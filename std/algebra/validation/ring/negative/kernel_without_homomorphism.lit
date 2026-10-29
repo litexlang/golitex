@@ -1,0 +1,28 @@
+have fn integer_add(x,y Z) Z = x+y
+
+have fn integer_neg(x Z) Z = -x
+
+have fn integer_mul(x,y Z) Z = x*y
+
+forall x,y,z Z:
+    integer_add(integer_add(x,y),z)=integer_add(x,integer_add(y,z))
+    integer_mul(integer_mul(x,y),z)=integer_mul(x,integer_mul(y,z))
+    integer_mul(x,integer_add(y,z))=integer_add(integer_mul(x,y),integer_mul(x,z))
+    integer_mul(integer_add(x,y),z)=integer_add(integer_mul(x,z),integer_mul(y,z))
+
+forall x,y Z:
+    integer_add(x,y)=integer_add(y,x)
+
+forall x Z:
+    integer_add(0,x)=x
+    integer_add(x,integer_neg(x))=0
+    integer_mul(1,x)=x
+    integer_mul(x,1)=x
+
+have integers &ring::Ring<Z> = (0,1,integer_add,integer_neg,integer_mul)
+
+release struct def integers
+
+have fn squaring(x Z) Z = x^2
+
+release thm ring::ring_kernel_is_ideal(Z,integers,Z,integers,squaring)

@@ -1,0 +1,9 @@
+release thm rel::universal_equivalence_laws({0,1})
+
+have whole &rel::EquivalenceRelation<{0,1}> = ({0,1},cart({0,1},{0,1}))
+
+release struct def whole
+
+whole.carrier={0,1}
+
+release thm rel::equivalence_class_contains_self({0,1},whole,2)

@@ -18,6 +18,22 @@ pub(super) fn project_structural_membership(
         ),
     ];
     let kind = match &proof.reason {
+        FunctionReturn { membership, proof } => {
+            fields.push((
+                "requirement",
+                string(format!(
+                    "{} $in {}",
+                    membership.element.readable_string(),
+                    membership.set.readable_string()
+                )),
+            ));
+            fields.push((
+                "return_evidence",
+                super::known_special_property::project_in_fact_special(proof, rt),
+            ));
+            fields.push(("domain_evidence", string("enclosing_object_wd")));
+            "function_return"
+        }
         Known(p) => {
             fields.push(("cite", super::searched::project_known_atomic(p, rt)));
             "known"

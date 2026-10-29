@@ -715,3 +715,32 @@ checked two-element Field supplies a nonidentity self-inverse element. No new
 Group field or operation is introduced. The conjugation and elementary batches
 pass 24 and 18 focused checks respectively, including final-statement refusals
 and actual/generic callers in both installed layouts.
+
+
+## Unital ring foundations
+
+A Ring supplies zero/one, an abelian-group addition/negation and associative
+multiplication with both identity laws and both distributive laws. Its
+nonempty carrier is explicit. Multiplicative commutativity and zero!=one are
+not assumed. Additive cancellation gives inverse uniqueness and makes an
+additive idempotent zero. Applying that lemma to distributivity gives left
+and right zero absorption; inverse uniqueness then gives the product sign
+laws. Zero=one forces every element to equal zero.
+
+Unital addition/multiplication preservation implies preservation of zero and
+negation. These facts prove that the actual zero fiber of a homomorphism is
+a two-sided ideal. They also prove the ideal inverse-image theorem. The
+kernel singleton criterion follows by applying a homomorphism to -y+x and
+using additive cancellation, with no division or field premise. Ideal
+intersection and the unit-element criterion use exactly the supplied closure
+and absorption laws. A Field forgets to a Ring after proving right
+multiplicative identity/distributivity from its commutative multiplication.
+
+Dependency order: native carriers/functions -> Ring -> additive cancellation
+and inverses -> zero/sign laws -> homomorphism zero/negation -> ideals and
+actual kernel -> inverse images and injectivity; independently Field -> Ring
+view. These are signature, definition, well-definedness and proof edges.
+The README records 27 source theorems, the 33-declaration strict gate, 58 full
+std-imported consumer statements and five focused source refusals. The
+noncommutative concrete model is still deferred proof debt, not checked
+coverage; quotient and polynomial constructions remain future work.

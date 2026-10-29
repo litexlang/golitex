@@ -14913,7 +14913,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof { requirement: f0, result: f1 } => {
-let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("result", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("result", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainRequirementProof(f1, capture, runtime))];
 let mut output = node("PredicateDomainWellDefinedProof", "", fields);
 output
 },
@@ -17969,6 +17969,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::HomogeneousCartesi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_homogeneous_cart__HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "HomogeneousCartesianEqualsFiniteSequence", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ElementaryIdentity(f0) => {
@@ -17976,6 +17977,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__ElementaryIdentitySearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ElementaryIdentity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SequenceLimit(f0) => {
@@ -17983,6 +17985,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SequenceLimit");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_sequence_limit__SequenceLimitEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SequenceLimit", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SequenceLiminf(f0) => {
@@ -17990,6 +17993,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SequenceLiminf");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_sequence_liminf__SequenceLiminfEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SequenceLiminf", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SequenceLimsup(f0) => {
@@ -17997,6 +18001,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SequenceLimsup");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_sequence_limsup__SequenceLimsupEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SequenceLimsup", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::RealBounds(f0) => {
@@ -18004,6 +18009,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::RealBounds");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_real_bounds__RealBoundEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "RealBounds", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::RiemannIntegralSelectedValue(f0) => {
@@ -18011,6 +18017,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::RiemannIntegralSel
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_riemann_integral__RiemannIntegralSelectedValueProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "RiemannIntegralSelectedValue", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::DerivativeSelectedValue(f0) => {
@@ -18018,6 +18025,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::DerivativeSelected
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_derivative__DerivativeSelectedValueProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "DerivativeSelectedValue", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FunctionLimit(f0) => {
@@ -18025,6 +18033,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FunctionLimit");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_function_limit__FunctionLimitEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FunctionLimit", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Multivariable(f0) => {
@@ -18032,6 +18041,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::Multivariable");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_multivariable__MultivariableEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "Multivariable", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::DvdZeroRemainder(f0) => {
@@ -18039,6 +18049,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::DvdZeroRemainder")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_dvd_zero_remainder__DvdZeroRemainderProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "DvdZeroRemainder", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SymmetricDifference(f0) => {
@@ -18046,6 +18057,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SymmetricDifferenc
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_symmetric_difference__SymmetricDifferenceEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SymmetricDifference", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Conjugation(f0) => {
@@ -18053,6 +18065,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::Conjugation");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_conjugation__ConjugationEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "Conjugation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReciprocalTrig(f0) => {
@@ -18060,6 +18073,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReciprocalTrig");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_reciprocal_trig__ReciprocalTrigEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReciprocalTrig", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Hyperbolic(f0) => {
@@ -18067,6 +18081,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::Hyperbolic");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_hyperbolic__HyperbolicEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "Hyperbolic", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AddZeroLeftFromEqualities(f0) => {
@@ -18074,6 +18089,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AddZeroLeftFromEqu
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__add_zero_from_equalities_builtin_rule_proof__AddZeroLeftFromEqualitiesBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AddZeroLeftFromEqualities", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AddZeroRightFromEqualities(f0) => {
@@ -18081,6 +18097,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AddZeroRightFromEq
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__add_zero_from_equalities_builtin_rule_proof__AddZeroRightFromEqualitiesBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AddZeroRightFromEqualities", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSeqReconstruction(f0) => {
@@ -18088,6 +18105,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSeqReconstru
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_finite_seq_reconstruction__FiniteSeqReconstructionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSeqReconstruction", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ScalarExtra(f0) => {
@@ -18095,6 +18113,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ScalarExtra");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_scalar_extra__ScalarExtraEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ScalarExtra", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntegerInterval(f0) => {
@@ -18102,6 +18121,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntegerInterval");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_integer_interval__IntegerIntervalEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntegerInterval", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FactorialPredecessor(f0) => {
@@ -18109,6 +18129,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FactorialPredecess
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_factorial_predecessor__FactorialPredecessorProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FactorialPredecessor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ExponentialLogarithmIdentity(f0) => {
@@ -18116,6 +18137,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ExponentialLogarit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_exponential_logarithm_identities__ExponentialLogarithmIdentityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ExponentialLogarithmIdentity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ScalarDivisionRelation(f0) => {
@@ -18123,6 +18145,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ScalarDivisionRela
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_scalar_division_relations__ScalarDivisionRelationProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ScalarDivisionRelation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::TanQuotientDefinition(f0) => {
@@ -18130,6 +18153,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::TanQuotientDefinit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_definitions__TanQuotientDefinitionProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "TanQuotientDefinition", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CotQuotientDefinition(f0) => {
@@ -18137,6 +18161,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CotQuotientDefinit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_definitions__CotQuotientDefinitionProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CotQuotientDefinition", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::GcdEuclideanStep(f0) => {
@@ -18144,6 +18169,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::GcdEuclideanStep")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_definitions__GcdEuclideanStepProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "GcdEuclideanStep", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LnAsEulerLog(f0) => {
@@ -18151,6 +18177,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LnAsEulerLog");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_fixed_base__LnAsEulerLogProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LnAsEulerLog", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ExpAsEulerPower(f0) => {
@@ -18158,6 +18185,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ExpAsEulerPower");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_fixed_base__ExpAsEulerPowerProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ExpAsEulerPower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::RangeSize(f0) => {
@@ -18165,6 +18193,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::RangeSize");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_range_size__RangeSizeProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "RangeSize", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ClosedRangeSize(f0) => {
@@ -18172,6 +18201,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ClosedRangeSize");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_range_size__ClosedRangeSizeProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ClosedRangeSize", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::EuclideanRemainder(f0) => {
@@ -18179,6 +18209,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::EuclideanRemainder
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_euclidean_remainder__EuclideanRemainderProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "EuclideanRemainder", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetProductReindex(f0) => {
@@ -18186,6 +18217,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetProductRe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_finite_set_product_reindex__FiniteSetProductReindexProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetProductReindex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetReduceReindex(f0) => {
@@ -18193,6 +18225,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetReduceRei
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_finite_set_reduce_reindex__FiniteSetReduceReindexProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetReduceReindex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntegerRangeBuilder(f0) => {
@@ -18200,6 +18233,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntegerRangeBuilde
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_integer_range_builder__IntegerRangeBuilderBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntegerRangeBuilder", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ScalarIdentity(f0) => {
@@ -18207,6 +18241,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ScalarIdentity");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_scalar_identities__ScalarIdentityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ScalarIdentity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ElementaryArithmetic(f0) => {
@@ -18214,6 +18249,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ElementaryArithmet
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_arithmetic__ElementaryArithmeticProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ElementaryArithmetic", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::TrigComplexIdentity(f0) => {
@@ -18221,6 +18257,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::TrigComplexIdentit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_trig_complex_identities__TrigComplexIdentityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "TrigComplexIdentity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReduceProduct(f0) => {
@@ -18228,6 +18265,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReduceProduct");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_reduce_product__ReduceProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReduceProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReduceLastStep(f0) => {
@@ -18235,6 +18273,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReduceLastStep");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_reduce_last_step__ReduceLastStepProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReduceLastStep", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReducePartition(f0) => {
@@ -18242,6 +18281,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReducePartition");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_reduce_partition__ReducePartitionProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReducePartition", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReduceFirstStep(f0) => {
@@ -18249,6 +18289,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReduceFirstStep");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_reduce_first_step__ReduceFirstStepProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReduceFirstStep", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReduceTranslation(f0) => {
@@ -18256,6 +18297,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReduceTranslation"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_reduce_translation__ReduceTranslationProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReduceTranslation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReducePointwise(f0) => {
@@ -18263,6 +18305,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReducePointwise");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_reduce_pointwise__ReducePointwiseProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReducePointwise", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CartesianSize(f0) => {
@@ -18270,6 +18313,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CartesianSize");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_cartesian_size__CartesianSizeProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CartesianSize", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteMapSize(f0) => {
@@ -18277,6 +18321,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteMapSize");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_finite_map_size__FiniteMapSizeProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteMapSize", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AggregateIdentity(f0) => {
@@ -18284,6 +18329,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AggregateIdentity"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__aggregate_identity_builtin_rule_proof__AggregateIdentityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AggregateIdentity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AggregateCalculation(f0) => {
@@ -18291,6 +18337,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AggregateCalculati
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__search_equal_fact_by_aggregate_calculation__AggregateCalculationBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AggregateCalculation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Calculation(f0) => {
@@ -18298,6 +18345,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::Calculation");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__search_equal_fact_builtin_rule_result__EqualitySearchProofByCalculation(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "Calculation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SinArcsinLeftInverse(f0) => {
@@ -18305,6 +18353,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SinArcsinLeftInver
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__SinArcsinLeftInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SinArcsinLeftInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CosArccosLeftInverse(f0) => {
@@ -18312,6 +18361,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CosArccosLeftInver
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__CosArccosLeftInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CosArccosLeftInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::TanArctanLeftInverse(f0) => {
@@ -18319,6 +18369,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::TanArctanLeftInver
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__TanArctanLeftInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "TanArctanLeftInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CotArccotLeftInverse(f0) => {
@@ -18326,6 +18377,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CotArccotLeftInver
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__CotArccotLeftInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CotArccotLeftInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArcsinSinRightInverse(f0) => {
@@ -18333,6 +18385,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArcsinSinRightInve
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArcsinSinRightInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArcsinSinRightInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArccosCosRightInverse(f0) => {
@@ -18340,6 +18393,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArccosCosRightInve
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArccosCosRightInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArccosCosRightInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArctanTanRightInverse(f0) => {
@@ -18347,6 +18401,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArctanTanRightInve
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArctanTanRightInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArctanTanRightInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArccotCotRightInverse(f0) => {
@@ -18354,6 +18409,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArccotCotRightInve
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArccotCotRightInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArccotCotRightInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArcsinExactZero(f0) => {
@@ -18361,6 +18417,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArcsinExactZero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArcsinExactZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArcsinExactZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArcsinExactOne(f0) => {
@@ -18368,6 +18425,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArcsinExactOne");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArcsinExactOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArcsinExactOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArcsinExactNegOne(f0) => {
@@ -18375,6 +18433,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArcsinExactNegOne"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArcsinExactNegOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArcsinExactNegOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArccosExactOne(f0) => {
@@ -18382,6 +18441,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArccosExactOne");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArccosExactOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArccosExactOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArccosExactZero(f0) => {
@@ -18389,6 +18449,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArccosExactZero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArccosExactZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArccosExactZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArccosExactNegOne(f0) => {
@@ -18396,6 +18457,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArccosExactNegOne"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArccosExactNegOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArccosExactNegOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArctanExactZero(f0) => {
@@ -18403,6 +18465,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArctanExactZero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArctanExactZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArctanExactZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ArccotExactZero(f0) => {
@@ -18410,6 +18473,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ArccotExactZero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_inverse_trig__ArccotExactZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ArccotExactZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::NegativeIntegerPowerReciprocal(f0) => {
@@ -18417,6 +18481,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::NegativeIntegerPow
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_power_laws__NegativeIntegerPowerReciprocalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "NegativeIntegerPowerReciprocal", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::PowerProductSameBase(f0) => {
@@ -18424,6 +18489,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::PowerProductSameBa
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_power_laws__PowerProductSameBaseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "PowerProductSameBase", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::PowerOfPower(f0) => {
@@ -18431,6 +18497,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::PowerOfPower");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_power_laws__PowerOfPowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "PowerOfPower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::PowerOfProduct(f0) => {
@@ -18438,6 +18505,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::PowerOfProduct");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_power_laws__PowerOfProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "PowerOfProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReciprocalAsNegOnePower(f0) => {
@@ -18445,6 +18513,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReciprocalAsNegOne
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_power_laws__ReciprocalAsNegOnePowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReciprocalAsNegOnePower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::QuotientAsMulNegOnePower(f0) => {
@@ -18452,6 +18521,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::QuotientAsMulNegOn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_power_laws__QuotientAsMulNegOnePowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "QuotientAsMulNegOnePower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::OneToAnyPower(f0) => {
@@ -18459,6 +18529,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::OneToAnyPower");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__OneToAnyPowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "OneToAnyPower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ZeroToPosNatPower(f0) => {
@@ -18466,6 +18537,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ZeroToPosNatPower"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__ZeroToPosNatPowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ZeroToPosNatPower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SqrtSquare(f0) => {
@@ -18473,6 +18545,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SqrtSquare");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__SqrtSquareBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SqrtSquare", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SqrtZero(f0) => {
@@ -18480,6 +18553,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SqrtZero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__SqrtZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SqrtZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SqrtOne(f0) => {
@@ -18487,6 +18561,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SqrtOne");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__SqrtOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SqrtOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SqrtOfSquare(f0) => {
@@ -18494,6 +18569,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SqrtOfSquare");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__SqrtOfSquareBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SqrtOfSquare", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SqrtProduct(f0) => {
@@ -18501,6 +18577,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SqrtProduct");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__SqrtProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SqrtProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SqrtQuotient(f0) => {
@@ -18508,6 +18585,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SqrtQuotient");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__SqrtQuotientBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SqrtQuotient", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AbsOfNegation(f0) => {
@@ -18515,6 +18593,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AbsOfNegation");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__AbsOfNegationBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AbsOfNegation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AbsProduct(f0) => {
@@ -18522,6 +18601,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AbsProduct");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__AbsProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AbsProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AbsSquare(f0) => {
@@ -18529,6 +18609,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AbsSquare");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__AbsSquareBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AbsSquare", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogBaseSelf(f0) => {
@@ -18536,6 +18617,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogBaseSelf");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__LogBaseSelfBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogBaseSelf", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogOfOne(f0) => {
@@ -18543,6 +18625,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogOfOne");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__LogOfOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogOfOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogOfPowerSameBase(f0) => {
@@ -18550,6 +18633,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogOfPowerSameBase
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__LogOfPowerSameBaseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogOfPowerSameBase", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogArgPower(f0) => {
@@ -18557,6 +18641,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogArgPower");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__LogArgPowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogArgPower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogProduct(f0) => {
@@ -18564,6 +18649,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogProduct");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__LogProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogQuotient(f0) => {
@@ -18571,6 +18657,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogQuotient");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__LogQuotientBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogQuotient", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogReciprocal(f0) => {
@@ -18578,6 +18665,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogReciprocal");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__LogReciprocalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogReciprocal", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogChangeOfBase(f0) => {
@@ -18585,6 +18673,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogChangeOfBase");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__LogChangeOfBaseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogChangeOfBase", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::OneModAtLeastTwo(f0) => {
@@ -18592,6 +18681,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::OneModAtLeastTwo")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__OneModAtLeastTwoBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "OneModAtLeastTwo", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::NestedSameModAbsorption(f0) => {
@@ -18599,6 +18689,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::NestedSameModAbsor
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__NestedSameModAbsorptionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "NestedSameModAbsorption", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ModCompatibleSmallerModulus(f0) => {
@@ -18606,6 +18697,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ModCompatibleSmall
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave2__ModCompatibleSmallerModulusBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ModCompatibleSmallerModulus", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MinIdempotent(f0) => {
@@ -18613,6 +18705,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MinIdempotent");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__MinIdempotentBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MinIdempotent", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MaxIdempotent(f0) => {
@@ -18620,6 +18713,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MaxIdempotent");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__MaxIdempotentBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MaxIdempotent", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MinCommutative(f0) => {
@@ -18627,6 +18721,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MinCommutative");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__MinCommutativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MinCommutative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MaxCommutative(f0) => {
@@ -18634,6 +18729,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MaxCommutative");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__MaxCommutativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MaxCommutative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AbsAbsAbsorption(f0) => {
@@ -18641,6 +18737,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AbsAbsAbsorption")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__AbsAbsAbsorptionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AbsAbsAbsorption", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ExpOfLn(f0) => {
@@ -18648,6 +18745,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ExpOfLn");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__ExpOfLnBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ExpOfLn", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LnOfExp(f0) => {
@@ -18655,6 +18753,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LnOfExp");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__LnOfExpBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LnOfExp", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FloorOfInteger(f0) => {
@@ -18662,6 +18761,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FloorOfInteger");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__FloorOfIntegerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FloorOfInteger", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CeilOfInteger(f0) => {
@@ -18669,6 +18769,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CeilOfInteger");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave3__CeilOfIntegerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CeilOfInteger", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FloorOfCeilOfInteger(f0) => {
@@ -18676,6 +18777,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FloorOfCeilOfInteg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave4__FloorOfCeilOfIntegerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FloorOfCeilOfInteger", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CeilOfFloorOfInteger(f0) => {
@@ -18683,6 +18785,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CeilOfFloorOfInteg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave4__CeilOfFloorOfIntegerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CeilOfFloorOfInteger", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SqrtOfSquareEqualsAbs(f0) => {
@@ -18690,6 +18793,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SqrtOfSquareEquals
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave4__SqrtOfSquareEqualsAbsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SqrtOfSquareEqualsAbs", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::QuotByOne(f0) => {
@@ -18697,6 +18801,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::QuotByOne");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__QuotByOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "QuotByOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::QuotSelfOne(f0) => {
@@ -18704,6 +18809,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::QuotSelfOne");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__QuotSelfOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "QuotSelfOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LcmCommutative(f0) => {
@@ -18711,6 +18817,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LcmCommutative");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__LcmCommutativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LcmCommutative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LcmIdempotentAbs(f0) => {
@@ -18718,6 +18825,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LcmIdempotentAbs")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__LcmIdempotentAbsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LcmIdempotentAbs", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::GcdCommutative(f0) => {
@@ -18725,6 +18833,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::GcdCommutative");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__GcdCommutativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "GcdCommutative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::GcdIdempotentAbs(f0) => {
@@ -18732,6 +18841,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::GcdIdempotentAbs")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__GcdIdempotentAbsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "GcdIdempotentAbs", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::GcdRightZeroAbs(f0) => {
@@ -18739,6 +18849,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::GcdRightZeroAbs");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__GcdRightZeroAbsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "GcdRightZeroAbs", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::GcdLeftZeroAbs(f0) => {
@@ -18746,6 +18857,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::GcdLeftZeroAbs");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__GcdLeftZeroAbsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "GcdLeftZeroAbs", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FactorialSuccessor(f0) => {
@@ -18753,6 +18865,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FactorialSuccessor
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave5__FactorialSuccessorBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FactorialSuccessor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(f0) => {
@@ -18760,6 +18873,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSel
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave6__AbsNonnegEqualsSelfBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AbsNonnegEqualsSelf", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AbsNonposEqualsNegation(f0) => {
@@ -18767,6 +18881,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AbsNonposEqualsNeg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave6__AbsNonposEqualsNegationBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AbsNonposEqualsNegation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SignOfPositive(f0) => {
@@ -18774,6 +18889,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SignOfPositive");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave6__SignOfPositiveBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SignOfPositive", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SignOfNegative(f0) => {
@@ -18781,6 +18897,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SignOfNegative");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave6__SignOfNegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SignOfNegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MaxRightWhenLessEqual(f0) => {
@@ -18788,6 +18905,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MaxRightWhenLessEq
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave6__MaxRightWhenLessEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MaxRightWhenLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MaxLeftWhenLessEqual(f0) => {
@@ -18795,6 +18913,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MaxLeftWhenLessEqu
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave6__MaxLeftWhenLessEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MaxLeftWhenLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MinLeftWhenLessEqual(f0) => {
@@ -18802,6 +18921,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MinLeftWhenLessEqu
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave6__MinLeftWhenLessEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MinLeftWhenLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MinRightWhenLessEqual(f0) => {
@@ -18809,6 +18929,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MinRightWhenLessEq
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave6__MinRightWhenLessEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MinRightWhenLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::EqualityFromTwoSidedWeakOrder(f0) => {
@@ -18816,6 +18937,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::EqualityFromTwoSid
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave7__EqualityFromTwoSidedWeakOrderBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "EqualityFromTwoSidedWeakOrder", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::DiffZeroFromEqualOperands(f0) => {
@@ -18823,6 +18945,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::DiffZeroFromEqualO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave7__DiffZeroFromEqualOperandsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "DiffZeroFromEqualOperands", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::EqualFromKnownDifferenceZero(f0) => {
@@ -18830,6 +18953,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::EqualFromKnownDiff
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equal_from_known_difference_zero__EqualFromKnownDifferenceZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "EqualFromKnownDifferenceZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ZeroProductCancel(f0) => {
@@ -18837,6 +18961,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ZeroProductCancel"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave7__ZeroProductCancelBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ZeroProductCancel", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SignOfNegation(f0) => {
@@ -18844,6 +18969,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SignOfNegation");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave7__SignOfNegationBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SignOfNegation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SignTimesAbsEqualsArg(f0) => {
@@ -18851,6 +18977,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SignTimesAbsEquals
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave7__SignTimesAbsEqualsArgBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SignTimesAbsEqualsArg", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::AbsEqualsSignTimesArg(f0) => {
@@ -18858,6 +18985,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::AbsEqualsSignTimes
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave7__AbsEqualsSignTimesArgBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "AbsEqualsSignTimesArg", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SignOfProduct(f0) => {
@@ -18865,6 +18993,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SignOfProduct");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave7__SignOfProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SignOfProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SubtractionFromKnownAddition(f0) => {
@@ -18872,6 +19001,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SubtractionFromKno
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave7__SubtractionFromKnownAdditionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SubtractionFromKnownAddition", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::QuotEuclideanDecomposition(f0) => {
@@ -18879,6 +19009,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::QuotEuclideanDecom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave8__QuotEuclideanDecompositionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "QuotEuclideanDecomposition", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SquareSumComponentZero(f0) => {
@@ -18886,6 +19017,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SquareSumComponent
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave8__SquareSumComponentZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SquareSumComponentZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::MinusOneOddNaturalPower(f0) => {
@@ -18893,6 +19025,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::MinusOneOddNatural
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave8__MinusOneOddNaturalPowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "MinusOneOddNaturalPower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LcmGcdProductAbs(f0) => {
@@ -18900,6 +19033,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LcmGcdProductAbs")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave8__LcmGcdProductAbsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LcmGcdProductAbs", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::UnionEmptyRight(f0) => {
@@ -18907,6 +19041,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::UnionEmptyRight");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__UnionEmptyRightBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "UnionEmptyRight", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::UnionEmptyLeft(f0) => {
@@ -18914,6 +19049,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::UnionEmptyLeft");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__UnionEmptyLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "UnionEmptyLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntersectEmptyRight(f0) => {
@@ -18921,6 +19057,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntersectEmptyRigh
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__IntersectEmptyRightBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntersectEmptyRight", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntersectEmptyLeft(f0) => {
@@ -18928,6 +19065,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntersectEmptyLeft
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__IntersectEmptyLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntersectEmptyLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetMinusSelfEmpty(f0) => {
@@ -18935,6 +19073,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetMinusSelfEmpty"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__SetMinusSelfEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetMinusSelfEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetMinusEmptyRight(f0) => {
@@ -18942,6 +19081,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetMinusEmptyRight
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__SetMinusEmptyRightBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetMinusEmptyRight", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetMinusEmptyLeft(f0) => {
@@ -18949,6 +19089,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetMinusEmptyLeft"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__SetMinusEmptyLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetMinusEmptyLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::UnionCommutative(f0) => {
@@ -18956,6 +19097,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::UnionCommutative")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__UnionCommutativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "UnionCommutative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntersectCommutative(f0) => {
@@ -18963,6 +19105,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntersectCommutati
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__IntersectCommutativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntersectCommutative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::UnionIdempotent(f0) => {
@@ -18970,6 +19113,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::UnionIdempotent");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__UnionIdempotentBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "UnionIdempotent", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntersectIdempotent(f0) => {
@@ -18977,6 +19121,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntersectIdempoten
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__IntersectIdempotentBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntersectIdempotent", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntersectFromSubset(f0) => {
@@ -18984,6 +19129,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntersectFromSubse
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__IntersectFromSubsetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntersectFromSubset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::EmptySetFromNotNonempty(f0) => {
@@ -18991,6 +19137,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::EmptySetFromNotNon
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__EmptySetFromNotNonemptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "EmptySetFromNotNonempty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::PowerSetFiniteSetSize(f0) => {
@@ -18998,6 +19145,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::PowerSetFiniteSetS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__PowerSetFiniteSetSizeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "PowerSetFiniteSetSize", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::UnionAssociative(f0) => {
@@ -19005,6 +19153,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::UnionAssociative")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__UnionAssociativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "UnionAssociative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntersectAssociative(f0) => {
@@ -19012,6 +19161,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntersectAssociati
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__IntersectAssociativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntersectAssociative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntersectUnionDistributive(f0) => {
@@ -19019,6 +19169,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntersectUnionDist
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__IntersectUnionDistributiveBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntersectUnionDistributive", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetMinusUnionDeMorgan(f0) => {
@@ -19026,6 +19177,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetMinusUnionDeMor
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__SetMinusUnionDeMorganBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetMinusUnionDeMorgan", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetMinusIntersectDeMorgan(f0) => {
@@ -19033,6 +19185,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetMinusIntersectD
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__SetMinusIntersectDeMorganBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetMinusIntersectDeMorgan", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IntersectSetMinusSelfEmpty(f0) => {
@@ -19040,6 +19193,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IntersectSetMinusS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave9__IntersectSetMinusSelfEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IntersectSetMinusSelfEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetSumEmpty(f0) => {
@@ -19047,6 +19201,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetSumEmpty"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave10__FiniteSetSumEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetSumEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetProductEmpty(f0) => {
@@ -19054,6 +19209,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetProductEm
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave10__FiniteSetProductEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetProductEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetReduceEmpty(f0) => {
@@ -19061,6 +19217,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetReduceEmp
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave10__FiniteSetReduceEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetReduceEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReduceEmpty(f0) => {
@@ -19068,6 +19225,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReduceEmpty");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave10__ReduceEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReduceEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SumEmptyRange(f0) => {
@@ -19075,6 +19233,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SumEmptyRange");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave10__SumEmptyRangeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SumEmptyRange", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ProductEmptyRange(f0) => {
@@ -19082,6 +19241,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ProductEmptyRange"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave10__ProductEmptyRangeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ProductEmptyRange", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::UnionAbsorptionFromSubset(f0) => {
@@ -19089,6 +19249,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::UnionAbsorptionFro
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__UnionAbsorptionFromSubsetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "UnionAbsorptionFromSubset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetMinusRecoversSubset(f0) => {
@@ -19096,6 +19257,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetMinusRecoversSu
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__SetMinusRecoversSubsetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetMinusRecoversSubset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::EmptySetFromSizeZero(f0) => {
@@ -19103,6 +19265,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::EmptySetFromSizeZe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__EmptySetFromSizeZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "EmptySetFromSizeZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(f0) => {
@@ -19110,6 +19273,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetEqualFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_finite_subset_size__FiniteSetEqualFromSubsetSizeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetEqualFromSubsetSize", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(f0) => {
@@ -19117,6 +19281,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__FiniteSetSizeSetMinusBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetSizeSetMinus", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion(f0) => {
@@ -19124,6 +19289,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__FiniteSetSizeUnionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetSizeUnion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ClosedRangeSingletonListSet(f0) => {
@@ -19131,6 +19297,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ClosedRangeSinglet
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__ClosedRangeSingletonListSetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ClosedRangeSingletonListSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SumSingleTerm(f0) => {
@@ -19138,6 +19305,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SumSingleTerm");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__SumSingleTermBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SumSingleTerm", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ProductSingleTerm(f0) => {
@@ -19145,6 +19313,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ProductSingleTerm"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__ProductSingleTermBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ProductSingleTerm", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReduceAddZeroEqualsSum(f0) => {
@@ -19152,6 +19321,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReduceAddZeroEqual
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__ReduceAddZeroEqualsSumBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReduceAddZeroEqualsSum", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetReduceAddZeroEqualsSum(f0) => {
@@ -19159,6 +19329,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetReduceAdd
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__FiniteSetReduceAddZeroEqualsSumBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetReduceAddZeroEqualsSum", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::PowOfLogInverse(f0) => {
@@ -19166,6 +19337,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::PowOfLogInverse");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave11__PowOfLogInverseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "PowOfLogInverse", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::UnionSetMinusDecomposition(f0) => {
@@ -19173,6 +19345,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::UnionSetMinusDecom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__UnionSetMinusDecompositionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "UnionSetMinusDecomposition", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetMinusIntersectSelf(f0) => {
@@ -19180,6 +19353,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetMinusIntersectS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__SetMinusIntersectSelfBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetMinusIntersectSelf", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReOfImaginaryUnit(f0) => {
@@ -19187,6 +19361,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReOfImaginaryUnit"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ReOfImaginaryUnitBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReOfImaginaryUnit", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ImgOfImaginaryUnit(f0) => {
@@ -19194,6 +19369,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ImgOfImaginaryUnit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ImgOfImaginaryUnitBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ImgOfImaginaryUnit", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReOfRealEmbedding(f0) => {
@@ -19201,6 +19377,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReOfRealEmbedding"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ReOfRealEmbeddingBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReOfRealEmbedding", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ImgOfRealEmbedding(f0) => {
@@ -19208,6 +19385,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ImgOfRealEmbedding
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ImgOfRealEmbeddingBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ImgOfRealEmbedding", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReOfRealPlusI(f0) => {
@@ -19215,6 +19393,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReOfRealPlusI");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ReOfRealPlusIBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReOfRealPlusI", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ImgOfRealPlusI(f0) => {
@@ -19222,6 +19401,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ImgOfRealPlusI");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ImgOfRealPlusIBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ImgOfRealPlusI", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ComplexAbsOfImaginaryUnit(f0) => {
@@ -19229,6 +19409,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ComplexAbsOfImagin
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ComplexAbsOfImaginaryUnitBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ComplexAbsOfImaginaryUnit", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ModNestedDivisibleAbsorption(f0) => {
@@ -19236,6 +19417,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ModNestedDivisible
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ModNestedDivisibleAbsorptionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ModNestedDivisibleAbsorption", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SumSplitLastTerm(f0) => {
@@ -19243,6 +19425,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SumSplitLastTerm")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__SumSplitLastTermBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SumSplitLastTerm", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ProductSplitLastTerm(f0) => {
@@ -19250,6 +19433,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ProductSplitLastTe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__ProductSplitLastTermBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ProductSplitLastTerm", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetSumListExpansion(f0) => {
@@ -19257,6 +19441,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetSumListEx
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__FiniteSetSumListExpansionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetSumListExpansion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetProductListExpansion(f0) => {
@@ -19264,6 +19449,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetProductLi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave12__FiniteSetProductListExpansionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetProductListExpansion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(f0) => {
@@ -19271,6 +19457,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::EulerEqualsExpOne"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__EulerEqualsExpOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "EulerEqualsExpOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LnOfEuler(f0) => {
@@ -19278,6 +19465,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LnOfEuler");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__LnOfEulerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LnOfEuler", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReOfReal(f0) => {
@@ -19285,6 +19473,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReOfReal");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__ReOfRealBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReOfReal", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ImgOfReal(f0) => {
@@ -19292,6 +19481,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ImgOfReal");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__ImgOfRealBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ImgOfReal", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(f0) => {
@@ -19299,6 +19489,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReOfRealPlusImagSc
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__ReOfRealPlusImagScaledBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReOfRealPlusImagScaled", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(f0) => {
@@ -19306,6 +19497,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__ImgOfRealPlusImagScaledBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ImgOfRealPlusImagScaled", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ComplexAbsOfNonnegReal(f0) => {
@@ -19313,6 +19505,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ComplexAbsOfNonneg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__ComplexAbsOfNonnegRealBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ComplexAbsOfNonnegReal", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ComplexAbsOfImagScaled(f0) => {
@@ -19320,6 +19513,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ComplexAbsOfImagSc
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__ComplexAbsOfImagScaledBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ComplexAbsOfImagScaled", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ClosedRangeLiteralExpansion(f0) => {
@@ -19327,6 +19521,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ClosedRangeLiteral
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__ClosedRangeLiteralExpansionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ClosedRangeLiteralExpansion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::RangeLiteralExpansion(f0) => {
@@ -19334,6 +19529,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::RangeLiteralExpans
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__RangeLiteralExpansionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "RangeLiteralExpansion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::PowerSetOfEmpty(f0) => {
@@ -19341,6 +19537,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::PowerSetOfEmpty");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__PowerSetOfEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "PowerSetOfEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::PowerSetOfSingleton(f0) => {
@@ -19348,6 +19545,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::PowerSetOfSingleto
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__PowerSetOfSingletonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "PowerSetOfSingleton", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty(f0) => {
@@ -19355,6 +19553,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__FamilyUnionOfEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FamilyUnionOfEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FamilyUnionOfSingleton(f0) => {
@@ -19362,6 +19561,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FamilyUnionOfSingl
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__FamilyUnionOfSingletonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FamilyUnionOfSingleton", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FamilyUnionOfPowerSet(f0) => {
@@ -19369,6 +19569,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FamilyUnionOfPower
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__FamilyUnionOfPowerSetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FamilyUnionOfPowerSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CartWithEmptyFactor(f0) => {
@@ -19376,6 +19577,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CartWithEmptyFacto
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__CartWithEmptyFactorBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CartWithEmptyFactor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::UnionOverIntersectDistributive(f0) => {
@@ -19383,6 +19585,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::UnionOverIntersect
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__UnionOverIntersectDistributiveBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "UnionOverIntersectDistributive", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetMinusChainToUnion(f0) => {
@@ -19390,6 +19593,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetMinusChainToUni
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__SetMinusChainToUnionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetMinusChainToUnion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(f0) => {
@@ -19397,6 +19601,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FnRangeOfConstantA
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__FnRangeOfConstantAnonymousFnBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FnRangeOfConstantAnonymousFn", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::Composition(f0) => {
@@ -19404,6 +19609,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::Composition");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_composition__CompositionEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "Composition", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(f0) => {
@@ -19411,6 +19617,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDoma
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_function_domain_image__FnRangeOfEmptyDomainBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FnRangeOfEmptyDomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::EmptyFunctionGraph(f0) => {
@@ -19418,6 +19625,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::EmptyFunctionGraph
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_empty_function_graph__EmptyFunctionGraphBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "EmptyFunctionGraph", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::EmptyDomainFunctionSpaceSingleton(f0) => {
@@ -19425,6 +19633,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::EmptyDomainFunctio
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_empty_function_graph__EmptyDomainFunctionSpaceSingletonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "EmptyDomainFunctionSpaceSingleton", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(f0) => {
@@ -19432,6 +19641,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__SeqEqualsFnOnNPosBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SeqEqualsFnOnNPos", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnOneBasedDomain(f0) => {
@@ -19439,6 +19649,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave13__FiniteSeqEqualsFnOnOneBasedDomainBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSeqEqualsFnOnOneBasedDomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IndexUnionEmptyIndex(f0) => {
@@ -19446,6 +19657,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IndexUnionEmptyInd
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__IndexUnionEmptyIndexBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IndexUnionEmptyIndex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IndexIntersectEmptyIndex(f0) => {
@@ -19453,6 +19665,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IndexIntersectEmpt
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__IndexIntersectEmptyIndexBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IndexIntersectEmptyIndex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IndexCartEmptyIndex(f0) => {
@@ -19460,6 +19673,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IndexCartEmptyInde
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__IndexCartEmptyIndexBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IndexCartEmptyIndex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::IndexUnionSingleton(f0) => {
@@ -19467,6 +19681,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::IndexUnionSingleto
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__IndexUnionSingletonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "IndexUnionSingleton", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSeqZeroEqualsFnOnEmpty(f0) => {
@@ -19474,6 +19689,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSeqZeroEqual
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__FiniteSeqZeroEqualsFnOnEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSeqZeroEqualsFnOnEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SetBuilderObviouslyEmpty(f0) => {
@@ -19481,6 +19697,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SetBuilderObviousl
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__SetBuilderObviouslyEmptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SetBuilderObviouslyEmpty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ComplexAbsSquaredOfRectForm(f0) => {
@@ -19488,6 +19705,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ComplexAbsSquaredO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__ComplexAbsSquaredOfRectFormBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ComplexAbsSquaredOfRectForm", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ExpOfSum(f0) => {
@@ -19495,6 +19713,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ExpOfSum");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__ExpOfSumBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ExpOfSum", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::LogBasePower(f0) => {
@@ -19502,6 +19721,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::LogBasePower");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__LogBasePowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "LogBasePower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReOfProduct(f0) => {
@@ -19509,6 +19729,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReOfProduct");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__ReOfProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReOfProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ImgOfProduct(f0) => {
@@ -19516,6 +19737,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ImgOfProduct");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__ImgOfProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ImgOfProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SinOfSum(f0) => {
@@ -19523,6 +19745,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SinOfSum");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__SinOfSumBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SinOfSum", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CosOfSum(f0) => {
@@ -19530,6 +19753,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CosOfSum");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__CosOfSumBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CosOfSum", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::ReduceSingleTermWithAddZero(f0) => {
@@ -19537,6 +19761,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::ReduceSingleTermWi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave14__ReduceSingleTermWithAddZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "ReduceSingleTermWithAddZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetSumFubiniSwap(f0) => {
@@ -19544,6 +19769,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetSumFubini
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave15__FiniteSetSumFubiniSwapBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetSumFubiniSwap", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::FiniteSetSumOverCartesianProduct(f0) => {
@@ -19551,6 +19777,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::FiniteSetSumOverCa
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_equality_identities_wave15__FiniteSetSumOverCartesianProductBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "FiniteSetSumOverCartesianProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SinOfZero(f0) => {
@@ -19558,6 +19785,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SinOfZero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_closed_trig__SinOfZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SinOfZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CosOfZero(f0) => {
@@ -19565,6 +19793,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CosOfZero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_closed_trig__CosOfZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CosOfZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::TanOfZero(f0) => {
@@ -19572,6 +19801,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::TanOfZero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_closed_trig__TanOfZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "TanOfZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SinOfHalfPi(f0) => {
@@ -19579,6 +19809,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SinOfHalfPi");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_closed_trig__SinOfHalfPiBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SinOfHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CosOfPi(f0) => {
@@ -19586,6 +19817,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CosOfPi");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_closed_trig__CosOfPiBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CosOfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::SinOfPi(f0) => {
@@ -19593,6 +19825,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::SinOfPi");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_closed_trig__SinOfPiBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "SinOfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::CotOfHalfPi(f0) => {
@@ -19600,6 +19833,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::CotOfHalfPi");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_closed_trig__CotOfHalfPiBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "CotOfHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::PythagoreanIdentity(f0) => {
@@ -19607,6 +19841,7 @@ let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::PythagoreanIdentit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_closed_trig__PythagoreanIdentityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRule", "PythagoreanIdentity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -19888,6 +20123,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NormalAtomicFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NormalAtomicFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(f0) => {
@@ -19895,6 +20131,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LessFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "LessFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(f0) => {
@@ -19902,6 +20139,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__GreaterFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "GreaterFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(f0) => {
@@ -19909,6 +20147,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "LessEqualFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(f0) => {
@@ -19916,6 +20155,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__GreaterEqualFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "GreaterEqualFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::IsSetFact(f0) => {
@@ -19923,6 +20163,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_set__IsSetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "IsSetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::IsNonemptySetFact(f0) => {
@@ -19930,6 +20171,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_nonempty_set__IsNonemptySetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "IsNonemptySetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(f0) => {
@@ -19937,6 +20179,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_finite_set__IsFiniteSetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "IsFiniteSetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(f0) => {
@@ -19944,6 +20187,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__InFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "InFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(f0) => {
@@ -19951,6 +20195,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "SubsetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::SupersetFact(f0) => {
@@ -19958,6 +20203,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__superset__SupersetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "SupersetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::ProperSubsetFact(f0) => {
@@ -19965,6 +20211,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__ProperSubsetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "ProperSubsetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::ProperSupersetFact(f0) => {
@@ -19972,6 +20219,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__ProperSupersetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "ProperSupersetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::PrimeFact(f0) => {
@@ -19979,6 +20227,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__PrimeFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "PrimeFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::CoprimeFact(f0) => {
@@ -19986,6 +20235,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__CoprimeFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "CoprimeFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::DvdFact(f0) => {
@@ -19993,6 +20243,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "DvdFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::InjectiveFact(f0) => {
@@ -20000,6 +20251,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__InjectiveFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "InjectiveFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::SurjectiveFact(f0) => {
@@ -20007,6 +20259,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__SurjectiveFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "SurjectiveFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::BijectiveFact(f0) => {
@@ -20014,6 +20267,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__BijectiveFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "BijectiveFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::IsChoiceFunctionForFact(f0) => {
@@ -20021,6 +20275,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__IsChoiceFunctionForFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "IsChoiceFunctionForFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotNormalAtomicFact(f0) => {
@@ -20028,6 +20283,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotNormalAtomicFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotNormalAtomicFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(f0) => {
@@ -20035,6 +20291,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__NotEqualFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotEqualFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessFact(f0) => {
@@ -20042,6 +20299,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_less__NotLessFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotLessFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterFact(f0) => {
@@ -20049,6 +20307,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_greater__NotGreaterFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotGreaterFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotLessEqualFact(f0) => {
@@ -20056,6 +20315,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_less_equal__NotLessEqualFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotLessEqualFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotGreaterEqualFact(f0) => {
@@ -20063,6 +20323,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_greater_equal__NotGreaterEqualFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotGreaterEqualFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsSetFact(f0) => {
@@ -20070,6 +20331,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotIsSetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotIsSetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsNonemptySetFact(f0) => {
@@ -20077,6 +20339,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_is_nonempty_set__NotIsNonemptySetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotIsNonemptySetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsFiniteSetFact(f0) => {
@@ -20084,6 +20347,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_is_finite_set__NotIsFiniteSetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotIsFiniteSetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotInFact(f0) => {
@@ -20091,6 +20355,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__NotInFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotInFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSubsetFact(f0) => {
@@ -20098,6 +20363,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_subset__NotSubsetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotSubsetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSupersetFact(f0) => {
@@ -20105,6 +20371,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_superset__NotSupersetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotSupersetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotProperSubsetFact(f0) => {
@@ -20112,6 +20379,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotProperSubsetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotProperSubsetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotProperSupersetFact(f0) => {
@@ -20119,6 +20387,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotProperSupersetFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotProperSupersetFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotPrimeFact(f0) => {
@@ -20126,6 +20395,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotPrimeFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotPrimeFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotCoprimeFact(f0) => {
@@ -20133,6 +20403,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotCoprimeFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotCoprimeFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotDvdFact(f0) => {
@@ -20140,6 +20411,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotDvdFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotDvdFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotInjectiveFact(f0) => {
@@ -20147,6 +20419,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotInjectiveFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotInjectiveFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotSurjectiveFact(f0) => {
@@ -20154,6 +20427,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotSurjectiveFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotSurjectiveFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotBijectiveFact(f0) => {
@@ -20161,6 +20435,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotBijectiveFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotBijectiveFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotIsChoiceFunctionForFact(f0) => {
@@ -20168,6 +20443,7 @@ let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotIsChoiceFunctionForFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotIsChoiceFunctionForFact", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -20950,126 +21226,144 @@ crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ClosedInteger
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::ClosedIntegerRangeEqualityCover");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinClosedIntegerRangeEqualityCover(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "ClosedIntegerRangeEqualityCover", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ClosedIntegerRangeEqualityCover", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::HalfOpenIntegerRangeEqualityCover(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::HalfOpenIntegerRangeEqualityCover");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinHalfOpenIntegerRangeEqualityCover(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "HalfOpenIntegerRangeEqualityCover", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "HalfOpenIntegerRangeEqualityCover", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::RealLineTrichotomyEqLessGreater(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::RealLineTrichotomyEqLessGreater");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinRealLineTrichotomyEqLessGreater(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "RealLineTrichotomyEqLessGreater", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "RealLineTrichotomyEqLessGreater", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::RealLineTrichotomyLessEqGreater(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::RealLineTrichotomyLessEqGreater");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinRealLineTrichotomyLessEqGreater(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "RealLineTrichotomyLessEqGreater", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "RealLineTrichotomyLessEqGreater", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::RealLineTrichotomyGreaterEqLess(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::RealLineTrichotomyGreaterEqLess");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinRealLineTrichotomyGreaterEqLess(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "RealLineTrichotomyGreaterEqLess", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "RealLineTrichotomyGreaterEqLess", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::NaturalZeroOrAtLeastOne(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::NaturalZeroOrAtLeastOne");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinNaturalZeroOrAtLeastOne(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "NaturalZeroOrAtLeastOne", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "NaturalZeroOrAtLeastOne", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ComplementaryAtomic(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::ComplementaryAtomic");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinComplementaryAtomic(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "ComplementaryAtomic", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ComplementaryAtomic", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::AbsSignSplit(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::AbsSignSplit");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinAbsSignSplit(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "AbsSignSplit", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "AbsSignSplit", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ZeroProductSplit(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::ZeroProductSplit");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinZeroProductSplit(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "ZeroProductSplit", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ZeroProductSplit", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::LessOrGreaterEqual(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::LessOrGreaterEqual");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinLessOrGreaterEqual(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "LessOrGreaterEqual", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "LessOrGreaterEqual", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::GreaterOrLessEqual(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::GreaterOrLessEqual");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinGreaterOrLessEqual(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "GreaterOrLessEqual", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "GreaterOrLessEqual", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::WeakOrderLeOrGe(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::WeakOrderLeOrGe");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinWeakOrderLeOrGe(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "WeakOrderLeOrGe", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "WeakOrderLeOrGe", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::EqualityPlusStrictCoversWeak(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::EqualityPlusStrictCoversWeak");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinEqualityPlusStrictCoversWeak(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "EqualityPlusStrictCoversWeak", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "EqualityPlusStrictCoversWeak", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::CompleteResidues(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::CompleteResidues");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinCompleteResidues(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "CompleteResidues", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "CompleteResidues", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::IntegerSuccessorTail(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::IntegerSuccessorTail");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinIntegerSuccessorTail(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "IntegerSuccessorTail", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "IntegerSuccessorTail", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::SquareSumComponentNonzero(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::SquareSumComponentNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinSquareSumComponentNonzero(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "SquareSumComponentNonzero", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "SquareSumComponentNonzero", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::ClassicalImplication(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::ClassicalImplication");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinClassicalImplication(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "ClassicalImplication", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ClassicalImplication", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::OrFactSearchProofByBuiltinRule::IntegerDiscreteSplit(f0) => {
 let rule_id = Some("builtin.OrFactSearchProofByBuiltinRule::IntegerDiscreteSplit");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_or_fact__result__OrBuiltinIntegerDiscreteSplit(f0, capture, runtime))];
 let mut output = node("OrFactSearchProofByBuiltinRule", "IntegerDiscreteSplit", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "IntegerDiscreteSplit", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -22040,6 +22334,22 @@ output
 crate::execute::InducCaseBodySuccess::NestedCases(f0) => {
 let fields = vec![("0", capture_execute__execute_have_fn_by_induc_stmt__InducCaseListSuccess(f0, capture, runtime))];
 let mut output = node("InducCaseBodySuccess", "NestedCases", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainRequirementProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::Verified(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("PredicateDomainRequirementProof", "Verified", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::CheckedArgument(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentMembershipProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainRequirementProof", "CheckedArgument", fields);
 output
 },
 };
@@ -23284,6 +23594,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::MinAssoc
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__MinAssociativeProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "MinAssociative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::MaxAssociative(f0) => {
@@ -23291,6 +23602,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::MaxAssoc
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__MaxAssociativeProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "MaxAssociative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::MinMaxSum(f0) => {
@@ -23298,6 +23610,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::MinMaxSu
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__MinMaxSumProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "MinMaxSum", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::MinMaxProduct(f0) => {
@@ -23305,6 +23618,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::MinMaxPr
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__MinMaxProductProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "MinMaxProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::MinTranslation(f0) => {
@@ -23312,6 +23626,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::MinTrans
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__MinTranslationProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "MinTranslation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::MaxNegation(f0) => {
@@ -23319,6 +23634,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::MaxNegat
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__MaxNegationProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "MaxNegation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::FloorCharacterization(f0) => {
@@ -23326,6 +23642,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::FloorCha
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__FloorCharacterizationProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "FloorCharacterization", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::CeilCharacterization(f0) => {
@@ -23333,6 +23650,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::CeilChar
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__CeilCharacterizationProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "CeilCharacterization", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::GcdAddArgument(f0) => {
@@ -23340,6 +23658,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::GcdAddAr
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__GcdAddArgumentProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "GcdAddArgument", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::GcdNegation(f0) => {
@@ -23347,6 +23666,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::GcdNegat
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__GcdNegationProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "GcdNegation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::GcdPositiveScale(f0) => {
@@ -23354,6 +23674,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::GcdPosit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__GcdPositiveScaleProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "GcdPositiveScale", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::RemainderIntegerShift(f0) => {
@@ -23361,6 +23682,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::Remainde
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__RemainderIntegerShiftProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "RemainderIntegerShift", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::CartesianUnion(f0) => {
@@ -23368,6 +23690,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::Cartesia
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__CartesianUnionProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "CartesianUnion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule::PowerSetIntersection(f0) => {
@@ -23375,6 +23698,7 @@ let rule_id = Some("builtin.ElementaryIdentitySearchProofByBuiltinRule::PowerSet
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_elementary_identities__PowerSetIntersectionProof(f0, capture, runtime))];
 let mut output = node("ElementaryIdentitySearchProofByBuiltinRule", "PowerSetIntersection", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -27090,100 +27414,112 @@ let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute_
 let mut output = node("PredicateDomainProof", "ByRequirements", fields);
 output
 },
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByCheckedArguments(f0) => {
-let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentMembershipProof(item, capture, runtime)).collect()))];
-let mut output = node("PredicateDomainProof", "ByCheckedArguments", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByCheckedArgumentReturns(f0) => {
-let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentReturnProof(item, capture, runtime)).collect()))];
-let mut output = node("PredicateDomainProof", "ByCheckedArgumentReturns", fields);
-output
-},
 };
 capture.intern_evidence(output)
 }
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipReason(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::FunctionReturn { membership: f0, proof: f1 } => {
+let fields = vec![("membership", capture_ast__fact__atomic__InFact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__InFactSearchProofByKnownSpecialProperty(f1, capture, runtime))];
+let mut output = node("StructuralMembershipReason", "FunctionReturn", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Known(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactSearchProofByKnownAtomicFact(f0, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Known", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Closed(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__closed_calculation_proof__ClosedMembershipCalculationProof(f0, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Closed", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::KnownSubset(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__KnownSubsetMembershipProof(f0, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "KnownSubset", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::StandardSuperset(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "StandardSuperset", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Add { left: f0, right: f1 } => {
 let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Add", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Sub { left: f0, right: f1 } => {
 let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Sub", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Min { left: f0, right: f1 } => {
 let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Min", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Max { left: f0, right: f1 } => {
 let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Max", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::NaturalMaxDifference { maximum: f0, subtrahend: f1, right_operand: f2 } => {
 let fields = vec![("maximum", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("subtrahend", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime)), ("right_operand", JsonValue::Bool(*(f2)))];
 let mut output = node("StructuralMembershipReason", "NaturalMaxDifference", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Mul { left: f0, right: f1 } => {
 let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Mul", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Div { left: f0, right: f1 } => {
 let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Div", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::ExactIntegerDiv { numerator: f0, denominator: f1, divisibility: f2 } => {
 let fields = vec![("numerator", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("denominator", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime)), ("divisibility", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f2, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "ExactIntegerDiv", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Neg { argument: f0 } => {
 let fields = vec![("argument", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Neg", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Abs { argument: f0 } => {
 let fields = vec![("argument", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Abs", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Pow { base: f0, exponent: f1 } => {
 let fields = vec![("base", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("exponent", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Pow", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason::Intrinsic(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__IntrinsicCodomain(f0, capture, runtime))];
 let mut output = node("StructuralMembershipReason", "Intrinsic", fields);
+capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());
 output
 },
 };
@@ -27398,6 +27734,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ClosedSubtractionS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LessClosedSubtractionStrictBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ClosedSubtractionStrictBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::QuotientScalarStrictUpperBound(f0) => {
@@ -27405,6 +27742,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::QuotientScalarStri
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__selected_scalar_bt_rules__QuotientScalarBoundProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "QuotientScalarStrictUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::AbsPositiveFromNonzero(f0) => {
@@ -27412,6 +27750,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::AbsPositiveFromNon
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__abs_positive_from_nonzero__AbsPositiveFromNonzeroProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "AbsPositiveFromNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LnNegativeBelowOne(f0) => {
@@ -27419,6 +27758,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LnNegativeBelowOne
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_extra_sign__LnNegativeBelowOneProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LnNegativeBelowOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LnPositiveAboveOne(f0) => {
@@ -27426,6 +27766,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LnPositiveAboveOne
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_extra_sign__LnPositiveAboveOneProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LnPositiveAboveOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ProductPositiveNegativeStrict(f0) => {
@@ -27433,6 +27774,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ProductPositiveNeg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_extra_sign__ProductPositiveNegativeStrictProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ProductPositiveNegativeStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SumStrictOperands(f0) => {
@@ -27440,6 +27782,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SumStrictOperands"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__SumStrictOperandsProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SumStrictOperands", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::NegationNegativeFromLiteralBound(f0) => {
@@ -27447,6 +27790,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::NegationNegativeFr
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__NegationNegativeFromLiteralBoundProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "NegationNegativeFromLiteralBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::NegationStrictOrder(f0) => {
@@ -27454,6 +27798,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::NegationStrictOrde
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__NegationStrictOrderProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "NegationStrictOrder", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::CosPositiveOnOpenHalfPi(f0) => {
@@ -27461,6 +27806,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::CosPositiveOnOpenH
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__CosPositiveOnOpenHalfPiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "CosPositiveOnOpenHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SinNegativeOnOpenNegativePi(f0) => {
@@ -27468,6 +27814,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SinNegativeOnOpenN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__SinNegativeOnOpenNegativePiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SinNegativeOnOpenNegativePi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::TanNegativeOnOpenNegativeHalfPi(f0) => {
@@ -27475,6 +27822,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::TanNegativeOnOpenN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__TanNegativeOnOpenNegativeHalfPiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "TanNegativeOnOpenNegativeHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::CotNegativeOnOpenUpperHalfPi(f0) => {
@@ -27482,6 +27830,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::CotNegativeOnOpenU
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__CotNegativeOnOpenUpperHalfPiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "CotNegativeOnOpenUpperHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SinPositiveOnFirstQuadrant(f0) => {
@@ -27489,6 +27838,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SinPositiveOnFirst
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__SinPositiveOnFirstQuadrantProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SinPositiveOnFirstQuadrant", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::CosPositiveOnFirstQuadrant(f0) => {
@@ -27496,6 +27846,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::CosPositiveOnFirst
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__CosPositiveOnFirstQuadrantProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "CosPositiveOnFirstQuadrant", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::CosStrictDecreasingOnClosedPi(f0) => {
@@ -27503,6 +27854,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::CosStrictDecreasin
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__CosStrictDecreasingOnClosedPiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "CosStrictDecreasingOnClosedPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::TanStrictIncreasingOnOpenHalfPi(f0) => {
@@ -27510,6 +27862,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::TanStrictIncreasin
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__TanStrictIncreasingOnOpenHalfPiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "TanStrictIncreasingOnOpenHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::CotStrictDecreasingOnOpenPi(f0) => {
@@ -27517,6 +27870,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::CotStrictDecreasin
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__CotStrictDecreasingOnOpenPiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "CotStrictDecreasingOnOpenPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::MulLeftNegativeReversesStrictLess(f0) => {
@@ -27524,6 +27878,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::MulLeftNegativeRev
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftNegativeReversesStrictLessProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "MulLeftNegativeReversesStrictLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::MulRightNegativeReversesStrictLess(f0) => {
@@ -27531,6 +27886,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::MulRightNegativeRe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulRightNegativeReversesStrictLessProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "MulRightNegativeReversesStrictLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::MulLeftRightNegativeReversesStrictLess(f0) => {
@@ -27538,6 +27894,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::MulLeftRightNegati
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftRightNegativeReversesStrictLessProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "MulLeftRightNegativeReversesStrictLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::MulRightLeftNegativeReversesStrictLess(f0) => {
@@ -27545,6 +27902,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::MulRightLeftNegati
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulRightLeftNegativeReversesStrictLessProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "MulRightLeftNegativeReversesStrictLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::TanPositiveOnFirstQuadrant(f0) => {
@@ -27552,6 +27910,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::TanPositiveOnFirst
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_first_quadrant__TanPositiveOnFirstQuadrantProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "TanPositiveOnFirstQuadrant", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::CotPositiveOnFirstQuadrant(f0) => {
@@ -27559,6 +27918,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::CotPositiveOnFirst
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_first_quadrant__CotPositiveOnFirstQuadrantProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "CotPositiveOnFirstQuadrant", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SinPositiveOnOpenPi(f0) => {
@@ -27566,6 +27926,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SinPositiveOnOpenP
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_interval_order__SinPositiveOnOpenPiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SinPositiveOnOpenPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SinStrictMonotoneOnHalfPi(f0) => {
@@ -27573,6 +27934,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SinStrictMonotoneO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_interval_order__SinStrictMonotoneOnHalfPiProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SinStrictMonotoneOnHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::FloorStrictUpperBound(f0) => {
@@ -27580,6 +27942,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::FloorStrictUpperBo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__rounding_definition_bounds__FloorStrictUpperBoundProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "FloorStrictUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::CeilStrictLowerBound(f0) => {
@@ -27587,6 +27950,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::CeilStrictLowerBou
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__rounding_definition_bounds__CeilStrictLowerBoundProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "CeilStrictLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ExpStrictMonotone(f0) => {
@@ -27594,6 +27958,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ExpStrictMonotone"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__exp_ln_order__ExpStrictMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ExpStrictMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LnStrictMonotone(f0) => {
@@ -27601,6 +27966,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LnStrictMonotone")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__exp_ln_order__LnStrictMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LnStrictMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ExpStrictOrderReflection(f0) => {
@@ -27608,6 +27974,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ExpStrictOrderRefl
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__exp_ln_order__ExpStrictOrderReflectionProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ExpStrictOrderReflection", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LnStrictOrderReflection(f0) => {
@@ -27615,6 +27982,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LnStrictOrderRefle
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__exp_ln_order__LnStrictOrderReflectionProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LnStrictOrderReflection", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::FactorialStrictMonotone(f0) => {
@@ -27622,6 +27990,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::FactorialStrictMon
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__factorial_order__FactorialStrictMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "FactorialStrictMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::FromKnownGreater(f0) => {
@@ -27629,6 +27998,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::FromKnownGreater")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__FromKnownGreaterBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "FromKnownGreater", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::FromKnownOrderComplement(f0) => {
@@ -27636,6 +28006,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::FromKnownOrderComp
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_complement__FromKnownOrderComplementBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "FromKnownOrderComplement", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ClosedNumericComparison(f0) => {
@@ -27643,6 +28014,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ClosedNumericCompa
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__ClosedNumericComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ClosedNumericComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::PiMultipleComparison(f0) => {
@@ -27650,6 +28022,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::PiMultipleComparis
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__PiMultipleComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "PiMultipleComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SubtractOneLess(f0) => {
@@ -27657,6 +28030,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SubtractOneLess");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__SubtractOneLessBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SubtractOneLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SubtractPositiveClosedLess(f0) => {
@@ -27664,6 +28038,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SubtractPositiveCl
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__SubtractPositiveClosedLessBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SubtractPositiveClosedLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ArctanPrincipalLowerBound(f0) => {
@@ -27671,6 +28046,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ArctanPrincipalLow
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__ArctanPrincipalLowerBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ArctanPrincipalLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ArctanPrincipalUpperBound(f0) => {
@@ -27678,6 +28054,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ArctanPrincipalUpp
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__ArctanPrincipalUpperBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ArctanPrincipalUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ArccotPrincipalLowerBound(f0) => {
@@ -27685,6 +28062,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ArccotPrincipalLow
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__ArccotPrincipalLowerBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ArccotPrincipalLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ArccotPrincipalUpperBound(f0) => {
@@ -27692,6 +28070,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ArccotPrincipalUpp
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__ArccotPrincipalUpperBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ArccotPrincipalUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SumBothPositive(f0) => {
@@ -27699,6 +28078,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SumBothPositive");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__SumBothPositiveBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SumBothPositive", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SumLeftStrictRightNonnegative(f0) => {
@@ -27706,6 +28086,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SumLeftStrictRight
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__SumLeftStrictRightNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SumLeftStrictRightNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SumLeftNonnegativeRightStrict(f0) => {
@@ -27713,6 +28094,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SumLeftNonnegative
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__SumLeftNonnegativeRightStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SumLeftNonnegativeRightStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ProductBothPositive(f0) => {
@@ -27720,6 +28102,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ProductBothPositiv
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__ProductBothPositiveBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ProductBothPositive", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::EvenPowPositiveFromNonzero(f0) => {
@@ -27727,6 +28110,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::EvenPowPositiveFro
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__EvenPowPositiveFromNonzeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "EvenPowPositiveFromNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::PowPositiveFromPositiveBase(f0) => {
@@ -27734,6 +28118,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::PowPositiveFromPos
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__PowPositiveFromPositiveBaseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "PowPositiveFromPositiveBase", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SqrtPositive(f0) => {
@@ -27741,6 +28126,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SqrtPositive");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__SqrtPositiveBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SqrtPositive", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::SqrtMonotoneIncreasing(f0) => {
@@ -27748,6 +28134,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::SqrtMonotoneIncrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__SqrtMonotoneIncreasingBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "SqrtMonotoneIncreasing", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LogOrderPreservingStrict(f0) => {
@@ -27755,6 +28142,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LogOrderPreserving
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LogOrderPreservingStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LogOrderPreservingStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LogStrictDecreasing(f0) => {
@@ -27762,6 +28150,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LogStrictDecreasin
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__log_unit_interval_order__LogStrictDecreasingProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LogStrictDecreasing", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LogPositiveFromBaseAndArgGtOne(f0) => {
@@ -27769,6 +28158,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LogPositiveFromBas
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LogPositiveFromBaseAndArgGtOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LogPositiveFromBaseAndArgGtOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LogNegativeFromBaseGtOneArgInUnitInterval(f0) => {
@@ -27776,6 +28166,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LogNegativeFromBas
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LogNegativeFromBaseGtOneArgInUnitIntervalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LogNegativeFromBaseGtOneArgInUnitInterval", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LessTransitivity(f0) => {
@@ -27783,6 +28174,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LessTransitivity")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LessTransitivityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LessTransitivity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LessFromPosDifference(f0) => {
@@ -27790,6 +28182,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LessFromPosDiffere
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LessFromPosDifferenceBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LessFromPosDifference", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::LessFromNegativeDifference(f0) => {
@@ -27797,6 +28190,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::LessFromNegativeDi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LessFromNegativeDifferenceBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "LessFromNegativeDifference", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::NegativeDifferenceFromLess(f0) => {
@@ -27804,6 +28198,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::NegativeDifference
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__NegativeDifferenceFromLessBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "NegativeDifferenceFromLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::PosDifferenceFromLess(f0) => {
@@ -27811,6 +28206,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::PosDifferenceFromL
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__PosDifferenceFromLessBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "PosDifferenceFromLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ModRemainderStrictUpperBound(f0) => {
@@ -27818,6 +28214,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ModRemainderStrict
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__ModRemainderStrictUpperBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "ModRemainderStrictUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::DivMonotoneStrictSamePosDivisor(f0) => {
@@ -27825,6 +28222,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::DivMonotoneStrictS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__DivMonotoneStrictSamePosDivisorBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "DivMonotoneStrictSamePosDivisor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::DivByGtOneLessSelf(f0) => {
@@ -27832,6 +28230,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::DivByGtOneLessSelf
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__DivByGtOneLessSelfBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "DivByGtOneLessSelf", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::DivMonotoneStrictSameNegDivisor(f0) => {
@@ -27839,6 +28238,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::DivMonotoneStrictS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__DivMonotoneStrictSameNegDivisorBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "DivMonotoneStrictSameNegDivisor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLt(f0) => {
@@ -27846,6 +28246,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::NumericLowerBoundW
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__NumericLowerBoundWeakenLtBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "NumericLowerBoundWeakenLt", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLt(f0) => {
@@ -27853,6 +28254,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::NumericUpperBoundW
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__NumericUpperBoundWeakenLtBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "NumericUpperBoundWeakenLt", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::PositiveEvenGtOne(f0) => {
@@ -27860,6 +28262,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::PositiveEvenGtOne"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__PositiveEvenGtOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "PositiveEvenGtOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::AddRightCongruenceStrict(f0) => {
@@ -27867,6 +28270,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::AddRightCongruence
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__AddRightCongruenceStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "AddRightCongruenceStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(f0) => {
@@ -27874,6 +28278,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::AddLeftCongruenceS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__AddLeftCongruenceStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "AddLeftCongruenceStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::MulLeftPositiveMonotoneStrict(f0) => {
@@ -27881,6 +28286,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::MulLeftPositiveMon
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__MulLeftPositiveMonotoneStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "MulLeftPositiveMonotoneStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::MulRightPositiveMonotoneStrict(f0) => {
@@ -27888,6 +28294,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::MulRightPositiveMo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__MulRightPositiveMonotoneStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "MulRightPositiveMonotoneStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::OrderSignFromPositiveLiteralBound(f0) => {
@@ -27895,6 +28302,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::OrderSignFromPosit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_sign_from_literal_bound__OrderSignFromPositiveLiteralBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "OrderSignFromPositiveLiteralBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(f0) => {
@@ -27902,6 +28310,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::OrderFlipMulMinusO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_flip_mul_minus_one__OrderFlipMulMinusOneToLessBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "OrderFlipMulMinusOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(f0) => {
@@ -27909,6 +28318,7 @@ let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::FiniteSetSizePrope
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__FiniteSetSizeProperSubsetLtBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessFactSearchProofByBuiltinRule", "FiniteSetSizeProperSubsetLt", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -27922,6 +28332,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::ClosedSubtracti
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__GreaterClosedSubtractionStrictBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "ClosedSubtractionStrictBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::MulLeftNegativeReversesStrictGreater(f0) => {
@@ -27929,6 +28340,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::MulLeftNegative
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftNegativeReversesStrictGreaterProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "MulLeftNegativeReversesStrictGreater", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::MulRightNegativeReversesStrictGreater(f0) => {
@@ -27936,6 +28348,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::MulRightNegativ
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulRightNegativeReversesStrictGreaterProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "MulRightNegativeReversesStrictGreater", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::MulLeftRightNegativeReversesStrictGreater(f0) => {
@@ -27943,6 +28356,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::MulLeftRightNeg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftRightNegativeReversesStrictGreaterProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "MulLeftRightNegativeReversesStrictGreater", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::MulRightLeftNegativeReversesStrictGreater(f0) => {
@@ -27950,6 +28364,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::MulRightLeftNeg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulRightLeftNegativeReversesStrictGreaterProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "MulRightLeftNegativeReversesStrictGreater", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::TanGreaterZeroOnFirstQuadrant(f0) => {
@@ -27957,6 +28372,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::TanGreaterZeroO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_first_quadrant__TanGreaterZeroOnFirstQuadrantProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "TanGreaterZeroOnFirstQuadrant", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::CotGreaterZeroOnFirstQuadrant(f0) => {
@@ -27964,6 +28380,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::CotGreaterZeroO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_first_quadrant__CotGreaterZeroOnFirstQuadrantProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "CotGreaterZeroOnFirstQuadrant", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::FromKnownOrderComplement(f0) => {
@@ -27971,6 +28388,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::FromKnownOrderC
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_complement__FromKnownOrderComplementBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "FromKnownOrderComplement", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::ClosedNumericComparison(f0) => {
@@ -27978,6 +28396,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::ClosedNumericCo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__ClosedNumericComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "ClosedNumericComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::FromKnownLess(f0) => {
@@ -27985,6 +28404,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::FromKnownLess")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__FromKnownLessBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "FromKnownLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::AddRightCongruenceStrict(f0) => {
@@ -27992,6 +28412,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::AddRightCongrue
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__AddRightCongruenceStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "AddRightCongruenceStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(f0) => {
@@ -27999,6 +28420,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::AddLeftCongruen
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__AddLeftCongruenceStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "AddLeftCongruenceStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::MulLeftPositiveMonotoneStrict(f0) => {
@@ -28006,6 +28428,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::MulLeftPositive
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__MulLeftPositiveMonotoneStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "MulLeftPositiveMonotoneStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::MulRightPositiveMonotoneStrict(f0) => {
@@ -28013,6 +28436,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::MulRightPositiv
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__MulRightPositiveMonotoneStrictBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "MulRightPositiveMonotoneStrict", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::FromPositiveRealMembership(f0) => {
@@ -28020,6 +28444,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::FromPositiveRea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__FromPositiveRealMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "FromPositiveRealMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterZero(f0) => {
@@ -28027,6 +28452,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::NativeEulerGrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__NativeEulerGreaterZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "NativeEulerGreaterZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::NativeEulerGreaterOne(f0) => {
@@ -28034,6 +28460,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::NativeEulerGrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__NativeEulerGreaterOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "NativeEulerGreaterOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::NativePiGreaterZero(f0) => {
@@ -28041,6 +28468,7 @@ let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::NativePiGreater
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__NativePiGreaterZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterFactSearchProofByBuiltinRule", "NativePiGreaterZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -28054,6 +28482,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FloorSumLower
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__elementary_bounds__FloorSumLowerBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FloorSumLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorSumUpperBound(f0) => {
@@ -28061,6 +28490,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FloorSumUpper
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__elementary_bounds__FloorSumUpperBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FloorSumUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::CeilSumUpperBound(f0) => {
@@ -28068,6 +28498,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::CeilSumUpperB
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__elementary_bounds__CeilSumUpperBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "CeilSumUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::RealReverseTriangle(f0) => {
@@ -28075,6 +28506,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::RealReverseTr
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__elementary_bounds__RealReverseTriangleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "RealReverseTriangle", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SubtractionOrderPairs(f0) => {
@@ -28082,6 +28514,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SubtractionOr
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__selected_scalar_bt_rules__SubtractionOrderPairsProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SubtractionOrderPairs", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsSquareRadius(f0) => {
@@ -28089,6 +28522,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsSquareRadi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__selected_scalar_bt_rules__AbsSquareRadiusProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsSquareRadius", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::QuotientScalarUpperBound(f0) => {
@@ -28096,6 +28530,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::QuotientScala
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__selected_scalar_bt_rules__QuotientScalarBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "QuotientScalarUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NonnegativeSquareOrderReflection(f0) => {
@@ -28103,6 +28538,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NonnegativeSq
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__nonnegative_square_order_reflection__NonnegativeSquareOrderReflectionProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NonnegativeSquareOrderReflection", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsDifferenceTriangle(f0) => {
@@ -28110,6 +28546,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsDifference
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__real_metric_bounds__AbsDifferenceTriangleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsDifferenceTriangle", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MaxLipschitzFromCoordinateBounds(f0) => {
@@ -28117,6 +28554,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MaxLipschitzF
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__real_metric_bounds__MaxLipschitzFromCoordinateBoundsProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MaxLipschitzFromCoordinateBounds", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MinLipschitzFromCoordinateBounds(f0) => {
@@ -28124,6 +28562,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MinLipschitzF
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__real_metric_bounds__MinLipschitzFromCoordinateBoundsProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MinLipschitzFromCoordinateBounds", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ProductNonnegativeNegativeWeak(f0) => {
@@ -28131,6 +28570,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ProductNonneg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_extra_sign__ProductNonnegativeNegativeWeakProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ProductNonnegativeNegativeWeak", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SqrtMonotoneFromDefinedRoots(f0) => {
@@ -28138,6 +28578,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SqrtMonotoneF
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__sqrt_defined_order__SqrtMonotoneFromDefinedRootsProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SqrtMonotoneFromDefinedRoots", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsFromIntervalBounds(f0) => {
@@ -28145,6 +28586,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsFromInterv
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__AbsFromIntervalBoundsProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsFromIntervalBounds", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NegationWeakOrder(f0) => {
@@ -28152,6 +28594,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NegationWeakO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__NegationWeakOrderProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NegationWeakOrder", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorGap(f0) => {
@@ -28159,6 +28602,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::IntegerSucces
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__IntegerSuccessorGapProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "IntegerSuccessorGap", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LiteralWeakBound(f0) => {
@@ -28166,6 +28610,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LiteralWeakBo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__LiteralWeakBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LiteralWeakBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SignLowerBound(f0) => {
@@ -28173,6 +28618,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SignLowerBoun
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__sign_extremum_order__SignLowerBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SignLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SignUpperBound(f0) => {
@@ -28180,6 +28626,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SignUpperBoun
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__sign_extremum_order__SignUpperBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SignUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SignWeakMonotone(f0) => {
@@ -28187,6 +28634,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SignWeakMonot
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__sign_extremum_order__SignWeakMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SignWeakMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MinLowerBound(f0) => {
@@ -28194,6 +28642,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MinLowerBound
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__sign_extremum_order__MinLowerBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MinLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MaxUpperBound(f0) => {
@@ -28201,6 +28650,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MaxUpperBound
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__sign_extremum_order__MaxUpperBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MaxUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MinWeakMonotone(f0) => {
@@ -28208,6 +28658,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MinWeakMonoto
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__sign_extremum_order__MinWeakMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MinWeakMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MaxWeakMonotone(f0) => {
@@ -28215,6 +28666,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MaxWeakMonoto
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__sign_extremum_order__MaxWeakMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MaxWeakMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SinWeakIncreasingOnClosedHalfPi(f0) => {
@@ -28222,6 +28674,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SinWeakIncrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__SinWeakIncreasingOnClosedHalfPiProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SinWeakIncreasingOnClosedHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::CosWeakDecreasingOnClosedPi(f0) => {
@@ -28229,6 +28682,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::CosWeakDecrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__CosWeakDecreasingOnClosedPiProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "CosWeakDecreasingOnClosedPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::TanWeakIncreasingOnOpenHalfPi(f0) => {
@@ -28236,6 +28690,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::TanWeakIncrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__TanWeakIncreasingOnOpenHalfPiProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "TanWeakIncreasingOnOpenHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::CotWeakDecreasingOnOpenPi(f0) => {
@@ -28243,6 +28698,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::CotWeakDecrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_additional_interval_order__CotWeakDecreasingOnOpenPiProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "CotWeakDecreasingOnOpenPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MulLeftNonpositiveReversesWeakLessEqual(f0) => {
@@ -28250,6 +28706,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MulLeftNonpos
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftNonpositiveReversesWeakLessEqualProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MulLeftNonpositiveReversesWeakLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MulRightNonpositiveReversesWeakLessEqual(f0) => {
@@ -28257,6 +28714,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MulRightNonpo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulRightNonpositiveReversesWeakLessEqualProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MulRightNonpositiveReversesWeakLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MulLeftRightNonpositiveReversesWeakLessEqual(f0) => {
@@ -28264,6 +28722,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MulLeftRightN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftRightNonpositiveReversesWeakLessEqualProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MulLeftRightNonpositiveReversesWeakLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MulRightLeftNonpositiveReversesWeakLessEqual(f0) => {
@@ -28271,6 +28730,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MulRightLeftN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulRightLeftNonpositiveReversesWeakLessEqualProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MulRightLeftNonpositiveReversesWeakLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorLowerBound(f0) => {
@@ -28278,6 +28738,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FloorLowerBou
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__rounding_definition_bounds__FloorLowerBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FloorLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::CeilUpperBound(f0) => {
@@ -28285,6 +28746,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::CeilUpperBoun
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__rounding_definition_bounds__CeilUpperBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "CeilUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ExpWeakMonotone(f0) => {
@@ -28292,6 +28754,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ExpWeakMonoto
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__exp_ln_order__ExpWeakMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ExpWeakMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LnWeakMonotone(f0) => {
@@ -28299,6 +28762,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LnWeakMonoton
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__exp_ln_order__LnWeakMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LnWeakMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ExpWeakOrderReflection(f0) => {
@@ -28306,6 +28770,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ExpWeakOrderR
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__exp_ln_order__ExpWeakOrderReflectionProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ExpWeakOrderReflection", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LnWeakOrderReflection(f0) => {
@@ -28313,6 +28778,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LnWeakOrderRe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__exp_ln_order__LnWeakOrderReflectionProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LnWeakOrderReflection", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FactorialMonotone(f0) => {
@@ -28320,6 +28786,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FactorialMono
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__factorial_order__FactorialMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FactorialMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorMonotone(f0) => {
@@ -28327,6 +28794,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FloorMonotone
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__rounding_order__FloorMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FloorMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::CeilMonotone(f0) => {
@@ -28334,6 +28802,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::CeilMonotone"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__rounding_order__CeilMonotoneProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "CeilMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ComplexTriangle(f0) => {
@@ -28341,6 +28810,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ComplexTriang
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__complex_triangle__ComplexTriangleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ComplexTriangle", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetSumTriangle(f0) => {
@@ -28348,6 +28818,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FiniteSetSumT
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__finite_sum_triangle__FiniteSetSumTriangleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FiniteSetSumTriangle", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ComplexReverseTriangle(f0) => {
@@ -28355,6 +28826,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ComplexRevers
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__complex_triangle__ComplexReverseTriangleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ComplexReverseTriangle", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LcmCommonMultipleBound(f0) => {
@@ -28362,6 +28834,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LcmCommonMult
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__lcm_order__LcmCommonMultipleBoundProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LcmCommonMultipleBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(f0) => {
@@ -28369,6 +28842,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ClosedSubtrac
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualClosedSubtractionBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ClosedSubtractionBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative => {
@@ -28376,6 +28850,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ComplexModulu
 let fields = vec![];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ComplexModulusNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownGreaterEqual(f0) => {
@@ -28383,6 +28858,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FromKnownGrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FromKnownGreaterEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FromKnownGreaterEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(f0) => {
@@ -28390,6 +28866,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FromKnownOrde
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_complement__FromKnownOrderComplementBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FromKnownOrderComplement", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(f0) => {
@@ -28397,6 +28874,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ClosedNumeric
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__ClosedNumericComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ClosedNumericComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(f0) => {
@@ -28404,6 +28882,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::OrderReflexiv
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__OrderReflexivityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "OrderReflexivity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownLess(f0) => {
@@ -28411,6 +28890,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FromKnownLess
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FromKnownLessBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FromKnownLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalLowerBound(f0) => {
@@ -28418,6 +28898,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ArcsinPrincip
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__ArcsinPrincipalLowerBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ArcsinPrincipalLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalUpperBound(f0) => {
@@ -28425,6 +28906,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ArcsinPrincip
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__ArcsinPrincipalUpperBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ArcsinPrincipalUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalLowerBound(f0) => {
@@ -28432,6 +28914,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ArccosPrincip
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__ArccosPrincipalLowerBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ArccosPrincipalLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalUpperBound(f0) => {
@@ -28439,6 +28922,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ArccosPrincip
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__ArccosPrincipalUpperBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ArccosPrincipalUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::UnitCircleLowerBound(f0) => {
@@ -28446,6 +28930,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::UnitCircleLow
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__UnitCircleLowerBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "UnitCircleLowerBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::UnitCircleUpperBound(f0) => {
@@ -28453,6 +28938,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::UnitCircleUpp
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__UnitCircleUpperBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "UnitCircleUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(f0) => {
@@ -28460,6 +28946,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsNonnegativ
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AddRightNonnegative(f0) => {
@@ -28467,6 +28954,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AddRightNonne
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AddRightNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AddRightNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AddLeftNonnegative(f0) => {
@@ -28474,6 +28962,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AddLeftNonneg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AddLeftNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AddLeftNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AddRightCongruence(f0) => {
@@ -28481,6 +28970,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AddRightCongr
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AddRightCongruenceBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AddRightCongruence", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AddLeftCongruence(f0) => {
@@ -28488,6 +28978,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AddLeftCongru
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AddLeftCongruenceBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AddLeftCongruence", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SubNonnegative(f0) => {
@@ -28495,6 +28986,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SubNonnegativ
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__SubNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SubNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MulLeftNonnegativeMonotone(f0) => {
@@ -28502,6 +28994,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MulLeftNonneg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__MulLeftNonnegativeMonotoneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MulLeftNonnegativeMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::MulRightNonnegativeMonotone(f0) => {
@@ -28509,6 +29002,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::MulRightNonne
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__MulRightNonnegativeMonotoneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "MulRightNonnegativeMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsLeFromSymmetricBounds(f0) => {
@@ -28516,6 +29010,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsLeFromSymm
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsLeFromSymmetricBoundsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsLeFromSymmetricBounds", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesUpper(f0) => {
@@ -28523,6 +29018,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesU
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsLeImpliesUpperBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsLeImpliesUpper", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesNegUpper(f0) => {
@@ -28530,6 +29026,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsLeImpliesNegUpperBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsLeImpliesNegUpper", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsSelfUpper(f0) => {
@@ -28537,6 +29034,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsSelfUpper"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsSelfUpperBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsSelfUpper", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsSelfLower(f0) => {
@@ -28544,6 +29042,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsSelfLower"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsSelfLowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsSelfLower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsTriangleInequality(f0) => {
@@ -28551,6 +29050,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsTriangleIn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsTriangleInequalityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsTriangleInequality", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsReverseTriangleAdd(f0) => {
@@ -28558,6 +29058,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsReverseTri
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsReverseTriangleAddBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsReverseTriangleAdd", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::AbsReverseTriangleSub(f0) => {
@@ -28565,6 +29066,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::AbsReverseTri
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__AbsReverseTriangleSubBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "AbsReverseTriangleSub", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(f0) => {
@@ -28572,6 +29074,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SumOfNonnegat
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__SumOfNonnegativesBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SumOfNonnegatives", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ProductOfNonnegatives(f0) => {
@@ -28579,6 +29082,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ProductOfNonn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__ProductOfNonnegativesBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ProductOfNonnegatives", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::EvenPowNonnegative(f0) => {
@@ -28586,6 +29090,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::EvenPowNonneg
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__EvenPowNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "EvenPowNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::PowNonnegFromPositiveBase(f0) => {
@@ -28593,6 +29098,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::PowNonnegFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__PowNonnegFromPositiveBaseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "PowNonnegFromPositiveBase", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::PowNonnegFromNonnegBasePosIntExp(f0) => {
@@ -28600,6 +29106,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::PowNonnegFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "PowNonnegFromNonnegBasePosIntExp", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SqrtNonnegative(f0) => {
@@ -28607,6 +29114,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SqrtNonnegati
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__SqrtNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SqrtNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::SqrtMonotoneNondecreasing(f0) => {
@@ -28614,6 +29122,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::SqrtMonotoneN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__SqrtMonotoneNondecreasingBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "SqrtMonotoneNondecreasing", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(f0) => {
@@ -28621,6 +29130,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FromKnownInPo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FromKnownInPositiveNaturalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FromKnownInPositiveNatural", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LogOrderPreservingWeak(f0) => {
@@ -28628,6 +29138,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LogOrderPrese
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LogOrderPreservingWeakBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LogOrderPreservingWeak", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LogWeakDecreasing(f0) => {
@@ -28635,6 +29146,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LogWeakDecrea
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__log_unit_interval_order__LogWeakDecreasingProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LogWeakDecreasing", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity(f0) => {
@@ -28642,6 +29154,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LessEqualTran
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualTransitivityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LessEqualTransitivity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(f0) => {
@@ -28649,6 +29162,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LessEqualFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFromNonnegDifferenceBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LessEqualFromNonnegDifference", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonpositiveDifference(f0) => {
@@ -28656,6 +29170,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LessEqualFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFromNonpositiveDifferenceBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LessEqualFromNonpositiveDifference", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NonpositiveDifferenceFromLessEqual(f0) => {
@@ -28663,6 +29178,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NonpositiveDi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NonpositiveDifferenceFromLessEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NonpositiveDifferenceFromLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NonnegDifferenceFromLessEqual(f0) => {
@@ -28670,6 +29186,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NonnegDiffere
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NonnegDifferenceFromLessEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NonnegDifferenceFromLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::ModRemainderNonnegative(f0) => {
@@ -28677,6 +29194,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::ModRemainderN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__ModRemainderNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "ModRemainderNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::DivMonotoneWeakSamePosDivisor(f0) => {
@@ -28684,6 +29202,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::DivMonotoneWe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__DivMonotoneWeakSamePosDivisorBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "DivMonotoneWeakSamePosDivisor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeNonnegativeLe(f0) => {
@@ -28691,6 +29210,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FiniteSetSize
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FiniteSetSizeNonnegativeLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FiniteSetSizeNonnegativeLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeAtLeastOneLe(f0) => {
@@ -28698,6 +29218,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FiniteSetSize
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FiniteSetSizeAtLeastOneLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FiniteSetSizeAtLeastOneLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeSubsetLe(f0) => {
@@ -28705,6 +29226,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FiniteSetSize
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FiniteSetSizeSubsetLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FiniteSetSizeSubsetLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::DivMonotoneWeakSameNegDivisor(f0) => {
@@ -28712,6 +29234,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::DivMonotoneWe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__DivMonotoneWeakSameNegDivisorBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "DivMonotoneWeakSameNegDivisor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualFromPosDivProductBound(f0) => {
@@ -28719,6 +29242,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LessEqualFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFromPosDivProductBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LessEqualFromPosDivProductBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualFromPosDenomQuotientBound(f0) => {
@@ -28726,6 +29250,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LessEqualFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFromPosDenomQuotientBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LessEqualFromPosDenomQuotientBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLe(f0) => {
@@ -28733,6 +29258,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NumericLowerB
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericLowerBoundWeakenLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NumericLowerBoundWeakenLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundFromStrictPredecessorLe(f0) => {
@@ -28740,6 +29266,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NumericLowerB
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NumericLowerBoundFromStrictPredecessorLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLe(f0) => {
@@ -28747,6 +29274,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NumericUpperB
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericUpperBoundWeakenLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NumericUpperBoundWeakenLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorLe(f0) => {
@@ -28754,6 +29282,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::IntegerSucces
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__IntegerSuccessorLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "IntegerSuccessorLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::IntegerAdjacencyLe(f0) => {
@@ -28761,6 +29290,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::IntegerAdjace
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__IntegerAdjacencyLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "IntegerAdjacencyLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::IntegerPredecessorLe(f0) => {
@@ -28768,6 +29298,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::IntegerPredec
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__IntegerPredecessorLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "IntegerPredecessorLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::IntegerDiffAtLeastOneLe(f0) => {
@@ -28775,6 +29306,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::IntegerDiffAt
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__IntegerDiffAtLeastOneLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "IntegerDiffAtLeastOneLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::PositiveCommonDivisorLeGcd(f0) => {
@@ -28782,6 +29314,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::PositiveCommo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__PositiveCommonDivisorLeGcdBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "PositiveCommonDivisorLeGcd", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetMaxMemberLe(f0) => {
@@ -28789,6 +29322,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FiniteSetMaxM
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FiniteSetMaxMemberLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FiniteSetMaxMemberLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetMinMemberLe(f0) => {
@@ -28796,6 +29330,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FiniteSetMinM
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FiniteSetMinMemberLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FiniteSetMinMemberLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeUnionLeSum(f0) => {
@@ -28803,6 +29338,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FiniteSetSize
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FiniteSetSizeUnionLeSumBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FiniteSetSizeUnionLeSum", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeSurjectionCodomainLeDomain(f0) => {
@@ -28810,6 +29346,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FiniteSetSize
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__FiniteSetSizeSurjectionCodomainLeDomainBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "FiniteSetSizeSurjectionCodomainLeDomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(f0) => {
@@ -28817,6 +29354,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::OrderFlipMulM
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_flip_mul_minus_one__OrderFlipMulMinusOneToLessEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "OrderFlipMulMinusOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::OrderSignFromNegativeLiteralBound(f0) => {
@@ -28824,6 +29362,7 @@ let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::OrderSignFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_sign_from_literal_bound__OrderSignFromNegativeLiteralBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "OrderSignFromNegativeLiteralBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -28837,6 +29376,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::MulLeftNon
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftNonpositiveReversesWeakGreaterEqualProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "MulLeftNonpositiveReversesWeakGreaterEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::MulRightNonpositiveReversesWeakGreaterEqual(f0) => {
@@ -28844,6 +29384,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::MulRightNo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulRightNonpositiveReversesWeakGreaterEqualProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "MulRightNonpositiveReversesWeakGreaterEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::MulLeftRightNonpositiveReversesWeakGreaterEqual(f0) => {
@@ -28851,6 +29392,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::MulLeftRig
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftRightNonpositiveReversesWeakGreaterEqualProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "MulLeftRightNonpositiveReversesWeakGreaterEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::MulRightLeftNonpositiveReversesWeakGreaterEqual(f0) => {
@@ -28858,6 +29400,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::MulRightLe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulRightLeftNonpositiveReversesWeakGreaterEqualProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "MulRightLeftNonpositiveReversesWeakGreaterEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::SumOfNonnegatives(f0) => {
@@ -28865,6 +29408,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::SumOfNonne
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__GreaterEqualSumOfNonnegativesBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "SumOfNonnegatives", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(f0) => {
@@ -28872,6 +29416,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::ClosedSubt
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__GreaterEqualClosedSubtractionBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "ClosedSubtractionBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ComplexModulusNonnegative => {
@@ -28879,6 +29424,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::ComplexMod
 let fields = vec![];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "ComplexModulusNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownLessEqual(f0) => {
@@ -28886,6 +29432,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::FromKnownL
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__FromKnownLessEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "FromKnownLessEqual", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(f0) => {
@@ -28893,6 +29440,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::FromKnownO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_complement__FromKnownOrderComplementBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "FromKnownOrderComplement", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(f0) => {
@@ -28900,6 +29448,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::ClosedNume
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__ClosedNumericComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "ClosedNumericComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::OrderReflexivity(f0) => {
@@ -28907,6 +29456,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::OrderRefle
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__OrderReflexivityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "OrderReflexivity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownGreater(f0) => {
@@ -28914,6 +29464,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::FromKnownG
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__FromKnownGreaterBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "FromKnownGreater", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(f0) => {
@@ -28921,6 +29472,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::FromKnownI
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__FromKnownInPositiveNaturalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "FromKnownInPositiveNatural", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::PredecessorNonNegFromAtLeastOne(f0) => {
@@ -28928,6 +29480,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::Predecesso
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__PredecessorNonNegFromAtLeastOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "PredecessorNonNegFromAtLeastOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FiniteSetSizeNonnegative(f0) => {
@@ -28935,6 +29488,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::FiniteSetS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__FiniteSetSizeNonnegativeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "FiniteSetSizeNonnegative", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::FiniteSetSizeAtLeastOne(f0) => {
@@ -28942,6 +29496,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::FiniteSetS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__FiniteSetSizeAtLeastOneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "FiniteSetSizeAtLeastOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::OrderFlipMulMinusOne(f0) => {
@@ -28949,6 +29504,7 @@ let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::OrderFlipM
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_flip_mul_minus_one__OrderFlipMulMinusOneToGreaterEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "OrderFlipMulMinusOne", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -28962,6 +29518,7 @@ let rule_id = Some("builtin.IsSetFactSearchProofByBuiltinRule::AlwaysTrue");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_set__IsSetAlwaysTrueBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsSetFactSearchProofByBuiltinRule", "AlwaysTrue", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -28975,6 +29532,7 @@ let rule_id = Some("builtin.IsNonemptySetFactSearchProofByBuiltinRule::StandardS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_nonempty_set__StandardSetNonemptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsNonemptySetFactSearchProofByBuiltinRule", "StandardSetNonempty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule::LiteralListSetNonempty(f0) => {
@@ -28982,6 +29540,7 @@ let rule_id = Some("builtin.IsNonemptySetFactSearchProofByBuiltinRule::LiteralLi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_nonempty_set__LiteralListSetNonemptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsNonemptySetFactSearchProofByBuiltinRule", "LiteralListSetNonempty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule::PowerSetNonempty(f0) => {
@@ -28989,6 +29548,7 @@ let rule_id = Some("builtin.IsNonemptySetFactSearchProofByBuiltinRule::PowerSetN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_nonempty_set__PowerSetNonemptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsNonemptySetFactSearchProofByBuiltinRule", "PowerSetNonempty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_nonempty_set::IsNonemptySetFactSearchProofByBuiltinRule::OneSideInfinityIntervalNonempty(f0) => {
@@ -28996,6 +29556,7 @@ let rule_id = Some("builtin.IsNonemptySetFactSearchProofByBuiltinRule::OneSideIn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_nonempty_set__OneSideInfinityIntervalNonemptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsNonemptySetFactSearchProofByBuiltinRule", "OneSideInfinityIntervalNonempty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -29009,6 +29570,7 @@ let rule_id = Some("builtin.IsFiniteSetFactSearchProofByBuiltinRule::FiniteIndex
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__finite_index_union__FiniteIndexUnionProof(f0, capture, runtime))];
 let mut output = node("IsFiniteSetFactSearchProofByBuiltinRule", "FiniteIndexUnion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::SurjectiveImageOfFiniteSet(f0) => {
@@ -29016,6 +29578,7 @@ let rule_id = Some("builtin.IsFiniteSetFactSearchProofByBuiltinRule::SurjectiveI
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_finite_set__SurjectiveImageOfFiniteSetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsFiniteSetFactSearchProofByBuiltinRule", "SurjectiveImageOfFiniteSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::FunctionRangeOfFiniteDomain(f0) => {
@@ -29023,6 +29586,7 @@ let rule_id = Some("builtin.IsFiniteSetFactSearchProofByBuiltinRule::FunctionRan
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_finite_set__FunctionRangeOfFiniteDomainProof(f0, capture, runtime))];
 let mut output = node("IsFiniteSetFactSearchProofByBuiltinRule", "FunctionRangeOfFiniteDomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::ListSet(f0) => {
@@ -29030,6 +29594,7 @@ let rule_id = Some("builtin.IsFiniteSetFactSearchProofByBuiltinRule::ListSet");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_finite_set__ListSetFiniteBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsFiniteSetFactSearchProofByBuiltinRule", "ListSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::ClosedRange(f0) => {
@@ -29037,6 +29602,7 @@ let rule_id = Some("builtin.IsFiniteSetFactSearchProofByBuiltinRule::ClosedRange
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_finite_set__ClosedRangeFiniteBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsFiniteSetFactSearchProofByBuiltinRule", "ClosedRange", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::Range(f0) => {
@@ -29044,6 +29610,7 @@ let rule_id = Some("builtin.IsFiniteSetFactSearchProofByBuiltinRule::Range");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_finite_set__RangeFiniteBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsFiniteSetFactSearchProofByBuiltinRule", "Range", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::FiniteSeqZeroLength(f0) => {
@@ -29051,6 +29618,7 @@ let rule_id = Some("builtin.IsFiniteSetFactSearchProofByBuiltinRule::FiniteSeqZe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_finite_set__FiniteSeqZeroLengthFiniteBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsFiniteSetFactSearchProofByBuiltinRule", "FiniteSeqZeroLength", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::FiniteSeqFromFiniteCodomain(f0) => {
@@ -29058,6 +29626,7 @@ let rule_id = Some("builtin.IsFiniteSetFactSearchProofByBuiltinRule::FiniteSeqFr
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__is_finite_set__FiniteSeqFromFiniteCodomainBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("IsFiniteSetFactSearchProofByBuiltinRule", "FiniteSeqFromFiniteCodomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -29071,6 +29640,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::HomogeneousCartesian
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__HomogeneousCartesianSequenceMembershipProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "HomogeneousCartesianSequenceMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NativeMatrix(f0) => {
@@ -29078,6 +29648,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NativeMatrix");
 let fields = vec![("0", capture_execute__execute_fact_stmt__native_matrix__MatrixMembershipProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "NativeMatrix", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ExactIntegerQuotient(f0) => {
@@ -29085,6 +29656,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::ExactIntegerQuotient
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__selected_scalar_bt_rules__ExactIntegerQuotientProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "ExactIntegerQuotient", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::MinPreservesPositiveCarrier(f0) => {
@@ -29092,6 +29664,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::MinPreservesPositive
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__positive_minimum__MinPreservesPositiveCarrierProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "MinPreservesPositiveCarrier", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NonzeroRationalQuotient(f0) => {
@@ -29099,6 +29672,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NonzeroRationalQuoti
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__scalar_refined_product__NonzeroRationalQuotientProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "NonzeroRationalQuotient", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NonzeroRationalProduct(f0) => {
@@ -29106,6 +29680,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NonzeroRationalProdu
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__scalar_refined_product__NonzeroRationalProductProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "NonzeroRationalProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::PositiveRealQuotient(f0) => {
@@ -29113,6 +29688,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::PositiveRealQuotient
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__scalar_refined_product__PositiveRealQuotientProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "PositiveRealQuotient", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::PositiveRealProduct(f0) => {
@@ -29120,6 +29696,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::PositiveRealProduct"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__scalar_refined_product__PositiveRealProductProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "PositiveRealProduct", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::DiscreteArithmeticConstructorClosure(f0) => {
@@ -29127,6 +29704,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::DiscreteArithmeticCo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__discrete_arithmetic_constructor__DiscreteArithmeticConstructorClosureBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "DiscreteArithmeticConstructorClosure", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::FiniteSetMaxMember(f0) => {
@@ -29134,6 +29712,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::FiniteSetMaxMember")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__FiniteSetMaxMemberBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "FiniteSetMaxMember", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::FiniteSetMinMember(f0) => {
@@ -29141,6 +29720,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::FiniteSetMinMember")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__FiniteSetMinMemberBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "FiniteSetMinMember", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ClosedNumericMembership(f0) => {
@@ -29148,6 +29728,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::ClosedNumericMembers
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__ClosedNumericMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "ClosedNumericMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ClosedExactScalarMembership(f0) => {
@@ -29155,6 +29736,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::ClosedExactScalarMem
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__ClosedExactScalarMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "ClosedExactScalarMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ComplexArithmeticClosure(f0) => {
@@ -29162,6 +29744,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::ComplexArithmeticClo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__ComplexArithmeticClosureBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "ComplexArithmeticClosure", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::RealTrigClosure(f0) => {
@@ -29169,6 +29752,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::RealTrigClosure");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__RealTrigClosureBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "RealTrigClosure", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::RealTrigInComplex(f0) => {
@@ -29176,6 +29760,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::RealTrigInComplex");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__RealTrigInComplexBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "RealTrigInComplex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ComplexCoordinateInReal(f0) => {
@@ -29183,6 +29768,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::ComplexCoordinateInR
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__ComplexCoordinateInRealBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "ComplexCoordinateInReal", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ComplexCoordinateInComplex(f0) => {
@@ -29190,6 +29776,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::ComplexCoordinateInC
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__ComplexCoordinateInComplexBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "ComplexCoordinateInComplex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::RealArithmeticClosure(f0) => {
@@ -29197,6 +29784,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::RealArithmeticClosur
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__RealArithmeticClosureBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "RealArithmeticClosure", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::RealOperandArithmeticClosure(f0) => {
@@ -29204,6 +29792,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::RealOperandArithmeti
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__RealOperandArithmeticClosureBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "RealOperandArithmeticClosure", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(f0) => {
@@ -29211,6 +29800,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::RealArithmeticConstr
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__real_arithmetic_constructor__RealArithmeticConstructorClosureBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "RealArithmeticConstructorClosure", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::RealPower(f0) => {
@@ -29218,6 +29808,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::RealPower");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__RealPowerBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "RealPower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::IntegerArithmeticClosure(f0) => {
@@ -29225,6 +29816,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::IntegerArithmeticClo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__IntegerArithmeticClosureBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "IntegerArithmeticClosure", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NativeScalarCodomain(f0) => {
@@ -29232,6 +29824,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NativeScalarCodomain
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__NativeScalarCodomainBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "NativeScalarCodomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::PositiveIntegerInNPos(f0) => {
@@ -29239,6 +29832,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::PositiveIntegerInNPo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__PositiveIntegerInNPosBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "PositiveIntegerInNPos", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::AggregateScalarCodomain(f0) => {
@@ -29246,6 +29840,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::AggregateScalarCodom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__AggregateScalarCodomainBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "AggregateScalarCodomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::FoldScalarCodomain(f0) => {
@@ -29253,6 +29848,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::FoldScalarCodomain")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__FoldScalarCodomainBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "FoldScalarCodomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::CompositionInFunctionSet(f0) => {
@@ -29260,6 +29856,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::CompositionInFunctio
 let fields = vec![("0", capture_execute__execute_fact_stmt__function_composition__CompositionInFunctionSetProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "CompositionInFunctionSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::CompositionApplicationInCodomain(f0) => {
@@ -29267,6 +29864,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::CompositionApplicati
 let fields = vec![("0", capture_execute__execute_fact_stmt__function_composition__CompositionApplicationInCodomainProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "CompositionApplicationInCodomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnInDeclaredFnSet(f0) => {
@@ -29274,6 +29872,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::AnonymousFnInDeclare
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__AnonymousFnInDeclaredFnSetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "AnonymousFnInDeclaredFnSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnApplicationScalarCodomain(f0) => {
@@ -29281,6 +29880,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::AnonymousFnApplicati
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__AnonymousFnApplicationScalarCodomainBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "AnonymousFnApplicationScalarCodomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::StandardSetSubsetMembership(f0) => {
@@ -29288,6 +29888,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::StandardSetSubsetMem
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__StandardSetSubsetMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "StandardSetSubsetMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::FiniteSetSubsetMembership(f0) => {
@@ -29295,6 +29896,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::FiniteSetSubsetMembe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__FiniteSetSubsetMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "FiniteSetSubsetMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::SetBuilderMembership(f0) => {
@@ -29302,6 +29904,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::SetBuilderMembership
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__SetBuilderMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "SetBuilderMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NativeConstantMembership(f0) => {
@@ -29309,6 +29912,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NativeConstantMember
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__NativeConstantMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "NativeConstantMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::ListSetElementMembership(f0) => {
@@ -29316,6 +29920,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::ListSetElementMember
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__ListSetElementMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "ListSetElementMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::CartMembership(f0) => {
@@ -29323,6 +29928,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::CartMembership");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__CartMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "CartMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::PowerSetMembership(f0) => {
@@ -29330,6 +29936,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::PowerSetMembership")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__PowerSetMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "PowerSetMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::StructObjMembership(f0) => {
@@ -29337,6 +29944,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::StructObjMembership"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__StructObjMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "StructObjMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::PredecessorInNatural(f0) => {
@@ -29344,6 +29952,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::PredecessorInNatural
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__PredecessorInNaturalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "PredecessorInNatural", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::PredecessorFromPositiveNatural(f0) => {
@@ -29351,6 +29960,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::PredecessorFromPosit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__PredecessorFromPositiveNaturalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "PredecessorFromPositiveNatural", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::PredecessorFromNaturalAboveZero(f0) => {
@@ -29358,6 +29968,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::PredecessorFromNatur
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__PredecessorFromNaturalAboveZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "PredecessorFromNaturalAboveZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::AnonymousFnApplicationInFnRange(f0) => {
@@ -29365,6 +29976,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::AnonymousFnApplicati
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__AnonymousFnApplicationInFnRangeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "AnonymousFnApplicationInFnRange", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::UnionMembershipFromLeft(f0) => {
@@ -29372,6 +29984,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::UnionMembershipFromL
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__UnionMembershipFromLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "UnionMembershipFromLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::UnionMembershipFromRight(f0) => {
@@ -29379,6 +29992,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::UnionMembershipFromR
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__UnionMembershipFromRightBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "UnionMembershipFromRight", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::IntersectMembership(f0) => {
@@ -29386,6 +30000,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::IntersectMembership"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__IntersectMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "IntersectMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::SetMinusMembership(f0) => {
@@ -29393,6 +30008,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::SetMinusMembership")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__SetMinusMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "SetMinusMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::FamilyUnionMembershipFromMember(f0) => {
@@ -29400,6 +30016,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::FamilyUnionMembershi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__FamilyUnionMembershipFromMemberBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "FamilyUnionMembershipFromMember", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::IndexUnionMembershipFromIndex(f0) => {
@@ -29407,6 +30024,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::IndexUnionMembership
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__IndexUnionMembershipFromIndexBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "IndexUnionMembershipFromIndex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::IntervalMembership(f0) => {
@@ -29414,6 +30032,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::IntervalMembership")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__IntervalMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "IntervalMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::OneSideInfinityIntervalMembership(f0) => {
@@ -29421,6 +30040,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::OneSideInfinityInter
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__OneSideInfinityIntervalMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "OneSideInfinityIntervalMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::AddInNatural(f0) => {
@@ -29428,6 +30048,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::AddInNatural");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__AddInNaturalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "AddInNatural", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::MulInNatural(f0) => {
@@ -29435,6 +30056,7 @@ let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::MulInNatural");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__MulInNaturalBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByBuiltinRule", "MulInNatural", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -29448,6 +30070,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::HomogeneousCarte
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__HomogeneousCartesianSequenceSubsetProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "HomogeneousCartesianSequenceSubset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(f0) => {
@@ -29455,6 +30078,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::FunctionRangeInC
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__FunctionRangeInCodomainProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "FunctionRangeInCodomain", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::CompositionRangeSubset(f0) => {
@@ -29462,6 +30086,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::CompositionRange
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__CompositionRangeSubsetProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "CompositionRangeSubset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::StandardSetSubset(f0) => {
@@ -29469,6 +30094,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::StandardSetSubse
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__StandardSetSubsetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "StandardSetSubset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::IntersectSubsetLeft(f0) => {
@@ -29476,6 +30102,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::IntersectSubsetL
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__IntersectSubsetLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "IntersectSubsetLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::IntersectSubsetRight(f0) => {
@@ -29483,6 +30110,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::IntersectSubsetR
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__IntersectSubsetRightBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "IntersectSubsetRight", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SubsetUnionLeft(f0) => {
@@ -29490,6 +30118,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SubsetUnionLeft"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetUnionLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SubsetUnionLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SubsetUnionRight(f0) => {
@@ -29497,6 +30126,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SubsetUnionRight
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetUnionRightBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SubsetUnionRight", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SetMinusSubsetLeft(f0) => {
@@ -29504,6 +30134,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SetMinusSubsetLe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SetMinusSubsetLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SetMinusSubsetLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::RealIntervalSubsetReal(f0) => {
@@ -29511,6 +30142,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::RealIntervalSubs
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__RealIntervalSubsetRealBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "RealIntervalSubsetReal", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SetBuilderSubsetOfParamSet(f0) => {
@@ -29518,6 +30150,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SetBuilderSubset
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SetBuilderSubsetOfParamSetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SetBuilderSubsetOfParamSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::FunctionPreimageSubsetOfInputCarrier(f0) => {
@@ -29525,6 +30158,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::FunctionPreimage
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__FunctionPreimageSubsetOfInputCarrierBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "FunctionPreimageSubsetOfInputCarrier", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(f0) => {
@@ -29532,6 +30166,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SubsetReflexivit
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetReflexivityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SubsetReflexivity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::UnionSubsetFromBothOperands(f0) => {
@@ -29539,6 +30174,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::UnionSubsetFromB
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__UnionSubsetFromBothOperandsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "UnionSubsetFromBothOperands", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::IntersectSubsetFromLeftUpperBound(f0) => {
@@ -29546,6 +30182,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::IntersectSubsetF
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__IntersectSubsetFromLeftUpperBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "IntersectSubsetFromLeftUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::IntersectSubsetFromRightUpperBound(f0) => {
@@ -29553,6 +30190,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::IntersectSubsetF
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__IntersectSubsetFromRightUpperBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "IntersectSubsetFromRightUpperBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::ListSetSubsetFromMembers(f0) => {
@@ -29560,6 +30198,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::ListSetSubsetFro
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__ListSetSubsetFromMembersBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "ListSetSubsetFromMembers", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::UnionSubsetFromComponentwise(f0) => {
@@ -29567,6 +30206,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::UnionSubsetFromC
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__UnionSubsetFromComponentwiseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "UnionSubsetFromComponentwise", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::IntegerRangeSubsetNumericCarrier(f0) => {
@@ -29574,6 +30214,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::IntegerRangeSubs
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__IntegerRangeSubsetNumericCarrierBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "IntegerRangeSubsetNumericCarrier", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SubsetPowerSetMonotone(f0) => {
@@ -29581,6 +30222,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SubsetPowerSetMo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetPowerSetMonotoneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SubsetPowerSetMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SubsetSetMinusCommonRightMonotone(f0) => {
@@ -29588,6 +30230,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SubsetSetMinusCo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetSetMinusCommonRightMonotoneBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SubsetSetMinusCommonRightMonotone", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SubsetCartComponentwise(f0) => {
@@ -29595,6 +30238,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SubsetCartCompon
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetCartComponentwiseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SubsetCartComponentwise", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::SubsetTransitivity(f0) => {
@@ -29602,6 +30246,7 @@ let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::SubsetTransitivi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetTransitivityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SubsetFactSearchProofByBuiltinRule", "SubsetTransitivity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -29615,6 +30260,7 @@ let rule_id = Some("builtin.SupersetFactSearchProofByBuiltinRule::StandardSetSup
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__superset__StandardSetSupersetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SupersetFactSearchProofByBuiltinRule", "StandardSetSuperset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::superset::SupersetFactSearchProofByBuiltinRule::SupersetReflexivity(f0) => {
@@ -29622,6 +30268,7 @@ let rule_id = Some("builtin.SupersetFactSearchProofByBuiltinRule::SupersetReflex
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__superset__SupersetReflexivityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("SupersetFactSearchProofByBuiltinRule", "SupersetReflexivity", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -29639,6 +30286,7 @@ let rule_id = Some("builtin.PrimeFactSearchProofByBuiltinRule::PrimeByComputatio
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__PrimeByComputation(f0, capture, runtime))];
 let mut output = node("PrimeFactSearchProofByBuiltinRule", "PrimeByComputation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -29652,6 +30300,7 @@ let rule_id = Some("builtin.CoprimeFactSearchProofByBuiltinRule::CoprimeByComput
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__CoprimeByComputation(f0, capture, runtime))];
 let mut output = node("CoprimeFactSearchProofByBuiltinRule", "CoprimeByComputation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -29665,6 +30314,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::Add");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdAddProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "Add", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::Subtract(f0) => {
@@ -29672,6 +30322,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::Subtract");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdSubtractProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "Subtract", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::Scale(f0) => {
@@ -29679,6 +30330,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::Scale");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdScaleProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "Scale", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::LinearCombination(f0) => {
@@ -29686,6 +30338,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::LinearCombination")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdLinearCombinationProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "LinearCombination", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::Zero(f0) => {
@@ -29693,6 +30346,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::Zero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdZeroProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "Zero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::One(f0) => {
@@ -29700,6 +30354,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::One");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdOneProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "One", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::SelfDivisor(f0) => {
@@ -29707,6 +30362,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::SelfDivisor");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdSelfProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "SelfDivisor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::ProductFactor(f0) => {
@@ -29714,6 +30370,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::ProductFactor");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdProductFactorProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "ProductFactor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::GcdArgument(f0) => {
@@ -29721,6 +30378,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::GcdArgument");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdGcdArgumentProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "GcdArgument", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::LcmArgument(f0) => {
@@ -29728,6 +30386,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::LcmArgument");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdLcmArgumentProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "LcmArgument", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::DividendMinusRemainder(f0) => {
@@ -29735,6 +30394,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::DividendMinusRemain
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdDividendMinusRemainderProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "DividendMinusRemainder", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::GcdCommonDivisor(f0) => {
@@ -29742,6 +30402,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::GcdCommonDivisor");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdGcdCommonDivisorProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "GcdCommonDivisor", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::LcmCommonMultiple(f0) => {
@@ -29749,6 +30410,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::LcmCommonMultiple")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdLcmCommonMultipleProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "LcmCommonMultiple", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::dvd::DvdFactSearchProofByBuiltinRule::Factorial(f0) => {
@@ -29756,6 +30418,7 @@ let rule_id = Some("builtin.DvdFactSearchProofByBuiltinRule::Factorial");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__dvd__DvdFactorialProof(f0, capture, runtime))];
 let mut output = node("DvdFactSearchProofByBuiltinRule", "Factorial", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -29779,6 +30442,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SinComplementN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__SinComplementNonzeroFromCosProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SinComplementNonzeroFromCos", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::NegationNonzero(f0) => {
@@ -29786,6 +30450,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::NegationNonzer
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__NegationNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "NegationNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CoshNonzero(f0) => {
@@ -29793,6 +30458,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CoshNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__CoshNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CoshNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SechNonzero(f0) => {
@@ -29800,6 +30466,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SechNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SechNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SechNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CothNonzero(f0) => {
@@ -29807,6 +30474,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CothNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__CothNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CothNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CschNonzero(f0) => {
@@ -29814,6 +30482,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CschNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__CschNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CschNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SecNonzero(f0) => {
@@ -29821,6 +30490,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SecNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SecNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SecNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CscNonzero(f0) => {
@@ -29828,6 +30498,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CscNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__CscNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CscNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SinhNonzeroFromArgument(f0) => {
@@ -29835,6 +30506,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SinhNonzeroFro
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SinhNonzeroFromArgumentProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SinhNonzeroFromArgument", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ConjugateNonzeroFromArgument(f0) => {
@@ -29842,6 +30514,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ConjugateNonze
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ConjugateNonzeroFromArgumentProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ConjugateNonzeroFromArgument", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ProductFactorNonzeroWithZeroAlias(f0) => {
@@ -29849,6 +30522,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ProductFactorN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__ProductFactorNonzeroWithZeroAliasProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ProductFactorNonzeroWithZeroAlias", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::EulerNonunit(f0) => {
@@ -29856,6 +30530,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::EulerNonunit")
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__EulerNonunitProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "EulerNonunit", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CotNonzeroFromCos(f0) => {
@@ -29863,6 +30538,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CotNonzeroFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__CotNonzeroFromCosProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CotNonzeroFromCos", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::TanNonzeroFromSin(f0) => {
@@ -29870,6 +30546,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::TanNonzeroFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__TanNonzeroFromSinProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "TanNonzeroFromSin", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroIntegerPiShift(f0) => {
@@ -29877,6 +30554,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CosNonzeroInte
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__CosNonzeroIntegerPiShiftProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CosNonzeroIntegerPiShift", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroIntegerPiShift(f0) => {
@@ -29884,6 +30562,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SinNonzeroInte
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__SinNonzeroIntegerPiShiftProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SinNonzeroIntegerPiShift", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroNegation(f0) => {
@@ -29891,6 +30570,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CosNonzeroNega
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__CosNonzeroNegationProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CosNonzeroNegation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroNegation(f0) => {
@@ -29898,6 +30578,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SinNonzeroNega
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__SinNonzeroNegationProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SinNonzeroNegation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ExpNonzero(f0) => {
@@ -29905,6 +30586,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ExpNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ExpNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ExpNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::FactorialNonzero(f0) => {
@@ -29912,6 +30594,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::FactorialNonze
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__FactorialNonzeroProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "FactorialNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SignNonzeroFromArgument(f0) => {
@@ -29919,6 +30602,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SignNonzeroFro
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SignNonzeroFromArgumentProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SignNonzeroFromArgument", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SignNonzeroReflection(f0) => {
@@ -29926,6 +30610,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SignNonzeroRef
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SignNonzeroReflectionProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SignNonzeroReflection", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFirstQuadrant(f0) => {
@@ -29933,6 +30618,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnFi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_first_quadrant__CosNonzeroOnFirstQuadrantProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CosNonzeroOnFirstQuadrant", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFirstQuadrant(f0) => {
@@ -29940,6 +30626,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnFi
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__trig_first_quadrant__SinNonzeroOnFirstQuadrantProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SinNonzeroOnFirstQuadrant", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::LcmNonzeroFromNonzeroOperands(f0) => {
@@ -29947,6 +30634,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::LcmNonzeroFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__common_relation_nonzero__LcmNonzeroFromNonzeroOperandsProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "LcmNonzeroFromNonzeroOperands", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::LogNonzeroFromNonunitArgument(f0) => {
@@ -29954,6 +30642,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::LogNonzeroFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__common_relation_nonzero__LogNonzeroFromNonunitArgumentProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "LogNonzeroFromNonunitArgument", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::PositiveNonunitIntegerPower(f0) => {
@@ -29961,6 +30650,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::PositiveNonuni
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__common_relation_nonzero__PositiveNonunitIntegerPowerProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "PositiveNonunitIntegerPower", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(f0) => {
@@ -29968,6 +30658,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_periodic_trig__PeriodicTrigNonzeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "PeriodicTrigNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::NonzeroFromSignedBound(f0) => {
@@ -29975,6 +30666,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::NonzeroFromSig
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__NonzeroFromSignedBoundBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "NonzeroFromSignedBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::InequalityFromDifferenceNonzero(f0) => {
@@ -29982,6 +30674,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::InequalityFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__InequalityFromDifferenceNonzeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "InequalityFromDifferenceNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::InequalityFromSumNonzero(f0) => {
@@ -29989,6 +30682,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::InequalityFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__InequalityFromSumNonzeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "InequalityFromSumNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ComplexModulusNonzero(f0) => {
@@ -29996,6 +30690,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ComplexModulus
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ComplexModulusNonzeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ComplexModulusNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ImaginaryUnitNonzero(f0) => {
@@ -30003,6 +30698,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ImaginaryUnitN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ImaginaryUnitNonzeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ImaginaryUnitNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::PiNonzero(f0) => {
@@ -30010,6 +30706,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::PiNonzero");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__PiNonzeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "PiNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ClosedDecimal(f0) => {
@@ -30017,6 +30714,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ClosedDecimal"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ClosedDecimalNotEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ClosedDecimal", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ClosedRational(f0) => {
@@ -30024,6 +30722,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ClosedRational
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ClosedRationalNotEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ClosedRational", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ClosedComplex(f0) => {
@@ -30031,6 +30730,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ClosedComplex"
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ClosedComplexNotEqualBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ClosedComplex", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::NotEqualSymmetry(f0) => {
@@ -30038,6 +30738,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::NotEqualSymmet
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__NotEqualSymmetryBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "NotEqualSymmetry", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ListSetDifferentLength(f0) => {
@@ -30045,6 +30746,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ListSetDiffere
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ListSetDifferentLengthBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ListSetDifferentLength", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(f0) => {
@@ -30052,6 +30754,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::FromKnownStric
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__FromKnownStrictOrderBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "FromKnownStrictOrder", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(f0) => {
@@ -30059,6 +30762,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOp
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__CosNonzeroOnOpenHalfPiBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CosNonzeroOnOpenHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZero(f0) => {
@@ -30066,6 +30770,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::CosNonzeroAtZe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__CosNonzeroAtZeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "CosNonzeroAtZero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(f0) => {
@@ -30073,6 +30778,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOp
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SinNonzeroOnOpenPiBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SinNonzeroOnOpenPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SinNonzeroAtHalfPi(f0) => {
@@ -30080,6 +30786,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SinNonzeroAtHa
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SinNonzeroAtHalfPiBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SinNonzeroAtHalfPi", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFromArg(f0) => {
@@ -30087,6 +30794,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::AbsNonzeroFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__AbsNonzeroFromArgBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "AbsNonzeroFromArg", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::DiffNonzeroFromInequality(f0) => {
@@ -30094,6 +30802,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::DiffNonzeroFro
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__DiffNonzeroFromInequalityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "DiffNonzeroFromInequality", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::EmptySetFromNonempty(f0) => {
@@ -30101,6 +30810,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::EmptySetFromNo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__EmptySetFromNonemptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "EmptySetFromNonempty", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ZeroFromNatAndOneLe(f0) => {
@@ -30108,6 +30818,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ZeroFromNatAnd
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ZeroFromNatAndOneLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ZeroFromNatAndOneLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::PowNonzeroFromBase(f0) => {
@@ -30115,6 +30826,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::PowNonzeroFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__PowNonzeroFromBaseBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "PowNonzeroFromBase", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::DivNonzeroFromFactors(f0) => {
@@ -30122,6 +30834,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::DivNonzeroFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__DivNonzeroFromFactorsBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "DivNonzeroFromFactors", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ProductComponentNonzero(f0) => {
@@ -30129,6 +30842,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::ProductCompone
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__ProductComponentNonzeroBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "ProductComponentNonzero", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SqrtNonzeroFromPositiveArg(f0) => {
@@ -30136,6 +30850,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SqrtNonzeroFro
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SqrtNonzeroFromPositiveArgBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SqrtNonzeroFromPositiveArg", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SquareSumNonzeroFromComponent(f0) => {
@@ -30143,6 +30858,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SquareSumNonze
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__SquareSumNonzeroFromComponentBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "SquareSumNonzeroFromComponent", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::AddNonzeroFromNotEqualNegation(f0) => {
@@ -30150,6 +30866,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::AddNonzeroFrom
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__AddNonzeroFromNotEqualNegationBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "AddNonzeroFromNotEqualNegation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::MembershipContradiction(f0) => {
@@ -30157,6 +30874,7 @@ let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::MembershipCont
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__MembershipContradictionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotEqualFactSearchProofByBuiltinRule", "MembershipContradiction", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30170,6 +30888,7 @@ let rule_id = Some("builtin.NotLessFactSearchProofByBuiltinRule::FromKnownOrderC
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_complement__FromKnownOrderComplementBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotLessFactSearchProofByBuiltinRule", "FromKnownOrderComplement", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_less::NotLessFactSearchProofByBuiltinRule::ClosedNumericComparison(f0) => {
@@ -30177,6 +30896,7 @@ let rule_id = Some("builtin.NotLessFactSearchProofByBuiltinRule::ClosedNumericCo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_less__ClosedNumericComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotLessFactSearchProofByBuiltinRule", "ClosedNumericComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_less::NotLessFactSearchProofByBuiltinRule::FromKnownGreater(f0) => {
@@ -30184,6 +30904,7 @@ let rule_id = Some("builtin.NotLessFactSearchProofByBuiltinRule::FromKnownGreate
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_less__FromKnownGreaterBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotLessFactSearchProofByBuiltinRule", "FromKnownGreater", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30197,6 +30918,7 @@ let rule_id = Some("builtin.NotGreaterFactSearchProofByBuiltinRule::FromKnownOrd
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_complement__FromKnownOrderComplementBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotGreaterFactSearchProofByBuiltinRule", "FromKnownOrderComplement", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_greater::NotGreaterFactSearchProofByBuiltinRule::ClosedNumericComparison(f0) => {
@@ -30204,6 +30926,7 @@ let rule_id = Some("builtin.NotGreaterFactSearchProofByBuiltinRule::ClosedNumeri
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_greater__ClosedNumericComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotGreaterFactSearchProofByBuiltinRule", "ClosedNumericComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_greater::NotGreaterFactSearchProofByBuiltinRule::FromKnownLess(f0) => {
@@ -30211,6 +30934,7 @@ let rule_id = Some("builtin.NotGreaterFactSearchProofByBuiltinRule::FromKnownLes
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_greater__FromKnownLessBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotGreaterFactSearchProofByBuiltinRule", "FromKnownLess", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30224,6 +30948,7 @@ let rule_id = Some("builtin.NotLessEqualFactSearchProofByBuiltinRule::FromKnownO
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_complement__FromKnownOrderComplementBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotLessEqualFactSearchProofByBuiltinRule", "FromKnownOrderComplement", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_less_equal::NotLessEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(f0) => {
@@ -30231,6 +30956,7 @@ let rule_id = Some("builtin.NotLessEqualFactSearchProofByBuiltinRule::ClosedNume
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_less_equal__ClosedNumericComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotLessEqualFactSearchProofByBuiltinRule", "ClosedNumericComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30244,6 +30970,7 @@ let rule_id = Some("builtin.NotGreaterEqualFactSearchProofByBuiltinRule::FromKno
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_complement__FromKnownOrderComplementBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotGreaterEqualFactSearchProofByBuiltinRule", "FromKnownOrderComplement", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_greater_equal::NotGreaterEqualFactSearchProofByBuiltinRule::ClosedNumericComparison(f0) => {
@@ -30251,6 +30978,7 @@ let rule_id = Some("builtin.NotGreaterEqualFactSearchProofByBuiltinRule::ClosedN
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_greater_equal__ClosedNumericComparisonBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotGreaterEqualFactSearchProofByBuiltinRule", "ClosedNumericComparison", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30266,6 +30994,7 @@ let rule_id = Some("builtin.NotIsNonemptySetFactSearchProofByBuiltinRule::EmptyL
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_is_nonempty_set__EmptyListSetNotNonemptyBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotIsNonemptySetFactSearchProofByBuiltinRule", "EmptyListSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30279,6 +31008,7 @@ let rule_id = Some("builtin.NotIsFiniteSetFactSearchProofByBuiltinRule::Standard
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_is_finite_set__StandardInfiniteSetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotIsFiniteSetFactSearchProofByBuiltinRule", "StandardInfiniteSet", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_is_finite_set::NotIsFiniteSetFactSearchProofByBuiltinRule::SetMinusInfiniteOfInfiniteFinite(f0) => {
@@ -30286,6 +31016,7 @@ let rule_id = Some("builtin.NotIsFiniteSetFactSearchProofByBuiltinRule::SetMinus
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_is_finite_set__SetMinusInfiniteOfInfiniteFiniteBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotIsFiniteSetFactSearchProofByBuiltinRule", "SetMinusInfiniteOfInfiniteFinite", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30299,6 +31030,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::ClosedNumericNonM
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__ClosedNumericNonMembershipBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "ClosedNumericNonMembership", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule::ListSetExhaustiveDisequality(f0) => {
@@ -30306,6 +31038,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::ListSetExhaustive
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__ListSetExhaustiveDisequalityBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "ListSetExhaustiveDisequality", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule::NonMembershipOfIntersectFromLeft(f0) => {
@@ -30313,6 +31046,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::NonMembershipOfIn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__NonMembershipOfIntersectFromLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "NonMembershipOfIntersectFromLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule::NonMembershipOfIntersectFromRight(f0) => {
@@ -30320,6 +31054,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::NonMembershipOfIn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__NonMembershipOfIntersectFromRightBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "NonMembershipOfIntersectFromRight", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule::NonMembershipOfUnion(f0) => {
@@ -30327,6 +31062,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::NonMembershipOfUn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__NonMembershipOfUnionBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "NonMembershipOfUnion", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule::NonMembershipOfSetMinusFromRight(f0) => {
@@ -30334,6 +31070,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::NonMembershipOfSe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__NonMembershipOfSetMinusFromRightBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "NonMembershipOfSetMinusFromRight", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule::NonMembershipOfSetMinusFromLeft(f0) => {
@@ -30341,6 +31078,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::NonMembershipOfSe
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__NonMembershipOfSetMinusFromLeftBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "NonMembershipOfSetMinusFromLeft", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule::NonMembershipOfIntervalAtOpenEndpoint(f0) => {
@@ -30348,6 +31086,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::NonMembershipOfIn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__NonMembershipOfIntervalAtOpenEndpointBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "NonMembershipOfIntervalAtOpenEndpoint", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule::NonMembershipOfIntervalOutside(f0) => {
@@ -30355,6 +31094,7 @@ let rule_id = Some("builtin.NotInFactSearchProofByBuiltinRule::NonMembershipOfIn
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_in_fact__NonMembershipOfIntervalOutsideBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotInFactSearchProofByBuiltinRule", "NonMembershipOfIntervalOutside", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30368,6 +31108,7 @@ let rule_id = Some("builtin.NotSubsetFactSearchProofByBuiltinRule::FromKnownNotS
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_subset__FromKnownNotSupersetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotSubsetFactSearchProofByBuiltinRule", "FromKnownNotSuperset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30381,6 +31122,7 @@ let rule_id = Some("builtin.NotSupersetFactSearchProofByBuiltinRule::FromKnownNo
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_superset__FromKnownNotSubsetBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("NotSupersetFactSearchProofByBuiltinRule", "FromKnownNotSubset", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30398,6 +31140,7 @@ let rule_id = Some("builtin.NotPrimeFactSearchProofByBuiltinRule::NotPrimeByComp
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotPrimeByComputation(f0, capture, runtime))];
 let mut output = node("NotPrimeFactSearchProofByBuiltinRule", "NotPrimeByComputation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -30411,6 +31154,7 @@ let rule_id = Some("builtin.NotCoprimeFactSearchProofByBuiltinRule::NotCoprimeBy
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotCoprimeByComputation(f0, capture, runtime))];
 let mut output = node("NotCoprimeFactSearchProofByBuiltinRule", "NotCoprimeByComputation", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -32462,63 +33206,72 @@ crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSear
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::BijectivePreimage");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinBijectivePreimage(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "BijectivePreimage", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "BijectivePreimage", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness(f0) => {
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinRealLineComparisonWitness(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "RealLineComparisonWitness", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "RealLineComparisonWitness", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::EqualityWitnessFromMembership(f0) => {
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::EqualityWitnessFromMembership");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinEqualityWitnessFromMembership(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "EqualityWitnessFromMembership", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "EqualityWitnessFromMembership", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::NonemptySetMemberWitness(f0) => {
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::NonemptySetMemberWitness");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinNonemptySetMemberWitness(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "NonemptySetMemberWitness", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "NonemptySetMemberWitness", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::RationalPositiveDenominator(f0) => {
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::RationalPositiveDenominator");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinRationalPositiveDenominator(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "RationalPositiveDenominator", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "RationalPositiveDenominator", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::RationalIntegerRatio(f0) => {
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::RationalIntegerRatio");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinRationalIntegerRatio(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "RationalIntegerRatio", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "RationalIntegerRatio", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::IntegerMultipleFromZeroRemainder(f0) => {
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::IntegerMultipleFromZeroRemainder");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinIntegerMultipleFromZeroRemainder(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "IntegerMultipleFromZeroRemainder", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "IntegerMultipleFromZeroRemainder", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::ArchimedeanReciprocal(f0) => {
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::ArchimedeanReciprocal");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinArchimedeanReciprocal(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "ArchimedeanReciprocal", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ArchimedeanReciprocal", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinRule::RealDensityMidpoint(f0) => {
 let rule_id = Some("builtin.ExistShapedFactSearchProofByBuiltinRule::RealDensityMidpoint");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedBuiltinRealDensityMidpoint(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "RealDensityMidpoint", fields);
-if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "RealDensityMidpoint", ""); }
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
 };
@@ -34032,6 +34785,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::well_defined_results::verify_obj::fail_to_verify_obj_well_defined::FailToVerifyFieldAccessObjWellDefined(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__fail_to_verify_obj_well_defined__FailToVerifyObjWellDefinedByDefCommon(f0, capture, runtime))];
 let mut output = node("FailToVerifyFieldAccessObjWellDefined", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof { requirement: f0, argument_index: f1, membership: f2 } => {
+let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("argument_index", JsonValue::String((f1).to_string())), ("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f2, capture, runtime))];
+let mut output = node("PredicateDomainArgumentMembershipProof", "", fields);
 output
 },
 };
@@ -37386,28 +38150,6 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::SequenceLimitPredicateDomainProof { sequence_source: f0, value_real: f1 } => {
 let fields = vec![("sequence_source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("SequenceLimitPredicateDomainProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof { requirement: f0, argument_index: f1, membership: f2 } => {
-let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("argument_index", JsonValue::String((f1).to_string())), ("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f2, capture, runtime))];
-let mut output = node("PredicateDomainArgumentMembershipProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentReturnProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnProof { requirement: f0, argument_index: f1, membership: f2 } => {
-let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("argument_index", JsonValue::String((f1).to_string())), ("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentReturnMembership(f2, capture, runtime))];
-let mut output = node("PredicateDomainArgumentReturnProof", "", fields);
 output
 },
 };
@@ -45285,22 +46027,6 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::AtNegativeInfinity => {
 let fields = vec![];
 let mut output = node("FunctionLimitApproachRealProof", "AtNegativeInfinity", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentReturnMembership(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership::Structural(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
-let mut output = node("PredicateDomainArgumentReturnMembership", "Structural", fields);
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership::FunctionReturn(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__InFactSearchProofByKnownSpecialProperty(f0, capture, runtime))];
-let mut output = node("PredicateDomainArgumentReturnMembership", "FunctionReturn", fields);
 output
 },
 };

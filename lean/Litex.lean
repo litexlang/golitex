@@ -13900,3 +13900,635 @@ theorem sequenceLimitCandidatesEqual {M : Semantics.{u}} [F : FunctionSemantics 
   have heq : r = s := sequenceLimitUnique (denote a) r s hdom (hr ▸ h1) (hs ▸ h2)
   exact hr.trans ((congrArg (fun x : ℝ => M.number (x : ℂ)) heq).trans hs.symm)
 end Litex
+
+
+namespace Litex
+
+namespace FunctionSemantics
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+/-- The exact graph domain is independent of the signature used to certify it. -/
+noncomputable def domainValue (f : M.Value) : M.Value := preimageValue f (fun _ => True)
+
+theorem domainValue_eq {D B f : M.Value} (hD : M.isSet D)
+    (hf : M.mem f (F.fnSetValue D B)) : domainValue f = D := by
+  apply F.ext _ _ (preimage_spec (fun _ => True) hD hf).1 hD
+  intro x
+  exact (preimage_mem_iff (fun _ => True) hD hf).trans ⟨And.left, fun hx => ⟨hx, True.intro⟩⟩
+end FunctionSemantics
+
+inductive FiniteLimitSide where
+  | both | left | right
+
+def finiteLimitDistance (side : FiniteLimitSide) (point input : ℝ) : ℝ :=
+  match side with
+  | .both => |input - point|
+  | .left => point - input
+  | .right => input - point
+
+/-- The punctured domain must have points arbitrarily near the approach point. -/
+def FiniteFunctionAccumulationValue (M : Semantics.{u}) [FunctionSemantics M]
+    (side : FiniteLimitSide) (f : M.Value) (point : ℝ) : Prop :=
+  ∀ radius : ℝ, 0 < radius → ∃ input : ℝ,
+    M.mem (M.number (input : ℂ)) (FunctionSemantics.domainValue f) ∧
+      0 < finiteLimitDistance side point input ∧ finiteLimitDistance side point input < radius
+
+def FiniteFunctionEpsilonValue (M : Semantics.{u}) [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f : M.Value) (point value : ℝ) : Prop :=
+  ∀ epsilon : ℝ, 0 < epsilon → ∃ delta : ℝ, 0 < delta ∧
+    ∀ input : ℝ, M.mem (M.number (input : ℂ)) (F.domainValue f) →
+      0 < finiteLimitDistance side point input → finiteLimitDistance side point input < delta →
+      ∃ output : ℝ, F.callValue f (M.number (input : ℂ)) = M.number (output : ℂ) ∧
+        |output - value| < epsilon
+
+def HasFiniteFunctionLimitValue (M : Semantics.{u}) [FunctionSemantics M]
+    (side : FiniteLimitSide) (f point value : M.Value) : Prop :=
+  ∃ p l : ℝ, point = M.number (p : ℂ) ∧ value = M.number (l : ℂ) ∧
+    FiniteFunctionAccumulationValue M side f p ∧ FiniteFunctionEpsilonValue M side f p l
+
+def HasFiniteFunctionLimit {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) : Prop :=
+  HasFiniteFunctionLimitValue M side (denote f) (denote point) (denote value)
+
+theorem finiteFunctionLimitUnique {M : Semantics.{u}} [F : FunctionSemantics M]
+    (side : FiniteLimitSide) (f : M.Value) (point r s : ℝ)
+    (ha : FiniteFunctionAccumulationValue M side f point)
+    (hr : FiniteFunctionEpsilonValue M side f point r)
+    (hs : FiniteFunctionEpsilonValue M side f point s) : r = s := by
+  by_contra hne
+  have hdist : 0 < |r-s| := abs_pos.mpr (sub_ne_zero.mpr hne)
+  let epsilon := |r-s| / 2
+  have he : 0 < epsilon := by dsimp [epsilon]; linarith
+  obtain ⟨d1, hd1, h1⟩ := hr epsilon he
+  obtain ⟨d2, hd2, h2⟩ := hs epsilon he
+  obtain ⟨input, hinput, hpositive, hnear⟩ := ha (Min.min d1 d2) (lt_min hd1 hd2)
+  obtain ⟨u, hu, hur⟩ := h1 input hinput hpositive (lt_of_lt_of_le hnear (min_le_left _ _))
+  obtain ⟨v, hv, hvs⟩ := h2 input hinput hpositive (lt_of_lt_of_le hnear (min_le_right _ _))
+  have huv : u = v := Complex.ofReal_injective (M.number_injective (hu.symm.trans hv))
+  subst v
+  have htriangle := abs_sub_le r u s
+  rw [abs_sub_comm r u] at htriangle
+  dsimp [epsilon] at hur hvs
+  linarith
+
+theorem finiteFunctionLimitCandidatesEqual {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type y}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (a : Obj (M := M) γ) (b : Obj (M := M) δ)
+    (ha : HasFiniteFunctionLimit side f point a) (hb : HasFiniteFunctionLimit side f point b) :
+    Same a b := by
+  obtain ⟨p, r, hp, hr, hacc, her⟩ := ha
+  obtain ⟨q, s, hq, hs, _, hes⟩ := hb
+  have hpq : p = q := Complex.ofReal_injective (M.number_injective (hp.symm.trans hq))
+  subst q
+  have hrs := finiteFunctionLimitUnique side (denote f) p r s hacc her hes
+  exact hr.trans ((congrArg (fun z : ℝ => M.number (z : ℂ)) hrs).trans hs.symm)
+
+def FiniteFunctionConvergentValue (M : Semantics.{u}) [FunctionSemantics M]
+    (side : FiniteLimitSide) (f point : M.Value) : Prop :=
+  ∃ value : ℝ, HasFiniteFunctionLimitValue M side f point (M.number (value : ℂ))
+
+noncomputable def finiteFunctionLimitValue {M : Semantics.{u}} [FunctionSemantics M]
+    (side : FiniteLimitSide) (f point : M.Value) : M.Value := by
+  classical
+  let selected : ℝ := if h : FiniteFunctionConvergentValue M side f point
+    then Classical.choose h else 0
+  exact M.number (selected : ℂ)
+
+def RealFunctionValue (M : Semantics.{u}) [FunctionSemantics M] (f : M.Value) : Prop :=
+  ∃ signature : FunctionSignature M,
+    M.mem f (FunctionSemantics.fnSetValue signature.domain signature.output) ∧
+    (∀ x, M.mem x signature.domain → M.mem x (denote (R (M := M)))) ∧
+    (∀ y, M.mem y signature.output → M.mem y (denote (R (M := M))))
+
+structure FiniteFunctionLimitObj {M : Semantics.{u}} (α : Type v) (β : Type w)
+    [Representation M α] [Representation M β] where
+  function : Obj (M := M) α
+  point : Obj (M := M) β
+  side : FiniteLimitSide
+
+noncomputable instance finiteFunctionLimitRepresentation {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β] :
+    Representation M (FiniteFunctionLimitObj (M := M) α β) where
+  wd p := RealFunctionValue M (denote p.function) ∧ In p.point R ∧
+    FiniteFunctionConvergentValue M p.side (denote p.function) (denote p.point)
+  denote p := finiteFunctionLimitValue p.side (denote p.function) (denote p.point)
+  wd_isSet {p} _ := by
+    unfold finiteFunctionLimitValue
+    exact M.member_isSet ((M.complex_members _).mpr ⟨_, rfl⟩)
+
+noncomputable def finiteFunctionLimit {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (hf : RealFunctionValue M (denote f)) (hp : In point R)
+    (hc : FiniteFunctionConvergentValue M side (denote f) (denote point)) :
+    Obj (M := M) (FiniteFunctionLimitObj (M := M) α β) := ⟨⟨f, point, side⟩, hf, hp, hc⟩
+
+theorem finiteFunctionConvergentOfCandidate {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) (h : HasFiniteFunctionLimit side f point value) :
+    FiniteFunctionConvergentValue M side (denote f) (denote point) := by
+  obtain ⟨p, l, hp, hl, ha, he⟩ := h
+  exact ⟨l, p, l, hp, rfl, ha, he⟩
+
+theorem finiteFunctionLimitEqCandidate {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (p : Obj (M := M) (FiniteFunctionLimitObj (M := M) α β)) (value : Obj (M := M) γ)
+    (h : HasFiniteFunctionLimit p.val.side p.val.function p.val.point value) : Same p value := by
+  classical
+  have hc := p.wd.2.2
+  have chosen := Classical.choose_spec hc
+  have heq := finiteFunctionLimitCandidatesEqual p.val.side p.val.function p.val.point
+    (number (M := M) ((Classical.choose hc : ℝ) : ℂ)) value chosen h
+  change finiteFunctionLimitValue p.val.side (denote p.val.function) (denote p.val.point) = denote value
+  unfold finiteFunctionLimitValue
+  rw [dif_pos hc]
+  exact heq
+
+theorem finiteFunctionLimitInR {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (FiniteFunctionLimitObj (M := M) α β)) : In p R := by
+  classical
+  change M.mem (finiteFunctionLimitValue p.val.side (denote p.val.function) (denote p.val.point)) _
+  unfold finiteFunctionLimitValue
+  exact (M.real_members _).mpr ⟨_, rfl⟩
+
+end Litex
+
+
+namespace Litex
+
+def RealLtValue (M : Semantics.{u}) (a b : M.Value) : Prop :=
+  ∃ r s : ℝ, a = M.number (r : ℂ) ∧ b = M.number (s : ℂ) ∧ r < s
+
+theorem realLtValue_numbers {M : Semantics.{u}} (a b : ℝ) :
+    RealLtValue M (M.number (a : ℂ)) (M.number (b : ℂ)) ↔ a < b := by
+  constructor
+  · rintro ⟨r, s, hr, hs, h⟩
+    have har : a = r := Complex.ofReal_injective (M.number_injective hr)
+    have hbs : b = s := Complex.ofReal_injective (M.number_injective hs)
+    simpa only [har, hbs] using h
+  · exact fun h => ⟨a, b, rfl, rfl, h⟩
+
+noncomputable def finiteLimitDistanceValue {M : Semantics.{u}}
+    (side : FiniteLimitSide) (point input : M.Value) : M.Value :=
+  match side with
+  | .both => absValue (M.subValue input point)
+  | .left => M.subValue point input
+  | .right => M.subValue input point
+
+theorem finiteLimitDistanceValue_numbers {M : Semantics.{u}}
+    (side : FiniteLimitSide) (point input : ℝ) :
+    finiteLimitDistanceValue side (M.number (point : ℂ)) (M.number (input : ℂ)) =
+      M.number ((finiteLimitDistance side point input : ℝ) : ℂ) := by
+  cases side <;> simp only [finiteLimitDistanceValue, finiteLimitDistance, M.sub_numbers,
+    ← Complex.ofReal_sub, absValue_number]
+
+noncomputable def finiteLimitNeighborhoodValue {M : Semantics.{u}} [SetSemantics M]
+    (side : FiniteLimitSide) (domain point radius : M.Value) : M.Value :=
+  SetSemantics.sepValue domain (fun x => ∃ _ : M.mem x domain,
+    RealLtValue M (M.number 0) (finiteLimitDistanceValue side point x) ∧
+    RealLtValue M (finiteLimitDistanceValue side point x) radius)
+
+def FiniteLimitAccumulationClauseValue (M : Semantics.{u}) [FunctionSemantics M]
+    (side : FiniteLimitSide) (domain point radius : M.Value) : Prop :=
+  ∃ input : Obj (M := M) M.Value, ∃ _ : M.mem (denote input) domain,
+    RealLtValue M (M.number 0) (finiteLimitDistanceValue side point (denote input)) ∧
+    RealLtValue M (finiteLimitDistanceValue side point (denote input)) radius
+
+def FiniteLimitEpsilonClauseValue (M : Semantics.{u}) [FunctionSemantics M]
+    (side : FiniteLimitSide) (f domain point value epsilon : M.Value) : Prop :=
+  ∃ delta : Obj (M := M) M.Value, ∃ _ : In delta RPos,
+    ∀ input, M.mem input (finiteLimitNeighborhoodValue side domain point (denote delta)) →
+      M.mem input (FunctionSemantics.preimageValue f
+        (fun y => M.mem y (sequenceEpsilonBallValue value epsilon)))
+
+theorem finiteFunctionConvergentOfExistence {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (h : ∃ value : Obj (M := M) M.Value, ∃ _ : In value R,
+      HasFiniteFunctionLimit side f point value) :
+    FiniteFunctionConvergentValue M side (denote f) (denote point) := by
+  obtain ⟨value, _, h⟩ := h
+  exact finiteFunctionConvergentOfCandidate side f point value h
+
+theorem finiteFunctionLimitOfForall {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type y}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) (domain : Obj (M := M) δ)
+    (hf : RealFunctionValue M (denote f))
+    (hD : denote domain = F.domainValue (denote f))
+    (hp : In point R) (hv : In value R)
+    (ha : ∀ {σ : Type z} [Representation M σ], (radius : Obj (M := M) σ) →
+      In radius RPos → FiniteLimitAccumulationClauseValue M side (denote domain) (denote point) (denote radius))
+    (he : ∀ {σ : Type t} [Representation M σ], (epsilon : Obj (M := M) σ) →
+      In epsilon RPos → FiniteLimitEpsilonClauseValue M side (denote f) (denote domain) (denote point) (denote value) (denote epsilon)) :
+    HasFiniteFunctionLimit side f point value := by
+  let p := NativeBridge.asReal point hp
+  let l := NativeBridge.asReal value hv
+  have hpvalue : denote point = M.number (p : ℂ) := NativeBridge.asReal_spec point hp
+  have hlvalue : denote value = M.number (l : ℂ) := NativeBridge.asReal_spec value hv
+  have ha := forallMembersOfRepresentations RPos ha
+  have he := forallMembersOfRepresentations RPos he
+  obtain ⟨signature, hfn, hinput, _⟩ := hf
+  have hdomain : denote domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  refine ⟨p, l, hpvalue, hlvalue, ?_, ?_⟩
+  · intro radius hradius
+    obtain ⟨input, hmem, hpositive, hnear⟩ := ha (M.number (radius : ℂ)) (numberInRPos radius hradius)
+    obtain ⟨x, hx⟩ := (M.real_members (denote input)).mp (hinput _ (hdomain ▸ hmem))
+    refine ⟨x, ?_, ?_, ?_⟩
+    · rw [← hx, ← hD]
+      exact hmem
+    · rw [hpvalue, hx, finiteLimitDistanceValue_numbers] at hpositive
+      exact (realLtValue_numbers 0 _).mp hpositive
+    · rw [hpvalue, hx, finiteLimitDistanceValue_numbers] at hnear
+      exact (realLtValue_numbers _ radius).mp hnear
+  · intro epsilon hepsilon
+    obtain ⟨delta, hdelta, hcontrol⟩ := he (M.number (epsilon : ℂ)) (numberInRPos epsilon hepsilon)
+    let d := NativeBridge.asReal delta (inRPos_real delta hdelta)
+    have hdvalue : denote delta = M.number (d : ℂ) := NativeBridge.asReal_spec delta (inRPos_real delta hdelta)
+    have hd : 0 < d := (NativeBridge.lt_iff_ofDenoteReal (number 0) delta 0 d rfl hdvalue).mp (inRPos_positive delta hdelta)
+    refine ⟨d, hd, ?_⟩
+    intro x hx hpositive hnear
+    have hxD : M.mem (M.number (x : ℂ)) (denote domain) := hD ▸ hx
+    have hn : M.mem (M.number (x : ℂ)) (finiteLimitNeighborhoodValue side (denote domain) (denote point) (denote delta)) := by
+      apply (F.sep_members _ _ _).mpr
+      refine ⟨hxD, hxD, ?_, ?_⟩
+      · rw [hpvalue, finiteLimitDistanceValue_numbers]
+        exact (realLtValue_numbers 0 _).mpr hpositive
+      · rw [hpvalue, hdvalue, finiteLimitDistanceValue_numbers]
+        exact (realLtValue_numbers _ d).mpr hnear
+    have image := ((F.preimage_mem_iff (fun y => M.mem y (sequenceEpsilonBallValue (denote value) (M.number (epsilon : ℂ)))) signature.domain_isSet hfn).mp (hcontrol _ hn)).2
+    obtain ⟨hyR, _, hless⟩ := (F.sep_members _ _ _).mp image
+    obtain ⟨y, hy⟩ := (M.real_members _).mp hyR
+    refine ⟨y, hy, ?_⟩
+    change RealLtValue M (absValue (M.subValue (F.callValue (denote f) (M.number (x : ℂ))) (denote value))) (M.number (epsilon : ℂ)) at hless
+    rw [hy, hlvalue, M.sub_numbers, ← Complex.ofReal_sub, absValue_number] at hless
+    exact (realLtValue_numbers _ epsilon).mp hless
+
+end Litex
+
+
+namespace Litex
+
+theorem divByGtOneLessSelf {M : Semantics.{u}}
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (DivObj (M := M) α β))
+    (hpos : Lt (number 0) p.val.left) (hgt : Lt (number 1) p.val.right) :
+    Lt p p.val.left := by
+  obtain ⟨z, a, hz, ha, hapos⟩ := hpos
+  change M.number (0 : ℂ) = M.number (z : ℂ) at hz
+  have hz0 : z = 0 := by exact_mod_cast (M.number_injective hz).symm
+  subst z
+  obtain ⟨one, b, h1, hb, hbgt⟩ := hgt
+  change M.number (1 : ℂ) = M.number (one : ℂ) at h1
+  have hone : one = 1 := by exact_mod_cast (M.number_injective h1).symm
+  subst one
+  refine ⟨a / b, a, ?_, ha, div_lt_self hapos hbgt⟩
+  change M.divValue (denote p.val.left) (denote p.val.right) = _
+  have hbn : (b : ℂ) ≠ 0 := by exact_mod_cast (ne_of_gt (lt_trans zero_lt_one hbgt))
+  rw [ha, hb, M.div_numbers _ _ hbn, Complex.ofReal_div]
+
+end Litex
+
+
+namespace Litex
+
+/-- Eliminate membership of the actual certified builder without rebuilding it. -/
+theorem inSetBuilderObj_iff {M : Semantics.{u}} [S : SetSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (s : Obj (M := M) (SetBuilderObj (M := M) β)) :
+    In a s ↔ ∃ ha : In a s.val.bound,
+      s.val.predicate (semanticObject (denote a) (M.member_isSet ha)) ha := by
+  change M.mem (denote a) (S.sepValue (denote s.val.bound) s.val.condition) ↔ _
+  rw [S.sep_members]
+  exact ⟨fun h => h.2, fun h => ⟨h.choose, h⟩⟩
+
+end Litex
+
+namespace Litex
+
+
+inductive InfiniteLimitDirection where
+  | positive | negative
+
+def infiniteBeyond (direction : InfiniteLimitDirection) (bound input : ℝ) : Prop :=
+  match direction with
+  | .positive => bound < input
+  | .negative => input < bound
+
+def commonInfinityThreshold (direction : InfiniteLimitDirection) (a b : ℝ) : ℝ :=
+  match direction with
+  | .positive => Max.max a b
+  | .negative => Min.min a b
+
+theorem infiniteBeyond_common (direction : InfiniteLimitDirection) (a b input : ℝ)
+    (h : infiniteBeyond direction (commonInfinityThreshold direction a b) input) :
+    infiniteBeyond direction a input ∧ infiniteBeyond direction b input := by
+  cases direction with
+  | positive => exact ⟨lt_of_le_of_lt (le_max_left _ _) h, lt_of_le_of_lt (le_max_right _ _) h⟩
+  | negative => exact ⟨lt_of_lt_of_le h (min_le_left _ _), lt_of_lt_of_le h (min_le_right _ _)⟩
+
+def InfiniteFunctionAccumulationValue (M : Semantics.{u}) [FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f : M.Value) : Prop :=
+  ∀ bound : ℝ, ∃ input : ℝ,
+    M.mem (M.number (input : ℂ)) (FunctionSemantics.domainValue f) ∧
+    infiniteBeyond direction bound input
+
+def InfiniteFunctionEpsilonValue (M : Semantics.{u}) [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f : M.Value) (value : ℝ) : Prop :=
+  ∀ epsilon : ℝ, 0 < epsilon → ∃ bound : ℝ,
+    ∀ input : ℝ, M.mem (M.number (input : ℂ)) (F.domainValue f) →
+      infiniteBeyond direction bound input →
+      ∃ output : ℝ, F.callValue f (M.number (input : ℂ)) = M.number (output : ℂ) ∧
+        |output - value| < epsilon
+
+def HasInfiniteFunctionLimitValue (M : Semantics.{u}) [FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f value : M.Value) : Prop :=
+  ∃ l : ℝ, value = M.number (l : ℂ) ∧
+    InfiniteFunctionAccumulationValue M direction f ∧ InfiniteFunctionEpsilonValue M direction f l
+
+def HasInfiniteFunctionLimit {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α) (value : Obj (M := M) β) : Prop :=
+  HasInfiniteFunctionLimitValue M direction (denote f) (denote value)
+
+theorem infiniteFunctionLimitUnique {M : Semantics.{u}} [F : FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f : M.Value) (r s : ℝ)
+    (ha : InfiniteFunctionAccumulationValue M direction f)
+    (hr : InfiniteFunctionEpsilonValue M direction f r)
+    (hs : InfiniteFunctionEpsilonValue M direction f s) : r = s := by
+  by_contra hne
+  have hdist : 0 < |r-s| := abs_pos.mpr (sub_ne_zero.mpr hne)
+  let epsilon := |r-s| / 2
+  have he : 0 < epsilon := by dsimp [epsilon]; linarith
+  obtain ⟨a, h1⟩ := hr epsilon he
+  obtain ⟨b, h2⟩ := hs epsilon he
+  obtain ⟨input, hinput, hbeyond⟩ := ha (commonInfinityThreshold direction a b)
+  obtain ⟨hleft, hright⟩ := infiniteBeyond_common direction a b input hbeyond
+  obtain ⟨u, hu, hur⟩ := h1 input hinput hleft
+  obtain ⟨v, hv, hvs⟩ := h2 input hinput hright
+  have huv : u = v := Complex.ofReal_injective (M.number_injective (hu.symm.trans hv))
+  subst v
+  have htriangle := abs_sub_le r u s
+  rw [abs_sub_comm r u] at htriangle
+  dsimp [epsilon] at hur hvs
+  linarith
+
+theorem infiniteFunctionLimitCandidatesEqual {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α)
+    (a : Obj (M := M) β) (b : Obj (M := M) γ)
+    (ha : HasInfiniteFunctionLimit direction f a) (hb : HasInfiniteFunctionLimit direction f b) :
+    Same a b := by
+  obtain ⟨r, hr, hacc, her⟩ := ha
+  obtain ⟨s, hs, _, hes⟩ := hb
+  have hrs := infiniteFunctionLimitUnique direction (denote f) r s hacc her hes
+  exact hr.trans ((congrArg (fun z : ℝ => M.number (z : ℂ)) hrs).trans hs.symm)
+
+def InfiniteFunctionConvergentValue (M : Semantics.{u}) [FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f : M.Value) : Prop :=
+  ∃ value : ℝ, HasInfiniteFunctionLimitValue M direction f (M.number (value : ℂ))
+
+noncomputable def infiniteFunctionLimitValue {M : Semantics.{u}} [FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f : M.Value) : M.Value := by
+  classical
+  let selected : ℝ := if h : InfiniteFunctionConvergentValue M direction f
+    then Classical.choose h else 0
+  exact M.number (selected : ℂ)
+
+structure InfiniteFunctionLimitObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  function : Obj (M := M) α
+  direction : InfiniteLimitDirection
+
+noncomputable instance infiniteFunctionLimitRepresentation {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α] :
+    Representation M (InfiniteFunctionLimitObj (M := M) α) where
+  wd p := RealFunctionValue M (denote p.function) ∧
+    InfiniteFunctionConvergentValue M p.direction (denote p.function)
+  denote p := infiniteFunctionLimitValue p.direction (denote p.function)
+  wd_isSet {p} _ := by
+    unfold infiniteFunctionLimitValue
+    exact M.member_isSet ((M.complex_members _).mpr ⟨_, rfl⟩)
+
+noncomputable def infiniteFunctionLimit {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α)
+    (hf : RealFunctionValue M (denote f))
+    (hc : InfiniteFunctionConvergentValue M direction (denote f)) :
+    Obj (M := M) (InfiniteFunctionLimitObj (M := M) α) := ⟨⟨f, direction⟩, hf, hc⟩
+
+theorem infiniteFunctionConvergentOfCandidate {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α) (value : Obj (M := M) β)
+    (h : HasInfiniteFunctionLimit direction f value) :
+    InfiniteFunctionConvergentValue M direction (denote f) := by
+  obtain ⟨l, hl, ha, he⟩ := h
+  exact ⟨l, l, rfl, ha, he⟩
+
+theorem infiniteFunctionConvergentOfExistence {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α)
+    (h : ∃ value : Obj (M := M) M.Value, ∃ _ : In value R,
+      HasInfiniteFunctionLimit direction f value) :
+    InfiniteFunctionConvergentValue M direction (denote f) := by
+  obtain ⟨value, _, h⟩ := h
+  exact infiniteFunctionConvergentOfCandidate direction f value h
+
+theorem infiniteFunctionLimitEqCandidate {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (InfiniteFunctionLimitObj (M := M) α)) (value : Obj (M := M) β)
+    (h : HasInfiniteFunctionLimit p.val.direction p.val.function value) : Same p value := by
+  classical
+  have hc := p.wd.2
+  have chosen := Classical.choose_spec hc
+  have heq := infiniteFunctionLimitCandidatesEqual p.val.direction p.val.function
+    (number (M := M) ((Classical.choose hc : ℝ) : ℂ)) value chosen h
+  change infiniteFunctionLimitValue p.val.direction (denote p.val.function) = denote value
+  unfold infiniteFunctionLimitValue
+  rw [dif_pos hc]
+  exact heq
+
+theorem infiniteFunctionLimitInR {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (p : Obj (M := M) (InfiniteFunctionLimitObj (M := M) α)) : In p R := by
+  classical
+  change M.mem (infiniteFunctionLimitValue p.val.direction (denote p.val.function)) _
+  unfold infiniteFunctionLimitValue
+  exact (M.real_members _).mpr ⟨_, rfl⟩
+
+end Litex
+
+namespace Litex
+
+
+def infiniteBeyondValue (M : Semantics.{u}) (direction : InfiniteLimitDirection)
+    (bound input : M.Value) : Prop :=
+  match direction with
+  | .positive => RealLtValue M bound input
+  | .negative => RealLtValue M input bound
+
+theorem infiniteBeyondValue_numbers {M : Semantics.{u}}
+    (direction : InfiniteLimitDirection) (bound input : ℝ) :
+    infiniteBeyondValue M direction (M.number (bound : ℂ)) (M.number (input : ℂ)) ↔
+      infiniteBeyond direction bound input := by
+  cases direction <;> exact realLtValue_numbers _ _
+
+noncomputable def infiniteLimitTailValue {M : Semantics.{u}} [SetSemantics M]
+    (direction : InfiniteLimitDirection) (domain bound : M.Value) : M.Value :=
+  SetSemantics.sepValue domain (fun input => ∃ _ : M.mem input domain,
+    infiniteBeyondValue M direction bound input)
+
+def InfiniteLimitAccumulationClauseValue (M : Semantics.{u}) [FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (domain bound : M.Value) : Prop :=
+  ∃ input : Obj (M := M) M.Value, ∃ _ : M.mem (denote input) domain,
+    infiniteBeyondValue M direction bound (denote input)
+
+def InfiniteLimitEpsilonClauseValue (M : Semantics.{u}) [FunctionSemantics M]
+    (direction : InfiniteLimitDirection) (f domain value epsilon : M.Value) : Prop :=
+  ∃ bound : Obj (M := M) M.Value, ∃ _ : In bound R,
+    ∀ input, M.mem input (infiniteLimitTailValue direction domain (denote bound)) →
+      M.mem input (FunctionSemantics.preimageValue f
+        (fun y => M.mem y (sequenceEpsilonBallValue value epsilon)))
+
+theorem infiniteFunctionLimitOfForall {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α)
+    (value : Obj (M := M) β) (domain : Obj (M := M) γ)
+    (hf : RealFunctionValue M (denote f))
+    (hD : denote domain = F.domainValue (denote f))
+    (hv : In value R)
+    (ha : ∀ {σ : Type y} [Representation M σ], (bound : Obj (M := M) σ) →
+      In bound R → InfiniteLimitAccumulationClauseValue M direction (denote domain) (denote bound))
+    (he : ∀ {σ : Type z} [Representation M σ], (epsilon : Obj (M := M) σ) →
+      In epsilon RPos → InfiniteLimitEpsilonClauseValue M direction (denote f) (denote domain) (denote value) (denote epsilon)) :
+    HasInfiniteFunctionLimit direction f value := by
+  let l := NativeBridge.asReal value hv
+  have hlvalue : denote value = M.number (l : ℂ) := NativeBridge.asReal_spec value hv
+  have ha := forallMembersOfRepresentations R ha
+  have he := forallMembersOfRepresentations RPos he
+  obtain ⟨signature, hfn, hinput, _⟩ := hf
+  have hdomain : denote domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  refine ⟨l, hlvalue, ?_, ?_⟩
+  · intro bound
+    obtain ⟨input, hmem, hbeyond⟩ := ha (M.number (bound : ℂ)) (NativeBridge.numberInR bound)
+    obtain ⟨x, hx⟩ := (M.real_members (denote input)).mp (hinput _ (hdomain ▸ hmem))
+    refine ⟨x, ?_, ?_⟩
+    · rw [← hx, ← hD]
+      exact hmem
+    · rw [hx] at hbeyond
+      exact (infiniteBeyondValue_numbers direction bound x).mp hbeyond
+  · intro epsilon hepsilon
+    obtain ⟨bound, hbound, hcontrol⟩ := he (M.number (epsilon : ℂ)) (numberInRPos epsilon hepsilon)
+    let b := NativeBridge.asReal bound hbound
+    have hbvalue : denote bound = M.number (b : ℂ) := NativeBridge.asReal_spec bound hbound
+    refine ⟨b, ?_⟩
+    intro x hx hbeyond
+    have hxD : M.mem (M.number (x : ℂ)) (denote domain) := hD ▸ hx
+    have htail : M.mem (M.number (x : ℂ))
+        (infiniteLimitTailValue direction (denote domain) (denote bound)) := by
+      apply (F.sep_members _ _ _).mpr
+      refine ⟨hxD, hxD, ?_⟩
+      rw [hbvalue]
+      exact (infiniteBeyondValue_numbers direction b x).mpr hbeyond
+    have image := ((F.preimage_mem_iff (fun y => M.mem y
+      (sequenceEpsilonBallValue (denote value) (M.number (epsilon : ℂ))))
+      signature.domain_isSet hfn).mp (hcontrol _ htail)).2
+    obtain ⟨hyR, _, hless⟩ := (F.sep_members _ _ _).mp image
+    obtain ⟨y, hy⟩ := (M.real_members _).mp hyR
+    refine ⟨y, hy, ?_⟩
+    change RealLtValue M (absValue (M.subValue
+      (F.callValue (denote f) (M.number (x : ℂ))) (denote value))) (M.number (epsilon : ℂ)) at hless
+    rw [hy, hlvalue, M.sub_numbers, ← Complex.ofReal_sub, absValue_number] at hless
+    exact (realLtValue_numbers _ epsilon).mp hless
+
+end Litex
+
+namespace Litex
+
+
+theorem finiteFunctionLimitExists {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) (h : HasFiniteFunctionLimit side f point value) :
+    ∃ witness : Obj (M := M) M.Value, ∃ _ : In witness R,
+      HasFiniteFunctionLimit side f point witness := by
+  obtain ⟨p, l, hp, _, ha, he⟩ := h
+  have hreal : M.mem (M.number (l : ℂ)) (denote (R (M := M))) :=
+    (M.real_members _).mpr ⟨l, rfl⟩
+  let witness := semanticObject (M.number (l : ℂ)) (M.member_isSet hreal)
+  exact ⟨witness, hreal, p, l, hp, rfl, ha, he⟩
+
+theorem finiteFunctionLimitSelected {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (FiniteFunctionLimitObj (M := M) α β)) :
+    HasFiniteFunctionLimit p.val.side p.val.function p.val.point p := by
+  classical
+  have hc := p.wd.2.2
+  change HasFiniteFunctionLimitValue M p.val.side (denote p.val.function)
+    (denote p.val.point) (finiteFunctionLimitValue p.val.side (denote p.val.function) (denote p.val.point))
+  unfold finiteFunctionLimitValue
+  rw [dif_pos hc]
+  exact Classical.choose_spec hc
+
+theorem infiniteFunctionLimitExists {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α)
+    (value : Obj (M := M) β) (h : HasInfiniteFunctionLimit direction f value) :
+    ∃ witness : Obj (M := M) M.Value, ∃ _ : In witness R,
+      HasInfiniteFunctionLimit direction f witness := by
+  obtain ⟨l, _, ha, he⟩ := h
+  have hreal : M.mem (M.number (l : ℂ)) (denote (R (M := M))) :=
+    (M.real_members _).mpr ⟨l, rfl⟩
+  let witness := semanticObject (M.number (l : ℂ)) (M.member_isSet hreal)
+  exact ⟨witness, hreal, l, rfl, ha, he⟩
+
+theorem infiniteFunctionLimitSelected {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (p : Obj (M := M) (InfiniteFunctionLimitObj (M := M) α)) :
+    HasInfiniteFunctionLimit p.val.direction p.val.function p := by
+  classical
+  have hc := p.wd.2
+  change HasInfiniteFunctionLimitValue M p.val.direction (denote p.val.function)
+    (infiniteFunctionLimitValue p.val.direction (denote p.val.function))
+  unfold infiniteFunctionLimitValue
+  rw [dif_pos hc]
+  exact Classical.choose_spec hc
+
+end Litex
+
+namespace Litex
+
+
+theorem sequenceLimitSelected {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α]
+    (p : Obj (M := M) (SequenceLimitObj (M := M) α)) :
+    HasSequenceLimit p.val.sequence p := by
+  classical
+  have hc := p.wd.2
+  change HasSequenceLimitValue M (denote p.val.sequence) (sequenceLimitValue (denote p.val.sequence))
+  unfold sequenceLimitValue
+  rw [dif_pos hc]
+  exact (Classical.choose_spec hc).2
+
+theorem sequenceLimitTail {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (value : Obj (M := M) β) (epsilon : Obj (M := M) γ)
+    (h : HasSequenceLimit a value) (hepsilon : In epsilon RPos) :
+    ∃ cutoff : Obj (M := M) M.Value, ∃ _ : In cutoff NPos,
+      SequenceLimitTailValue M (denote a) (denote value) (denote epsilon) (denote cutoff) :=
+  h (denote epsilon) hepsilon
+
+end Litex

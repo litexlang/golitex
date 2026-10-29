@@ -1,0 +1,5 @@
+# A checked complex return does not supply real membership to arithmetic order.
+# Run: target/release/litex -lang en -strict -f examples/wd_negative/checked_function_composition_complex.lit
+thm complex_composed_return_order:
+    ? forall f fn(x R) C,t R:
+        f(t)+1<=f(t)+1

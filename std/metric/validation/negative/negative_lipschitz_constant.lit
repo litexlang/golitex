@@ -1,0 +1,19 @@
+release obj def m::real_line_distance
+
+release thm m::real_line_metric_laws()
+
+have line &m::MetricSpace<R> = (R,m::real_line_distance)
+
+release struct def line
+
+line.carrier=R
+
+line.distance=m::real_line_distance
+
+release thm fn_set_member(line.distance,fn(x,y line.carrier) R)
+
+0 $in line.carrier
+
+have fn constant(x line.carrier) line.carrier = 0
+
+by def $m::is_lipschitz_map(R,line,R,line,constant,-1)

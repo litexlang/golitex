@@ -145,6 +145,8 @@ impl LitexToLeanCompiler {
                     | AtomicFact::NotSequenceAnalysisFact(_)
                     | AtomicFact::HasSequenceLimitFact(_)
                     | AtomicFact::NotHasSequenceLimitFact(_)
+                    | AtomicFact::HasFunctionLimitFact(_)
+                    | AtomicFact::NotHasFunctionLimitFact(_)
                     | AtomicFact::RealSetBoundFact(_)
                     | AtomicFact::NotRealSetBoundFact(_)
                     | AtomicFact::RealSetBoundedFact(_)

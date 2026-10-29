@@ -488,7 +488,7 @@ fn checked_order_function_return_rejects_changed_argument_position() {
         panic!("local introduction");
     };
     let atomic = atomic_mut(&mut proof.proved_then_facts[0].verify_result);
-    let PredicateDomainProof::ByCheckedArgumentReturns(requirements) = &mut atomic
+    let PredicateDomainProof::ByRequirements(requirements) = &mut atomic
         .well_defined_proof
         .as_detailed_mut()
         .unwrap()
@@ -496,9 +496,56 @@ fn checked_order_function_return_rejects_changed_argument_position() {
     else {
         panic!("checked argument return evidence");
     };
-    requirements[0].argument_index = 1;
+    let crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::CheckedArgument(checked) = &mut requirements[0].result else { panic!("checked argument") };
+    checked.argument_index = 1;
     let error = compiler
         .compile_run(&result, "changed_return_argument")
         .unwrap_err();
     assert_eq!(error.route, "WD/OrderRealDomain");
+}
+
+#[test]
+fn checked_return_membership_composes_through_arithmetic_in_lean() {
+    let source = "thm composed_real_return:\n    ? forall f fn(x R:x>0) R,n R:\n        n>0\n        =>:\n            (f(n+1)+1)*(f(n+1)-1) $in R\n";
+    let (result, compiler) = checked(source);
+    let lean = compiler
+        .compile_run(&result, "composed_real_return")
+        .unwrap();
+    assert!(lean.contains("theorem"));
+    assert!(lean.contains("call"));
+}
+
+#[test]
+fn checked_return_composition_rejects_changed_leaf_carrier() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason;
+    let source = "forall f fn(x R:x>0) R,n R:\n    n>0\n    =>:\n        (f(n+1)+1) $in R\n";
+    let (mut result, compiler) = checked(source);
+    let VerifyFactResult::ForallFact(universal) = (match &mut result.statement_results[0] {
+        ExecStmtResult::Fact(ExecFactStmtResult::Success(s)) => &mut s.verify_result,
+        _ => panic!("source forall"),
+    }) else {
+        panic!("forall proof")
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(proof)) =
+        universal.as_mut()
+    else {
+        panic!("local scope")
+    };
+    let atomic = atomic_mut(&mut proof.proved_then_facts[0].verify_result);
+    let AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(tree) =
+        &mut atomic.searched_proof
+    else {
+        panic!("shared membership proof")
+    };
+    let StructuralMembershipReason::Add { left, .. } = &mut tree.reason else {
+        panic!("addition")
+    };
+    let StructuralMembershipReason::FunctionReturn { membership, .. } = &mut left.reason else {
+        panic!("function return")
+    };
+    membership.set = Obj::StandardSet(StandardSet::C);
+    let error = compiler
+        .compile_run(&result, "changed_function_leaf")
+        .unwrap_err();
+    assert_eq!(error.route, "StructuralMembership/FunctionReturnSubject");
 }

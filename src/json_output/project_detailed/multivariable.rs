@@ -49,7 +49,10 @@ pub(super) fn requirements(
                     rt,
                     vec![
                         ("requirement", string(p.requirement.readable_string())),
-                        ("proof", super::verify::project_verify_fact(&p.result, rt)),
+                        (
+                            "proof",
+                            super::wd::project_predicate_requirement(&p.result, rt),
+                        ),
                     ],
                 )
             })

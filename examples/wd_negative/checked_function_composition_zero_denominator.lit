@@ -1,0 +1,5 @@
+# Shared membership composition must retain the enclosing division guard.
+# Run: target/release/litex -lang en -strict -f examples/wd_negative/checked_function_composition_zero_denominator.lit
+thm missing_composed_denominator_guard:
+    ? forall u seq(R),n N+:
+        (u(n+1)+1)/u(n+1) $in R

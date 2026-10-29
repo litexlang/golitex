@@ -1,8 +1,8 @@
-# Algebra: groups, fields and vector spaces
+# Algebra: groups, rings, fields and vector spaces
 
 This package exports `group`, `field`, `vector_space`, `finite_span`, `basis`, `dependence`, `span_reduction`, `basis_existence`, `exchange`, `basis_comparison`, `basis_extension`, `dimension`, `subspace`, `finite_decomposition`,
 `linear_dimension`, `linear_criteria`, `coordinate_maps`, `direct_sum` and
-`subspace_sums`. It provides shared
+`subspace_sums` and `ring`. It provides shared
 group, field and vector-space definitions and checked source theorems for
 finite combinations, bases, dependence, removal, basis existence and single-step
 exchange, invariant finite basis length, ordered basis extension and guarded
@@ -1390,3 +1390,45 @@ which independent-list lengths exist in the bounded-length argument. These
 source proofs do not choose a complement or canonical basis. External direct
 sums, complement existence, matrix representations and operator theory remain
 separate work; no Litex-to-Lean certification is claimed here.
+
+
+## Unital rings and two-sided ideals
+
+The `ring` export adds `Ring<K nonempty_set>` with fields `zero`, `one`,
+`add`, `neg` and `mul`. Addition is an abelian group; multiplication is
+associative, has a two-sided identity and distributes on both sides.
+Multiplication need not be commutative, and zero may equal one. The separate
+`is_commutative_ring` predicate adds commutativity. These conventions exclude
+neither zero divisors nor the zero ring.
+
+Its 27 source theorems include additive cancellation/inverse uniqueness,
+zero absorption and signs of products, and collapse when zero equals one.
+`is_ring_homomorphism(K,S,L,T,f)` means a complete **unital** map preserving
+addition and multiplication; preservation of zero and negation is proved.
+Homomorphisms compose. `is_two_sided_ideal` requires zero, addition/negation
+closure and absorption on both sides. Zero/whole ideals, intersections, the
+unit-element criterion and homomorphism inverse images are supplied.
+
+`\ring_kernel<K,L,T,f>` is the actual subset `{x K:f(x)=T.zero}`. It is an
+ideal for a homomorphism. Injectivity is equivalent to that kernel being the
+singleton source zero. `field_has_ring_structure` and the checked
+`\field_ring<K,F>` value forget a Field's inverse and retain its ring data;
+no existing Field or vector-space contract is changed.
+
+The focused command is `python3 std/algebra/validation/ring/check.py`.
+The strict ring source has 33 accepted declarations; the full std-imported
+consumer has 58 accepted statements, including the integers, the zero ring,
+the real Field's ring view, genuine kernels and arbitrary-carrier callers.
+Five final-statement controls reject a nonunital map, a missing homomorphism
+premise, an ideal incorrectly required to contain one, injectivity with full
+kernel, and a zero ring claimed to be a Field. Refusal fixtures export the same
+Field and Ring source files directly, avoiding unrelated linear-algebra
+exports; the positive consumer imports the complete public `algebra` package.
+Run the checks serially; concurrent full-package refusals exceeded 300 seconds
+in this task, while all focused source refusals completed and rejected.
+
+The concrete noncommutative upper-triangular ring model remains unfinished
+proof work and is excluded from the passing consumers.
+Left/right-only ideals, polynomial rings, quotient rings and isomorphism
+structure are not supplied by this batch. No new trust, axiom, parser or kernel
+rule was introduced.

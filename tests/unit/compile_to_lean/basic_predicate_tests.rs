@@ -101,7 +101,6 @@ fn basic_predicate_rejects_missing_domain_and_altered_computation() {
             .unwrap()
             .predicate_domain
         {
-            PredicateDomainProof::ByCheckedArguments(r) => r.clear(),
             PredicateDomainProof::ByRequirements(r) => r.clear(),
             _ => panic!("expected original numeric domain"),
         }

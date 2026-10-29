@@ -12,6 +12,27 @@ mod not_forall_tests;
 
 use super::{compile_run as compile_run_owned_runtime, LeanCompileError, LitexToLeanCompiler};
 
+#[path = "../../tests/unit/compile_to_lean/function_limit_tests.rs"]
+mod function_limit_tests;
+
+#[path = "../../tests/unit/compile_to_lean/infinite_function_limit_tests.rs"]
+mod infinite_function_limit_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_theorem_tests.rs"]
+mod function_limit_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_limit_theorem_tests.rs"]
+mod sequence_limit_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/division_shrink_tests.rs"]
+mod division_shrink_tests;
+
+#[path = "../../tests/unit/compile_to_lean/absolute_nonnegative_tests.rs"]
+mod absolute_nonnegative_tests;
+
+#[path = "../../tests/unit/compile_to_lean/nested_builder_projection_tests.rs"]
+mod nested_builder_projection_tests;
+
 #[path = "../../tests/unit/compile_to_lean/cart_release_tests.rs"]
 mod cart_release_tests;
 
@@ -3026,7 +3047,7 @@ fn phase2_even_power_tag_rejects_a_genuinely_well_defined_odd_power() {
         PredicateDomainProof::ByRequirements(requirements) => {
             assert_eq!(requirements.len(), 2);
             requirements[1].requirement = Fact::AtomicFact(cube_member_fact);
-            requirements[1].result = Box::new(cube_member.verify_result);
+            requirements[1].result = crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::Verified(Box::new(cube_member.verify_result));
         }
         _ => panic!("actual two-stage real-domain WD"),
     }

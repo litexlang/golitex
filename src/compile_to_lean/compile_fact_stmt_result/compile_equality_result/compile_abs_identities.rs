@@ -67,13 +67,21 @@ impl LitexToLeanCompiler {
             ));
         };
         let (zero, positive, strict) = source_order_oriented(&subject)?;
-        if strict || !is_exact_zero(zero) || positive.ir() != argument.ir() {
+        if !is_exact_zero(zero) || positive.ir() != argument.ir() {
             return Err(LeanCompileError::new(
                 "AbsNonnegative/RequirementSubject",
-                "The selected argument proof must certify its exact weak lower bound zero.",
+                "The selected argument proof must certify its exact lower bound zero.",
             ));
         }
         let nonnegative = self.compile_verify(requirement, position)?.1;
+        let nonnegative = if strict {
+            format!(
+                "(Litex.ltToLe (Litex.number (M := M) 0) {} {nonnegative})",
+                self.compile_object_reference(argument, position)?
+            )
+        } else {
+            nonnegative
+        };
         let term = self.compile_object_reference(abs_object, position)?;
         let symmetric = if reversed { ".symm" } else { "" };
         Ok(format!("(by\n  let _litex_abs := {term}\n  exact (Litex.absOfNonnegative _litex_abs.val.arg _litex_abs.wd {nonnegative}){symmetric}\n)"))

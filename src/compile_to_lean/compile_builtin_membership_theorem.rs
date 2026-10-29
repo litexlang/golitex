@@ -29,6 +29,58 @@ impl LitexToLeanCompiler {
         };
         if matches!(
             builtin.theorem,
+            BuiltinTheoremId::SequenceLimitUnique
+                | BuiltinTheoremId::SequenceLimitExists
+                | BuiltinTheoremId::SequenceLimitSelected
+                | BuiltinTheoremId::SequenceLimitFromEpsilon
+                | BuiltinTheoremId::SequenceLimitTail
+        ) {
+            return self.compile_builtin_sequence_limit_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtUnique
+                | BuiltinTheoremId::FnLimitLeftUnique
+                | BuiltinTheoremId::FnLimitRightUnique
+                | BuiltinTheoremId::FnLimitPosInfUnique
+                | BuiltinTheoremId::FnLimitNegInfUnique
+                | BuiltinTheoremId::FnLimitAtExists
+                | BuiltinTheoremId::FnLimitAtSelected
+                | BuiltinTheoremId::FnLimitLeftExists
+                | BuiltinTheoremId::FnLimitLeftSelected
+                | BuiltinTheoremId::FnLimitRightExists
+                | BuiltinTheoremId::FnLimitRightSelected
+                | BuiltinTheoremId::FnLimitPosInfExists
+                | BuiltinTheoremId::FnLimitPosInfSelected
+                | BuiltinTheoremId::FnLimitNegInfExists
+                | BuiltinTheoremId::FnLimitNegInfSelected
+        ) {
+            return self.compile_builtin_function_limit_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
             BuiltinTheoremId::RealLeastUpperBoundFromDefinition
                 | BuiltinTheoremId::RealGreatestLowerBoundFromDefinition
                 | BuiltinTheoremId::RealLeastUpperBoundUpperBound

@@ -51,17 +51,17 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
                 text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
             }
-            Self::CoshNonzero(_) => text(
-                "CoshNonzero",
-                "Defined cosh(x) != 0; enclosing WD retains the domain",
+            Self::CoshNonzero(_) => crate::json_output::explain::text::text(
+                "Hyperbolic cosine is nonzero",
+                "For real x, cosh(x)≥1, hence cosh(x)≠0.",
             ),
             Self::SechNonzero(_) => text(
                 "SechNonzero",
                 "Defined sech(x) != 0; enclosing WD retains the domain",
             ),
-            Self::CothNonzero(_) => text(
-                "CothNonzero",
-                "Defined coth(x) != 0; enclosing WD retains the domain",
+            Self::CothNonzero(_) => crate::json_output::explain::text::text(
+                "Hyperbolic cotangent is nonzero",
+                "For real x≠0, coth(x)=cosh(x)/sinh(x) is nonzero.",
             ),
             Self::CschNonzero(_) => text(
                 "CschNonzero",
@@ -80,17 +80,20 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "SinhNonzeroFromArgument",
                 "x != 0 and checked domain => sinh(x) != 0",
             ),
-            Self::ConjugateNonzeroFromArgument(_) => text(
-                "ConjugateNonzeroFromArgument",
-                "x != 0 and checked domain => conjugate(x) != 0",
+            Self::ConjugateNonzeroFromArgument(_) => crate::json_output::explain::text::text(
+                "Conjugation preserves nonzero values",
+                "For complex z≠0, conjugate(z)≠0.",
             ),
             Self::SinComplementNonzeroFromCos(_) => {
                 text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
             }
-            Self::ExpNonzero(_) => text("Exponential is nonzero", "x in R: exp(x)>0 => exp(x)!=0"),
-            Self::FactorialNonzero(_) => text(
+            Self::ExpNonzero(_) => crate::json_output::explain::text::text(
+                "Exponential is nonzero",
+                "For real x, exp(x)>0 and therefore exp(x)≠0.",
+            ),
+            Self::FactorialNonzero(_) => crate::json_output::explain::text::text(
                 "Factorial is nonzero",
-                "n in N: factorial(n)>0 => factorial(n)!=0",
+                "For n ∈ ℕ, n! is a positive integer, including 0!=1.",
             ),
             Self::SignNonzeroFromArgument(_) => {
                 text("Nonzero sign from argument", "x in R, x!=0 => sign(x)!=0")
@@ -108,9 +111,9 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "Nonzero value from a signed bound",
                 "A checked bound separates the value strictly from zero",
             ),
-            Self::ImaginaryUnitNonzero(_) => text(
-                "Imaginary unit is nonzero",
-                "The reserved imaginary unit satisfies i² = -1 and is nonzero",
+            Self::ImaginaryUnitNonzero(_) => crate::json_output::explain::text::text(
+                "The imaginary unit is nonzero",
+                "The imaginary unit i satisfies i²=−1 and i≠0.",
             ),
             Self::InequalityFromDifferenceNonzero(_) => text(
                 "Inequality from a nonzero difference",
@@ -185,17 +188,17 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
                 text("ProductFactorNonzeroWithZeroAlias", "a*b!=z, z=0 => a!=0")
             }
-            Self::CoshNonzero(_) => text(
-                "CoshNonzero",
-                "Defined cosh(x) != 0; enclosing WD retains the domain",
+            Self::CoshNonzero(_) => crate::json_output::explain::text::text(
+                "双曲余弦非零",
+                "对实数 x，cosh(x)≥1，因此 cosh(x)≠0。",
             ),
             Self::SechNonzero(_) => text(
                 "SechNonzero",
                 "Defined sech(x) != 0; enclosing WD retains the domain",
             ),
-            Self::CothNonzero(_) => text(
-                "CothNonzero",
-                "Defined coth(x) != 0; enclosing WD retains the domain",
+            Self::CothNonzero(_) => crate::json_output::explain::text::text(
+                "双曲余切非零",
+                "对非零实数 x，coth(x)=cosh(x)/sinh(x) 非零。",
             ),
             Self::CschNonzero(_) => text(
                 "CschNonzero",
@@ -214,17 +217,21 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "SinhNonzeroFromArgument",
                 "x != 0 and checked domain => sinh(x) != 0",
             ),
-            Self::ConjugateNonzeroFromArgument(_) => text(
-                "ConjugateNonzeroFromArgument",
-                "x != 0 and checked domain => conjugate(x) != 0",
+            Self::ConjugateNonzeroFromArgument(_) => crate::json_output::explain::text::text(
+                "共轭保持非零",
+                "对非零复数 z，conjugate(z)≠0。",
             ),
             Self::SinComplementNonzeroFromCos(_) => {
                 text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
             }
-            Self::ExpNonzero(_) => text("指数函数非零", "x in R: exp(x)>0 => exp(x)!=0"),
-            Self::FactorialNonzero(_) => {
-                text("阶乘非零", "n in N: factorial(n)>0 => factorial(n)!=0")
-            }
+            Self::ExpNonzero(_) => crate::json_output::explain::text::text(
+                "指数函数非零",
+                "对实数 x，exp(x)>0，因此 exp(x)≠0。",
+            ),
+            Self::FactorialNonzero(_) => crate::json_output::explain::text::text(
+                "阶乘非零",
+                "对 n ∈ ℕ，n! 为正整数；其中 0!=1。",
+            ),
             Self::SignNonzeroFromArgument(_) => {
                 text("非零参数的 sign 非零", "x in R, x!=0 => sign(x)!=0")
             }
@@ -239,9 +246,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "由带符号界推出非零",
                 "已验证的界使该值严格大于零或严格小于零",
             ),
-            Self::ImaginaryUnitNonzero(_) => {
-                text("虚数单位非零", "内建虚数单位满足 i² = -1，因而不等于零")
-            }
+            Self::ImaginaryUnitNonzero(_) => crate::json_output::explain::text::text(
+                "虚数单位非零",
+                "虚数单位 i 满足 i²=−1，且 i≠0。",
+            ),
             Self::InequalityFromDifferenceNonzero(_) => {
                 text("差非零推出不相等", "已验证的差非零说明两个操作数不相等")
             }

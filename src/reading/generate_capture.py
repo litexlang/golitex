@@ -67,15 +67,45 @@ def pieces_with_offsets(text):
     yield start, len(text)
 
 
+def match_arms(masked):
+    """Top-level match arms; block expressions may omit their trailing comma."""
+    starts, depth = [], 0
+    for index, char in enumerate(masked):
+        if depth == 0 and masked.startswith('Self::', index):
+            before = masked[:index].rstrip()
+            pattern = r'Self::\w+\s*(?:\([^)]*\)|\{[^}]*\})?(?:\s*\|\s*Self::\w+\s*(?:\([^)]*\)|\{[^}]*\})?)*\s*=>'
+            if not before.endswith('|') and re.match(pattern, masked[index:]):
+                starts.append(index)
+        if char in '({[':
+            depth += 1
+        elif char in ')}]':
+            depth -= 1
+    for index, start in enumerate(starts):
+        yield start, starts[index + 1] if index + 1 < len(starts) else len(masked)
+
+
 def static_text(expression):
+    expression = expression.strip().removesuffix(',').strip().removesuffix(';').strip()
+    if expression.startswith('{') and expression.endswith('}'):
+        expression = expression[1:-1].strip()
     literal = r'"(?:\\.|[^"\\])*"'
-    match = re.fullmatch(r'\s*(?:return\s+)?text\(\s*(' + literal + r')\s*,\s*(' + literal + r')\s*,?\s*\)\s*;?\s*', expression, re.S)
-    if not match:
-        return None
-    try:
-        return {'name': json.loads(match[1]), 'message': json.loads(match[2])}
-    except ValueError:
-        return None
+    match = re.fullmatch(r'\s*(?:return\s+)?(?:crate::json_output::explain::text::)?text\(\s*(' + literal + r')\s*,\s*(' + literal + r')\s*,?\s*\)\s*;?\s*', expression, re.S)
+    if match:
+        try:
+            return {'name': json.loads(match[1]), 'message': json.loads(match[2])}
+        except ValueError:
+            # Rust-only escapes remain runtime-owned instead of being guessed.
+            return None
+    # These are source literals, not Rust Debug or human JSON output. Preserve
+    # a literal struct's exact localized text just like the text(...) helper.
+    match = re.fullmatch(r'BuiltinRuleText\s*\{\s*rule_name:\s*(' + literal + r')\.(?:into|to_string)\(\),\s*message:\s*(' + literal + r')\.(?:into|to_string)\(\),?\s*\}', expression, re.S)
+    if match:
+        try:
+            return {'name': json.loads(match[1]), 'message': json.loads(match[2])}
+        except ValueError:
+            # Rust-only escapes remain runtime-owned instead of being guessed.
+            return None
+    return None
 
 
 def fields(text):
@@ -169,15 +199,16 @@ class Generator:
         self.rule_ids = json.loads(registry.read_text()) if registry.exists() else {}
         self.paths, self.missing_exports = self.access_paths()
         self.methods = set()
+        self.comment_languages = collections.defaultdict(set)
         for path in ROOT.rglob('*.rs'):
             if 'reading' in path.parts:
                 continue
             source = path.read_text()
             text = clean(source)
-            for match in re.finditer(r'\bimpl\s+(\w+)\s*\{', text):
+            for match in re.finditer(r'\bimpl\s+([\w:]+)\s*\{', text):
                 end = closing(text, match.end() - 1)
                 if re.search(r'pub fn rule_name_and_message\s*\(', text[match.end():end]):
-                    self.methods.add(match[1])
+                    self.methods.add(match[1].split('::')[-1])
                 owner = self.resolve(match[1], module_path(path))
                 if not owner:
                     continue
@@ -188,6 +219,7 @@ class Generator:
                     raw_body = source[start:method_end]
                     cleaned_body = text[start:method_end]
                     language = method[1].replace('_', '-')
+                    self.comment_languages[owner].add(language)
                     direct = static_text(raw_body)
                     if direct:
                         self.labels[(owner, '', language)] = direct
@@ -196,7 +228,7 @@ class Generator:
                         continue
                     body_start = dispatch.end()
                     body_end = closing(cleaned_body, body_start - 1)
-                    for arm_start, arm_end in pieces_with_offsets(cleaned_body[body_start:body_end]):
+                    for arm_start, arm_end in match_arms(cleaned_body[body_start:body_end]):
                         arm = raw_body[body_start + arm_start:body_start + arm_end]
                         variant = re.match(r'\s*Self::(\w+)[\s\S]*?=>', clean(arm))
                         if variant:
@@ -399,6 +431,8 @@ class Generator:
                 category = 'infer' if is_infer else 'builtin_theorem' if is_theorem else 'builtin'
                 registry_key = category + '.' + key
                 rule_id = self.rule_ids.setdefault(registry_key, registry_key)
+                if category == 'builtin' and (record['name'] not in self.methods or not {'en', 'zh'}.issubset(self.comment_languages[full])):
+                    raise ValueError(f'{full} must own localized builtin rule comments')
                 labels = {}
                 for language in ['en', 'zh', 'zh-hant', 'fr', 'ru', 'es', 'ar', 'ja', 'ko', 'vi']:
                     label = self.labels.get((full, name, language))
@@ -493,8 +527,12 @@ class Generator:
         if is_rule:
             if record['name'] in self.methods:
                 lines.append('if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }')
+                if not is_infer and not is_theorem:
+                    lines.append('if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }')
             else:
                 lines.append(f'if let Some(rule_id) = rule_id {{ capture.rule_application(&mut output, rule_id, {json.dumps(name)}, ""); }}')
+        if record['name'] == 'StructuralMembershipReason':
+            lines.append('capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());')
         if environments:
             lines.append('capture.leave_scope(saved_scope);')
         if locations:

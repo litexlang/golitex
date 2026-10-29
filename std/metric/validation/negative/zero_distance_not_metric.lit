@@ -1,0 +1,3 @@
+have fn zero_distance(x,y {0,1}) R = 0
+
+have bad &m::MetricSpace<{0,1}> = ({0,1},zero_distance)

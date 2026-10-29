@@ -1,0 +1,188 @@
+# Positive square-root Newton iteration, error bounds and convergence.
+
+claim:
+    ? forall a,x R+:
+        (x+a/x)/2 $in R+
+    a/x>0
+    x+a/x>0
+    (x+a/x)/2>0
+
+have fn newton_sqrt_step(a,x R+) R+ = (x+a/x)/2
+
+have fn newton_sqrt_iterate(a,start R+,n N) R+ by induc n from 0:
+    case n=0:start
+    case n>=1:newton_sqrt_step(a,newton_sqrt_iterate(a,start,n-1))
+
+thm newton_sqrt_scaled_step:
+    ? forall a,x R+:
+        2*x*newton_sqrt_step(a,x)=x^2+a
+    newton_sqrt_step(a,x)=(x+a/x)/2
+    2*x*newton_sqrt_step(a,x)=2*x*((x+a/x)/2)=x^2+a
+
+thm newton_sqrt_residual_identity:
+    ? forall a,x R+:
+        4*x^2*(newton_sqrt_step(a,x)^2-a)=(x^2-a)^2
+    release thm newton_sqrt_scaled_step(a,x)
+    4*x^2*(newton_sqrt_step(a,x)^2-a)=(2*x*newton_sqrt_step(a,x))^2-4*x^2*a=(x^2+a)^2-4*x^2*a=(x^2-a)^2
+
+thm newton_sqrt_root_error_identity:
+    ? forall a,x R+:
+        2*x*(newton_sqrt_step(a,x)-sqrt(a))=(x-sqrt(a))^2
+    release thm newton_sqrt_scaled_step(a,x)
+    sqrt(a)^2=a
+    (x-sqrt(a))^2=x^2-2*x*sqrt(a)+sqrt(a)^2=x^2-2*x*sqrt(a)+a
+    2*x*(newton_sqrt_step(a,x)-sqrt(a))=2*x*newton_sqrt_step(a,x)-2*x*sqrt(a)=(x^2+a)-2*x*sqrt(a)=(x-sqrt(a))^2
+
+thm newton_sqrt_step_is_above_root:
+    ? forall a,x R+:
+        sqrt(a)<=newton_sqrt_step(a,x)
+    release thm newton_sqrt_root_error_identity(a,x)
+    0<2*x
+    0<=(x-sqrt(a))^2
+    by contra:
+        ? sqrt(a)<=newton_sqrt_step(a,x)
+        newton_sqrt_step(a,x)<sqrt(a)
+        newton_sqrt_step(a,x)-sqrt(a)<0
+        (x-sqrt(a))^2=2*x*(newton_sqrt_step(a,x)-sqrt(a))<0
+        impossible 0<=(x-sqrt(a))^2
+
+thm newton_sqrt_step_decreases_above_root:
+    ? forall a,x R+:
+        sqrt(a)<=x
+        =>:
+            newton_sqrt_step(a,x)<=x
+    sqrt(a)^2=a
+    0<=sqrt(a)
+    sqrt(a)^2<=x^2
+    a/x<=x^2/x=x
+    x+a/x<=x+x
+    newton_sqrt_step(a,x)=(x+a/x)/2<=(x+x)/2=x
+
+thm newton_sqrt_error_halves:
+    ? forall a,x R+:
+        sqrt(a)<=x
+        =>:
+            0<=newton_sqrt_step(a,x)-sqrt(a)
+            newton_sqrt_step(a,x)-sqrt(a)<=(x-sqrt(a))/2
+    release thm newton_sqrt_step_is_above_root(a,x)
+    release thm newton_sqrt_root_error_identity(a,x)
+    0<=sqrt(a)
+    0<=x-sqrt(a)
+    x-sqrt(a)<=x
+    0<2*x
+    (x-sqrt(a))^2=(x-sqrt(a))*(x-sqrt(a))<=x*(x-sqrt(a))
+    newton_sqrt_step(a,x)-sqrt(a)=(2*x*(newton_sqrt_step(a,x)-sqrt(a)))/(2*x)=(x-sqrt(a))^2/(2*x)<=(x*(x-sqrt(a)))/(2*x)=(x-sqrt(a))/2
+
+thm newton_sqrt_iterates_are_above_root:
+    ? forall a,start R+,n N:
+        n>=1
+        =>:
+            sqrt(a)<=newton_sqrt_iterate(a,start,n)
+    n-1 $in N
+    release thm newton_sqrt_step_is_above_root(a,newton_sqrt_iterate(a,start,n-1))
+    newton_sqrt_iterate(a,start,n)=newton_sqrt_step(a,newton_sqrt_iterate(a,start,n-1))
+
+thm newton_sqrt_iterates_decrease:
+    ? forall a,start R+,n N:
+        n>=1
+        =>:
+            newton_sqrt_iterate(a,start,n+1)<=newton_sqrt_iterate(a,start,n)
+    release thm newton_sqrt_iterates_are_above_root(a,start,n)
+    release thm newton_sqrt_step_decreases_above_root(a,newton_sqrt_iterate(a,start,n))
+    n+1>=1
+    (n+1)-1=n
+    newton_sqrt_iterate(a,start,n+1)=newton_sqrt_step(a,newton_sqrt_iterate(a,start,n))
+
+forall a R+:
+    sqrt(a)>0
+
+thm newton_sqrt_error_is_quadratic:
+    ? forall a,x R+:
+        sqrt(a)<=x
+        =>:
+            newton_sqrt_step(a,x)-sqrt(a)<=(x-sqrt(a))^2/(2*sqrt(a))
+    release thm newton_sqrt_step_is_above_root(a,x)
+    release thm newton_sqrt_root_error_identity(a,x)
+    0<=newton_sqrt_step(a,x)-sqrt(a)
+    0<2*sqrt(a)<=2*x
+    2*sqrt(a)*(newton_sqrt_step(a,x)-sqrt(a))<=2*x*(newton_sqrt_step(a,x)-sqrt(a))=(x-sqrt(a))^2
+    newton_sqrt_step(a,x)-sqrt(a)=(2*sqrt(a)*(newton_sqrt_step(a,x)-sqrt(a)))/(2*sqrt(a))<=(x-sqrt(a))^2/(2*sqrt(a))
+
+thm newton_sqrt_iterate_error_bound:
+    ? forall a,start R+,n N:
+        n>=1
+        =>:
+            newton_sqrt_iterate(a,start,n)-sqrt(a)<=(newton_sqrt_iterate(a,start,1)-sqrt(a))/2^(n-1)
+    by induc n from 1:
+        ? newton_sqrt_iterate(a,start,n)-sqrt(a)<=(newton_sqrt_iterate(a,start,1)-sqrt(a))/2^(n-1)
+        ? from n=1:
+            1-1=0
+            2^(1-1)=2^0=1
+            (newton_sqrt_iterate(a,start,1)-sqrt(a))/2^(1-1)=(newton_sqrt_iterate(a,start,1)-sqrt(a))/1=newton_sqrt_iterate(a,start,1)-sqrt(a)
+        ? induc:
+            release thm newton_sqrt_iterates_are_above_root(a,start,n)
+            release thm newton_sqrt_error_halves(a,newton_sqrt_iterate(a,start,n))
+            n+1>=1
+            (n+1)-1=n
+            newton_sqrt_iterate(a,start,n+1)=newton_sqrt_step(a,newton_sqrt_iterate(a,start,n))
+            (n-1)+1=n
+            2^n=2^((n-1)+1)=2^(n-1)*2
+            newton_sqrt_iterate(a,start,n+1)-sqrt(a)=newton_sqrt_step(a,newton_sqrt_iterate(a,start,n))-sqrt(a)<=(newton_sqrt_iterate(a,start,n)-sqrt(a))/2<=((newton_sqrt_iterate(a,start,1)-sqrt(a))/2^(n-1))/2=(newton_sqrt_iterate(a,start,1)-sqrt(a))/(2^(n-1)*2)=(newton_sqrt_iterate(a,start,1)-sqrt(a))/2^n=(newton_sqrt_iterate(a,start,1)-sqrt(a))/2^((n+1)-1)
+
+template<a,start R+>:
+    have fn newton_sqrt_sequence(k N+) R = newton_sqrt_iterate(a,start,k)
+
+thm newton_sqrt_sequence_converges:
+    ? forall a,start R+:
+        $has_seq_limit(\newton_sqrt_sequence<a,start>,sqrt(a))
+    release thm fn_set_member(\newton_sqrt_sequence<a,start>,fn(k N+) R)
+    have c R = newton_sqrt_iterate(a,start,1)-sqrt(a)
+    have fn geometric(k N+) R = (1/2)^k
+    release thm series::sequence_geometric_nonnegative_limit(geometric,1/2)
+    release thm seq_limit_scale(geometric,0,2*c)
+    have fn upper(k N+) R = 2*c*geometric(k)
+    2*c*0=0
+    $has_seq_limit(upper,0)
+    have fn zero(k N+) R = 0
+    release thm seq_limit_constant(zero,0)
+    have fn error(k N+) R = \newton_sqrt_sequence<a,start>(k)-sqrt(a)
+    claim:
+        ? forall k N+:
+            k>=1
+            =>:
+                zero(k)<=error(k)
+                error(k)<=upper(k)
+        k $in N
+        by thm newton_sqrt_iterates_are_above_root(a,start,k) => sqrt(a)<=newton_sqrt_iterate(a,start,k)
+        release thm newton_sqrt_iterate_error_bound(a,start,k)
+        \newton_sqrt_sequence<a,start>(k)=newton_sqrt_iterate(a,start,k)
+        error(k)=\newton_sqrt_sequence<a,start>(k)-sqrt(a)=newton_sqrt_iterate(a,start,k)-sqrt(a)
+        zero(k)=0<=newton_sqrt_iterate(a,start,k)-sqrt(a)=error(k)
+        (k-1)+1=k
+        2^k=2^((k-1)+1)=2^(k-1)*2
+        1/2=2^(-1)
+        (1/2)^k=(2^(-1))^k=2^((-1)*k)=2^(-k)=1/2^k
+        geometric(k)=(1/2)^k=1/2^k
+        upper(k)=2*c*geometric(k)=2*c*(1/2^k)=(2*c)/2^k
+        (newton_sqrt_iterate(a,start,1)-sqrt(a))/2^(k-1)=c/2^(k-1)=(2*c)/(2^(k-1)*2)=(2*c)/2^k=upper(k)
+        error(k)=newton_sqrt_iterate(a,start,k)-sqrt(a)<=(newton_sqrt_iterate(a,start,1)-sqrt(a))/2^(k-1)=upper(k)
+    release thm seq_limit_squeeze(zero,error,upper,0,1)
+    have fn root_constant(k N+) R = sqrt(a)
+    release thm seq_limit_constant(root_constant,sqrt(a))
+    release thm seq_limit_add(error,root_constant,0,sqrt(a))
+    0+sqrt(a)=sqrt(a)
+    by fn_extension:
+        ? \newton_sqrt_sequence<a,start> = fn(k N+) R {error(k)+root_constant(k)}
+        claim:
+            ? forall k N+:
+                \newton_sqrt_sequence<a,start>(k)=fn(j N+) R {error(j)+root_constant(j)}(k)
+            error(k)=\newton_sqrt_sequence<a,start>(k)-sqrt(a)
+            root_constant(k)=sqrt(a)
+            fn(j N+) R {error(j)+root_constant(j)}(k)=error(k)+root_constant(k)=(\newton_sqrt_sequence<a,start>(k)-sqrt(a))+sqrt(a)=\newton_sqrt_sequence<a,start>(k)
+
+thm newton_sqrt_fixes_root:
+    ? forall a R+:
+        newton_sqrt_step(a,sqrt(a))=sqrt(a)
+    sqrt(a)^2=a
+    a/sqrt(a)=sqrt(a)^2/sqrt(a)=sqrt(a)
+    newton_sqrt_step(a,sqrt(a))=(sqrt(a)+a/sqrt(a))/2=(sqrt(a)+sqrt(a))/2=sqrt(a)

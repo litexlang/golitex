@@ -1,0 +1,5 @@
+{} $in power_set({})
+
+{{}} $subset power_set({})
+
+by def $rel::is_partition({},{{}})

@@ -11078,17 +11078,21 @@ fact first.
 ### Order and comparison rules
 
 Every ordered comparison requires both operands to be real; membership in `C`
-alone never supplies an order. A checked function application can provide its
-exact real return carrier to the comparison without repeating its call proof:
+alone never supplies an order. Shared membership verification can compose a
+checked function's return carrier through arithmetic and supply it to a
+comparison or another numeric consumer without repeating its call proof:
 
 ```litex
 forall u seq(R), n N+:
-    u(n+1) <= u(n+1)
+    u(n+1)+1 <= u(n+1)+1
+forall u seq(R), n N+:
+    (u(n+1)+1)*(u(n+1)-1) $in R
 ```
 
 The function argument and any guard must still be proved; a complex-returning
 function does not acquire a real result from the comparison. See the
-[checked-call example](../examples/wd/checked_function_order_domain.lit) and
+[composition example](../examples/proof_nodes/atomic/checked_function_membership_composition.lit), the
+[direct-call example](../examples/wd/checked_function_order_domain.lit), and
 its invalid-index, missing-guard, complex-return and conflicting-signature
 controls in `examples/wd_negative/`. The order layer recognizes these contracts:
 
@@ -12628,6 +12632,28 @@ The preceding `have a R = 2` example illustrates the knowledge cycle: establish 
 At the native syntax and execution layer, numerals, addition and summation have direct constructors such as `Number`, `Add` and `Sum` ([object AST](../src/ast/obj.rs)). [Closed arithmetic checking](../src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/calculate_closed_equal_fact.rs) need not replay a construction of numerals from successor operations or set encodings. This is a choice of semantic and implementation level. The primitives still need a mathematical interpretation and justified checking rules. SMT-LIB's interpreted integer and real arithmetic gives an established example of specifying numerals and operations through their intended models [SMTTheory]. `Obj`/`Fact`/`Stmt` are syntactic categories, not a claim to have eliminated primitive structure or logical assumptions.
 
 ITP and ATP chiefly describe the organization and automation of proving; they do not identify a mathematical foundation. The TPTP workflow presents automatic search for consequences of a supplied problem [ATPProcess], while Isabelle combines interactive proof development, automation and multiple object logics [IsabelleGeneric]. In broad terminology, Litex can serve as a proof assistant and contains automated reasoning. Its distinguishing default interface is the incremental checking and reuse of mathematical statements; those broad labels do not fully describe that design.
+
+<a id="mathematical-expression-and-reasoning"></a>
+
+**Closeness to ordinary mathematical writing has two complementary aspects: expression structure and reasoning structure.** The first concerns how mathematics is written; the second concerns how known facts support new steps.
+
+| Aspect | Structure already present in mathematical writing | Litex's corresponding design |
+| --- | --- | --- |
+| **Expression structure: how mathematics is written** | Objects, sets, functions and relations, together with ways of organizing statements such as “for every”, “there exists” and “assume”. | Represent these structures through native objects, facts and statements, with explicit meanings, conditions of use, quantification and scope. |
+| **Reasoning structure: how mathematics is established step by step** | Connections by which known facts justify a next step: substitution, calculation, applying general laws, splitting into cases and choosing witnesses. | Authors write meaningful mathematical steps; the system searches the current context, definitions, user-proved general facts and builtin rules for supported justifications, and records the evidence. |
+
+Syntax and semantics run through both aspects. Syntax specifies how constructs are written; semantics specifies the meanings of objects and claims, and how actions affect the context. “Assume” introduces a local premise with a scope of validity; “therefore” proposes a conclusion that needs justification. Explicit case splits and witness choices also express reasoning structure in source code. That structure concerns the dependencies and justification between steps, including both the author's proof actions and the verifier's use of rules.
+
+An ordinary mathematical passage connects the two aspects:
+
+> Let $x$ be a positive real number. Set $y = 1/x$. Then $xy = 1$.
+
+- **Expression structure** identifies the objects $x$ and $y$, the range and condition on $x$, the definition of $y$, and the final equality being asserted.
+- **Reasoning structure** connects those statements: positivity gives $x \ne 0$, which makes the reciprocal well-defined; the definition, substitution and arithmetic rules then justify $xy = 1$.
+
+Authors or AI supply the key constructions and proof route. Litex makes supported connections in that route executable through contextual retrieval and checking. Its proximity to mathematical writing therefore concerns both the expression interface and the allocation of reasoning work, a design dimension that the ITP/ATP labels alone do not capture.
+
+**Litex makes the structure already present in mathematical writing executable.**
 
 Litex's choice of author-visible granularity is a further dimension. Familiar mathematical objects, relations, statements and proof actions are native constructs, so the author can define a function, use a finite sum or split into cases at the abstraction level of ordinary mathematics. Here “semantic primitives” means units available through the authoring interface; they can still have parameters and internal structure. These source-visible constructs are **only part of Litex's native semantics**, which also includes domain and well-definedness conditions, scope, context updates and reuse of accepted facts.
 

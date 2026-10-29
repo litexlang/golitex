@@ -140,7 +140,7 @@ impl Runtime {
                     },
                 ));
             }
-            domains.push(super::super::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof {requirement,result:Box::new(proof)});
+            domains.push(super::super::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof {requirement,result:super::super::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::Verified(Box::new(proof))});
         }
         let selection =
             if let Some((_, candidate)) = self.known_multivariable_selector_candidate(obj) {

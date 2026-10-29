@@ -5025,3 +5025,45 @@ visible parameter; arbitrary sequence-producing expressions and a native
 Mathlib sequence adapter remain separate work. Full Cargo tests remain blocked
 by the missing fixture noted above. Local receipts:
 `scripts/litex_to_lean/.draft/eight-hour-2026-10-28/`.
+
+## Native sequence-limit uniqueness interface — 2026-10-29
+
+The [sequence uniqueness example](../lean/examples/sequence_limit_unique/) now
+includes a handwritten `Adapter.lean` and native `Final.lean`. The final theorem
+has only a function `ℕ → ℝ`, real candidate limits and Mathlib `Tendsto`
+hypotheses. Its proof calls the Adapter; the Adapter converts those hypotheses
+to the existing epsilon-tail predicate and consumes the compiler-generated
+theorem. The source passes strict checking and the generated pair has no drift.
+The generated file, Adapter and Final passed fresh Lean 4.31.0 checks under
+the pinned Lake environment. Their native theorem axiom audit contains only
+`propext`, `Classical.choice` and `Quot.sound`. Removing the generated proof
+binding makes the Adapter fail. This completes this handwritten native bridge;
+it does not extend the compiler's supported sequence-domain expressions.
+Local receipt: `tmp/2026-10-29/litex-to-lean-six-hour/sequence-native-adapter-checkpoint.json`.
+
+## Finite real function limits — 2026-10-29
+
+The compiler now replays finite-point and one-sided function-limit predicates,
+their selected-value and uniqueness equality results, and their selectors'
+original function/point WD, real-domain proof and candidate or existence
+evidence. It also folds the two recorded accumulation and epsilon-delta
+definition clauses, including a nonzero guarded input domain. Equality of
+approach points transports a cited predicate without changing the selected
+proof route. The graph's exact domain determines the interpretation; a local
+set-builder constructor is not hoisted out of a quantifier.
+
+Eleven new source/generated pairs and three related pairs pass strict source
+checking, deterministic regeneration and fresh Lean 4.31.0 checks against Core
+`a828ea1e4d7cf0e7f50a09557a4b52eded466a87d4a6b1315710fb58a7918037`.
+The final related Rust harness passes 171 tests, including one local diagnostic;
+the new tests cover changed points/directions, WD, effective domains, citations,
+clause order, binder capture and invalid cross-side uniqueness. This remains a
+focused harness, not the full Cargo suite, whose existing fixture is missing.
+
+The [function uniqueness example](../lean/examples/function_limit_unique/)
+also includes checked handwritten Adapter and native Final files. Final accepts
+`f : ℝ → ℝ` and two `Tendsto f (𝓝[≠] x0)` hypotheses. Deleting the generated
+proof makes the Adapter fail. Its axiom audit contains only `propext`,
+`Classical.choice` and `Quot.sound`. Infinite approaches and general explicit
+limit builtin-theorem calls remain separate coverage work. Local receipts:
+`tmp/2026-10-29/litex-to-lean-six-hour/`.

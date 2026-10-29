@@ -1,7 +1,7 @@
 # Ordered real series
 
 This source library defines finite partial sums, real series convergence and a
-guarded sum value, absolute convergence and convergence tests. It proves 100
+guarded sum value, absolute convergence and convergence tests. It proves 103
 source theorems using native finite sums, induction and real sequence limits.
 It adds no kernel objects, reserved theorems or
 automatic convergence search.
@@ -109,7 +109,7 @@ range over every `k in N+`, unless a tail restriction is stated. Write
 
 ## Convergence and divergence theorems
 
-The following 67 source theorems extend the 33 basic theorems above. All
+The following 70 source theorems extend the 33 basic theorems above. All
 sequence parameters are complete real sequences. Candidate limits and extrema
 are finite reals. A conclusion of convergence does not compute a sum value.
 
@@ -160,6 +160,9 @@ are finite reals. A conclusion of convergence does not compute a sum value.
 | `absolute_terms_at(a,k)` | The absolute-term map's defining equality |
 | `absolute_series_converges(a)` | Absolute convergence implies convergence |
 | `absolute_series_comparison(a,b)` | `b` converges and `abs(a(k))<=b(k)` imply absolute convergence of `a` |
+| `positive_sequence_limit_eventual_bounds(ratio,L)` | A positive finite limit gives a tail on which `L/2<ratio(k)<2*L` |
+| `series_limit_comparison_left(a,b,ratio,L,m)` | `ratio -> L>0`, b positive on k>=m, `ratio=a/b` there, and b convergent imply a convergent |
+| `series_limit_comparison_right(a,b,ratio,L,m)` | Under the same limit, positivity and quotient laws, convergence of a implies convergence of b |
 | `series_eventual_comparison(a,b,m)` | Positive comparison with inequalities only for `k>m` |
 | `absolute_series_eventual_comparison(a,b,m)` | Absolute comparison with inequalities only for `k>m` |
 | `absolute_terms_tail_at(a,m,k)` | Absolute terms commute pointwise with the tail construction |
@@ -233,3 +236,21 @@ python3 examples/real_analysis/series/natural_p_series/check.py
 The [mathematical design](math_collections.md) records the definitions and
 dependency direction. The checks use strict mode and do not permit `trust`,
 `axiom` or an assumed convergence result to stand in for a proof.
+
+## Positive finite limit comparison
+
+The denominator is required positive only for k>=m. Its finite prefix may
+contain zero terms, and the numerator prefix may have either sign. Quotient
+agreement is a separate guarded universal statement with both k>=m and b(k)>0
+before `ratio(k)=a(k)/b(k)`; `ratio` is a supplied complete real sequence.
+The limit L must be finite and strictly positive. A zero limit does not give
+the reverse inference: 1/k^2 converges, 1/k diverges, and their ratio tends to0.
+
+The std-owned validation project checks both full-domain generic callers,
+constant-ratio examples and a tail with a zero denominator in its finite
+prefix. Three independent final-premise refusals check missing limit,
+missing denominator positivity and the zero-limit counterexample:
+
+```bash
+python3 std/real_series/validation/check.py
+```

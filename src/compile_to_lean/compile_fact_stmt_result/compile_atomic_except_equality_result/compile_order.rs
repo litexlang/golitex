@@ -13,6 +13,51 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::rational_expression::NumberCompareResult;
 
 impl LitexToLeanCompiler {
+    fn compile_division_shrinks_positive(
+        &self,
+        goal: &AtomicFact,
+        numerator_positive: &VerifyFactResult,
+        denominator_gt_one: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) = low else {
+            return Err(LeanCompileError::unsupported("DivisionShrink/Subject"));
+        };
+        let positive = source_subject(numerator_positive)?;
+        let gt_one = source_subject(denominator_gt_one)?;
+        let (Fact::AtomicFact(positive), Fact::AtomicFact(gt_one)) = (&positive, &gt_one) else {
+            return Err(LeanCompileError::unsupported(
+                "DivisionShrink/PremiseFamily",
+            ));
+        };
+        let (zero, numerator, pos_strict) = source_order_oriented(positive)?;
+        let (one, denominator, gt_strict) = source_order_oriented(gt_one)?;
+        if !strict
+            || !pos_strict
+            || !gt_strict
+            || !is_zero(zero)
+            || closed_integer(one) != Some(1)
+            || high.ir() != div.left.ir()
+            || numerator.ir() != div.left.ir()
+            || denominator.ir() != div.right.ir()
+        {
+            return Err(LeanCompileError::unsupported(
+                "DivisionShrink/PremiseSubject",
+            ));
+        }
+        let numerator = self
+            .compile_verify(numerator_positive, &position.atomic_search_prior(0)?)?
+            .1;
+        let denominator = self
+            .compile_verify(denominator_gt_one, &position.atomic_search_prior(1)?)?
+            .1;
+        Ok(format!(
+            "(Litex.divByGtOneLessSelf {} {numerator} {denominator})",
+            self.compile_object_reference(low, position)?
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_order_proposition(
         &self,
         fact: &AtomicFact,
@@ -340,6 +385,17 @@ impl LitexToLeanCompiler {
                     LessFactSearchProofByBuiltinRule::NegationStrictOrder(p),
                 ),
             ) => self.compile_negation_order(goal, &p.argument_order, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::DivByGtOneLessSelf(p),
+                ),
+            ) => self.compile_division_shrinks_positive(
+                goal,
+                &p.numerator_pos_proof,
+                &p.denominator_gt_one_proof,
+                position,
+            ),
             (
                 AtomicFact::LessEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(

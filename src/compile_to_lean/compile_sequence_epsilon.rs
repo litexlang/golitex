@@ -139,18 +139,32 @@ pub(super) fn validate_epsilon_clause<'a>(
     let [ExistOrAndChainAtomicFact::ExistFact(exists)] = f.then_facts.as_slice() else {
         return Err(invalid("CutoffExistence"));
     };
+    validate_control_clause(sequence, value, &identifier(epsilon), exists)?;
+    Ok((f, epsilon))
+}
+
+pub(super) fn validate_control_clause<'a>(
+    sequence: &Obj,
+    value: Option<&Obj>,
+    epsilon: &Obj,
+    exists: &'a PlainExistFact,
+) -> Result<&'a BoundName, LeanCompileError> {
+    let mut source = vec![sequence, epsilon];
+    if let Some(value) = value {
+        source.push(value);
+    }
     let cutoff = parameter(
         &exists.typed_parameters,
         &Obj::StandardSet(StandardSet::NPos),
     )?;
-    fresh(cutoff, &source, &[epsilon.id])?;
+    fresh(cutoff, &source, &[])?;
     let [QuantifierFreeFact::AtomicFact(AtomicFact::SubsetFact(inclusion))] =
         exists.facts.as_slice()
     else {
         return Err(invalid("Inclusion"));
     };
-    let outer = [epsilon.id, cutoff.id];
-    let e = identifier(epsilon);
+    let outer = [cutoff.id];
+    let e = epsilon;
     let n = identifier(cutoff);
     if let Some(value) = value {
         let tail_parameter = tail(&inclusion.left, &n, &source, &outer)?;
@@ -167,9 +181,9 @@ pub(super) fn validate_epsilon_clause<'a>(
         fresh(
             &ball.param_binding,
             &source,
-            &[epsilon.id, cutoff.id, tail_parameter.id],
+            &[cutoff.id, tail_parameter.id],
         )?;
-        let (left, right) = distance(clause(ball)?, &e)?;
+        let (left, right) = distance(clause(ball)?, e)?;
         if left.ir() != identifier(&ball.param_binding).ir() || right.ir() != value.ir() {
             return Err(invalid("BallCenter"));
         }
@@ -199,15 +213,15 @@ pub(super) fn validate_epsilon_clause<'a>(
         fresh(
             &pairs.param_binding,
             &source,
-            &[epsilon.id, cutoff.id, tail_parameter.id],
+            &[cutoff.id, tail_parameter.id],
         )?;
-        let (left, right) = distance(clause(pairs)?, &e)?;
+        let (left, right) = distance(clause(pairs)?, e)?;
         let pair = identifier(&pairs.param_binding);
         if !indexed_call(left, sequence, &pair, 1) || !indexed_call(right, sequence, &pair, 2) {
             return Err(invalid("PairCalls"));
         }
     }
-    Ok((f, epsilon))
+    Ok(cutoff)
 }
 
 impl LitexToLeanCompiler {

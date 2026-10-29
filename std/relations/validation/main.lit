@@ -1,0 +1,117 @@
+# Imported equivalence-class, partition and order consumers.
+
+have points set={0,1}
+
+release thm rel::universal_equivalence_laws(points)
+
+have whole &rel::EquivalenceRelation<points> = (points,cart(points,points))
+
+release struct def whole
+
+whole.carrier=points
+
+whole.pairs=cart(points,points)
+
+release thm rel::equivalence_classes_form_partition(points,whole)
+
+release thm rel::equivalence_class_contains_self(points,whole,0)
+
+release thm rel::related_equivalence_classes_equal(points,whole,0,1)
+
+release thm rel::equal_equivalence_classes_imply_related(points,whole,0,1)
+
+release thm rel::equality_equivalence_laws(points)
+
+have equality &rel::EquivalenceRelation<points> = (points,\rel::diagonal_pairs<points>)
+
+release struct def equality
+
+equality.carrier=points
+
+equality.pairs=\rel::diagonal_pairs<points>
+
+release thm rel::equivalence_classes_form_partition(points,equality)
+
+release thm rel::equivalence_classes_equal_or_disjoint(points,equality,0,1)
+
+release thm rel::universal_equivalence_laws({})
+
+have empty &rel::EquivalenceRelation<{}> = ({},cart({},{}))
+
+release struct def empty
+
+empty.carrier={}
+
+release thm rel::equivalence_classes_form_partition({},empty)
+
+release thm rel::discrete_partial_order_laws(points)
+
+have discrete &rel::PartialOrder<points> = (points,\rel::diagonal_pairs<points>)
+
+release struct def discrete
+
+discrete.carrier=points
+
+discrete.pairs=\rel::diagonal_pairs<points>
+
+claim:
+    ? forall y {0}:
+        (0,y) $in discrete.pairs
+    0 $in discrete.carrier
+    (0,0) $in discrete.pairs
+    (0,y)=(0,0)
+
+0 $in discrete.carrier
+
+{0} $subset discrete.carrier
+
+by def $rel::is_least_element(points,discrete,{0},0)
+
+release thm rel::least_element_is_unique(points,discrete,{0},0,0)
+
+release thm rel::least_element_is_minimal(points,discrete,{0},0)
+
+have fn identity(x discrete.carrier) discrete.carrier=x
+
+claim:
+    ? forall x,y discrete.carrier:
+        (x,y) $in discrete.pairs
+        =>:
+            (identity(x),identity(y)) $in discrete.pairs
+    identity(x)=x
+    identity(y)=y
+    (identity(x),identity(y))=(x,y)
+
+by def $rel::is_monotone(points,discrete,points,discrete,identity)
+
+claim:
+    ? forall x,y discrete.carrier:
+        (identity(x),identity(y)) $in discrete.pairs
+        =>:
+            (x,y) $in discrete.pairs
+    identity(x)=x
+    identity(y)=y
+    (x,y)=(identity(x),identity(y))
+
+by def $rel::is_order_embedding(points,discrete,points,discrete,identity)
+
+release thm rel::monotone_composition(points,discrete,points,discrete,points,discrete,identity,identity)
+
+release thm rel::order_embedding_is_injective(points,discrete,points,discrete,identity)
+
+release thm rel::order_embedding_composition(points,discrete,points,discrete,points,discrete,identity,identity)
+
+thm quotient_caller:
+    ? forall A set,E &rel::EquivalenceRelation<A>:
+        $rel::is_partition(E.carrier,\rel::equivalence_classes<A,E>)
+    release thm rel::equivalence_classes_form_partition(A,E)
+
+thm extrema_caller:
+    ? forall A set,P &rel::PartialOrder<A>,S power_set(P.carrier),x,y P.carrier:
+        $rel::is_greatest_element(A,P,S,x)
+        $rel::is_greatest_element(A,P,S,y)
+        =>:
+            x=y
+            $rel::is_maximal_element(A,P,S,x)
+    release thm rel::greatest_element_is_unique(A,P,S,x,y)
+    release thm rel::greatest_element_is_maximal(A,P,S,x)

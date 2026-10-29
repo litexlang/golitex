@@ -94,14 +94,17 @@ impl NotIsNonemptySetFactSearchProofByBuiltinRule {
 
 impl EmptyListSetNotNonemptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Empty List Set",
-            "Verified by the empty List Set builtin rule",
+        crate::json_output::explain::text::text(
+            "The empty set has no elements",
+            "The empty set contains no element, so it is not nonempty.",
         )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("空列表集非非空", "空列表集不是非空集")
+        crate::json_output::explain::text::text(
+            "空集没有元素",
+            "空集不含元素，因此不满足非空性质。",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {

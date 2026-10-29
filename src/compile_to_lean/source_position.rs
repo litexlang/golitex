@@ -10645,6 +10645,7 @@ fn atomic_search_stages(
                 BuiltinPropDefinitionProof::RealSetBounded(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::SequenceAnalysis(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::SequenceLimit(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::FunctionLimit(p) => &p.proof_of_requirement_facts,
                 _ => return stages,
             };
             stages.extend(children.iter().map(AtomicSearchStage::Verify));
@@ -10654,6 +10655,10 @@ fn atomic_search_stages(
             stages.push(AtomicSearchStage::Verify(&p.premise_proof));
         }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::ExpStrictMonotone(p))) => { stages.push(AtomicSearchStage::Verify(&p.argument_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::DivByGtOneLessSelf(p))) => {
+            stages.push(AtomicSearchStage::Verify(&p.numerator_pos_proof));
+            stages.push(AtomicSearchStage::Verify(&p.denominator_gt_one_proof));
+        }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::LnStrictMonotone(p))) => { stages.push(AtomicSearchStage::Verify(&p.argument_order)); }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::ExpStrictOrderReflection(p))) => { stages.push(AtomicSearchStage::Verify(&p.image_order)); }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::LnStrictOrderReflection(p))) => { stages.push(AtomicSearchStage::Verify(&p.image_order)); }
@@ -10972,8 +10977,10 @@ fn visit_atomic_formation<T>(
                 before: children.len() + index,
                 ..*position
             };
-            if let Some(value) = visit_complete_verify(&requirement.result, &prior, wd, verify)? {
-                return Ok(Some(value));
+            if let crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::Verified(result) = &requirement.result {
+                if let Some(value) = visit_complete_verify(result, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
             }
         }
     }

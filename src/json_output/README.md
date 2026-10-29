@@ -1199,13 +1199,16 @@ actual requirement. The referenced argument WD remains in
 `well_defined_of_each_parameter`; this route adds no duplicate WD or cache ID.
 It is domain evidence, not a proof of the comparison's truth.
 
-An ordered comparison can also reuse a previously checked function application
-and its exact codomain. Detailed JSON records `by_checked_argument_return`, the
-ordered `argument_index`, and either structural membership or the existing
-`FnApplicationInCodomain` signature evidence. The enclosing object WD retains
-the call-domain and guard evidence; this route does not prove comparison truth
-or infer a real result from a complex-only signature. Reading capture preserves
-the same evidence.
+The shared checked-expression membership derivation also composes function
+returns inside arithmetic. A structural node with `kind: function_return`
+retains the exact `requirement`, its original `return_evidence`, and
+`domain_evidence: enclosing_object_wd`. Arithmetic parents keep their existing
+nested structural fields. Ordinary membership proofs and predicate-domain
+`by_checked_argument_membership` entries use the same certificate. Predicate
+requirements use a `Verified` / `CheckedArgument` evidence union, retaining each
+consumer's original search ceiling. The former order-only `by_checked_argument_return` entry has been removed. Reading capture
+preserves the same subject, signature and guard provenance. Normal/Compact
+verification makes the same decisions without requiring a Detailed proof tree.
 
 Detailed UnionInPowerSet records left/right known membership proofs.
 IntersectInPowerSetFromLeft, IntersectInPowerSetFromRight and SetMinusInPowerSet

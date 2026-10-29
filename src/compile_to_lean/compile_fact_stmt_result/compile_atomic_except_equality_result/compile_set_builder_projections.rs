@@ -63,8 +63,12 @@ impl LitexToLeanCompiler {
             }
             let a = self.compile_object_reference(&step.source_membership.element, position)?;
             let built = self.compile_object_reference(&builder, position)?;
-            let member = format!("(Litex.inOfSame {a} {a} {} {built} (Litex.sameRefl {a}) {equality} {parent_proof})", self.compile_object_reference(&step.source_membership.set, position)?);
-            let projected = format!("((Litex.inSetBuilder_iff {a} ({built}).val.bound ({built}).val.predicate).mp {member})");
+            let member = if step.equality_path.is_empty() && step.source_membership.set == builder {
+                parent_proof
+            } else {
+                format!("(Litex.inOfSame {a} {a} {} _litex_builder (Litex.sameRefl {a}) {equality} {parent_proof})", self.compile_object_reference(&step.source_membership.set, position)?)
+            };
+            let projected = format!("(let _litex_builder := {built}; (Litex.inSetBuilderObj_iff {a} _litex_builder).mp {member})");
             let substitution = HashMap::from([(
                 step.builder.param_binding.id,
                 step.source_membership.element.clone(),
@@ -138,10 +142,20 @@ impl LitexToLeanCompiler {
                     term,
                 );
                 declarations.push(self.emit_internal_fact(&fact, &compiled, position)?);
+                // Project the fact just emitted. Re-elaborating the builder
+                // inside And.left/right loses the predicate's expected type
+                // and duplicates its captured formation proofs.
+                let name = format!("h_{}", fact.fact_id().value());
+                let reference = if position.is_local() {
+                    name
+                } else {
+                    self.context_application(&name, position)
+                };
+                let stored = (compiled.0, reference);
                 declarations.extend(self.compile_stored_projections(
                     &derived.store,
                     &fact,
-                    &compiled,
+                    &stored,
                     &formed,
                 )?);
                 offset += 1;

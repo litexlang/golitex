@@ -170,7 +170,7 @@ pub(super) fn project_atomic_wd_proof(
                                         ("requirement", string(r.requirement.readable_string())),
                                         (
                                             "verify",
-                                            super::verify::project_verify_fact(&r.result, runtime),
+                                            project_predicate_requirement(&r.result, runtime),
                                         ),
                                     ],
                                 )
@@ -212,59 +212,6 @@ pub(super) fn project_atomic_wd_proof(
                 ("cite", super::searched::project_known_atomic(cite, runtime)),
             ],
         ),
-        PredicateDomainProof::ByCheckedArguments(requirements) => JsonValue::Array(
-            requirements
-                .iter()
-                .map(|p| {
-                    object_for(
-                        runtime,
-                        vec![
-                            ("requirement", string(p.requirement.readable_string())),
-                            ("type", string("by_checked_argument_membership")),
-                            ("argument_index", JsonValue::Number(p.argument_index as f64)),
-                            (
-                                "membership",
-                                super::structural_membership::project_structural_membership(
-                                    &p.membership,
-                                    runtime,
-                                ),
-                            ),
-                        ],
-                    )
-                })
-                .collect(),
-        ),
-        PredicateDomainProof::ByCheckedArgumentReturns(requirements) => {
-            use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership;
-            JsonValue::Array(
-                requirements
-                    .iter()
-                    .map(|p| {
-                        let membership = match &p.membership {
-                            PredicateDomainArgumentReturnMembership::Structural(proof) => {
-                                super::structural_membership::project_structural_membership(
-                                    proof, runtime,
-                                )
-                            }
-                            PredicateDomainArgumentReturnMembership::FunctionReturn(proof) => {
-                                super::known_special_property::project_in_fact_special(
-                                    proof, runtime,
-                                )
-                            }
-                        };
-                        object_for(
-                            runtime,
-                            vec![
-                                ("requirement", string(p.requirement.readable_string())),
-                                ("type", string("by_checked_argument_return")),
-                                ("argument_index", JsonValue::Number(p.argument_index as f64)),
-                                ("membership", membership),
-                            ],
-                        )
-                    })
-                    .collect(),
-            )
-        }
         PredicateDomainProof::ByRequirements(requirements) => JsonValue::Array(
             requirements
                 .iter()
@@ -273,10 +220,7 @@ pub(super) fn project_atomic_wd_proof(
                         runtime,
                         vec![
                             ("requirement", string(p.requirement.readable_string())),
-                            (
-                                "verify",
-                                super::verify::project_verify_fact(&p.result, runtime),
-                            ),
+                            ("verify", project_predicate_requirement(&p.result, runtime)),
                         ],
                     )
                 })
@@ -837,4 +781,28 @@ fn project_not_forall_wd(proof: &NotForallFactWellDefinedProof, runtime: &Runtim
             ),
         ],
     )
+}
+
+pub(super) fn project_predicate_requirement(
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof;
+    match proof {
+        PredicateDomainRequirementProof::Verified(result) => {
+            super::verify::project_verify_fact(result, rt)
+        }
+        PredicateDomainRequirementProof::CheckedArgument(p) => object_for(
+            rt,
+            vec![
+                ("type", string("by_checked_argument_membership")),
+                ("argument_index", JsonValue::Number(p.argument_index as f64)),
+                ("requirement", string(p.requirement.readable_string())),
+                (
+                    "membership",
+                    super::structural_membership::project_structural_membership(&p.membership, rt),
+                ),
+            ],
+        ),
+    }
 }

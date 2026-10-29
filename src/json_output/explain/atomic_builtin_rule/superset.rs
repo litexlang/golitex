@@ -106,14 +106,17 @@ impl SupersetFactSearchProofByBuiltinRule {
 
 impl StandardSetSupersetBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Standard Set Superset",
-            "Verified by the standard Set Superset builtin rule",
+        crate::json_output::explain::text::text(
+            "Containment of standard number sets",
+            "Use the fixed inclusions among standard number sets; for example, ℝ ⊇ ℚ.",
         )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("标准集超集", "标准数集之间的固定超集关系")
+        crate::json_output::explain::text::text(
+            "标准数集的包含关系",
+            "使用标准数集之间的固定包含关系；例如 ℝ ⊇ ℚ。",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -184,14 +187,14 @@ impl StandardSetSupersetBuiltinRuleProof {
 
 impl SupersetReflexivityBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Superset Reflexivity",
-            "Verified by the superset Reflexivity builtin rule",
+        crate::json_output::explain::text::text(
+            "Reflexivity of containment",
+            "Every set contains itself: A ⊇ A.",
         )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("超集自反", "任意集合是自身的超集")
+        crate::json_output::explain::text::text("包含关系的自反性", "任意集合都包含自身：A ⊇ A。")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {

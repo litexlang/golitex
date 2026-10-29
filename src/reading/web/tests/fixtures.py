@@ -20,6 +20,15 @@ INLINE_CASES = {
     'predicate-membership-failure': ('1 $in intersect({1, 2}, {2, 3})', False),
     'predicate-membership-known': ('2 $in {1, 2}\n2 $in {2, 3}\n2 $in intersect({1, 2}, {2, 3})', True),
 }
+CORRESPONDENCE_CASES = {
+    'known': ('examples/proof_nodes/atomic/by_known_atomic_fact/cite_via_nested_arg_equality.lit', 'en'),
+    'builtin': ('examples/proof_nodes/atomic/by_builtin_rule/dvd_one.lit', 'en'),
+    'strategy': ('examples/proof_nodes/atomic/by_builtin_strategy/pos_add_pos_is_pos.lit', 'en'),
+    'named-strategy': ('examples/stmt_nodes/definition/def_strategy.lit', 'en'),
+    'forall-zh': ('examples/reading/lessons/zh/syllogism.lit', 'zh'),
+    'forall-en': ('examples/reading/lessons/en/syllogism.lit', 'en'),
+    'least-squares': ('examples/reading/lessons/en/least-squares.lit', 'en'),
+}
 
 
 def main():
@@ -27,6 +36,7 @@ def main():
     parser.add_argument('output', type=Path)
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release/litex')
     parser.add_argument('--lessons', action='store_true', help='Also verify the bilingual lessons and their concrete repair exercises.')
+    parser.add_argument('--correspondence', action='store_true', help='Also export the four atomic proof routes and named strategy examples.')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     report = {}
@@ -58,6 +68,19 @@ def main():
             raise RuntimeError(f'{name}: inline source snapshot mismatch')
         (args.output / f'{name}.json').write_text(run.stdout)
         report[name] = {'source': '<inline>', 'exit': run.returncode, 'run_result': expected}
+    if args.correspondence:
+        for name, (relative, locale) in CORRESPONDENCE_CASES.items():
+            source = ROOT / relative
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', locale, '-f', str(source)], capture_output=True, text=True)
+            if run.returncode:
+                raise RuntimeError(f'{name}: proof-route example failed\n{run.stderr}')
+            bundle = json.loads(run.stdout)
+            if bundle.get('run_result') != 'success' or not any(
+                    value.get('content') == source.read_text() for value in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: proof-route source/result mismatch')
+            (args.output / f'{name}.json').write_text(run.stdout)
+            report[name] = {'source': relative, 'exit': run.returncode, 'run_result': 'success'}
     project = ROOT / 'examples/reading/book'
     run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
                           '-strict', '-lang', 'zh', '-r', str(project)],
@@ -112,7 +135,7 @@ def main():
         report['lessons'] = {'bilingual_sources': len(items) * 2,
                              'expected_successes': 12, 'expected_failures': 6, 'repairs': 6}
     (args.output / 'verification.json').write_text(json.dumps(report, indent=2) + '\n')
-    print(f'{len(CASES) + len(INLINE_CASES) + 1} core reading fixtures' + (' and bilingual lesson/repair fixtures' if args.lessons else '') + f' exported to {args.output}')
+    print(f'{len(CASES) + len(INLINE_CASES) + 1} core reading fixtures' + (' and proof-route examples' if args.correspondence else '') + (' and bilingual lesson/repair fixtures' if args.lessons else '') + f' exported to {args.output}')
 
 
 if __name__ == '__main__':

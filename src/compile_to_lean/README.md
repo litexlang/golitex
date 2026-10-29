@@ -737,6 +737,32 @@ the local `scripts/litex_to_lean/check.py` gate is development tooling and is
 not published with the repository. Full examples, mathematical
 experiments and their progress records belong in their own documentation.
 
+## Limits: replaying a complete proof
+
+The [punctured cancellation source](../../lean/examples/function_limit_punctured_cancellation/statement.lit)
+defines `f(x)=x²/x` on `x≠0`, proves accumulation at zero and the epsilon-delta
+estimate, folds `$has_limit_at(f,0,0)`, then uses `fn_lim(f,0)`.
+The compiler follows those recorded stages:
+
+| Result evidence | Compiler owner | Lean law or artifact |
+| --- | --- | --- |
+| Two verified definition clauses | [Definition consumer](compile_function_limit_definition.rs) | `finiteFunctionLimitOfForall`, applied to the original clause proofs |
+| Function/point WD, real domain and convergence | [Function-limit consumer](compile_function_limit.rs) | Certified `finiteFunctionLimit` object |
+| Selected candidate and equality evidence | Same equality consumer | `finiteFunctionLimitEqCandidate` |
+| Generated epsilon estimate and the same function graph | Handwritten [Adapter](../../lean/examples/function_limit_punctured_cancellation/Adapter.lean) | Native `Tendsto` statement in [Final](../../lean/examples/function_limit_punctured_cancellation/Final.lean) |
+
+The native proof depends on the generated theorem. Its adapter converts graph
+membership and numeric observations; its limit estimate comes from Litex.
+Finite and one-sided limits preserve nontrivial approach through the actual
+domain. Infinite limits preserve directional unboundedness as well as the
+original epsilon/threshold condition. Their selectors have fixed denotations
+independent of which WD evidence certified them.
+
+Explicit function-limit uniqueness, existence and selection use the
+[function theorem consumer](compile_builtin_function_limit_theorem.rs).
+It validates the reserved theorem ID, arguments, ordered premises, stores and
+returned conclusion before applying the corresponding proved Core law.
+
 ## Current mathematical reach
 
 The implemented subset connects elementary algebra and real inequalities over

@@ -323,7 +323,10 @@ fn predicate_domain_reuses_checked_function_return_without_losing_guards() {
     assert!(run.success, "positive function-return example failed");
     let detail =
         crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
-    assert!(detail.contains("by_checked_argument_return"), "{detail}");
+    assert!(
+        detail.contains("by_checked_argument_membership"),
+        "{detail}"
+    );
     assert!(detail.contains("FnApplicationInCodomain"), "{detail}");
     assert_eq!(rt.execution_environments_stack.len(), 1);
 
