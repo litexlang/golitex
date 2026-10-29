@@ -13,12 +13,13 @@ All task-authored file changes are confined to `std/`, including journals and
 validation. Read other source only for reference. Do not repair the verifier,
 compiler, examples, tests, documentation or installers outside this directory.
 
-Baseline: 15 directories, 792 named source theorems. These counts describe
-source declarations, not independent course results or verified completeness.
-The existing algebra, finite probability, topology and real-series modules are
-substantial; relations/order, metric spaces, ring theory, graph theory, complex
-analysis, differential equations and numerical analysis lack public source
-spines or substantial course-level results.
+Baseline: 15 directories and 792 named source theorems. The completed first
+batches add 76 named core-export theorems, bringing that source count to 868.
+These are declaration counts, not independent course results or completeness.
+Relations/order, metric-space and ring foundations, positive finite series
+limit comparison, and positive square-root Newton iteration are now supplied.
+Graph theory, complex analysis and differential equations still lack public
+source spines. The numerical-analysis spine currently covers one method.
 
 ## Dependency order and target mathematics
 
@@ -35,7 +36,7 @@ spines or substantial course-level results.
 | Single-variable real analysis | Native limits, derivatives, Riemann rules | IVT, extreme value, Rolle/MVT, Taylor; standard applications and improper integration | Rebuild missing compactness/extrema dependencies; never promote trusted textbook statements as proofs. |
 | General topology | Continuity, connectedness, separation, compactness | Subspace topology, closed subsets of compact spaces, compact-to-Hausdorff maps, products | Distinguish image topology from the original target; construct exact carriers. |
 | Multivariable/vector calculus | Coordinates, directional/higher derivatives, ordered integrals | Differentiability/chain rule applications, extrema, Fubini prerequisites, line/surface integration | Existing ordered rectangular integrals do not establish order exchange or integral theorems. |
-| Complex analysis, ODE and numerical analysis | Native complex arithmetic and real analysis primitives | Complex polynomial/analytic foundations; elementary ODE existence/solution contracts; error bounds and basic numerical methods | Planned lanes. Do not claim course coverage before reusable source definitions and main theorems exist. |
+| Complex analysis, ODE and numerical analysis | Native complex/real primitives; positive square-root Newton updates, bounds and convergence | Complex polynomial/analytic foundations; elementary ODE solution contracts; other numerical methods and rounding/error analysis | Newton is one checked numerical method. Complex/ODE source lanes remain planned; no complete-course claim. |
 
 Foundation dependency spine: sets/functions -> relations/order and algebraic
 structures -> maps/constructions -> finite-dimensional/metric/topological tools
@@ -68,6 +69,8 @@ mathematical order rather than target-specific proof convenience.
 - [x] Relations/order foundation: 21 source theorems; strict 33-declaration source and 43-statement imported consumers pass; four mathematical/domain refusal controls reject. Further order and quotient work remains.
 - [x] Metric-space foundation: 13 source theorems; strict 19-declaration source and 33-statement imported consumers pass, including real-line/empty instances and L=0; six refusal controls reject. Completeness and metric-topology work remain.
 - [x] Ring foundation: 27 source theorems; strict 33-declaration source, full std-imported 58-statement consumer and five focused source refusals pass. Noncommutative concrete-model proof debt is recorded in algebra/todo.md; quotients/polynomials remain.
+- [x] Numerical first spine: 12 theorems / 17 strict source statements, 34 strict full-imported consumer statements and seven fresh-Session refusals pass. Covers the general positive square-root Newton iteration, error estimates and convergence; other numerical methods remain.
+- [ ] Number-theory existence: general Bezout and coprime modular inverses, then CRT.
 - [ ] Subsequent lane batches as the dependencies above become available.
 
 ## Integration boundary

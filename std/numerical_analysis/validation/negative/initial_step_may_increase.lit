@@ -2,8 +2,10 @@ release obj def num::newton_sqrt_step
 
 release obj def num::newton_sqrt_iterate
 
+1-1=0
+
 num::newton_sqrt_iterate(4,1,0)=1
 
-num::newton_sqrt_iterate(4,1,1)=5/2
+num::newton_sqrt_iterate(4,1,1)=num::newton_sqrt_step(4,num::newton_sqrt_iterate(4,1,1-1))=num::newton_sqrt_step(4,num::newton_sqrt_iterate(4,1,0))=num::newton_sqrt_step(4,1)=5/2
 
 num::newton_sqrt_iterate(4,1,1)<=num::newton_sqrt_iterate(4,1,0)

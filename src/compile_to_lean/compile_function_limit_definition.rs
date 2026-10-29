@@ -101,16 +101,13 @@ pub(super) fn validate_limit_existence(
     Ok(())
 }
 
-fn validate_clauses<'a>(
+pub(super) fn validate_accumulation_clause<'a>(
     goal: &HasFunctionLimitFact,
-    facts: &'a [Fact],
+    accumulation: &'a Fact,
 ) -> Result<&'a Obj, LeanCompileError> {
     let finite = goal.approach.point().is_some();
     let mut source = vec![&goal.function, &goal.value];
     source.extend(goal.approach.point());
-    let [accumulation, epsilon] = facts else {
-        return Err(invalid("ClauseArity"));
-    };
     let radius_domain = Obj::StandardSet(if finite {
         StandardSet::RPos
     } else {
@@ -141,6 +138,25 @@ fn validate_clauses<'a>(
         &identifier(radius),
     )?;
 
+    Ok(domain)
+}
+
+fn validate_clauses<'a>(
+    goal: &HasFunctionLimitFact,
+    facts: &'a [Fact],
+) -> Result<&'a Obj, LeanCompileError> {
+    let [accumulation, epsilon] = facts else {
+        return Err(invalid("ClauseArity"));
+    };
+    let domain = validate_accumulation_clause(goal, accumulation)?;
+    let finite = goal.approach.point().is_some();
+    let mut source = vec![&goal.function, &goal.value];
+    source.extend(goal.approach.point());
+    let radius_domain = Obj::StandardSet(if finite {
+        StandardSet::RPos
+    } else {
+        StandardSet::R
+    });
     let (all, epsilon) = universal(epsilon, &Obj::StandardSet(StandardSet::RPos))?;
     let mut scoped_source = source.clone();
     scoped_source.push(domain);
@@ -267,24 +283,11 @@ impl LitexToLeanCompiler {
         let formed = position.atomic_search_prior(2)?;
         let function = self.compile_object_reference(&goal.function, &formed)?;
         let value = self.compile_object_reference(&goal.value, &formed)?;
-        // This is the exact domain view already certified by the function's
-        // complete signature. It is not a source constructor hoisted out of a
-        // quantified proof. Its raw denotation matches the recorded clauses.
-        let raw_domain =
-            self.compile_function_raw_expression_bound(domain, &formed, &HashMap::new())?;
-        let source = &formation.function_domain.source;
-        let signature = self.compile_complete_domain_signature(source, &formed)?;
-        let member = self.compile_complete_domain_member(&goal.function, source, &formed)?;
-        let base = self.compile_object_reference(
-            &source.signature.set_bound_parameters.groups[0].param_type,
+        let (domain_view, domain_equal) = self.compile_function_limit_domain_view(
+            &goal.function,
+            &formation.function_domain,
             &formed,
         )?;
-        let (domain_set, compare) = if source.signature.dom_facts.is_empty() {
-            (format!("(Litex.isSet {base})"), format!("change M.mem x (Litex.denote {base}) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) (fun _ => True))\n    rw [Litex.SetSemantics.sep_members]\n    exact ⟨fun hx => ⟨hx, True.intro⟩, And.left⟩"))
-        } else {
-            (format!("(Litex.SetSemantics.sep_isSet (Litex.denote {base}) _ (Litex.isSet {base}))"), format!("change M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _)\n    rw [Litex.SetSemantics.sep_members, Litex.SetSemantics.sep_members]\n    exact ⟨fun ⟨hx, _, hg⟩ => ⟨hx, hg⟩, fun ⟨hx, hg⟩ => ⟨hx, hx, hg⟩⟩"))
-        };
-        let domain_equal = "(_domain_match.trans (Litex.FunctionSemantics.domainValue_eq _signature.domain_isSet _member).symm)";
         let value_real = source_subject(&formation.value_real)?.fact_id().value();
         let fold = match (&goal.approach, &formation.approach_real) {
             (approach, FunctionLimitApproachRealProof::Finite(point_real))
@@ -307,6 +310,33 @@ impl LitexToLeanCompiler {
             }
             _ => return Err(invalid("ApproachReal")),
         };
-        Ok(format!("(by\n  let _signature := {signature}\n  have _member : Litex.In {function} (Litex.fnSet _signature) := {member}\n  let _source_domain := {raw_domain}\n  have _domain_set : M.isSet _source_domain := {domain_set}\n  have _domain_match : _source_domain = _signature.domain := by\n    apply Litex.SetSemantics.ext _ _ _domain_set _signature.domain_isSet\n    intro x\n    {compare}\n  let _domain := Litex.semanticObject _source_domain _domain_set\n  exact {fold}\n)"))
+        Ok(format!("(by\n{domain_view}\n  exact {fold}\n)"))
+    }
+    pub(super) fn compile_function_limit_domain_view(
+        &self,
+        function_obj: &Obj,
+        proof: &crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        // This is the exact domain view already certified by the function's
+        // complete signature. It is not a source constructor hoisted out of a
+        // quantified proof. Its raw denotation matches the recorded clauses.
+        let raw_domain =
+            self.compile_function_raw_expression_bound(&proof.domain, position, &HashMap::new())?;
+        let function = self.compile_object_reference(function_obj, position)?;
+        let source = &proof.source;
+        let signature = self.compile_complete_domain_signature(source, position)?;
+        let member = self.compile_complete_domain_member(function_obj, source, position)?;
+        let base = self.compile_object_reference(
+            &source.signature.set_bound_parameters.groups[0].param_type,
+            position,
+        )?;
+        let (domain_set, compare) = if source.signature.dom_facts.is_empty() {
+            (format!("(Litex.isSet {base})"), format!("change M.mem x (Litex.denote {base}) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) (fun _ => True))\n    rw [Litex.SetSemantics.sep_members]\n    exact ⟨fun hx => ⟨hx, True.intro⟩, And.left⟩"))
+        } else {
+            (format!("(Litex.SetSemantics.sep_isSet (Litex.denote {base}) _ (Litex.isSet {base}))"), format!("change M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _)\n    rw [Litex.SetSemantics.sep_members, Litex.SetSemantics.sep_members]\n    exact ⟨fun ⟨hx, _, hg⟩ => ⟨hx, hg⟩, fun ⟨hx, hg⟩ => ⟨hx, hx, hg⟩⟩"))
+        };
+        let prefix = format!("  let _signature := {signature}\n  have _member : Litex.In {function} (Litex.fnSet _signature) := {member}\n  let _source_domain := {raw_domain}\n  have _domain_set : M.isSet _source_domain := {domain_set}\n  have _domain_match : _source_domain = _signature.domain := by\n    apply Litex.SetSemantics.ext _ _ _domain_set _signature.domain_isSet\n    intro x\n    {compare}\n  let _domain := Litex.semanticObject _source_domain _domain_set");
+        Ok((prefix, "(_domain_match.trans (Litex.FunctionSemantics.domainValue_eq _signature.domain_isSet _member).symm)".into()))
     }
 }

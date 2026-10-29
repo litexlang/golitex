@@ -29,6 +29,23 @@ CORRESPONDENCE_CASES = {
     'forall-en': ('examples/reading/lessons/en/syllogism.lit', 'en'),
     'least-squares': ('examples/reading/lessons/en/least-squares.lit', 'en'),
 }
+DEFINITION_CASES = {
+    'reciprocal': 'examples/reading/homepage/17-reciprocal-definition.lit',
+    'predicate': 'examples/proof_nodes/atomic/by_definition/ambient_prop_expand.lit',
+    'by-def': 'examples/reading/lessons/en/definitions.lit',
+    'nested': 'examples/proof_nodes/equal/by_object_definition/nested_call_one_step.lit',
+    'both': 'examples/proof_nodes/equal/by_object_definition/by_fn_application/both_function_bodies.lit',
+    'alias': 'examples/proof_nodes/equal/by_object_definition/by_fn_application/callable_alias_special_property.lit',
+    'tuple': 'examples/proof_nodes/equal/by_known_special_property/tuple_projection.lit',
+    'fn-tuple': 'examples/proof_nodes/equal/by_known_special_property/fn_tuple_projection.lit',
+    'codomain': 'examples/proof_nodes/atomic/by_known_special_property/in_fn_application_in_codomain.lit',
+}
+# The guard pair comes from function_body_evaluation's existing kernel test.
+DEFINITION_CONTROLS = {
+    'body-guard': ('forall f fn(x R) R:\n    f = fn(x R: x!=0) R {1/x}\n    =>:\n        f(2)=1/2\n', True),
+    'missing-body-guard': ('forall f fn(x R) R:\n    f = fn(x R: x!=0) R {1/x}\n    =>:\n        f(0)=0\n', False),
+    'wrong-reciprocal': ('have fn reciprocal(x R: x != 0) R = 1 / x\nreciprocal(2) = 2\n', False),
+}
 
 
 def main():
@@ -37,9 +54,28 @@ def main():
     parser.add_argument('--binary', type=Path, default=ROOT / 'target/release/litex')
     parser.add_argument('--lessons', action='store_true', help='Also verify the bilingual lessons and their concrete repair exercises.')
     parser.add_argument('--correspondence', action='store_true', help='Also export the four atomic proof routes and named strategy examples.')
+    parser.add_argument('--definitions', action='store_true', help='Also export definition applications, tuple properties and rejection controls.')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     report = {}
+    if args.definitions:
+        # Isolate these public files from their containing project's exports;
+        # the CLI still verifies and retains every exact source byte.
+        definitions = {name: ((ROOT / relative).read_text(), True)
+                       for name, relative in DEFINITION_CASES.items()}
+        for name, (content, succeeds) in {**definitions, **DEFINITION_CONTROLS}.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content],
+                                 capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected:
+                raise RuntimeError(f'{name}: unexpected definition result\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: definition source snapshot mismatch')
+            (args.output / f'{name}.json').write_text(run.stdout)
+            report[name] = {'source': DEFINITION_CASES.get(name, '<control>'),
+                            'exit': run.returncode, 'run_result': expected}
     for name, (relative, succeeds) in CASES.items():
         source = ROOT / 'examples/reading/homepage' / relative
         run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',

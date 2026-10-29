@@ -758,10 +758,14 @@ domain. Infinite limits preserve directional unboundedness as well as the
 original epsilon/threshold condition. Their selectors have fixed denotations
 independent of which WD evidence certified them.
 
-Explicit function-limit uniqueness, existence and selection use the
+Explicit function-limit uniqueness, existence, selection and constant-function laws use the
 [function theorem consumer](compile_builtin_function_limit_theorem.rs).
 It validates the reserved theorem ID, arguments, ordered premises, stores and
 returned conclusion before applying the corresponding proved Core law.
+The [sequence theorem consumer](compile_builtin_sequence_limit_theorem.rs)
+handles the same certificates plus epsilon introduction and tail extraction.
+The two function-limit consumers share the domain-view emitter and accumulation
+validator; both read the original captured signature and domain evidence.
 
 ## Current mathematical reach
 
@@ -771,4 +775,8 @@ reusable theorems. The [coverage table and example navigation](../../docs/Litex_
 ([中文](../../docs/Litex到Lean编译器指南.md#当前覆盖的数学范围与示例)) identify representative
 checked source/generated pairs and distinguish complete examples from bounded
 rule checks. Start with [adding zero through Adapter](../../docs/examples/litex_to_lean/add_zero/README.md),
-then explore the [example collection](../../lean/examples/).
+then explore the [example collection](../../lean/examples/). Real-set bounds,
+extrema, real sequence limits and finite real function limits at finite points,
+one-sided points and positive/negative infinity have checked compilation routes.
+The [punctured cancellation example](../../lean/examples/function_limit_punctured_cancellation/)
+also exposes its proved limit as an ordinary Mathlib theorem.

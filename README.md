@@ -192,7 +192,7 @@ Litex is in beta. `-strict` rejects user-written `trust` and `axiom`; verificati
 
 I am Jiachen Shen (沈嘉辰), a mathematics PhD student at Fudan University. I hope Litex helps more people write checkable mathematics and understand the definitions, conditions and reasoning behind it. Questions and feedback: litexlang@outlook.com.
 
-Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Keyao Zhu, and Zhaoxuan Hong for their support and advice.
+Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Hao wu, Keyao Zhu, and Zhaoxuan Hong for their support and advice.
 
 Released under the Apache License 2.0.
 

@@ -72,6 +72,26 @@ strategy-declaration identity. Missing parameter lists, unmatched proof identiti
 or incomplete records receive explicit explanations rather than invented
 correspondences. Reference navigation and return retain the selected application.
 
+Function-definition proofs show the retained defining equality, parameter-to-
+argument bindings and each checked body expansion in execution order. For
+`reciprocal(2) = 1 / 2`, the current verifier uses `ByObjectDefinition`, not
+`ByKnownSpecialProperty`: the card shows `x = 2`, the instantiated body, and
+whether the remaining equality is identity or needs a separate proof. Nested
+applications and both-side normalization use the same evidence adapter. Function
+aliases follow the recorded equality endpoint, which may have different binder
+names from the original declaration; source text is never substituted to guess
+a body. Retained body-domain checks join the final closed WD disclosure, including
+when a selected body has a narrower domain than its callable signature.
+
+User-predicate definition applications link the resolved declaration and pair
+its typed binders with the actual arguments; the existing requirement/proof
+pairs explain the instantiated conditions. Selected special-property adapters
+explain tuple coordinates, tuple reconstruction and function codomains using
+their actual certificates. Known equality paths expose their ordered edges and
+any separately checked connecting equality. Unsupported forms and incomplete
+records keep explicit missing-data explanations; these adapters do not cover
+every template, matrix, induction or special-property proof form.
+
 Equality operators have their own proof targets when retained evidence maps
 them precisely. In `a = b = c`, hovering the first `=` explains only `a = b`;
 the second explains only `b = c`, with that step's own mathematical citations

@@ -11109,6 +11109,25 @@ controls in `examples/wd_negative/`. The order layer recognizes these contracts:
 | Finite aggregates and extrema | Pointwise weak/strict order on the relevant index set gives sum order. A nonnegative finite-set summand is at most the total. Finite-set extrema bound every member. Finite subset inclusion bounds cardinality, and union cardinality is at most the sum. |
 | Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln` and trigonometric order use the dedicated sections below; complex modulus uses the [complex scalar contract](#complex-scalars-beta-preview). |
 
+For a negated real comparison, the `NegatedOrder` builtin strategy can verify
+its positive complement: `not a>b` requires `a<=b`, `not a<b` requires
+`a>=b`, `not a>=b` requires `a<b`, and `not a<=b` requires `a>b`.
+It checks both real carriers, then the complement through shared verification
+at the existing BuiltinRule premise ceiling, with rewrite disabled. The
+complement may compose already checked bounds; it need not be stored first.
+Known complements and closed calculations retain priority. This applies to
+ordinary goals and the opposite checked by `impossible` alike; a search miss
+is never evidence of negation. The strategy retains all three child proofs.
+See the [integer/product contradiction tracer](../examples/proof_nodes/atomic/by_builtin_strategy/contra_integer_product_order.lit).
+This strategy has no Lean replay adapter yet.
+
+```litex
+forall x R:
+    x <= 900
+    =>:
+        not x > 1070
+```
+
 Two real upper bounds `a<=M` and `b<=M` also prove `a+b<=2*M` directly,
 including negative `M`. The bounded strategy accepts `M*2` and a closed
 rational expression equal to `2`, such as `(6/3)*M`, and retains both premise

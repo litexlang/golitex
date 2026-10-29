@@ -1,0 +1,5 @@
+by def $nt::is_congruent_mod(15,0,3)
+
+by def $nt::is_congruent_mod(15,0,5)
+
+release thm nt::chinese_remainder_residue_of_solution(0,0,3,5,15)

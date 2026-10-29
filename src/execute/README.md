@@ -599,6 +599,20 @@ coverage.
 
 ## Local finite aggregation and constructor proofs (2026-10-05)
 
+Negated real comparisons have a bounded `NegatedOrder` strategy. It checks
+left/right membership in R, then verifies the positive complement using the
+strategy's existing BuiltinRule child state, without rewrite. For example,
+`x <= 900` can prove `not x > 1070` through verification of `x <= 1070`.
+The four negative order forms remove one negated comparison constructor;
+positive comparisons do not enter this branch. Known-complement rules keep
+priority. All three requirement facts and their verification results remain
+in Detailed and reading evidence. `by contra` uses shared verification
+unchanged. False/missing bounds, weak-to-strict promotion, nonreal operands,
+and undefined expressions remain rejected. The focused regressions live in
+`tests/unit/execute/negated_order/tests.rs`; the stable tracer is
+`examples/proof_nodes/atomic/by_builtin_strategy/contra_integer_product_order.lit`.
+Lean compilation rejects this new strategy explicitly until an adapter exists.
+
 Function-space membership now checks complete domains before pointwise return
 typing. `function_domain` reads checked function constructions, existing exact
 memberships, equality paths and checked function-valued application returns.

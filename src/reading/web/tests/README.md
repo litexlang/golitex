@@ -68,6 +68,16 @@ controls cover wrong universal identity, missing argument/equality records and
 incorrect premise-proof pairing. These are public component events, not browser
 visual acceptance or an exhaustive grammar/proof-form audit.
 
+Generate `--definitions` fixtures and run
+`node src/reading/web/tests/definition-proofs.cjs <fixture-directory>` for
+reciprocal and predicate definitions, explicit `by def`, nested and curried
+applications, callable aliases, tuple properties and declared codomains. The
+suite checks real source citations and return, retained binder names, residual
+calculations, final closed WD (including a selected body's narrower guard), and
+rejection controls. Removing binders, expansion records or residual facts must
+not produce guessed substitutions or proof steps. This exercises the public
+DOM component and CLI evidence, without browser geometry or visual assertions.
+
 Run `node src/reading/web/tests/proof-rules.cjs <fixture-directory>` to check the
 actual `ExactIntegerDiv` application for `p / 2 $in Z`, its context, full guarded
 law and parameter substitution in both locales. Hovered and pinned views agree.

@@ -6,13 +6,20 @@ conversation. The same content is bundled with the project skill
 `.agents/skills/litex-formalizer/`.
 
 Use it with [Agent Prompt Authoring](Agent_Prompt_Authoring.md), which explains
-the three-layer layout and the measured effects. Every snippet below is a
-pattern the current release accepts; replace the names, not the shapes.
+the layout, the incremental checking loop and the measured effects. Every
+snippet below is a pattern the current release accepts; replace the names, not
+the shapes.
 
 ---
 
 One fact per line, checked in order. Accepted lines stay usable; a rejected line
-reports `why_failed` and the run stops, so fix forward, never rewrite.
+reports `why_failed`, so fix forward, never rewrite.
+
+Check incrementally: append to `solution.lit`, then run `./step`. It sends only
+the new statements to a live session, so a statement costs milliseconds and one
+short line of output. `./check solution.lit` once at the end is the whole-file
+strict gate. Never re-run the whole file after every line: that re-checks and
+re-prints everything and is the main way a Litex session becomes expensive.
 
 ## Declarations
 
@@ -161,6 +168,9 @@ sqrt(x^2) = x
 
 ## Working style
 
-Write the declaration and one fact, run `./check solution.lit`, then add the
-next fact. A rejected line tells you exactly which check failed; add the missing
-fact before it instead of restructuring the file.
+Append one declaration or a few related facts, run `./step`, read the one-line
+result, then continue. A rejected line tells you exactly which check failed; add
+the missing fact before it instead of restructuring the file. If `./step` prints
+`RESYNC`, you rewrote earlier lines and the whole file was re-checked; prefer
+appending. Run `./check solution.lit` once before you finish.
+

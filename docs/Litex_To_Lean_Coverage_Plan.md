@@ -5067,3 +5067,46 @@ proof makes the Adapter fail. Its axiom audit contains only `propext`,
 `Classical.choice` and `Quot.sound`. Infinite approaches and general explicit
 limit builtin-theorem calls remain separate coverage work. Local receipts:
 `tmp/2026-10-29/litex-to-lean-six-hour/`.
+
+
+## Function-limit proof replay and explicit certificates — 2026-10-29
+
+This increment adds 55 source/generated pairs across finite and one-sided
+function limits, limits at positive/negative infinity, explicit certificate
+calls and their scalar/set dependencies. It preserves the existing source
+syntax, Runtime semantics and typed-result shapes.
+
+- Selectors consume their original function/point WD, complete real-domain
+  evidence and candidate or existence proof. Core fixes their denotations
+  independently of the certifying proof and proves uniqueness.
+- Definition folding consumes both accumulation and epsilon-control clauses.
+  The domain can carry a nonzero guard. Infinite approaches retain directional
+  unboundedness; one-sided approaches retain the corresponding strict distance.
+- Twenty-five explicit builtin theorem IDs replay: uniqueness, existence,
+  selection and constant-function laws for all five function approaches, plus
+  sequence epsilon introduction, tail extraction, uniqueness, existence and
+  selection. Every invocation validates its arguments, ordered requirements,
+  stores, WD and returned subject.
+- The complete [punctured cancellation proof](../lean/examples/function_limit_punctured_cancellation/)
+  proves `x²/x → 0` from the definition, then exports a native Mathlib `Tendsto`
+  theorem through Adapter/Final. A [constant-function proof at infinity](../lean/examples/constant_function_limit_at_infinity/)
+  supplies its own unboundedness and epsilon estimate.
+- Nested numeric set-builder projections now cite the compound fact already
+  emitted before selecting its components. The complete cancellation output
+  shrank from 292,998 to 149,524 bytes. The selected positive-division and
+  absolute-value rules replay their actual premise certificates.
+
+The first integration checkpoint checked all 50 pairs then present and four
+related pairs: 47 fresh Lean checks and seven reused identical checks under the
+same Core/toolchain. All 74 exports use only `propext`, `Classical.choice` and
+`Quot.sound`. The five constant-function pairs also pass strict source,
+deterministic regeneration and Lean. The source/generated files remain compiler
+output; Adapter and Final are handwritten. Three native bridges are checked:
+sequence uniqueness, finite-function uniqueness and punctured cancellation;
+removing the generated proof makes each Adapter fail.
+
+Durable local receipts and the final affected-regression results are in
+`tmp/2026-10-29/litex-to-lean-six-hour/`. Full Cargo tests remain separate from
+these compiler harnesses because the existing regression fixture is missing.
+General limit algebra, comparison/continuity calls, `limsup`/`liminf` selectors
+and later analysis families remain future coverage work.

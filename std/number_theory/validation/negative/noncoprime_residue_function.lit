@@ -1,0 +1,3 @@
+release obj def nt::chinese_remainder_residue
+
+nt::chinese_remainder_residue(2,2,4,6) $in N

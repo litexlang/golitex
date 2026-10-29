@@ -1413,7 +1413,121 @@
       const pairs=[];for(let index=0;index<parameters.length;index++){const parameter=resolveEvidence(parameters[index]),pair=bound.get(parameter.fields?.param_id?.id);if(!pair||pair.node!==resolveEvidence(args[index]))return null;pairs.push(pair);}return pairs;
     }
     function appendSubstitutions(target,fact,pairs){
-      const summary=element("p","lr-proof-summary lr-proof-substitutions");summary.append(document.createTextNode(editText("取 ","Take ")));pairs.forEach((pair,index)=>{if(index)summary.append(document.createTextNode(editText("，",", ")));summary.append(element("code","lr-proof-substitution",displayText(pair.parameter,factLocation(fact).sourceId)+" = "+mathText(pair.argument,factLocation(fact).sourceId)));});if(!pairs.length)summary.append(document.createTextNode(editText("此命题不需要代入参数。","no parameter substitution is required.")));target.append(summary);
+      const summary=element("p","lr-proof-summary lr-proof-substitutions");if(pairs.length)summary.append(document.createTextNode(editText("取 ","Take ")));pairs.forEach((pair,index)=>{if(index)summary.append(document.createTextNode(editText("，",", ")));summary.append(element("code","lr-proof-substitution",displayText(pair.parameter,factLocation(fact).sourceId)+" = "+mathText(pair.argument,factLocation(fact).sourceId)));});if(!pairs.length)summary.append(document.createTextNode(editText("此应用不需要代入参数。","No parameter substitution is required.")));target.append(summary);
+    }
+    function recordedParameters(value){
+      const groups=resolveEvidence(value).fields?.groups;if(!Array.isArray(groups))return null;
+      const parameters=[];for(const group of groups){const params=resolveEvidence(group).fields?.params;if(!Array.isArray(params))return null;for(const param of params){const symbol=resolveEvidence(param);if(symbol.kind!=="symbol_reference")return null;parameters.push(symbol);}}return parameters;
+    }
+    function appendDefinitionBindings(target,fact,parameters,args){
+      if(!parameters||!Array.isArray(args)||parameters.length!==args.length||args.some(arg=>typeof resolveEvidence(arg).text!=="string")){
+        target.append(element("p","lr-empty-note",editText("形参与实参的对应记录不完整。","The parameter-to-argument correspondence is incomplete.")));return false;
+      }
+      appendSubstitutions(target,fact,parameters.map((param,index)=>({parameter:param.name,argument:resolveEvidence(args[index]).text})));return true;
+    }
+    function anonymousFunction(value){
+      let node=resolveEvidence(value);
+      if(node.type==="Obj"&&node.variant==="FunctionSpace")node=resolveEvidence(node.fields?.["0"]);
+      if(node.type==="FunctionSpace"&&node.variant==="AnonymousFn")node=resolveEvidence(node.fields?.["0"]);
+      return node.type==="AnonymousFn"?node:null;
+    }
+    function recordedFunctionApplication(value){
+      let node=resolveEvidence(value);if(node.type==="Obj"&&node.variant==="FnObj")node=resolveEvidence(node.fields?.["0"]);
+      return node.type==="FnObj"?node:null;
+    }
+    function appendDefinitionSource(target,fact,path){
+      const proof=resolveEvidence(path),edges=proof.type==="KnownEqualityPathProof"?proof.fields?.path:null;
+      if(!Array.isArray(edges))return null;
+      const source=element("div","lr-proof-definition-source"),cited=new Set();
+      for(const edge of edges){const id=resolveEvidence(edge?.[2]).fact_id;if(facts.has(id)&&!cited.has(id)){cited.add(id);source.append(factButton(id));}}
+      if(cited.size)target.append(source);
+      return edges.length?resolveEvidence(edges.at(-1)?.[1]):null;
+    }
+    function appendBodyExpansion(target,fact,value){
+      const wrapper=resolveEvidence(value),step=resolveEvidence(wrapper.fields?.["0"]),application=resolveEvidence(step.fields?.application),body=resolveEvidence(step.fields?.expanded_body),part=element("div","lr-definition-expansion");target.append(part);
+      if(wrapper.type!=="FunctionBodyExpansionProof"||!application.text||!body.text){part.append(element("p","lr-empty-note",editText("此步定义展开记录不完整。","This definition-expansion record is incomplete.")));return;}
+      if(wrapper.variant==="Anonymous"){
+        const source=resolveEvidence(step.fields.function_body),path=source.variant==="KnownEquality"?source.fields?.["0"]:source.fields?.function_equal,endpoint=appendDefinitionSource(part,fact,path),call=recordedFunctionApplication(step.fields.application),head=resolveEvidence(call?.fields?.head);
+        const fn=source.variant==="Template"?anonymousFunction(source.fields?.instantiated_function):anonymousFunction(endpoint)||anonymousFunction(head.type==="FnObjHead"&&head.variant==="AnonymousFnLiteral"?head.fields?.["0"]:null),signature=resolveEvidence(fn?.fields?.body);
+        // The function value is the retained equality endpoint (or literal),
+        // not a same-named declaration found elsewhere in the source.
+        if(fn)appendDefinitionBindings(part,fact,recordedParameters(signature.fields?.set_bound_parameters),call?.fields?.body?.[0]);
+        else part.append(element("p","lr-empty-note",editText("此记录未提供被代入的函数体及其形参。","The applied function body and its parameters were not exported here.")));
+      }else if(wrapper.variant==="Composition"){
+        appendDefinitionSource(part,fact,step.fields.function_equal);part.append(element("p","lr-proof-summary",editText("按复合函数的定义，先应用内层函数，再应用外层函数。","By the definition of composition, apply the inner function and then the outer function.")));
+      }else if(wrapper.variant==="FiniteCoordinate")part.append(element("p","lr-proof-summary",editText("取有限函数中指定坐标的值。","Select the specified coordinate of the finite function.")));
+      else{part.append(element("p","lr-empty-note",editText("此种定义展开尚无专门解说。","This definition-expansion form has no dedicated explanation yet.")));return;}
+      part.append(formula(application.text+" = "+body.text,factLocation(fact).sourceId));
+    }
+    function appendObjectDefinitionApplication(target,fact,evidence,depth){
+      const frames=proofFrames(evidence);if(!frames.some(node=>node.variant==="ByObjectDefinition"))return false;
+      const detail=frames.find(node=>["ByUnfoldNamedHaveFnEqualApplicationObjectDefinitionProof","ByBothFunctionBodiesObjectDefinitionProof","ByHaveObjEqualObjectDefinitionProof","ByLetObjObjectDefinitionProof","ByUnfoldHaveFnEqualCaseByCaseApplicationObjectDefinitionProof","ByUnfoldHaveFnByInducApplicationObjectDefinitionProof"].includes(node.type));if(!detail)return false;
+      const part=element("section","lr-definition-application"),fields=detail.fields;part.append(element("h4","lr-proof-section-title",editText("按定义展开","Unfold the definition")));target.append(part);
+      const normalizations=[fields.normalization,fields.left_normalization,fields.right_normalization].filter(Boolean);
+      for(const value of normalizations){const normalization=resolveEvidence(value);if(!Array.isArray(normalization.fields?.expansions)||!normalization.fields.expansions.length)part.append(element("p","lr-empty-note",editText("定义展开步骤未完整导出。","The definition-expansion steps were not fully exported.")));else normalization.fields.expansions.forEach(step=>appendBodyExpansion(part,fact,step));}
+      if(!normalizations.length){
+        const body=resolveEvidence(fields.expanded_rhs||fields.expanded_body);if(body.text)part.append(formula(body.text,factLocation(fact).sourceId));
+        if(fields.guard){part.append(element("p","lr-proof-summary",editText("所选分支的条件：","Condition of the selected branch:")));appendProofRequirement(part,fact,proofResult(fields.guard).fields?.fact,fields.guard,depth);}
+        for(const selection of array(fields.selected_case_path)){const guard=resolveEvidence(selection).fields?.guard;appendProofRequirement(part,fact,proofResult(guard).fields?.fact,guard,depth);}
+      }
+      const residual=fields.residual_equal,record=proofRecord(residual);
+      if(proofRelation(residual)&&record.variant==="ByTheyAreTheSame")part.append(element("p","lr-proof-summary",editText("代入后，两边是同一表达式，等式成立。","After substitution, both sides are the same expression, establishing the equality.")));
+      else if(proofRelation(residual)){
+        part.append(element("p","lr-proof-summary",editText("展开后还需验证：","It remains to verify:")));appendProofRequirement(part,fact,proofResult(residual).fields?.fact,residual,depth);
+      }else part.append(element("p","lr-empty-note",editText("展开后的等式证明未完整导出。","The proof of the equality after expansion was not fully exported.")));
+      return true;
+    }
+    function appendPredicateApplication(target,fact,evidence){
+      if(!proofFrames(evidence).some(node=>node.type==="AtomicExceptEqualityFactSearchProofByDefinition"&&node.variant==="UserDefinedProp"))return;
+      const subject=proofSubject({...fact,evidence}),predicate=resolveEvidence(subject?.fields?.predicate),declaration=symbolDefinitions.get(predicate.symbol_id),part=element("section","lr-predicate-application");target.append(part);
+      if(declaration)part.append(button(editText("使用 ","Use ")+predicate.name+editText(" 的定义","'s definition"),"lr-text-link lr-definition-link",()=>selectStatement(declaration.id,declaration.line)));
+      let definition=null;if(declaration)walkEvidence(declaration.evidence,node=>{if(node.type==="DefPropStmt"&&resolveEvidence(node.fields?.name).symbol_id===predicate.symbol_id)definition=node;});
+      appendDefinitionBindings(part,fact,definition&&recordedParameters(definition.fields.typed_parameters),subject?.fields?.body);
+    }
+    function appendSpecialPropertyApplication(target,fact,evidence,depth){
+      const frames=proofFrames(evidence);if(!frames.some(node=>node.variant==="ByKnownSpecialProperty"))return false;
+      const tuple=frames.find(node=>["TupleProjectionKnownProof","FnTupleProjectionKnownProof","TupleReconstructionKnownProof"].includes(node.type)),codomain=frames.find(node=>node.type==="FnApplicationInCodomainKnownSpecialPropertyProof");if(!tuple&&!codomain)return false;
+      const part=element("section","lr-special-application");target.append(part);
+      if(tuple){
+        const fields=tuple.fields,goal=resolveEvidence(proofResult(evidence).fields?.fact),subject=resolveEvidence(fields.reversed?goal.fields?.right:goal.fields?.left),call=recordedFunctionApplication(subject),functionValue=resolveEvidence(fields.function),value=resolveEvidence(resolveEvidence(fields.tuple||fields.function).fields?.value),components=value.fields?.args;
+        part.append(element("h4","lr-proof-section-title",editText("使用已知的元组性质","Use the known tuple structure")));appendProofReferences(part,fact,evidence);
+        if(tuple.type==="TupleReconstructionKnownProof"){
+          part.append(element("p","lr-proof-summary",editText("已知此对象为元组；依次取出它的各个分量，即得原元组。","The object is a tuple; collecting its coordinates in order reconstructs the original tuple.")));return true;
+        }
+        if(fields.function){
+          const endpoint=appendDefinitionSource(part,fact,functionValue.fields?.function_equal),fn=anonymousFunction(endpoint),signature=resolveEvidence(fn?.fields?.body);
+          if(fn)appendDefinitionBindings(part,fact,recordedParameters(signature.fields?.set_bound_parameters),call?.fields?.body?.[0]);
+        }
+        const index=Number(fields.index),component=Array.isArray(components)&&Number.isInteger(index)&&index>=1?resolveEvidence(components[index-1]):null;
+        if(component?.text){part.append(element("p","lr-proof-summary",editText("取第 "+index+" 个分量：","Select coordinate "+index+":")),formula(component.text,factLocation(fact).sourceId));
+          const certificate=fields.component_equal,other=resolveEvidence(fields.reversed?goal.fields?.left:goal.fields?.right);
+          if(certificate&&proofRecord(certificate).variant!=="ByTheyAreTheSame"&&other.text){const step=element("details","lr-proof-step");step.append(element("summary",null,editText("验证分量相等","Verify coordinate equality")),formula(component.text+" = "+other.text,factLocation(fact).sourceId));let shown=false;step.addEventListener("toggle",()=>{if(step.open&&!shown){shown=true;appendProofMain(step,{...fact,id:null},certificate,false,depth+1);positionOverlays();}});part.append(step);}
+        }
+        else part.append(element("p","lr-empty-note",editText("元组的具体分量未完整导出。","The tuple's individual coordinates were not fully exported.")));
+      }else{
+        part.append(element("h4","lr-proof-section-title",editText("使用函数的陪域声明","Use the declared function codomain")));
+        const id=resolveEvidence(codomain.fields.cite_property_fact_id).fact_id;
+        if(facts.has(id))part.append(factButton(id));
+        const membership=factSubjects.get(id),set=resolveEvidence(membership?.fields?.set),space=set.type==="Obj"&&set.variant==="FunctionSpace"?resolveEvidence(set.fields?.["0"]):null,signature=space?.type==="FunctionSpace"&&space.variant==="FnSet"?resolveEvidence(space.fields?.["0"]):null,goal=proofSubject({...fact,evidence}),call=recordedFunctionApplication(goal?.fields?.element);
+        if(signature)appendDefinitionBindings(part,fact,recordedParameters(signature.fields?.set_bound_parameters),call?.fields?.body?.[0]);
+        part.append(element("p","lr-proof-summary",editText("实参满足函数的定义域条件，因此函数值属于声明的返回集合。","The arguments satisfy the function's domain conditions, so the value belongs to its declared return set.")));
+        appendProofReferences(part,fact,evidence);appendProofResult(part,fact,evidence);
+      }
+      return true;
+    }
+    function appendEqualityTransport(target,fact,evidence,depth){
+      const frames=proofFrames(evidence);if(!frames.some(node=>node.variant==="ByEquivalenceClass"))return false;
+      const route=frames.find(node=>node.type==="EqualFactSearchedProofByEquivalenceClass"),detail=resolveEvidence(route?.fields?.["0"]);if(!["KnownPath","ViaPeers"].includes(route?.variant))return false;
+      const part=element("section","lr-equality-transport");part.append(element("h4","lr-proof-section-title",editText("利用已知等式","Use established equalities")));target.append(part);
+      function path(value){const node=resolveEvidence(value);if(node.type!=="KnownEqualityPathProof"||!Array.isArray(node.fields?.path)){part.append(element("p","lr-empty-note",editText("等式引用链未完整导出。","The cited equality path was not fully exported.")));return;}for(const edge of node.fields.path){const left=resolveEvidence(edge?.[0]),right=resolveEvidence(edge?.[1]),id=resolveEvidence(edge?.[2]).fact_id;if(left.text&&right.text)part.append(formula(left.text+" = "+right.text,factLocation(fact).sourceId));if(facts.has(id))part.append(factButton(id));}}
+      if(route.variant==="KnownPath")path(detail);
+      else{
+        path(detail.fields?.left_path);const bridge=detail.fields?.bridge;
+        if(proofRelation(bridge)){part.append(element("p","lr-proof-summary",editText("中间还需验证：","Verify the connecting equality:")));appendProofRequirement(part,fact,proofResult(bridge).fields?.fact,bridge,depth);}
+        else part.append(element("p","lr-empty-note",editText("中间等式的证明未完整导出。","The connecting equality proof was not fully exported.")));
+        path(detail.fields?.right_path);
+      }
+      return true;
     }
     function appendInstantiationRequirements(target,fact,application,depth){
       const requirements=instantiationDetail(application);
@@ -1524,7 +1638,7 @@
         for(const [key,child] of Object.entries(node)){
           // Parameter domains and formation are genuine dependencies, retained
           // separately below rather than mixed with the mathematical premises.
-          if(["well_defined_proof","well_defined","param_type_requirements"].includes(key))continue;
+          if(["well_defined_proof","well_defined","application_well_defined","body_application_well_defined","param_type_requirements"].includes(key))continue;
           if(Array.isArray(child))child.forEach(visit);else if(child&&typeof child==="object")visit(child);
         }
       }
@@ -1561,7 +1675,7 @@
     }
     function appendAtomicWellDefinedness(target,fact,evidence,depth){
       const result=proofResult(evidence);
-      if(fact.role==="hypothesis"||!(["VerifyEqualitySuccess","VerifyAtomicExceptEqualityFactSuccess"].includes(result.type)||["VerifyEqualityFailed","VerifyAtomicExceptEqualityFactFailed"].includes(result.type)&&result.variant==="FailToSearchProof"))return;
+      if(fact.role==="hypothesis"||!(["VerifyEqualitySuccess","VerifyAtomicExceptEqualityFactSuccess","PeerEqualitySuccess"].includes(result.type)||["VerifyEqualityFailed","VerifyAtomicExceptEqualityFactFailed"].includes(result.type)&&result.variant==="FailToSearchProof"))return;
       const proof=result.fields?.well_defined_proof,tail=element("details","lr-proof-formation lr-atomic-wd"),summary=element("summary",null,editText("表达式有定义","Well-defined expressions"));tail.append(summary);target.append(tail);let rendered=false;
       tail.addEventListener("toggle",()=>{
         if(!tail.open||rendered)return;rendered=true;
@@ -1584,6 +1698,10 @@
           for(const [key,child] of Object.entries(node.fields||{})){if(!["obj","fact","requirement"].includes(key))visit(child);}
         }
         visit(proof);
+        // Definition expansion can select a narrower body domain than the
+        // callable's outer signature. Keep those retained checks in this same
+        // final disclosure, rather than presenting them as truth-search steps.
+        for(const frame of proofFrames(evidence))for(const key of ["normalization","left_normalization","right_normalization"]){const normalization=resolveEvidence(frame.fields?.[key]);if(normalization.type==="FunctionBodyNormalizationProof")for(const value of array(normalization.fields?.expansions)){const expansion=resolveEvidence(resolveEvidence(value).fields?.["0"]);if(expansion.fields?.application_well_defined)visit(expansion.fields.application_well_defined);if(expansion.fields?.body_application_well_defined)visit(expansion.fields.body_application_well_defined);}}
         if(objects.length){const list=element("div","lr-wd-objects");list.append(element("p","lr-empty-note",editText("本句中的对象与运算：","Objects and operations in this statement:")));for(const object of objects){const item=element("div","lr-wd-object");item.append(formula(object.text,factLocation(fact).sourceId));if(object.reference&&wellDefinedness.has(object.reference))item.append(button(editText("已有定义","Previously established"),"lr-text-link",()=>selectWellDefinedness(object.reference)));list.append(item);}tail.append(list);}
         if(conditions.length){tail.append(element("p","lr-empty-note",editText("定义域条件及其证明：","Domain conditions and their proofs:")));for(const condition of conditions){
           if(!condition.structural){appendProofRequirement(tail,fact,condition.requirement,condition.evidence,depth);continue;}
@@ -1608,7 +1726,7 @@
       if(!evidence||record.kind==="unavailable"){
         target.append(element("p","lr-empty-note",editText("这条事实已验证，但此处没有导出它的逐步证明记录。","This fact was verified, but its proof steps were not exported here.")));return;
       }
-      if(appendUniversalApplication(target,fact,evidence,record,depth)||appendKnownApplication(target,fact,evidence,record,depth))return;
+      if(appendUniversalApplication(target,fact,evidence,record,depth)||appendKnownApplication(target,fact,evidence,record,depth)||appendObjectDefinitionApplication(target,fact,evidence,depth)||appendSpecialPropertyApplication(target,fact,evidence,depth)||appendEqualityTransport(target,fact,evidence,depth))return;
       if(record.type==="ExecByContraStmtSuccess"){
         target.append(element("p","lr-proof-summary",editText("反证法：假设目标的否定，在此假设下推出矛盾，从而得到原目标。","Proof by contradiction: assume the negation of the goal and derive a contradiction, establishing the original goal.")));
         const assumption=resolveEvidence(record.fields.reverse_assumption_fact_id),closing=resolveEvidence(record.fields.closing);
@@ -1635,6 +1753,7 @@
         const rule=frames.find(node=>children[node.type]);if(rule){const proofs=children[rule.type].map(key=>rule.fields?.[key]);requirements={fields:{requirement_facts:proofs.map(proof=>proofResult(proof).fields?.fact),proof_of_requirement_facts:proofs}};}
       }
       if(requirements){
+        appendPredicateApplication(target,fact,evidence);
         const descriptions={IntersectMembership:["按交集的定义，分别证明该元素属于两个集合。","By the definition of intersection, establish membership in both sets."],UnionMembershipFromLeft:["该元素属于左边的集合，因此属于并集。","Membership in the left set establishes membership in the union."],UnionMembershipFromRight:["该元素属于右边的集合，因此属于并集。","Membership in the right set establishes membership in the union."],ByDefinition:["将实参代入谓词定义，验证参数类型要求及全部定义条件。","Substitute the arguments into the predicate definition and verify its parameter requirements and all defining conditions."],ArithmeticCongruence:["在算式中使用已知等式，验证替换后的结果相等。","Use known equalities inside the arithmetic expression to verify equal results."]};
         const name=frames.map(node=>node.variant).find(name=>descriptions[name]),description=descriptions[name]||["验证下面的条件后，应用记录中的规则得到本句结论。","The recorded rule establishes this conclusion from the following verified conditions."];
         target.append(element("p","lr-proof-summary",description[lang()==="zh"?0:1]));
@@ -1649,6 +1768,7 @@
         ByKnownForallFact:["把全称命题用于当前对象，并验证它所要求的前提。","Apply the universal statement to the current objects and verify its premises."],
         ByKnownAtomicFact:["引用已建立的事实。","Use an already established fact."],
         ByTheyAreTheSame:["两边表示同一对象。","Both sides denote the same object."],
+        ByClosedCalculation:["通过精确计算验证本句的关系。","Exact calculation verifies the stated relation."],
         ByMatchingOneArgByOne:["同一运算的对应参数分别相等，因此运算结果相等。","Corresponding arguments of the same operation are equal, so the results are equal."]
       },description=descriptions[record.variant];
       const builtin=resolveEvidence(record.fields?.["0"]),builtinDescription=builtin.type==="EqualitySearchProofByBuiltinRule"&&builtin.variant==="Calculation"?["按内置运算规则验证这个等式。","Verify this equality using the builtin calculation rules."]:builtin.type==="EqualitySearchProofByBuiltinStrategy"&&builtin.variant==="ArithmeticCongruence"?["在算式中使用已知等式，验证替换后的结果相等。","Use known equalities inside the arithmetic expression to verify equal results."]:null;
