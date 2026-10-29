@@ -1,0 +1,7 @@
+# Release the explicit at function-limit selected theorem.
+claim:
+    ? forall f fn(x R) R, p R:
+        exist L R st {$has_limit_at(f,p,L)}
+        =>:
+            $has_limit_at(f,p,fn_lim(f,p))
+    release thm fn_limit_at_selected(f,p)

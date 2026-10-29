@@ -7,10 +7,13 @@
 //! including every atomic builtin leaf (no family-level stubs).
 
 pub mod atomic_builtin_rule;
+mod compound_builtin_rule;
 pub mod equality_builtin_rule;
 pub(super) mod failure;
+mod scalar_extra;
 pub mod searched_proof_why;
 pub mod stmt_why;
+mod structural_membership;
 mod text;
 
 pub use searched_proof_why::explain_searched_proof_why;

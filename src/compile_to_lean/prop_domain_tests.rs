@@ -1,4 +1,5 @@
 use super::LitexToLeanCompiler;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof;
 use crate::prelude::*;
 
 fn checked() -> (Runtime, RunLitexCodeResult) {
@@ -75,7 +76,7 @@ fn concrete_prop_rejects_an_added_true_domain_stage_the_producer_did_not_execute
     requirements.push(
         crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof {
             requirement,
-            result: Box::new(other),
+            result: PredicateDomainRequirementProof::Verified(Box::new(other)),
         },
     );
     let error = LitexToLeanCompiler::new(runtime)
@@ -180,7 +181,7 @@ fn checked_argument_domains_compile_and_reject_changed_indices_or_subjects() {
             .well_defined_proof
             .as_detailed_mut()
             .unwrap()
-            .predicate_domain = PredicateDomainProof::ByCheckedArguments(checked);
+            .predicate_domain = PredicateDomainProof::ByRequirements(checked.into_iter().map(|p| crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof { requirement: p.requirement.clone(), result: PredicateDomainRequirementProof::CheckedArgument(p) }).collect());
         let compilation =
             LitexToLeanCompiler::new(runtime).compile_run(&result, "checked_argument_domain");
         if change == "valid" {

@@ -468,9 +468,7 @@ impl LitexToLeanCompiler {
                 Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
             }
             InferAtomicFactResult::HasFunctionLimitFact(_)
-            | InferAtomicFactResult::NotHasFunctionLimitFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/FunctionLimit"))
-            }
+            | InferAtomicFactResult::NotHasFunctionLimitFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::HasSequenceLimitFact(_)
             | InferAtomicFactResult::NotHasSequenceLimitFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::HasSequenceLimsupFact(_)

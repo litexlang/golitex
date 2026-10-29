@@ -15,6 +15,7 @@ impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_prop_definition(
         &self,
         goal: &AtomicFact,
+        wd: &AtomicFactWellDefinedProof,
         proof: &AtomicExceptEqualityFactSearchProofByDefinition,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
@@ -156,6 +157,12 @@ impl LitexToLeanCompiler {
                 &p.proof_of_requirement_facts,
                 position,
             ),
+            (
+                AtomicFact::HasFunctionLimitFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::FunctionLimit(p),
+                ),
+            ) => self.compile_function_limit_definition(f, wd, p, position),
             (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(_)) => {
                 Err(LeanCompileError::unsupported("Prop/BuiltinDefinition"))
             }

@@ -1,0 +1,8 @@
+# Two limits of the same real function at positive infinity are equal.
+claim:
+    ? forall f fn(x R) R, L R, K R:
+        $has_limit_pos_inf(f,L)
+        $has_limit_pos_inf(f,K)
+        =>:
+            L = K
+    L = K

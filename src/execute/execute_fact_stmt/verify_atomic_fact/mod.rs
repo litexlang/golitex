@@ -35,3 +35,5 @@ pub mod closed_calculation_proof;
 
 pub mod search_structural_membership;
 pub mod structural_membership_proof;
+
+mod verify_requirement_with_checked_arguments;

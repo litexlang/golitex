@@ -1,0 +1,10 @@
+# Accumulation and epsilon-delta clauses prove the left-sided function-limit predicate.
+thm checked_left_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < (x0-x) and (x0-x) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < (x0-x) and (x0-x) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_left(f,x0,L)
+    by def $has_limit_left(f,x0,L)

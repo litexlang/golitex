@@ -153,8 +153,33 @@
 .lr-proof-popover { position:fixed; z-index:41; width:min(480px,calc(100vw - 16px)); max-height:min(420px,calc(100vh - 16px)); background:var(--reading-paper); color:var(--reading-ink); border:1px solid var(--reading-line); border-radius:7px; box-shadow:0 6px 24px #20331c26; font:13px/1.7 Roboto,"PingFang SC",sans-serif; overflow:hidden; }
 .lr-proof-header { display:flex; justify-content:space-between; align-items:center; padding:9px 14px; border-bottom:1px solid var(--reading-line); color:var(--reading-accent); }
 .lr-proof-body { max-height:min(360px,calc(100vh - 76px)); overflow:auto; padding:12px 14px; overscroll-behavior:contain; }
+.lr-fact-preview { width:min(720px,calc(100vw - 16px)); }
+.lr-fact-preview .lr-proof-body { display:grid; grid-template-columns:minmax(0,1.3fr) minmax(0,1fr); height:min(320px,calc(100vh - 100px)); max-height:none; padding:0; overflow:hidden; }
+.lr-proof-evidence { grid-column:1 / -1; min-width:0; min-height:0; padding:12px 14px; overflow:auto; overscroll-behavior:contain; }
+.lr-proof-has-symbol .lr-proof-evidence { grid-column:1; }
+.lr-proof-symbol { min-width:0; min-height:0; padding:12px 14px; border-left:1px solid var(--reading-line); background:var(--reading-hover); overflow:auto; overscroll-behavior:contain; font-size:12px; overflow-wrap:anywhere; }
+.lr-proof-symbol[hidden] { display:none; }
+.lr-proof-symbol>strong { display:block; margin-bottom:6px; color:var(--reading-accent); font-family:var(--reading-code); }
+.lr-proof-symbol .lr-definition-source { max-height:160px; margin:8px 0; padding:8px; }
+.lr-proof-symbol .lr-predicate-definition { margin-top:10px; }
+@media (max-width:600px) {
+  .lr-fact-preview .lr-proof-body { grid-template-columns:minmax(0,1fr); }
+  .lr-proof-has-symbol .lr-proof-body { grid-template-rows:minmax(0,1.2fr) minmax(0,1fr); }
+  .lr-proof-symbol { border-left:0; border-top:1px solid var(--reading-line); }
+}
 .lr-proof-summary { margin:0 0 10px; }
 .lr-proof-section-title { margin:0 0 8px; font-size:12px; font-weight:600; color:var(--reading-muted); }
+.lr-proof-application { margin-top:12px; padding-top:10px; border-top:1px solid var(--reading-line); }
+.lr-proof-rule-name { display:inline-block; color:var(--reading-accent); font:12px/1.7 var(--reading-code); overflow-wrap:anywhere; }
+.lr-proof-rule-title { margin-left:8px; color:var(--reading-muted); font-size:12px; }
+.lr-proof-rule-message { margin:6px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
+.lr-proof-rule-result { margin-top:9px; }
+.lr-forall-application,.lr-known-application,.lr-strategy-application { margin-top:0; padding-top:0; border-top:0; }
+.lr-proof-matches,.lr-instantiated-premises { margin:10px 0; }
+.lr-proof-matches>summary,.lr-proof-match>summary { cursor:pointer; color:var(--reading-accent); }
+.lr-proof-match { padding:6px 0; }
+.lr-proof-match>summary .lr-formula { display:inline; }
+.lr-proof-match-evidence { padding:8px 0 0 12px; }
 .lr-predicate-definition { margin-bottom:12px; padding-bottom:10px; border-bottom:1px solid var(--reading-line); }
 .lr-proof-header strong { flex:1; }
 .lr-proof-pin { border:0; background:transparent; color:var(--reading-accent)!important; font:inherit; font-size:12px; line-height:1.6; cursor:pointer; padding:2px 5px; }
@@ -412,3 +437,4 @@
 .lr-inferred-item+.lr-inferred-item { margin-top:8px; }
 .lr-inferred-item .lr-inference-origin { display:block; margin:3px 8px 0; color:var(--reading-muted); font-size:10px; }
 .lr-editor-error { margin:0; padding:10px 14px; border-top:1px solid #e6b6b1; background:#fff7f6; color:#9d2929; font-size:12px; line-height:1.6; overflow-wrap:anywhere; }
+.lr-wd-objects{margin:.5rem 0}.lr-wd-object{display:flex;align-items:baseline;gap:.6em;flex-wrap:wrap}.lr-wd-object .lr-formula{margin:.15rem 0}

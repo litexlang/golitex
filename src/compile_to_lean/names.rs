@@ -819,6 +819,31 @@ impl LitexToLeanCompiler {
                     term
                 })
             }
+            f @ (AtomicFact::HasFunctionLimitFact(_) | AtomicFact::NotHasFunctionLimitFact(_)) => {
+                let (function, approach, value, negative) =
+                    super::compile_function_limit::limit_parts(f).unwrap();
+                let term = if approach.point().is_some() {
+                    let (side, point) = super::compile_function_limit::finite_side(approach)?;
+                    format!(
+                        "Litex.HasFiniteFunctionLimit .{side} {} {} {}",
+                        self.compile_object_reference(function, position)?,
+                        self.compile_object_reference(point, position)?,
+                        self.compile_object_reference(value, position)?
+                    )
+                } else {
+                    let direction = super::compile_function_limit::infinite_direction(approach)?;
+                    format!(
+                        "Litex.HasInfiniteFunctionLimit .{direction} {} {}",
+                        self.compile_object_reference(function, position)?,
+                        self.compile_object_reference(value, position)?
+                    )
+                };
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
             AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::FunctionRiemannIntegrableFact(_)
@@ -837,8 +862,6 @@ impl LitexToLeanCompiler {
             | AtomicFact::NotFunctionContinuousFact(_)
             | AtomicFact::FunctionLipschitzFact(_)
             | AtomicFact::NotFunctionLipschitzFact(_)
-            | AtomicFact::HasFunctionLimitFact(_)
-            | AtomicFact::NotHasFunctionLimitFact(_)
             | AtomicFact::HasSequenceLimsupFact(_)
             | AtomicFact::HasSequenceLiminfFact(_)
             | AtomicFact::NotHasSequenceLimsupFact(_)

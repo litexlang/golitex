@@ -1,0 +1,63 @@
+have fn integer_add(x,y Z) Z = x+y
+
+have fn integer_neg(x Z) Z = -x
+
+have fn integer_mul(x,y Z) Z = x*y
+
+forall x,y,z Z:
+    integer_add(integer_add(x,y),z)=integer_add(x,integer_add(y,z))
+    integer_mul(integer_mul(x,y),z)=integer_mul(x,integer_mul(y,z))
+    integer_mul(x,integer_add(y,z))=integer_add(integer_mul(x,y),integer_mul(x,z))
+    integer_mul(integer_add(x,y),z)=integer_add(integer_mul(x,z),integer_mul(y,z))
+
+forall x,y Z:
+    integer_add(x,y)=integer_add(y,x)
+
+forall x Z:
+    integer_add(0,x)=x
+    integer_add(x,integer_neg(x))=0
+    integer_mul(1,x)=x
+    integer_mul(x,1)=x
+
+have integers &ring::Ring<Z> = (0,1,integer_add,integer_neg,integer_mul)
+
+release struct def integers
+
+have fn zero_add(x,y {0}) {0} = 0
+
+have fn zero_neg(x {0}) {0} = 0
+
+have fn zero_mul(x,y {0}) {0} = 0
+
+forall x,y,z {0}:
+    zero_add(zero_add(x,y),z)=zero_add(x,zero_add(y,z))
+    zero_mul(zero_mul(x,y),z)=zero_mul(x,zero_mul(y,z))
+    zero_mul(x,zero_add(y,z))=zero_add(zero_mul(x,y),zero_mul(x,z))
+    zero_mul(zero_add(x,y),z)=zero_add(zero_mul(x,z),zero_mul(y,z))
+
+forall x,y {0}:
+    zero_add(x,y)=zero_add(y,x)
+
+forall x {0}:
+    zero_add(0,x)=x
+    zero_add(x,zero_neg(x))=0
+    zero_mul(0,x)=x
+    zero_mul(x,0)=x
+
+0 $in {0}
+
+zero_add $in fn(x,y {0}) {0}
+
+zero_neg $in fn(x {0}) {0}
+
+zero_mul $in fn(x,y {0}) {0}
+
+have trivial &ring::Ring<{0}> = (0,0,zero_add,zero_neg,zero_mul)
+
+release struct def trivial
+
+have fn to_zero(x Z) {0} = 0
+
+by def $ring::is_ring_homomorphism(Z,integers,{0},trivial,to_zero)
+
+release thm ring::trivial_ring_kernel_implies_injective(Z,integers,{0},trivial,to_zero)

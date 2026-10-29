@@ -1,0 +1,23 @@
+# Prove a constant function's limit at positive infinity from its definition.
+have fn infinite_constant(x R) R = 5
+
+claim:
+    ? forall T R:
+        exist x R st {T < x}
+    T < T+1
+    witness exist x R st {T < x} from T+1
+
+claim:
+    ? forall epsilon R+:
+        exist T R st {{x R: T < x} $subset preimage_set(infinite_constant,{v R: abs(v-5) < epsilon})}
+    witness exist T R st {{x R: T < x} $subset preimage_set(infinite_constant,{v R: abs(v-5) < epsilon})} from 0:
+        claim:
+            ? forall x {t R: 0 < t}:
+                x $in preimage_set(infinite_constant,{v R: abs(v-5) < epsilon})
+            x $in R
+            infinite_constant(x)=5
+            abs(infinite_constant(x)-5)=0<epsilon
+        by def {x R: 0 < x} $subset preimage_set(infinite_constant,{v R: abs(v-5) < epsilon})
+
+by def $has_limit_pos_inf(infinite_constant,5)
+lim_pos_inf(infinite_constant)=5

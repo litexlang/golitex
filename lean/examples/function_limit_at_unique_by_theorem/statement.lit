@@ -1,0 +1,8 @@
+# Invoke the explicit at function-limit uniqueness theorem.
+claim:
+    ? forall f fn(x R) R, p R, L R, K R:
+        $has_limit_at(f,p,L)
+        $has_limit_at(f,p,K)
+        =>:
+            L = K
+    by thm fn_limit_at_unique(f,p,L,K) => L = K

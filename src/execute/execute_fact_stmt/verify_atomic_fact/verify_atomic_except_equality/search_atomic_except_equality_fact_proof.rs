@@ -42,6 +42,20 @@ impl Runtime {
                 return Ok(Some(P::ByKnownSpecialProperty(proof)));
             }
         }
+        // Object WD is already established. Share the same bounded carrier
+        // derivation used by domain consumers; composition may use exact
+        // function-return leaves only when KnownSpecialProperty is allowed.
+        if state.allows(KnownSpecialProperty) {
+            if let AtomicFact::InFact(member) = fact {
+                if let Obj::StandardSet(target) = &member.set {
+                    if let Some(proof) =
+                        self.search_membership_of_checked_object(&member.element, target, state)
+                    {
+                        return Ok(Some(P::ByStructuralMembership(proof)));
+                    }
+                }
+            }
+        }
         if let Some(child) = state.for_premises(BuiltinRule) {
             if let Some(proof) =
                 self.search_atomic_except_equality_fact_proof_by_builtin_rule(fact, child)?

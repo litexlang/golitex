@@ -1,0 +1,8 @@
+# Equality of approach points transports an existing function-limit fact.
+claim:
+    ? forall f fn(x R) R, x0 R, y0 R, L R:
+        x0 = y0
+        $has_limit_at(f,x0,L)
+        =>:
+            $has_limit_at(f,y0,L)
+    $has_limit_at(f,y0,L)

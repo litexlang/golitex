@@ -1,0 +1,8 @@
+# Invoke the explicit right function-limit uniqueness theorem.
+claim:
+    ? forall f fn(x R) R, p R, L R, K R:
+        $has_limit_right(f,p,L)
+        $has_limit_right(f,p,K)
+        =>:
+            L = K
+    by thm fn_limit_right_unique(f,p,L,K) => L = K

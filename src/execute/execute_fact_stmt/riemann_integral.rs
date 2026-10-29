@@ -87,7 +87,7 @@ impl Runtime {
             completed.push(
                 super::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof {
                     requirement,
-                    result: Box::new(result),
+                    result: super::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::Verified(Box::new(result)),
                 },
             );
         }

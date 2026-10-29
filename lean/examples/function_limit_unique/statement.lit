@@ -1,0 +1,8 @@
+# Two finite real limits of the same function at the same point are equal.
+claim:
+    ? forall f fn(x R) R, x0 R, L R, K R:
+        $has_limit_at(f,x0,L)
+        $has_limit_at(f,x0,K)
+        =>:
+            L = K
+    L = K

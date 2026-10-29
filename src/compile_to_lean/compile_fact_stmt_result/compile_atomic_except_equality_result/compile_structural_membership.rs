@@ -54,6 +54,28 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let compiled = match &proof.reason {
+            StructuralMembershipReason::FunctionReturn {
+                membership,
+                proof: returned,
+            } => {
+                use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty as InSpecial;
+                if membership.element != proof.element
+                    || membership.set != Obj::StandardSet(proof.set.clone())
+                    || !matches!(&proof.element, Obj::FnObj(_))
+                {
+                    return Err(LeanCompileError::new(
+                        "StructuralMembership/FunctionReturnSubject",
+                        "Function-return evidence changes its checked application or carrier.",
+                    ));
+                }
+                match returned.as_ref() {
+                    InSpecial::FnApplicationInCodomain(p) => {
+                        self.compile_fn_return_codomain(membership, p, position)
+                    }
+                    other => self.compile_fn_return_rule(membership, other, position),
+                }
+            }
+
             StructuralMembershipReason::Min { left, right }
             | StructuralMembershipReason::Max { left, right } => {
                 let maximum = matches!(&proof.reason, StructuralMembershipReason::Max { .. });
@@ -775,6 +797,30 @@ impl LitexToLeanCompiler {
                 }
                 Ok(format!(
                     "(Litex.sequenceLimitInR {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::FunctionLimit) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::LimitOperator(LimitOperator::Function(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionLimit/IntrinsicSubject",
+                    ));
+                }
+                let Obj::LimitOperator(LimitOperator::Function(f)) = &proof.element else {
+                    unreachable!()
+                };
+                let law = if f.approach.point().is_some() {
+                    "finiteFunctionLimitInR"
+                } else {
+                    "infiniteFunctionLimitInR"
+                };
+                Ok(format!(
+                    "(Litex.{law} {})",
                     self.compile_object_reference(&proof.element, position)?
                 ))
             }

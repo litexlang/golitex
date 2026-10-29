@@ -1,0 +1,7 @@
+# Dividing a positive real number by a real factor greater than one shrinks it.
+claim:
+    ? forall a R+, b R:
+        1 < b
+        =>:
+            a/b < a
+    a/b < a

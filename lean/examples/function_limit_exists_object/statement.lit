@@ -1,0 +1,7 @@
+# Existence of a finite real limit makes the selector well defined.
+claim:
+    ? forall f fn(x R) R, x0 R:
+        exist L R st {$has_limit_at(f,x0,L)}
+        =>:
+            $is_set(fn_lim(f,x0))
+    $is_set(fn_lim(f,x0))

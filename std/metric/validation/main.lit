@@ -1,0 +1,94 @@
+# Imported metric spaces, ball geometry and Lipschitz continuity.
+
+release obj def m::real_line_distance
+
+release thm m::real_line_metric_laws()
+
+have line &m::MetricSpace<R> = (R,m::real_line_distance)
+
+release struct def line
+
+line.carrier=R
+
+line.distance=m::real_line_distance
+
+release thm fn_set_member(line.distance,fn(x,y line.carrier) R)
+
+0 $in line.carrier
+
+3 $in line.carrier
+
+5 $in line.carrier
+
+release thm m::reverse_triangle_inequality(R,line,0,3,5)
+
+release thm m::open_ball_contains_center(R,line,0,1)
+
+release thm m::zero_closed_ball_is_singleton(R,line,0)
+
+release thm m::open_ball_is_in_closed_ball(R,line,0,1)
+
+release thm m::open_balls_are_nested(R,line,0,1,2)
+
+line.distance(0,3)=m::real_line_distance(0,3)=abs(0-3)=3
+
+release thm m::distant_open_balls_are_disjoint(R,line,0,3,1,1)
+
+release thm m::distinct_points_have_disjoint_balls(R,line,0,3)
+
+release thm m::open_ball_has_interior_subballs(R,line,0,0,1)
+
+have fn doubling(x line.carrier) line.carrier=2*x
+
+claim:
+    ? forall x,y line.carrier:
+        line.distance(doubling(x),doubling(y))<=2*line.distance(x,y)
+    x $in R
+    y $in R
+    doubling(x)=2*x
+    doubling(y)=2*y
+    line.distance(doubling(x),doubling(y))=m::real_line_distance(doubling(x),doubling(y))=abs(doubling(x)-doubling(y))
+    doubling(x)-doubling(y)=2*(x-y)
+    abs(doubling(x)-doubling(y))=abs(2*(x-y))=2*abs(x-y)
+    line.distance(x,y)=m::real_line_distance(x,y)=abs(x-y)
+    2*abs(x-y)=2*line.distance(x,y)
+
+by def $m::is_lipschitz_map(R,line,R,line,doubling,2)
+
+release thm m::lipschitz_implies_metric_continuity(R,line,R,line,doubling,2,0)
+
+have fn constant(x line.carrier) line.carrier=0
+
+claim:
+    ? forall x,y line.carrier:
+        line.distance(constant(x),constant(y))<=0*line.distance(x,y)
+    constant(x)=0
+    constant(y)=0
+    line.distance(constant(x),constant(y))=line.distance(0,0)=0
+    0*line.distance(x,y)=0
+
+by def $m::is_lipschitz_map(R,line,R,line,constant,0)
+
+release thm m::lipschitz_implies_metric_continuity(R,line,R,line,constant,0,3)
+
+release thm m::lipschitz_composition(R,line,R,line,R,line,doubling,constant,2,0)
+
+thm metric_continuity_caller:
+    ? forall A set,M &m::MetricSpace<A>,B set,T &m::MetricSpace<B>,f fn(x M.carrier) T.carrier,L R,point M.carrier:
+        $m::is_lipschitz_map(A,M,B,T,f,L)
+        =>:
+            $m::is_metric_continuous_at(A,M,B,T,f,point)
+    release thm m::lipschitz_implies_metric_continuity(A,M,B,T,f,L,point)
+
+thm metric_separation_caller:
+    ? forall A set,M &m::MetricSpace<A>,x,y M.carrier:
+        x!=y
+        =>:
+            exist r R+ st {intersect(\m::open_ball<A,M>(x,r),\m::open_ball<A,M>(y,r))={}}
+    release thm m::distinct_points_have_disjoint_balls(A,M,x,y)
+
+have fn empty_distance(x,y {}) R = 0
+
+release thm struct_member(({},empty_distance),&m::MetricSpace<{}>)
+
+have empty &m::MetricSpace<{}> = ({},empty_distance)

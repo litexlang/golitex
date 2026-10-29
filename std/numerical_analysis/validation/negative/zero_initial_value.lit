@@ -1,0 +1,5 @@
+release obj def num::newton_sqrt_step
+
+release obj def num::newton_sqrt_iterate
+
+release thm num::newton_sqrt_scaled_step(2,0)

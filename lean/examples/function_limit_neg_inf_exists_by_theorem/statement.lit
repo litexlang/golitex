@@ -1,0 +1,7 @@
+# Release the explicit neg_inf function-limit exists theorem.
+claim:
+    ? forall f fn(x R) R, L R:
+        $has_limit_neg_inf(f,L)
+        =>:
+            exist K R st {$has_limit_neg_inf(f,K)}
+    release thm fn_limit_neg_inf_exists(f,L)

@@ -1,0 +1,7 @@
+# The selected function limit at positive infinity is real.
+claim:
+    ? forall f fn(x R) R, L R:
+        $has_limit_pos_inf(f,L)
+        =>:
+            lim_pos_inf(f) $in R
+    lim_pos_inf(f) $in R

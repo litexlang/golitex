@@ -1,0 +1,32 @@
+have points set={0,1}
+
+release thm rel::discrete_partial_order_laws(points)
+
+have discrete &rel::PartialOrder<points> = (points,\rel::diagonal_pairs<points>)
+
+release struct def discrete
+
+discrete.carrier=points
+
+discrete.pairs=\rel::diagonal_pairs<points>
+
+0 $in discrete.carrier
+
+points $subset discrete.carrier
+
+\rel::diagonal_pairs<points> = {p cart(points,points):p(1)=p(2)}
+
+discrete.pairs=\rel::diagonal_pairs<points> = {p cart(points,points):p(1)=p(2)}
+
+claim:
+    ? forall y points:
+        (y,0) $in discrete.pairs
+        =>:
+            y=0
+    (y,0) $in {p cart(points,points):p(1)=p(2)}
+    (y,0)(1)=(y,0)(2)
+    y=(y,0)(1)=(y,0)(2)=0
+
+by def $rel::is_minimal_element(points,discrete,points,0)
+
+by def $rel::is_least_element(points,discrete,points,0)

@@ -1,0 +1,7 @@
+# A proved function-limit candidate at negative infinity determines the selector.
+claim:
+    ? forall f fn(x R) R, L R:
+        $has_limit_neg_inf(f,L)
+        =>:
+            lim_neg_inf(f) = L
+    lim_neg_inf(f) = L

@@ -200,7 +200,7 @@ pub(super) fn project_atomic_wd_failure(
                                     rt,
                                     vec![
                                         ("requirement", string(p.requirement.readable_string())),
-                                        ("verify", project_verify_fact(&p.result, rt)),
+                                        ("verify", super::wd::project_predicate_requirement(&p.result, rt)),
                                     ],
                                 )
                             })

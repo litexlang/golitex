@@ -755,15 +755,27 @@ search. Literal construction still checks all inner WD and pairwise distinctness
 The complete finite-expectation declaration is a regression consumer.
 
 
-## Checked function return for real order
+## Checked expression membership composition
 
-After each order operand passes object WD, a failed capped domain recheck may
-reuse that exact argument's structural real-membership proof or an existing
-`FnApplicationInCodomain` proof. The new branch requires the inherited
-KnownSpecialProperty permission and the matching argument position. Existing
-function-signature selection still checks alternatives and guards; it does not
-open another search stage or mutate the WD cache. Detailed evidence records
-`ByCheckedArgumentReturns`, while Normal output keeps its existing shape.
-The source tracer is `examples/wd/checked_function_order_domain.lit`; the
-negative companions cover invalid index, unproved guard, complex return,
-false order and a conflicting guarded signature.
+The shared truth-only `search_membership_of_checked_object` routine derives
+numeric membership after object WD. Its existing structural rules compose
+arithmetic expressions; at KnownSpecialProperty or above, function-application
+leaves read the existing exact return/signature evidence, including alternatives
+and guard compatibility. Direct remains structural-only. The routine neither
+calls the verifier/rule dispatcher nor publishes facts or WD cache entries.
+
+Ordinary membership verification and generic predicate-domain consumption use
+this same routine. The old order-only `ByCheckedArgumentReturns` route has been
+removed. Predicate requirements carry either an ordinary `Verified` result
+or a `CheckedArgument` membership certificate. One shared requirement verifier
+handles numeric predicates and analysis consumers without repeating a checked
+operand's WD at a reduced ceiling. Structural `FunctionReturn` leaves retain
+the exact queried membership and existing return evidence. Return carriers are not inferred from object WD
+alone, and arbitrary subset/refinement proofs remain outside this recursion.
+
+The positive tracer is
+`examples/proof_nodes/atomic/checked_function_membership_composition.lit`.
+Focused tests cover arithmetic, ordinary calls, numeric predicates, all output
+modes, inherited ceilings, guards, alternative signatures and failed-statement
+rollback. Goal WD still runs before proof bodies; no search ceiling or
+Env/Runtime state contract changes.

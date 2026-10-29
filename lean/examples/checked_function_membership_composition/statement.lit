@@ -1,0 +1,19 @@
+# Checked real returns compose with arithmetic in membership and order.
+thm composed_real_return:
+    ? forall f fn(x R:x>0) R,n R:
+        n>0
+        =>:
+            (f(n+1)+1)*(f(n+1)-1) $in R
+
+thm composed_real_return_order:
+    ? forall f fn(x R:x>0) R,n R:
+        n>0
+        =>:
+            f(n+1)+1<=f(n+1)+1
+
+thm composed_sequence_limit_candidate:
+    ? forall a seq(R),f fn(x R:x>0) R,n R:
+        n>0
+        $has_seq_limit(a,f(n+1)+1)
+        =>:
+            $has_seq_limit(a,f(n+1)+1)

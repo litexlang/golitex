@@ -2568,3 +2568,131 @@ thm alternating_series_remainder_bound:
     release thm series_tail_at(u,1,n)
     series_tail(u,1)(n)=u(n+1)
     abs(L-partial_sum(a,n))<=series_tail(u,1)(n)=u(n+1)
+
+thm positive_sequence_limit_eventual_bounds:
+    ? forall ratio seq(R),L R:
+        $has_seq_limit(ratio,L)
+        L>0
+        =>:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(ratio,{v R:L/2<v,v<2*L})}
+    L/2>0
+    L/2 $in R+
+    release thm seq_limit_tail(ratio,L,L/2)
+    obtain cutoff from exist start N+ st {{k N+:k>=start} $subset preimage_set(ratio,{v R:abs(v-L)<L/2})}
+    witness exist start N+ st {{k N+:k>=start} $subset preimage_set(ratio,{v R:L/2<v,v<2*L})} from cutoff:
+        claim:
+            ? forall k {j N+:j>=cutoff}:
+                k $in preimage_set(ratio,{v R:L/2<v,v<2*L})
+            k $in preimage_set(ratio,{v R:abs(v-L)<L/2})
+            ratio(k) $in {v R:abs(v-L)<L/2}
+            abs(ratio(k)-L)<L/2
+            -(ratio(k)-L)<=abs(-(ratio(k)-L))=abs(ratio(k)-L)
+            -abs(ratio(k)-L)<=-(-(ratio(k)-L))=ratio(k)-L
+            ratio(k)-L<=abs(ratio(k)-L)<L/2
+            -(L/2)<-abs(ratio(k)-L)
+            -L/2=-(L/2)<-abs(ratio(k)-L)<=ratio(k)-L
+            -L/2+L<(ratio(k)-L)+L=ratio(k)
+            -L/2+L=L/2
+            L/2<ratio(k)
+            ratio(k)=(ratio(k)-L)+L<L/2+L=L+L/2
+            L/2<L/2+L/2=L
+            L+L/2<L+L=2*L
+            ratio(k)<L+L/2<2*L
+            ratio(k) $in {v R:L/2<v,v<2*L}
+        by def {k N+:k>=cutoff} $subset preimage_set(ratio,{v R:L/2<v,v<2*L})
+
+thm series_limit_comparison_left:
+    ? forall a,b,ratio seq(R),L R,m N+:
+        $has_seq_limit(ratio,L)
+        L>0
+        $is_convergent_series(b)
+        forall k N+:
+            k>=m
+            =>:
+                b(k)>0
+        forall k N+:
+            k>=m
+            b(k)>0
+            =>:
+                ratio(k)=a(k)/b(k)
+        =>:
+            $is_convergent_series(a)
+    release thm positive_sequence_limit_eventual_bounds(ratio,L)
+    obtain cutoff from exist start N+ st {{k N+:k>=start} $subset preimage_set(ratio,{v R:L/2<v,v<2*L})}
+    have start N+=cutoff+m
+    obtain B from $is_convergent_series(b)
+    have fn majorant(k N+) R=(2*L)*b(k)
+    claim:
+        ? forall k N+:
+            majorant(k)=(2*L)*b(k)
+        majorant(k)=(2*L)*b(k)
+    release thm series_sum_scale(b,majorant,B,2*L)
+    release thm series_sum_convergent(majorant,(2*L)*B)
+    claim:
+        ? forall k N+:
+            k>start
+            =>:
+                0<=a(k)
+                a(k)<=majorant(k)
+        k>start=cutoff+m>=cutoff
+        k>start=cutoff+m>=m
+        k $in {j N+:j>=cutoff}
+        k $in preimage_set(ratio,{v R:L/2<v,v<2*L})
+        ratio(k) $in {v R:L/2<v,v<2*L}
+        0<L/2<ratio(k)<2*L
+        b(k)>0
+        ratio(k)=a(k)/b(k)
+        a(k)=(a(k)/b(k))*b(k)=ratio(k)*b(k)>0
+        ratio(k)*b(k)<(2*L)*b(k)=majorant(k)
+        0<=a(k)<=majorant(k)
+    release thm series_eventual_comparison(a,majorant,start)
+
+thm series_limit_comparison_right:
+    ? forall a,b,ratio seq(R),L R,m N+:
+        $has_seq_limit(ratio,L)
+        L>0
+        $is_convergent_series(a)
+        forall k N+:
+            k>=m
+            =>:
+                b(k)>0
+        forall k N+:
+            k>=m
+            b(k)>0
+            =>:
+                ratio(k)=a(k)/b(k)
+        =>:
+            $is_convergent_series(b)
+    release thm positive_sequence_limit_eventual_bounds(ratio,L)
+    obtain cutoff from exist start N+ st {{k N+:k>=start} $subset preimage_set(ratio,{v R:L/2<v,v<2*L})}
+    have start N+=cutoff+m
+    obtain A from $is_convergent_series(a)
+    have fn majorant(k N+) R=(2/L)*a(k)
+    claim:
+        ? forall k N+:
+            majorant(k)=(2/L)*a(k)
+        majorant(k)=(2/L)*a(k)
+    release thm series_sum_scale(a,majorant,A,2/L)
+    release thm series_sum_convergent(majorant,(2/L)*A)
+    claim:
+        ? forall k N+:
+            k>start
+            =>:
+                0<=b(k)
+                b(k)<=majorant(k)
+        k>start=cutoff+m>=cutoff
+        k>start=cutoff+m>=m
+        k $in {j N+:j>=cutoff}
+        k $in preimage_set(ratio,{v R:L/2<v,v<2*L})
+        ratio(k) $in {v R:L/2<v,v<2*L}
+        0<L/2<ratio(k)
+        b(k)>0
+        ratio(k)=a(k)/b(k)
+        a(k)=(a(k)/b(k))*b(k)=ratio(k)*b(k)
+        (L/2)*b(k)<ratio(k)*b(k)=a(k)
+        2/L>0
+        (2/L)*((L/2)*b(k))<(2/L)*a(k)
+        (2/L)*((L/2)*b(k))=b(k)
+        (2/L)*a(k)=majorant(k)
+        0<=b(k)<majorant(k)
+    release thm series_eventual_comparison(b,majorant,start)

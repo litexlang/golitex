@@ -1,0 +1,154 @@
+release obj def series::partial_sum
+
+release obj def series::partial_sums
+
+release obj def series::series_tail
+
+
+have fn lc_square(k N+) R=1/k^2
+
+have fn lc_scaled(k N+) R=3/k^2
+
+have fn lc_ratio(k N+) R=3
+
+release thm series::reciprocal_square_series_converges(lc_square)
+
+release thm seq_limit_constant(lc_ratio,3)
+
+claim:
+    ? forall k N+:
+        k>=1
+        =>:
+            lc_square(k)>0
+    0<k
+    0<k^2
+    lc_square(k)=1/k^2>0
+
+claim:
+    ? forall k N+:
+        k>=1
+        lc_square(k)>0
+        =>:
+            lc_ratio(k)=lc_scaled(k)/lc_square(k)
+    lc_square(k)=1/k^2
+    lc_scaled(k)=3/k^2
+    lc_ratio(k)=3
+    (3/k^2)/(1/k^2)=3
+    lc_ratio(k)=3=lc_scaled(k)/lc_square(k)
+
+release thm series::series_limit_comparison_left(lc_scaled,lc_square,lc_ratio,3,1)
+
+release thm series::series_limit_comparison_right(lc_scaled,lc_square,lc_ratio,3,1)
+
+have fn lc_harmonic(k N+) R=1/k
+
+have fn lc_zero_ratio(k N+) R=1/k
+
+release thm series::harmonic_series_diverges(lc_harmonic)
+
+release thm series::sequence_reciprocal_limit(lc_zero_ratio)
+
+claim:
+    ? forall k N+:
+        k>=1
+        =>:
+            lc_harmonic(k)>0
+    0<k
+    lc_harmonic(k)=1/k>0
+
+claim:
+    ? forall k N+:
+        k>=1
+        lc_harmonic(k)>0
+        =>:
+            lc_zero_ratio(k)=lc_square(k)/lc_harmonic(k)
+    lc_square(k)=1/k^2
+    lc_harmonic(k)=1/k
+    lc_zero_ratio(k)=1/k
+    (1/k^2)/(1/k)=1/k
+    lc_zero_ratio(k)=1/k=lc_square(k)/lc_harmonic(k)
+
+have fn lc_tail_b(k N+) R by cases:
+    case k=1: 0
+    case k!=1: lc_square(k)
+
+have fn lc_tail_a(k N+) R by cases:
+    case k=1: -5
+    case k!=1: lc_scaled(k)
+
+lc_tail_b(1)=0
+
+lc_tail_a(1)=-5
+
+claim:
+    ? forall k N+:
+        k>1
+        =>:
+            0<=lc_tail_b(k)
+            lc_tail_b(k)<=lc_square(k)
+    k!=1
+    lc_tail_b(k)=lc_square(k)=1/k^2>0
+
+release thm series::series_eventual_comparison(lc_tail_b,lc_square,1)
+
+claim:
+    ? forall k N+:
+        k>=2
+        =>:
+            lc_tail_b(k)>0
+    k>1
+    k!=1
+    lc_tail_b(k)=lc_square(k)=1/k^2>0
+
+claim:
+    ? forall k N+:
+        k>=2
+        lc_tail_b(k)>0
+        =>:
+            lc_ratio(k)=lc_tail_a(k)/lc_tail_b(k)
+    k>1
+    k!=1
+    lc_tail_a(k)=lc_scaled(k)=3/k^2
+    lc_tail_b(k)=lc_square(k)=1/k^2
+    lc_ratio(k)=3=(3/k^2)/(1/k^2)=lc_tail_a(k)/lc_tail_b(k)
+
+release thm series::series_limit_comparison_left(lc_tail_a,lc_tail_b,lc_ratio,3,2)
+
+release thm series::series_limit_comparison_right(lc_tail_a,lc_tail_b,lc_ratio,3,2)
+
+
+thm generic_limit_comparison_left:
+    ? forall a,b,ratio seq(R),L R,m N+:
+        $has_seq_limit(ratio,L)
+        L>0
+        $series::is_convergent_series(b)
+        forall k N+:
+            k>=m
+            =>:
+                b(k)>0
+        forall k N+:
+            k>=m
+            b(k)>0
+            =>:
+                ratio(k)=a(k)/b(k)
+        =>:
+            $series::is_convergent_series(a)
+    release thm series::series_limit_comparison_left(a,b,ratio,L,m)
+
+thm generic_limit_comparison_right:
+    ? forall a,b,ratio seq(R),L R,m N+:
+        $has_seq_limit(ratio,L)
+        L>0
+        $series::is_convergent_series(a)
+        forall k N+:
+            k>=m
+            =>:
+                b(k)>0
+        forall k N+:
+            k>=m
+            b(k)>0
+            =>:
+                ratio(k)=a(k)/b(k)
+        =>:
+            $series::is_convergent_series(b)
+    release thm series::series_limit_comparison_right(a,b,ratio,L,m)

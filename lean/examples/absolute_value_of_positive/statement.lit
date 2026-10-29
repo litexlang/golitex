@@ -1,0 +1,6 @@
+# Strict positivity also justifies removing an absolute value.
+claim:
+    ? forall a R+:
+        abs(a/2) = a/2
+    0 < a/2 < a
+    abs(a/2) = a/2

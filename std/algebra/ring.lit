@@ -1,0 +1,412 @@
+# Unital rings, two-sided ideals and unital homomorphisms.
+# Multiplication may be noncommutative; the zero ring is allowed.
+
+struct Ring<K nonempty_set>:
+    zero K
+    one K
+    add fn(x,y K) K
+    neg fn(x K) K
+    mul fn(x,y K) K
+    <=>:
+        forall x,y,z K:
+            add(add(x,y),z)=add(x,add(y,z))
+            mul(mul(x,y),z)=mul(x,mul(y,z))
+            mul(x,add(y,z))=add(mul(x,y),mul(x,z))
+            mul(add(x,y),z)=add(mul(x,z),mul(y,z))
+        forall x,y K:
+            add(x,y)=add(y,x)
+        forall x K:
+            add(zero,x)=x
+            add(x,neg(x))=zero
+            mul(one,x)=x
+            mul(x,one)=x
+
+prop is_commutative_ring(K nonempty_set,S &Ring<K>):
+    forall x,y K:
+        S.mul(x,y)=S.mul(y,x)
+
+thm add_right_zero:
+    ? forall K nonempty_set,S &Ring<K>,a K:
+        S.add(a,S.zero)=a
+    S.add(a,S.zero)=S.add(S.zero,a)=a
+
+thm add_left_inverse:
+    ? forall K nonempty_set,S &Ring<K>,a K:
+        S.add(S.neg(a),a)=S.zero
+    S.add(S.neg(a),a)=S.add(a,S.neg(a))=S.zero
+
+thm add_left_cancel:
+    ? forall K nonempty_set,S &Ring<K>,a,b,c K:
+        S.add(a,b)=S.add(a,c)
+        =>:
+            b=c
+    release thm add_left_inverse(K,S,a)
+    b=S.add(S.zero,b)=S.add(S.add(S.neg(a),a),b)=S.add(S.neg(a),S.add(a,b))=S.add(S.neg(a),S.add(a,c))=S.add(S.add(S.neg(a),a),c)=S.add(S.zero,c)=c
+
+thm add_right_cancel:
+    ? forall K nonempty_set,S &Ring<K>,a,b,c K:
+        S.add(b,a)=S.add(c,a)
+        =>:
+            b=c
+    S.add(a,b)=S.add(b,a)=S.add(c,a)=S.add(a,c)
+    release thm add_left_cancel(K,S,a,b,c)
+
+thm additive_idempotent_is_zero:
+    ? forall K nonempty_set,S &Ring<K>,a K:
+        S.add(a,a)=a
+        =>:
+            a=S.zero
+    release thm add_right_zero(K,S,a)
+    S.add(a,a)=a=S.add(a,S.zero)
+    release thm add_left_cancel(K,S,a,a,S.zero)
+
+thm additive_inverse_is_unique:
+    ? forall K nonempty_set,S &Ring<K>,a,b K:
+        S.add(a,b)=S.zero
+        =>:
+            b=S.neg(a)
+    S.add(a,b)=S.zero=S.add(a,S.neg(a))
+    release thm add_left_cancel(K,S,a,b,S.neg(a))
+
+thm neg_zero:
+    ? forall K nonempty_set,S &Ring<K>:
+        S.neg(S.zero)=S.zero
+    S.add(S.zero,S.zero)=S.zero
+    release thm additive_inverse_is_unique(K,S,S.zero,S.zero)
+
+thm neg_involution:
+    ? forall K nonempty_set,S &Ring<K>,a K:
+        S.neg(S.neg(a))=a
+    release thm add_left_inverse(K,S,a)
+    release thm additive_inverse_is_unique(K,S,S.neg(a),a)
+
+thm zero_mul:
+    ? forall K nonempty_set,S &Ring<K>,a K:
+        S.mul(S.zero,a)=S.zero
+    S.add(S.zero,S.zero)=S.zero
+    S.add(S.mul(S.zero,a),S.mul(S.zero,a))=S.mul(S.add(S.zero,S.zero),a)=S.mul(S.zero,a)
+    release thm additive_idempotent_is_zero(K,S,S.mul(S.zero,a))
+
+thm mul_zero:
+    ? forall K nonempty_set,S &Ring<K>,a K:
+        S.mul(a,S.zero)=S.zero
+    S.add(S.zero,S.zero)=S.zero
+    S.add(S.mul(a,S.zero),S.mul(a,S.zero))=S.mul(a,S.add(S.zero,S.zero))=S.mul(a,S.zero)
+    release thm additive_idempotent_is_zero(K,S,S.mul(a,S.zero))
+
+thm neg_mul:
+    ? forall K nonempty_set,S &Ring<K>,a,b K:
+        S.mul(S.neg(a),b)=S.neg(S.mul(a,b))
+    release thm zero_mul(K,S,b)
+    S.add(a,S.neg(a))=S.zero
+    S.add(S.mul(a,b),S.mul(S.neg(a),b))=S.mul(S.add(a,S.neg(a)),b)=S.mul(S.zero,b)=S.zero
+    release thm additive_inverse_is_unique(K,S,S.mul(a,b),S.mul(S.neg(a),b))
+
+thm mul_neg:
+    ? forall K nonempty_set,S &Ring<K>,a,b K:
+        S.mul(a,S.neg(b))=S.neg(S.mul(a,b))
+    release thm mul_zero(K,S,a)
+    S.add(b,S.neg(b))=S.zero
+    S.add(S.mul(a,b),S.mul(a,S.neg(b)))=S.mul(a,S.add(b,S.neg(b)))=S.mul(a,S.zero)=S.zero
+    release thm additive_inverse_is_unique(K,S,S.mul(a,b),S.mul(a,S.neg(b)))
+
+thm neg_mul_neg:
+    ? forall K nonempty_set,S &Ring<K>,a,b K:
+        S.mul(S.neg(a),S.neg(b))=S.mul(a,b)
+    release thm neg_mul(K,S,a,S.neg(b))
+    release thm mul_neg(K,S,a,b)
+    release thm neg_involution(K,S,S.mul(a,b))
+    S.mul(S.neg(a),S.neg(b))=S.neg(S.mul(a,S.neg(b)))=S.neg(S.neg(S.mul(a,b)))=S.mul(a,b)
+
+thm zero_one_equal_implies_trivial:
+    ? forall K nonempty_set,S &Ring<K>,a K:
+        S.zero=S.one
+        =>:
+            a=S.zero
+    release thm zero_mul(K,S,a)
+    a=S.mul(S.one,a)=S.mul(S.zero,a)=S.zero
+
+prop is_ring_homomorphism(K nonempty_set,S &Ring<K>,L nonempty_set,T &Ring<L>,f fn(x K) L):
+    f(S.one)=T.one
+    forall x,y K:
+        f(S.add(x,y))=T.add(f(x),f(y))
+        f(S.mul(x,y))=T.mul(f(x),f(y))
+
+thm ring_homomorphism_zero:
+    ? forall K nonempty_set,S &Ring<K>,L nonempty_set,T &Ring<L>,f fn(x K) L:
+        $is_ring_homomorphism(K,S,L,T,f)
+        =>:
+            f(S.zero)=T.zero
+    S.add(S.zero,S.zero)=S.zero
+    T.add(f(S.zero),f(S.zero))=f(S.add(S.zero,S.zero))=f(S.zero)
+    release thm additive_idempotent_is_zero(L,T,f(S.zero))
+
+thm ring_homomorphism_neg:
+    ? forall K nonempty_set,S &Ring<K>,L nonempty_set,T &Ring<L>,f fn(x K) L,a K:
+        $is_ring_homomorphism(K,S,L,T,f)
+        =>:
+            f(S.neg(a))=T.neg(f(a))
+    release thm ring_homomorphism_zero(K,S,L,T,f)
+    S.add(a,S.neg(a))=S.zero
+    T.add(f(a),f(S.neg(a)))=f(S.add(a,S.neg(a)))=f(S.zero)=T.zero
+    release thm additive_inverse_is_unique(L,T,f(a),f(S.neg(a)))
+
+thm ring_homomorphism_composition:
+    ? forall K nonempty_set,S &Ring<K>,L nonempty_set,T &Ring<L>,D nonempty_set,V &Ring<D>,f fn(x K) L,g fn(x L) D:
+        $is_ring_homomorphism(K,S,L,T,f)
+        $is_ring_homomorphism(L,T,D,V,g)
+        =>:
+            $is_ring_homomorphism(K,S,D,V,compose(g,f))
+    f(S.one)=T.one
+    compose(g,f)(S.one)=g(f(S.one))=g(T.one)=V.one
+    claim:
+        ? forall x,y K:
+            compose(g,f)(S.add(x,y))=V.add(compose(g,f)(x),compose(g,f)(y))
+            compose(g,f)(S.mul(x,y))=V.mul(compose(g,f)(x),compose(g,f)(y))
+        f(S.add(x,y))=T.add(f(x),f(y))
+        f(S.mul(x,y))=T.mul(f(x),f(y))
+        compose(g,f)(x)=g(f(x))
+        compose(g,f)(y)=g(f(y))
+        compose(g,f)(S.add(x,y))=g(f(S.add(x,y)))=g(T.add(f(x),f(y)))=V.add(g(f(x)),g(f(y)))=V.add(compose(g,f)(x),compose(g,f)(y))
+        compose(g,f)(S.mul(x,y))=g(f(S.mul(x,y)))=g(T.mul(f(x),f(y)))=V.mul(g(f(x)),g(f(y)))=V.mul(compose(g,f)(x),compose(g,f)(y))
+    by def $is_ring_homomorphism(K,S,D,V,compose(g,f))
+
+prop is_two_sided_ideal(K nonempty_set,S &Ring<K>,I power_set(K)):
+    S.zero $in I
+    forall x,y I:
+        S.add(x,y) $in I
+    forall x I:
+        S.neg(x) $in I
+    forall r K,x I:
+        S.mul(r,x) $in I
+        S.mul(x,r) $in I
+
+thm whole_ring_is_ideal:
+    ? forall K nonempty_set,S &Ring<K>:
+        $is_two_sided_ideal(K,S,K)
+    by def $is_two_sided_ideal(K,S,K)
+
+thm zero_singleton_is_ideal:
+    ? forall K nonempty_set,S &Ring<K>:
+        $is_two_sided_ideal(K,S,{S.zero})
+    release thm neg_zero(K,S)
+    claim:
+        ? forall x,y {S.zero}:
+            S.add(x,y) $in {S.zero}
+        x=S.zero
+        y=S.zero
+        S.add(x,y)=S.add(S.zero,S.zero)=S.zero
+    claim:
+        ? forall x {S.zero}:
+            S.neg(x) $in {S.zero}
+        x=S.zero
+        S.neg(x)=S.neg(S.zero)=S.zero
+    claim:
+        ? forall r K,x {S.zero}:
+            S.mul(r,x) $in {S.zero}
+            S.mul(x,r) $in {S.zero}
+        x=S.zero
+        release thm mul_zero(K,S,r)
+        release thm zero_mul(K,S,r)
+        S.mul(r,x)=S.mul(r,S.zero)=S.zero
+        S.mul(x,r)=S.mul(S.zero,r)=S.zero
+    by def $is_two_sided_ideal(K,S,{S.zero})
+
+thm ideal_intersection:
+    ? forall K nonempty_set,S &Ring<K>,I,J power_set(K):
+        $is_two_sided_ideal(K,S,I)
+        $is_two_sided_ideal(K,S,J)
+        =>:
+            $is_two_sided_ideal(K,S,intersect(I,J))
+    claim:
+        ? forall x,y intersect(I,J):
+            S.add(x,y) $in intersect(I,J)
+        S.add(x,y) $in I
+        S.add(x,y) $in J
+    claim:
+        ? forall x intersect(I,J):
+            S.neg(x) $in intersect(I,J)
+        S.neg(x) $in I
+        S.neg(x) $in J
+    claim:
+        ? forall r K,x intersect(I,J):
+            S.mul(r,x) $in intersect(I,J)
+            S.mul(x,r) $in intersect(I,J)
+        S.mul(r,x) $in I
+        S.mul(r,x) $in J
+        S.mul(x,r) $in I
+        S.mul(x,r) $in J
+    by def $is_two_sided_ideal(K,S,intersect(I,J))
+
+thm ideal_containing_one_is_whole:
+    ? forall K nonempty_set,S &Ring<K>,I power_set(K):
+        $is_two_sided_ideal(K,S,I)
+        S.one $in I
+        =>:
+            I=K
+    by extension:
+        ? I=K
+        claim:
+            ? forall x K:
+                x $in I
+            S.mul(x,S.one) $in I
+            S.mul(x,S.one)=x
+
+template<K,L nonempty_set,T &Ring<L>,f fn(x K) L>:
+    have ring_kernel power_set(K) = {x K:f(x)=T.zero}
+
+thm ring_kernel_is_ideal:
+    ? forall K nonempty_set,S &Ring<K>,L nonempty_set,T &Ring<L>,f fn(x K) L:
+        $is_ring_homomorphism(K,S,L,T,f)
+        =>:
+            $is_two_sided_ideal(K,S,\ring_kernel<K,L,T,f>)
+    \ring_kernel<K,L,T,f> = {x K:f(x)=T.zero}
+    release thm ring_homomorphism_zero(K,S,L,T,f)
+    release thm set_builder_member(S.zero,{x K:f(x)=T.zero})
+    claim:
+        ? forall x,y \ring_kernel<K,L,T,f>:
+            S.add(x,y) $in \ring_kernel<K,L,T,f>
+        f(x)=T.zero
+        f(y)=T.zero
+        f(S.add(x,y))=T.add(f(x),f(y))=T.add(T.zero,T.zero)=T.zero
+        release thm set_builder_member(S.add(x,y),{z K:f(z)=T.zero})
+    claim:
+        ? forall x \ring_kernel<K,L,T,f>:
+            S.neg(x) $in \ring_kernel<K,L,T,f>
+        f(x)=T.zero
+        release thm ring_homomorphism_neg(K,S,L,T,f,x)
+        release thm neg_zero(L,T)
+        f(S.neg(x))=T.neg(f(x))=T.neg(T.zero)=T.zero
+        release thm set_builder_member(S.neg(x),{z K:f(z)=T.zero})
+    claim:
+        ? forall r K,x \ring_kernel<K,L,T,f>:
+            S.mul(r,x) $in \ring_kernel<K,L,T,f>
+            S.mul(x,r) $in \ring_kernel<K,L,T,f>
+        f(x)=T.zero
+        release thm mul_zero(L,T,f(r))
+        release thm zero_mul(L,T,f(r))
+        f(S.mul(r,x))=T.mul(f(r),f(x))=T.mul(f(r),T.zero)=T.zero
+        f(S.mul(x,r))=T.mul(f(x),f(r))=T.mul(T.zero,f(r))=T.zero
+        release thm set_builder_member(S.mul(r,x),{z K:f(z)=T.zero})
+        release thm set_builder_member(S.mul(x,r),{z K:f(z)=T.zero})
+    by def $is_two_sided_ideal(K,S,\ring_kernel<K,L,T,f>)
+
+thm ring_homomorphism_ideal_preimage:
+    ? forall K nonempty_set,S &Ring<K>,L nonempty_set,T &Ring<L>,f fn(x K) L,J power_set(L):
+        $is_ring_homomorphism(K,S,L,T,f)
+        $is_two_sided_ideal(L,T,J)
+        =>:
+            $is_two_sided_ideal(K,S,preimage_set(f,J))
+    release thm ring_homomorphism_zero(K,S,L,T,f)
+    T.zero $in J
+    f(S.zero) $in J
+    S.zero $in preimage_set(f,J)
+    claim:
+        ? forall x,y preimage_set(f,J):
+            S.add(x,y) $in preimage_set(f,J)
+        f(x) $in J
+        f(y) $in J
+        T.add(f(x),f(y)) $in J
+        f(S.add(x,y))=T.add(f(x),f(y))
+        f(S.add(x,y)) $in J
+    claim:
+        ? forall x preimage_set(f,J):
+            S.neg(x) $in preimage_set(f,J)
+        f(x) $in J
+        T.neg(f(x)) $in J
+        release thm ring_homomorphism_neg(K,S,L,T,f,x)
+        f(S.neg(x)) $in J
+    claim:
+        ? forall r K,x preimage_set(f,J):
+            S.mul(r,x) $in preimage_set(f,J)
+            S.mul(x,r) $in preimage_set(f,J)
+        f(x) $in J
+        T.mul(f(r),f(x)) $in J
+        T.mul(f(x),f(r)) $in J
+        f(S.mul(r,x))=T.mul(f(r),f(x))
+        f(S.mul(x,r))=T.mul(f(x),f(r))
+        f(S.mul(r,x)) $in J
+        f(S.mul(x,r)) $in J
+    by def $is_two_sided_ideal(K,S,preimage_set(f,J))
+
+thm injective_ring_homomorphism_kernel:
+    ? forall K nonempty_set,S &Ring<K>,L nonempty_set,T &Ring<L>,f fn(x K) L:
+        $is_ring_homomorphism(K,S,L,T,f)
+        $injective(K,L,f)
+        =>:
+            \ring_kernel<K,L,T,f> = {S.zero}
+    \ring_kernel<K,L,T,f> = {x K:f(x)=T.zero}
+    release thm ring_homomorphism_zero(K,S,L,T,f)
+    by extension:
+        ? \ring_kernel<K,L,T,f> = {S.zero}
+        claim:
+            ? forall x \ring_kernel<K,L,T,f>:
+                x $in {S.zero}
+            f(x)=T.zero=f(S.zero)
+            x=S.zero
+        claim:
+            ? forall x {S.zero}:
+                x $in \ring_kernel<K,L,T,f>
+            x=S.zero
+            f(x)=f(S.zero)=T.zero
+            release thm set_builder_member(x,{z K:f(z)=T.zero})
+
+thm trivial_ring_kernel_implies_injective:
+    ? forall K nonempty_set,S &Ring<K>,L nonempty_set,T &Ring<L>,f fn(x K) L:
+        $is_ring_homomorphism(K,S,L,T,f)
+        \ring_kernel<K,L,T,f> = {S.zero}
+        =>:
+            $injective(K,L,f)
+    \ring_kernel<K,L,T,f> = {x K:f(x)=T.zero}
+    claim:
+        ? forall x,y K:
+            f(x)=f(y)
+            =>:
+                x=y
+        release thm ring_homomorphism_neg(K,S,L,T,f,y)
+        release thm add_left_inverse(L,T,f(y))
+        f(S.add(S.neg(y),x))=T.add(f(S.neg(y)),f(x))=T.add(T.neg(f(y)),f(y))=T.zero
+        release thm set_builder_member(S.add(S.neg(y),x),{z K:f(z)=T.zero})
+        S.add(S.neg(y),x) $in \ring_kernel<K,L,T,f>
+        S.add(S.neg(y),x) $in {S.zero}
+        S.add(S.neg(y),x)=S.zero
+        release thm add_left_inverse(K,S,y)
+        S.add(S.neg(y),x)=S.zero=S.add(S.neg(y),y)
+        release thm add_left_cancel(K,S,S.neg(y),x,y)
+    by def $injective(K,L,f)
+
+thm field_has_ring_structure:
+    ? forall K nonempty_set,F &field::Field<K>:
+        (F.zero,F.one,F.add,F.neg,F.mul) $in &Ring<K>
+    F.zero $in K
+    F.one $in K
+    F.add $in fn(x,y K) K
+    F.neg $in fn(x K) K
+    F.mul $in fn(x,y K) K
+    claim:
+        ? forall x,y,z K:
+            F.add(F.add(x,y),z)=F.add(x,F.add(y,z))
+            F.mul(F.mul(x,y),z)=F.mul(x,F.mul(y,z))
+            F.mul(x,F.add(y,z))=F.add(F.mul(x,y),F.mul(x,z))
+            F.mul(F.add(x,y),z)=F.add(F.mul(x,z),F.mul(y,z))
+        F.mul(z,x)=F.mul(x,z)
+        F.mul(z,y)=F.mul(y,z)
+        F.mul(F.add(x,y),z)=F.mul(z,F.add(x,y))=F.add(F.mul(z,x),F.mul(z,y))=F.add(F.mul(x,z),F.mul(y,z))
+    forall x,y K:
+        F.add(x,y)=F.add(y,x)
+    claim:
+        ? forall x K:
+            F.add(F.zero,x)=x
+            F.add(x,F.neg(x))=F.zero
+            F.mul(F.one,x)=x
+            F.mul(x,F.one)=x
+        F.mul(x,F.one)=F.mul(F.one,x)=x
+    release thm struct_member((F.zero,F.one,F.add,F.neg,F.mul),&Ring<K>)
+
+thm ring_homomorphism_identity:
+    ? forall K nonempty_set,S &Ring<K>:
+        $is_ring_homomorphism(K,S,K,S,fn(x K) K {x})
+    by def $is_ring_homomorphism(K,S,K,S,fn(x K) K {x})
+
+template<K nonempty_set,F &field::Field<K>>:
+    have field_ring &Ring<K> = (F.zero,F.one,F.add,F.neg,F.mul)

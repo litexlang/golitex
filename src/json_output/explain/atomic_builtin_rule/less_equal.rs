@@ -72,29 +72,27 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText { rule_name: "FloorSumLowerBound".into(), message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into() },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText { rule_name: "FloorSumUpperBound".into(), message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into() },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText { rule_name: "CeilSumUpperBound".into(), message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into() },
-            Self::RealReverseTriangle(_) => BuiltinRuleText { rule_name: "RealReverseTriangle".into(), message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into() },
-
-            Self::SubtractionOrderPairs(_) => text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c"),
-            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
-            Self::QuotientScalarUpperBound(_) => text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M"),
-
-            Self::NonnegativeSquareOrderReflection(_) => text("NonnegativeSquareOrderReflection", "0<=x, 0<=y, x^2<=y^2 => x<=y"),
-Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
-            Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
-            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
-            Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
-            Self::SqrtMonotoneFromDefinedRoots(_) => text("SqrtMonotoneFromDefinedRoots", "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)"),
-            Self::SignLowerBound(_) => text("Lower bound of sign", "x in R: -1<=sign(x)"),
-            Self::SignUpperBound(_) => text("Upper bound of sign", "x in R: sign(x)<=1"),
-            Self::SignWeakMonotone(_) => text("Weak monotonicity of sign", "a,b in R, a<=b => sign(a)<=sign(b)"),
-            Self::MinLowerBound(_) => text("Minimum below an operand", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
-            Self::MaxUpperBound(_) => text("Maximum above an operand", "a,b in R: a<=max(a,b), b<=max(a,b)"),
-            Self::MinWeakMonotone(_) => text("Weak monotonicity of minimum", "a<=c, b<=d => min(a,b)<=min(c,d)"),
-            Self::MaxWeakMonotone(_) => text("Weak monotonicity of maximum", "a<=c, b<=d => max(a,b)<=max(c,d)"),
+            Self::FloorSumLowerBound(_) => crate::json_output::explain::text::text("Floor of a sum: lower bound", "For real x,y, ⌊x⌋+⌊y⌋≤⌊x+y⌋."),
+            Self::FloorSumUpperBound(_) => crate::json_output::explain::text::text("Floor of a sum: upper bound", "For real x,y, ⌊x+y⌋≤⌊x⌋+⌊y⌋+1."),
+            Self::CeilSumUpperBound(_) => crate::json_output::explain::text::text("Ceiling of a sum", "For real x,y, ⌈x+y⌉≤⌈x⌉+⌈y⌉."),
+            Self::RealReverseTriangle(_) => crate::json_output::explain::text::text("Reverse triangle inequality", "For real x,y, ||x|−|y||≤|x−y|."),
+            Self::SubtractionOrderPairs(_) => crate::json_output::explain::text::text("Subtract ordered pairs", "For real a≤b and c≤d, a−d≤b−c. The subtracted pair is reversed."),
+            Self::AbsSquareRadius(_) => crate::json_output::explain::text::text("An absolute bound from squares", "For real x,r with r≥0, x²≤r² implies |x|≤r."),
+            Self::QuotientScalarUpperBound(_) => crate::json_output::explain::text::text("Upper bound of a quotient", "For real a,b,M with b>0, a≤M·b implies a/b≤M."),
+            Self::NonnegativeSquareOrderReflection(_) => crate::json_output::explain::text::text("Compare nonnegative numbers by their squares", "For nonnegative reals x,y, x²≤y² implies x≤y. Nonnegativity is essential."),
+            Self::ProductNonnegativeNegativeWeak(_) => crate::json_output::explain::text::text("Product with opposite weak signs", "The product of a nonnegative real and a nonpositive real is nonpositive."),
+            Self::LiteralWeakBound(_) => crate::json_output::explain::text::text("Weaken a numeric bound", "A known numeric lower or upper bound implies a weaker bound in the same direction. For example, x≤2 implies x≤3."),
+            Self::IntegerSuccessorGap(_) => crate::json_output::explain::text::text("A strict integer gap", "For integers a<b, a+1≤b."),
+            Self::NegationWeakOrder(_) => crate::json_output::explain::text::text("Negation reverses weak order", "For real a≤b, −b≤−a."),
+            Self::AbsFromIntervalBounds(_) => crate::json_output::explain::text::text("Absolute value from symmetric bounds", "For real x,b, −b≤x≤b implies |x|≤b."),
+            Self::SqrtMonotoneFromDefinedRoots(_) => crate::json_output::explain::text::text("Monotonicity of square root", "For nonnegative real x≤y, √x≤√y."),
+            Self::SignLowerBound(_) => crate::json_output::explain::text::text("Lower bound of sign", "For real x, sign(x) is −1, 0 or 1, so −1≤sign(x)."),
+            Self::SignUpperBound(_) => crate::json_output::explain::text::text("Upper bound of sign", "For real x, sign(x) is −1, 0 or 1, so sign(x)≤1."),
+            Self::SignWeakMonotone(_) => crate::json_output::explain::text::text("Monotonicity of sign", "For real a≤b, sign(a)≤sign(b)."),
+            Self::MinLowerBound(_) => crate::json_output::explain::text::text("Minimum bounds its arguments", "For real a,b, min(a,b)≤a and min(a,b)≤b."),
+            Self::MaxUpperBound(_) => crate::json_output::explain::text::text("Maximum bounds its arguments", "For real a,b, a≤max(a,b) and b≤max(a,b)."),
+            Self::MinWeakMonotone(_) => crate::json_output::explain::text::text("Monotonicity of minimum", "For real a≤c and b≤d, min(a,b)≤min(c,d)."),
+            Self::MaxWeakMonotone(_) => crate::json_output::explain::text::text("Monotonicity of maximum", "For real a≤c and b≤d, max(a,b)≤max(c,d)."),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_en(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_en(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_en(),
@@ -143,9 +141,9 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesNegUpper(p) => p.rule_name_and_message_en(),
             Self::AbsSelfUpper(p) => p.rule_name_and_message_en(),
             Self::AbsSelfLower(p) => p.rule_name_and_message_en(),
-            Self::AbsDifferenceTriangle(_) => text("Triangle inequality for real distance", "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)"),
-            Self::MaxLipschitzFromCoordinateBounds(_) => text("Lipschitz bound for maximum", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon"),
-            Self::MinLipschitzFromCoordinateBounds(_) => text("Lipschitz bound for minimum", "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon"),
+            Self::AbsDifferenceTriangle(_) => crate::json_output::explain::text::text("Triangle inequality for differences", "For real x,y,z, |x−z|≤|x−y|+|y−z|; in particular |x−y|≤|x|+|y|."),
+            Self::MaxLipschitzFromCoordinateBounds(_) => crate::json_output::explain::text::text("Stability of maximum", "If |a−x|≤ε and |b−y|≤ε for reals, then |max(a,b)−max(x,y)|≤ε."),
+            Self::MinLipschitzFromCoordinateBounds(_) => crate::json_output::explain::text::text("Stability of minimum", "If |a−x|≤ε and |b−y|≤ε for reals, then |min(a,b)−min(x,y)|≤ε."),
             Self::AbsTriangleInequality(p) => p.rule_name_and_message_en(),
             Self::AbsReverseTriangleAdd(p) => p.rule_name_and_message_en(),
             Self::AbsReverseTriangleSub(p) => p.rule_name_and_message_en(),
@@ -192,62 +190,88 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
-            Self::FloorSumLowerBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumLowerBound".into(),
-                message: "x,y in R => floor(x)+floor(y)<=floor(x+y)".into(),
-            },
-            Self::FloorSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "FloorSumUpperBound".into(),
-                message: "x,y in R => floor(x+y)<=floor(x)+floor(y)+1".into(),
-            },
-            Self::CeilSumUpperBound(_) => BuiltinRuleText {
-                rule_name: "CeilSumUpperBound".into(),
-                message: "x,y in R => ceil(x+y)<=ceil(x)+ceil(y)".into(),
-            },
-            Self::RealReverseTriangle(_) => BuiltinRuleText {
-                rule_name: "RealReverseTriangle".into(),
-                message: "x,y in R => abs(abs(x)-abs(y))<=abs(x-y)".into(),
-            },
-
-            Self::SubtractionOrderPairs(_) => {
-                text("SubtractionOrderPairs", "a<=b, c<=d => a-d<=b-c")
-            }
-            Self::AbsSquareRadius(_) => text("AbsSquareRadius", "r>=0, x^2<=r^2 => abs(x)<=r"),
-            Self::QuotientScalarUpperBound(_) => {
-                text("QuotientScalarUpperBound", "b>0, a<=M*b => a/b<=M")
-            }
-
-            Self::NonnegativeSquareOrderReflection(_) => text(
-                "非负实数平方比较反推原数比较",
-                "0<=x, 0<=y, x^2<=y^2 => x<=y",
+            Self::FloorSumLowerBound(_) => crate::json_output::explain::text::text(
+                "和的向下取整下界",
+                "对实数 x、y，⌊x⌋+⌊y⌋≤⌊x+y⌋。",
             ),
-            Self::ProductNonnegativeNegativeWeak(_) => text(
-                "ProductNonnegativeNegativeWeak",
-                "Apply the fixed scalar sign property with checked guards",
+            Self::FloorSumUpperBound(_) => crate::json_output::explain::text::text(
+                "和的向下取整上界",
+                "对实数 x、y，⌊x+y⌋≤⌊x⌋+⌊y⌋+1。",
             ),
-            Self::LiteralWeakBound(_) => {
-                text("LiteralWeakBound", "Weaken a checked exact literal bound")
-            }
+            Self::CeilSumUpperBound(_) => crate::json_output::explain::text::text(
+                "和的向上取整界",
+                "对实数 x、y，⌈x+y⌉≤⌈x⌉+⌈y⌉。",
+            ),
+            Self::RealReverseTriangle(_) => crate::json_output::explain::text::text(
+                "反向三角不等式",
+                "对实数 x、y，||x|−|y||≤|x−y|。",
+            ),
+            Self::SubtractionOrderPairs(_) => crate::json_output::explain::text::text(
+                "两组不等式相减",
+                "对实数，a≤b 且 c≤d 推出 a−d≤b−c；被减去的一组交换次序。",
+            ),
+            Self::AbsSquareRadius(_) => crate::json_output::explain::text::text(
+                "由平方界控制绝对值",
+                "对实数 x、r，若 r≥0 且 x²≤r²，则 |x|≤r。",
+            ),
+            Self::QuotientScalarUpperBound(_) => crate::json_output::explain::text::text(
+                "商的上界",
+                "对实数 a、b、M，若 b>0 且 a≤M·b，则 a/b≤M。",
+            ),
+            Self::NonnegativeSquareOrderReflection(_) => crate::json_output::explain::text::text(
+                "用平方比较非负数",
+                "对非负实数 x、y，x²≤y² 推出 x≤y；非负条件不可省略。",
+            ),
+            Self::ProductNonnegativeNegativeWeak(_) => crate::json_output::explain::text::text(
+                "异号非严格符号的乘积",
+                "非负实数与非正实数的乘积为非正实数。",
+            ),
+            Self::LiteralWeakBound(_) => crate::json_output::explain::text::text(
+                "放宽数值界",
+                "已知数值上界或下界可推出同方向的较弱界。例如 x≤2 推出 x≤3。",
+            ),
             Self::IntegerSuccessorGap(_) => {
-                text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
+                crate::json_output::explain::text::text("整数的严格间隔", "对整数 a<b，a+1≤b。")
             }
-            Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
-            Self::AbsFromIntervalBounds(_) => {
-                text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b")
-            }
-            Self::SqrtMonotoneFromDefinedRoots(_) => text(
-                "SqrtMonotoneFromDefinedRoots",
-                "Defined sqrt(x), sqrt(y), x<=y => sqrt(x)<=sqrt(y)",
+            Self::NegationWeakOrder(_) => crate::json_output::explain::text::text(
+                "取相反数反转非严格不等式",
+                "对实数 a≤b，−b≤−a。",
             ),
-            Self::SignLowerBound(_) => text("sign 的下界", "x in R: -1<=sign(x)"),
-            Self::SignUpperBound(_) => text("sign 的上界", "x in R: sign(x)<=1"),
-            Self::SignWeakMonotone(_) => {
-                text("sign 的弱保序", "a,b in R, a<=b => sign(a)<=sign(b)")
+            Self::AbsFromIntervalBounds(_) => crate::json_output::explain::text::text(
+                "由对称界控制绝对值",
+                "对实数 x、b，−b≤x≤b 推出 |x|≤b。",
+            ),
+            Self::SqrtMonotoneFromDefinedRoots(_) => {
+                crate::json_output::explain::text::text("平方根的单调性", "对非负实数 x≤y，√x≤√y。")
             }
-            Self::MinLowerBound(_) => text("min 的基本下界", "a,b in R: min(a,b)<=a, min(a,b)<=b"),
-            Self::MaxUpperBound(_) => text("max 的基本上界", "a,b in R: a<=max(a,b), b<=max(a,b)"),
-            Self::MinWeakMonotone(_) => text("min 的弱单调", "a<=c, b<=d => min(a,b)<=min(c,d)"),
-            Self::MaxWeakMonotone(_) => text("max 的弱单调", "a<=c, b<=d => max(a,b)<=max(c,d)"),
+            Self::SignLowerBound(_) => crate::json_output::explain::text::text(
+                "符号函数的下界",
+                "对实数 x，sign(x) 取 −1、0、1 之一，因此 −1≤sign(x)。",
+            ),
+            Self::SignUpperBound(_) => crate::json_output::explain::text::text(
+                "符号函数的上界",
+                "对实数 x，sign(x) 取 −1、0、1 之一，因此 sign(x)≤1。",
+            ),
+            Self::SignWeakMonotone(_) => crate::json_output::explain::text::text(
+                "符号函数的单调性",
+                "对实数 a≤b，sign(a)≤sign(b)。",
+            ),
+            Self::MinLowerBound(_) => crate::json_output::explain::text::text(
+                "最小值是两个参数的下界",
+                "对实数 a、b，min(a,b)≤a 且 min(a,b)≤b。",
+            ),
+            Self::MaxUpperBound(_) => crate::json_output::explain::text::text(
+                "最大值是两个参数的上界",
+                "对实数 a、b，a≤max(a,b) 且 b≤max(a,b)。",
+            ),
+            Self::MinWeakMonotone(_) => crate::json_output::explain::text::text(
+                "最小值的单调性",
+                "对实数，a≤c 且 b≤d 推出 min(a,b)≤min(c,d)。",
+            ),
+            Self::MaxWeakMonotone(_) => crate::json_output::explain::text::text(
+                "最大值的单调性",
+                "对实数，a≤c 且 b≤d 推出 max(a,b)≤max(c,d)。",
+            ),
             Self::SinWeakIncreasingOnClosedHalfPi(p) => p.rule_name_and_message_zh(),
             Self::CosWeakDecreasingOnClosedPi(p) => p.rule_name_and_message_zh(),
             Self::TanWeakIncreasingOnOpenHalfPi(p) => p.rule_name_and_message_zh(),
@@ -299,17 +323,17 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesNegUpper(p) => p.rule_name_and_message_zh(),
             Self::AbsSelfUpper(p) => p.rule_name_and_message_zh(),
             Self::AbsSelfLower(p) => p.rule_name_and_message_zh(),
-            Self::AbsDifferenceTriangle(_) => text(
-                "实数距离三角不等式",
-                "abs(x-z) <= abs(x-y)+abs(y-z); abs(x-y) <= abs(x)+abs(y)",
+            Self::AbsDifferenceTriangle(_) => crate::json_output::explain::text::text(
+                "差的三角不等式",
+                "对实数 x、y、z，|x−z|≤|x−y|+|y−z|；特别地，|x−y|≤|x|+|y|。",
             ),
-            Self::MaxLipschitzFromCoordinateBounds(_) => text(
-                "最大值的 Lipschitz 界",
-                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(max(a,b)-max(x,y))<=epsilon",
+            Self::MaxLipschitzFromCoordinateBounds(_) => crate::json_output::explain::text::text(
+                "最大值的误差界",
+                "对实数，若 |a−x|≤ε 且 |b−y|≤ε，则 |max(a,b)−max(x,y)|≤ε。",
             ),
-            Self::MinLipschitzFromCoordinateBounds(_) => text(
-                "最小值的 Lipschitz 界",
-                "abs(a-x)<=epsilon, abs(b-y)<=epsilon => abs(min(a,b)-min(x,y))<=epsilon",
+            Self::MinLipschitzFromCoordinateBounds(_) => crate::json_output::explain::text::text(
+                "最小值的误差界",
+                "对实数，若 |a−x|≤ε 且 |b−y|≤ε，则 |min(a,b)−min(x,y)|≤ε。",
             ),
             Self::AbsTriangleInequality(p) => p.rule_name_and_message_zh(),
             Self::AbsReverseTriangleAdd(p) => p.rule_name_and_message_zh(),

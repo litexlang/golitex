@@ -7,6 +7,8 @@ use super::AtomicExceptEqualityFactSearchProofByKnownAtomicFact;
 use crate::ast::fact::{AtomicFact, InFact};
 use crate::ast::obj::*;
 use crate::runtime::Runtime;
+use crate::execute::execute_fact_stmt::{VerifyState, VerifyStateLevel};
+use super::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::AtomicExceptEqualityFactSearchProofByKnownSpecialProperty as Special;
 
 impl Runtime {
     // Truth only, after WD. Recursion strictly removes an AST constructor.
@@ -16,6 +18,23 @@ impl Runtime {
         &mut self,
         element: &Obj,
         target: &StandardSet,
+    ) -> Option<StructuralMembershipProof> {
+        self.search_membership_of_checked_object(
+            element,
+            target,
+            VerifyState::new(VerifyStateLevel::Direct),
+        )
+    }
+
+    // Shared truth-only membership derivation after object WD. Constructors
+    // strictly descend; function-return leaves only read exact stored signatures
+    // and equalities at the inherited permission. No verifier or rule dispatcher
+    // is re-entered, and no fact/cache entry is published here.
+    pub(in crate::execute) fn search_membership_of_checked_object(
+        &mut self,
+        element: &Obj,
+        target: &StandardSet,
+        state: VerifyState,
     ) -> Option<StructuralMembershipProof> {
         use StandardSet::*;
         use StructuralMembershipReason as P;
@@ -78,13 +97,38 @@ impl Runtime {
                 });
             }
         }
+        // WD of this exact application (as a checked child of the enclosing
+        // expression) owns arguments and guards. The existing return leaf also
+        // checks all alternative signatures, so cached WD cannot lend an
+        // unrelated guarded return. Direct intentionally cannot enter here.
+        if matches!(element, Obj::FnObj(_)) && state.allows(VerifyStateLevel::KnownSpecialProperty)
+        {
+            if let Some(Special::InFact(returned)) = self
+                .search_atomic_except_equality_fact_proof_by_known_special_property_at_ceiling(
+                    &goal, state,
+                )
+            {
+                let AtomicFact::InFact(membership) = goal else {
+                    unreachable!()
+                };
+                return Some(StructuralMembershipProof::new(
+                    element.clone(),
+                    target.clone(),
+                    P::FunctionReturn {
+                        membership,
+                        proof: Box::new(returned),
+                    },
+                ));
+            }
+        }
         // No refinement search: signed/nonzero targets need known evidence,
         // exact calculation or an intrinsic signature above.
         if !matches!(target, N | Z | Q | R | C) {
             return None;
         }
         let mut child = |obj: &Obj, set: &StandardSet| {
-            self.search_structural_membership(obj, set).map(Box::new)
+            self.search_membership_of_checked_object(obj, set, state)
+                .map(Box::new)
         };
         let reason = match element {
             Obj::ArithmeticOperator(ArithmeticOperator::Add(v)) => P::Add {
@@ -152,8 +196,7 @@ impl Runtime {
                 base: child(&v.base, target)?,
                 exponent: child(&v.exponent, if matches!(target, N | Z) { &N } else { &Z })?,
             },
-            // User-function/tuple carriers remain SP. A leaf can be used here
-            // only if its membership was already cited above.
+            // Other constructors require an existing carrier rule or known fact.
             _ => return None,
         };
         Some(StructuralMembershipProof::new(

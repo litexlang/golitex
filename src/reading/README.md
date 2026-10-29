@@ -13,11 +13,21 @@ This module connects the source to its actual verification evidence, so readers
 can follow citations back to facts, definitions and rules. Concept highlighting
 follows resolved symbol identity, separately from proof dependencies.
 
-Hover a fact's predicate or the unused area of its source row for a transient
-proof preview; focusing its line number provides the same keyboard access.
+Hover anywhere in a mapped fact's source row for a transient proof preview;
+focusing its line number provides the same keyboard access. The sentence owns
+the initial dwell timer and proof content: moving between its tokens neither
+restarts that timer nor rebuilds the proof. Hovering an object, predicate,
+operation or keyword adds a separate symbol-information compartment to the same
+preview. Changing symbols preserves expanded proof conditions and scroll
+position. The last symbol information remains available while entering the
+card; both compartments scroll independently and stack on narrow screens.
+Entering the card cancels delayed dismissal and incidental pending previews
+from crossing neighboring sentences. Outside facts, symbols retain standalone
+semantic help. Definitions and proofs still follow their separate recorded
+identities; hovering an object does not select it as the conclusion.
 The preview follows that primary fact's own evidence and exact source line,
 including conclusions nested inside a larger proof. Its premise links navigate
-to actual FactIds. Object, operator and keyword hover retains semantic help.
+to actual FactIds. Symbol help uses the same renderer inside and outside proofs.
 Mathematical premises are visible first; parameter and expression conditions
 remain available in a disclosure. Verified chains expose their adjacent steps
 from the recorded result, rather than treating the enclosing statement's entire
@@ -29,6 +39,38 @@ cover selected proof forms, not every kernel rule. JSON remains the underlying
 evidence format; the reader has no raw JSON column or JSON-view toggle. Source
 hover and on-demand explanations expose definitions, citations and inferred
 results directly beside the mathematics.
+
+Proof explanations connect their cited context with the actual rule application.
+The rule's exact recorded name is visible, together with its catalogue statement
+when available. Builtin strategies and structural membership derivations retain
+their own names and categories. For example, `p / 2 $in Z` in the sqrt-two lesson
+uses `ExactIntegerDiv`: the context supplies integer membership and divisibility,
+and enclosing expression verification owns the nonzero-denominator requirement.
+The card gives the guarded integer-quotient law and the substitution `a = p,
+b = 2`. It does not claim that the distinct `ExactIntegerQuotient` fallback was
+called. Application selection follows the current proof's typed wrapper chain,
+not a recursive collection of rules from premises, WD or earlier statements.
+Consequently each equality step retains its own rule. Missing catalogue text
+does not erase a retained application name; catalogue presence alone does not
+establish an application. Assumptions and rejected statements receive no
+successful-rule label. Hover and pinned views use the same formatter.
+
+Atomic proof applications expose four complementary routes. Known-fact reuse
+links the precise cited fact and pairs its arguments with the current arguments
+using the recorded equality certificates; changed arguments are visible by
+default. Builtin rules and builtin strategies show their actual name, retained
+requirements and current conclusion. A `forall` application identifies the exact
+universal fact, lists parameter substitutions in declaration order, and presents
+the already-instantiated premises with their matching proofs. Parameter domains
+and conclusion-argument matching remain available separately. The viewer never
+substitutes source strings to construct those premises.
+
+Named strategies show the recorded strategy name and bindings recovered from
+typed parameter identities and argument-match records. They do not acquire a
+guessed definition link: current detailed records do not retain a resolved
+strategy-declaration identity. Missing parameter lists, unmatched proof identities
+or incomplete records receive explicit explanations rather than invented
+correspondences. Reference navigation and return retain the selected application.
 
 Equality operators have their own proof targets when retained evidence maps
 them precisely. In `a = b = c`, hovering the first `=` explains only `a = b`;
@@ -446,3 +488,24 @@ lexical tokens split `exist` and `!`. The reader also accepts horizontal spacing
 between these tokens, matching the parser. Its hint states existence and
 uniqueness together; ordinary `exist` retains its existential hint and a
 factorial `!` is not absorbed into a quantifier.
+
+Builtin rule comments are produced by the owning proof type's
+`rule_name_and_message_en` / `_zh` methods. Reading captures both languages on
+**each actual rule application** as optional `comment.en` / `comment.zh`
+`{name, message}` objects. This preserves different laws within one catalogue
+family and supports language switching without rerunning a proof. The catalogue
+remains the fallback for older exports. Adding a builtin family without a comment
+owner fails the capture generator; a new variant must also satisfy the owner's
+exhaustive Rust matches. New disjunction/existence comments currently cover
+English and Chinese, with English fallback for other output languages.
+
+Every retained successful atomic verification, including each adjacent equality,
+ends with a closed **Well-defined expressions** disclosure. It reads only that
+verification's WD certificate, retains its actual verified domain conditions and
+proofs, and stops before walking into a condition's own proof. Each condition
+opens its own explanation, with its own WD disclosure at the end. Closed numeric
+conditions such as `2 != 0` remain inspectable. This presentation never changes
+WD ownership, proof search, fact identities or verification order.
+If atomic proof search fails after WD succeeds, the rejection explanation keeps
+that same closed WD tail. A successful domain check never marks the goal proved;
+a failure during WD continues to show its unmet condition as the diagnostic.

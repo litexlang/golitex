@@ -9,6 +9,30 @@ definitions and facts. Never rerun from the beginning after adding a few new
 lines. It includes a checked comparison and the exact restart/replay boundary.
 Apply the `golitex-repository-policy` skill for the full repository working policy.
 
+## Shared verifier ownership and std task boundaries
+
+The maintainer requires general expression membership verification and the
+composition and reuse of its evidence to be owned by the shared `verify`
+mechanism. WD consumers must use that common mechanism. Do not add a
+scenario-specific WD branch, such as an order-only function-return fallback,
+merely to make a particular standard-library theorem pass.
+
+A request to build or expand `std` authorizes task-authored file additions,
+modifications and removals only under the repository-root `std/` directory.
+Changes outside `std/`, including kernel, parser, verifier, compiler, tests,
+examples, documentation, configuration and inventories, require separate
+explicit authorization. Read-only inspection and verification do not expand
+the file-change scope. Supporting tests, documentation or inventory requirements
+in another skill are not implicit exceptions to this restriction.
+
+Try and verify explicit intermediate facts and existing source-library
+constructions first. If a verifier limitation remains, report the exact
+reproduction and discuss a separate, general verifier proposal; do not implement
+that repair inside the std task or create blocker records outside the authorized
+file scope. Do not weaken the mathematics or add unproved assumptions to hide
+the limitation. This scope restriction overrides generic skill advice that
+delegates local Rust repairs when the active task is std construction.
+
 ## Comparison and experiment READMEs
 
 Write READMEs for comparisons, benchmarks, experiments and their supporting

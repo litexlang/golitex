@@ -1,0 +1,36 @@
+have fn zero_add(x,y {0}) {0} = 0
+
+have fn zero_neg(x {0}) {0} = 0
+
+have fn zero_mul(x,y {0}) {0} = 0
+
+forall x,y,z {0}:
+    zero_add(zero_add(x,y),z)=zero_add(x,zero_add(y,z))
+    zero_mul(zero_mul(x,y),z)=zero_mul(x,zero_mul(y,z))
+    zero_mul(x,zero_add(y,z))=zero_add(zero_mul(x,y),zero_mul(x,z))
+    zero_mul(zero_add(x,y),z)=zero_add(zero_mul(x,z),zero_mul(y,z))
+
+forall x,y {0}:
+    zero_add(x,y)=zero_add(y,x)
+
+forall x {0}:
+    zero_add(0,x)=x
+    zero_add(x,zero_neg(x))=0
+    zero_mul(0,x)=x
+    zero_mul(x,0)=x
+
+0 $in {0}
+
+zero_add $in fn(x,y {0}) {0}
+
+zero_neg $in fn(x {0}) {0}
+
+zero_mul $in fn(x,y {0}) {0}
+
+have trivial &ring::Ring<{0}> = (0,0,zero_add,zero_neg,zero_mul)
+
+release struct def trivial
+
+have fn unused_inverse(x {0}:x!=0) {0} = 0
+
+have bad &fld::Field<{0}> = (0,0,zero_add,zero_neg,zero_mul,unused_inverse)

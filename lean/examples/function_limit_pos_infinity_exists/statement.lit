@@ -1,0 +1,7 @@
+# Existence of a real function limit at positive infinity certifies its selector.
+claim:
+    ? forall f fn(x R) R:
+        exist L R st {$has_limit_pos_inf(f,L)}
+        =>:
+            $is_set(lim_pos_inf(f))
+    $is_set(lim_pos_inf(f))

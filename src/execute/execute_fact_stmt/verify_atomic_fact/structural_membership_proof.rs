@@ -12,6 +12,13 @@ pub struct StructuralMembershipProof {
 }
 
 pub enum StructuralMembershipReason {
+    // A pure KnownSpecialProperty leaf, used only after the exact application
+    // passed object WD. The membership subject and carrier are retained for
+    // consumer validation; arithmetic parents compose it like any other leaf.
+    FunctionReturn {
+        membership: crate::ast::fact::InFact,
+        proof: Box<super::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty>,
+    },
     Known(AtomicExceptEqualityFactSearchProofByKnownAtomicFact),
     Closed(ClosedMembershipCalculationProof),
     KnownSubset(KnownSubsetMembershipProof),

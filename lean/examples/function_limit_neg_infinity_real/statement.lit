@@ -1,0 +1,7 @@
+# The selected function limit at negative infinity is real.
+claim:
+    ? forall f fn(x R) R, L R:
+        $has_limit_neg_inf(f,L)
+        =>:
+            lim_neg_inf(f) $in R
+    lim_neg_inf(f) $in R

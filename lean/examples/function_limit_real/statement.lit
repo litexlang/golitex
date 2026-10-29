@@ -1,0 +1,7 @@
+# A proved finite real function limit yields a real selected value.
+claim:
+    ? forall f fn(x R) R, x0 R, L R:
+        $has_limit_at(f,x0,L)
+        =>:
+            fn_lim(f,x0) $in R
+    fn_lim(f,x0) $in R

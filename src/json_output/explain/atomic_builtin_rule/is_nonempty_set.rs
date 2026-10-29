@@ -130,14 +130,14 @@ impl IsNonemptySetFactSearchProofByBuiltinRule {
 
 impl StandardSetNonemptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Standard Set Nonempty",
-            "Verified by the standard Set Nonempty builtin rule",
-        )
+        crate::json_output::explain::text::text("Nonempty standard number set", "Each supported standard number set contains an element; for example, 0 ∈ ℤ and 1 ∈ ℝ+.")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("标准集非空", "标准数集非空")
+        crate::json_output::explain::text::text(
+            "标准数集非空",
+            "受支持的标准数集都含有元素；例如 0 ∈ ℤ，1 ∈ ℝ+。",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -211,14 +211,17 @@ impl StandardSetNonemptyBuiltinRuleProof {
 
 impl LiteralListSetNonemptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Literal List Set Nonempty",
-            "Verified by the literal List Set Nonempty builtin rule",
+        crate::json_output::explain::text::text(
+            "A listed element witnesses nonemptiness",
+            "A set with at least one listed element is nonempty; for example, a ∈ {a}.",
         )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("字面列表集非空", "非空字面列表集非空")
+        crate::json_output::explain::text::text(
+            "列出的元素见证非空",
+            "至少列出一个元素的集合非空；例如 a ∈ {a}。",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -292,14 +295,17 @@ impl LiteralListSetNonemptyBuiltinRuleProof {
 
 impl PowerSetNonemptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Power Set Nonempty",
-            "Verified by the power Set Nonempty builtin rule",
+        crate::json_output::explain::text::text(
+            "A power set is nonempty",
+            "The empty set is a subset of every set A, so ∅ ∈ P(A); hence P(A) is nonempty.",
         )
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("幂集非空", "任意集合的幂集非空")
+        crate::json_output::explain::text::text(
+            "幂集非空",
+            "空集是任意集合 A 的子集，因此 ∅ ∈ P(A)，从而 P(A) 非空。",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
@@ -373,14 +379,14 @@ impl PowerSetNonemptyBuiltinRuleProof {
 
 impl OneSideInfinityIntervalNonemptyBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "One Side Infinity Interval Nonempty",
-            "Verified by the one Side Infinity Interval Nonempty builtin rule",
-        )
+        crate::json_output::explain::text::text("An unbounded real ray is nonempty", "A real ray with a finite endpoint contains a real number beyond that endpoint, whether the endpoint is included or excluded.")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("单侧无穷区间非空", "单侧无穷实区间非空")
+        crate::json_output::explain::text::text(
+            "无界实数射线非空",
+            "有限端点的实数射线包含端点以外的实数，因此无论端点是否包含，射线都非空。",
+        )
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {

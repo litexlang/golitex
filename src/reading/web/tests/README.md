@@ -56,6 +56,37 @@ fixtures with `fixtures.py <task-owned-output> --lessons`, then run
 18 source views and uses six successful real repaired bundles after submitting
 the exact edited bytes. Each lesson exercises its intended reading move.
 
+Generate proof-route fixtures with
+`python3 src/reading/web/tests/fixtures.py <fixture-directory> --correspondence`,
+then run `node src/reading/web/tests/proof-correspondence.cjs <fixture-directory>`.
+Actual public examples exercise known atomic argument equalities, a builtin
+atomic rule, a builtin strategy, a named strategy and bilingual syllogisms.
+The test follows the exact cited universal and returns to its application,
+checks instantiated premise proofs, ordered multi-parameter bindings, visible
+nontrivial known-argument equalities, and unchanged reading JSON. Degraded
+controls cover wrong universal identity, missing argument/equality records and
+incorrect premise-proof pairing. These are public component events, not browser
+visual acceptance or an exhaustive grammar/proof-form audit.
+
+Run `node src/reading/web/tests/proof-rules.cjs <fixture-directory>` to check the
+actual `ExactIntegerDiv` application for `p / 2 $in Z`, its context, full guarded
+law and parameter substitution in both locales. Hovered and pinned views agree.
+Exact equality steps retain their own builtin rule/strategy rather than rules
+from a premise. Degraded controls remove catalogue metadata or application
+identity separately; only the former preserves a recorded rule name. Assumed
+and rejected facts must not receive success-rule applications. Full exported
+bundles remain unchanged.
+
+Run `node src/reading/web/tests/stable-hover.cjs <fixture-directory>` with the
+same actual CLI fixtures to exercise sentence-owned hover and its separate
+symbol-information compartment in both locales, in editable and read-only
+views. A controlled clock checks dwell continuity, movement between symbols,
+retained proof DOM/expanded conditions/scroll, entry across the source/card gap,
+cancellation of neighboring-sentence candidates, dismissal, and edit
+invalidation. It also checks predicate definitions, compound keywords, exact
+equality steps, failed checks and local assumptions. Source bundle JSON stays
+unchanged. These are public event tests, not browser layout measurements.
+
 Run `node src/reading/web/tests/predicate-proof.cjs <fixture-directory>` with
 those same fixtures for combined predicate definition/proof hover. It covers
 the actual intersection strategy and direct builtin-rule paths, each retained
@@ -110,3 +141,14 @@ format fidelity, including Unicode, escapes and buffer boundaries;
 actual loopback service, child verifier, cache, failures, policies and exports.
 The upload response is compact JSON with complete values; the ordinary CLI
 continues to emit formatted JSON.
+
+`atomic-wd.cjs <fixture-directory>` uses real `--lessons --correspondence`
+exports to check the final, initially collapsed WD disclosure across known,
+builtin, builtin-strategy, named-strategy, universal-instantiation and equality
+routes. It opens the actual nonzero-denominator condition and its proof and
+checks honest missing-data behavior. `rule-comments.cjs <fixture-directory>`
+checks the per-application English/Chinese copy and language switching; older
+exports continue to use catalogue descriptions. `cargo test --test
+reading_rule_comments` checks the actual Rust capture, including distinct scalar
+subrules sharing one catalogue ID. These are data and component checks, not
+browser or visual acceptance.

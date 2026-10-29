@@ -43,7 +43,10 @@ pub(super) fn object_wd(p: &RiemannIntegralWellDefinedProof, rt: &Runtime) -> Js
                                 rt,
                                 vec![
                                     ("requirement", string(r.requirement.readable_string())),
-                                    ("proof", project_verify_fact(&r.result, rt)),
+                                    (
+                                        "proof",
+                                        super::wd::project_predicate_requirement(&r.result, rt),
+                                    ),
                                 ],
                             )
                         })

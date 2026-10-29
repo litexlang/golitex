@@ -1043,6 +1043,7 @@ impl LitexToLeanCompiler {
                 | AtomicFact::NotDvdFact(_)
                 | AtomicFact::NotSequenceAnalysisFact(_)
                 | AtomicFact::NotHasSequenceLimitFact(_)
+                | AtomicFact::NotHasFunctionLimitFact(_)
                 | AtomicFact::NotRealSetBoundFact(_)
                 | AtomicFact::NotRealSetBoundedFact(_)
         ) {
@@ -1099,6 +1100,21 @@ impl LitexToLeanCompiler {
                 "(Litex.HasSequenceLimitValue M {} {})",
                 arguments[0], arguments[1]
             ),
+            AtomicFact::HasFunctionLimitFact(f) => {
+                if f.approach.point().is_some() {
+                    let (side, _) = super::compile_function_limit::finite_side(&f.approach)?;
+                    format!(
+                        "(Litex.HasFiniteFunctionLimitValue M .{side} {} {} {})",
+                        arguments[0], arguments[1], arguments[2]
+                    )
+                } else {
+                    let direction = super::compile_function_limit::infinite_direction(&f.approach)?;
+                    format!(
+                        "(Litex.HasInfiniteFunctionLimitValue M .{direction} {} {})",
+                        arguments[0], arguments[1]
+                    )
+                }
+            }
             AtomicFact::SequenceAnalysisFact(f) => {
                 let name = super::compile_sequence_analysis::sequence_name(f.property)?;
                 format!("(Litex.Sequence{name}Value M {})", arguments[0])

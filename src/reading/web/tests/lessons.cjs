@@ -41,11 +41,11 @@ async function run(){
     }
     if(item.id==="sets"){
       const row=view.line("union({1, 2}, {2, 3}) = union({2, 3}, {1, 2})"),token=row.querySelectorAll(".lr-token,[data-syntax]").find(node=>node.textContent==="union");
-      assert(token);await view.hover(token);assert(view.root.querySelector(".lr-token-help").textContent.includes(locale==="zh"?"集合运算符":"Set operator"));
+      assert(token);await view.hover(token);assert(view.root.querySelector(".lr-proof-evidence"),'hovering an operation keeps the sentence proof');assert(view.root.querySelector(".lr-proof-symbol").textContent.includes(locale==="zh"?"集合运算符":"Set operator"));
     }
     if(item.id==="cantor"){
       const row=view.line("obtain a from exist a S st {diagonal_set = f(a)}"),token=row.querySelectorAll(".lr-token").find(node=>node.textContent==="a");assert(token);
-      await view.hover(token);assert(view.root.querySelector(".lr-token-help").textContent.includes("S"));
+      await view.hover(token);assert(view.root.querySelector(".lr-proof-evidence"),'the extracted witness keeps its retained fact evidence');assert(view.root.querySelector(".lr-proof-symbol").textContent.includes("S"));
     }
     if(item.id==="least-squares"){
       const row=[...view.root.querySelectorAll(".lr-code-row")].find(node=>node.querySelectorAll(".lr-chain-equality").length===2&&node.textContent.includes("<=")&&node.textContent.includes("candidate"));

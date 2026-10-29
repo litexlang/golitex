@@ -1,0 +1,37 @@
+release obj def series::partial_sum
+release obj def series::partial_sums
+release obj def series::series_tail
+
+have fn lc_square(k N+) R=1/k^2
+
+release thm series::reciprocal_square_series_converges(lc_square)
+
+have fn lc_harmonic(k N+) R=1/k
+
+have fn lc_zero_ratio(k N+) R=1/k
+
+release thm series::harmonic_series_diverges(lc_harmonic)
+
+release thm series::sequence_reciprocal_limit(lc_zero_ratio)
+
+claim:
+    ? forall k N+:
+        k>=1
+        =>:
+            lc_harmonic(k)>0
+    0<k
+    lc_harmonic(k)=1/k>0
+
+claim:
+    ? forall k N+:
+        k>=1
+        lc_harmonic(k)>0
+        =>:
+            lc_zero_ratio(k)=lc_square(k)/lc_harmonic(k)
+    lc_square(k)=1/k^2
+    lc_harmonic(k)=1/k
+    lc_zero_ratio(k)=1/k
+    (1/k^2)/(1/k)=1/k
+    lc_zero_ratio(k)=1/k=lc_square(k)/lc_harmonic(k)
+
+release thm series::series_limit_comparison_right(lc_square,lc_harmonic,lc_zero_ratio,0,1)

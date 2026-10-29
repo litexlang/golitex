@@ -65,7 +65,8 @@ Finite-set inclusion tracers:
 - [A finite subset of equal size equals its containing set](proof_nodes/equal/by_builtin_rule/finite_set_equal_from_subset_size.lit), including an explicit singleton proof.
 - [A proper finite subset has smaller size](proof_nodes/atomic/by_builtin_rule/less_finite_set_size_proper_subset.lit), using either `$proper_subset` or `$subset` with disequality.
 
-Checked function-return order formation: [positive tracer](wd/checked_function_order_domain.lit)
+Shared function-return and arithmetic membership: [composition tracer](proof_nodes/atomic/checked_function_membership_composition.lit).
+Direct function-return order formation: [positive tracer](wd/checked_function_order_domain.lit)
 and negative controls for [invalid index](wd_negative/checked_function_order_invalid_index.lit),
 [missing guard](wd_negative/checked_function_order_unproved_guard.lit),
 [complex return](wd_negative/checked_function_order_complex.lit),

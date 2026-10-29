@@ -1,0 +1,20 @@
+release obj def series::partial_sum
+release obj def series::partial_sums
+release obj def series::series_tail
+
+thm comparison_missing_limit_must_fail:
+    ? forall a,b,ratio seq(R),L R,m N+:
+        L>0
+        $series::is_convergent_series(b)
+        forall k N+:
+            k>=m
+            =>:
+                b(k)>0
+        forall k N+:
+            k>=m
+            b(k)>0
+            =>:
+                ratio(k)=a(k)/b(k)
+        =>:
+            $series::is_convergent_series(a)
+    release thm series::series_limit_comparison_left(a,b,ratio,L,m)

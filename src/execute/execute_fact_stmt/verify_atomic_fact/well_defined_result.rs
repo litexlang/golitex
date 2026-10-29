@@ -158,8 +158,6 @@ pub enum PredicateDomainProof {
         Box<super::verify_atomic_except_equality::known_divisibility::KnownZeroRemainderProof>,
     ),
     ByRequirements(Vec<PredicateDomainWellDefinedProof>),
-    ByCheckedArguments(Vec<PredicateDomainArgumentMembershipProof>),
-    ByCheckedArgumentReturns(Vec<PredicateDomainArgumentReturnProof>),
 }
 
 // These memberships consume the enclosing atomic proof's checked argument WD.
@@ -184,24 +182,14 @@ impl PredicateDomainArgumentMembershipProof {
     }
 }
 
-// These proofs consume the same argument WD as ByCheckedArguments. Function
-// returns retain the exact signature evidence rather than repeating call WD.
-pub struct PredicateDomainArgumentReturnProof {
-    pub requirement: Fact,
-    pub argument_index: usize,
-    pub membership: PredicateDomainArgumentReturnMembership,
-}
-
-pub enum PredicateDomainArgumentReturnMembership {
-    Structural(super::structural_membership_proof::StructuralMembershipProof),
-    FunctionReturn(
-        super::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty,
-    ),
-}
-
 pub struct PredicateDomainWellDefinedProof {
     pub requirement: Fact,
-    pub result: Box<VerifyFactResult>,
+    pub result: PredicateDomainRequirementProof,
+}
+
+pub enum PredicateDomainRequirementProof {
+    Verified(Box<VerifyFactResult>),
+    CheckedArgument(PredicateDomainArgumentMembershipProof),
 }
 
 // Soft miss vs success for atomic-fact WD. Proof never embeds Fail.

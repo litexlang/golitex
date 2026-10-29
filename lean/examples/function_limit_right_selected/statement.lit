@@ -1,0 +1,7 @@
+# A proved right-hand real function-limit candidate determines lim_right(f,x0).
+claim:
+    ? forall f fn(x R) R, x0 R, L R:
+        $has_limit_right(f,x0,L)
+        =>:
+            lim_right(f,x0) = L
+    lim_right(f,x0) = L

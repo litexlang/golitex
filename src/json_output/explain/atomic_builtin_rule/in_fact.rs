@@ -47,37 +47,36 @@ impl InFactSearchProofByBuiltinRule {
         match self {
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Transport known membership between a homogeneous Cartesian product and its equal finite sequence carrier."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::English),
-            Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
-
-            Self::MinPreservesPositiveCarrier(_) => text("Positive minimum", "a,b $in R+ => min(a,b) $in R+"),
-            Self::PositiveRealProduct(_) => text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+"),
-            Self::PositiveRealQuotient(_) => text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+"),
-            Self::NonzeroRationalProduct(_) => text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*"),
-            Self::NonzeroRationalQuotient(_) => text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*"),
+            Self::ExactIntegerQuotient(_) => crate::json_output::explain::text::text("Integer quotient by divisibility", "If integers a,b satisfy b≠0 and b divides a, their quotient is an integer: a/b ∈ ℤ. For example, 6/2 ∈ ℤ."),
+            Self::MinPreservesPositiveCarrier(_) => crate::json_output::explain::text::text("Minimum of positive numbers", "For positive real a,b, min(a,b) is one of a,b and is therefore positive."),
+            Self::PositiveRealProduct(_) => crate::json_output::explain::text::text("Product of positive reals", "For a,b ∈ ℝ+, a·b ∈ ℝ+."),
+            Self::PositiveRealQuotient(_) => crate::json_output::explain::text::text("Quotient of positive reals", "For a,b ∈ ℝ+, a/b ∈ ℝ+; positivity of b ensures b≠0."),
+            Self::NonzeroRationalProduct(_) => crate::json_output::explain::text::text("Product of nonzero rationals", "For a,b ∈ ℚ∖{0}, a·b ∈ ℚ∖{0}."),
+            Self::NonzeroRationalQuotient(_) => crate::json_output::explain::text::text("Quotient of nonzero rationals", "For a,b ∈ ℚ∖{0}, a/b ∈ ℚ∖{0}."),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_en(),
-            Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_en(),
+            Self::ComplexArithmeticClosure(_) => crate::json_output::explain::text::text("Closure of complex arithmetic", "For complex a,b, a+b, a−b and a·b are complex; for b≠0, a/b is complex."),
             Self::RealTrigClosure(p) => p.rule_name_and_message_en(),
             Self::RealTrigInComplex(p) => p.rule_name_and_message_en(),
             Self::ComplexCoordinateInReal(p) => p.rule_name_and_message_en(),
             Self::ComplexCoordinateInComplex(p) => p.rule_name_and_message_en(),
             Self::RealArithmeticClosure(p) => p.rule_name_and_message_en(),
-            Self::RealArithmeticConstructorClosure(_) => text("Real arithmetic constructor closure", "Checked real leaves compose under field operations and integer powers; domain guards remain in the enclosing WD proof"),
-            Self::DiscreteArithmeticConstructorClosure(_) => text("Natural/integer arithmetic constructor closure", "Checked natural/integer leaves compose under their closed arithmetic constructors; domain guards remain in the enclosing WD proof"),
-            Self::RealOperandArithmeticClosure(_) => text("Real arithmetic from checked operands", "Checked real operands remain real under field arithmetic; division also has its checked WD domain"),
-            Self::RealPower(_) => text("Real power", "The base is checked real and the enclosing power WD certificate proves a supported real power domain"),
-            Self::ClosedExactScalarMembership(_) => text("Exact scalar membership", "Exact real and imaginary coordinates satisfy the target scalar carrier"),
-            Self::IntegerArithmeticClosure(_) => text("Integer arithmetic closure", "Checked integer operands remain integers under negation, absolute value, addition, subtraction, multiplication and natural powers"),
+            Self::RealArithmeticConstructorClosure(_) => crate::json_output::explain::text::text("Closure of real arithmetic", "Sums, differences, products and defined quotients of real numbers are real; defined integer powers of a real number are real."),
+            Self::DiscreteArithmeticConstructorClosure(_) => crate::json_output::explain::text::text("Closure of natural and integer arithmetic", "Natural numbers are closed under addition, multiplication and natural powers; integers are also closed under subtraction and negation."),
+            Self::RealOperandArithmeticClosure(_) => crate::json_output::explain::text::text("Closure of real field arithmetic", "For real a,b, a+b, a−b and a·b are real; if b≠0, a/b is real."),
+            Self::RealPower(_) => crate::json_output::explain::text::text("A real value of a power", "A real base with an exponent in the established real-power domain has a real power value. The domain conditions depend on the base and exponent."),
+            Self::ClosedExactScalarMembership(_) => crate::json_output::explain::text::text("Exact numeric membership", "Evaluate the real and imaginary coordinates exactly and test membership in the stated number set. For example, 1/2 ∈ ℚ and i ∉ ℝ."),
+            Self::IntegerArithmeticClosure(_) => crate::json_output::explain::text::text("Closure of integer arithmetic", "Negation, absolute value, addition, subtraction, multiplication and natural powers of integers have integer values. Division requires a separate divisibility condition."),
             Self::FiniteSetMaxMember(p) => p.rule_name_and_message_en(),
             Self::FiniteSetMinMember(p) => p.rule_name_and_message_en(),
             Self::NativeScalarCodomain(p) => p.rule_name_and_message_en(),
             Self::PositiveIntegerInNPos(p) => p.rule_name_and_message_en(),
-            Self::FoldScalarCodomain(_) => text("Fold carrier", "The checked homogeneous operation and seed preserve the fold carrier"),
+            Self::FoldScalarCodomain(_) => crate::json_output::explain::text::text("Carrier preserved by a fold", "If the initial value is in S and the binary operation maps S×S into S, every finite fold using that operation also lies in S."),
             Self::AggregateScalarCodomain(_) => {
                 let (name, message) = ("Finite aggregate scalar carrier", "Checked summands or factors close the declared scalar carrier; empty sums include zero");
                 BuiltinRuleText { rule_name:name.into(), message:message.into() }
             },
-            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
-            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
+            Self::CompositionInFunctionSet(_) => crate::json_output::explain::text::text("Domain and codomain of a composite", "If g: A → B and f: B → C, then f∘g: A → C. The intermediate codomain must lie in the outer function’s domain."),
+            Self::CompositionApplicationInCodomain(_) => crate::json_output::explain::text::text("Return domain of a composite", "If g maps A into B and f maps B into C, then f(g(x)) ∈ C for x ∈ A."),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_en(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text("Anonymous function return carrier", "A checked direct application inhabits its declared static scalar codomain"),
             Self::StandardSetSubsetMembership(p) => p.rule_name_and_message_en(),
@@ -107,65 +106,82 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
-            Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "在同质笛卡尔积与相等的有限数列空间之间传递已知成员关系。"),
-            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Chinese),
-            Self::ExactIntegerQuotient(_) => text(
-                "ExactIntegerQuotient",
-                "a,b in Z, b!=0, $dvd(a,b) => a/b in Z",
+            Self::HomogeneousCartesianSequenceMembership(_) => text(
+                "HomogeneousCartesianSequenceMembership",
+                "在同质笛卡尔积与相等的有限数列空间之间传递已知成员关系。",
             ),
-
-            Self::MinPreservesPositiveCarrier(_) => {
-                text("正实数的最小值", "a,b $in R+ => min(a,b) $in R+")
-            }
+            Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_id(),
+                p.law(),
+                OutputLanguage::Chinese,
+            ),
+            Self::ExactIntegerQuotient(_) => crate::json_output::explain::text::text(
+                "整除给出的整数商",
+                "若整数 a、b 满足 b≠0 且 b 整除 a，则 a/b ∈ ℤ。例如 6/2 ∈ ℤ。",
+            ),
+            Self::MinPreservesPositiveCarrier(_) => crate::json_output::explain::text::text(
+                "正数的最小值",
+                "对正实数 a、b，min(a,b) 等于其中之一，因而仍为正实数。",
+            ),
             Self::PositiveRealProduct(_) => {
-                text("a,b $in R+ => a*b $in R+", "a,b $in R+ => a*b $in R+")
+                crate::json_output::explain::text::text("正实数的乘积", "对 a,b ∈ ℝ+，a·b ∈ ℝ+。")
             }
-            Self::PositiveRealQuotient(_) => {
-                text("a,b $in R+ => a/b $in R+", "a,b $in R+ => a/b $in R+")
-            }
-            Self::NonzeroRationalProduct(_) => {
-                text("a,b $in Q* => a*b $in Q*", "a,b $in Q* => a*b $in Q*")
-            }
-            Self::NonzeroRationalQuotient(_) => {
-                text("a,b $in Q* => a/b $in Q*", "a,b $in Q* => a/b $in Q*")
-            }
+            Self::PositiveRealQuotient(_) => crate::json_output::explain::text::text(
+                "正实数的商",
+                "对 a,b ∈ ℝ+，a/b ∈ ℝ+；b 为正保证了 b≠0。",
+            ),
+            Self::NonzeroRationalProduct(_) => crate::json_output::explain::text::text(
+                "非零有理数的乘积",
+                "对 a,b ∈ ℚ∖{0}，a·b ∈ ℚ∖{0}。",
+            ),
+            Self::NonzeroRationalQuotient(_) => crate::json_output::explain::text::text(
+                "非零有理数的商",
+                "对 a,b ∈ ℚ∖{0}，a/b ∈ ℚ∖{0}。",
+            ),
             Self::ClosedNumericMembership(p) => p.rule_name_and_message_zh(),
-            Self::ComplexArithmeticClosure(p) => p.rule_name_and_message_zh(),
+            Self::ComplexArithmeticClosure(_) => crate::json_output::explain::text::text(
+                "复数运算的封闭性",
+                "对复数 a、b，a+b、a−b、a·b 为复数；当 b≠0 时，a/b 为复数。",
+            ),
             Self::RealTrigClosure(p) => p.rule_name_and_message_zh(),
             Self::RealTrigInComplex(p) => p.rule_name_and_message_zh(),
             Self::ComplexCoordinateInReal(p) => p.rule_name_and_message_zh(),
             Self::ComplexCoordinateInComplex(p) => p.rule_name_and_message_zh(),
             Self::RealArithmeticClosure(p) => p.rule_name_and_message_zh(),
-            Self::RealArithmeticConstructorClosure(_) => text(
-                "实数运算结构封闭",
-                "已验证的实数叶子经四则运算和整数幂仍为实数；定义域条件保留在外层WD证明中",
+            Self::RealArithmeticConstructorClosure(_) => crate::json_output::explain::text::text(
+                "实数四则运算的封闭性",
+                "实数的和、差、积以及有定义的商仍为实数；实数的有定义整数次幂仍为实数。",
             ),
-            Self::DiscreteArithmeticConstructorClosure(_) => text(
-                "自然数/整数运算结构封闭",
-                "已验证的自然数/整数叶子经对应的封闭运算保持类型；定义域条件保留在外层WD证明中",
-            ),
-            Self::RealOperandArithmeticClosure(_) => text(
-                "由实数操作数得实数运算结果",
-                "已验证的实数操作数经四则运算仍为实数；除法另有已验证的定义域条件",
-            ),
-            Self::RealPower(_) => text(
-                "实数幂",
-                "底数已验证为实数；外层幂的定义良好证据验证受支持的实数幂定义域",
-            ),
-            Self::ClosedExactScalarMembership(_) => {
-                text("精确数值载体", "精确的实部和虚部满足目标数值集合的条件")
+            Self::DiscreteArithmeticConstructorClosure(_) => {
+                crate::json_output::explain::text::text(
+                    "自然数与整数运算的封闭性",
+                    "自然数对加法、乘法及自然数次幂封闭；整数还对减法与取相反数封闭。",
+                )
             }
-            Self::IntegerArithmeticClosure(_) => text(
-                "整数运算封闭",
-                "已验证的整数操作数经取负、绝对值、加减乘及自然数幂仍为整数",
+            Self::RealOperandArithmeticClosure(_) => crate::json_output::explain::text::text(
+                "实数四则运算的封闭性",
+                "对实数 a、b，a+b、a−b、a·b 为实数；当 b≠0 时，a/b 为实数。",
+            ),
+            Self::RealPower(_) => crate::json_output::explain::text::text(
+                "幂的实数取值",
+                "实数底数与指数满足实数幂的定义域条件时，幂的值为实数；具体条件取决于底数与指数。",
+            ),
+            Self::ClosedExactScalarMembership(_) => crate::json_output::explain::text::text(
+                "精确数值的数域归属",
+                "精确计算实部与虚部，再判定其是否属于目标数集。例如 1/2 ∈ ℚ，而 i ∉ ℝ。",
+            ),
+            Self::IntegerArithmeticClosure(_) => crate::json_output::explain::text::text(
+                "整数运算的封闭性",
+                "整数的相反数、绝对值、和、差、积及自然数次幂仍为整数；整数相除还需要整除条件。",
             ),
             Self::FiniteSetMaxMember(p) => p.rule_name_and_message_zh(),
             Self::FiniteSetMinMember(p) => p.rule_name_and_message_zh(),
             Self::NativeScalarCodomain(p) => p.rule_name_and_message_zh(),
             Self::PositiveIntegerInNPos(p) => p.rule_name_and_message_zh(),
-            Self::FoldScalarCodomain(_) => {
-                text("Fold 的载体", "已验证的齐次运算与初值保持 fold 的载体")
-            }
+            Self::FoldScalarCodomain(_) => crate::json_output::explain::text::text(
+                "归约保持数域",
+                "若初值属于 S，且二元运算把 S×S 映入 S，则使用该运算的有限次归约结果仍属于 S。",
+            ),
             Self::AggregateScalarCodomain(_) => {
                 let (name, message) = (
                     "有限聚合的数值载体",
@@ -176,8 +192,14 @@ impl InFactSearchProofByBuiltinRule {
                     message: message.into(),
                 }
             }
-            Self::CompositionInFunctionSet(_) => BuiltinRuleText { rule_name: "CompositionInFunctionSet".into(), message: "A checked composition retains the complete inner domain and outer return carrier".into() },
-            Self::CompositionApplicationInCodomain(_) => BuiltinRuleText { rule_name: "CompositionApplicationInCodomain".into(), message: "A checked composition application belongs to its return carrier".into() },
+            Self::CompositionInFunctionSet(_) => crate::json_output::explain::text::text(
+                "复合函数的定义域与陪域",
+                "若 g: A → B，f: B → C，则 f∘g: A → C；中间值必须属于外层函数的定义域。",
+            ),
+            Self::CompositionApplicationInCodomain(_) => crate::json_output::explain::text::text(
+                "复合函数值的返回域",
+                "若 g 把 A 映入 B，f 把 B 映入 C，则对 x ∈ A，f(g(x)) ∈ C。",
+            ),
             Self::AnonymousFnInDeclaredFnSet(p) => p.rule_name_and_message_zh(),
             Self::AnonymousFnApplicationScalarCodomain(_) => text(
                 "匿名函数的返回载体",

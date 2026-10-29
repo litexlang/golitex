@@ -10,6 +10,9 @@ use crate::tokenize::Tokenizer;
 #[path = "integer_quotient_remainder.rs"]
 mod integer_quotient_remainder;
 
+#[path = "checked_function_composition.rs"]
+mod checked_function_composition;
+
 #[test]
 fn maintained_structural_and_tuple_tracers() {
     for code in [
@@ -278,16 +281,24 @@ fn order_domain_reuses_checked_argument_wd_without_publishing_it() {
     else {
         panic!("finite difference comparison WD")
     };
-    let PredicateDomainProof::ByCheckedArguments(requirements) =
-        &proof.detailed_ref().predicate_domain
+    let PredicateDomainProof::ByRequirements(requirements) = &proof.detailed_ref().predicate_domain
     else {
         panic!("checked argument domain fallback")
     };
     assert_eq!(requirements.len(), 2);
-    for (index, requirement) in requirements.iter().enumerate() {
-        assert_eq!(requirement.argument_index, index);
-        assert_eq!(requirement.membership.set, StandardSet::R);
-    }
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof;
+    // Only the difference requires checked-argument reuse; the ordinary
+    // finite-set-size membership retains its earlier successful verify route.
+    let PredicateDomainRequirementProof::CheckedArgument(requirement) = &requirements[0].result
+    else {
+        panic!("checked difference requirement")
+    };
+    assert_eq!(requirement.argument_index, 0);
+    assert_eq!(requirement.membership.set, StandardSet::R);
+    let PredicateDomainRequirementProof::Verified(result) = &requirements[1].result else {
+        panic!("ordinary finite size requirement must keep priority")
+    };
+    assert!(!result.is_failed());
     assert_eq!(memory_sizes(&rt), before, "domain fallback published state");
 }
 

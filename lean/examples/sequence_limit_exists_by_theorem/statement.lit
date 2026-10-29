@@ -1,0 +1,7 @@
+# Release an existence certificate from a proved sequence-limit candidate.
+claim:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            exist K R st {$has_seq_limit(a,K)}
+    release thm seq_limit_exists(a,L)

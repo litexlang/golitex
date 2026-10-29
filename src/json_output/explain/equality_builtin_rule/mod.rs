@@ -30,7 +30,7 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ElementaryIdentity(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
-            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_en(),
+            Self::DvdZeroRemainder(_) => crate::json_output::explain::text::text("Divisibility gives a zero remainder", "For integers a,b with b≠0, if b divides a then the Euclidean remainder a mod b is zero."),
             Self::Composition(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::English)
             }
@@ -83,25 +83,12 @@ impl EqualitySearchProofByBuiltinRule {
                     OutputLanguage::English,
                 )
             }
-            Self::ScalarExtra(p) => BuiltinRuleText {
-                rule_name: p.rule_id().into(),
-                message: "Apply the fixed scalar identity with its checked premises and domains"
-                    .into(),
-            },
-            Self::IntegerInterval(_) => BuiltinRuleText {
-                rule_name: "Integer singleton interval".into(),
-                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
-            },
-            Self::FactorialPredecessor(_) => BuiltinRuleText {
-                rule_name: "Factorial predecessor recurrence".into(),
-                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
-            },
+            Self::ScalarExtra(proof) => proof.rule_name_and_message_en(),
+            Self::IntegerInterval(_) => crate::json_output::explain::text::text("An integer in a unit interval", "For integers x,k, k≤x<k+1 or k−1<x≤k implies x=k."),
+            Self::FactorialPredecessor(_) => crate::json_output::explain::text::text("Factorial recurrence", "For n ∈ ℕ+, n!=n·(n−1)!."),
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_en(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_en(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
-                rule_name: "Negative integer power reciprocal".into(),
-                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
-            },
+            Self::NegativeIntegerPowerReciprocal(_) => crate::json_output::explain::text::text("Reciprocal of an integer power", "For nonzero complex a and integer n, a^(−n)=1/a^n."),
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_en(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_en(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_en(),
@@ -329,7 +316,10 @@ impl EqualitySearchProofByBuiltinRule {
             Self::ElementaryIdentity(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
-            Self::DvdZeroRemainder(p) => p.divisibility.rule_name_and_message_zh(),
+            Self::DvdZeroRemainder(_) => crate::json_output::explain::text::text(
+                "整除给出零余数",
+                "对整数 a、b 且 b≠0，若 b 整除 a，则欧几里得余数 a mod b 为零。",
+            ),
             Self::Composition(p) => {
                 native_operations::text(p.rule_id(), p.law(), OutputLanguage::Chinese)
             }
@@ -382,25 +372,20 @@ impl EqualitySearchProofByBuiltinRule {
                     OutputLanguage::Chinese,
                 )
             }
-            Self::ScalarExtra(p) => BuiltinRuleText {
-                rule_name: p.rule_id().into(),
-                message: "Apply the fixed scalar identity with its checked premises and domains"
-                    .into(),
-            },
-            Self::IntegerInterval(_) => BuiltinRuleText {
-                rule_name: "Integer singleton interval".into(),
-                message: "Integer x,k: k<=x<k+1 => x=k; k-1<x<=k => x=k".into(),
-            },
-            Self::FactorialPredecessor(_) => BuiltinRuleText {
-                rule_name: "阶乘前项递推".into(),
-                message: "n $in N+: factorial(n)=n*factorial(n-1)".into(),
-            },
+            Self::ScalarExtra(proof) => proof.rule_name_and_message_zh(),
+            Self::IntegerInterval(_) => crate::json_output::explain::text::text(
+                "单位区间中的整数",
+                "对整数 x、k，k≤x<k+1 或 k−1<x≤k 均推出 x=k。",
+            ),
+            Self::FactorialPredecessor(_) => {
+                crate::json_output::explain::text::text("阶乘递推式", "对 n ∈ ℕ+，n!=n·(n−1)!。")
+            }
             Self::ExponentialLogarithmIdentity(p) => p.rule_name_and_message_zh(),
             Self::ScalarDivisionRelation(p) => p.rule_name_and_message_zh(),
-            Self::NegativeIntegerPowerReciprocal(_) => BuiltinRuleText {
-                rule_name: "负整数幂的倒数".into(),
-                message: "a!=0, a in C, n in Z: a^(-n)=1/(a^n)".into(),
-            },
+            Self::NegativeIntegerPowerReciprocal(_) => crate::json_output::explain::text::text(
+                "整数幂的倒数",
+                "对非零复数 a 与整数 n，a^(−n)=1/a^n。",
+            ),
             Self::TanQuotientDefinition(p) => p.rule_name_and_message_zh(),
             Self::CotQuotientDefinition(p) => p.rule_name_and_message_zh(),
             Self::GcdEuclideanStep(p) => p.rule_name_and_message_zh(),

@@ -1,0 +1,69 @@
+# Shared membership verification composes checked function-return leaves.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/checked_function_membership_composition.lit
+# Before: the direct return comparison worked only through an order-specific
+# WD fallback; adding one failed goal WD at (u(n+1)+1) $in R.
+# thm sequence_return_arithmetic_order:
+#     ? forall u seq(R),n N+:
+#         u(n+1)+1<=u(n+1)+1
+
+thm sequence_return_arithmetic_order:
+    ? forall u seq(R),n N+:
+        u(n+1)+1<=u(n+1)+1
+
+thm sequence_return_arithmetic_membership:
+    ? forall u seq(R),n N+:
+        (u(n+1)+1)*(u(n+1)-1) $in R
+
+thm sequence_return_quotient_membership:
+    ? forall u seq(R),n N+:
+        u(n+1)!=0
+        =>:
+            (u(n+1)+1)/u(n+1) $in R
+
+thm sequence_return_as_function_argument:
+    ? forall u seq(R),n N+,f fn(x R) R:
+        f(u(n+1)+1)=f(u(n+1)+1)
+
+thm natural_return_numeric_predicate:
+    ? forall f fn(k N+) N,n N+:
+        $prime(f(n+1)+1)
+        =>:
+            $prime(f(n+1)+1)
+
+thm dependent_return_composition:
+    ? forall A set,f fn(x R) A,g fn(y A) R,t R:
+        g(f(t))+1<=g(f(t))+1
+
+thm guarded_real_return_arithmetic_order:
+    ? forall f fn(x R:x>0) R,t R:
+        t>0
+        =>:
+            f(t+1)+1<=f(t+1)+1
+
+thm stronger_same_domain_return_composes:
+    ? forall f fn(x R) C,t R:
+        f $in fn(y R) R
+        =>:
+            f(t)+1<=f(t)+1
+
+thm natural_return_standard_inclusion_composes:
+    ? forall f fn(x R) N,t R:
+        f(t)+1 $in R
+
+thm sequence_limit_composed_candidate:
+    ? forall a,u seq(R),n N+:
+        $has_seq_limit(a,u(n+1)+1)
+        =>:
+            $has_seq_limit(a,u(n+1)+1)
+
+thm derivative_composed_candidate:
+    ? forall f fn(x R) R,u seq(R),n N+:
+        $has_derivative_at(f,0,u(n+1)+1)
+        =>:
+            $has_derivative_at(f,0,u(n+1)+1)
+
+thm integral_composed_candidate:
+    ? forall f fn(x R) R,u seq(R),n N+:
+        $has_riemann_integral(f,0,1,u(n+1)+1)
+        =>:
+            $has_riemann_integral(f,0,1,u(n+1)+1)

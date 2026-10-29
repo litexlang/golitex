@@ -1,0 +1,7 @@
+# A proved function-limit candidate at positive infinity determines the selector.
+claim:
+    ? forall f fn(x R) R, L R:
+        $has_limit_pos_inf(f,L)
+        =>:
+            lim_pos_inf(f) = L
+    lim_pos_inf(f) = L

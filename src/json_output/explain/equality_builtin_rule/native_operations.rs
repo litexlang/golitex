@@ -2,8 +2,8 @@ use crate::json_output::explain::BuiltinRuleText;
 use crate::launch_command::OutputLanguage;
 pub(super) fn text(rule: &str, law: &str, language: OutputLanguage) -> BuiltinRuleText {
     let prefix = match language {
-        OutputLanguage::English => "Both sides and domain guards checked",
-        OutputLanguage::Chinese => "两边及定义域条件均已检查",
+        OutputLanguage::English => "Conditions and identity",
+        OutputLanguage::Chinese => "适用条件与恒等关系",
         OutputLanguage::ChineseTraditional => "兩邊及定義域條件均已檢查",
         OutputLanguage::French => "Les deux membres et leurs domaines sont vérifiés",
         OutputLanguage::Russian => "Обе части и условия области определения проверены",

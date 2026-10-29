@@ -1,0 +1,6 @@
+# Project membership through a nested domain whose predicate uses numeric WD.
+claim:
+    ? forall epsilon R+, x {t {s R: s != 0}: 0 < abs(t) and abs(t) < epsilon}:
+        x $in R
+    x $in {s R: s != 0}
+    x $in R

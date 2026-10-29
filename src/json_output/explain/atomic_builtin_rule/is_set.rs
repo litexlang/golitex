@@ -94,11 +94,11 @@ impl IsSetFactSearchProofByBuiltinRule {
 
 impl IsSetAlwaysTrueBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("Always True", "Verified by the always True builtin rule")
+        crate::json_output::explain::text::text("Objects in the set model", "In Litex’s set-based object model, every well-defined object is a set; hence $is_set(x) holds for any defined x.")
     }
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("恒为真", "「是集合」目标恒成立")
+        crate::json_output::explain::text::text("集合模型中的对象", "在 Litex 的集合对象模型中，每个有定义的对象都是集合，因此任意有定义的 x 都满足 $is_set(x)。")
     }
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {

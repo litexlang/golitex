@@ -339,7 +339,7 @@ impl LitexToLeanCompiler {
                     return Err(LeanCompileError::unsupported("Atomic/KnownStrategy"))
                 }
                 AtomicExceptEqualityFactSearchedProof::ByDefinition(proof) =>
-                    self.compile_prop_definition(&success.fact, proof, position)?,
+                    self.compile_prop_definition(&success.fact, &success.well_defined_proof, proof, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(proof) =>
                     self.compile_known_application(&success.fact.clone().into(), proof, position)?.1,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(proof) =>

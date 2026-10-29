@@ -1,0 +1,10 @@
+# Directional unboundedness and epsilon control prove a limit at negative infinity.
+thm checked_neg_infinite_limit_intro:
+    ? forall f fn(x R:x != 0) R, L R:
+        forall T R:
+            exist x {s R:s != 0} st {x < T}
+        forall epsilon R+:
+            exist T R st {{x {s R:s != 0}: x < T} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_neg_inf(f,L)
+    by def $has_limit_neg_inf(f,L)

@@ -1,0 +1,7 @@
+# Release the explicit left function-limit selected theorem.
+claim:
+    ? forall f fn(x R) R, p R:
+        exist L R st {$has_limit_left(f,p,L)}
+        =>:
+            $has_limit_left(f,p,lim_left(f,p))
+    release thm fn_limit_left_selected(f,p)

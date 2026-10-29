@@ -1,0 +1,428 @@
+# Equivalence relations, partitions and partial orders.
+
+struct EquivalenceRelation<Ambient set>:
+    carrier power_set(Ambient)
+    pairs power_set(cart(carrier,carrier))
+    <=>:
+        forall x carrier:
+            (x,x) $in pairs
+        forall x,y carrier:
+            (x,y) $in pairs
+            =>:
+                (y,x) $in pairs
+        forall x,y,z carrier:
+            (x,y) $in pairs
+            (y,z) $in pairs
+            =>:
+                (x,z) $in pairs
+
+template<A set,E &EquivalenceRelation<A>>:
+    have fn equivalence_class(x E.carrier) power_set(E.carrier) = {y E.carrier: (x,y) $in E.pairs}
+
+thm equivalence_class_contains_self:
+    ? forall A set,E &EquivalenceRelation<A>,x E.carrier:
+        x $in \equivalence_class<A,E>(x)
+    \equivalence_class<A,E>(x) = {y E.carrier: (x,y) $in E.pairs}
+    (x,x) $in E.pairs
+    release thm set_builder_member(x,{y E.carrier: (x,y) $in E.pairs})
+
+thm universal_equivalence_laws:
+    ? forall X set:
+        (X,cart(X,X)) $in &EquivalenceRelation<X>
+    X $in power_set(X)
+    cart(X,X) $in power_set(cart(X,X))
+    forall x X:
+        (x,x) $in cart(X,X)
+    forall x,y X:
+        (x,y) $in cart(X,X)
+        =>:
+            (y,x) $in cart(X,X)
+    forall x,y,z X:
+        (x,y) $in cart(X,X)
+        (y,z) $in cart(X,X)
+        =>:
+            (x,z) $in cart(X,X)
+    release thm struct_member((X,cart(X,X)),&EquivalenceRelation<X>)
+
+thm equivalence_class_is_nonempty:
+    ? forall A set,E &EquivalenceRelation<A>,x E.carrier:
+        \equivalence_class<A,E>(x) != {}
+    release thm equivalence_class_contains_self(A,E,x)
+    by contra:
+        ? \equivalence_class<A,E>(x) != {}
+        x $in {}
+        impossible x $in {}
+
+thm related_equivalence_classes_equal:
+    ? forall A set,E &EquivalenceRelation<A>,x,y E.carrier:
+        (x,y) $in E.pairs
+        =>:
+            \equivalence_class<A,E>(x) = \equivalence_class<A,E>(y)
+    \equivalence_class<A,E>(x) = {z E.carrier: (x,z) $in E.pairs}
+    \equivalence_class<A,E>(y) = {z E.carrier: (y,z) $in E.pairs}
+    (y,x) $in E.pairs
+    by extension:
+        ? \equivalence_class<A,E>(x) = \equivalence_class<A,E>(y)
+        claim:
+            ? forall z \equivalence_class<A,E>(x):
+                z $in \equivalence_class<A,E>(y)
+            (x,z) $in E.pairs
+            (y,z) $in E.pairs
+            release thm set_builder_member(z,{v E.carrier: (y,v) $in E.pairs})
+        claim:
+            ? forall z \equivalence_class<A,E>(y):
+                z $in \equivalence_class<A,E>(x)
+            (y,z) $in E.pairs
+            (x,z) $in E.pairs
+            release thm set_builder_member(z,{v E.carrier: (x,v) $in E.pairs})
+
+thm equal_equivalence_classes_imply_related:
+    ? forall A set,E &EquivalenceRelation<A>,x,y E.carrier:
+        \equivalence_class<A,E>(x) = \equivalence_class<A,E>(y)
+        =>:
+            (x,y) $in E.pairs
+    \equivalence_class<A,E>(x) = {z E.carrier: (x,z) $in E.pairs}
+    release thm equivalence_class_contains_self(A,E,y)
+    y $in \equivalence_class<A,E>(x)
+
+template<A set,E &EquivalenceRelation<A>>:
+    have equivalence_classes power_set(power_set(E.carrier)) = fn_range(\equivalence_class<A,E>)
+
+prop is_partition(Carrier set,blocks power_set(power_set(Carrier))):
+    family_union(blocks) = Carrier
+    forall U blocks:
+        U != {}
+    forall U,V blocks:
+        U=V or intersect(U,V) = {}
+
+thm equivalence_classes_equal_or_disjoint:
+    ? forall A set,E &EquivalenceRelation<A>,x,y E.carrier:
+        \equivalence_class<A,E>(x) = \equivalence_class<A,E>(y) or intersect(\equivalence_class<A,E>(x),\equivalence_class<A,E>(y)) = {}
+    \equivalence_class<A,E>(x) = {z E.carrier: (x,z) $in E.pairs}
+    \equivalence_class<A,E>(y) = {z E.carrier: (y,z) $in E.pairs}
+    by cases:
+        ? \equivalence_class<A,E>(x) = \equivalence_class<A,E>(y) or intersect(\equivalence_class<A,E>(x),\equivalence_class<A,E>(y)) = {}
+        case (x,y) $in E.pairs:
+            release thm related_equivalence_classes_equal(A,E,x,y)
+        case not (x,y) $in E.pairs:
+            by extension:
+                ? intersect(\equivalence_class<A,E>(x),\equivalence_class<A,E>(y)) = {}
+                claim:
+                    ? forall z intersect(\equivalence_class<A,E>(x),\equivalence_class<A,E>(y)):
+                        z $in {}
+                    by contra:
+                        ? z $in {}
+                        z $in \equivalence_class<A,E>(x)
+                        z $in \equivalence_class<A,E>(y)
+                        (x,z) $in E.pairs
+                        (y,z) $in E.pairs
+                        (z,y) $in E.pairs
+                        (x,y) $in E.pairs
+                        impossible (x,y) $in E.pairs
+
+thm equivalence_classes_cover_carrier:
+    ? forall A set,E &EquivalenceRelation<A>:
+        family_union(\equivalence_classes<A,E>) = E.carrier
+    release thm fn_set_member(\equivalence_class<A,E>,fn(x E.carrier) power_set(E.carrier))
+    \equivalence_classes<A,E> = fn_range(\equivalence_class<A,E>)
+    \equivalence_classes<A,E> $subset power_set(E.carrier)
+    by extension:
+        ? family_union(\equivalence_classes<A,E>) = E.carrier
+        claim:
+            ? forall z family_union(\equivalence_classes<A,E>):
+                z $in E.carrier
+            obtain U from exist V \equivalence_classes<A,E> st {z $in V}
+            U $in power_set(E.carrier)
+            U $subset E.carrier
+        claim:
+            ? forall x E.carrier:
+                x $in family_union(\equivalence_classes<A,E>)
+            \equivalence_class<A,E>(x) $in fn_range(\equivalence_class<A,E>)
+            \equivalence_class<A,E>(x) $in \equivalence_classes<A,E>
+            \equivalence_class<A,E>(x) $subset family_union(\equivalence_classes<A,E>)
+            release thm equivalence_class_contains_self(A,E,x)
+
+thm equivalence_classes_form_partition:
+    ? forall A set,E &EquivalenceRelation<A>:
+        $is_partition(E.carrier,\equivalence_classes<A,E>)
+    release thm fn_set_member(\equivalence_class<A,E>,fn(x E.carrier) power_set(E.carrier))
+    \equivalence_classes<A,E> = fn_range(\equivalence_class<A,E>)
+    release thm equivalence_classes_cover_carrier(A,E)
+    claim:
+        ? forall U \equivalence_classes<A,E>:
+            U != {}
+        have by fn_preimage: x from U $in fn_range(\equivalence_class<A,E>)
+        release thm equivalence_class_is_nonempty(A,E,x)
+    claim:
+        ? forall U,V \equivalence_classes<A,E>:
+            U=V or intersect(U,V)={}
+        have by fn_preimage: x from U $in fn_range(\equivalence_class<A,E>)
+        have by fn_preimage: y from V $in fn_range(\equivalence_class<A,E>)
+        release thm equivalence_classes_equal_or_disjoint(A,E,x,y)
+        by cases:
+            ? U=V or intersect(U,V)={}
+            case \equivalence_class<A,E>(x) = \equivalence_class<A,E>(y):
+                U = \equivalence_class<A,E>(x) = \equivalence_class<A,E>(y) = V
+            case intersect(\equivalence_class<A,E>(x),\equivalence_class<A,E>(y)) = {}:
+                intersect(U,V) = intersect(\equivalence_class<A,E>(x),\equivalence_class<A,E>(y)) = {}
+    by def $is_partition(E.carrier,\equivalence_classes<A,E>)
+
+struct PartialOrder<Ambient set>:
+    carrier power_set(Ambient)
+    pairs power_set(cart(carrier,carrier))
+    <=>:
+        forall x carrier:
+            (x,x) $in pairs
+        forall x,y carrier:
+            (x,y) $in pairs
+            (y,x) $in pairs
+            =>:
+                x=y
+        forall x,y,z carrier:
+            (x,y) $in pairs
+            (y,z) $in pairs
+            =>:
+                (x,z) $in pairs
+
+prop is_least_element(A set,P &PartialOrder<A>,S power_set(P.carrier),x P.carrier):
+    x $in S
+    forall y S:
+        (x,y) $in P.pairs
+
+prop is_greatest_element(A set,P &PartialOrder<A>,S power_set(P.carrier),x P.carrier):
+    x $in S
+    forall y S:
+        (y,x) $in P.pairs
+
+prop is_minimal_element(A set,P &PartialOrder<A>,S power_set(P.carrier),x P.carrier):
+    x $in S
+    forall y S:
+        (y,x) $in P.pairs
+        =>:
+            y=x
+
+prop is_maximal_element(A set,P &PartialOrder<A>,S power_set(P.carrier),x P.carrier):
+    x $in S
+    forall y S:
+        (x,y) $in P.pairs
+        =>:
+            y=x
+
+thm least_element_is_unique:
+    ? forall A set,P &PartialOrder<A>,S power_set(P.carrier),x,y P.carrier:
+        $is_least_element(A,P,S,x)
+        $is_least_element(A,P,S,y)
+        =>:
+            x=y
+    (x,y) $in P.pairs
+    (y,x) $in P.pairs
+
+thm greatest_element_is_unique:
+    ? forall A set,P &PartialOrder<A>,S power_set(P.carrier),x,y P.carrier:
+        $is_greatest_element(A,P,S,x)
+        $is_greatest_element(A,P,S,y)
+        =>:
+            x=y
+    (x,y) $in P.pairs
+    (y,x) $in P.pairs
+
+thm least_element_is_minimal:
+    ? forall A set,P &PartialOrder<A>,S power_set(P.carrier),x P.carrier:
+        $is_least_element(A,P,S,x)
+        =>:
+            $is_minimal_element(A,P,S,x)
+    claim:
+        ? forall y S:
+            (y,x) $in P.pairs
+            =>:
+                y=x
+        (x,y) $in P.pairs
+        (y,x) $in P.pairs
+    by def $is_minimal_element(A,P,S,x)
+
+thm greatest_element_is_maximal:
+    ? forall A set,P &PartialOrder<A>,S power_set(P.carrier),x P.carrier:
+        $is_greatest_element(A,P,S,x)
+        =>:
+            $is_maximal_element(A,P,S,x)
+    claim:
+        ? forall y S:
+            (x,y) $in P.pairs
+            =>:
+                y=x
+        (x,y) $in P.pairs
+        (y,x) $in P.pairs
+    by def $is_maximal_element(A,P,S,x)
+
+prop is_monotone(A set,P &PartialOrder<A>,B set,O &PartialOrder<B>,f fn(x P.carrier) O.carrier):
+    forall x,y P.carrier:
+        (x,y) $in P.pairs
+        =>:
+            (f(x),f(y)) $in O.pairs
+
+prop is_order_embedding(A set,P &PartialOrder<A>,B set,O &PartialOrder<B>,f fn(x P.carrier) O.carrier):
+    $is_monotone(A,P,B,O,f)
+    forall x,y P.carrier:
+        (f(x),f(y)) $in O.pairs
+        =>:
+            (x,y) $in P.pairs
+
+thm monotone_composition:
+    ? forall A set,P &PartialOrder<A>,B set,O &PartialOrder<B>,D set,T &PartialOrder<D>,f fn(x P.carrier) O.carrier,g fn(x O.carrier) T.carrier:
+        $is_monotone(A,P,B,O,f)
+        $is_monotone(B,O,D,T,g)
+        =>:
+            $is_monotone(A,P,D,T,compose(g,f))
+    claim:
+        ? forall x,y P.carrier:
+            (x,y) $in P.pairs
+            =>:
+                (compose(g,f)(x),compose(g,f)(y)) $in T.pairs
+        (f(x),f(y)) $in O.pairs
+        (g(f(x)),g(f(y))) $in T.pairs
+        compose(g,f)(x)=g(f(x))
+        compose(g,f)(y)=g(f(y))
+        (compose(g,f)(x),compose(g,f)(y)) = (g(f(x)),g(f(y)))
+    by def $is_monotone(A,P,D,T,compose(g,f))
+
+thm order_embedding_is_injective:
+    ? forall A set,P &PartialOrder<A>,B set,O &PartialOrder<B>,f fn(x P.carrier) O.carrier:
+        $is_order_embedding(A,P,B,O,f)
+        =>:
+            $injective(P.carrier,O.carrier,f)
+    claim:
+        ? forall x,y P.carrier:
+            f(x)=f(y)
+            =>:
+                x=y
+        (f(x),f(x)) $in O.pairs
+        (f(y),f(y)) $in O.pairs
+        (f(x),f(y)) $in O.pairs
+        (f(y),f(x)) $in O.pairs
+        (x,y) $in P.pairs
+        (y,x) $in P.pairs
+    by def $injective(P.carrier,O.carrier,f)
+
+thm order_embedding_composition:
+    ? forall A set,P &PartialOrder<A>,B set,O &PartialOrder<B>,D set,T &PartialOrder<D>,f fn(x P.carrier) O.carrier,g fn(x O.carrier) T.carrier:
+        $is_order_embedding(A,P,B,O,f)
+        $is_order_embedding(B,O,D,T,g)
+        =>:
+            $is_order_embedding(A,P,D,T,compose(g,f))
+    release thm monotone_composition(A,P,B,O,D,T,f,g)
+    claim:
+        ? forall x,y P.carrier:
+            (compose(g,f)(x),compose(g,f)(y)) $in T.pairs
+            =>:
+                (x,y) $in P.pairs
+        compose(g,f)(x)=g(f(x))
+        compose(g,f)(y)=g(f(y))
+        (g(f(x)),g(f(y))) = (compose(g,f)(x),compose(g,f)(y))
+        (g(f(x)),g(f(y))) $in T.pairs
+        (f(x),f(y)) $in O.pairs
+    by def $is_order_embedding(A,P,D,T,compose(g,f))
+
+thm least_element_in_smaller_subset:
+    ? forall A set,P &PartialOrder<A>,S,U power_set(P.carrier),x P.carrier:
+        U $subset S
+        x $in U
+        $is_least_element(A,P,S,x)
+        =>:
+            $is_least_element(A,P,U,x)
+    by def $is_least_element(A,P,U,x)
+
+thm greatest_element_in_smaller_subset:
+    ? forall A set,P &PartialOrder<A>,S,U power_set(P.carrier),x P.carrier:
+        U $subset S
+        x $in U
+        $is_greatest_element(A,P,S,x)
+        =>:
+            $is_greatest_element(A,P,U,x)
+    by def $is_greatest_element(A,P,U,x)
+
+thm minimal_element_in_smaller_subset:
+    ? forall A set,P &PartialOrder<A>,S,U power_set(P.carrier),x P.carrier:
+        U $subset S
+        x $in U
+        $is_minimal_element(A,P,S,x)
+        =>:
+            $is_minimal_element(A,P,U,x)
+    by def $is_minimal_element(A,P,U,x)
+
+thm maximal_element_in_smaller_subset:
+    ? forall A set,P &PartialOrder<A>,S,U power_set(P.carrier),x P.carrier:
+        U $subset S
+        x $in U
+        $is_maximal_element(A,P,S,x)
+        =>:
+            $is_maximal_element(A,P,U,x)
+    by def $is_maximal_element(A,P,U,x)
+
+template<X set>:
+    have diagonal_pairs power_set(cart(X,X)) = {p cart(X,X): p(1)=p(2)}
+
+thm equality_equivalence_laws:
+    ? forall X set:
+        (X,\diagonal_pairs<X>) $in &EquivalenceRelation<X>
+    X $in power_set(X)
+    \diagonal_pairs<X> $in power_set(cart(X,X))
+    \diagonal_pairs<X> = {p cart(X,X): p(1)=p(2)}
+    claim:
+        ? forall x X:
+            (x,x) $in \diagonal_pairs<X>
+        release thm set_builder_member((x,x),{p cart(X,X): p(1)=p(2)})
+    claim:
+        ? forall x,y X:
+            (x,y) $in \diagonal_pairs<X>
+            =>:
+                (y,x) $in \diagonal_pairs<X>
+        (x,y) $in {p cart(X,X): p(1)=p(2)}
+        (x,y)(1)=(x,y)(2)
+        x=(x,y)(1)=(x,y)(2)=y
+        release thm set_builder_member((y,x),{p cart(X,X): p(1)=p(2)})
+    claim:
+        ? forall x,y,z X:
+            (x,y) $in \diagonal_pairs<X>
+            (y,z) $in \diagonal_pairs<X>
+            =>:
+                (x,z) $in \diagonal_pairs<X>
+        (x,y) $in {p cart(X,X): p(1)=p(2)}
+        (y,z) $in {p cart(X,X): p(1)=p(2)}
+        (x,y)(1)=(x,y)(2)
+        (y,z)(1)=(y,z)(2)
+        x=(x,y)(1)=(x,y)(2)=y=(y,z)(1)=(y,z)(2)=z
+        release thm set_builder_member((x,z),{p cart(X,X): p(1)=p(2)})
+    release thm struct_member((X,\diagonal_pairs<X>),&EquivalenceRelation<X>)
+
+thm discrete_partial_order_laws:
+    ? forall X set:
+        (X,\diagonal_pairs<X>) $in &PartialOrder<X>
+    X $in power_set(X)
+    \diagonal_pairs<X> $in power_set(cart(X,X))
+    \diagonal_pairs<X> = {p cart(X,X): p(1)=p(2)}
+    claim:
+        ? forall x X:
+            (x,x) $in \diagonal_pairs<X>
+        release thm set_builder_member((x,x),{p cart(X,X): p(1)=p(2)})
+    claim:
+        ? forall x,y X:
+            (x,y) $in \diagonal_pairs<X>
+            (y,x) $in \diagonal_pairs<X>
+            =>:
+                x=y
+        (x,y) $in {p cart(X,X): p(1)=p(2)}
+        (x,y)(1)=(x,y)(2)
+        x=(x,y)(1)=(x,y)(2)=y
+    claim:
+        ? forall x,y,z X:
+            (x,y) $in \diagonal_pairs<X>
+            (y,z) $in \diagonal_pairs<X>
+            =>:
+                (x,z) $in \diagonal_pairs<X>
+        (x,y) $in {p cart(X,X): p(1)=p(2)}
+        (y,z) $in {p cart(X,X): p(1)=p(2)}
+        (x,y)(1)=(x,y)(2)
+        (y,z)(1)=(y,z)(2)
+        x=(x,y)(1)=(x,y)(2)=y=(y,z)(1)=(y,z)(2)=z
+        release thm set_builder_member((x,z),{p cart(X,X): p(1)=p(2)})
+    release thm struct_member((X,\diagonal_pairs<X>),&PartialOrder<X>)

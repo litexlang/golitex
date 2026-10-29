@@ -1,0 +1,250 @@
+# Metric spaces, balls and Lipschitz maps.
+
+struct MetricSpace<Ambient set>:
+    carrier power_set(Ambient)
+    distance fn(x,y carrier) R
+    <=>:
+        forall x,y carrier:
+            0<=distance(x,y)
+        forall x carrier:
+            distance(x,x)=0
+        forall x,y carrier:
+            distance(x,y)=0
+            =>:
+                x=y
+        forall x,y carrier:
+            distance(x,y)=distance(y,x)
+        forall x,y,z carrier:
+            distance(x,z)<=distance(x,y)+distance(y,z)
+
+template<A set,M &MetricSpace<A>>:
+    have fn open_ball(center M.carrier,radius R+) power_set(M.carrier) = {x M.carrier: M.distance(center,x)<radius}
+
+template<A set,M &MetricSpace<A>>:
+    have fn closed_ball(center M.carrier,radius R:radius>=0) power_set(M.carrier) = {x M.carrier: M.distance(center,x)<=radius}
+
+thm distinct_points_have_positive_distance:
+    ? forall A set,M &MetricSpace<A>,x,y M.carrier:
+        x!=y
+        =>:
+            0<M.distance(x,y)
+    0<=M.distance(x,y)
+    by contra:
+        ? 0<M.distance(x,y)
+        M.distance(x,y)<=0
+        M.distance(x,y)=0
+        x=y
+        impossible x=y
+
+thm reverse_triangle_inequality:
+    ? forall A set,M &MetricSpace<A>,x,y,z M.carrier:
+        abs(M.distance(x,z)-M.distance(y,z))<=M.distance(x,y)
+    M.distance(x,z)<=M.distance(x,y)+M.distance(y,z)
+    M.distance(y,z)<=M.distance(y,x)+M.distance(x,z)
+    M.distance(y,x)=M.distance(x,y)
+    M.distance(x,z)-M.distance(y,z)<=(M.distance(x,y)+M.distance(y,z))-M.distance(y,z)=M.distance(x,y)
+    M.distance(y,z)-M.distance(x,z)<=(M.distance(y,x)+M.distance(x,z))-M.distance(x,z)=M.distance(y,x)=M.distance(x,y)
+    -(M.distance(x,y))<=-(M.distance(y,z)-M.distance(x,z))=M.distance(x,z)-M.distance(y,z)
+
+thm open_ball_contains_center:
+    ? forall A set,M &MetricSpace<A>,x M.carrier,r R+:
+        x $in \open_ball<A,M>(x,r)
+    \open_ball<A,M>(x,r) = {y M.carrier: M.distance(x,y)<r}
+    M.distance(x,x)=0<r
+    release thm set_builder_member(x,{y M.carrier: M.distance(x,y)<r})
+
+thm open_balls_are_nested:
+    ? forall A set,M &MetricSpace<A>,x M.carrier,r,s R+:
+        r<=s
+        =>:
+            \open_ball<A,M>(x,r) $subset \open_ball<A,M>(x,s)
+    \open_ball<A,M>(x,r) = {y M.carrier: M.distance(x,y)<r}
+    \open_ball<A,M>(x,s) = {y M.carrier: M.distance(x,y)<s}
+    claim:
+        ? forall y \open_ball<A,M>(x,r):
+            y $in \open_ball<A,M>(x,s)
+        M.distance(x,y)<r<=s
+        release thm set_builder_member(y,{z M.carrier: M.distance(x,z)<s})
+    by def \open_ball<A,M>(x,r) $subset \open_ball<A,M>(x,s)
+
+thm open_ball_contains_subball:
+    ? forall A set,M &MetricSpace<A>,x,y M.carrier,r,s R+:
+        M.distance(x,y)+s<=r
+        =>:
+            \open_ball<A,M>(y,s) $subset \open_ball<A,M>(x,r)
+    \open_ball<A,M>(x,r) = {z M.carrier: M.distance(x,z)<r}
+    \open_ball<A,M>(y,s) = {z M.carrier: M.distance(y,z)<s}
+    claim:
+        ? forall z \open_ball<A,M>(y,s):
+            z $in \open_ball<A,M>(x,r)
+        M.distance(x,z)<=M.distance(x,y)+M.distance(y,z)<M.distance(x,y)+s<=r
+        release thm set_builder_member(z,{t M.carrier: M.distance(x,t)<r})
+    by def \open_ball<A,M>(y,s) $subset \open_ball<A,M>(x,r)
+
+thm distant_open_balls_are_disjoint:
+    ? forall A set,M &MetricSpace<A>,x,y M.carrier,r,s R+:
+        r+s<=M.distance(x,y)
+        =>:
+            intersect(\open_ball<A,M>(x,r),\open_ball<A,M>(y,s))={}
+    \open_ball<A,M>(x,r) = {z M.carrier: M.distance(x,z)<r}
+    \open_ball<A,M>(y,s) = {z M.carrier: M.distance(y,z)<s}
+    by extension:
+        ? intersect(\open_ball<A,M>(x,r),\open_ball<A,M>(y,s))={}
+        claim:
+            ? forall z intersect(\open_ball<A,M>(x,r),\open_ball<A,M>(y,s)):
+                z $in {}
+            by contra:
+                ? z $in {}
+                z $in \open_ball<A,M>(x,r)
+                z $in \open_ball<A,M>(y,s)
+                M.distance(x,z)<r
+                M.distance(y,z)<s
+                M.distance(z,y)=M.distance(y,z)
+                M.distance(x,y)<=M.distance(x,z)+M.distance(z,y)<r+s
+                impossible r+s<=M.distance(x,y)
+
+prop is_lipschitz_map(A set,M &MetricSpace<A>,B set,T &MetricSpace<B>,f fn(x M.carrier) T.carrier,L R):
+    0<=L
+    forall x,y M.carrier:
+        T.distance(f(x),f(y))<=L*M.distance(x,y)
+
+prop is_metric_continuous_at(A set,M &MetricSpace<A>,B set,T &MetricSpace<B>,f fn(x M.carrier) T.carrier,point M.carrier):
+    forall epsilon R+:
+        exist delta R+ st {\open_ball<A,M>(point,delta) $subset preimage_set(f,\open_ball<B,T>(f(point),epsilon))}
+
+thm lipschitz_composition:
+    ? forall A set,M &MetricSpace<A>,B set,T &MetricSpace<B>,D set,V &MetricSpace<D>,f fn(x M.carrier) T.carrier,g fn(x T.carrier) V.carrier,L,K R:
+        $is_lipschitz_map(A,M,B,T,f,L)
+        $is_lipschitz_map(B,T,D,V,g,K)
+        =>:
+            $is_lipschitz_map(A,M,D,V,compose(g,f),K*L)
+    0<=K
+    0<=L
+    0<=K*L
+    claim:
+        ? forall x,y M.carrier:
+            V.distance(compose(g,f)(x),compose(g,f)(y))<=K*L*M.distance(x,y)
+        T.distance(f(x),f(y))<=L*M.distance(x,y)
+        compose(g,f)(x)=g(f(x))
+        compose(g,f)(y)=g(f(y))
+        V.distance(compose(g,f)(x),compose(g,f)(y))=V.distance(g(f(x)),g(f(y)))<=K*T.distance(f(x),f(y))<=K*(L*M.distance(x,y))=K*L*M.distance(x,y)
+    by def $is_lipschitz_map(A,M,D,V,compose(g,f),K*L)
+
+thm lipschitz_implies_metric_continuity:
+    ? forall A set,M &MetricSpace<A>,B set,T &MetricSpace<B>,f fn(x M.carrier) T.carrier,L R,point M.carrier:
+        $is_lipschitz_map(A,M,B,T,f,L)
+        =>:
+            $is_metric_continuous_at(A,M,B,T,f,point)
+    0<=L
+    0<L+1
+    claim:
+        ? forall epsilon R+:
+            exist delta R+ st {\open_ball<A,M>(point,delta) $subset preimage_set(f,\open_ball<B,T>(f(point),epsilon))}
+        have delta R+ = epsilon/(L+1)
+        \open_ball<A,M>(point,delta)={y M.carrier:M.distance(point,y)<delta}
+        \open_ball<B,T>(f(point),epsilon)={v T.carrier:T.distance(f(point),v)<epsilon}
+        claim:
+            ? forall y \open_ball<A,M>(point,delta):
+                y $in preimage_set(f,\open_ball<B,T>(f(point),epsilon))
+            y $in M.carrier
+            M.distance(point,y)<delta
+            0<=M.distance(point,y)
+            T.distance(f(point),f(y))<=L*M.distance(point,y)<=(L+1)*M.distance(point,y)<(L+1)*delta=epsilon
+            release thm set_builder_member(f(y),{v T.carrier:T.distance(f(point),v)<epsilon})
+            f(y) $in \open_ball<B,T>(f(point),epsilon)
+        by def \open_ball<A,M>(point,delta) $subset preimage_set(f,\open_ball<B,T>(f(point),epsilon))
+        witness exist d R+ st {\open_ball<A,M>(point,d) $subset preimage_set(f,\open_ball<B,T>(f(point),epsilon))} from delta
+    by def $is_metric_continuous_at(A,M,B,T,f,point)
+
+have fn real_line_distance(x,y R) R=abs(x-y)
+
+thm real_line_metric_laws:
+    ? forall :
+        (R,real_line_distance) $in &MetricSpace<R>
+    R $in power_set(R)
+    real_line_distance $in fn(x,y R) R
+    claim:
+        ? forall x,y R:
+            0<=real_line_distance(x,y)
+        real_line_distance(x,y)=abs(x-y)
+    claim:
+        ? forall x R:
+            real_line_distance(x,x)=0
+        x-x=0
+        real_line_distance(x,x)=abs(x-x)=abs(0)=0
+    claim:
+        ? forall x,y R:
+            real_line_distance(x,y)=0
+            =>:
+                x=y
+        abs(x-y)=real_line_distance(x,y)=0
+        x-y=0
+        x=x-y+y=0+y=y
+    claim:
+        ? forall x,y R:
+            real_line_distance(x,y)=real_line_distance(y,x)
+        real_line_distance(x,y)=abs(x-y)=abs(-(y-x))=abs(y-x)=real_line_distance(y,x)
+    claim:
+        ? forall x,y,z R:
+            real_line_distance(x,z)<=real_line_distance(x,y)+real_line_distance(y,z)
+        real_line_distance(x,z)=abs(x-z)=abs((x-y)+(y-z))<=abs(x-y)+abs(y-z)=real_line_distance(x,y)+real_line_distance(y,z)
+    release thm struct_member((R,real_line_distance),&MetricSpace<R>)
+
+thm zero_closed_ball_is_singleton:
+    ? forall A set,M &MetricSpace<A>,x M.carrier:
+        \closed_ball<A,M>(x,0)={x}
+    \closed_ball<A,M>(x,0)={y M.carrier:M.distance(x,y)<=0}
+    by extension:
+        ? \closed_ball<A,M>(x,0)={x}
+        claim:
+            ? forall y \closed_ball<A,M>(x,0):
+                y $in {x}
+            0<=M.distance(x,y)
+            M.distance(x,y)<=0
+            M.distance(x,y)=0
+            x=y
+        claim:
+            ? forall y {x}:
+                y $in \closed_ball<A,M>(x,0)
+            y=x
+            M.distance(x,y)=M.distance(x,x)=0
+            release thm set_builder_member(y,{z M.carrier:M.distance(x,z)<=0})
+
+thm open_ball_is_in_closed_ball:
+    ? forall A set,M &MetricSpace<A>,x M.carrier,r R+:
+        \open_ball<A,M>(x,r) $subset \closed_ball<A,M>(x,r)
+    \open_ball<A,M>(x,r)={y M.carrier:M.distance(x,y)<r}
+    \closed_ball<A,M>(x,r)={y M.carrier:M.distance(x,y)<=r}
+    claim:
+        ? forall y \open_ball<A,M>(x,r):
+            y $in \closed_ball<A,M>(x,r)
+        M.distance(x,y)<r
+        release thm set_builder_member(y,{z M.carrier:M.distance(x,z)<=r})
+    by def \open_ball<A,M>(x,r) $subset \closed_ball<A,M>(x,r)
+
+thm open_ball_has_interior_subballs:
+    ? forall A set,M &MetricSpace<A>,x,y M.carrier,r R+:
+        y $in \open_ball<A,M>(x,r)
+        =>:
+            exist s R+ st {\open_ball<A,M>(y,s) $subset \open_ball<A,M>(x,r)}
+    \open_ball<A,M>(x,r)={z M.carrier:M.distance(x,z)<r}
+    y $in \open_ball<A,M>(x,r)
+    M.distance(x,y)<r
+    0<r-M.distance(x,y)
+    have s R+=(r-M.distance(x,y))/2
+    M.distance(x,y)+s=M.distance(x,y)+(r-M.distance(x,y))/2=(r+M.distance(x,y))/2
+    r+M.distance(x,y)<r+r
+    (r+M.distance(x,y))/2<=(r+r)/2=r
+    release thm open_ball_contains_subball(A,M,x,y,r,s)
+    witness exist t R+ st {\open_ball<A,M>(y,t) $subset \open_ball<A,M>(x,r)} from s
+
+thm distinct_points_have_disjoint_balls:
+    ? forall A set,M &MetricSpace<A>,x,y M.carrier:
+        x!=y
+        =>:
+            exist r R+ st {intersect(\open_ball<A,M>(x,r),\open_ball<A,M>(y,r))={}}
+    release thm distinct_points_have_positive_distance(A,M,x,y)
+    have r R+=M.distance(x,y)/2
+    r+r=M.distance(x,y)/2+M.distance(x,y)/2=M.distance(x,y)
+    release thm distant_open_balls_are_disjoint(A,M,x,y,r,r)
+    witness exist s R+ st {intersect(\open_ball<A,M>(x,s),\open_ball<A,M>(y,s))={}} from r

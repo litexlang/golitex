@@ -1,0 +1,7 @@
+# Release the explicit at function-limit exists theorem.
+claim:
+    ? forall f fn(x R) R, p R, L R:
+        $has_limit_at(f,p,L)
+        =>:
+            exist K R st {$has_limit_at(f,p,K)}
+    release thm fn_limit_at_exists(f,p,L)

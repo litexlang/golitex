@@ -146,26 +146,28 @@ impl Runtime {
                 ));
             };
             let mut completed = Vec::new();
-            for requirement in requirements {
-                let result = self.verify_fact(&requirement, verify_state)?;
-                if result.is_failed() {
-                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
-                        FailToVerifyAtomicFactWellDefinedResult::Domain {
-                            fact: fact.clone(),
-                            well_defined_of_each_parameter: succeeded_args,
-                            predicate_signature,
-                            completed,
-                            requirement,
-                            result: Box::new(result),
-                        },
-                    ));
-                }
-                completed.push(
-                    super::well_defined_result::PredicateDomainWellDefinedProof {
-                        requirement,
-                        result: Box::new(result),
-                    },
-                );
+            for (index, requirement) in requirements.into_iter().enumerate() {
+                let proof = match self.verify_requirement_with_checked_arguments(
+                    &requirement,
+                    &args,
+                    index,
+                    verify_state,
+                )? {
+                    Ok(proof) => proof,
+                    Err(result) => {
+                        return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                            FailToVerifyAtomicFactWellDefinedResult::Domain {
+                                fact: fact.clone(),
+                                well_defined_of_each_parameter: succeeded_args,
+                                predicate_signature,
+                                completed,
+                                requirement,
+                                result: Box::new(result),
+                            },
+                        ));
+                    }
+                };
+                completed.push(proof);
             }
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
                 AtomicFactWellDefinedProof::new(self.result_detail(), || {
@@ -361,31 +363,30 @@ impl Runtime {
                 ));
             }
             let mut completed = Vec::new();
-            for requirement in requirements {
-                let result = self.verify_fact(
+            for (index, requirement) in requirements.into_iter().enumerate() {
+                let proof = match self.verify_requirement_with_checked_arguments(
                     &requirement,
+                    &args,
+                    index,
                     verify_state.capped_at(
                         crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
                     ),
-                )?;
-                if result.is_failed() {
-                    return Ok(VerifyAtomicFactWellDefinedResult::Failed(
-                        FailToVerifyAtomicFactWellDefinedResult::Domain {
-                            fact: fact.clone(),
-                            well_defined_of_each_parameter: succeeded_args,
-                            predicate_signature,
-                            completed,
-                            requirement,
-                            result: Box::new(result),
-                        },
-                    ));
-                }
-                completed.push(
-                    super::well_defined_result::PredicateDomainWellDefinedProof {
-                        requirement,
-                        result: Box::new(result),
-                    },
-                );
+                )? {
+                    Ok(proof) => proof,
+                    Err(result) => {
+                        return Ok(VerifyAtomicFactWellDefinedResult::Failed(
+                            FailToVerifyAtomicFactWellDefinedResult::Domain {
+                                fact: fact.clone(),
+                                well_defined_of_each_parameter: succeeded_args,
+                                predicate_signature,
+                                completed,
+                                requirement,
+                                result: Box::new(result),
+                            },
+                        ));
+                    }
+                };
+                completed.push(proof);
             }
             return Ok(VerifyAtomicFactWellDefinedResult::Success(
                 AtomicFactWellDefinedProof::new(self.result_detail(), || {
@@ -480,9 +481,11 @@ impl Runtime {
             if let Some(sequence_source) =
                 self.checked_real_sequence_domain(sequence, verify_state)?
             {
-                if let Some(value_real) =
-                    self.search_structural_membership(value, &crate::ast::obj::StandardSet::R)
-                {
+                if let Some(value_real) = self.search_membership_of_checked_object(
+                    value,
+                    &crate::ast::obj::StandardSet::R,
+                    verify_state,
+                ) {
                     return Ok(VerifyAtomicFactWellDefinedResult::Success(
                         AtomicFactWellDefinedProof::new(self.result_detail(), || {
                             DetailedAtomicFactWellDefinedProof {
@@ -541,153 +544,27 @@ impl Runtime {
         for requirements in routes {
             let mut predicate_domain = Vec::new();
             let mut failed = None;
-            for requirement in requirements.iter().cloned() {
-                // Domain obligations inherit the caller's ceiling; peer/strategy
-                // expansion cannot be reopened while checking a predicate domain.
-                let domain_state = verify_state
-                    .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
-                let result = self.verify_fact(&requirement, domain_state)?;
-                if result.is_failed() {
-                    failed = Some((requirement, result));
-                    break;
-                }
-                if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
-                    predicate_domain.push(
-                        super::well_defined_result::PredicateDomainWellDefinedProof {
-                            requirement,
-                            result: Box::new(result),
-                        },
-                    );
+            for (index, requirement) in requirements.iter().enumerate() {
+                match self.verify_requirement_with_checked_arguments(
+                    requirement,
+                    &args,
+                    index,
+                    verify_state.capped_at(
+                        crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule,
+                    ),
+                )? {
+                    Ok(proof) => {
+                        if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                            predicate_domain.push(proof);
+                        }
+                    }
+                    Err(result) => {
+                        failed = Some((requirement.clone(), result));
+                        break;
+                    }
                 }
             }
             if let Some((requirement, result)) = failed {
-                // Each argument already passed object WD above. If a reduced
-                // domain recheck cannot replay that WD, reuse it for truth-only
-                // structural membership (e.g. finite_set_size(A \ B) in R).
-                let mut memberships = Vec::new();
-                let mut membership_count = 0;
-                for domain in &requirements {
-                    let crate::ast::fact::Fact::AtomicFact(AtomicFact::InFact(member)) = domain
-                    else {
-                        break;
-                    };
-                    let Obj::StandardSet(target) = &member.set else {
-                        break;
-                    };
-                    let Some(argument_index) = args.iter().position(|arg| *arg == &member.element)
-                    else {
-                        break;
-                    };
-                    let Some(membership) =
-                        self.search_structural_membership(&member.element, target)
-                    else {
-                        break;
-                    };
-                    membership_count += 1;
-                    if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
-                        memberships.push(
-                            super::well_defined_result::PredicateDomainArgumentMembershipProof::new(
-                                domain.clone(),
-                                argument_index,
-                                membership,
-                            ),
-                        );
-                    }
-                }
-                if !requirements.is_empty() && membership_count == requirements.len() {
-                    return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                        AtomicFactWellDefinedProof::new(self.result_detail(), || {
-                            DetailedAtomicFactWellDefinedProof {
-                                well_defined_of_each_parameter: succeeded_args,
-                                predicate_signature,
-                                predicate_domain: PredicateDomainProof::ByCheckedArguments(
-                                    memberships,
-                                ),
-                            }
-                        })?,
-                    ));
-                }
-                // Order arguments have already passed object WD. When the
-                // reduced domain check cannot replay a function call, reuse
-                // that checked call with the existing exact codomain leaf.
-                // No domain proof, signature guard or search ceiling is reset.
-                let domain_state = verify_state
-                    .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
-                if matches!(
-                    fact,
-                    AtomicFact::LessFact(_)
-                        | AtomicFact::NotLessFact(_)
-                        | AtomicFact::GreaterFact(_)
-                        | AtomicFact::NotGreaterFact(_)
-                        | AtomicFact::LessEqualFact(_)
-                        | AtomicFact::NotLessEqualFact(_)
-                        | AtomicFact::GreaterEqualFact(_)
-                        | AtomicFact::NotGreaterEqualFact(_)
-                ) && domain_state.allows(
-                    crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty,
-                ) {
-                    use super::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{
-                        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty as Special,
-                        InFactSearchProofByKnownSpecialProperty as InSpecial,
-                    };
-                    use super::well_defined_result::{
-                        PredicateDomainArgumentReturnMembership as Membership,
-                        PredicateDomainArgumentReturnProof,
-                    };
-                    let mut checked = Vec::new();
-                    let mut count = 0;
-                    for (argument_index, domain) in requirements.iter().enumerate() {
-                        let crate::ast::fact::Fact::AtomicFact(AtomicFact::InFact(member)) = domain
-                        else {
-                            break;
-                        };
-                        let Obj::StandardSet(target) = &member.set else {
-                            break;
-                        };
-                        if args.get(argument_index).copied() != Some(&member.element) {
-                            break;
-                        }
-                        let membership = if let Some(proof) =
-                            self.search_structural_membership(&member.element, target)
-                        {
-                            Membership::Structural(proof)
-                        } else {
-                            let member_fact = AtomicFact::InFact(member.clone());
-                            let Some(Special::InFact(proof)) = self
-                                .search_atomic_except_equality_fact_proof_by_known_special_property_at_ceiling(
-                                    &member_fact,
-                                    domain_state,
-                                )
-                            else {
-                                break;
-                            };
-                            if !matches!(&proof, InSpecial::FnApplicationInCodomain(_)) {
-                                break;
-                            }
-                            Membership::FunctionReturn(proof)
-                        };
-                        count += 1;
-                        if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
-                            checked.push(PredicateDomainArgumentReturnProof {
-                                requirement: domain.clone(),
-                                argument_index,
-                                membership,
-                            });
-                        }
-                    }
-                    if !requirements.is_empty() && count == requirements.len() {
-                        return Ok(VerifyAtomicFactWellDefinedResult::Success(
-                            AtomicFactWellDefinedProof::new(self.result_detail(), || {
-                                DetailedAtomicFactWellDefinedProof {
-                                    well_defined_of_each_parameter: succeeded_args,
-                                    predicate_signature,
-                                    predicate_domain:
-                                        PredicateDomainProof::ByCheckedArgumentReturns(checked),
-                                }
-                            })?,
-                        ));
-                    }
-                }
                 if first_failure.is_none() {
                     first_failure = Some((predicate_domain, requirement, result));
                 }

@@ -475,6 +475,28 @@ impl Capture {
         }
     }
 
+    /// Attach copy to this application, not merely its family catalogue entry:
+    /// several typed subrules can share a catalogue identity but have distinct laws.
+    pub fn rule_comments(
+        &self,
+        output: &mut JsonValue,
+        english: crate::json_output::explain::BuiltinRuleText,
+        chinese: crate::json_output::explain::BuiltinRuleText,
+    ) {
+        let label = |copy: crate::json_output::explain::BuiltinRuleText| {
+            object(vec![
+                ("name", text(&copy.rule_name)),
+                ("message", text(&copy.message)),
+            ])
+        };
+        if let JsonValue::Object(fields) = output {
+            fields.insert(
+                "comment".into(),
+                object(vec![("en", label(english)), ("zh", label(chinese))]),
+            );
+        }
+    }
+
     fn symbol(
         &mut self,
         identifier: &IdentifierObj,

@@ -1,0 +1,8 @@
+# Invoke the explicit neg_inf function-limit uniqueness theorem.
+claim:
+    ? forall f fn(x R) R, L R, K R:
+        $has_limit_neg_inf(f,L)
+        $has_limit_neg_inf(f,K)
+        =>:
+            L = K
+    by thm fn_limit_neg_inf_unique(f,L,K) => L = K

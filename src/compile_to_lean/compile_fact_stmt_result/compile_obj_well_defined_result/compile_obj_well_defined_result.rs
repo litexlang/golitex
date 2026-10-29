@@ -155,6 +155,7 @@ impl LitexToLeanCompiler {
             }
             DetailedObjWellDefinedProof::ByDef { obj, proof } => {
                 let term = match (obj, proof) {
+                    (Obj::LimitOperator(LimitOperator::Function(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Function(evidence))) => self.compile_function_limit_wd(object, evidence, position)?,
                     (Obj::LimitOperator(LimitOperator::Sequence(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Sequence(evidence))) => self.compile_sequence_limit_wd(object, evidence, position)?,
                     (Obj::BoundOperator(object), ObjWellDefinedProofByDef::BoundOperator(evidence)) => self.compile_real_extremum_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(object @ (IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_))), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_finite_aggregate_wd(object, evidence, position)?,
@@ -571,8 +572,8 @@ impl LitexToLeanCompiler {
             PredicateDomainProof::FunctionAnalysis(_) => {
                 return Err(LeanCompileError::unsupported("WD/RealAnalysisPredicate"))
             }
-            PredicateDomainProof::FunctionLimit(_) => {
-                return Err(LeanCompileError::unsupported("WD/FunctionLimitPredicate"))
+            PredicateDomainProof::FunctionLimit(p) => {
+                bindings.extend(self.compile_function_limit_predicate_domain(fact, p, position)?);
             }
             PredicateDomainProof::SequenceLimit(p) => {
                 let (_, value, _) =
@@ -600,116 +601,6 @@ impl LitexToLeanCompiler {
             }
             PredicateDomainProof::ByKnownZeroRemainder(p) => {
                 self.compile_known_dvd_zero(fact, p, position)?;
-            }
-            PredicateDomainProof::ByCheckedArguments(requirements) => {
-                let numeric_domains =
-                    crate::compile_to_lean::compile_basic_predicates::numeric_predicate_domains(
-                        fact,
-                    );
-                if numeric_domains.is_none()
-                    && !matches!(
-                        fact,
-                        AtomicFact::LessFact(_)
-                            | AtomicFact::GreaterFact(_)
-                            | AtomicFact::LessEqualFact(_)
-                            | AtomicFact::GreaterEqualFact(_)
-                            | AtomicFact::NotLessFact(_)
-                            | AtomicFact::NotGreaterFact(_)
-                            | AtomicFact::NotLessEqualFact(_)
-                            | AtomicFact::NotGreaterEqualFact(_)
-                    )
-                {
-                    return Err(LeanCompileError::unsupported(
-                        "WD/CheckedArgumentPredicateDomain",
-                    ));
-                }
-                if requirements.len() != args.len() {
-                    return Err(LeanCompileError::new(
-                        "WD/OrderRealDomain",
-                        "Checked argument domains have another arity.",
-                    ));
-                }
-                let carriers = numeric_domains.unwrap_or_else(|| vec![StandardSet::R; args.len()]);
-                for (index, requirement) in requirements.iter().enumerate() {
-                    let carrier = &carriers[index];
-                    if requirement.argument_index != index
-                        || !matches!(&requirement.requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == *args[index] && f.set == Obj::StandardSet(carrier.clone()))
-                        || requirement.membership.element != *args[index]
-                        || &requirement.membership.set != carrier
-                    {
-                        return Err(LeanCompileError::new(
-                            "WD/OrderRealDomain",
-                            "Checked argument membership has another subject, carrier or position.",
-                        ));
-                    }
-                    self.compile_structural(
-                        &requirement.membership,
-                        &SourcePosition {
-                            before: args.len() + index,
-                            ..*position
-                        },
-                    )?;
-                }
-            }
-            PredicateDomainProof::ByCheckedArgumentReturns(requirements) => {
-                use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership as Membership;
-                use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty as InSpecial;
-                if !matches!(
-                    fact,
-                    AtomicFact::LessFact(_)
-                        | AtomicFact::GreaterFact(_)
-                        | AtomicFact::LessEqualFact(_)
-                        | AtomicFact::GreaterEqualFact(_)
-                        | AtomicFact::NotLessFact(_)
-                        | AtomicFact::NotGreaterFact(_)
-                        | AtomicFact::NotLessEqualFact(_)
-                        | AtomicFact::NotGreaterEqualFact(_)
-                ) || requirements.len() != args.len()
-                {
-                    return Err(LeanCompileError::new(
-                        "WD/OrderRealDomain",
-                        "Checked return domains have another predicate or arity.",
-                    ));
-                }
-                for (index, requirement) in requirements.iter().enumerate() {
-                    let Fact::AtomicFact(AtomicFact::InFact(member)) = &requirement.requirement
-                    else {
-                        return Err(LeanCompileError::new(
-                            "WD/OrderRealDomain",
-                            "Expected real membership.",
-                        ));
-                    };
-                    if requirement.argument_index != index
-                        || member.element != *args[index]
-                        || member.set != Obj::StandardSet(StandardSet::R)
-                    {
-                        return Err(LeanCompileError::new(
-                            "WD/OrderRealDomain",
-                            "Checked return membership has another subject, carrier or position.",
-                        ));
-                    }
-                    let prior = SourcePosition {
-                        before: args.len() + index,
-                        ..*position
-                    };
-                    match &requirement.membership {
-                        Membership::Structural(proof) => {
-                            if proof.element != member.element || proof.set != StandardSet::R {
-                                return Err(LeanCompileError::new(
-                                    "WD/OrderRealDomain",
-                                    "Structural membership differs from the checked argument.",
-                                ));
-                            }
-                            self.compile_structural(proof, &prior)?;
-                        }
-                        Membership::FunctionReturn(InSpecial::FnApplicationInCodomain(proof)) => {
-                            self.compile_fn_return_codomain(member, proof, &prior)?;
-                        }
-                        Membership::FunctionReturn(_) => {
-                            return Err(LeanCompileError::unsupported("WD/CheckedFunctionReturn"));
-                        }
-                    }
-                }
             }
             PredicateDomainProof::ByRequirements(requirements) => {
                 if let Some(carriers) =
@@ -761,18 +652,20 @@ impl LitexToLeanCompiler {
                     }
                 }
                 for (index, requirement) in requirements.iter().enumerate() {
-                    let _compiled = self.compile_verify(
-                        &requirement.result,
-                        &SourcePosition {
-                            before: args.len() + index,
-                            ..*position
-                        },
-                    )?;
-                    if source_subject(&requirement.result)? != requirement.requirement {
-                        return Err(LeanCompileError::new(
-                            "WD/PredicateDomain",
-                            "Verified domain requirement has another subject.",
-                        ));
+                    let prior = SourcePosition {
+                        before: args.len() + index,
+                        ..*position
+                    };
+                    match &requirement.result {
+                        crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::Verified(result) => {
+                            self.compile_verify(result, &prior)?;
+                            if source_subject(result)? != requirement.requirement {
+                                return Err(LeanCompileError::new("WD/PredicateDomain", "Verified domain requirement has another subject."));
+                            }
+                        }
+                        crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::CheckedArgument(checked) => {
+                            self.compile_checked_domain_argument(&requirement.requirement, checked, &args, index, &prior)?;
+                        }
                     }
                 }
             }
@@ -957,4 +850,41 @@ impl LitexToLeanCompiler {
 
     // The goal's WD scope predates the named theorem's separate truth scope.
     // Its actual parameter/domain producers cannot be replaced by body IDs.
+}
+
+impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_checked_domain_argument(
+        &self,
+        requirement: &Fact,
+        checked: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentMembershipProof,
+        arguments: &[&Obj],
+        requirement_index: usize,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let Fact::AtomicFact(AtomicFact::InFact(member)) = requirement else {
+            return Err(LeanCompileError::new(
+                "WD/OrderRealDomain",
+                "Checked argument evidence requires a membership subject.",
+            ));
+        };
+        let expected_index = if arguments.get(requirement_index).copied() == Some(&member.element) {
+            Some(requirement_index)
+        } else {
+            arguments
+                .iter()
+                .position(|argument| *argument == &member.element)
+        };
+        if expected_index != Some(checked.argument_index)
+            || checked.requirement != *requirement
+            || arguments.get(checked.argument_index).copied() != Some(&member.element)
+            || checked.membership.element != member.element
+            || member.set != Obj::StandardSet(checked.membership.set.clone())
+        {
+            return Err(LeanCompileError::new(
+                "WD/OrderRealDomain",
+                "Checked membership has another subject, carrier or argument position.",
+            ));
+        }
+        self.compile_structural(&checked.membership, position)
+    }
 }

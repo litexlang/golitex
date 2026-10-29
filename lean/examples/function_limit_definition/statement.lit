@@ -1,0 +1,10 @@
+# Accumulation and epsilon-delta clauses prove the finite function-limit predicate.
+thm checked_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-x0) and abs(x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < abs(x-x0) and abs(x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_at(f,x0,L)
+    by def $has_limit_at(f,x0,L)

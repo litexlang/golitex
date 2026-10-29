@@ -1,0 +1,3 @@
+release thm rel::universal_equivalence_laws({0,1})
+
+have bad &rel::PartialOrder<{0,1}> = ({0,1},cart({0,1},{0,1}))

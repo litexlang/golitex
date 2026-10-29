@@ -1,0 +1,8 @@
+# Invoke the explicit epsilon-to-limit theorem for a real sequence.
+thm checked_sequence_limit_intro:
+    ? forall a seq(R), L R:
+        forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})}
+        =>:
+            $has_seq_limit(a,L)
+    by thm seq_limit_from_epsilon(a,L) => $has_seq_limit(a,L)

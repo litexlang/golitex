@@ -87,3 +87,15 @@ carriers, infinite values, products and function series are outside this
 module. No new AST node is needed for these definitions.
 
 The implemented names and exact call order are in [README.md](README.md).
+
+## Positive finite limit comparison
+
+A positive finite ratio limit L supplies eventual lower and upper bounds
+L/2 and 2L. Combining the cutoff with the supplied positive-denominator tail
+allows multiplication by b(k) without reversing order. The upper bound
+compares a with 2L*b; the lower bound compares b with (2/L)*a. Existing
+scaling and eventual comparison prove the two convergence directions, while
+finite prefixes remain unrestricted. The proof establishes convergence, not
+a sum formula. A zero limit cannot establish the reverse direction, as the
+reciprocal-square and harmonic sequences demonstrate. The source adds no
+native operation, reserved theorem, search strategy, trust or axiom.

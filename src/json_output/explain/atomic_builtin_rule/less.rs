@@ -35,31 +35,38 @@ impl LessFactSearchProofByBuiltinRule {
                 "Subtract to obtain a strict stored bound",
                 "The closed offset or the strict source bound makes the translated bound strict",
             ),
-            Self::QuotientScalarStrictUpperBound(_) => {
-                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
-            }
-
-            Self::AbsPositiveFromNonzero(_) => {
-                text("AbsPositiveFromNonzero", "x in R, x!=0 => 0<abs(x)")
-            }
-            Self::ProductPositiveNegativeStrict(_) => text(
-                "ProductPositiveNegativeStrict",
-                "Apply the fixed scalar sign property with checked guards",
+            Self::QuotientScalarStrictUpperBound(_) => crate::json_output::explain::text::text(
+                "Strict upper bound of a quotient",
+                "For real a,b,M with b>0, a<M·b implies a/b<M.",
             ),
-            Self::LnPositiveAboveOne(_) => text(
-                "LnPositiveAboveOne",
-                "Apply the fixed scalar sign property with checked guards",
+            Self::AbsPositiveFromNonzero(_) => crate::json_output::explain::text::text(
+                "Absolute value of a nonzero real",
+                "For real x≠0, |x|>0.",
             ),
-            Self::LnNegativeBelowOne(_) => text(
-                "LnNegativeBelowOne",
-                "Apply the fixed scalar sign property with checked guards",
+            Self::ProductPositiveNegativeStrict(_) => crate::json_output::explain::text::text(
+                "Product of opposite signs",
+                "A strictly positive real times a strictly negative real is strictly negative.",
             ),
-            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
-            Self::NegationNegativeFromLiteralBound(_) => text(
-                "NegationNegativeFromLiteralBound",
-                "x>=k>0 or x>k>=0 => -x<0",
+            Self::LnPositiveAboveOne(_) => crate::json_output::explain::text::text(
+                "Positive logarithm above one",
+                "For real x>1, ln(x)>0.",
             ),
-            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
+            Self::LnNegativeBelowOne(_) => crate::json_output::explain::text::text(
+                "Negative logarithm below one",
+                "For 0<x<1, ln(x)<0.",
+            ),
+            Self::NegationStrictOrder(_) => crate::json_output::explain::text::text(
+                "Negation reverses strict order",
+                "For real a<b, −b<−a.",
+            ),
+            Self::NegationNegativeFromLiteralBound(_) => crate::json_output::explain::text::text(
+                "Negativity from a positive lower bound",
+                "A known bound x≥k>0, or x>k≥0, implies −x<0.",
+            ),
+            Self::SumStrictOperands(_) => crate::json_output::explain::text::text(
+                "Add strict inequalities",
+                "For real a<b and c<d, a+c<b+d.",
+            ),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_en(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_en(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_en(),
@@ -138,31 +145,37 @@ impl LessFactSearchProofByBuiltinRule {
                 "减法传递严格界",
                 "闭合常数的方向或已存储的严格前提保证减法后的严格界",
             ),
-            Self::QuotientScalarStrictUpperBound(_) => {
-                text("QuotientScalarStrictUpperBound", "b>0, a<M*b => a/b<M")
-            }
-
+            Self::QuotientScalarStrictUpperBound(_) => crate::json_output::explain::text::text(
+                "商的严格上界",
+                "对实数 a、b、M，若 b>0 且 a<M·b，则 a/b<M。",
+            ),
             Self::AbsPositiveFromNonzero(_) => {
-                text("非零实数的绝对值为正", "x in R, x!=0 => 0<abs(x)")
+                crate::json_output::explain::text::text("非零实数的绝对值", "对非零实数 x，|x|>0。")
             }
-            Self::ProductPositiveNegativeStrict(_) => text(
-                "ProductPositiveNegativeStrict",
-                "Apply the fixed scalar sign property with checked guards",
+            Self::ProductPositiveNegativeStrict(_) => crate::json_output::explain::text::text(
+                "异号实数的乘积",
+                "正实数与负实数的乘积为负实数。",
             ),
-            Self::LnPositiveAboveOne(_) => text(
-                "LnPositiveAboveOne",
-                "Apply the fixed scalar sign property with checked guards",
+            Self::LnPositiveAboveOne(_) => crate::json_output::explain::text::text(
+                "大于一的数的自然对数为正",
+                "对实数 x>1，ln(x)>0。",
             ),
-            Self::LnNegativeBelowOne(_) => text(
-                "LnNegativeBelowOne",
-                "Apply the fixed scalar sign property with checked guards",
+            Self::LnNegativeBelowOne(_) => crate::json_output::explain::text::text(
+                "零与一之间的自然对数为负",
+                "对 0<x<1，ln(x)<0。",
             ),
-            Self::NegationStrictOrder(_) => text("NegationStrictOrder", "a<b => -b<-a"),
-            Self::NegationNegativeFromLiteralBound(_) => text(
-                "NegationNegativeFromLiteralBound",
-                "x>=k>0 or x>k>=0 => -x<0",
+            Self::NegationStrictOrder(_) => crate::json_output::explain::text::text(
+                "取相反数反转严格不等式",
+                "对实数 a<b，−b<−a。",
             ),
-            Self::SumStrictOperands(_) => text("SumStrictOperands", "a<b, c<d => a+c<b+d"),
+            Self::NegationNegativeFromLiteralBound(_) => crate::json_output::explain::text::text(
+                "正下界给出的相反数符号",
+                "已知 x≥k>0 或 x>k≥0，可得 −x<0。",
+            ),
+            Self::SumStrictOperands(_) => crate::json_output::explain::text::text(
+                "严格不等式相加",
+                "对实数，a<b 且 c<d 推出 a+c<b+d。",
+            ),
             Self::CosPositiveOnOpenHalfPi(p) => p.rule_name_and_message_zh(),
             Self::SinNegativeOnOpenNegativePi(p) => p.rule_name_and_message_zh(),
             Self::TanNegativeOnOpenNegativeHalfPi(p) => p.rule_name_and_message_zh(),

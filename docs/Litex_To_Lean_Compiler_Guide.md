@@ -1353,7 +1353,7 @@ examples also expose ordinary Lean/Mathlib theorems through handwritten adapters
 | Finite linear algebra | Matrix spaces, zero/identity matrices, transposes, entrywise operations, scalar/matrix multiplication, natural matrix powers, deleted-row/column matrices, cofactors, adjugates and inverses with nonzero-determinant WD, vector application, diagonal/outer products, trace, determinant, rank, inner product and vector/matrix norms; selected carrier, definition and nonnegativity proofs. | [Matrix product](../lean/examples/matrix_multiplication/), [coordinate formula](../lean/examples/matrix_multiplication_coordinates/), [matrix powers](../lean/examples/matrix_power_membership/), [deleted-row/column coordinates](../lean/examples/matrix_minor_coordinates/), [cofactors](../lean/examples/matrix_cofactor_small_orders/), [adjugate coordinates and computation](../lean/examples/matrix_adjugate_two_steps/), [guarded inverse theorem](../lean/examples/matrix_inverse_theorem/), [rank bounds and theorem reuse](../lean/examples/matrix_rank_bounds/), [successor power](../lean/examples/matrix_power_successor/), [vector application](../lean/examples/matrix_vector_definition/), [determinant laws](../lean/examples/matrix_determinant_transpose/), [small-order determinants](../lean/examples/matrix_determinant_small_orders/), [inner product](../lean/examples/finite_inner_product_definition/), [vector norm](../lean/examples/euclidean_norm_nonnegative/), [matrix norm](../lean/examples/frobenius_norm_nonnegative/) |
 | Real-set bounds | Upper/lower bounds and one-/two-sided boundedness, with their negations; original real-domain WD, definition folding/unfolding, witnesses, citations, equality transport and theorem reuse. Core bridges connect these to Mathlib bounds and boundedness. | [Bound theorem](../lean/examples/real_set_bound_theorem/), [empty set](../lean/examples/real_empty_set_bounds/), [witnesses and components](../lean/examples/real_set_bounded_components/), [predicate citations](../lean/examples/real_set_bound_citations/) |
 | Real extrema | `sup(A)` and `inf(A)` with recorded carrier and selection evidence; certificate definition, existence, uniqueness, bound/member comparisons and crossing witnesses; citations, substitution and formula-function bodies. | [Supremum laws](../lean/examples/real_supremum_certificate_laws/), [infimum laws](../lean/examples/real_infimum_certificate_laws/), [candidate theorem and aliases](../lean/examples/real_supremum_candidate/), [functions](../lean/examples/real_extremum_functions/) |
-| Real sequences | Monotonicity and boundedness; Cauchy, convergence and a specified real limit. Includes definition replay, inferred witnesses, positive/negative citations, equality transport and named theorem calls. Exact unary `N+ → R` domains without extra guards; `lim`, `limsup` and `liminf` selectors remain pending. | [Monotonicity](../lean/examples/sequence_monotonicity/), [range and bounds](../lean/examples/sequence_range_bounds/), [Cauchy tails](../lean/examples/sequence_cauchy_definition/), [epsilon-limit definition](../lean/examples/sequence_limit_definition/), [convergence witnesses](../lean/examples/sequence_convergence_witness/), [limit citations](../lean/examples/sequence_limit_citations/) |
+| Real sequences | Monotonicity and boundedness; Cauchy, convergence and a specified real limit. Includes definition replay, inferred witnesses, positive/negative citations, equality transport and named theorem calls. Exact unary `N+ → R` domains without extra guards; `lim` consumes recorded convergence evidence and supports selected-value equality and uniqueness for suitably typed parameters; `limsup` and `liminf` selectors remain pending. | [Monotonicity](../lean/examples/sequence_monotonicity/), [range and bounds](../lean/examples/sequence_range_bounds/), [Cauchy tails](../lean/examples/sequence_cauchy_definition/), [epsilon-limit definition](../lean/examples/sequence_limit_definition/), [convergence witnesses](../lean/examples/sequence_convergence_witness/), [limit citations](../lean/examples/sequence_limit_citations/) |
 | Structures | Top-level set/nonempty-set/object header parameters, independent or ordered dependent fields, atomic/flat conjunction/chain conditions, tuple membership, quantified and declared objects, typed aliases, explicit release, direct field access and numeric field arithmetic; arbitrary carriers and nested tuple instances. | [Generic pairs](../lean/examples/parameterized_pairs/), [dependent coordinates](../lean/examples/repeated_coordinate_fields/), [member pairs](../lean/examples/member_coordinate_pairs/), [reciprocal fields](../lean/examples/reciprocal_coordinate_fields/), [positive points](../lean/examples/positive_point_conditions/) |
 | Definitions and proofs | Concrete predicates, top-level abstract predicates, universal and conditional facts, equality chains, selected conjunctions, named theorems and calls, local objects, `let`, `claim` and `sketch`. | [Abstract properties](../lean/examples/abstract_property_transport/), [predicate equality transport](../lean/examples/concrete_predicate_equality_transport/), [theorem returns and calls](../lean/examples/named_compound_theorem_returns/), [local objects](../lean/examples/local_witness_additive_identity/), [claim and positive return domain](../lean/examples/newton_positive_update/) |
 
@@ -1505,6 +1505,56 @@ definition. See [the selected value](../lean/examples/sequence_limit_selected_va
 generated theorems retain the model and function-semantics parameters.
 The selected uniqueness rule also cites both candidate-limit facts when the
 sequence is a suitably typed parameter; see [uniqueness](../lean/examples/sequence_limit_unique/).
+That example also has a handwritten [Adapter](../lean/examples/sequence_limit_unique/Adapter.lean)
+and a checked [native consumer](../lean/examples/sequence_limit_unique/Final.lean).
+The consumer accepts `f : ℕ → ℝ` and two Mathlib `Tendsto` hypotheses and
+concludes native equality of the limits. The Adapter embeds the sequence in
+the existing numeric function model, proves the conversion from `Tendsto`
+to the source epsilon-tail predicate, and calls the generated uniqueness
+theorem. All three Lean files pass in the pinned Lake environment; removing
+the generated theorem call makes the Adapter fail. The bridge is handwritten.
+
+Finite real function limits follow the same result-driven path. The compiler
+supports `$has_limit_at`, `$has_limit_left`, `$has_limit_right` and the
+proof-consuming selectors `fn_lim`, `lim_left`, `lim_right`. It keeps the
+original unary function signature, real-domain evidence and candidate or
+existence proof. Core proves uniqueness using both nontrivial approach through
+the actual domain and the epsilon-delta condition. Examples cover
+[selection](../lean/examples/function_limit_selected_value/),
+[existence-only formation](../lean/examples/function_limit_exists_object/),
+[equal-point citations](../lean/examples/function_limit_equal_point/),
+[definition folding](../lean/examples/function_limit_definition/) and
+[a guarded domain](../lean/examples/function_limit_guarded_definition/).
+The [native function-limit consumer](../lean/examples/function_limit_unique/Final.lean)
+uses only `ℝ → ℝ`, Mathlib punctured-neighborhood `Tendsto` hypotheses and native
+equality. Its handwritten Adapter calls the generated uniqueness theorem.
+A [complete punctured cancellation proof](../lean/examples/function_limit_punctured_cancellation/)
+proves `x²/x → 0` from accumulation and epsilon-delta clauses. Its
+[Final theorem](../lean/examples/function_limit_punctured_cancellation/Final.lean)
+is the ordinary Mathlib statement
+`Tendsto (fun x : ℝ => x ^ 2 / x) (𝓝[≠] 0) (𝓝 0)`.
+The Adapter reads the generated estimate and the same function graph; it does
+not assume convergence. Removing the generated proof makes this Adapter fail.
+
+At positive and negative infinity, `$has_limit_pos_inf` and
+`$has_limit_neg_inf` have corresponding proof-consuming selectors
+`lim_pos_inf` and `lim_neg_inf`. Core retains directional unboundedness of
+the actual function domain, then proves uniqueness from the epsilon/threshold
+condition. Compiler examples cover
+[candidate selection](../lean/examples/function_limit_pos_infinity_selected/),
+[negative-direction uniqueness](../lean/examples/function_limit_neg_infinity_unique/),
+[existence-only formation](../lean/examples/function_limit_pos_infinity_exists/),
+[definition folding](../lean/examples/function_limit_pos_infinity_definition/)
+and [guarded domains](../lean/examples/function_limit_neg_infinity_guarded_definition/).
+The [constant-function example](../lean/examples/constant_function_limit_at_infinity/)
+proves the two definition clauses and then uses the selected limit.
+Explicit function-limit uniqueness, existence and selection calls have their own
+compiler routes: `fn_limit_{at,left,right,pos_inf,neg_inf}_{unique,exists,selected}`.
+Each invocation checks the reserved ID, original arguments, complete real-domain
+requirements, ordered proofs and returned fact before citing the corresponding
+Core theorem. See [an explicit uniqueness call](../lean/examples/function_limit_at_unique_by_theorem/)
+and [an explicit existence release](../lean/examples/function_limit_at_exists_by_theorem/).
+Other explicit limit laws remain outside these routes.
 
 Exact rational logarithms also compile when Litex evaluates them:
 

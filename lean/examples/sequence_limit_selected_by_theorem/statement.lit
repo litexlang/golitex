@@ -1,0 +1,7 @@
+# The selected sequence limit satisfies the limit predicate.
+claim:
+    ? forall a seq(R):
+        exist L R st {$has_seq_limit(a,L)}
+        =>:
+            $has_seq_limit(a,lim(a))
+    release thm seq_limit_selected(a)

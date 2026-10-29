@@ -16,13 +16,13 @@ async function run(){
  for(const locale of ['zh','en']){
   const bundle=fixture('lesson-sets-'+locale),before=JSON.stringify(bundle),view=mount(bundle,locale);
   let card=await view.hover(view.row('2 $in intersect({1, 2}, {2, 3})'));
-  assert(card.querySelector('.lr-predicate-definition').textContent.includes('x ∈ A ∩ B'));
+  assert(card.querySelector('.lr-proof-symbol').textContent.includes('∈'),'membership documentation is separate from its instance proof');
   assert(!card.textContent.includes(locale==='zh'?'此类证明的逐步解说尚未提供':'step-by-step explanation of this proof form is not available'));
   const requirements=card.querySelectorAll('.lr-proof-step');assert.equal(requirements.length,2);
   assert(requirements[0].textContent.includes('2 ∈ {1, 2}'));assert(requirements[1].textContent.includes('2 ∈ {2, 3}'));
   for(const item of requirements){await item.querySelector('summary').click();assert(item.textContent.includes(locale==='zh'?'列出的元素':'listed elements'));}
   card=await view.hover(view.row('? not 1 $in intersect({1, 2}, {2, 3})'));
-  assert(card.querySelector('.lr-predicate-definition'));assert(card.textContent.includes(locale==='zh'?'反证法':'Proof by contradiction'));
+  assert(card.querySelector('.lr-proof-symbol'));assert(card.textContent.includes(locale==='zh'?'反证法':'Proof by contradiction'));
   assert(card.textContent.includes(locale==='zh'?'反证假设':'Contradiction assumption'));
   assert(card.querySelector('.lr-proof-grounds .lr-fact-link').textContent.includes(locale==='zh'?'局部假设':'Local hypothesis'));
   assert.equal(card.querySelectorAll('.lr-proof-step').length,2);
@@ -46,8 +46,8 @@ async function run(){
  const degraded=mount(broken,'en'),card=await degraded.hover(degraded.row('2 $in intersect({1, 2}, {2, 3})'));
  const condition=card.querySelector('.lr-proof-step');await condition.querySelector('summary').click();assert(condition.textContent.includes('No proof record can be matched exactly'));degraded.reader.destroy();
  const rejected=mount(fixture('predicate-membership-failure'),'zh'),failure=await rejected.hover(rejected.row('1 $in intersect({1, 2}, {2, 3})'));
- assert(failure.querySelector('.lr-predicate-definition'));assert(failure.textContent.includes('当前证明尚未建立这个结论'));assert(!failure.textContent.includes('这一步已验证'));rejected.reader.destroy();
- const known=mount(fixture('predicate-membership-known'),'en'),knownCard=await known.hover(known.row('2 $in intersect({1, 2}, {2, 3})'));assert(knownCard.querySelector('.lr-predicate-definition'));assert.equal(knownCard.querySelectorAll('.lr-proof-step').length,2,'the direct builtin-rule route retains both membership proofs');known.reader.destroy();
+ assert(failure.querySelector('.lr-proof-symbol'));assert(failure.textContent.includes('当前证明尚未建立这个结论'));assert(!failure.textContent.includes('这一步已验证'));rejected.reader.destroy();
+ const known=mount(fixture('predicate-membership-known'),'en'),knownCard=await known.hover(known.row('2 $in intersect({1, 2}, {2, 3})'));assert(knownCard.querySelector('.lr-proof-symbol'));assert.equal(knownCard.querySelectorAll('.lr-proof-step').length,2,'the direct builtin-rule route retains both membership proofs');known.reader.destroy();
  console.log(JSON.stringify({passed:true,results,wrongRequirementProofRejected:true},null,2));
 }
 run().catch(error=>{console.error(error);process.exitCode=1;});

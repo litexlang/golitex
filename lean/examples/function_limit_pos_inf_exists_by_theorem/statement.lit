@@ -1,0 +1,7 @@
+# Release the explicit pos_inf function-limit exists theorem.
+claim:
+    ? forall f fn(x R) R, L R:
+        $has_limit_pos_inf(f,L)
+        =>:
+            exist K R st {$has_limit_pos_inf(f,K)}
+    release thm fn_limit_pos_inf_exists(f,L)

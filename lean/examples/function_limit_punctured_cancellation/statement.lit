@@ -1,0 +1,36 @@
+# A punctured rational function has limit zero without being defined at zero.
+have fn f(x R: x != 0) R = x^2/x
+
+claim:
+    ? forall r R+:
+        exist x {t R: t != 0} st {0 < abs(x-0) and abs(x-0) < r}
+    0 < r/2 < r
+    r/2 != 0
+    r/2-0 = r/2
+    abs(r/2-0) = abs(r/2) = r/2
+    witness exist x {t R: t != 0} st {0 < abs(x-0) and abs(x-0) < r} from r/2
+
+claim:
+    ? forall epsilon R+:
+        exist delta R+ st {{x {t R: t != 0}: 0 < abs(x-0) and abs(x-0) < delta} $subset preimage_set(f,{v R: abs(v-0) < epsilon})}
+    witness exist delta R+ st {{x {t R: t != 0}: 0 < abs(x-0) and abs(x-0) < delta} $subset preimage_set(f,{v R: abs(v-0) < epsilon})} from epsilon:
+        claim:
+            ? forall x {t {s R: s != 0}: 0 < abs(t-0) and abs(t-0) < epsilon}:
+                x $in preimage_set(f,{v R: abs(v-0) < epsilon})
+            x $in {s R: s != 0}
+            x $in R
+            x != 0
+            f(x)=x^2/x=x
+            f(x)-0=x-0
+            abs(f(x)-0)=abs(x-0)<epsilon
+        by def {x {t R: t != 0}: 0 < abs(x-0) and abs(x-0) < epsilon} $subset preimage_set(f,{v R: abs(v-0) < epsilon})
+
+
+by def $has_limit_at(f,0,0)
+
+fn_lim(f,0)=0
+
+fn_lim(f,0)+2=2
+
+fn_lim(f,0) $in R
+

@@ -1,0 +1,8 @@
+# Invoke the explicit sequence-limit uniqueness theorem.
+claim:
+    ? forall a seq(R), L R, K R:
+        $has_seq_limit(a,L)
+        $has_seq_limit(a,K)
+        =>:
+            L=K
+    by thm seq_limit_unique(a,L,K) => L=K
