@@ -1,0 +1,14 @@
+release obj def series::partial_sum
+
+release obj def series::partial_sums
+
+thm missing_limit_must_fail:
+    ? forall a,u seq(R):
+        $is_seq_nonincreasing(u)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+        =>:
+            $series::is_convergent_series(a)
+    release thm series::alternating_series_test(a,u)

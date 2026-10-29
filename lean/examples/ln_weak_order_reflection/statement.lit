@@ -1,0 +1,7 @@
+# ln reflects weak order on its real domain.
+claim:
+    ? forall x R+, y R+:
+        ln(x) <= ln(y)
+        =>:
+            x <= y
+    x <= y

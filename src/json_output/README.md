@@ -1199,6 +1199,14 @@ actual requirement. The referenced argument WD remains in
 `well_defined_of_each_parameter`; this route adds no duplicate WD or cache ID.
 It is domain evidence, not a proof of the comparison's truth.
 
+An ordered comparison can also reuse a previously checked function application
+and its exact codomain. Detailed JSON records `by_checked_argument_return`, the
+ordered `argument_index`, and either structural membership or the existing
+`FnApplicationInCodomain` signature evidence. The enclosing object WD retains
+the call-domain and guard evidence; this route does not prove comparison truth
+or infer a real result from a complex-only signature. Reading capture preserves
+the same evidence.
+
 Detailed UnionInPowerSet records left/right known membership proofs.
 IntersectInPowerSetFromLeft, IntersectInPowerSetFromRight and SetMinusInPowerSet
 record respectively left, right and left. Each child preserves fact and

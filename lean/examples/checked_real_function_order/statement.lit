@@ -1,0 +1,6 @@
+# A positive real input remains in the guarded function's domain after adding one.
+thm guarded_real_order:
+    ? forall f fn(x R:x>0) R,n R:
+        n>0
+        =>:
+            f(n+1)<=f(n+1)

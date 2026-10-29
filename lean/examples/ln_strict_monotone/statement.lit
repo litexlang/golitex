@@ -1,0 +1,7 @@
+# ln preserves strict order on its real domain.
+claim:
+    ? forall x R+, y R+:
+        x < y
+        =>:
+            ln(x) < ln(y)
+    ln(x) < ln(y)

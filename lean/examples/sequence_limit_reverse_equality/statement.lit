@@ -1,0 +1,7 @@
+# The selected limit equals its proved value in the reversed orientation.
+claim:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            L = lim(a)
+    L = lim(a)

@@ -195,7 +195,8 @@ fn eval_checks_the_published_equality_identity_and_subject() {
 
 #[test]
 fn eval_rejects_an_unsupported_operator_after_a_supported_prefix() {
-    let (run, compiler) = super::execute("1 = 1\neval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))\n");
+    let (run, compiler) =
+        super::execute("1 = 1\neval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))*(sqrt(2)+sqrt(3))\n");
     let err = compiler
         .compile_run(&run, "eval_unsupported")
         .expect_err("bounded scalar adapter");

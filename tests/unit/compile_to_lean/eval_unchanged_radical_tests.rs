@@ -67,9 +67,10 @@ fn unchanged_radical_eval_rejects_wrong_output_missing_wd_and_citation() {
 }
 
 #[test]
-fn product_of_radical_sums_remains_unsupported() {
-    let (run, compiler) = super::execute("eval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))");
+fn nested_product_of_radical_sums_remains_unsupported() {
+    let (run, compiler) =
+        super::execute("eval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))*(sqrt(2)+sqrt(3))");
     compiler
         .compile_run(&run, "nonlinear_radical")
-        .expect_err("product of radical sums");
+        .expect_err("nested product of radical sums");
 }

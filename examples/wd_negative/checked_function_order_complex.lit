@@ -1,0 +1,5 @@
+# Run: target/release/litex -lang en -strict -f examples/wd_negative/checked_function_order_complex.lit
+# Complex output is not implicitly real.
+thm complex_function_not_real_order:
+    ? forall f fn(k N+) C,n N+:
+        f(n+1)<=f(n+1)

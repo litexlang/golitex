@@ -1,0 +1,7 @@
+release obj def series::partial_sum
+
+release obj def series::partial_sums
+
+have fn zero_power_terms(k N+) R=1/k^0
+
+release thm series::reciprocal_natural_power_series_converges(zero_power_terms,0)

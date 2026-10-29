@@ -459,3 +459,46 @@ fn function_return_matrix_wd_rejects_missing_citations_and_changed_domain() {
         }
     }
 }
+
+#[test]
+fn checked_order_argument_function_return_is_replayed() {
+    let source = "thm guarded_real_order:\n    ? forall f fn(x R:x>0) R,n R:\n        n>0\n        =>:\n            f(n+1)<=f(n+1)\n";
+    let (result, compiler) = checked(source);
+    let lean = compiler
+        .compile_run(&result, "checked_order_function_return")
+        .unwrap();
+    assert!(lean.contains("theorem"));
+}
+
+#[test]
+fn checked_order_function_return_rejects_changed_argument_position() {
+    let source = "forall f fn(x R:x>0) R,n R:\n    n>0\n    =>:\n        f(n+1)<=f(n+1)\n";
+    let (mut result, compiler) = checked(source);
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+        &mut result.statement_results[0]
+    else {
+        panic!("checked forall statement");
+    };
+    let VerifyFactResult::ForallFact(proof) = &mut statement.verify_result else {
+        panic!("checked forall");
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(proof)) =
+        proof.as_mut()
+    else {
+        panic!("local introduction");
+    };
+    let atomic = atomic_mut(&mut proof.proved_then_facts[0].verify_result);
+    let PredicateDomainProof::ByCheckedArgumentReturns(requirements) = &mut atomic
+        .well_defined_proof
+        .as_detailed_mut()
+        .unwrap()
+        .predicate_domain
+    else {
+        panic!("checked argument return evidence");
+    };
+    requirements[0].argument_index = 1;
+    let error = compiler
+        .compile_run(&result, "changed_return_argument")
+        .unwrap_err();
+    assert_eq!(error.route, "WD/OrderRealDomain");
+}

@@ -1351,6 +1351,22 @@ theorem sqrtNonnegative {M : Semantics.{u}} {α : Type v} [Representation M α]
     (NativeBridge.denoteSqrt a haR ha0 _ (NativeBridge.asReal_spec a haR))
     (Real.sqrt_nonneg _)
 
+/-- Defined principal square roots preserve the order of their arguments. -/
+theorem sqrtMonotone {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SqrtObj (M := M) α))
+    (q : Obj (M := M) (SqrtObj (M := M) β))
+    (h : Le p.val.arg q.val.arg) : Le p q := by
+  let x := NativeBridge.asReal p.val.arg p.wd.1
+  let y := NativeBridge.asReal q.val.arg q.wd.1
+  have hx := NativeBridge.asReal_spec p.val.arg p.wd.1
+  have hy := NativeBridge.asReal_spec q.val.arg q.wd.1
+  have hxy : x ≤ y := (NativeBridge.le_iff_ofDenoteReal p.val.arg q.val.arg x y hx hy).mp h
+  exact NativeBridge.leOfDenoteReal p q (Real.sqrt x) (Real.sqrt y)
+    (NativeBridge.denoteSqrt p.val.arg p.wd.1 p.wd.2 x hx)
+    (NativeBridge.denoteSqrt q.val.arg q.wd.1 q.wd.2 y hy)
+    (Real.sqrt_le_sqrt hxy)
+
 /-- The principal square root of a positive real number is nonzero. -/
 theorem sqrtNonzeroOfPositive {M : Semantics.{u}} {α : Type v} [Representation M α]
     (p : Obj (M := M) (SqrtObj (M := M) α))
@@ -8536,6 +8552,56 @@ theorem lnInR {M : Semantics.{u}} [SetSemantics M] {α : Type v} [Representation
   (M.real_members _).mpr ⟨Real.log (NativeBridge.asReal p.val.arg (inRPos_real _ p.wd)),
     denoteLn p _ (NativeBridge.asReal_spec p.val.arg (inRPos_real _ p.wd))⟩
 
+/-- The exponential preserves and reflects the order of real arguments. -/
+theorem expLtIff {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (ExpObj (M := M) α)) (q : Obj (M := M) (ExpObj (M := M) β)) :
+    Lt p q ↔ Lt p.val.arg q.val.arg := by
+  let x := NativeBridge.asReal p.val.arg p.wd
+  let y := NativeBridge.asReal q.val.arg q.wd
+  have hx := NativeBridge.asReal_spec p.val.arg p.wd
+  have hy := NativeBridge.asReal_spec q.val.arg q.wd
+  exact (NativeBridge.lt_iff_ofDenoteReal p q (Real.exp x) (Real.exp y) (denoteExp p x hx) (denoteExp q y hy)).trans
+    (Real.exp_lt_exp.trans (NativeBridge.lt_iff_ofDenoteReal p.val.arg q.val.arg x y hx hy).symm)
+
+theorem expLeIff {M : Semantics.{u}} {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (ExpObj (M := M) α)) (q : Obj (M := M) (ExpObj (M := M) β)) :
+    Le p q ↔ Le p.val.arg q.val.arg := by
+  let x := NativeBridge.asReal p.val.arg p.wd
+  let y := NativeBridge.asReal q.val.arg q.wd
+  have hx := NativeBridge.asReal_spec p.val.arg p.wd
+  have hy := NativeBridge.asReal_spec q.val.arg q.wd
+  exact (NativeBridge.le_iff_ofDenoteReal p q (Real.exp x) (Real.exp y) (denoteExp p x hx) (denoteExp q y hy)).trans
+    (Real.exp_le_exp.trans (NativeBridge.le_iff_ofDenoteReal p.val.arg q.val.arg x y hx hy).symm)
+
+/-- The logarithm preserves and reflects order on positive real arguments. -/
+theorem lnLtIff {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (LnObj (M := M) α)) (q : Obj (M := M) (LnObj (M := M) β)) :
+    Lt p q ↔ Lt p.val.arg q.val.arg := by
+  let x := NativeBridge.asReal p.val.arg (inRPos_real _ p.wd)
+  let y := NativeBridge.asReal q.val.arg (inRPos_real _ q.wd)
+  have hx := NativeBridge.asReal_spec p.val.arg (inRPos_real _ p.wd)
+  have hy := NativeBridge.asReal_spec q.val.arg (inRPos_real _ q.wd)
+  have hx0 : 0 < x := (NativeBridge.lt_iff_ofDenoteReal (number 0) p.val.arg 0 x rfl hx).mp (inRPos_positive _ p.wd)
+  have hy0 : 0 < y := (NativeBridge.lt_iff_ofDenoteReal (number 0) q.val.arg 0 y rfl hy).mp (inRPos_positive _ q.wd)
+  exact (NativeBridge.lt_iff_ofDenoteReal p q (Real.log x) (Real.log y) (denoteLn p x hx) (denoteLn q y hy)).trans
+    ((Real.log_lt_log_iff hx0 hy0).trans (NativeBridge.lt_iff_ofDenoteReal p.val.arg q.val.arg x y hx hy).symm)
+
+theorem lnLeIff {M : Semantics.{u}} [SetSemantics M] {α : Type v} {β : Type w}
+    [Representation M α] [Representation M β]
+    (p : Obj (M := M) (LnObj (M := M) α)) (q : Obj (M := M) (LnObj (M := M) β)) :
+    Le p q ↔ Le p.val.arg q.val.arg := by
+  let x := NativeBridge.asReal p.val.arg (inRPos_real _ p.wd)
+  let y := NativeBridge.asReal q.val.arg (inRPos_real _ q.wd)
+  have hx := NativeBridge.asReal_spec p.val.arg (inRPos_real _ p.wd)
+  have hy := NativeBridge.asReal_spec q.val.arg (inRPos_real _ q.wd)
+  have hx0 : 0 < x := (NativeBridge.lt_iff_ofDenoteReal (number 0) p.val.arg 0 x rfl hx).mp (inRPos_positive _ p.wd)
+  have hy0 : 0 < y := (NativeBridge.lt_iff_ofDenoteReal (number 0) q.val.arg 0 y rfl hy).mp (inRPos_positive _ q.wd)
+  exact (NativeBridge.le_iff_ofDenoteReal p q (Real.log x) (Real.log y) (denoteLn p x hx) (denoteLn q y hy)).trans
+    ((Real.log_le_log_iff hx0 hy0).trans (NativeBridge.le_iff_ofDenoteReal p.val.arg q.val.arg x y hx hy).symm)
+
 structure LogObj {M : Semantics.{u}} (α : Type v) (β : Type w)
     [Representation M α] [Representation M β] where
   base : Obj (M := M) α
@@ -13675,4 +13741,162 @@ theorem sequenceCauchyOfForall {M : Semantics.{u}} [FunctionSemantics M]
       In epsilon RPos → ∃ cutoff : Obj (M := M) M.Value, ∃ _ : In cutoff NPos,
         SequenceCauchyTailValue M (denote a) (denote epsilon) (denote cutoff)) :
     SequenceCauchy a := forallMembersOfRepresentations RPos h
+end Litex
+
+namespace Litex
+
+-- A single tail bound yields the native metric bound at a positive natural index.
+theorem sequenceLimitAtIndex {M : Semantics.{u}} [F : FunctionSemantics M]
+    (a : M.Value) (r epsilon : ℝ) (cutoff : Obj (M := M) M.Value)
+    (n : ℕ) (hn : 0 < n)
+    (hf : M.mem a (F.fnSetValue (denote (NPos (M := M))) (denote (R (M := M)))))
+    (hcut : In cutoff NPos)
+    (horder : NativeBridge.asNat cutoff (inNPos_natural cutoff hcut) ≤ n)
+    (htail : SequenceLimitTailValue M a (M.number (r : ℂ)) (M.number (epsilon : ℂ)) (denote cutoff)) :
+    ∃ v : ℝ, F.callValue a (M.number (n : ℂ)) = M.number (v : ℂ) ∧ |v-r| < epsilon := by
+  let cut := NativeBridge.asNat cutoff (inNPos_natural cutoff hcut)
+  have hcutval : denote cutoff = M.number ((cut : ℕ) : ℂ) := NativeBridge.asNat_spec cutoff (inNPos_natural cutoff hcut)
+  have hnmem : M.mem (M.number (n : ℂ)) (denote (NPos (M := M))) := numberInNPosOfEq (M := M) (n : ℂ) n rfl hn
+  have htailmem : M.mem (M.number (n : ℂ)) (sequenceTailValue (denote cutoff)) := by
+    apply (F.sep_members _ _ _).mpr
+    refine ⟨hnmem, hnmem, (cut : ℝ), (n : ℝ), ?_, ?_, ?_⟩
+    · simpa only [Complex.ofReal_natCast] using hcutval
+    · simp only [Complex.ofReal_natCast]
+    · exact_mod_cast horder
+  have himage := htail _ htailmem
+  have hdomain := isSet (NPos (M := M))
+  have hp := ((FunctionSemantics.preimage_mem_iff (fun y => M.mem y (sequenceEpsilonBallValue (M.number (r : ℂ)) (M.number (epsilon : ℂ)))) hdomain hf).mp himage).2
+  obtain ⟨hvR, _, t, e, hdist, heps, hlt⟩ := (F.sep_members _ _ _).mp hp
+  obtain ⟨v, hv⟩ := (M.real_members _).mp hvR
+  have he : e = epsilon := Complex.ofReal_injective (M.number_injective heps).symm
+  have ht : t = |v-r| := by
+    have hden : absValue (M.subValue (F.callValue a (M.number (n : ℂ))) (M.number (r : ℂ))) = M.number ((|v-r| : ℝ) : ℂ) := by
+      rw [hv, M.sub_numbers, ← Complex.ofReal_sub, absValue_number]
+    exact Complex.ofReal_injective (M.number_injective (hdist.symm.trans hden))
+  refine ⟨v, hv, ?_⟩
+  simpa only [ht, he] using hlt
+
+theorem sequenceLimitUnique {M : Semantics.{u}} [F : FunctionSemantics M]
+    (a : M.Value) (r s : ℝ)
+    (hf : M.mem a (F.fnSetValue (denote (NPos (M := M))) (denote (R (M := M)))))
+    (hr : HasSequenceLimitValue M a (M.number (r : ℂ)))
+    (hs : HasSequenceLimitValue M a (M.number (s : ℂ))) : r = s := by
+  by_contra hne
+  have hd : 0 < |r-s| := abs_pos.mpr (sub_ne_zero.mpr hne)
+  let epsilon : ℝ := |r-s| / 2
+  have heps : 0 < epsilon := by dsimp [epsilon]; linarith
+  have hepsmem : M.mem (M.number (epsilon : ℂ)) (denote (RPos (M := M))) := numberInRPos epsilon heps
+  obtain ⟨c1,hc1,ht1⟩ := hr (M.number (epsilon : ℂ)) hepsmem
+  obtain ⟨c2,hc2,ht2⟩ := hs (M.number (epsilon : ℂ)) hepsmem
+  let n1 := NativeBridge.asNat c1 (inNPos_natural c1 hc1)
+  let n2 := NativeBridge.asNat c2 (inNPos_natural c2 hc2)
+  let n := Nat.max n1 n2 + 1
+  have hn : 0 < n := by dsimp [n]; omega
+  have h1 : n1 ≤ n := Nat.le_trans (Nat.le_max_left n1 n2) (Nat.le_succ _)
+  have h2 : n2 ≤ n := Nat.le_trans (Nat.le_max_right n1 n2) (Nat.le_succ _)
+  obtain ⟨v,hv,hvr⟩ := sequenceLimitAtIndex a r epsilon c1 n hn hf hc1 h1 ht1
+  obtain ⟨w,hw,hws⟩ := sequenceLimitAtIndex a s epsilon c2 n hn hf hc2 h2 ht2
+  have heq : v = w := Complex.ofReal_injective (M.number_injective (hv.symm.trans hw))
+  subst w
+  have htri : |r-s| ≤ |r-v| + |v-s| := abs_sub_le r v s
+  rw [abs_sub_comm r v] at htri
+  dsimp [epsilon] at hvr hws
+  linarith
+end Litex
+namespace Litex
+
+noncomputable def sequenceLimitValue {M : Semantics.{u}} [FunctionSemantics M] (a : M.Value) : M.Value := by
+  classical
+  exact if h : SequenceConvergentValue M a then denote (Classical.choose h) else M.number 0
+
+theorem sequenceLimitValueOfCandidate {M : Semantics.{u}} [F : FunctionSemantics M]
+    (a : M.Value) (r : ℝ)
+    (hf : M.mem a (F.fnSetValue (denote (NPos (M := M))) (denote (R (M := M)))))
+    (hr : HasSequenceLimitValue M a (M.number (r : ℂ))) :
+    sequenceLimitValue a = M.number (r : ℂ) := by
+  classical
+  have hm : M.mem (M.number (r : ℂ)) (denote (R (M := M))) := (M.real_members _).mpr ⟨r,rfl⟩
+  let v : Obj (M := M) M.Value := semanticObject (M.number (r : ℂ)) (M.member_isSet hm)
+  have hc : SequenceConvergentValue M a := ⟨v, hm, hr⟩
+  let selected := Classical.choose hc
+  have hs := Classical.choose_spec hc
+  obtain ⟨s, hselected⟩ := (M.real_members _).mp hs.1
+  have heq : s = r := sequenceLimitUnique a s r hf (hselected ▸ hs.2) hr
+  unfold sequenceLimitValue
+  rw [dif_pos hc]
+  exact hselected.trans (congrArg (fun x : ℝ => M.number (x : ℂ)) heq)
+
+structure SequenceLimitObj {M : Semantics.{u}} (α : Type v) [Representation M α] where
+  sequence : Obj (M := M) α
+
+noncomputable instance sequenceLimitRepresentation {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α] : Representation M (SequenceLimitObj (M := M) α) where
+  wd p := M.mem (denote p.sequence) (F.fnSetValue (denote (NPos (M := M))) (denote (R (M := M)))) ∧
+    SequenceConvergentValue M (denote p.sequence)
+  denote p := sequenceLimitValue (denote p.sequence)
+  wd_isSet {p} hp := by
+    classical
+    unfold sequenceLimitValue
+    rw [dif_pos hp.2]
+    exact M.member_isSet (Classical.choose_spec hp.2).1
+end Litex
+namespace Litex
+
+noncomputable def sequenceLimit {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (ha : M.mem (denote a) (F.fnSetValue (denote (NPos (M := M))) (denote (R (M := M)))))
+    (hc : SequenceConvergentValue M (denote a)) : Obj (M := M) (SequenceLimitObj (M := M) α) :=
+  ⟨⟨a⟩, ha, hc⟩
+
+theorem sequenceConvergentOfCandidate {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (value : Obj (M := M) β) (hR : In value R)
+    (h : HasSequenceLimit a value) : SequenceConvergentValue M (denote a) := by
+  let v : Obj (M := M) M.Value := semanticObject (denote value) (isSet value)
+  exact ⟨v, hR, h⟩
+
+theorem sequenceLimitEqCandidate {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (p : Obj (M := M) (SequenceLimitObj (M := M) α)) (value : Obj (M := M) β)
+    (hR : In value R) (h : HasSequenceLimit p.val.sequence value) : Same p value := by
+  let r := NativeBridge.asReal value hR
+  have hr := NativeBridge.asReal_spec value hR
+  change sequenceLimitValue (denote p.val.sequence) = denote value
+  exact (sequenceLimitValueOfCandidate (denote p.val.sequence) r p.wd.1 (hr ▸ h)).trans hr.symm
+
+theorem sequenceLimitInR {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} [Representation M α] (p : Obj (M := M) (SequenceLimitObj (M := M) α)) : In p R := by
+  classical
+  change M.mem (sequenceLimitValue (denote p.val.sequence)) (denote R)
+  unfold sequenceLimitValue
+  rw [dif_pos p.wd.2]
+  exact (Classical.choose_spec p.wd.2).1
+end Litex
+
+namespace Litex
+theorem unguardedFunctionDomain {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} [Representation M α] (a : Obj (M := M) α)
+    (D B : M.Value) (hD : M.isSet D) (hB : M.isSet B)
+    (h : In a (fnSet (FunctionSignature.withGuard D B hD hB (fun _ => True)))) :
+    M.mem (denote a) (F.fnSetValue D B) := by
+  have heq : F.sepValue D (fun _ => True) = D := by
+    apply F.ext _ _ (F.sep_isSet D _ hD) hD
+    intro x
+    simp only [F.sep_members, and_true]
+  change M.mem (denote a) (F.fnSetValue (F.sepValue D (fun _ => True)) B) at h
+  simpa only [heq] using h
+end Litex
+
+namespace Litex
+theorem sequenceLimitCandidatesEqual {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} [Representation M α] [Representation M β] [Representation M γ]
+    (a : Obj (M := M) α) (v : Obj (M := M) β) (w : Obj (M := M) γ)
+    (hdom : M.mem (denote a) (F.fnSetValue (denote (NPos (M := M))) (denote (R (M := M)))))
+    (hv : In v R) (hw : In w R) (h1 : HasSequenceLimit a v) (h2 : HasSequenceLimit a w) : Same v w := by
+  let r := NativeBridge.asReal v hv
+  let s := NativeBridge.asReal w hw
+  have hr := NativeBridge.asReal_spec v hv
+  have hs := NativeBridge.asReal_spec w hw
+  have heq : r = s := sequenceLimitUnique (denote a) r s hdom (hr ▸ h1) (hs ▸ h2)
+  exact hr.trans ((congrArg (fun x : ℝ => M.number (x : ℂ)) heq).trans hs.symm)
 end Litex

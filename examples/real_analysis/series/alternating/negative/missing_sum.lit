@@ -1,0 +1,17 @@
+release obj def series::partial_sum
+
+release obj def series::partial_sums
+
+release obj def series::series_tail
+
+thm remainder_missing_sum_must_fail:
+    ? forall a,u seq(R),L R,n N+:
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+        =>:
+            abs(L-series::partial_sum(a,n))<=u(n+1)
+    release thm series::alternating_series_remainder_bound(a,u,L,n)

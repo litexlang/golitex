@@ -222,6 +222,63 @@ impl LitexToLeanCompiler {
             self.compile_object_reference(left, &complete)?, self.compile_object_reference(right, &complete)?, proofs[0], proofs[1], proofs[2]))
     }
 
+    fn compile_exp_ln_order(
+        &self,
+        goal: &AtomicFact,
+        argument_order: &VerifyFactResult,
+        logarithm: bool,
+        strict: bool,
+        reflection: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (left, right, goal_strict) = source_order_oriented(goal)?;
+        fn argument(object: &Obj, logarithm: bool) -> Option<&Obj> {
+            match object {
+                Obj::ExpLogOperator(ExpLogOperator::Exp(p)) if !logarithm => Some(&*p.arg),
+                Obj::ExpLogOperator(ExpLogOperator::Ln(p)) if logarithm => Some(&*p.arg),
+                _ => None,
+            }
+        }
+        let Fact::AtomicFact(subject) = source_subject(argument_order)? else {
+            return Err(LeanCompileError::unsupported("ExpLnOrder/Premise"));
+        };
+        let (low, high, premise_strict) = source_order_oriented(&subject)?;
+        let (image_left, image_right, arg_left, arg_right) = if reflection {
+            (low, high, left, right)
+        } else {
+            (left, right, low, high)
+        };
+        let (Some(a), Some(b)) = (
+            argument(image_left, logarithm),
+            argument(image_right, logarithm),
+        ) else {
+            return Err(LeanCompileError::unsupported("ExpLnOrder/Constructor"));
+        };
+        if goal_strict != strict
+            || premise_strict != strict
+            || arg_left.ir() != a.ir()
+            || arg_right.ir() != b.ir()
+        {
+            return Err(LeanCompileError::unsupported("ExpLnOrder/Premise"));
+        }
+        let premise = self
+            .compile_verify(argument_order, &position.atomic_search_prior(0)?)?
+            .1;
+        let complete = position.atomic_search_prior(1)?;
+        let name = match (logarithm, strict) {
+            (false, true) => "expLtIff",
+            (false, false) => "expLeIff",
+            (true, true) => "lnLtIff",
+            (true, false) => "lnLeIff",
+        };
+        Ok(format!(
+            "((Litex.{name} {} {}).{} {premise})",
+            self.compile_object_reference(image_left, &complete)?,
+            self.compile_object_reference(image_right, &complete)?,
+            if reflection { "mp" } else { "mpr" }
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_order_builtin(
         &self,
         goal: &AtomicFact,
@@ -229,6 +286,54 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (goal, rule) {
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ExpStrictMonotone(p),
+                ),
+            ) => self.compile_exp_ln_order(goal, &p.argument_order, false, true, false, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::LnStrictMonotone(p),
+                ),
+            ) => self.compile_exp_ln_order(goal, &p.argument_order, true, true, false, position),
+            (
+                AtomicFact::LessEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::ExpWeakMonotone(p),
+                ),
+            ) => self.compile_exp_ln_order(goal, &p.argument_order, false, false, false, position),
+            (
+                AtomicFact::LessEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::LnWeakMonotone(p),
+                ),
+            ) => self.compile_exp_ln_order(goal, &p.argument_order, true, false, false, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ExpStrictOrderReflection(p),
+                ),
+            ) => self.compile_exp_ln_order(goal, &p.image_order, false, true, true, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::LnStrictOrderReflection(p),
+                ),
+            ) => self.compile_exp_ln_order(goal, &p.image_order, true, true, true, position),
+            (
+                AtomicFact::LessEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::ExpWeakOrderReflection(p),
+                ),
+            ) => self.compile_exp_ln_order(goal, &p.image_order, false, false, true, position),
+            (
+                AtomicFact::LessEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::LnWeakOrderReflection(p),
+                ),
+            ) => self.compile_exp_ln_order(goal, &p.image_order, true, false, true, position),
             (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
@@ -449,6 +554,33 @@ impl LitexToLeanCompiler {
                     let nonnegative = self.compile_verify(&p.arg_nonnegative_proof, position)?.1;
                     let term = self.compile_object_reference(value, position)?;
                     Ok(format!("(by\n  let _litex_sqrt := {term}\n  have _litex_nonnegative : Litex.Le (Litex.number (M := M) 0) _litex_sqrt.val.arg := {nonnegative}\n  exact Litex.sqrtNonnegative _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_nonnegative\n)"))
+                }
+                LessEqualFactSearchProofByBuiltinRule::SqrtMonotoneFromDefinedRoots(p) => {
+                    let (left, right, strict) = source_order_oriented(goal)?;
+                    let (
+                        Obj::ExpLogOperator(ExpLogOperator::Sqrt(a)),
+                        Obj::ExpLogOperator(ExpLogOperator::Sqrt(b)),
+                    ) = (left, right)
+                    else {
+                        return Err(LeanCompileError::unsupported("SqrtMonotone/Constructor"));
+                    };
+                    let Fact::AtomicFact(subject) = source_subject(&p.arguments_order)? else {
+                        return Err(LeanCompileError::unsupported("SqrtMonotone/Premise"));
+                    };
+                    let (low, high, premise_strict) = source_order_oriented(&subject)?;
+                    if strict || premise_strict || low.ir() != a.arg.ir() || high.ir() != b.arg.ir()
+                    {
+                        return Err(LeanCompileError::unsupported("SqrtMonotone/Premise"));
+                    }
+                    let order = self
+                        .compile_verify(&p.arguments_order, &position.atomic_search_prior(0)?)?
+                        .1;
+                    let complete = position.atomic_search_prior(1)?;
+                    Ok(format!(
+                        "(Litex.sqrtMonotone {} {} {order})",
+                        self.compile_object_reference(left, &complete)?,
+                        self.compile_object_reference(right, &complete)?
+                    ))
                 }
                 LessEqualFactSearchProofByBuiltinRule::AbsNonnegative(_) => {
                     let (zero, value, strict) = source_order_oriented(goal)?;

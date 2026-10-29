@@ -1,0 +1,8 @@
+# Two proved real limits of the same sequence are equal.
+claim:
+    ? forall a fn(k N+) R, L R, K R:
+        $has_seq_limit(a,L)
+        $has_seq_limit(a,K)
+        =>:
+            L = K
+    L = K

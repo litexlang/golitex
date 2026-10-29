@@ -1,0 +1,7 @@
+# A proved real sequence limit is real.
+claim:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            lim(a) $in R
+    lim(a) $in R

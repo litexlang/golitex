@@ -1,0 +1,2 @@
+# Normalize roots before multiplying two radical sums.
+eval (sqrt(8)+sqrt(3))*(sqrt(5)+sqrt(7))

@@ -1,0 +1,8 @@
+# The principal square root preserves the order of nonnegative real numbers.
+claim:
+    ? forall x R, y R:
+        0 <= x
+        x <= y
+        =>:
+            sqrt(x) <= sqrt(y)
+    sqrt(x) <= sqrt(y)

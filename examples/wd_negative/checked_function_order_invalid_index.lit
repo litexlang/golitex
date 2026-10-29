@@ -1,0 +1,5 @@
+# Run: target/release/litex -lang en -strict -f examples/wd_negative/checked_function_order_invalid_index.lit
+# An arbitrary real is not known to be a positive-integer sequence index.
+thm unchecked_sequence_index:
+    ? forall u seq(R),x R:
+        u(x)<=u(x)

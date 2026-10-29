@@ -1,0 +1,111 @@
+# Absolute values of oriented Riemann integrals and exact-domain examples.
+# Run: python3 examples/real_analysis/integral_absolute_bound/check.py
+
+have fn identity(x R) R=x
+
+have fn negative(x R) R=-x
+
+have fn magnitude(x R) R=abs(-x)
+
+release thm riemann_integral_power(identity,0,1,1)
+
+release thm riemann_integral_scale(identity,negative,0,1,-1,1/2)
+
+claim:
+    ? forall x '[0,1]:
+        magnitude(x)=abs(negative(x))
+        magnitude(x)=identity(x)
+    x>=0
+    negative(x)=-x
+    abs(negative(x))=abs(-x)=abs(x)=x
+    magnitude(x)=abs(-x)=x=identity(x)
+
+release thm riemann_integral_extensional(identity,magnitude,0,1,1/2)
+
+release thm integrals::riemann_integral_absolute_bound(0,1,R,negative,magnitude,-1/2,1/2)
+
+release thm integrals::riemann_integral_absolute_bound_oriented(0,1,R,negative,magnitude,-1/2,1/2)
+
+release thm riemann_integral_reverse(negative,0,1,-1/2)
+
+release thm riemann_integral_reverse(magnitude,0,1,1/2)
+
+release thm integrals::riemann_integral_absolute_bound_oriented(1,0,R,negative,magnitude,1/2,-1/2)
+
+release thm riemann_integral_zero(negative,0)
+
+release thm riemann_integral_zero(magnitude,0)
+
+release thm integrals::riemann_integral_absolute_bound_oriented(0,0,R,negative,magnitude,0,0)
+
+claim:
+    ? forall x R:
+        magnitude(x)=abs(negative(x))
+    negative(x)=-x
+    magnitude(x)=abs(-x)=abs(negative(x))
+
+claim:
+    ? forall x '[0,1]:
+        $is_continuous_at(negative,x)
+    release thm fn_continuous_at_identity(identity,x)
+    release thm fn_continuous_at_neg(identity,negative,x)
+
+release thm integrals::riemann_absolute_bound_continuous(0,1,R,negative,magnitude)
+
+have fn local_id(x '[0,1]) R=x
+
+have fn local_negative(x '[0,1]) R=-x
+
+have fn local_absolute(x '[0,1]) R=abs(-x)
+
+release thm riemann_integral_power(local_id,0,1,1)
+
+release thm riemann_integral_scale(local_id,local_negative,0,1,-1,1/2)
+
+claim:
+    ? forall x '[0,1]:
+        local_absolute(x)=local_id(x)
+        local_absolute(x)=abs(local_negative(x))
+    x>=0
+    local_negative(x)=-x
+    local_absolute(x)=abs(-x)=abs(x)=x=local_id(x)
+    local_absolute(x)=abs(-x)=abs(local_negative(x))
+
+release thm riemann_integral_extensional(local_id,local_absolute,0,1,1/2)
+
+release thm integrals::riemann_integral_absolute_bound(0,1,'[0,1],local_negative,local_absolute,-1/2,1/2)
+
+# Integral difference bound for x^2 and x, in both orientations.
+
+have fn square_function(x R) R=x^2
+
+have fn difference_function(x R) R=x^2-x
+
+have fn difference_magnitude(x R) R=x-x^2
+
+release thm riemann_integral_power(square_function,0,1,2)
+
+release thm riemann_integral_subtract(identity,square_function,difference_magnitude,0,1,1/2,1/3)
+
+claim:
+    ? forall x '[0,1]:
+        difference_function(x)=square_function(x)-identity(x)
+        difference_magnitude(x)=abs(difference_function(x))
+    0<=x
+    x<=1
+    x*x<=x*1=x
+    x^2=x*x<=x
+    x^2-x<=0
+    difference_function(x)=x^2-x<=0
+    abs(difference_function(x))=-(x^2-x)=x-x^2=difference_magnitude(x)
+    difference_function(x)=x^2-x=square_function(x)-identity(x)
+
+release thm integrals::riemann_integral_difference_bound(0,1,R,square_function,identity,difference_function,difference_magnitude,1/3,1/2,1/6)
+
+release thm riemann_integral_reverse(square_function,0,1,1/3)
+
+release thm riemann_integral_reverse(identity,0,1,1/2)
+
+release thm riemann_integral_reverse(difference_magnitude,0,1,1/6)
+
+release thm integrals::riemann_integral_difference_bound_oriented(1,0,R,square_function,identity,difference_function,difference_magnitude,-1/3,-1/2,-1/6)

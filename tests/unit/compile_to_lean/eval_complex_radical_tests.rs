@@ -71,7 +71,8 @@ fn complex_modulus_eval_rejects_wrong_root_or_missing_source_wd() {
 
 #[test]
 fn general_radical_arithmetic_remains_an_explicit_boundary() {
-    let (run, compiler) = super::execute("eval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))");
+    let (run, compiler) =
+        super::execute("eval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))*(sqrt(2)+sqrt(3))");
     compiler
         .compile_run(&run, "unsupported_radical_product")
         .expect_err("nonlinear radical product");

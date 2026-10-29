@@ -1,0 +1,2 @@
+# Evaluate a product of radical sums with integer coefficients.
+eval (2*sqrt(2)+sqrt(3))*(sqrt(5)+3*sqrt(7))

@@ -1,0 +1,7 @@
+# A proved limit remains usable inside arithmetic.
+claim:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            lim(a)+1 = L+1
+    lim(a)+1 = L+1

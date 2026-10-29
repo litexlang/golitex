@@ -234,6 +234,37 @@ pub(super) fn project_atomic_wd_proof(
                 })
                 .collect(),
         ),
+        PredicateDomainProof::ByCheckedArgumentReturns(requirements) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership;
+            JsonValue::Array(
+                requirements
+                    .iter()
+                    .map(|p| {
+                        let membership = match &p.membership {
+                            PredicateDomainArgumentReturnMembership::Structural(proof) => {
+                                super::structural_membership::project_structural_membership(
+                                    proof, runtime,
+                                )
+                            }
+                            PredicateDomainArgumentReturnMembership::FunctionReturn(proof) => {
+                                super::known_special_property::project_in_fact_special(
+                                    proof, runtime,
+                                )
+                            }
+                        };
+                        object_for(
+                            runtime,
+                            vec![
+                                ("requirement", string(p.requirement.readable_string())),
+                                ("type", string("by_checked_argument_return")),
+                                ("argument_index", JsonValue::Number(p.argument_index as f64)),
+                                ("membership", membership),
+                            ],
+                        )
+                    })
+                    .collect(),
+            )
+        }
         PredicateDomainProof::ByRequirements(requirements) => JsonValue::Array(
             requirements
                 .iter()

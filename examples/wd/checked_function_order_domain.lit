@@ -1,0 +1,24 @@
+# A checked function application supplies its real return to an order goal.
+# Run: target/release/litex -lang en -strict -f examples/wd/checked_function_order_domain.lit
+# Before: this theorem rejected goal WD at u(n+1) $in R even though the
+# same application and its real membership were individually checkable.
+# thm sequence_successor_order:
+#     ? forall u seq(R),n N+:
+#         u(n+1)<=u(n+1)
+
+thm sequence_successor_order:
+    ? forall u seq(R),n N+:
+        u(n+1)<=u(n+1)
+
+thm real_function_successor_order:
+    ? forall f fn(k N+) R,n N+:
+        f(n+1)<=f(n+1)
+
+thm checked_guarded_return:
+    ? forall f fn(k N+:k<=2) R,n N+:
+        n=1
+        =>:
+            f(n+1)<=f(n+1)
+
+# Restricting an argument or using a complex return does not establish a
+# valid real-order comparison; see the executable negative controls.

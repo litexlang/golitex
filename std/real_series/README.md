@@ -1,7 +1,7 @@
 # Ordered real series
 
 This source library defines finite partial sums, real series convergence and a
-guarded sum value, absolute convergence and convergence tests. It proves 78
+guarded sum value, absolute convergence and convergence tests. It proves 100
 source theorems using native finite sums, induction and real sequence limits.
 It adds no kernel objects, reserved theorems or
 automatic convergence search.
@@ -109,7 +109,7 @@ range over every `k in N+`, unless a tail restriction is stated. Write
 
 ## Convergence and divergence theorems
 
-The following 45 source theorems extend the 33 basic theorems above. All
+The following 67 source theorems extend the 33 basic theorems above. All
 sequence parameters are complete real sequences. Candidate limits and extrema
 are finite reals. A conclusion of convergence does not compute a sum value.
 
@@ -135,6 +135,28 @@ are finite reals. A conclusion of convergence does not compute a sum value.
 | `harmonic_block_lower(a,n)` | `a(k)=1/k` implies `abs(S(a,2*n)-S(a,n))>=1/2` |
 | `series_comparison(a,b)` | `b` converges and `0<=a(k)<=b(k)` imply convergence of `a` |
 | `harmonic_series_diverges(a)` | `a(k)=1/k` implies actual nonconvergence |
+| `reciprocal_square_series_converges(a)` | `a(k)=1/k^2` gives convergence |
+| `natural_power_at_least_one(x,n)` | `x>=1,n in N` gives `x^n>=1` |
+| `reciprocal_natural_power_series_converges(a,p)` | Natural `p>=2` and `a(k)=1/k^p` give convergence |
+| `positive_integer_parity(n)` | A positive integer is `2*k` or `2*k+1` for some natural k |
+| `alternating_even_step(a,u,n)` | Odd `a` terms equal `u`, even terms equal `-u`; advances an even partial sum by the next pair |
+| `alternating_even_partial_sums(a,u,b,n)` | Paired terms `b(k)=u(2*k+1)-u(2*k+2)` express the even partial sum as `S(a,2)+S(b,n)` |
+| `sequence_odd_subsequence_limit(u,v,L)` | If `u -> L` and `v(k)=u(2*k+1)`, then `v -> L` |
+| `alternating_paired_series_converges(u,b)` | A nonincreasing `u -> 0` makes the above paired series converge |
+| `alternating_even_partial_sums_converge(a,u,evens)` | With the alternating term laws, the even partial sums converge |
+| `sequence_interleaved_limit(a,evens,odds,L)` | Limits of the even and odd subsequences both equal L, so `a -> L` |
+| `alternating_series_test(a,u)` | If `u` is nonincreasing and tends to zero, odd `a(2*k+1)=u(2*k+1)` for k in N and even `a(2*k)=-u(2*k)` for k in N+, then the series of a converges |
+| `sequence_limit_lower_bound(s,L,B)` | A real lower bound for every term of a sequence with limit L also bounds L below |
+| `sequence_limit_upper_bound(s,L,B)` | A real upper bound for every term of a sequence with limit L also bounds L above |
+| `sequence_even_subsequence_limit(u,v,L)` | If `u -> L` and `v(k)=u(2*k)`, then `v -> L` |
+| `alternating_odd_step(a,u,n)` | For natural n, the next odd partial sum differs by `-u(2*n+2)+u(2*n+3)` |
+| `alternating_odd_partial_sums_nonincreasing(a,u,odds)` | Odd partial sums from index 3 are nonincreasing |
+| `alternating_even_partial_sums_nondecreasing(a,u,evens)` | Even partial sums are nondecreasing |
+| `alternating_partial_sums_bracket(a,u,evens,odds,L,n)` | An alternating series candidate L lies between its `2*n` and `2*n+1` partial sums |
+| `alternating_first_remainder_bound(a,u,evens,odds,L)` | The absolute error after the first term is at most `u(2)` |
+| `alternating_even_index_remainder(a,u,evens,odds,L,n,index)` | The next-term error bound at an even positive index `n=2*index` |
+| `alternating_odd_index_remainder(a,u,evens,odds,L,n,index)` | The next-term error bound at an odd index `n=2*index+1`, index in N+ |
+| `alternating_series_remainder_bound(a,u,L,n)` | Under the alternating hypotheses and an actual sum candidate L, `abs(L-S(a,n))<=u(n+1)` for every n in N+ |
 | `absolute_terms_at(a,k)` | The absolute-term map's defining equality |
 | `absolute_series_converges(a)` | Absolute convergence implies convergence |
 | `absolute_series_comparison(a,b)` | `b` converges and `abs(a(k))<=b(k)` imply absolute convergence of `a` |
@@ -180,12 +202,19 @@ limsup criterion does have a divergence direction above 1. See the
 [imported convergence examples](../../examples/real_analysis/series/convergence/main.lit)
 for actual checked calls in both directions.
 
+The alternating remainder theorem states the usual bound directly in terms of
+`u(n+1)`. The [imported example](../../examples/real_analysis/series/alternating/main.lit)
+uses the theorem before computing its numerical bounds at the first three
+partial sums.
+
 ## Boundaries and verification
 
 There is no zero-length prefix in this version: `partial_sum(a,0)` is invalid.
 Finite tuples and incomplete functions are not silently extended by zero.
-Values are finite reals. Rearrangements, infinite extrema, conditional
-convergence classification and products are outside this module. A zero term
+Values are finite reals. Rearrangements, infinite extrema, a general conditional-convergence
+classification, the real-exponent p-series test and products are outside this
+module. The alternating harmonic example proves a specific series converges
+without absolute convergence. A zero term
 limit alone does not establish series convergence; the harmonic example
 proves both its zero term limit and its nonconvergence.
 
@@ -197,6 +226,8 @@ Run the focused positive and rejection checks from the repository:
 
 ```bash
 python3 examples/real_analysis/series/check.py
+python3 examples/real_analysis/series/alternating/check.py
+python3 examples/real_analysis/series/natural_p_series/check.py
 ```
 
 The [mathematical design](math_collections.md) records the definitions and

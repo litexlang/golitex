@@ -1,0 +1,11 @@
+thm reversed_forward_bound_must_fail:
+    ? forall a,b R,D power_set(R),f,g fn(x D) R,I,J R:
+        a>b
+        '[min(a,b),max(a,b)] $subset D
+        $has_riemann_integral(f,a,b,I)
+        $has_riemann_integral(g,a,b,J)
+        forall x '[min(a,b),max(a,b)]:
+            g(x)=abs(f(x))
+        =>:
+            abs(I)<=J
+    release thm integrals::riemann_integral_absolute_bound(a,b,D,f,g,I,J)

@@ -1,0 +1,2 @@
+# Evaluate radical sums containing exact fractional constants.
+eval (1/2+sqrt(2))*(2/3+sqrt(3))

@@ -1,0 +1,170 @@
+# Real Riemann integral absolute-value bounds.
+
+thm riemann_integral_absolute_bound:
+    ? forall a,b R,D power_set(R),f,g fn(x D) R,I,J R:
+        a<=b
+        '[min(a,b),max(a,b)] $subset D
+        $has_riemann_integral(f,a,b,I)
+        $has_riemann_integral(g,a,b,J)
+        forall x '[min(a,b),max(a,b)]:
+            g(x)=abs(f(x))
+        =>:
+            abs(I)<=J
+    have fn neg(x D) R=-f(x)
+    min(a,b)=a
+    max(a,b)=b
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            neg(x)=(-1)*f(x)
+        x $in '[a,b]
+        x $in D
+        neg(x)=-f(x)=(-1)*f(x)
+    release thm riemann_integral_scale(f,neg,a,b,-1,I)
+    (-1)*I=-I
+    $has_riemann_integral(neg,a,b,-I)
+    claim:
+        ? forall x '[a,b]:
+            f(x)<=g(x)
+            neg(x)<=g(x)
+        x $in D
+        g(x)=abs(f(x))
+        f(x)<=abs(f(x))=g(x)
+        -f(x)<=abs(-f(x))=abs(f(x))=g(x)
+        neg(x)=-f(x)<=abs(f(x))=g(x)
+    release thm riemann_integral_compare(f,g,a,b,I,J)
+    release thm riemann_integral_compare(neg,g,a,b,-I,J)
+    I<=J
+    -I<=J
+    by cases:
+        ? abs(I)<=J
+        case I>=0:
+            abs(I)=I<=J
+        case I<0:
+            abs(I)=-I<=J
+
+thm riemann_integral_absolute_bound_oriented:
+    ? forall a,b R,D power_set(R),f,g fn(x D) R,I,J R:
+        '[min(a,b),max(a,b)] $subset D
+        $has_riemann_integral(f,a,b,I)
+        $has_riemann_integral(g,a,b,J)
+        forall x '[min(a,b),max(a,b)]:
+            g(x)=abs(f(x))
+        =>:
+            abs(I)<=abs(J)
+    by cases:
+        ? abs(I)<=abs(J)
+        case a<=b:
+            release thm riemann_integral_absolute_bound(a,b,D,f,g,I,J)
+            0<=abs(I)<=J
+            0<=J
+            abs(J)=J
+            abs(I)<=J=abs(J)
+        case a>b:
+            b<=a
+            min(b,a)=min(a,b)
+            max(b,a)=max(a,b)
+            '[min(b,a),max(b,a)]='[min(a,b),max(a,b)]
+            '[min(b,a),max(b,a)] $subset D
+            release thm riemann_integral_reverse(f,a,b,I)
+            release thm riemann_integral_reverse(g,a,b,J)
+            (-1)*I=-I
+            (-1)*J=-J
+            $has_riemann_integral(f,b,a,-I)
+            $has_riemann_integral(g,b,a,-J)
+            claim:
+                ? forall x '[min(b,a),max(b,a)]:
+                    g(x)=abs(f(x))
+                x $in '[min(a,b),max(a,b)]
+                g(x)=abs(f(x))
+            release thm riemann_integral_absolute_bound(b,a,D,f,g,-I,-J)
+            abs(-I)=abs(I)
+            0<=abs(-I)<=-J
+            J<=0
+            abs(J)=-J
+            abs(I)=abs(-I)<=-J=abs(J)
+
+thm riemann_absolute_integrable_from_continuous:
+    ? forall a,b R,D power_set(R),f,g fn(x D) R:
+        '[min(a,b),max(a,b)] $subset D
+        forall x D:
+            g(x)=abs(f(x))
+        forall x '[min(a,b),max(a,b)]:
+            $is_continuous_at(f,x)
+        =>:
+            $is_riemann_integrable(g,a,b)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            $is_continuous_at(g,x)
+        x $in D
+        release thm fn_continuous_at_abs(f,g,x)
+    release thm riemann_integrable_continuous(g,a,b)
+
+thm riemann_absolute_bound_continuous:
+    ? forall a,b R,D power_set(R),f,g fn(x D) R:
+        '[min(a,b),max(a,b)] $subset D
+        forall x D:
+            g(x)=abs(f(x))
+        forall x '[min(a,b),max(a,b)]:
+            $is_continuous_at(f,x)
+        =>:
+            exist I,J R st {$has_riemann_integral(f,a,b,I) and $has_riemann_integral(g,a,b,J) and abs(I)<=abs(J)}
+    release thm riemann_integrable_continuous(f,a,b)
+    release thm riemann_absolute_integrable_from_continuous(a,b,D,f,g)
+    release thm riemann_integral_selected(f,a,b)
+    release thm riemann_integral_selected(g,a,b)
+    have I R=integral(f,a,b)
+    have J R=integral(g,a,b)
+    $has_riemann_integral(f,a,b,I)
+    $has_riemann_integral(g,a,b,J)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            g(x)=abs(f(x))
+        x $in D
+        g(x)=abs(f(x))
+    release thm riemann_integral_absolute_bound_oriented(a,b,D,f,g,I,J)
+    witness exist value,absolute_value R st {$has_riemann_integral(f,a,b,value) and $has_riemann_integral(g,a,b,absolute_value) and abs(value)<=abs(absolute_value)} from I,J
+
+thm riemann_integral_difference_bound:
+    ? forall a,b R,D power_set(R),f,g,d,h fn(x D) R,I,J,K R:
+        a<=b
+        '[min(a,b),max(a,b)] $subset D
+        $has_riemann_integral(f,a,b,I)
+        $has_riemann_integral(g,a,b,J)
+        $has_riemann_integral(h,a,b,K)
+        forall x '[min(a,b),max(a,b)]:
+            d(x)=f(x)-g(x)
+            h(x)=abs(d(x))
+        =>:
+            abs(I-J)<=K
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            d(x)=f(x)-g(x)
+        d(x)=f(x)-g(x)
+    release thm riemann_integral_subtract(f,g,d,a,b,I,J)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            h(x)=abs(d(x))
+        h(x)=abs(d(x))
+    release thm riemann_integral_absolute_bound(a,b,D,d,h,I-J,K)
+
+thm riemann_integral_difference_bound_oriented:
+    ? forall a,b R,D power_set(R),f,g,d,h fn(x D) R,I,J,K R:
+        '[min(a,b),max(a,b)] $subset D
+        $has_riemann_integral(f,a,b,I)
+        $has_riemann_integral(g,a,b,J)
+        $has_riemann_integral(h,a,b,K)
+        forall x '[min(a,b),max(a,b)]:
+            d(x)=f(x)-g(x)
+            h(x)=abs(d(x))
+        =>:
+            abs(I-J)<=abs(K)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            d(x)=f(x)-g(x)
+        d(x)=f(x)-g(x)
+    release thm riemann_integral_subtract(f,g,d,a,b,I,J)
+    claim:
+        ? forall x '[min(a,b),max(a,b)]:
+            h(x)=abs(d(x))
+        h(x)=abs(d(x))
+    release thm riemann_integral_absolute_bound_oriented(a,b,D,d,h,I-J,K)

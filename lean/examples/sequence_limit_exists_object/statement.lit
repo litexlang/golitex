@@ -1,0 +1,7 @@
+# A real sequence with an existing limit has a well-defined limit object.
+claim:
+    ? forall a seq(R):
+        exist L R st {$has_seq_limit(a,L)}
+        =>:
+            $is_set(lim(a))
+    $is_set(lim(a))

@@ -203,5 +203,6 @@ mod compile_real_extrema;
 mod compile_real_set_bounds;
 mod compile_sequence_analysis;
 mod compile_sequence_epsilon;
+mod compile_sequence_limit;
 
 mod compile_power_set_inference;

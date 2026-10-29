@@ -112,7 +112,8 @@ fn sqrt_eval_preserves_negative_and_nonlinear_radical_boundaries() {
     let mut runtime = Runtime::new(command);
     assert!(!runtime.run_litex_code(source).unwrap().success);
 
-    let (run, compiler) = super::execute("eval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))");
+    let (run, compiler) =
+        super::execute("eval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))*(sqrt(2)+sqrt(3))");
     assert_eq!(
         compiler
             .compile_run(&run, "irrational_sqrt")

@@ -1,0 +1,3 @@
+# Evaluate a product of radical sums using a cited value.
+have sum_prod_a R = 2
+eval (sqrt(sum_prod_a)+sqrt(3))*(sqrt(5)+sqrt(7))

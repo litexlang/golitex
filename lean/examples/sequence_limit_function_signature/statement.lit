@@ -1,0 +1,7 @@
+# A unary positive-natural real function has the same limit contract.
+claim:
+    ? forall a fn(k N+) R, L R:
+        $has_seq_limit(a,L)
+        =>:
+            lim(a) = L
+    lim(a) = L

@@ -1,0 +1,2 @@
+# Evaluate the product of two sums of square roots exactly.
+eval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))

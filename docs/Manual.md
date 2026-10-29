@@ -11078,7 +11078,19 @@ fact first.
 ### Order and comparison rules
 
 Every ordered comparison requires both operands to be real; membership in `C`
-alone never supplies an order. The order layer recognizes these contracts:
+alone never supplies an order. A checked function application can provide its
+exact real return carrier to the comparison without repeating its call proof:
+
+```litex
+forall u seq(R), n N+:
+    u(n+1) <= u(n+1)
+```
+
+The function argument and any guard must still be proved; a complex-returning
+function does not acquire a real result from the comparison. See the
+[checked-call example](../examples/wd/checked_function_order_domain.lit) and
+its invalid-index, missing-guard, complex-return and conflicting-signature
+controls in `examples/wd_negative/`. The order layer recognizes these contracts:
 
 | Group | Recognized premises and consequences |
 |---|---|

@@ -65,12 +65,22 @@ Finite-set inclusion tracers:
 - [A finite subset of equal size equals its containing set](proof_nodes/equal/by_builtin_rule/finite_set_equal_from_subset_size.lit), including an explicit singleton proof.
 - [A proper finite subset has smaller size](proof_nodes/atomic/by_builtin_rule/less_finite_set_size_proper_subset.lit), using either `$proper_subset` or `$subset` with disequality.
 
+Checked function-return order formation: [positive tracer](wd/checked_function_order_domain.lit)
+and negative controls for [invalid index](wd_negative/checked_function_order_invalid_index.lit),
+[missing guard](wd_negative/checked_function_order_unproved_guard.lit),
+[complex return](wd_negative/checked_function_order_complex.lit),
+[false order](wd_negative/checked_function_order_false.lit) and
+[an alternative guarded signature](wd_negative/checked_function_order_alternative_guard.lit).
+
 Real sequence limit tracers:
 
 - [Explicit epsilon-N proof for 1/k, then selected-value use](wd/sequence_limit.lit).
 - [Equivalent seq(R) / fn(k N+) R and finite-existence interfaces](wd/sequence_limit_interfaces.lit).
 - [Common sequence-limit proofs](wd/sequence_limit_common_proofs.lit): explicit `1/n -> 0`, rational examples, `sin(n)/n -> 0`, `sqrt(1+1/n) -> 1`, and `(1/2)^n -> 0`; also finite initial changes, even-index subsequences, eventual positivity/nonzero terms, and divergence of `n`. Each convergence proof precedes `lim` use.
 - One `seq_limit_*.lit` example per theorem in `stmt_nodes/release_and_expand/builtin_thm/`.
+
+The [Riemann integral absolute-bound example](real_analysis/integral_absolute_bound/README.md)
+checks positive and reversed orientations, equal endpoints and exact domains.
 
 Ordered real series:
 

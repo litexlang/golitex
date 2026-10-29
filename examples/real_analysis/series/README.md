@@ -54,3 +54,9 @@ Cauchy-block argument.
 `negative/context.lit` is the accepted empty module prefix; it is not a
 rejection control. Run the named negative fixtures separately, not as an
 ordered sequence of expected successes.
+
+The [alternating-series example](alternating/README.md) verifies conditional
+convergence of the alternating harmonic series and checks missing premises.
+
+The [natural-exponent reciprocal series example](natural_p_series/README.md)
+checks convergence at p=2 and p=3 and divergence at p=0 and p=1.

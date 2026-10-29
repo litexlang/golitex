@@ -1,0 +1,7 @@
+# A convergent real sequence has a well-defined limit object.
+claim:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            $is_set(lim(a))
+    $is_set(lim(a))

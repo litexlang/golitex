@@ -1,0 +1,8 @@
+# Square-root order with the argument order written in reverse.
+claim:
+    ? forall x R, y R:
+        0 <= x
+        y >= x
+        =>:
+            sqrt(x) <= sqrt(y)
+    sqrt(x) <= sqrt(y)

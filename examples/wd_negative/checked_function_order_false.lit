@@ -1,0 +1,5 @@
+# Run: target/release/litex -lang en -strict -f examples/wd_negative/checked_function_order_false.lit
+# A well-defined real result is never strictly less than itself.
+thm strict_self_comparison:
+    ? forall u seq(R),n N+:
+        u(n+1)<u(n+1)

@@ -1,0 +1,7 @@
+# exp preserves strict order on its real domain.
+claim:
+    ? forall x R, y R:
+        x < y
+        =>:
+            exp(x) < exp(y)
+    exp(x) < exp(y)
