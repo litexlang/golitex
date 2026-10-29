@@ -1,0 +1,7 @@
+release obj def series::partial_sum
+
+release obj def series::partial_sums
+
+have fn harmonic(k N+) R=1/k
+
+release thm series::reciprocal_natural_power_series_converges(harmonic,1)

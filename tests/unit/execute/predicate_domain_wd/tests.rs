@@ -310,3 +310,41 @@ fn predicate_domain_wd_closed_negative_carriers_terminate_and_positive_integer_e
         assert_eq!(rt.execution_environments_stack.len(), 1);
     }
 }
+
+#[test]
+fn predicate_domain_reuses_checked_function_return_without_losing_guards() {
+    let mut rt = runtime();
+    let run = rt
+        .run_litex_code(include_str!(
+            "../../../../examples/wd/checked_function_order_domain.lit"
+        ))
+        .unwrap();
+    assert!(run.session_error.is_none(), "{:?}", run.session_error);
+    assert!(run.success, "positive function-return example failed");
+    let detail =
+        crate::json_output::project_stmt_detailed(&run.statement_results[0], &rt).stringify();
+    assert!(detail.contains("by_checked_argument_return"), "{detail}");
+    assert!(detail.contains("FnApplicationInCodomain"), "{detail}");
+    assert_eq!(rt.execution_environments_stack.len(), 1);
+
+    for code in [
+        include_str!("../../../../examples/wd_negative/checked_function_order_invalid_index.lit"),
+        include_str!("../../../../examples/wd_negative/checked_function_order_unproved_guard.lit"),
+        include_str!("../../../../examples/wd_negative/checked_function_order_complex.lit"),
+        include_str!("../../../../examples/wd_negative/checked_function_order_false.lit"),
+        include_str!(
+            "../../../../examples/wd_negative/checked_function_order_alternative_guard.lit"
+        ),
+    ] {
+        let mut rt = runtime();
+        let rejected = rt.run_litex_code(code).unwrap();
+        assert!(
+            rejected.session_error.is_none(),
+            "{code}: {:?}",
+            rejected.session_error
+        );
+        assert!(!rejected.success, "{code}");
+        assert_eq!(rt.execution_environments_stack.len(), 1);
+        assert!(!rt.run_litex_code("0=1").unwrap().success);
+    }
+}

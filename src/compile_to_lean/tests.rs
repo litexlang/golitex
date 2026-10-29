@@ -118,6 +118,8 @@ mod eval_log_tests;
 mod eval_sqrt_tests;
 #[path = "../../tests/unit/compile_to_lean/eval_unchanged_radical_tests.rs"]
 mod eval_unchanged_radical_tests;
+#[path = "../../tests/unit/compile_to_lean/exp_ln_order_tests.rs"]
+mod exp_ln_order_tests;
 #[path = "../../tests/unit/compile_to_lean/exp_sign_nonzero_tests.rs"]
 mod exp_sign_nonzero_tests;
 #[path = "../../tests/unit/compile_to_lean/integer_division_tests.rs"]
@@ -134,6 +136,10 @@ mod nonzero_sum_inequality_tests;
 mod power_nonzero_tests;
 #[path = "../../tests/unit/compile_to_lean/product_nonzero_tests.rs"]
 mod product_nonzero_tests;
+#[path = "../../tests/unit/compile_to_lean/sequence_limit_selector_tests.rs"]
+mod sequence_limit_selector_tests;
+#[path = "../../tests/unit/compile_to_lean/sqrt_monotone_tests.rs"]
+mod sqrt_monotone_tests;
 #[path = "../../tests/unit/compile_to_lean/sqrt_nonzero_tests.rs"]
 mod sqrt_nonzero_tests;
 #[path = "../../tests/unit/compile_to_lean/trig_negation_nonzero_tests.rs"]

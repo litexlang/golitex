@@ -129,6 +129,59 @@ impl LitexToLeanCompiler {
                                 return self.compile_structural(&requirement.membership, &producer);
                             }
                         }
+                        if let PredicateDomainProof::ByCheckedArgumentReturns(requirements) =
+                            &proof.well_defined_proof.detailed_ref().predicate_domain
+                        {
+                            use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership as Membership;
+                            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty as InSpecial;
+                            let args = atomic_fact_args_ref(&proof.fact);
+                            for requirement in requirements {
+                                let Fact::AtomicFact(AtomicFact::InFact(member)) =
+                                    &requirement.requirement
+                                else {
+                                    return Err(LeanCompileError::new(
+                                        "WD/OrderRealDomain",
+                                        "Expected real membership.",
+                                    ));
+                                };
+                                if member.element != *object {
+                                    continue;
+                                }
+                                if member.set != Obj::StandardSet(StandardSet::R)
+                                    || args
+                                        .get(requirement.argument_index)
+                                        .is_none_or(|arg| *arg != object)
+                                {
+                                    return Err(LeanCompileError::new(
+                                        "WD/OrderRealDomain",
+                                        "Return evidence is not attached to its checked argument.",
+                                    ));
+                                }
+                                let producer = SourcePosition::new(
+                                    Some(cursor),
+                                    SourceOwner::AtomicWD(&proof.well_defined_proof),
+                                    args.len() + requirement.argument_index,
+                                );
+                                return match &requirement.membership {
+                                    Membership::Structural(structural) => {
+                                        if structural.element != *object
+                                            || structural.set != StandardSet::R
+                                        {
+                                            return Err(LeanCompileError::new("WD/OrderRealDomain", "Structural evidence differs from the checked argument."));
+                                        }
+                                        self.compile_structural(structural, &producer)
+                                    }
+                                    Membership::FunctionReturn(
+                                        InSpecial::FnApplicationInCodomain(returned),
+                                    ) => {
+                                        self.compile_fn_return_codomain(member, returned, &producer)
+                                    }
+                                    Membership::FunctionReturn(_) => Err(
+                                        LeanCompileError::unsupported("WD/CheckedFunctionReturn"),
+                                    ),
+                                };
+                            }
+                        }
                         if let PredicateDomainProof::ByKnownFact(known) =
                             &proof.well_defined_proof.detailed_ref().predicate_domain
                         {

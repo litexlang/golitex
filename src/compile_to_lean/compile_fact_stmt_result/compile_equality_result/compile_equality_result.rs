@@ -184,6 +184,7 @@ impl LitexToLeanCompiler {
                 }
             }
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::RealBounds(p)) => self.compile_real_extremum_equality(fact,p,position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLimit(p)) => self.compile_sequence_limit_equality(fact,p,position)?,
             EqualFactSearchedProof::ByTheyAreTheSame(
                 proof @ TheyAreTheSameProof::SameFreeParamShape(_),
             ) => self.compile_identity(&fact.left, &fact.right, proof, position)?,

@@ -1,0 +1,30 @@
+# Natural-power reciprocal series: p=2,3 converge; p=0,1 diverge.
+# Run: python3 examples/real_analysis/series/natural_p_series/check.py
+
+release obj def series::partial_sum
+
+release obj def series::partial_sums
+
+release obj def series::series_tail
+
+have fn reciprocal_squares(k N+) R=1/k^2
+
+release thm series::reciprocal_square_series_converges(reciprocal_squares)
+
+have fn reciprocal_cubes(k N+) R=1/k^3
+
+release thm series::reciprocal_natural_power_series_converges(reciprocal_cubes,3)
+
+have fn harmonic(k N+) R=1/k
+
+release thm series::harmonic_series_diverges(harmonic)
+
+have fn zero_power_terms(k N+) R=1/k^0
+
+claim:
+    ? forall k N+:
+        zero_power_terms(k)=1
+    k^0=1
+    zero_power_terms(k)=1/k^0=1/1=1
+
+release thm series::nonzero_constant_series_diverges(zero_power_terms,1)

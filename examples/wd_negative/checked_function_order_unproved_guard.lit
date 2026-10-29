@@ -1,0 +1,7 @@
+# Run: target/release/litex -lang en -strict -f examples/wd_negative/checked_function_order_unproved_guard.lit
+# The complete function type retains the explicit input guard.
+have fn limited(k N+:k<=2) R=0
+
+thm unchecked_function_guard:
+    ? forall n N+:
+        limited(n+1)<=limited(n+1)

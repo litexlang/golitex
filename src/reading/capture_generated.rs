@@ -27095,6 +27095,11 @@ let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute_
 let mut output = node("PredicateDomainProof", "ByCheckedArguments", fields);
 output
 },
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof::ByCheckedArgumentReturns(f0) => {
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentReturnProof(item, capture, runtime)).collect()))];
+let mut output = node("PredicateDomainProof", "ByCheckedArgumentReturns", fields);
+output
+},
 };
 capture.intern_evidence(output)
 }
@@ -37398,6 +37403,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentReturnProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnProof { requirement: f0, argument_index: f1, membership: f2 } => {
+let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("argument_index", JsonValue::String((f1).to_string())), ("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentReturnMembership(f2, capture, runtime))];
+let mut output = node("PredicateDomainArgumentReturnProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__KnownSubsetMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::KnownSubsetMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::KnownSubsetMembershipProof { member_proof: f0, subset_proof: f1 } => {
@@ -45269,6 +45285,22 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof::AtNegativeInfinity => {
 let fields = vec![];
 let mut output = node("FunctionLimitApproachRealProof", "AtNegativeInfinity", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainArgumentReturnMembership(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership::Structural(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
+let mut output = node("PredicateDomainArgumentReturnMembership", "Structural", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership::FunctionReturn(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_special_property__InFactSearchProofByKnownSpecialProperty(f0, capture, runtime))];
+let mut output = node("PredicateDomainArgumentReturnMembership", "FunctionReturn", fields);
 output
 },
 };

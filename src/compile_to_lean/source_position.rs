@@ -10653,6 +10653,15 @@ fn atomic_search_stages(
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(p))) => {
             stages.push(AtomicSearchStage::Verify(&p.premise_proof));
         }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::ExpStrictMonotone(p))) => { stages.push(AtomicSearchStage::Verify(&p.argument_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::LnStrictMonotone(p))) => { stages.push(AtomicSearchStage::Verify(&p.argument_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::ExpStrictOrderReflection(p))) => { stages.push(AtomicSearchStage::Verify(&p.image_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::LnStrictOrderReflection(p))) => { stages.push(AtomicSearchStage::Verify(&p.image_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(LessEqualFactSearchProofByBuiltinRule::ExpWeakMonotone(p))) => { stages.push(AtomicSearchStage::Verify(&p.argument_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(LessEqualFactSearchProofByBuiltinRule::LnWeakMonotone(p))) => { stages.push(AtomicSearchStage::Verify(&p.argument_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(LessEqualFactSearchProofByBuiltinRule::ExpWeakOrderReflection(p))) => { stages.push(AtomicSearchStage::Verify(&p.image_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(LessEqualFactSearchProofByBuiltinRule::LnWeakOrderReflection(p))) => { stages.push(AtomicSearchStage::Verify(&p.image_order)); }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(LessEqualFactSearchProofByBuiltinRule::SqrtMonotoneFromDefinedRoots(p))) => { stages.push(AtomicSearchStage::Verify(&p.arguments_order)); }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::ModRemainderStrictUpperBound(p))) => {
             stages.push(AtomicSearchStage::Verify(&p.dividend_in_z_proof));
             stages.push(AtomicSearchStage::Verify(&p.modulus_in_n_pos_proof));

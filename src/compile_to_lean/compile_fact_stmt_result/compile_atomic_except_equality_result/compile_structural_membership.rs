@@ -762,6 +762,22 @@ impl LitexToLeanCompiler {
                 let term = self.compile_object_reference(&proof.element, position)?;
                 Ok(format!("(by\n  let _litex_sqrt := {term}\n  exact Litex.sqrtInR _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2\n)"))
             }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::SequenceLimit) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::LimitOperator(LimitOperator::Sequence(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "SequenceLimit/IntrinsicSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.sequenceLimitInR {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
             StructuralMembershipReason::Intrinsic(_) => Err(LeanCompileError::unsupported(
                 "StructuralMembership/Intrinsic",
             )),

@@ -4932,3 +4932,96 @@ radical sums, division, function calls and aggregate records remain outside
 this route. Full Cargo tests remain blocked by the missing fixture noted
 above. Local receipts: `cited-radical-batch.log` and
 `cited-radical-rust-batch.log`.
+
+## Products of linear radical sums — 2026-10-28
+
+The exact evaluator's canonical root coefficients now support a product of
+two linear radical sums. The compiler checks each distinct root product in
+Lean and combines its coefficients, retaining original citations and WD.
+Seven strict source/generated pairs cover [sums](../lean/examples/evaluated_radical_sum_product/),
+[cancellation](../lean/examples/evaluated_radical_sum_product_difference/),
+[coefficients](../lean/examples/evaluated_radical_sum_product_coefficients/),
+[citations](../lean/examples/evaluated_cited_radical_sum_product/),
+[root normalization](../lean/examples/evaluated_radical_sum_product_normalized/),
+[fractional constants](../lean/examples/evaluated_radical_sum_product_fractional/)
+and [a fractional root](../lean/examples/evaluated_radical_sum_product_fractional_root/).
+Each passed a fresh Lean 4.31.0 check. The final batch regenerated these and
+three related pairs identically and reused their same-Core Lean evidence; 16
+exports use only `propext`, `Classical.choice` and `Quot.sound`. A current-library
+harness passed 144 tests including one local diagnostic; a final focused check
+also verified cancellation avoids duplicate root-pair proofs. Changed results,
+missing WD, missing citations and the 64-pair generation budget are rejected.
+Nested products, division, function calls and aggregate records remain outside
+this route. Full Cargo tests remain blocked by the missing fixture noted above.
+Local receipts: `scripts/litex_to_lean/.draft/eight-hour-2026-10-28/`.
+
+## Square-root monotonicity — 2026-10-28
+
+The selected `SqrtMonotoneFromDefinedRoots` builtin now compiles its recorded
+argument-order proof and uses both original square-root WD proofs. Two strict
+source/generated pairs cover [the general theorem](../lean/examples/sqrt_monotone/)
+and [a reversed premise](../lean/examples/sqrt_monotone_reversed_premise/).
+Both and four related pairs passed fresh Lean 4.31.0 checks against the updated
+Core. Their 12 exports use only `propext`, `Classical.choice` and `Quot.sound`.
+The current-library harness passed 147 tests including one local diagnostic;
+focused controls reject altered premises and missing goal WD, and Litex rejects
+the example without the nonnegative-domain premise. Full Cargo tests remain
+blocked by the missing fixture noted above. Local receipts:
+`scripts/litex_to_lean/.draft/eight-hour-2026-10-28/`.
+
+## Exponential and logarithm order — 2026-10-29
+
+The selected strict and weak monotonicity and order-reflection rules for
+`exp` on real arguments and `ln` on positive real arguments now replay their
+actual argument-order or image-order premise, including original WD.
+Eight strict source/generated pairs cover both functions, both orders and
+both directions; see [strict exponential monotonicity](../lean/examples/exp_strict_monotone/),
+[strict exponential reflection](../lean/examples/exp_strict_order_reflection/),
+[weak logarithm monotonicity](../lean/examples/ln_weak_monotone/) and
+[weak logarithm reflection](../lean/examples/ln_weak_order_reflection/).
+All eight and three related pairs passed Lean 4.31.0 against the updated Core:
+six fresh checks and five reused identical prior checks; all 11 exports use
+only `propext`, `Classical.choice` and `Quot.sound`. A current-library harness
+passed 151 tests including one local diagnostic, with wrong-premise, missing-WD
+and nonpositive-logarithm controls. Full Cargo tests remain separately blocked
+by the missing fixture noted above. Local receipts:
+`scripts/litex_to_lean/.draft/eight-hour-2026-10-28/`.
+
+## Real sequence limit selector — 2026-10-29
+
+`lim(a)` now has a proof-independent semantic value and consumes the recorded
+positive-natural real-function domain and either a candidate or an existence
+proof. Core proves uniqueness from the existing epsilon-tail definition, so a
+selected limit equals any recorded real candidate and is real. Six source/
+generated pairs cover [object formation](../lean/examples/sequence_limit_object/),
+[candidate equality](../lean/examples/sequence_limit_selected_value/),
+[real membership](../lean/examples/sequence_limit_real/),
+[existence-only formation](../lean/examples/sequence_limit_exists_object/),
+[function-signature input](../lean/examples/sequence_limit_function_signature/)
+and [reversed equality](../lean/examples/sequence_limit_reverse_equality/).
+They and four related pairs passed Lean 4.31.0; the final batch reused six
+identical checked outputs and freshly checked four related pairs. Its 12 exports
+use only `propext`, `Classical.choice` and `Quot.sound`. A current-library
+harness passed 154 tests including one local diagnostic. Controls reject a
+changed candidate, changed sequence, mismatched object WD and missing convergence.
+At that checkpoint the direct two-candidate equality rule and general native
+Mathlib sequence adapter remained separate work. Full Cargo tests remain blocked by the missing
+fixture noted above. Local receipts:
+`scripts/litex_to_lean/.draft/eight-hour-2026-10-28/`.
+
+## Two sequence-limit candidates — 2026-10-29
+
+The selected `SequenceLimit::Uniqueness` equality proof now cites both original
+candidate facts and uses the original sequence parameter's domain and each
+real-value membership. [A `seq(R)` parameter](../lean/examples/sequence_limit_unique/)
+and [a `fn(k N+) R` parameter](../lean/examples/sequence_limit_unique_function_signature/)
+pass strict source verification and Lean 4.31.0. Eight related pairs also pass
+against the updated Core; two identical prior checks are reused, and eight are
+fresh. Their 12 exports use only `propext`, `Classical.choice` and `Quot.sound`.
+The current-library harness passed 157 tests including one local diagnostic;
+controls reject altered candidates, invalid citation IDs and changed WD.
+The compiler currently requires the common sequence to be a suitably typed
+visible parameter; arbitrary sequence-producing expressions and a native
+Mathlib sequence adapter remain separate work. Full Cargo tests remain blocked
+by the missing fixture noted above. Local receipts:
+`scripts/litex_to_lean/.draft/eight-hour-2026-10-28/`.

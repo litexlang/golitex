@@ -1,0 +1,146 @@
+# Alternating harmonic series converges but is not absolutely convergent.
+# Run: python3 examples/real_analysis/series/alternating/check.py
+# Odd terms start positive; all functions are complete on N+.
+
+release obj def series::partial_sum
+
+release obj def series::partial_sums
+
+release obj def series::absolute_terms
+
+have fn harmonic_u(k N+) R=1/k
+
+have fn alternating_harmonic(k N+) R=(-1)^(k+1)/k
+
+claim:
+    ? forall m,n N+:
+        m<=n
+        =>:
+            harmonic_u(n)<=harmonic_u(m)
+    0<m*n
+    harmonic_u(n)=1/n=m/(m*n)<=n/(m*n)=1/m=harmonic_u(m)
+
+by def $is_seq_nonincreasing(harmonic_u)
+
+release thm series::sequence_reciprocal_limit(harmonic_u)
+
+claim:
+    ? forall k N:
+        alternating_harmonic(2*k+1)=harmonic_u(2*k+1)
+    have index N+=2*k+1
+    2*k+2=2*(k+1)
+    (-1)^(2*(k+1))=((-1)^2)^(k+1)=1^(k+1)=1
+    (-1)^(2*k+2)=(-1)^(2*(k+1))=1
+    index=2*k+1
+    index+1=(2*k+1)+1=2*k+2
+    (-1)^(index+1)=(-1)^(2*k+2)=1
+    alternating_harmonic(index)=(-1)^(index+1)/index=1/index=harmonic_u(index)
+    alternating_harmonic(2*k+1)=alternating_harmonic(index)=harmonic_u(index)=harmonic_u(2*k+1)
+
+claim:
+    ? forall k N+:
+        alternating_harmonic(2*k)=-harmonic_u(2*k)
+    have index N+=2*k
+    (-1)^(2*k)=((-1)^2)^k=1^k=1
+    (-1)^(2*k+1)=(-1)^(2*k)*(-1)=1*(-1)=-1
+    index=2*k
+    index+1=2*k+1
+    (-1)^(index+1)=(-1)^(2*k+1)=-1
+    alternating_harmonic(index)=(-1)^(index+1)/index=(-1)/index=-harmonic_u(index)
+    alternating_harmonic(2*k)=alternating_harmonic(index)=-harmonic_u(index)=-harmonic_u(2*k)
+
+release thm series::alternating_series_test(alternating_harmonic,harmonic_u)
+
+claim:
+    ? forall k N+:
+        series::absolute_terms(alternating_harmonic)(k)=1/k
+    have n N+=k+1
+    by thm series::absolute_natural_power(-1,n) => abs((-1)^n)=abs(-1)^n
+    abs(-1)=1
+    abs((-1)^n)=abs(-1)^n=1^n=1
+    (-1)^(k+1)=(-1)^n
+    abs((-1)^(k+1))=abs((-1)^n)=1
+    1/k>0
+    abs(1/k)=1/k
+    alternating_harmonic(k)=(-1)^(k+1)/k=(-1)^(k+1)*(1/k)
+    abs(alternating_harmonic(k))=abs((-1)^(k+1)*(1/k))=abs((-1)^(k+1))*abs(1/k)=1*(1/k)=1/k
+    series::absolute_terms(alternating_harmonic)(k)=abs(alternating_harmonic(k))=1/k
+
+release thm series::harmonic_series_diverges(series::absolute_terms(alternating_harmonic))
+
+claim:
+    ? not $series::is_absolutely_convergent_series(alternating_harmonic)
+    by contra:
+        ? not $series::is_absolutely_convergent_series(alternating_harmonic)
+        $series::is_absolutely_convergent_series(alternating_harmonic)
+        $series::is_convergent_series(series::absolute_terms(alternating_harmonic))
+        impossible not $series::is_convergent_series(series::absolute_terms(alternating_harmonic))
+
+have fn alternating_zero(k N+) R=0
+
+claim:
+    ? forall m,n N+:
+        m<=n
+        =>:
+            alternating_zero(n)<=alternating_zero(m)
+    alternating_zero(n)=0=alternating_zero(m)
+
+by def $is_seq_nonincreasing(alternating_zero)
+
+release thm seq_limit_constant(alternating_zero,0)
+
+claim:
+    ? forall k N:
+        alternating_zero(2*k+1)=alternating_zero(2*k+1)
+    alternating_zero(2*k+1)=alternating_zero(2*k+1)
+
+claim:
+    ? forall k N+:
+        alternating_zero(2*k)=-alternating_zero(2*k)
+    alternating_zero(2*k)=0=-0=-alternating_zero(2*k)
+
+release thm series::alternating_series_test(alternating_zero,alternating_zero)
+
+# Bounds for the first three partial sums; the sum is an existential witness.
+
+release obj def series::series_tail
+
+obtain H from $series::is_convergent_series(alternating_harmonic)
+
+release thm series::alternating_series_remainder_bound(alternating_harmonic,harmonic_u,H,1)
+
+release thm series::series_tail_at(harmonic_u,1,1)
+
+series::series_tail(harmonic_u,1)(1)=harmonic_u(2)=1/2
+
+series::partial_sum(alternating_harmonic,1)=alternating_harmonic(1)=1
+
+abs(H-series::partial_sum(alternating_harmonic,1))<=1/2
+
+release thm series::series_tail_at(harmonic_u,1,2)
+
+series::series_tail(harmonic_u,1)(2)=harmonic_u(3)=1/3
+
+claim:
+    ? series::partial_sum(alternating_harmonic,2)=1/2
+    by thm series::partial_sum_successor(alternating_harmonic,1) => series::partial_sum(alternating_harmonic,1+1)=series::partial_sum(alternating_harmonic,1)+alternating_harmonic(1+1)
+    alternating_harmonic(2)=-1/2
+    series::partial_sum(alternating_harmonic,2)=series::partial_sum(alternating_harmonic,1+1)=series::partial_sum(alternating_harmonic,1)+alternating_harmonic(1+1)=1-1/2=1/2
+
+release thm series::alternating_series_remainder_bound(alternating_harmonic,harmonic_u,H,2)
+
+abs(H-series::partial_sum(alternating_harmonic,2))<=1/3
+
+release thm series::series_tail_at(harmonic_u,1,3)
+
+series::series_tail(harmonic_u,1)(3)=harmonic_u(4)=1/4
+
+claim:
+    ? series::partial_sum(alternating_harmonic,3)=5/6
+    by thm series::partial_sum_successor(alternating_harmonic,2) => series::partial_sum(alternating_harmonic,2+1)=series::partial_sum(alternating_harmonic,2)+alternating_harmonic(2+1)
+    alternating_harmonic(3)=1/3
+    series::partial_sum(alternating_harmonic,3)=series::partial_sum(alternating_harmonic,2+1)=series::partial_sum(alternating_harmonic,2)+alternating_harmonic(2+1)=1/2+1/3=5/6
+
+release thm series::alternating_series_remainder_bound(alternating_harmonic,harmonic_u,H,3)
+
+abs(H-series::partial_sum(alternating_harmonic,3))<=1/4

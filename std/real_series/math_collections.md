@@ -59,6 +59,28 @@ the zero-term condition. A finite root limsup above 1 gives arbitrarily late
 terms of magnitude greater than 1, also contradicting that condition.
 No test decides the threshold 1; ratio limsup above 1 alone is insufficient.
 
+The reciprocal-square series is compared after its first term with the
+nonnegative telescoping sequence `1/k-1/(k+1)`. For any natural exponent
+`p>=2`, `k^p>=k^2` gives comparison with the reciprocal-square series.
+These theorems establish convergence, not the numerical sum. They do not
+establish the general real-exponent p-series test. The cases p=0 and p=1 are
+separately divergent by the existing nonzero-constant and harmonic theorems.
+
+For the alternating test, odd terms begin with `a(1)=u(1)` and even terms
+are `-u(2*k)`. The nonincreasing `u` tends to zero. Pairing after the first
+two terms yields `b(k)=u(2*k+1)-u(2*k+2)`. These nonnegative paired terms
+are bounded by the telescoping difference of odd-indexed values of `u`.
+Comparison gives convergence of the paired series and therefore of even
+partial sums; the next odd term tends to zero. An explicit parity and
+interleaving argument then gives convergence of all partial sums. The convergence
+conclusion asserts existence of a finite sum, not its value.
+The even sums increase, the odd sums decrease, and their common limit is
+between adjacent partial sums. This yields the absolute remainder estimate
+`abs(L-S_n)<=u(n+1)` for an actual candidate L; an existing tail
+construction supplies the next-term equality inside the proof. The included
+alternating harmonic consumer proves convergence and separately proves failure
+of absolute convergence.
+
 This is convergence in the given `N+` order. Convergence alone does not imply
 absolute or unconditional convergence or permit rearrangement. Empty prefixes, other
 carriers, infinite values, products and function series are outside this

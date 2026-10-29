@@ -607,6 +607,87 @@ impl Runtime {
                         })?,
                     ));
                 }
+                // Order arguments have already passed object WD. When the
+                // reduced domain check cannot replay a function call, reuse
+                // that checked call with the existing exact codomain leaf.
+                // No domain proof, signature guard or search ceiling is reset.
+                let domain_state = verify_state
+                    .capped_at(crate::execute::execute_fact_stmt::VerifyStateLevel::BuiltinRule);
+                if matches!(
+                    fact,
+                    AtomicFact::LessFact(_)
+                        | AtomicFact::NotLessFact(_)
+                        | AtomicFact::GreaterFact(_)
+                        | AtomicFact::NotGreaterFact(_)
+                        | AtomicFact::LessEqualFact(_)
+                        | AtomicFact::NotLessEqualFact(_)
+                        | AtomicFact::GreaterEqualFact(_)
+                        | AtomicFact::NotGreaterEqualFact(_)
+                ) && domain_state.allows(
+                    crate::execute::execute_fact_stmt::VerifyStateLevel::KnownSpecialProperty,
+                ) {
+                    use super::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{
+                        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty as Special,
+                        InFactSearchProofByKnownSpecialProperty as InSpecial,
+                    };
+                    use super::well_defined_result::{
+                        PredicateDomainArgumentReturnMembership as Membership,
+                        PredicateDomainArgumentReturnProof,
+                    };
+                    let mut checked = Vec::new();
+                    let mut count = 0;
+                    for (argument_index, domain) in requirements.iter().enumerate() {
+                        let crate::ast::fact::Fact::AtomicFact(AtomicFact::InFact(member)) = domain
+                        else {
+                            break;
+                        };
+                        let Obj::StandardSet(target) = &member.set else {
+                            break;
+                        };
+                        if args.get(argument_index).copied() != Some(&member.element) {
+                            break;
+                        }
+                        let membership = if let Some(proof) =
+                            self.search_structural_membership(&member.element, target)
+                        {
+                            Membership::Structural(proof)
+                        } else {
+                            let member_fact = AtomicFact::InFact(member.clone());
+                            let Some(Special::InFact(proof)) = self
+                                .search_atomic_except_equality_fact_proof_by_known_special_property_at_ceiling(
+                                    &member_fact,
+                                    domain_state,
+                                )
+                            else {
+                                break;
+                            };
+                            if !matches!(&proof, InSpecial::FnApplicationInCodomain(_)) {
+                                break;
+                            }
+                            Membership::FunctionReturn(proof)
+                        };
+                        count += 1;
+                        if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                            checked.push(PredicateDomainArgumentReturnProof {
+                                requirement: domain.clone(),
+                                argument_index,
+                                membership,
+                            });
+                        }
+                    }
+                    if !requirements.is_empty() && count == requirements.len() {
+                        return Ok(VerifyAtomicFactWellDefinedResult::Success(
+                            AtomicFactWellDefinedProof::new(self.result_detail(), || {
+                                DetailedAtomicFactWellDefinedProof {
+                                    well_defined_of_each_parameter: succeeded_args,
+                                    predicate_signature,
+                                    predicate_domain:
+                                        PredicateDomainProof::ByCheckedArgumentReturns(checked),
+                                }
+                            })?,
+                        ));
+                    }
+                }
                 if first_failure.is_none() {
                     first_failure = Some((predicate_domain, requirement, result));
                 }

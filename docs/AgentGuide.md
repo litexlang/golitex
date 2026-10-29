@@ -172,6 +172,7 @@ strict file check. Omit the rejected candidate from that saved file. Reserve
 | --- | --- |
 | Language, domains, proof commands and mathematical recipes | [Manual](Manual.md) |
 | First-contact authoring choices | [Learner Cheatsheet](Litex_Learner_Cheatsheet.md) |
+| The prompt that teaches an agent Litex cheaply, and how to tune it | [Prompt Authoring](Agent_Prompt_Authoring.md), [Agent Primer](Litex_Agent_Primer.md) |
 | Small runnable examples and their assumptions | [Examples](../examples/README.md) |
 | Module interfaces and chapter dependencies | The owning module's `README.md`, `math_collections.md`, and `litex.config` |
 | Repository authorization and local-only boundaries | [AGENTS.md](../AGENTS.md) and the applicable repository policy skill |

@@ -1483,12 +1483,28 @@ evaluations can also replay recorded equality citations, as in
 [a cited root](../lean/examples/evaluated_cited_irrational_root/) and
 [a cited product](../lean/examples/evaluated_cited_radical_product/). The
 rewritten intermediate is interpreted as a semantic value; the source and
-result objects keep their original WD evidence. Products of radical sums,
-division, function calls and aggregate records remain outside these radical
-routes.
+result objects keep their original WD evidence. Products of two linear radical
+sums also compile; see [a product of sums](../lean/examples/evaluated_radical_sum_product/)
+and [a cited product](../lean/examples/evaluated_cited_radical_sum_product/).
+The compiler combines repeated root pairs and limits each expansion to 64
+nonzero pairs. Nested products of sums, division, function calls and aggregate
+records remain outside these radical routes.
 The selected rule that a positive real has a nonzero square root also replays
 through the proved `Litex.sqrtNonzeroOfPositive` theorem; see
 [the generic theorem](../lean/examples/square_root_nonzero_theorem/).
+The selected square-root monotonicity rule replays the original argument
+order and the two square-root WD proofs; see
+[square-root monotonicity](../lean/examples/sqrt_monotone/).
+
+For a positive-indexed real sequence, `lim(a)` now keeps the original sequence
+domain and convergence evidence. Its semantic value is selected independently
+of the WD proof, and its uniqueness is proved from Litex's epsilon-tail
+definition. See [the selected value](../lean/examples/sequence_limit_selected_value/),
+[real membership](../lean/examples/sequence_limit_real/) and
+[existence-only WD](../lean/examples/sequence_limit_exists_object/). These
+generated theorems retain the model and function-semantics parameters.
+The selected uniqueness rule also cites both candidate-limit facts when the
+sequence is a suitably typed parameter; see [uniqueness](../lean/examples/sequence_limit_unique/).
 
 Exact rational logarithms also compile when Litex evaluates them:
 
@@ -1539,6 +1555,12 @@ The real exponential's nonzero rule and both directions of sign nonzero also
 replay their selected results; see [exponential](../lean/examples/real_exponential_nonzero/),
 [sign](../lean/examples/real_sign_nonzero/) and
 [sign reflection](../lean/examples/real_sign_reflects_nonzero/).
+For real exponentials and logarithms on positive reals, the selected strict
+and weak order rules also compile in both directions. See
+[exponential monotonicity](../lean/examples/exp_strict_monotone/),
+[exponential order reflection](../lean/examples/exp_strict_order_reflection/),
+[logarithm monotonicity](../lean/examples/ln_weak_monotone/) and
+[logarithm order reflection](../lean/examples/ln_weak_order_reflection/).
 For a nonzero complex argument, the selected conjugate and modulus nonzero
 rules reuse the recorded premise and original WD; see
 [conjugation](../lean/examples/complex_conjugate_nonzero/) and

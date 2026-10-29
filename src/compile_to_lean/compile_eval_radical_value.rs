@@ -5,6 +5,7 @@ use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::ExecEvalStmtSuccess;
 use crate::prelude::*;
 use crate::rational_expression::exact_radical::ExactRadical;
+use std::collections::BTreeMap;
 
 /// Only linear combinations and rational scaling are supported here. Products
 /// of two irrational roots need a separate checked multiplication certificate.
@@ -147,6 +148,98 @@ fn root_product_certificate(
     Ok(Some(format!("have _litex_product : Real.sqrt {a} * Real.sqrt {b} = {value} := by\n  rw [← Real.sqrt_mul (by norm_num : (0 : ℝ) ≤ {a})]\n  apply (Real.sqrt_eq_iff_eq_sq (by norm_num) (by positivity)).mpr\n  {square}\nexact_mod_cast _litex_product")))
 }
 
+/// Verify each pair in the evaluator's product of two canonical linear sums.
+/// The final linear combination checks their coefficients in Lean as well.
+fn radical_sum_product_certificate(
+    left: &Obj,
+    right: &Obj,
+) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+    let left = ExactRadical::from_obj(left)
+        .ok_or_else(|| LeanCompileError::unsupported("Eval/RadicalProductLeft"))?;
+    let right = ExactRadical::from_obj(right)
+        .ok_or_else(|| LeanCompileError::unsupported("Eval/RadicalProductRight"))?;
+    let mut weighted_pairs: BTreeMap<(i128, i128), EvalRational> = BTreeMap::new();
+    for (a, ca) in left.terms().filter(|(a, _)| *a != 1) {
+        for (b, cb) in right.terms().filter(|(b, _)| *b != 1) {
+            let key = (a.min(b), a.max(b));
+            let coefficient = ca
+                .mul(cb)
+                .ok_or_else(|| LeanCompileError::unsupported("Eval/RadicalProductCoefficient"))?;
+            let value = match weighted_pairs.get(&key) {
+                Some(previous) => previous.add(&coefficient).ok_or_else(|| {
+                    LeanCompileError::unsupported("Eval/RadicalProductCoefficient")
+                })?,
+                None => coefficient,
+            };
+            if value.is_zero() {
+                weighted_pairs.remove(&key);
+            } else {
+                weighted_pairs.insert(key, value);
+            }
+        }
+    }
+    // Each pair emits a Lean proof; do not let a single source step generate
+    // an unbounded number of certificates.
+    if weighted_pairs.len() > 64 {
+        return Err(LeanCompileError::unsupported("Eval/RadicalProductBudget"));
+    }
+    let mut proofs = Vec::new();
+    let mut combination = Vec::new();
+    for ((a, b), coefficient) in weighted_pairs {
+        let root = |n: i128| {
+            Obj::ExpLogOperator(ExpLogOperator::Sqrt(Sqrt {
+                arg: Box::new(Obj::Literal(Literal::Number(Number::new(n.to_string())))),
+            }))
+        };
+        let pair = Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
+            left: Box::new(root(a)),
+            right: Box::new(root(b)),
+        }));
+        let result = ExactRadical::from_obj(&pair)
+            .and_then(|r| r.checked_to_obj())
+            .ok_or_else(|| LeanCompileError::unsupported("Eval/RadicalProductPair"))?;
+        let result_complex = if let Some(q) = EvalRational::from_obj(&result) {
+            exact_rational_literal(&q, "ℂ")?
+        } else {
+            let (c, d) = match &result {
+                Obj::ExpLogOperator(ExpLogOperator::Sqrt(r)) => {
+                    (EvalRational::new(1, 1).unwrap(), &*r.arg)
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(m)) => {
+                    let c = EvalRational::from_obj(&m.left).ok_or_else(|| {
+                        LeanCompileError::unsupported("Eval/RadicalProductCoefficient")
+                    })?;
+                    let Obj::ExpLogOperator(ExpLogOperator::Sqrt(r)) = &*m.right else {
+                        return Err(LeanCompileError::unsupported("Eval/RadicalProductOutput"));
+                    };
+                    (c, &*r.arg)
+                }
+                _ => return Err(LeanCompileError::unsupported("Eval/RadicalProductOutput")),
+            };
+            let d = EvalRational::from_obj(d)
+                .ok_or_else(|| LeanCompileError::unsupported("Eval/RadicalProductOutput"))?;
+            let d = exact_rational_literal(&d, "ℝ")?;
+            let root = format!("((Real.sqrt {d} : ℝ) : ℂ)");
+            if c == EvalRational::new(1, 1).unwrap() {
+                root
+            } else {
+                format!("({} * {root})", exact_rational_literal(&c, "ℂ")?)
+            }
+        };
+        let a_real = exact_rational_literal(&EvalRational::new(a, 1).unwrap(), "ℝ")?;
+        let b_real = exact_rational_literal(&EvalRational::new(b, 1).unwrap(), "ℝ")?;
+        let body = root_product_certificate(&pair, &result)?
+            .ok_or_else(|| LeanCompileError::unsupported("Eval/RadicalProductPair"))?;
+        let name = format!("_litex_pair_{}", proofs.len());
+        proofs.push(format!("have {name} : ((Real.sqrt {a_real} : ℝ) : ℂ) * ((Real.sqrt {b_real} : ℝ) : ℂ) = {result_complex} := by\n  {}", body.replace('\n', "\n  ")));
+        combination.push(format!(
+            "{} * {name}",
+            exact_rational_literal(&coefficient, "ℂ")?
+        ));
+    }
+    Ok((proofs, combination))
+}
+
 impl LitexToLeanCompiler {
     /// Interpret a closed rewrite endpoint as a semantic value. This internal
     /// value is not a newly formed Litex object and needs no invented WD.
@@ -216,10 +309,18 @@ impl LitexToLeanCompiler {
         }
         let product = root_product_certificate(&p.rewritten_object, &p.evaluated_object)?;
         let mut roots = Vec::new();
-        if product.is_none()
-            && (!linear_radical(&p.rewritten_object, &mut roots)
-                || !linear_radical(&p.evaluated_object, &mut roots))
-        {
+        let mut pairs = None;
+        if product.is_none() && !linear_radical(&p.rewritten_object, &mut roots) {
+            roots.clear();
+            let Obj::ArithmeticOperator(ArithmeticOperator::Mul(m)) = &p.rewritten_object else {
+                return Err(LeanCompileError::unsupported("Eval/LinearRadicalDomain"));
+            };
+            if !linear_radical(&m.left, &mut roots) || !linear_radical(&m.right, &mut roots) {
+                return Err(LeanCompileError::unsupported("Eval/LinearRadicalDomain"));
+            }
+            pairs = Some(radical_sum_product_certificate(&m.left, &m.right)?);
+        }
+        if product.is_none() && !linear_radical(&p.evaluated_object, &mut roots) {
             return Err(LeanCompileError::unsupported("Eval/LinearRadicalDomain"));
         }
         let mut names = Vec::new();
@@ -230,6 +331,12 @@ impl LitexToLeanCompiler {
                 certificates.push(proof);
             }
         }
+        let combination = if let Some((pair_proofs, combination)) = pairs {
+            certificates.extend(pair_proofs);
+            combination
+        } else {
+            Vec::new()
+        };
         let evaluated = SourcePosition {
             before: 2,
             ..*position
@@ -256,7 +363,11 @@ impl LitexToLeanCompiler {
         if !names.is_empty() {
             calculation.push_str("push_cast\n");
         }
-        calculation.push_str("ring");
+        if combination.is_empty() {
+            calculation.push_str("ring");
+        } else {
+            calculation.push_str(&format!("linear_combination {}", combination.join(" + ")));
+        }
         if let Some(product) = product {
             calculation = product;
         }

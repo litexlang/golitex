@@ -155,6 +155,7 @@ impl LitexToLeanCompiler {
             }
             DetailedObjWellDefinedProof::ByDef { obj, proof } => {
                 let term = match (obj, proof) {
+                    (Obj::LimitOperator(LimitOperator::Sequence(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Sequence(evidence))) => self.compile_sequence_limit_wd(object, evidence, position)?,
                     (Obj::BoundOperator(object), ObjWellDefinedProofByDef::BoundOperator(evidence)) => self.compile_real_extremum_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(object @ (IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_))), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_finite_aggregate_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(IteratedOperator::Reduce(object)), ObjWellDefinedProofByDef::IteratedOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Reduce(evidence))) => self.compile_range_fold_wd(object, evidence, position)?,
@@ -648,6 +649,66 @@ impl LitexToLeanCompiler {
                             ..*position
                         },
                     )?;
+                }
+            }
+            PredicateDomainProof::ByCheckedArgumentReturns(requirements) => {
+                use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainArgumentReturnMembership as Membership;
+                use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty as InSpecial;
+                if !matches!(
+                    fact,
+                    AtomicFact::LessFact(_)
+                        | AtomicFact::GreaterFact(_)
+                        | AtomicFact::LessEqualFact(_)
+                        | AtomicFact::GreaterEqualFact(_)
+                        | AtomicFact::NotLessFact(_)
+                        | AtomicFact::NotGreaterFact(_)
+                        | AtomicFact::NotLessEqualFact(_)
+                        | AtomicFact::NotGreaterEqualFact(_)
+                ) || requirements.len() != args.len()
+                {
+                    return Err(LeanCompileError::new(
+                        "WD/OrderRealDomain",
+                        "Checked return domains have another predicate or arity.",
+                    ));
+                }
+                for (index, requirement) in requirements.iter().enumerate() {
+                    let Fact::AtomicFact(AtomicFact::InFact(member)) = &requirement.requirement
+                    else {
+                        return Err(LeanCompileError::new(
+                            "WD/OrderRealDomain",
+                            "Expected real membership.",
+                        ));
+                    };
+                    if requirement.argument_index != index
+                        || member.element != *args[index]
+                        || member.set != Obj::StandardSet(StandardSet::R)
+                    {
+                        return Err(LeanCompileError::new(
+                            "WD/OrderRealDomain",
+                            "Checked return membership has another subject, carrier or position.",
+                        ));
+                    }
+                    let prior = SourcePosition {
+                        before: args.len() + index,
+                        ..*position
+                    };
+                    match &requirement.membership {
+                        Membership::Structural(proof) => {
+                            if proof.element != member.element || proof.set != StandardSet::R {
+                                return Err(LeanCompileError::new(
+                                    "WD/OrderRealDomain",
+                                    "Structural membership differs from the checked argument.",
+                                ));
+                            }
+                            self.compile_structural(proof, &prior)?;
+                        }
+                        Membership::FunctionReturn(InSpecial::FnApplicationInCodomain(proof)) => {
+                            self.compile_fn_return_codomain(member, proof, &prior)?;
+                        }
+                        Membership::FunctionReturn(_) => {
+                            return Err(LeanCompileError::unsupported("WD/CheckedFunctionReturn"));
+                        }
+                    }
                 }
             }
             PredicateDomainProof::ByRequirements(requirements) => {

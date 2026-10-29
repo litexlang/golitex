@@ -1,0 +1,7 @@
+# Run: target/release/litex -lang en -strict -f examples/wd_negative/checked_function_order_alternative_guard.lit
+# An unguarded complex-return signature cannot borrow a guarded real return.
+thm unchecked_alternative_guard:
+    ? forall f fn(k N+) C,n N+:
+        f $in fn(k N+:k<=2) R
+        =>:
+            f(n+1)<=f(n+1)

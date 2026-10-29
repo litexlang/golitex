@@ -18,6 +18,14 @@ pub(crate) struct ExactRadical {
 }
 
 impl ExactRadical {
+    /// Expose the evaluator's canonical basis for consumers that check its
+    /// exact arithmetic in another proof system.
+    pub(crate) fn terms(&self) -> impl Iterator<Item = (i128, &EvalRational)> {
+        self.terms
+            .iter()
+            .map(|(&radicand, coefficient)| (radicand, coefficient))
+    }
+
     /// Materialize the canonical result only when every coefficient has a
     /// representable magnitude. This is useful when validating external
     /// evidence, where malformed values must not trigger `to_obj`'s unwrap.

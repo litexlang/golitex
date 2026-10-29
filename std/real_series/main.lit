@@ -1701,3 +1701,870 @@ thm series_ratio_limit_diverges:
     release thm seq_liminf_from_limit(ratio,L)
     release thm series_ratio_liminf_diverges(a,ratio,L,m)
 
+
+
+thm positive_integer_parity:
+    ? forall n N+:
+        exist k N st {n=2*k or n=2*k+1}
+    by induc n from 1:
+        ? exist k N st {n=2*k or n=2*k+1}
+        ? from n=1:
+            1=2*0+1
+            witness exist k N st {1=2*k or 1=2*k+1} from 0
+        ? induc:
+            obtain q from exist index N st {n=2*index or n=2*index+1}
+            by cases:
+                ? exist k N st {n+1=2*k or n+1=2*k+1}
+                case n=2*q:
+                    n+1=2*q+1
+                    witness exist j N st {n+1=2*j or n+1=2*j+1} from q
+                case n=2*q+1:
+                    have next N=q+1
+                    n+1=(2*q+1)+1=2*q+2=2*(q+1)=2*next
+                    witness exist j N st {n+1=2*j or n+1=2*j+1} from next
+
+thm alternating_even_step:
+    ? forall a,u seq(R),n N+:
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+        =>:
+            partial_sum(a,2*n+2)=partial_sum(a,2*n)+u(2*n+1)-u(2*n+2)
+    have m N+=2*n
+    have k N+=n+1
+    have next N+=m+1
+    by thm partial_sum_successor(a,m) => partial_sum(a,m+1)=partial_sum(a,m)+a(m+1)
+    by thm partial_sum_successor(a,next) => partial_sum(a,next+1)=partial_sum(a,next)+a(next+1)
+    2*k=2*(n+1)=2*n+2
+    m=2*n
+    m+1=2*n+1
+    next=m+1=2*n+1
+    next+1=(2*n+1)+1=2*n+2
+    2*k=next+1
+    a(2*n+1)=u(2*n+1)
+    a(2*k)=-u(2*k)
+    partial_sum(a,next)=partial_sum(a,m+1)=partial_sum(a,m)+a(m+1)
+    a(m+1)=a(2*n+1)=u(2*n+1)
+    u(2*k)=u(2*n+2)
+    -u(2*k)=-u(2*n+2)
+    a(next+1)=a(2*k)=-u(2*k)=-u(2*n+2)
+    partial_sum(a,m)=partial_sum(a,2*n)
+    partial_sum(a,2*n+2)=partial_sum(a,next+1)=partial_sum(a,next)+a(next+1)
+    partial_sum(a,next)=partial_sum(a,2*n)+u(2*n+1)
+    partial_sum(a,next)+a(next+1)=partial_sum(a,next)+(-u(2*n+2))
+    partial_sum(a,next)+(-u(2*n+2))=(partial_sum(a,2*n)+u(2*n+1))+(-u(2*n+2))
+    (partial_sum(a,2*n)+u(2*n+1))+(-u(2*n+2))=partial_sum(a,2*n)+u(2*n+1)-u(2*n+2)
+
+thm alternating_even_partial_sums:
+    ? forall a,u,b seq(R),n N+:
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+            b(k)=u(2*k+1)-u(2*k+2)
+        =>:
+            partial_sum(a,2*n+2)=partial_sum(a,2)+partial_sum(b,n)
+    by induc n from 1:
+        ? partial_sum(a,2*n+2)=partial_sum(a,2)+partial_sum(b,n)
+        ? from n=1:
+            by thm alternating_even_step(a,u,1) => partial_sum(a,2*1+2)=partial_sum(a,2*1)+u(2*1+1)-u(2*1+2)
+            b(1)=u(3)-u(4)
+            partial_sum(b,1)=b(1)=u(3)-u(4)
+            2*1+2=4
+            2*1=2
+            2*1+1=3
+            u(2*1+1)=u(3)
+            u(2*1+2)=u(4)
+            partial_sum(a,4)=partial_sum(a,2*1+2)=partial_sum(a,2*1)+u(2*1+1)-u(2*1+2)
+            partial_sum(a,2*1)=partial_sum(a,2)
+            partial_sum(a,2*1)+u(2*1+1)-u(2*1+2)=partial_sum(a,2)+u(3)-u(4)
+            partial_sum(a,4)=partial_sum(a,2)+(u(3)-u(4))=partial_sum(a,2)+partial_sum(b,1)
+        ? induc:
+            have next N+=n+1
+            by thm alternating_even_step(a,u,next) => partial_sum(a,2*next+2)=partial_sum(a,2*next)+u(2*next+1)-u(2*next+2)
+            by thm partial_sum_successor(b,n) => partial_sum(b,n+1)=partial_sum(b,n)+b(n+1)
+            b(next)=u(2*next+1)-u(2*next+2)
+            2*next=2*(n+1)=2*n+2
+            2*next+2=2*(n+1)+2
+            partial_sum(a,2*next)=partial_sum(a,2*n+2)=partial_sum(a,2)+partial_sum(b,n)
+            partial_sum(b,n+1)=partial_sum(b,n)+b(next)
+            partial_sum(a,2*next)+u(2*next+1)-u(2*next+2)=partial_sum(a,2*next)+(u(2*next+1)-u(2*next+2))
+            partial_sum(a,2*next)+(u(2*next+1)-u(2*next+2))=partial_sum(a,2*next)+b(next)
+            partial_sum(a,2*(n+1)+2)=partial_sum(a,2*next+2)=partial_sum(a,2*next)+u(2*next+1)-u(2*next+2)=partial_sum(a,2*next)+b(next)
+            partial_sum(a,2*next)+b(next)=(partial_sum(a,2)+partial_sum(b,n))+b(next)
+            (partial_sum(a,2)+partial_sum(b,n))+b(next)=partial_sum(a,2)+(partial_sum(b,n)+b(next))=partial_sum(a,2)+partial_sum(b,n+1)
+
+thm sequence_odd_subsequence_limit:
+    ? forall u,v seq(R),L R:
+        $has_seq_limit(u,L)
+        forall k N+:
+            v(k)=u(2*k+1)
+        =>:
+            $has_seq_limit(v,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(v,{x R:abs(x-L)<epsilon})}
+        release thm seq_limit_tail(u,L,epsilon)
+        obtain n0 from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(u,{x R:abs(x-L)<epsilon})}
+        witness exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(v,{x R:abs(x-L)<epsilon})} from n0:
+            claim:
+                ? forall k {j N+:j>=n0}:
+                    k $in preimage_set(v,{x R:abs(x-L)<epsilon})
+                2*k=k+k>=k>=n0
+                2*k+1>2*k>=n0
+                have index N+=2*k+1
+                index>=n0
+                index $in {j N+:j>=n0}
+                2*k+1 $in {j N+:j>=n0}
+                2*k+1 $in preimage_set(u,{x R:abs(x-L)<epsilon})
+                u(2*k+1) $in {x R:abs(x-L)<epsilon}
+                abs(u(2*k+1)-L)<epsilon
+                v(k)=u(2*k+1)
+                abs(v(k)-L)=abs(u(2*k+1)-L)<epsilon
+                v(k) $in {x R:abs(x-L)<epsilon}
+            by def {k N+:k>=n0} $subset preimage_set(v,{x R:abs(x-L)<epsilon})
+    by def $has_seq_limit(v,L)
+
+thm alternating_paired_series_converges:
+    ? forall u,b seq(R):
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        forall k N+:
+            b(k)=u(2*k+1)-u(2*k+2)
+        =>:
+            $is_convergent_series(b)
+    have fn odd(k N+) R=u(2*k+1)
+    have fn telescope(k N+) R=odd(k)-odd(k+1)
+    claim:
+        ? forall k N+:
+            odd(k)=u(2*k+1)
+        odd(k)=u(2*k+1)
+    release thm sequence_odd_subsequence_limit(u,odd,0)
+    claim:
+        ? forall k N+:
+            telescope(k)=odd(k)-odd(k+1)
+        telescope(k)=odd(k)-odd(k+1)
+    release thm series_sum_telescoping(telescope,odd,0)
+    release thm series_sum_convergent(telescope,odd(1)-0)
+    claim:
+        ? forall k N+:
+            0<=b(k)
+            b(k)<=telescope(k)
+        have first N+=2*k+1
+        have second N+=2*k+2
+        have third N+=2*k+3
+        first=2*k+1
+        second=2*k+2
+        third=2*k+3
+        2*k+1<2*k+2<2*k+3
+        first<second<third
+        u(first)>=u(second)>=u(third)
+        u(2*k+1)>=u(2*k+2)>=u(2*k+3)
+        0<=u(2*k+1)-u(2*k+2)<=u(2*k+1)-u(2*k+3)
+        b(k)=u(2*k+1)-u(2*k+2)
+        odd(k)=u(2*k+1)
+        odd(k+1)=u(2*(k+1)+1)
+        2*(k+1)+1=2*k+3
+        odd(k+1)=u(2*k+3)
+        telescope(k)=odd(k)-odd(k+1)=u(2*k+1)-u(2*k+3)
+        0<=b(k)<=telescope(k)
+    release thm series_comparison(b,telescope)
+
+thm alternating_even_partial_sums_converge:
+    ? forall a,u,evens seq(R):
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+            evens(k)=partial_sum(a,2*k)
+        =>:
+            $is_seq_convergent(evens)
+    have fn b(k N+) R=u(2*k+1)-u(2*k+2)
+    claim:
+        ? forall k N+:
+            b(k)=u(2*k+1)-u(2*k+2)
+        b(k)=u(2*k+1)-u(2*k+2)
+    release thm alternating_paired_series_converges(u,b)
+    release thm convergent_series_limit_exists(b)
+    obtain L from exist value R st {$has_seq_limit(partial_sums(b),value)}
+    have fn constant(k N+) R=partial_sum(a,2)
+    have fn shifted(k N+) R=evens(k+1)
+    release thm seq_limit_constant(constant,partial_sum(a,2))
+    release thm seq_limit_add(constant,partial_sums(b),partial_sum(a,2),L)
+    claim:
+        ? forall k N+:
+            fn(j N+) R {constant(j)+partial_sums(b)(j)}(k)=shifted(k)
+        release thm alternating_even_partial_sums(a,u,b,k)
+        by thm partial_sums_at(b,k) => partial_sums(b)(k)=partial_sum(b,k)
+        have next N+=k+1
+        evens(next)=partial_sum(a,2*next)
+        evens(k+1)=evens(next)=partial_sum(a,2*next)
+        2*(k+1)=2*k+2
+        2*next=2*(k+1)=2*k+2
+        partial_sum(a,2*next)=partial_sum(a,2*k+2)=partial_sum(a,2)+partial_sum(b,k)
+        shifted(k)=evens(k+1)=partial_sum(a,2)+partial_sum(b,k)
+        constant(k)=partial_sum(a,2)
+        fn(j N+) R {constant(j)+partial_sums(b)(j)}(k)=constant(k)+partial_sums(b)(k)=partial_sum(a,2)+partial_sum(b,k)=shifted(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {constant(j)+partial_sums(b)(j)},shifted,partial_sum(a,2)+L,1)
+    claim:
+        ? forall k N+:
+            shifted(k)=evens(k+1)
+        shifted(k)=evens(k+1)
+    release thm sequence_limit_from_shift(evens,shifted,partial_sum(a,2)+L,1)
+    release thm sequence_convergent_from_limit(evens,partial_sum(a,2)+L)
+
+thm sequence_interleaved_limit:
+    ? forall a,evens,odds seq(R),L R:
+        $has_seq_limit(evens,L)
+        $has_seq_limit(odds,L)
+        forall k N+:
+            evens(k)=a(2*k)
+            odds(k)=a(2*k+1)
+        =>:
+            $has_seq_limit(a,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{x R:abs(x-L)<epsilon})}
+        release thm seq_limit_tail(evens,L,epsilon)
+        release thm seq_limit_tail(odds,L,epsilon)
+        obtain p from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(evens,{x R:abs(x-L)<epsilon})}
+        obtain q from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(odds,{x R:abs(x-L)<epsilon})}
+        have bound N+=2*(p+q)+2
+        witness exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{x R:abs(x-L)<epsilon})} from bound:
+            claim:
+                ? forall n {j N+:j>=bound}:
+                    n $in preimage_set(a,{x R:abs(x-L)<epsilon})
+                release thm positive_integer_parity(n)
+                obtain index from exist k N st {n=2*k or n=2*k+1}
+                by cases:
+                    ? abs(a(n)-L)<epsilon
+                    case n=2*index:
+                        2*index=n>=bound=2*(p+q)+2>2*(p+q)
+                        (2*index)/2>(2*(p+q))/2
+                        (2*index)/2=index
+                        (2*(p+q))/2=p+q
+                        index>p+q
+                        p+q>p
+                        p>=1
+                        index>p+q>p>=1
+                        index>=1
+                        index $in Z
+                        index>=1>0
+                        index $in N+
+                        index $in {k N+:k>=p}
+                        index $in preimage_set(evens,{x R:abs(x-L)<epsilon})
+                        evens(index) $in {x R:abs(x-L)<epsilon}
+                        abs(evens(index)-L)<epsilon
+                        evens(index)=a(2*index)=a(n)
+                        abs(a(n)-L)=abs(evens(index)-L)<epsilon
+                    case n=2*index+1:
+                        2*index+1=n>=bound=2*(p+q)+2
+                        2*index=(2*index+1)-1>=bound-1
+                        bound-1=(2*(p+q)+2)-1=2*(p+q)+1
+                        2*index>=2*(p+q)+1>2*(p+q)
+                        (2*index)/2>(2*(p+q))/2
+                        (2*index)/2=index
+                        (2*(p+q))/2=p+q
+                        index>p+q
+                        p+q>q
+                        q>=1
+                        index>p+q>q>=1
+                        index>=1
+                        index $in Z
+                        index>=1>0
+                        index $in N+
+                        index $in {k N+:k>=q}
+                        index $in preimage_set(odds,{x R:abs(x-L)<epsilon})
+                        odds(index) $in {x R:abs(x-L)<epsilon}
+                        abs(odds(index)-L)<epsilon
+                        odds(index)=a(2*index+1)=a(n)
+                        abs(a(n)-L)=abs(odds(index)-L)<epsilon
+                a(n) $in {x R:abs(x-L)<epsilon}
+            by def {n N+:n>=bound} $subset preimage_set(a,{x R:abs(x-L)<epsilon})
+    by def $has_seq_limit(a,L)
+
+thm alternating_series_test:
+    ? forall a,u seq(R):
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+        =>:
+            $is_convergent_series(a)
+    have fn evens(k N+) R=partial_sum(a,2*k)
+    have fn odds(k N+) R=partial_sum(a,2*k+1)
+    have fn odd_terms(k N+) R=u(2*k+1)
+    claim:
+        ? forall k N+:
+            a(2*k)=-u(2*k)
+            evens(k)=partial_sum(a,2*k)
+        a(2*k)=-u(2*k)
+        evens(k)=partial_sum(a,2*k)
+    release thm alternating_even_partial_sums_converge(a,u,evens)
+    release thm sequence_limit_from_convergent(evens)
+    obtain L from exist value R st {$has_seq_limit(evens,value)}
+    claim:
+        ? forall k N+:
+            odd_terms(k)=u(2*k+1)
+        odd_terms(k)=u(2*k+1)
+    release thm sequence_odd_subsequence_limit(u,odd_terms,0)
+    release thm seq_limit_add(evens,odd_terms,L,0)
+    claim:
+        ? forall k N+:
+            fn(j N+) R {evens(j)+odd_terms(j)}(k)=odds(k)
+        have index N+=2*k
+        by thm partial_sum_successor(a,index) => partial_sum(a,index+1)=partial_sum(a,index)+a(index+1)
+        index+1=2*k+1
+        a(2*k+1)=u(2*k+1)
+        evens(k)=partial_sum(a,2*k)=partial_sum(a,index)
+        odd_terms(k)=u(2*k+1)=a(2*k+1)=a(index+1)
+        odds(k)=partial_sum(a,2*k+1)=partial_sum(a,index+1)=partial_sum(a,index)+a(index+1)=evens(k)+odd_terms(k)
+        fn(j N+) R {evens(j)+odd_terms(j)}(k)=evens(k)+odd_terms(k)=odds(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {evens(j)+odd_terms(j)},odds,L+0,1)
+    L+0=L
+    $has_seq_limit(odds,L)
+    claim:
+        ? forall k N+:
+            evens(k)=partial_sums(a)(2*k)
+            odds(k)=partial_sums(a)(2*k+1)
+        by thm partial_sums_at(a,2*k) => partial_sums(a)(2*k)=partial_sum(a,2*k)
+        have next N+=2*k+1
+        by thm partial_sums_at(a,next) => partial_sums(a)(next)=partial_sum(a,next)
+        evens(k)=partial_sum(a,2*k)=partial_sums(a)(2*k)
+        odds(k)=partial_sum(a,2*k+1)=partial_sum(a,next)=partial_sums(a)(next)=partial_sums(a)(2*k+1)
+    release thm sequence_interleaved_limit(partial_sums(a),evens,odds,L)
+    by def $has_series_sum(a,L)
+    release thm series_sum_convergent(a,L)
+
+thm reciprocal_square_series_converges:
+    ? forall a seq(R):
+        forall k N+:
+            a(k)=1/k^2
+        =>:
+            $is_convergent_series(a)
+    have fn reciprocal(k N+) R=1/k
+    have fn telescope(k N+) R=reciprocal(k)-reciprocal(k+1)
+    release thm sequence_reciprocal_limit(reciprocal)
+    claim:
+        ? forall k N+:
+            telescope(k)=reciprocal(k)-reciprocal(k+1)
+        telescope(k)=reciprocal(k)-reciprocal(k+1)
+    release thm series_sum_telescoping(telescope,reciprocal,0)
+    release thm series_sum_convergent(telescope,reciprocal(1)-0)
+    claim:
+        ? forall k N+:
+            0<=series_tail(a,1)(k)
+            series_tail(a,1)(k)<=telescope(k)
+        have next N+=k+1
+        k>0
+        next>0
+        k<=next
+        a(next)=1/next^2
+        series_tail(a,1)(k)=a(k+1)=a(next)=1/next^2
+        0<=1/next^2
+        reciprocal(k)=1/k
+        reciprocal(next)=1/next
+        reciprocal(k+1)=reciprocal(next)=1/next
+        telescope(k)=reciprocal(k)-reciprocal(k+1)=1/k-1/next
+        0<k*next
+        next-k=(k+1)-k=1
+        1/k=next/(k*next)
+        1/next=k/(k*next)
+        1/k-1/next=next/(k*next)-k/(k*next)=(next-k)/(k*next)=1/(k*next)
+        next^2=next*next
+        0<k*next
+        0<next*next
+        0<k*next*next
+        1/(next*next)=k/(k*next*next)
+        1/(k*next)=next/(k*next*next)
+        k/(k*next*next)<=next/(k*next*next)
+        1/(next*next)=k/(k*next*next)<=next/(k*next*next)=1/(k*next)
+        series_tail(a,1)(k)=1/next^2=1/(next*next)<=1/(k*next)=telescope(k)
+    release thm series_comparison(series_tail(a,1),telescope)
+    release thm tail_convergent_series(a,1)
+
+thm natural_power_at_least_one:
+    ? forall x R,n N:
+        x>=1
+        =>:
+            x^n>=1
+    by induc n from 0:
+        ? x^n>=1
+        ? from n=0:
+            x^0=1
+        ? induc:
+            x^n>=1
+            x>=1
+            x^n*x>=1*1=1
+            x^(n+1)=x^n*x>=1
+
+thm reciprocal_natural_power_series_converges:
+    ? forall a seq(R),p N+:
+        p>=2
+        forall k N+:
+            a(k)=1/k^p
+        =>:
+            $is_convergent_series(a)
+    have fn square(k N+) R=1/k^2
+    release thm reciprocal_square_series_converges(square)
+    claim:
+        ? forall k N+:
+            0<=a(k)
+            a(k)<=square(k)
+        k>=1
+        have exponent N=p-2
+        exponent=p-2
+        p=2+(p-2)=2+exponent
+        release thm natural_power_at_least_one(k,exponent)
+        k^exponent>=1
+        0<k^2
+        k^p=k^(2+exponent)=k^2*k^exponent>=k^2*1=k^2
+        0<k^2<=k^p
+        0<k^2*k^p
+        1/k^p=k^2/(k^2*k^p)
+        1/k^2=k^p/(k^2*k^p)
+        k^2/(k^2*k^p)<=k^p/(k^2*k^p)
+        a(k)=1/k^p=k^2/(k^2*k^p)<=k^p/(k^2*k^p)=1/k^2=square(k)
+        0<1/k^p=a(k)
+    release thm series_comparison(a,square)
+
+thm sequence_limit_lower_bound:
+    ? forall s seq(R),L,B R:
+        $has_seq_limit(s,L)
+        forall n N+:
+            B<=s(n)
+        =>:
+            B<=L
+    have fn constant(k N+) R=B
+    have fn shifted(k N+) R=s(k)-B
+    release thm seq_limit_constant(constant,B)
+    release thm seq_limit_subtract(s,constant,L,B)
+    claim:
+        ? forall k N+:
+            fn(j N+) R {s(j)-constant(j)}(k)=shifted(k)
+        constant(k)=B
+        fn(j N+) R {s(j)-constant(j)}(k)=s(k)-constant(k)=s(k)-B=shifted(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {s(j)-constant(j)},shifted,L-B,1)
+    release thm seq_limsup_from_limit(shifted,L-B)
+    claim:
+        ? forall k N+:
+            k>=1
+            =>:
+                0<=shifted(k)
+        B<=s(k)
+        0<=s(k)-B=shifted(k)
+    release thm nonnegative_sequence_limsup(shifted,L-B,1)
+    0<=L-B
+    B<=L
+
+thm sequence_limit_upper_bound:
+    ? forall s seq(R),L,B R:
+        $has_seq_limit(s,L)
+        forall n N+:
+            s(n)<=B
+        =>:
+            L<=B
+    have fn constant(k N+) R=B
+    have fn shifted(k N+) R=B-s(k)
+    release thm seq_limit_constant(constant,B)
+    release thm seq_limit_subtract(constant,s,B,L)
+    claim:
+        ? forall k N+:
+            fn(j N+) R {constant(j)-s(j)}(k)=shifted(k)
+        constant(k)=B
+        fn(j N+) R {constant(j)-s(j)}(k)=constant(k)-s(k)=B-s(k)=shifted(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {constant(j)-s(j)},shifted,B-L,1)
+    release thm seq_limsup_from_limit(shifted,B-L)
+    claim:
+        ? forall k N+:
+            k>=1
+            =>:
+                0<=shifted(k)
+        s(k)<=B
+        0<=B-s(k)=shifted(k)
+    release thm nonnegative_sequence_limsup(shifted,B-L,1)
+    0<=B-L
+    L<=B
+
+thm alternating_odd_step:
+    ? forall a,u seq(R),n N:
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+        =>:
+            partial_sum(a,2*n+3)=partial_sum(a,2*n+1)-u(2*n+2)+u(2*n+3)
+    have first N+=2*n+1
+    have second N+=first+1
+    have next N+=n+1
+    by thm partial_sum_successor(a,first) => partial_sum(a,first+1)=partial_sum(a,first)+a(first+1)
+    by thm partial_sum_successor(a,second) => partial_sum(a,second+1)=partial_sum(a,second)+a(second+1)
+    first=2*n+1
+    first+1=(2*n+1)+1=2*n+2
+    second=first+1=2*n+2
+    second+1=(2*n+2)+1=2*n+3
+    2*next=2*(n+1)=2*n+2
+    a(2*next)=-u(2*next)
+    u(2*next)=u(2*n+2)
+    -u(2*next)=-u(2*n+2)
+    a(first+1)=a(2*next)=-u(2*next)=-u(2*n+2)
+    a(2*next+1)=u(2*next+1)
+    2*next+1=(2*n+2)+1=2*n+3
+    a(second+1)=a(2*next+1)=u(2*next+1)=u(2*n+3)
+    partial_sum(a,second)=partial_sum(a,first+1)=partial_sum(a,first)+a(first+1)
+    partial_sum(a,first)=partial_sum(a,2*n+1)
+    partial_sum(a,first)+a(first+1)=partial_sum(a,first)+(-u(2*n+2))
+    partial_sum(a,first)+(-u(2*n+2))=partial_sum(a,2*n+1)+(-u(2*n+2))
+    partial_sum(a,2*n+1)+(-u(2*n+2))=partial_sum(a,2*n+1)-u(2*n+2)
+    partial_sum(a,second)=partial_sum(a,2*n+1)-u(2*n+2)
+    partial_sum(a,2*n+3)=partial_sum(a,second+1)=partial_sum(a,second)+a(second+1)
+    partial_sum(a,second)+a(second+1)=partial_sum(a,second)+u(2*n+3)
+    partial_sum(a,second)+u(2*n+3)=(partial_sum(a,2*n+1)-u(2*n+2))+u(2*n+3)
+
+thm alternating_odd_partial_sums_nonincreasing:
+    ? forall a,u,odds seq(R):
+        $is_seq_nonincreasing(u)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+            odds(k)=partial_sum(a,2*k+1)
+        =>:
+            $is_seq_nonincreasing(odds)
+    claim:
+        ? forall n,m N+:
+            n<=m
+            =>:
+                odds(m)<=odds(n)
+        by induc m from n:
+            ? odds(m)<=odds(n)
+            ? from m=n:
+                odds(n)<=odds(n)
+            ? induc:
+                have odd_index N+=2*m+1
+                2*m+1 $in N+
+                have first N+=2*m+2
+                have second N+=2*m+3
+                first=2*m+2
+                second=2*m+3
+                2*m+2<2*m+3
+                first<second
+                u(first)>=u(second)
+                u(2*m+2)>=u(2*m+3)
+                release thm alternating_odd_step(a,u,m)
+                partial_sum(a,2*m+3)=partial_sum(a,2*m+1)-u(2*m+2)+u(2*m+3)
+                u(2*m+3)-u(2*m+2)<=0
+                partial_sum(a,2*m+1)+(u(2*m+3)-u(2*m+2))<=partial_sum(a,2*m+1)+0=partial_sum(a,2*m+1)
+                partial_sum(a,2*m+1)-u(2*m+2)+u(2*m+3)=partial_sum(a,2*m+1)+(u(2*m+3)-u(2*m+2))<=partial_sum(a,2*m+1)
+                have next N+=m+1
+                2*next+1=2*(m+1)+1=2*m+3
+                odds(next)=partial_sum(a,2*next+1)=partial_sum(a,2*m+3)
+                odds(m)=partial_sum(a,2*m+1)
+                odds(m+1)=odds(next)<=odds(m)<=odds(n)
+    by def $is_seq_nonincreasing(odds)
+
+thm alternating_even_partial_sums_nondecreasing:
+    ? forall a,u,evens seq(R):
+        $is_seq_nonincreasing(u)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+            evens(k)=partial_sum(a,2*k)
+        =>:
+            $is_seq_nondecreasing(evens)
+    claim:
+        ? forall n,m N+:
+            n<=m
+            =>:
+                evens(n)<=evens(m)
+        by induc m from n:
+            ? evens(n)<=evens(m)
+            ? from m=n:
+                evens(n)<=evens(n)
+            ? induc:
+                have even_index N+=2*m
+                2*m $in N+
+                partial_sum(a,2*m) $in R
+                have first N+=2*m+1
+                have second N+=2*m+2
+                first=2*m+1
+                second=2*m+2
+                2*m+1<2*m+2
+                first<second
+                u(first)>=u(second)
+                u(2*m+1)>=u(2*m+2)
+                release thm alternating_even_step(a,u,m)
+                partial_sum(a,2*m+2)=partial_sum(a,2*m)+u(2*m+1)-u(2*m+2)
+                u(2*m+1)-u(2*m+2)>=0
+                partial_sum(a,2*m)+(u(2*m+1)-u(2*m+2))>=partial_sum(a,2*m)+0=partial_sum(a,2*m)
+                partial_sum(a,2*m)+u(2*m+1)-u(2*m+2)=partial_sum(a,2*m)+(u(2*m+1)-u(2*m+2))>=partial_sum(a,2*m)
+                have next N+=m+1
+                2*next=2*(m+1)=2*m+2
+                evens(next)=partial_sum(a,2*next)=partial_sum(a,2*m+2)
+                evens(m)=partial_sum(a,2*m)
+                evens(n)<=evens(m)<=evens(next)=evens(m+1)
+    by def $is_seq_nondecreasing(evens)
+
+thm sequence_even_subsequence_limit:
+    ? forall u,v seq(R),L R:
+        $has_seq_limit(u,L)
+        forall k N+:
+            v(k)=u(2*k)
+        =>:
+            $has_seq_limit(v,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(v,{x R:abs(x-L)<epsilon})}
+        release thm seq_limit_tail(u,L,epsilon)
+        obtain n0 from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(u,{x R:abs(x-L)<epsilon})}
+        witness exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(v,{x R:abs(x-L)<epsilon})} from n0:
+            claim:
+                ? forall k {j N+:j>=n0}:
+                    k $in preimage_set(v,{x R:abs(x-L)<epsilon})
+                2*k=k+k>=k>=n0
+                have index N+=2*k
+                index>=n0
+                index $in {j N+:j>=n0}
+                2*k $in {j N+:j>=n0}
+                2*k $in preimage_set(u,{x R:abs(x-L)<epsilon})
+                u(2*k) $in {x R:abs(x-L)<epsilon}
+                abs(u(2*k)-L)<epsilon
+                v(k)=u(2*k)
+                abs(v(k)-L)=abs(u(2*k)-L)<epsilon
+                v(k) $in {x R:abs(x-L)<epsilon}
+            by def {k N+:k>=n0} $subset preimage_set(v,{x R:abs(x-L)<epsilon})
+    by def $has_seq_limit(v,L)
+
+thm alternating_partial_sums_bracket:
+    ? forall a,u,evens,odds seq(R),L R,n N+:
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        $has_series_sum(a,L)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+            evens(k)=partial_sum(a,2*k)
+            odds(k)=partial_sum(a,2*k+1)
+        =>:
+            evens(n)<=L
+            L<=odds(n)
+    release thm alternating_even_partial_sums_nondecreasing(a,u,evens)
+    release thm alternating_odd_partial_sums_nonincreasing(a,u,odds)
+    $has_seq_limit(partial_sums(a),L)
+    claim:
+        ? forall k N+:
+            evens(k)=partial_sums(a)(2*k)
+            odds(k)=partial_sums(a)(2*k+1)
+        have odd_index N+=2*k+1
+        by thm partial_sums_at(a,2*k) => partial_sums(a)(2*k)=partial_sum(a,2*k)
+        by thm partial_sums_at(a,odd_index) => partial_sums(a)(odd_index)=partial_sum(a,odd_index)
+        evens(k)=partial_sum(a,2*k)=partial_sums(a)(2*k)
+        odds(k)=partial_sum(a,2*k+1)=partial_sum(a,odd_index)=partial_sums(a)(odd_index)=partial_sums(a)(2*k+1)
+    release thm sequence_even_subsequence_limit(partial_sums(a),evens,L)
+    release thm sequence_odd_subsequence_limit(partial_sums(a),odds,L)
+    have fn even_tail(k N+) R=evens(k+n)
+    have fn odd_tail(k N+) R=odds(k+n)
+    release thm seq_limit_shift(evens,L,n)
+    release thm seq_limit_shift(odds,L,n)
+    $has_seq_limit(even_tail,L)
+    $has_seq_limit(odd_tail,L)
+    claim:
+        ? forall k N+:
+            evens(n)<=even_tail(k)
+            odd_tail(k)<=odds(n)
+        have index N+=k+n
+        index=k+n>=n
+        evens(n)<=evens(index)
+        odds(index)<=odds(n)
+        even_tail(k)=evens(k+n)=evens(index)
+        odd_tail(k)=odds(k+n)=odds(index)
+    release thm sequence_limit_lower_bound(even_tail,L,evens(n))
+    release thm sequence_limit_upper_bound(odd_tail,L,odds(n))
+
+thm alternating_first_remainder_bound:
+    ? forall a,u,evens,odds seq(R),L R:
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        $has_series_sum(a,L)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+            evens(k)=partial_sum(a,2*k)
+            odds(k)=partial_sum(a,2*k+1)
+        =>:
+            abs(L-partial_sum(a,1))<=u(2)
+    release thm alternating_partial_sums_bracket(a,u,evens,odds,L,1)
+    evens(1)=partial_sum(a,2)
+    odds(1)=partial_sum(a,3)
+    by thm partial_sum_successor(a,1) => partial_sum(a,1+1)=partial_sum(a,1)+a(1+1)
+    1+1=2
+    partial_sum(a,2)=partial_sum(a,1+1)=partial_sum(a,1)+a(1+1)=partial_sum(a,1)+a(2)
+    a(2*1)=-u(2*1)
+    2*1=2
+    u(2*1)=u(2)
+    -u(2*1)=-u(2)
+    a(2)=a(2*1)=-u(2*1)=-u(2)
+    partial_sum(a,1)+a(2)=partial_sum(a,1)+(-u(2))=partial_sum(a,1)-u(2)
+    partial_sum(a,2)=partial_sum(a,1)+a(2)=partial_sum(a,1)-u(2)
+    release thm alternating_odd_step(a,u,0)
+    2*0+1=1
+    2*0+2=2
+    2*0+3=3
+    partial_sum(a,2*0+1)=partial_sum(a,1)
+    partial_sum(a,2*0+3)=partial_sum(a,3)
+    u(2*0+2)=u(2)
+    u(2*0+3)=u(3)
+    partial_sum(a,3)=partial_sum(a,2*0+3)=partial_sum(a,2*0+1)-u(2*0+2)+u(2*0+3)
+    partial_sum(a,2*0+1)-u(2*0+2)+u(2*0+3)=partial_sum(a,1)-u(2)+u(3)
+    2<3
+    u(3)<=u(2)
+    u(3)-u(2)<=0
+    partial_sum(a,1)+(u(3)-u(2))<=partial_sum(a,1)+0=partial_sum(a,1)
+    partial_sum(a,3)=partial_sum(a,1)+(u(3)-u(2))<=partial_sum(a,1)
+    partial_sum(a,1)-u(2)=evens(1)<=L<=odds(1)=partial_sum(a,3)<=partial_sum(a,1)
+    0<=partial_sum(a,1)-L
+    -L<=-(partial_sum(a,1)-u(2))
+    partial_sum(a,1)+(-L)<=partial_sum(a,1)+(-(partial_sum(a,1)-u(2)))=u(2)
+    partial_sum(a,1)-L=partial_sum(a,1)+(-L)<=u(2)
+    L-partial_sum(a,1)<=0
+    abs(L-partial_sum(a,1))=-(L-partial_sum(a,1))=partial_sum(a,1)-L<=u(2)
+
+thm alternating_even_index_remainder:
+    ? forall a,u,evens,odds seq(R),L R,n,index N+:
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        $has_series_sum(a,L)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+            evens(k)=partial_sum(a,2*k)
+            odds(k)=partial_sum(a,2*k+1)
+        n=2*index
+        =>:
+            abs(L-partial_sum(a,n))<=series_tail(u,1)(n)
+    release thm alternating_partial_sums_bracket(a,u,evens,odds,L,index)
+    evens(index)=partial_sum(a,2*index)=partial_sum(a,n)
+    have next N+=n+1
+    by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+    2*index+1=n+1=next
+    a(2*index+1)=u(2*index+1)
+    a(next)=a(2*index+1)=u(2*index+1)=u(next)
+    odds(index)=partial_sum(a,2*index+1)=partial_sum(a,next)
+    partial_sum(a,next)=partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+    a(n+1)=a(next)=u(next)=u(n+1)
+    partial_sum(a,n)+a(n+1)=partial_sum(a,n)+u(n+1)
+    odds(index)=partial_sum(a,n)+u(n+1)
+    partial_sum(a,n)=evens(index)<=L<=odds(index)=partial_sum(a,n)+u(n+1)
+    0<=L-partial_sum(a,n)
+    L-partial_sum(a,n)<=(partial_sum(a,n)+u(n+1))-partial_sum(a,n)=u(n+1)
+    abs(L-partial_sum(a,n))=L-partial_sum(a,n)<=u(n+1)
+    release thm series_tail_at(u,1,n)
+    series_tail(u,1)(n)=u(n+1)
+    abs(L-partial_sum(a,n))<=u(n+1)=series_tail(u,1)(n)
+
+thm alternating_odd_index_remainder:
+    ? forall a,u,evens,odds seq(R),L R,n,index N+:
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        $has_series_sum(a,L)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+            evens(k)=partial_sum(a,2*k)
+            odds(k)=partial_sum(a,2*k+1)
+        n=2*index+1
+        =>:
+            abs(L-partial_sum(a,n))<=series_tail(u,1)(n)
+    release thm alternating_partial_sums_bracket(a,u,evens,odds,L,index)
+    have successor N+=index+1
+    release thm alternating_partial_sums_bracket(a,u,evens,odds,L,successor)
+    odds(index)=partial_sum(a,2*index+1)=partial_sum(a,n)
+    have next N+=n+1
+    by thm partial_sum_successor(a,n) => partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+    2*successor=2*(index+1)=2*index+2
+    n+1=(2*index+1)+1=2*index+2=2*successor
+    next=n+1=2*successor
+    a(2*successor)=-u(2*successor)
+    a(next)=a(2*successor)=-u(2*successor)=-u(next)
+    evens(successor)=partial_sum(a,2*successor)=partial_sum(a,next)
+    partial_sum(a,next)=partial_sum(a,n+1)=partial_sum(a,n)+a(n+1)
+    a(n+1)=a(next)=-u(next)=-u(n+1)
+    partial_sum(a,n)+a(n+1)=partial_sum(a,n)+(-u(n+1))=partial_sum(a,n)-u(n+1)
+    evens(successor)=partial_sum(a,n)-u(n+1)
+    partial_sum(a,n)-u(n+1)=evens(successor)<=L<=odds(index)=partial_sum(a,n)
+    0<=partial_sum(a,n)-L
+    -L<=-(partial_sum(a,n)-u(n+1))
+    partial_sum(a,n)+(-L)<=partial_sum(a,n)+(-(partial_sum(a,n)-u(n+1)))=u(n+1)
+    partial_sum(a,n)-L=partial_sum(a,n)+(-L)<=u(n+1)
+    L-partial_sum(a,n)<=0
+    abs(L-partial_sum(a,n))=-(L-partial_sum(a,n))=partial_sum(a,n)-L<=u(n+1)
+    release thm series_tail_at(u,1,n)
+    series_tail(u,1)(n)=u(n+1)
+    abs(L-partial_sum(a,n))<=u(n+1)=series_tail(u,1)(n)
+
+thm alternating_series_remainder_bound:
+    ? forall a,u seq(R),L R,n N+:
+        $is_seq_nonincreasing(u)
+        $has_seq_limit(u,0)
+        $has_series_sum(a,L)
+        forall k N:
+            a(2*k+1)=u(2*k+1)
+        forall k N+:
+            a(2*k)=-u(2*k)
+        =>:
+            abs(L-partial_sum(a,n))<=u(n+1)
+    have fn evens(k N+) R=partial_sum(a,2*k)
+    have fn odds(k N+) R=partial_sum(a,2*k+1)
+    claim:
+        ? forall k N+:
+            a(2*k)=-u(2*k)
+            evens(k)=partial_sum(a,2*k)
+            odds(k)=partial_sum(a,2*k+1)
+        a(2*k)=-u(2*k)
+        evens(k)=partial_sum(a,2*k)
+        odds(k)=partial_sum(a,2*k+1)
+    by cases:
+        ? abs(L-partial_sum(a,n))<=series_tail(u,1)(n)
+        case n<=1:
+            n>=1
+            n=1
+            release thm alternating_first_remainder_bound(a,u,evens,odds,L)
+            release thm series_tail_at(u,1,1)
+            series_tail(u,1)(1)=u(1+1)=u(2)
+            partial_sum(a,n)=partial_sum(a,1)
+            series_tail(u,1)(n)=series_tail(u,1)(1)
+            abs(L-partial_sum(a,n))=abs(L-partial_sum(a,1))<=u(2)=series_tail(u,1)(1)=series_tail(u,1)(n)
+        case n>1:
+            release thm positive_integer_parity(n)
+            obtain index from exist k N st {n=2*k or n=2*k+1}
+            by cases:
+                ? abs(L-partial_sum(a,n))<=series_tail(u,1)(n)
+                case n=2*index:
+                    2*index=n>1>0
+                    (2*index)/2>0/2=0
+                    (2*index)/2=index
+                    index>0
+                    index $in Z
+                    index $in N+
+                    release thm alternating_even_index_remainder(a,u,evens,odds,L,n,index)
+                case n=2*index+1:
+                    2*index=n-1>1-1=0
+                    (2*index)/2>0/2=0
+                    (2*index)/2=index
+                    index>0
+                    index $in Z
+                    index $in N+
+                    release thm alternating_odd_index_remainder(a,u,evens,odds,L,n,index)
+    release thm series_tail_at(u,1,n)
+    series_tail(u,1)(n)=u(n+1)
+    abs(L-partial_sum(a,n))<=series_tail(u,1)(n)=u(n+1)

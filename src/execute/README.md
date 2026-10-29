@@ -753,3 +753,17 @@ stage: each literal element must already have a queried membership proof in the
 same carrier (including its recorded equality transport). This does not reopen
 search. Literal construction still checks all inner WD and pairwise distinctness.
 The complete finite-expectation declaration is a regression consumer.
+
+
+## Checked function return for real order
+
+After each order operand passes object WD, a failed capped domain recheck may
+reuse that exact argument's structural real-membership proof or an existing
+`FnApplicationInCodomain` proof. The new branch requires the inherited
+KnownSpecialProperty permission and the matching argument position. Existing
+function-signature selection still checks alternatives and guards; it does not
+open another search stage or mutate the WD cache. Detailed evidence records
+`ByCheckedArgumentReturns`, while Normal output keeps its existing shape.
+The source tracer is `examples/wd/checked_function_order_domain.lit`; the
+negative companions cover invalid index, unproved guard, complex return,
+false order and a conflicting guarded signature.
