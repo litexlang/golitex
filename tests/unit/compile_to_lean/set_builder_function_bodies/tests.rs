@@ -283,7 +283,7 @@ fn projected_line_condition_replays_its_original_builder_constructor() {
         .compile_run(&result, "line_condition_constructor")
         .unwrap();
     assert!(output.contains("fun (_value_i"));
-    assert!(output.contains("Litex.inSetBuilder_iff"));
+    assert!(output.contains("Litex.setBuilder"));
 }
 
 #[test]

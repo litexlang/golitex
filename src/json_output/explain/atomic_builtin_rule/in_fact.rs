@@ -45,6 +45,7 @@ use crate::json_output::explain::text::text;
 impl InFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::English),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Transport known membership between a homogeneous Cartesian product and its equal finite sequence carrier."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::English),
             Self::ExactIntegerQuotient(_) => crate::json_output::explain::text::text("Integer quotient by divisibility", "If integers a,b satisfy b≠0 and b divides a, their quotient is an integer: a/b ∈ ℤ. For example, 6/2 ∈ ℤ."),
@@ -106,6 +107,9 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => {
+                super::structural_real_sign::membership_text(p, OutputLanguage::Chinese)
+            }
             Self::HomogeneousCartesianSequenceMembership(_) => text(
                 "HomogeneousCartesianSequenceMembership",
                 "在同质笛卡尔积与相等的有限数列空间之间传递已知成员关系。",
@@ -232,6 +236,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::ChineseTraditional),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "在同質笛卡爾積與相等的有限數列空間之間傳遞已知成員關係。"),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::ChineseTraditional),
             Self::ExactIntegerQuotient(_) => text(
@@ -333,6 +338,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::French),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Transporte une appartenance connue entre un produit homogène et son espace de suites finies égal."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::French),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
@@ -395,6 +401,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Russian),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Переносит известную принадлежность между однородным произведением и равным пространством конечных последовательностей."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Russian),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
@@ -457,6 +464,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Spanish),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Transporta la pertenencia conocida entre un producto homogéneo y su espacio igual de sucesiones finitas."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Spanish),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
@@ -519,6 +527,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Arabic),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "ينقل الانتماء المعروف بين الجداء المتجانس وفضاء المتتاليات المنتهية المساوي له."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Arabic),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
@@ -581,6 +590,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Japanese),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "同質直積と等しい有限列空間の間で既知の所属関係を移します。"),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Japanese),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
@@ -661,6 +671,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Korean),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "동질 직적과 같은 유한 수열 공간 사이에서 알려진 원소 관계를 전달합니다."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Korean),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
@@ -723,6 +734,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Vietnamese),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Chuyển quan hệ thuộc đã biết giữa tích đồng nhất và không gian dãy hữu hạn bằng nó."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Vietnamese),
             Self::ExactIntegerQuotient(_) => text("ExactIntegerQuotient", "a,b in Z, b!=0, $dvd(a,b) => a/b in Z"),
@@ -800,6 +812,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::SignedNumericMembership(_) => None,
             Self::HomogeneousCartesianSequenceMembership(p) => p.membership.cite_fact_id(),
             Self::NativeMatrix(_) => None,
             Self::ExactIntegerQuotient(_) => None,

@@ -110,3 +110,6 @@ pub(crate) use crate::execute::execute_fact_stmt::well_defined_results::verify_o
     ExpLogOperatorObjWellDefinedProofByDef, FailToVerifyFunctionSpaceObjWellDefinedResult,
     ObjWellDefinedProofByDef,
 };
+
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::*;
+pub(crate) use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;

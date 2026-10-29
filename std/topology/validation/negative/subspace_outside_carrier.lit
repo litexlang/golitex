@@ -1,0 +1,7 @@
+release thm top::discrete_topology_laws({0,1})
+
+have outside_space &top::TopologicalSpace<{0,1}> = ({0,1},power_set({0,1}))
+
+outside_space.carrier={0,1}
+
+release thm top::subspace_topology_laws({0,1},outside_space,{0,2})

@@ -1,0 +1,5 @@
+0=0
+
+claim:
+    ? $m::is_lipschitz_map(R,s::real_line_metric,R,s::real_line_metric,constant,-1)
+    by def $m::is_lipschitz_map(R,s::real_line_metric,R,s::real_line_metric,constant,-1)

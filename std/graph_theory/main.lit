@@ -1,0 +1,484 @@
+# Finite simple undirected graphs on an explicit finite vertex set.
+
+struct FiniteSimpleGraph<Vertices finite_set>:
+    vertices power_set(Vertices)
+    arcs power_set(cart(Vertices,Vertices))
+    <=>:
+        vertices=Vertices
+        forall v Vertices:
+            not (v,v) $in arcs
+        forall v,w Vertices:
+            (v,w) $in arcs
+            =>:
+                (w,v) $in arcs
+
+template<V finite_set,G &FiniteSimpleGraph<V>>:
+    have fn graph_neighbors(v V) power_set(V) = {w V:(v,w) $in G.arcs}
+
+thm graph_neighbors_are_finite:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        $is_finite_set(\graph_neighbors<V,G>(v))
+    \graph_neighbors<V,G>(v)={w V:(v,w) $in G.arcs}
+    \graph_neighbors<V,G>(v) $subset V
+    $is_finite_set(V)
+
+template<V finite_set,G &FiniteSimpleGraph<V>>:
+    have fn graph_degree(v V) N = finite_set_size(\graph_neighbors<V,G>(v))
+
+thm vertex_is_not_its_neighbor:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        not v $in \graph_neighbors<V,G>(v)
+    \graph_neighbors<V,G>(v)={w V:(v,w) $in G.arcs}
+    by contra:
+        ? not v $in \graph_neighbors<V,G>(v)
+        (v,v) $in G.arcs
+        impossible (v,v) $in G.arcs
+
+thm adjacent_vertex_is_neighbor:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v,w V:
+        (v,w) $in G.arcs
+        =>:
+            w $in \graph_neighbors<V,G>(v)
+            v $in \graph_neighbors<V,G>(w)
+    \graph_neighbors<V,G>(v)={x V:(v,x) $in G.arcs}
+    \graph_neighbors<V,G>(w)={x V:(w,x) $in G.arcs}
+    (w,v) $in G.arcs
+    release thm set_builder_member(w,{x V:(v,x) $in G.arcs})
+    release thm set_builder_member(v,{x V:(w,x) $in G.arcs})
+
+thm graph_neighbors_exclude_vertex:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        \graph_neighbors<V,G>(v) $subset set_minus(V,{v})
+    \graph_neighbors<V,G>(v)={w V:(v,w) $in G.arcs}
+    release thm vertex_is_not_its_neighbor(V,G,v)
+    claim:
+        ? forall w \graph_neighbors<V,G>(v):
+            w $in set_minus(V,{v})
+        w $in V
+        w!=v
+    by def \graph_neighbors<V,G>(v) $subset set_minus(V,{v})
+
+thm graph_degree_upper_bound:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        \graph_degree<V,G>(v)<finite_set_size(V)
+    release thm graph_neighbors_exclude_vertex(V,G,v)
+    release thm count::remove_one_size(V,v)
+    finite_set_size(\graph_neighbors<V,G>(v))<=finite_set_size(set_minus(V,{v}))=finite_set_size(V)-1
+    \graph_degree<V,G>(v)=finite_set_size(\graph_neighbors<V,G>(v))<=finite_set_size(V)-1<finite_set_size(V)
+
+prop is_isolated_vertex(V finite_set,G &FiniteSimpleGraph<V>,v V):
+    forall w V:
+        not (v,w) $in G.arcs
+
+thm zero_degree_has_no_neighbors:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        \graph_degree<V,G>(v)=0
+        =>:
+            $is_isolated_vertex(V,G,v)
+    finite_set_size(\graph_neighbors<V,G>(v))=\graph_degree<V,G>(v)=0
+    \graph_neighbors<V,G>(v)={}
+    claim:
+        ? forall w V:
+            not (v,w) $in G.arcs
+        by contra:
+            ? not (v,w) $in G.arcs
+            release thm adjacent_vertex_is_neighbor(V,G,v,w)
+            w $in {}
+            impossible w $in {}
+    by def $is_isolated_vertex(V,G,v)
+
+thm no_neighbors_has_zero_degree:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        $is_isolated_vertex(V,G,v)
+        =>:
+            \graph_degree<V,G>(v)=0
+    \graph_neighbors<V,G>(v)={w V:(v,w) $in G.arcs}
+    by extension:
+        ? \graph_neighbors<V,G>(v)={}
+        claim:
+            ? forall w \graph_neighbors<V,G>(v):
+                w $in {}
+            w $in V
+            (v,w) $in G.arcs
+            by contra:
+                ? w $in {}
+                impossible (v,w) $in G.arcs
+    \graph_degree<V,G>(v)=finite_set_size(\graph_neighbors<V,G>(v))=finite_set_size({})=0
+
+thm maximal_degree_has_all_neighbors:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        \graph_degree<V,G>(v)=finite_set_size(V)-1
+        =>:
+            \graph_neighbors<V,G>(v)=set_minus(V,{v})
+    release thm graph_neighbors_exclude_vertex(V,G,v)
+    release thm count::remove_one_size(V,v)
+    finite_set_size(\graph_neighbors<V,G>(v))=\graph_degree<V,G>(v)=finite_set_size(V)-1=finite_set_size(set_minus(V,{v}))
+    release thm count::subset_equal_cardinality(set_minus(V,{v}),\graph_neighbors<V,G>(v))
+
+thm isolated_vertex_bounds_all_degrees:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,z,v V:
+        2<=finite_set_size(V)
+        $is_isolated_vertex(V,G,z)
+        =>:
+            \graph_degree<V,G>(v)<=finite_set_size(V)-2
+    release thm graph_degree_upper_bound(V,G,v)
+    \graph_degree<V,G>(v) $in N
+    by cases:
+        ? \graph_degree<V,G>(v)<=finite_set_size(V)-2
+        case v=z:
+            release thm no_neighbors_has_zero_degree(V,G,z)
+            \graph_degree<V,G>(v)=\graph_degree<V,G>(z)=0<=finite_set_size(V)-2
+        case v!=z:
+            by contra:
+                ? \graph_degree<V,G>(v)<=finite_set_size(V)-2
+                \graph_degree<V,G>(v)>finite_set_size(V)-2
+                \graph_degree<V,G>(v)<=finite_set_size(V)-1
+                \graph_degree<V,G>(v)>=finite_set_size(V)-1
+                \graph_degree<V,G>(v)=finite_set_size(V)-1
+                release thm maximal_degree_has_all_neighbors(V,G,v)
+                z!=v
+                not z $in {v}
+                z $in set_minus(V,{v})
+                \graph_neighbors<V,G>(v)={w V:(v,w) $in G.arcs}
+                z $in \graph_neighbors<V,G>(v)
+                (v,z) $in G.arcs
+                (z,v) $in G.arcs
+                impossible (z,v) $in G.arcs
+
+prop has_isolated_vertex(V finite_set,G &FiniteSimpleGraph<V>):
+    exist v V st {$is_isolated_vertex(V,G,v)}
+
+thm finite_simple_graph_has_equal_degrees:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        2<=finite_set_size(V)
+        =>:
+            exist v,w V st {v!=w,\graph_degree<V,G>(v)=\graph_degree<V,G>(w)}
+    have n N=finite_set_size(V)
+    2<=n
+    n-2 $in N
+    n-1 $in N
+    0<=n-2
+    1<=n-1
+    by cases:
+        ? exist v,w V st {v!=w,\graph_degree<V,G>(v)=\graph_degree<V,G>(w)}
+        case $has_isolated_vertex(V,G):
+            obtain z from $has_isolated_vertex(V,G)
+            claim:
+                ? forall v V:
+                    \graph_degree<V,G>(v) $in closed_range(0,n-2)
+                release thm isolated_vertex_bounds_all_degrees(V,G,z,v)
+                \graph_degree<V,G>(v)<=finite_set_size(V)-2=n-2
+                \graph_degree<V,G>(v) $in N
+                0<=\graph_degree<V,G>(v)<=n-2
+            have labels finite_set=closed_range(0,n-2)
+            finite_set_size(labels)=finite_set_size(closed_range(0,n-2))=n-2-0+1=n-1<n=finite_set_size(V)
+            have fn degree_label(v V) labels=\graph_degree<V,G>(v)
+            release thm count::pigeonhole_collision(V,labels,degree_label)
+            obtain v,w from exist v,w V st {v!=w,degree_label(v)=degree_label(w)}
+            \graph_degree<V,G>(v)=degree_label(v)=degree_label(w)=\graph_degree<V,G>(w)
+            witness exist left,right V st {left!=right,\graph_degree<V,G>(left)=\graph_degree<V,G>(right)} from v,w
+        case not $has_isolated_vertex(V,G):
+            claim:
+                ? forall v V:
+                    \graph_degree<V,G>(v) $in closed_range(1,n-1)
+                release thm graph_degree_upper_bound(V,G,v)
+                \graph_degree<V,G>(v) $in N
+                \graph_degree<V,G>(v)<=finite_set_size(V)-1=n-1
+                by contra:
+                    ? 1<=\graph_degree<V,G>(v)
+                    \graph_degree<V,G>(v)<1
+                    \graph_degree<V,G>(v)=0
+                    release thm zero_degree_has_no_neighbors(V,G,v)
+                    witness $has_isolated_vertex(V,G) from v
+                    impossible $has_isolated_vertex(V,G)
+                1<=\graph_degree<V,G>(v)<=n-1
+            have labels finite_set=closed_range(1,n-1)
+            finite_set_size(labels)=finite_set_size(closed_range(1,n-1))=n-1-1+1=n-1<n=finite_set_size(V)
+            have fn degree_label(v V) labels=\graph_degree<V,G>(v)
+            release thm count::pigeonhole_collision(V,labels,degree_label)
+            obtain v,w from exist v,w V st {v!=w,degree_label(v)=degree_label(w)}
+            \graph_degree<V,G>(v)=degree_label(v)=degree_label(w)=\graph_degree<V,G>(w)
+            witness exist left,right V st {left!=right,\graph_degree<V,G>(left)=\graph_degree<V,G>(right)} from v,w
+
+thm edgeless_graph_construction:
+    ? forall V finite_set:
+        (V,{}) $in &FiniteSimpleGraph<V>
+    V $in power_set(V)
+    {} $in power_set(cart(V,V))
+    forall v V:
+        not (v,v) $in {}
+    claim:
+        ? forall v,w V:
+            (v,w) $in {}
+            =>:
+                (w,v) $in {}
+        by contra:
+            ? (w,v) $in {}
+            impossible (v,w) $in {}
+    release thm struct_member((V,{}),&FiniteSimpleGraph<V>)
+
+template<V finite_set>:
+    have edgeless_graph &FiniteSimpleGraph<V> = (V,{})
+
+template<V finite_set>:
+    have complete_graph_arcs power_set(cart(V,V))={p cart(V,V):p(1)!=p(2)}
+
+thm complete_graph_construction:
+    ? forall V finite_set:
+        (V,\complete_graph_arcs<V>) $in &FiniteSimpleGraph<V>
+    \complete_graph_arcs<V> ={p cart(V,V):p(1)!=p(2)}
+    V $in power_set(V)
+    \complete_graph_arcs<V> $in power_set(cart(V,V))
+    claim:
+        ? forall v V:
+            not (v,v) $in \complete_graph_arcs<V>
+        by contra:
+            ? not (v,v) $in \complete_graph_arcs<V>
+            (v,v)(1)=v
+            (v,v)(2)=v
+            (v,v)(1)!=(v,v)(2)
+            impossible v!=v
+    claim:
+        ? forall v,w V:
+            (v,w) $in \complete_graph_arcs<V>
+            =>:
+                (w,v) $in \complete_graph_arcs<V>
+        (v,w)(1)=v
+        (v,w)(2)=w
+        v!=w
+        w!=v
+        (w,v)(1)=w
+        (w,v)(2)=v
+        release thm set_builder_member((w,v),{p cart(V,V):p(1)!=p(2)})
+    release thm struct_member((V,\complete_graph_arcs<V>),&FiniteSimpleGraph<V>)
+
+template<V finite_set>:
+    have complete_graph &FiniteSimpleGraph<V> = (V,\complete_graph_arcs<V>)
+
+template<V finite_set,G &FiniteSimpleGraph<V>>:
+    have complement_graph_arcs power_set(cart(V,V))={p cart(V,V):p(1)!=p(2),not p $in G.arcs}
+
+thm complement_graph_construction:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        (V,\complement_graph_arcs<V,G>) $in &FiniteSimpleGraph<V>
+    \complement_graph_arcs<V,G> ={p cart(V,V):p(1)!=p(2),not p $in G.arcs}
+    \complement_graph_arcs<V,G> $in power_set(cart(V,V))
+    claim:
+        ? forall v V:
+            not (v,v) $in \complement_graph_arcs<V,G>
+        by contra:
+            ? not (v,v) $in \complement_graph_arcs<V,G>
+            (v,v)(1)=v
+            (v,v)(2)=v
+            (v,v)(1)!=(v,v)(2)
+            impossible v!=v
+    claim:
+        ? forall v,w V:
+            (v,w) $in \complement_graph_arcs<V,G>
+            =>:
+                (w,v) $in \complement_graph_arcs<V,G>
+        (v,w)(1)=v
+        (v,w)(2)=w
+        v!=w
+        w!=v
+        not (v,w) $in G.arcs
+        by contra:
+            ? not (w,v) $in G.arcs
+            (v,w) $in G.arcs
+            impossible (v,w) $in G.arcs
+        (w,v)(1)=w
+        (w,v)(2)=v
+        release thm set_builder_member((w,v),{p cart(V,V):p(1)!=p(2),not p $in G.arcs})
+    release thm struct_member((V,\complement_graph_arcs<V,G>),&FiniteSimpleGraph<V>)
+
+template<V finite_set,G &FiniteSimpleGraph<V>>:
+    have complement_graph &FiniteSimpleGraph<V> = (V,\complement_graph_arcs<V,G>)
+
+thm induced_graph_construction:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,U power_set(V):
+        (U,intersect(G.arcs,cart(U,U))) $in &FiniteSimpleGraph<U>
+    U $subset V
+    U $in power_set(U)
+    $is_finite_set(U)
+    intersect(G.arcs,cart(U,U)) $subset cart(U,U)
+    intersect(G.arcs,cart(U,U)) $in power_set(cart(U,U))
+    claim:
+        ? forall v U:
+            not (v,v) $in intersect(G.arcs,cart(U,U))
+        v $in V
+        not (v,v) $in G.arcs
+    claim:
+        ? forall v,w U:
+            (v,w) $in intersect(G.arcs,cart(U,U))
+            =>:
+                (w,v) $in intersect(G.arcs,cart(U,U))
+        v $in V
+        w $in V
+        (v,w) $in G.arcs
+        (w,v) $in G.arcs
+        (w,v) $in cart(U,U)
+    release thm struct_member((U,intersect(G.arcs,cart(U,U))),&FiniteSimpleGraph<U>)
+
+template<V finite_set,G &FiniteSimpleGraph<V>,U power_set(V)>:
+    have induced_graph &FiniteSimpleGraph<U> = (U,intersect(G.arcs,cart(U,U)))
+
+forall V finite_set:
+    \edgeless_graph<V>.arcs={}
+
+forall V finite_set:
+    \complete_graph<V>.arcs=\complete_graph_arcs<V>
+
+forall V finite_set,G &FiniteSimpleGraph<V>:
+    \complement_graph<V,G>.arcs=\complement_graph_arcs<V,G>
+
+thm edgeless_graph_degree:
+    ? forall V finite_set,v V:
+        \graph_degree<V,\edgeless_graph<V>>(v)=0
+    claim:
+        ? forall w V:
+            not (v,w) $in \edgeless_graph<V>.arcs
+        \edgeless_graph<V>.arcs={}
+        not (v,w) $in {}
+    by def $is_isolated_vertex(V,\edgeless_graph<V>,v)
+    release thm no_neighbors_has_zero_degree(V,\edgeless_graph<V>,v)
+
+thm complete_graph_neighbors:
+    ? forall V finite_set,v V:
+        \graph_neighbors<V,\complete_graph<V>>(v)=set_minus(V,{v})
+    \complete_graph<V>.arcs=\complete_graph_arcs<V>
+    \complete_graph_arcs<V> = {p cart(V,V):p(1)!=p(2)}
+    \graph_neighbors<V,\complete_graph<V>>(v)={w V:(v,w) $in \complete_graph<V>.arcs}
+    by extension:
+        ? \graph_neighbors<V,\complete_graph<V>>(v)=set_minus(V,{v})
+        claim:
+            ? forall w \graph_neighbors<V,\complete_graph<V>>(v):
+                w $in set_minus(V,{v})
+            w $in V
+            (v,w) $in \complete_graph_arcs<V>
+            (v,w)(1)=v
+            (v,w)(2)=w
+            v!=w
+            w!=v
+            not w $in {v}
+        claim:
+            ? forall w set_minus(V,{v}):
+                w $in \graph_neighbors<V,\complete_graph<V>>(v)
+            w $in V
+            w!=v
+            v!=w
+            (v,w)(1)=v
+            (v,w)(2)=w
+            release thm set_builder_member((v,w),{p cart(V,V):p(1)!=p(2)})
+            (v,w) $in \complete_graph<V>.arcs
+            release thm set_builder_member(w,{x V:(v,x) $in \complete_graph<V>.arcs})
+
+thm complete_graph_degree:
+    ? forall V finite_set,v V:
+        \graph_degree<V,\complete_graph<V>>(v)=finite_set_size(V)-1
+    release thm complete_graph_neighbors(V,v)
+    release thm count::remove_one_size(V,v)
+    \graph_degree<V,\complete_graph<V>>(v)=finite_set_size(\graph_neighbors<V,\complete_graph<V>>(v))=finite_set_size(set_minus(V,{v}))=finite_set_size(V)-1
+
+forall V finite_set,G &FiniteSimpleGraph<V>,U power_set(V):
+    \induced_graph<V,G,U>.arcs=intersect(G.arcs,cart(U,U))
+
+thm complement_graph_neighbors:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        \graph_neighbors<V,\complement_graph<V,G>>(v)=set_minus(set_minus(V,{v}),\graph_neighbors<V,G>(v))
+    \complement_graph<V,G>.arcs=\complement_graph_arcs<V,G>
+    \complement_graph_arcs<V,G> = {p cart(V,V):p(1)!=p(2),not p $in G.arcs}
+    \graph_neighbors<V,G>(v)={w V:(v,w) $in G.arcs}
+    \graph_neighbors<V,\complement_graph<V,G>>(v)={w V:(v,w) $in \complement_graph<V,G>.arcs}
+    by extension:
+        ? \graph_neighbors<V,\complement_graph<V,G>>(v)=set_minus(set_minus(V,{v}),\graph_neighbors<V,G>(v))
+        claim:
+            ? forall w \graph_neighbors<V,\complement_graph<V,G>>(v):
+                w $in set_minus(set_minus(V,{v}),\graph_neighbors<V,G>(v))
+            w $in V
+            (v,w) $in \complement_graph_arcs<V,G>
+            (v,w)(1)=v
+            (v,w)(2)=w
+            v!=w
+            w!=v
+            not w $in {v}
+            w $in set_minus(V,{v})
+            not (v,w) $in G.arcs
+            by contra:
+                ? not w $in \graph_neighbors<V,G>(v)
+                (v,w) $in G.arcs
+                impossible (v,w) $in G.arcs
+        claim:
+            ? forall w set_minus(set_minus(V,{v}),\graph_neighbors<V,G>(v)):
+                w $in \graph_neighbors<V,\complement_graph<V,G>>(v)
+            w $in set_minus(V,{v})
+            w $in V
+            w!=v
+            v!=w
+            not w $in \graph_neighbors<V,G>(v)
+            by contra:
+                ? not (v,w) $in G.arcs
+                release thm adjacent_vertex_is_neighbor(V,G,v,w)
+                impossible w $in \graph_neighbors<V,G>(v)
+            (v,w)(1)=v
+            (v,w)(2)=w
+            release thm set_builder_member((v,w),{p cart(V,V):p(1)!=p(2),not p $in G.arcs})
+            (v,w) $in \complement_graph<V,G>.arcs
+            release thm set_builder_member(w,{x V:(v,x) $in \complement_graph<V,G>.arcs})
+
+thm complement_graph_degree_sum:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        \graph_degree<V,G>(v)+\graph_degree<V,\complement_graph<V,G>>(v)=finite_set_size(V)-1
+    release thm complement_graph_neighbors(V,G,v)
+    release thm graph_neighbors_exclude_vertex(V,G,v)
+    release thm count::remove_one_size(V,v)
+    release thm graph_neighbors_are_finite(V,G,v)
+    $is_finite_set(set_minus(V,{v}))
+    $is_finite_set(set_minus(set_minus(V,{v}),\graph_neighbors<V,G>(v)))
+    $is_finite_set(intersect(set_minus(V,{v}),\graph_neighbors<V,G>(v)))
+    release thm count::subset_difference_size(set_minus(V,{v}),\graph_neighbors<V,G>(v))
+    \graph_degree<V,\complement_graph<V,G>>(v)=finite_set_size(\graph_neighbors<V,\complement_graph<V,G>>(v))=finite_set_size(set_minus(set_minus(V,{v}),\graph_neighbors<V,G>(v)))=finite_set_size(set_minus(V,{v}))-finite_set_size(\graph_neighbors<V,G>(v))
+    finite_set_size(set_minus(V,{v}))=finite_set_size(V)-1
+    finite_set_size(\graph_neighbors<V,G>(v))=\graph_degree<V,G>(v)
+    \graph_degree<V,\complement_graph<V,G>>(v)=finite_set_size(V)-1-\graph_degree<V,G>(v)
+    \graph_degree<V,G>(v)+\graph_degree<V,\complement_graph<V,G>>(v)=\graph_degree<V,G>(v)+(finite_set_size(V)-1-\graph_degree<V,G>(v))=finite_set_size(V)-1
+
+thm induced_graph_neighbors:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,U power_set(V),v U:
+        \graph_neighbors<U,\induced_graph<V,G,U>>(v)=intersect(U,\graph_neighbors<V,G>(v))
+    v $in V
+    \induced_graph<V,G,U>.arcs=intersect(G.arcs,cart(U,U))
+    \graph_neighbors<V,G>(v)={w V:(v,w) $in G.arcs}
+    \graph_neighbors<U,\induced_graph<V,G,U>>(v)={w U:(v,w) $in \induced_graph<V,G,U>.arcs}
+    by extension:
+        ? \graph_neighbors<U,\induced_graph<V,G,U>>(v)=intersect(U,\graph_neighbors<V,G>(v))
+        claim:
+            ? forall w \graph_neighbors<U,\induced_graph<V,G,U>>(v):
+                w $in intersect(U,\graph_neighbors<V,G>(v))
+            w $in U
+            w $in V
+            (v,w) $in \induced_graph<V,G,U>.arcs
+            (v,w) $in intersect(G.arcs,cart(U,U))
+            (v,w) $in G.arcs
+            release thm set_builder_member(w,{x V:(v,x) $in G.arcs})
+            w $in \graph_neighbors<V,G>(v)
+            w $in intersect(U,\graph_neighbors<V,G>(v))
+        claim:
+            ? forall w intersect(U,\graph_neighbors<V,G>(v)):
+                w $in \graph_neighbors<U,\induced_graph<V,G,U>>(v)
+            w $in U
+            w $in \graph_neighbors<V,G>(v)
+            (v,w) $in G.arcs
+            (v,w) $in cart(U,U)
+            (v,w) $in intersect(G.arcs,cart(U,U))
+            (v,w) $in \induced_graph<V,G,U>.arcs
+            release thm set_builder_member(w,{x U:(v,x) $in \induced_graph<V,G,U>.arcs})
+
+thm induced_graph_degree_bound:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,U power_set(V),v U:
+        \graph_degree<U,\induced_graph<V,G,U>>(v)<=\graph_degree<V,G>(v)
+    release thm induced_graph_neighbors(V,G,U,v)
+    intersect(U,\graph_neighbors<V,G>(v)) $subset \graph_neighbors<V,G>(v)
+    release thm graph_neighbors_are_finite(V,G,v)
+    $is_finite_set(intersect(U,\graph_neighbors<V,G>(v)))
+    finite_set_size(intersect(U,\graph_neighbors<V,G>(v)))<=finite_set_size(\graph_neighbors<V,G>(v))
+    \graph_degree<U,\induced_graph<V,G,U>>(v)=finite_set_size(\graph_neighbors<U,\induced_graph<V,G,U>>(v))=finite_set_size(intersect(U,\graph_neighbors<V,G>(v)))<=finite_set_size(\graph_neighbors<V,G>(v))=\graph_degree<V,G>(v)

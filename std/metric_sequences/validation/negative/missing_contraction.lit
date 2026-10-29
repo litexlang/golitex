@@ -1,0 +1,9 @@
+0=0
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier:
+        $s::is_complete_metric_space(A,M)
+        $is_nonempty_set(M.carrier)
+        =>:
+            exist! p M.carrier st {f(p)=p}
+    release thm s::banach_fixed_point(A,M,f)

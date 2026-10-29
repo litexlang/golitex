@@ -1,298 +1,97 @@
 {
-  "date": "2026-10-28",
-  "status": "Real restriction verified with automatic finite-row case coverage; 20 statements, no carrier or row-enumeration prelude",
+  "date": "2026-10-29",
+  "status": "Verified standalone real Jacobian example organized into four mathematical sections; auxiliary calculations are scoped to their proofs",
   "source": "main.lit",
-  "source_sha256": "97d1f1b8dd9d819930c6798a713892c28aa4402c13a7e854b04f48d9b9e51901",
-  "config_sha256": "d11a553b432222e765c45a240d02039bec8c7dd37494bef7085714481aa60fc7",
-  "tested_release_version": "Litex 1.1.6-beta",
-  "tested_release_sha256": "19fed2d38c2e815aa7e755f12851054a68756f245d01ce2825edc00e93a252cb",
-  "disk_release_sha256_at_gate_end": "19fed2d38c2e815aa7e755f12851054a68756f245d01ce2825edc00e93a252cb",
+  "source_sha256": "1ae1c53c510861bdaca567aabb811bc61188a20af36f353df422ef18c602e8c0",
+  "config_sha256": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+  "tested_release_version": "Litex 1.1.9-beta",
+  "tested_release_sha256": "58ab6b86a2e5badbf2284dede464ce528684b9085540eab5d05c49ddee4082d2",
+  "disk_release_sha256_at_gate_end": "58ab6b86a2e5badbf2284dede464ce528684b9085540eab5d05c49ddee4082d2",
   "clean_gate": {
     "command": "target/release/litex -strict -lang en -f examples/real_analysis/jacobian_counterexample/main.lit",
+    "execution_note": "Executed an immutable copy of the release with the recorded SHA-256.",
     "exit_code": 0,
     "run_result": "success",
-    "statement_count": 20,
-    "seconds": 208.16458983300254,
+    "seconds": 277.93849983392283,
+    "statement_count": 10,
+    "all_statements_accepted": true,
     "session_terminated": false,
     "termination": null,
-    "source_hash_unchanged_during_gate": true,
-    "immutable_release_hash_unchanged_during_gate": true,
-    "all_statements_accepted": true,
-    "source_uses_only_cart_n_carrier": true,
-    "carrier_claim_removed": true,
-    "row_enumeration_prelude_removed": true
+    "identities_stable": true
   },
-  "source_interface_renames": {
-    "jacobian_counterexample_map/1": "F/1",
-    "jacobian_counterexample_matrix<p>/2": "J<p>/2",
-    "is_left_inverse_of_jacobian_counterexample/1": "is_left_inverse/1"
+  "source_interfaces": {
+    "F/1": "fn(p cart_n(R,3)) cart_n(R,3)",
+    "J_entry/3": "fn(p cart_n(R,3),row 1...3,col 1...3) R; three checked row cases",
+    "J/1": "fn(p cart_n(R,3)) matrix(R,3,3); J(p)(row,col)=J_entry(p,row,col)",
+    "is_left_inverse/1": "G in fn(p cart_n(R,3)) cart_n(R,3); forall p cart_n(R,3): G(F(p))=p"
   },
-  "local_function_parameter_rename": {
-    "inverse": "G"
-  },
-  "source_interfaces": [
-    "F/1",
-    "J<p>/2",
-    "is_left_inverse/1"
+  "local_thm_proof": [
+    "by fn_extension a=b",
+    "$has_partial_derivative_at(b,point,n,axis,L)"
   ],
-  "compatibility": "Existing short names, one-vector cart_n carrier and mathematical claims are unchanged. The case checker now consumes finite integer membership directly; no separate row-cover fact is required.",
-  "carrier_notation": {
-    "before": "R × R × R",
-    "after": "cart_n(R,3)",
-    "canonical_carrier": "finite_seq(R,3)",
-    "shape": "One vector argument with complete finite input domain 1...3 and real coordinates",
-    "explicit_bridge": null,
-    "previous_carrier_claim_removed": true,
-    "well_definedness": "Direct existing Euclidean carrier; candidate-before-selector WD unchanged"
-  },
-  "proof_order": [
-    "Define F by its three tuple components",
-    "Define the proposed derivative matrix with complete row cases",
-    "Prove all nine partials and connect them to the matrix entries",
-    "Assemble the analytic Jacobian candidate",
-    "Compute minors, weighted first-row terms and determinant -2; use the actual selector",
-    "Use exact eval on two inputs with equal images to prove noninjectivity",
-    "A hypothetical left inverse would imply injectivity, contradicting the preceding result"
-  ],
-  "edit_metrics": {
-    "before": {
-      "lines": 263,
-      "code_lines": 128,
-      "comments": 114,
-      "bytes": 18407
-    },
-    "after": {
-      "lines": 257,
-      "code_lines": 124,
-      "comments": 113,
-      "bytes": 18213
-    },
-    "statement_count_before": 21,
-    "statement_count_after": 20
-  },
-  "new_native_or_source_interfaces": [],
-  "new_source_mathematical_claims": [],
-  "new_thm_declarations": [],
-  "rust_std_ast_env_runtime_bt_changes": [
-    "Local finite integer equality-cover builtin rules and typed evidence",
-    "Homogeneous Cartesian/finite-sequence equality, subset and cite-only member leaves; bounded Euclidean-domain consumption",
-    "No AST, Env/Runtime structure, storage, scope lifecycle, global search budget, reserved public BT name or std change"
-  ],
-  "trust_or_axiom": [],
-  "reused": [
-    "Calc::locality::real_partials_extensional/8",
-    "jacobian_at_from_definition/5",
-    "matrix(R,3,3) subset matrix(C,3,3)",
-    "Existing expression partial-derivative verification, candidate-consuming selectors, determinant identities and rational arithmetic",
-    "Existing cart_n/finite_seq carrier",
-    "Existing exact eval command",
-    "The native closed-integer-range equality-cover rule, consumed by existing function case coverage"
-  ],
-  "syntax_only_note": "The1=1 in finite enumeration is explicitly marked as a nonempty-body syntax requirement, not a mathematical lemma. Empty-body and direct-symbolic-candidate replacements were rejected; no parser change was made.",
-  "historical_controls": {
-    "date": "2026-10-27",
-    "verified_source_sha256": "4c4df61c7e1f5fbee57d5ed9f867944851e837164c47cea92a6496ec1c80fd50",
-    "cases": [
-      {
-        "name": "wrong_jacobian_candidate",
-        "source_after_loading_example": "$has_jacobian_at(main::jacobian_counterexample_map,(0,0,0),3,3,zero_matrix(3,3))",
-        "run_result": "failure",
-        "phase": "search_proof",
-        "category": "proof_search",
-        "session_terminated": false,
-        "same_session_liveness_after": true,
-        "context": "REPL after -f examples/real_analysis/jacobian_counterexample/main.lit -session; main:: names refer to its registered main export",
-        "setup": []
-      },
-      {
-        "name": "wrong_selected_determinant",
-        "source_after_loading_example": "det(jacobian(main::jacobian_counterexample_map,(0,0,0),3,3),3)=2",
-        "run_result": "failure",
-        "phase": "search_proof",
-        "category": "proof_search",
-        "session_terminated": false,
-        "same_session_liveness_after": true,
-        "context": "REPL after -f examples/real_analysis/jacobian_counterexample/main.lit -session; main:: names refer to its registered main export",
-        "setup": [
-          "matrix(R,3,3) $subset matrix(C,3,3)",
-          "$has_jacobian_at(main::jacobian_counterexample_map,(0,0,0),3,3,\\main::jacobian_counterexample_matrix<(0,0,0)>)",
-          "jacobian(main::jacobian_counterexample_map,(0,0,0),3,3) $in matrix(R,3,3)",
-          "jacobian(main::jacobian_counterexample_map,(0,0,0),3,3) $in matrix(C,3,3)"
-        ]
-      },
-      {
-        "name": "missing_candidate",
-        "source_after_loading_example": "jacobian(jacobian_counterexample_unproved,(0,0,0),3,3)(1,1)=1",
-        "run_result": "failure",
-        "phase": "well_defined",
-        "category": "well_defined",
-        "session_terminated": false,
-        "same_session_liveness_after": true,
-        "context": "REPL after -f examples/real_analysis/jacobian_counterexample/main.lit -session; main:: names refer to its registered main export",
-        "setup": [
-          "have fn jacobian_counterexample_unproved(q cart_n(R,3)) cart_n(R,3)=(q(1),q(2),q(3))"
-        ]
-      }
-    ],
-    "note": "These earlier semantic/WD controls are retained as dated evidence. This proof/comment rewrite widens no kernel or interface contract; only the current focused positive file gate was rerun."
-  },
-  "historical_previous_edition": {
-    "source_sha256": "886e4d84214cd1f6f7c645b323883c98a00553f3c9383847a6ab154f4b15f8f6",
-    "statement_count": 22,
-    "clean_gate": {
-      "command": "target/release/litex -strict -lang en -f examples/real_analysis/jacobian_counterexample/main.lit",
-      "exit_code": 0,
-      "run_result": "success",
-      "statement_count": 22,
-      "seconds": 254.6255696672015,
-      "session_terminated": false,
-      "termination": null,
-      "source_hash_unchanged_during_gate": true,
-      "new_no_left_inverse_proof_confirmed": true
-    },
-    "note": "The earlier long-name 22-statement edition is historical; this receipt verifies the current 23-statement edition."
-  },
-  "current_focused_controls": [
-    "All 20 mathematical statements accepted consecutively in a persistent native Session",
-    "Independent strict file verification using immutable bytes of the verified current release: 20 accepted statements, no termination, stable source and executable hashes",
-    "Seven rule-specific strict tracers, six focused Rust tests, eight focused Lean fixtures and two CLI-generated canonical pairs; this is not a full release gate"
-  ],
-  "scope": [
-    "One real-vector input in cart_n(R,3)",
-    "Actual Jacobian determinant -2 at every real point",
-    "Two explicit equal-image inputs",
-    "Noninjectivity and absence of every left inverse"
-  ],
-  "boundaries": [
-    "No complex analytic or polynomial-ring automorphism theorem",
-    "No Lean replay attempted for this full Jacobian example; only the newly added small rule fixtures have Lean replay",
-    "No textbook, whole examples or full Cargo/release gate performed"
-  ],
-  "historical_short_name_gate": {
-    "source_sha256": "856b3ce4050981f55b482019883ac6a92ff9124e109513d29fb60bf3ea536a13",
-    "clean_gate": {
-      "command": "target/release/litex -strict -lang en -f examples/real_analysis/jacobian_counterexample/main.lit",
-      "exit_code": 0,
-      "run_result": "success",
-      "statement_count": 23,
-      "seconds": 204.91053108405322,
-      "session_terminated": false,
-      "termination": null,
-      "source_hash_unchanged_during_gate": true,
-      "carrier_bridge_confirmed": true,
-      "short_no_left_inverse_proof_confirmed": true
-    },
-    "note": "Earlier Cartesian/short-name edition before the range shorthand and explanatory header."
-  },
-  "range_shorthand": {
-    "before": "closed_range(1,3)",
-    "after": "1...3",
-    "replaced_occurrences": 4,
-    "meaning": "The same closed integer range {1,2,3}, including the upper endpoint",
-    "parser_or_rule_change": false
-  },
-  "source_introduction": {
-    "question": "Must a complex polynomial map with nonzero constant Jacobian determinant have a polynomial two-sided inverse?",
-    "source_answer": "The cited source gives a negative answer in dimension three.",
-    "checked_here": "The real restriction has determinant -2 and identifies (0,0,-1/4) with (1,-3/2,13/2), so it has no left inverse on real three-dimensional space.",
-    "source": "https://arxiv.org/html/2608.00222v1#S3.SS4",
-    "complex_formalization_added": false
-  },
-  "retained_source_carrier_claims": [],
-  "historical_coordinate_equations_edition": {
-    "source_sha256": "70d8f113619acf7b2614ada258cda7edfeea289ad9b3c8b7d8562029a8cf4581",
-    "clean_gate": {
-      "command": "target/release/litex -strict -lang en -f examples/real_analysis/jacobian_counterexample/main.lit",
-      "exit_code": 0,
-      "run_result": "success",
-      "statement_count": 23,
-      "seconds": 166.2514937077649,
-      "session_terminated": false,
-      "termination": null,
-      "source_hash_unchanged_during_gate": true,
-      "canonical_statements_unchanged": true,
-      "all_statements_accepted": true,
-      "carrier_bridge_confirmed": true,
-      "short_no_left_inverse_proof_confirmed": true
-    },
-    "note": "The former 23-statement edition included the global coordinate forall and longer concrete image proofs."
-  },
-  "current_source_delta": {
-    "removed": "The complete preliminary row-enumeration statement",
-    "retained": "All other mathematical statements, short names, cart_n carriers, proof comments and two exact eval image claims",
-    "native_rule_dependency": "ClosedIntegerRangeEqualityCover consumes row binder membership inside the existing case coverage check",
-    "new_native_obj_or_public_operation": false
-  },
-  "deletion_evidence": {
-    "partials_and_jacobian_without_coordinates": "All nine partials, the assembled Jacobian and its determinant passed unchanged",
-    "legacy_consumer_failure": "The original first concrete image proof failed at a nested coordinate substitution after deleting the global forall; direct whole-image equality search also failed",
-    "accepted_explicit_route": "Each concrete image passes with a claim body consisting of eval F(point), without restoring any global coordinate equations",
-    "unchanged_tail": "Noninjectivity and no-left-inverse proofs passed unchanged",
-    "session_note": "The merged exploratory Session includes three rejected variants; the fresh public-file gate independently verifies the final source"
-  },
-  "historical_cartesian_carrier_edition": {
-    "source_sha256": "126f1a3931c74ab5fa190936ac2ea3296321b26e9d51e37d772fb78864a3b280",
-    "clean_gate": {
-      "command": "target/release/litex -strict -lang en -f examples/real_analysis/jacobian_counterexample/main.lit",
-      "exit_code": 0,
-      "run_result": "success",
-      "statement_count": 22,
-      "seconds": 169.3968102922663,
-      "session_terminated": false,
-      "termination": null,
-      "source_hash_unchanged_during_gate": true,
-      "unchanged_20_statements_confirmed": true,
-      "two_exact_evaluation_claims_confirmed": true,
-      "all_statements_accepted": true
-    },
-    "note": "Previous 22-statement edition used Cartesian notation and an explicit first carrier equality claim."
-  },
-  "source_interface_contracts": {
-    "F": "fn(p cart_n(R,3)) cart_n(R,3)",
-    "J": "template<p cart_n(R,3)>; fn(row 1...3,col 1...3) R",
-    "is_left_inverse": "G in fn(p cart_n(R,3)) cart_n(R,3); forall p cart_n(R,3): G(F(p))=p"
-  },
-  "removed_source_carrier_claims": [
-    "R × R × R = cart_n(R,3)"
-  ],
-  "historical_21_statement_edition": {
-    "source_sha256": "be5b321b8fb5e66cd3e48a44d70ae38ba8b6fff8ce62cd50f0f1a474cfa5a79c",
-    "tested_release_sha256": "575aa54e126ed9063b95c4096979ff23fbc81010ac80997a3b7dfd330256c30c",
-    "clean_gate": {
-      "command": "target/release/litex -strict -lang en -f examples/real_analysis/jacobian_counterexample/main.lit",
-      "exit_code": 0,
-      "run_result": "success",
-      "statement_count": 21,
-      "seconds": 216.0853759162128,
-      "session_terminated": false,
-      "termination": null,
-      "source_hash_unchanged_during_gate": true,
-      "canonical_statements_match_carrier_substitution": true,
-      "all_statements_accepted": true,
-      "source_uses_only_cart_n_carrier": true,
-      "carrier_claim_removed": true
-    },
-    "edit_metrics": {
+  "source_delta": {
+    "prior_source_sha256": "78a4ff698aa5008307185e6763278fba0d0c7430b381e6cc18fc6027aab0d7d1",
+    "layout": "Definitions; Jacobian formula; determinant; collision and absence of a left inverse",
+    "jacobian": "Nine separate top-level partial claims are grouped inside one Jacobian claim, by row. The three expanded coordinate formulas and equality-transfer lemma are local to it.",
+    "determinant": "The previous polynomial calculation is unchanged. Its separate short selector block retains explicit pointwise candidate evidence before selecting jacobian.",
+    "collision": "The two exact eval claims are local to the noninjectivity argument. The no-left-inverse proof reuses that noninjectivity.",
+    "source_interfaces": "F/1, J_entry/3, J/1 and is_left_inverse/1 are unchanged. partials_equal/6 is now local to the Jacobian proof; temporary f1/f2/f3 do not become global interfaces.",
+    "preserved": "Exact F and J definitions, all nine derivative candidates, actual Jacobian determinant -2, collision witnesses and no-left-inverse conclusion",
+    "metrics": {
       "before": {
-        "lines": 273,
+        "lines": 270,
         "code_lines": 133,
-        "comments": 118,
-        "bytes": 18866
+        "comments": 114,
+        "bytes": 18369,
+        "top_level_statements": 22
       },
       "after": {
-        "lines": 263,
-        "code_lines": 128,
-        "comments": 114,
-        "bytes": 18407
-      },
-      "statement_count_before": 22,
-      "statement_count_after": 21
-    },
-    "current_source_delta": {
-      "carrier_replacement": "R × R × R -> cart_n(R,3)",
-      "removed": "The first explicit Cartesian/Euclidean carrier equality claim",
-      "retained": "All 21 other statements after carrier substitution, including exact eval image proofs",
-      "new_native_or_std_change": false
+        "lines": 204,
+        "code_lines": 109,
+        "comments": 79,
+        "bytes": 13474,
+        "top_level_statements": 10
+      }
     }
+  },
+  "imports": [],
+  "templates": [],
+  "new_native_obj_fact_bt_strategy": [],
+  "new_reserved_bt_names_or_arities": [],
+  "rust_std_ast_env_runtime_changes": [],
+  "trust_or_axiom": [],
+  "reused": [
+    "Ordinary function definitions and checked finite row cases",
+    "Existing by fn_extension and stored equality substitution",
+    "Existing explicit-expression partial differentiation",
+    "Native jacobian_at_from_definition/5 and candidate-consuming jacobian selector",
+    "Existing real-to-complex matrix carrier inclusion, determinant identities and exact rational eval"
+  ],
+  "proof_order": [
+    "Define F, the entry table J_entry and the ordinary matrix-valued J",
+    "In one Jacobian claim, locally name the three scalar component formulas, prove equality transport and check all nine coordinate partials by row",
+    "Compute det J(p)=-2; explicitly instantiate the Jacobian certificate before selecting and transferring its determinant",
+    "Evaluate the two collision witnesses inside noninjectivity, then rule out every left inverse"
+  ],
+  "verification_scope": "Source-only layout cleanup: one persistent source-order Session followed by one independent strict standalone file gate. No Cargo, Lean, textbook or release gate.",
+  "boundaries": [
+    "One real-vector input, using cart_n(R,3) and 1-based coordinates",
+    "The local partials_equal lemma concerns equal functions on the same full Euclidean domain; it does not replace the standard library locality theory on differing domains",
+    "No complex analytic or polynomial-ring automorphism theorem",
+    "Lean compilation of the complete Jacobian example has not been attempted"
+  ],
+  "local_helpers": {
+    "scope": "Inside the single Jacobian claim",
+    "f1/1, f2/1, f3/1": "Three real scalar functions on cart_n(R,3), each containing one expanded component formula",
+    "partials_equal/6": "n N+, a,b in fn(q cart_n(R,n)) R, point cart_n(R,n), axis 1...n, L R; a supplied partial candidate for a and pointwise equality imply the same partial candidate for b"
+  },
+  "preservation_audit": {
+    "F_definition_identical": true,
+    "J_definition_identical": true,
+    "J_entry_cases_identical": true,
+    "determinant_arithmetic_identical": true,
+    "exact_eval_preserved": true,
+    "no_std_import": true,
+    "no_trust_or_axiom": true
   }
 }

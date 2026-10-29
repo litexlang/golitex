@@ -1,0 +1,9 @@
+0=0
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K,F power_set(space.carrier):
+        $top::is_compact_subset(A,space,K)
+        F $subset K
+        =>:
+            $top::is_compact_subset(A,space,F)
+    release thm top::closed_subset_of_compact_is_compact(A,space,K,F)

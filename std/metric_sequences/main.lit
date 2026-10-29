@@ -1,0 +1,678 @@
+# Metric sequences, completeness and the Banach fixed-point theorem.
+
+prop has_metric_limit(A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,p M.carrier):
+    forall epsilon R+:
+        exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,\m::open_ball<A,M>(p,epsilon))}
+
+prop is_metric_cauchy_tail(A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,epsilon R+,cutoff N+):
+    forall n,k N+:
+        n>=cutoff
+        k>=cutoff
+        =>:
+            M.distance(a(n),a(k))<epsilon
+
+prop is_metric_cauchy(A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier):
+    forall epsilon R+:
+        exist cutoff N+ st {$is_metric_cauchy_tail(A,M,a,epsilon,cutoff)}
+
+prop is_complete_metric_space(A set,M &m::MetricSpace<A>):
+    forall a fn(k N+) M.carrier:
+        $is_metric_cauchy(A,M,a)
+        =>:
+            exist p M.carrier st {$has_metric_limit(A,M,a,p)}
+
+template<S set,p S>:
+    have fn constant_sequence(k N+) S=p
+
+thm constant_sequence_has_metric_limit:
+    ? forall A set,M &m::MetricSpace<A>,p M.carrier:
+        $has_metric_limit(A,M,\constant_sequence<M.carrier,p>,p)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(\constant_sequence<M.carrier,p>,\m::open_ball<A,M>(p,epsilon))}
+        release thm m::open_ball_contains_center(A,M,p,epsilon)
+        claim:
+            ? forall k {n N+:n>=1}:
+                k $in preimage_set(\constant_sequence<M.carrier,p>,\m::open_ball<A,M>(p,epsilon))
+            \constant_sequence<M.carrier,p>(k)=p
+            \constant_sequence<M.carrier,p>(k) $in \m::open_ball<A,M>(p,epsilon)
+        by def {k N+:k>=1} $subset preimage_set(\constant_sequence<M.carrier,p>,\m::open_ball<A,M>(p,epsilon))
+        witness exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(\constant_sequence<M.carrier,p>,\m::open_ball<A,M>(p,epsilon))} from 1
+    by def $has_metric_limit(A,M,\constant_sequence<M.carrier,p>,p)
+
+thm metric_limit_is_unique:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,p,q M.carrier:
+        $has_metric_limit(A,M,a,p)
+        $has_metric_limit(A,M,a,q)
+        =>:
+            p=q
+    by contra:
+        ? p=q
+        p!=q
+        release thm m::distinct_points_have_positive_distance(A,M,p,q)
+        have epsilon R+=M.distance(p,q)/2
+        epsilon+epsilon=M.distance(p,q)/2+M.distance(p,q)/2=M.distance(p,q)
+        release thm m::distant_open_balls_are_disjoint(A,M,p,q,epsilon,epsilon)
+        obtain first from exist first N+ st {{k N+:k>=first} $subset preimage_set(a,\m::open_ball<A,M>(p,epsilon))}
+        obtain second from exist second N+ st {{k N+:k>=second} $subset preimage_set(a,\m::open_ball<A,M>(q,epsilon))}
+        have n N+=first+second
+        n>=first
+        n>=second
+        release thm set_builder_member(n,{k N+:k>=first})
+        release thm set_builder_member(n,{k N+:k>=second})
+        n $in preimage_set(a,\m::open_ball<A,M>(p,epsilon))
+        n $in preimage_set(a,\m::open_ball<A,M>(q,epsilon))
+        a(n) $in \m::open_ball<A,M>(p,epsilon)
+        a(n) $in \m::open_ball<A,M>(q,epsilon)
+        a(n) $in intersect(\m::open_ball<A,M>(p,epsilon),\m::open_ball<A,M>(q,epsilon))
+        a(n) $in {}
+        impossible a(n) $in {}
+
+thm metric_limit_implies_cauchy:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,p M.carrier:
+        $has_metric_limit(A,M,a,p)
+        =>:
+            $is_metric_cauchy(A,M,a)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {$is_metric_cauchy_tail(A,M,a,epsilon,cutoff)}
+        have delta R+=epsilon/2
+        delta+delta=epsilon/2+epsilon/2=epsilon
+        obtain cutoff from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,\m::open_ball<A,M>(p,delta))}
+        \m::open_ball<A,M>(p,delta)={x M.carrier:M.distance(p,x)<delta}
+        claim:
+            ? forall n,k N+:
+                n>=cutoff
+                k>=cutoff
+                =>:
+                    M.distance(a(n),a(k))<epsilon
+            release thm set_builder_member(n,{j N+:j>=cutoff})
+            release thm set_builder_member(k,{j N+:j>=cutoff})
+            n $in preimage_set(a,\m::open_ball<A,M>(p,delta))
+            k $in preimage_set(a,\m::open_ball<A,M>(p,delta))
+            a(n) $in \m::open_ball<A,M>(p,delta)
+            a(k) $in \m::open_ball<A,M>(p,delta)
+            M.distance(p,a(n))<delta
+            M.distance(p,a(k))<delta
+            M.distance(a(n),p)=M.distance(p,a(n))
+            M.distance(a(n),a(k))<=M.distance(a(n),p)+M.distance(p,a(k))<delta+delta=epsilon
+        by def $is_metric_cauchy_tail(A,M,a,epsilon,cutoff)
+        witness exist c N+ st {$is_metric_cauchy_tail(A,M,a,epsilon,c)} from cutoff
+    by def $is_metric_cauchy(A,M,a)
+
+template<S set,f fn(x S) S,start S>:
+    have fn iterate(n N) S by induc n from 0:
+        case n=0:start
+        case n>=1:f(iterate(n-1))
+
+template<S set,f fn(x S) S,start S>:
+    have fn orbit_sequence(k N+) S=\iterate<S,f,start>(k)
+
+thm metric_limit_extensional:
+    ? forall A set,M &m::MetricSpace<A>,a,b fn(k N+) M.carrier,p M.carrier:
+        $has_metric_limit(A,M,a,p)
+        forall k N+:
+            a(k)=b(k)
+        =>:
+            $has_metric_limit(A,M,b,p)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(b,\m::open_ball<A,M>(p,epsilon))}
+        obtain cutoff from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,\m::open_ball<A,M>(p,epsilon))}
+        claim:
+            ? forall k {j N+:j>=cutoff}:
+                k $in preimage_set(b,\m::open_ball<A,M>(p,epsilon))
+            k $in preimage_set(a,\m::open_ball<A,M>(p,epsilon))
+            a(k) $in \m::open_ball<A,M>(p,epsilon)
+            b(k)=a(k)
+            b(k) $in \m::open_ball<A,M>(p,epsilon)
+        by def {k N+:k>=cutoff} $subset preimage_set(b,\m::open_ball<A,M>(p,epsilon))
+        witness exist c N+ st {{k N+:k>=c} $subset preimage_set(b,\m::open_ball<A,M>(p,epsilon))} from cutoff
+    by def $has_metric_limit(A,M,b,p)
+
+template<S set,a fn(k N+) S,offset N>:
+    have fn shifted_sequence(k N+) S=a(k+offset)
+
+thm metric_limit_shift:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,p M.carrier,offset N:
+        $has_metric_limit(A,M,a,p)
+        =>:
+            $has_metric_limit(A,M,\shifted_sequence<M.carrier,a,offset>,p)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(\shifted_sequence<M.carrier,a,offset>,\m::open_ball<A,M>(p,epsilon))}
+        obtain cutoff from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,\m::open_ball<A,M>(p,epsilon))}
+        claim:
+            ? forall k {j N+:j>=cutoff}:
+                k $in preimage_set(\shifted_sequence<M.carrier,a,offset>,\m::open_ball<A,M>(p,epsilon))
+            have n N+=k+offset
+            n=k+offset>=k>=cutoff
+            release thm set_builder_member(n,{j N+:j>=cutoff})
+            n $in preimage_set(a,\m::open_ball<A,M>(p,epsilon))
+            a(n) $in \m::open_ball<A,M>(p,epsilon)
+            \shifted_sequence<M.carrier,a,offset>(k)=a(k+offset)=a(n)
+            \shifted_sequence<M.carrier,a,offset>(k) $in \m::open_ball<A,M>(p,epsilon)
+        by def {k N+:k>=cutoff} $subset preimage_set(\shifted_sequence<M.carrier,a,offset>,\m::open_ball<A,M>(p,epsilon))
+        witness exist c N+ st {{k N+:k>=c} $subset preimage_set(\shifted_sequence<M.carrier,a,offset>,\m::open_ball<A,M>(p,epsilon))} from cutoff
+    by def $has_metric_limit(A,M,\shifted_sequence<M.carrier,a,offset>,p)
+
+thm continuous_map_preserves_metric_limit:
+    ? forall A set,M &m::MetricSpace<A>,B set,T &m::MetricSpace<B>,f fn(x M.carrier) T.carrier,a fn(k N+) M.carrier,p M.carrier:
+        $has_metric_limit(A,M,a,p)
+        $m::is_metric_continuous_at(A,M,B,T,f,p)
+        =>:
+            $has_metric_limit(B,T,compose(f,a),f(p))
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(compose(f,a),\m::open_ball<B,T>(f(p),epsilon))}
+        obtain delta from exist delta R+ st {\m::open_ball<A,M>(p,delta) $subset preimage_set(f,\m::open_ball<B,T>(f(p),epsilon))}
+        obtain cutoff from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,\m::open_ball<A,M>(p,delta))}
+        claim:
+            ? forall k {j N+:j>=cutoff}:
+                k $in preimage_set(compose(f,a),\m::open_ball<B,T>(f(p),epsilon))
+            k $in preimage_set(a,\m::open_ball<A,M>(p,delta))
+            a(k) $in \m::open_ball<A,M>(p,delta)
+            a(k) $in preimage_set(f,\m::open_ball<B,T>(f(p),epsilon))
+            f(a(k)) $in \m::open_ball<B,T>(f(p),epsilon)
+            compose(f,a)(k)=f(a(k))
+            compose(f,a)(k) $in \m::open_ball<B,T>(f(p),epsilon)
+        by def {k N+:k>=cutoff} $subset preimage_set(compose(f,a),\m::open_ball<B,T>(f(p),epsilon))
+        witness exist c N+ st {{k N+:k>=c} $subset preimage_set(compose(f,a),\m::open_ball<B,T>(f(p),epsilon))} from cutoff
+    by def $has_metric_limit(B,T,compose(f,a),f(p))
+
+thm lipschitz_map_preserves_metric_limit:
+    ? forall A set,M &m::MetricSpace<A>,B set,T &m::MetricSpace<B>,f fn(x M.carrier) T.carrier,L R,a fn(k N+) M.carrier,p M.carrier:
+        $has_metric_limit(A,M,a,p)
+        $m::is_lipschitz_map(A,M,B,T,f,L)
+        =>:
+            $has_metric_limit(B,T,compose(f,a),f(p))
+    release thm m::lipschitz_implies_metric_continuity(A,M,B,T,f,L,p)
+    release thm continuous_map_preserves_metric_limit(A,M,B,T,f,a,p)
+
+prop is_contraction_map(A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier):
+    exist q R st {0<=q,q<1,$m::is_lipschitz_map(A,M,A,M,f,q)}
+
+thm contraction_fixed_point_is_unique:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,p,r M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        f(r)=r
+        =>:
+            p=r
+    by contra:
+        ? p=r
+        p!=r
+        release thm m::distinct_points_have_positive_distance(A,M,p,r)
+        M.distance(p,r)=M.distance(f(p),f(r))<=q*M.distance(p,r)<1*M.distance(p,r)=M.distance(p,r)
+        impossible M.distance(p,r)<M.distance(p,r)
+
+thm contraction_iterate_adjacent_bound:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier,n N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        =>:
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+1))<=q^n*M.distance(start,f(start))
+    0<=q
+    release thm fn_set_member(\iterate<M.carrier,f,start>,fn(k N) M.carrier)
+    by induc n from 0:
+        ? M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+1))<=q^n*M.distance(start,f(start))
+        ? from n=0:
+            \iterate<M.carrier,f,start>(0)=start
+            \iterate<M.carrier,f,start>(1)=f(\iterate<M.carrier,f,start>(0))=f(start)
+            0+1=1
+            \iterate<M.carrier,f,start>(0+1)=\iterate<M.carrier,f,start>(1)=f(start)
+            q^0=1
+            q^0*M.distance(start,f(start))=1*M.distance(start,f(start))=M.distance(start,f(start))
+            M.distance(\iterate<M.carrier,f,start>(0),\iterate<M.carrier,f,start>(0+1))=M.distance(\iterate<M.carrier,f,start>(0),\iterate<M.carrier,f,start>(1))=M.distance(start,f(start))=q^0*M.distance(start,f(start))
+        ? induc:
+            n+1>=1
+            (n+1)-1=n
+            \iterate<M.carrier,f,start>(n+1)=f(\iterate<M.carrier,f,start>(n))
+            (n+1)+1>=1
+            ((n+1)+1)-1=n+1
+            \iterate<M.carrier,f,start>((n+1)+1)=f(\iterate<M.carrier,f,start>(n+1))
+            M.distance(\iterate<M.carrier,f,start>(n+1),\iterate<M.carrier,f,start>((n+1)+1))=M.distance(f(\iterate<M.carrier,f,start>(n)),f(\iterate<M.carrier,f,start>(n+1)))<=q*M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+1))<=q*(q^n*M.distance(start,f(start)))
+            q^(n+1)=q^n*q
+            q*(q^n*M.distance(start,f(start)))=(q^n*q)*M.distance(start,f(start))=q^(n+1)*M.distance(start,f(start))
+            M.distance(\iterate<M.carrier,f,start>(n+1),\iterate<M.carrier,f,start>((n+1)+1))<=q^(n+1)*M.distance(start,f(start))
+
+claim:
+    ? forall q R:
+        q<1
+        =>:
+            1-q $in R+
+            1-q!=0
+    0<1-q
+    1-q $in R+
+    1-q!=0
+
+thm contraction_iterate_gap_bound:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier,n,k N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        =>:
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+k))<=(q^n-q^(n+k))*M.distance(start,f(start))/(1-q)
+    release thm fn_set_member(\iterate<M.carrier,f,start>,fn(t N) M.carrier)
+    0<=q
+    0<1-q
+    have D R=M.distance(start,f(start))
+    0<=D
+    by induc k from 0:
+        ? M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+k))<=(q^n-q^(n+k))*D/(1-q)
+        ? from k=0:
+            n+0=n
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+0))=M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n))=0
+            (q^n-q^(n+0))*D/(1-q)=(q^n-q^n)*D/(1-q)=0
+        ? induc:
+            have next N=n+k
+            release thm contraction_iterate_adjacent_bound(A,M,f,q,start,next)
+            n+(k+1)=(n+k)+1=next+1
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+(k+1)))<=M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+k))+M.distance(\iterate<M.carrier,f,start>(n+k),\iterate<M.carrier,f,start>(n+(k+1)))
+            \iterate<M.carrier,f,start>(n+k)=\iterate<M.carrier,f,start>(next)
+            \iterate<M.carrier,f,start>(n+(k+1))=\iterate<M.carrier,f,start>(next+1)
+            M.distance(\iterate<M.carrier,f,start>(n+k),\iterate<M.carrier,f,start>(n+(k+1)))=M.distance(\iterate<M.carrier,f,start>(next),\iterate<M.carrier,f,start>(next+1))<=q^next*M.distance(start,f(start))=q^(n+k)*D
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+k))<=(q^n-q^(n+k))*D/(1-q)
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+k))+M.distance(\iterate<M.carrier,f,start>(n+k),\iterate<M.carrier,f,start>(n+(k+1)))<=(q^n-q^(n+k))*D/(1-q)+q^(n+k)*D
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+(k+1)))<=(q^n-q^(n+k))*D/(1-q)+q^(n+k)*D
+            q^(n+(k+1))=q^((n+k)+1)=q^(n+k)*q
+            (q^n-q^(n+k))*D/(1-q)+q^(n+k)*D=((q^n-q^(n+k))+q^(n+k)*(1-q))*D/(1-q)=(q^n-q^(n+k)*q)*D/(1-q)=(q^n-q^(n+(k+1)))*D/(1-q)
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+(k+1)))<=(q^n-q^(n+(k+1)))*D/(1-q)
+
+release obj def m::real_line_distance
+
+release thm m::real_line_metric_laws()
+
+have real_line_metric &m::MetricSpace<R> = (R,m::real_line_distance)
+
+thm real_line_metric_components:
+    ? forall :
+        real_line_metric.carrier=R
+        real_line_metric.distance=m::real_line_distance
+        real_line_metric.distance $in fn(x,y real_line_metric.carrier) R
+    release struct def real_line_metric
+    real_line_metric.carrier=R
+    real_line_metric.distance=m::real_line_distance
+    release thm fn_set_member(real_line_metric.distance,fn(x,y real_line_metric.carrier) R)
+
+release thm real_line_metric_components()
+
+thm real_line_open_ball:
+    ? forall p R,epsilon R+:
+        \m::open_ball<R,real_line_metric>(p,epsilon)={x R:abs(x-p)<epsilon}
+    release thm real_line_metric_components()
+    \m::open_ball<R,real_line_metric>(p,epsilon)={x real_line_metric.carrier:real_line_metric.distance(p,x)<epsilon}
+    by extension:
+        ? \m::open_ball<R,real_line_metric>(p,epsilon)={x R:abs(x-p)<epsilon}
+        claim:
+            ? forall x \m::open_ball<R,real_line_metric>(p,epsilon):
+                x $in {v R:abs(v-p)<epsilon}
+            real_line_metric.distance(p,x)=m::real_line_distance(p,x)=abs(p-x)=abs(-(x-p))=abs(x-p)
+            real_line_metric.distance(p,x)<epsilon
+            abs(x-p)<epsilon
+            release thm set_builder_member(x,{v R:abs(v-p)<epsilon})
+        claim:
+            ? forall x {v R:abs(v-p)<epsilon}:
+                x $in \m::open_ball<R,real_line_metric>(p,epsilon)
+            abs(x-p)<epsilon
+            real_line_metric.distance(p,x)=m::real_line_distance(p,x)=abs(p-x)=abs(-(x-p))=abs(x-p)<epsilon
+            release thm set_builder_member(x,{v real_line_metric.carrier:real_line_metric.distance(p,v)<epsilon})
+
+thm real_sequence_limit_is_metric_limit:
+    ? forall a seq(R),p R:
+        $has_seq_limit(a,p)
+        =>:
+            $has_metric_limit(R,real_line_metric,a,p)
+    release thm real_line_metric_components()
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,\m::open_ball<R,real_line_metric>(p,epsilon))}
+        release thm real_line_open_ball(p,epsilon)
+        release thm seq_limit_tail(a,p,epsilon)
+        obtain cutoff from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,{v R:abs(v-p)<epsilon})}
+        claim:
+            ? forall k {j N+:j>=cutoff}:
+                k $in preimage_set(a,\m::open_ball<R,real_line_metric>(p,epsilon))
+            k $in preimage_set(a,{v R:abs(v-p)<epsilon})
+            a(k) $in {v R:abs(v-p)<epsilon}
+            a(k) $in \m::open_ball<R,real_line_metric>(p,epsilon)
+        by def {k N+:k>=cutoff} $subset preimage_set(a,\m::open_ball<R,real_line_metric>(p,epsilon))
+        witness exist c N+ st {{k N+:k>=c} $subset preimage_set(a,\m::open_ball<R,real_line_metric>(p,epsilon))} from cutoff
+    by def $has_metric_limit(R,real_line_metric,a,p)
+
+thm real_metric_limit_is_sequence_limit:
+    ? forall a seq(R),p R:
+        $has_metric_limit(R,real_line_metric,a,p)
+        =>:
+            $has_seq_limit(a,p)
+    release thm real_line_metric_components()
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,{v R:abs(v-p)<epsilon})}
+        release thm real_line_open_ball(p,epsilon)
+        obtain cutoff from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(a,\m::open_ball<R,real_line_metric>(p,epsilon))}
+        claim:
+            ? forall k {j N+:j>=cutoff}:
+                k $in preimage_set(a,{v R:abs(v-p)<epsilon})
+            k $in preimage_set(a,\m::open_ball<R,real_line_metric>(p,epsilon))
+            a(k) $in \m::open_ball<R,real_line_metric>(p,epsilon)
+            a(k) $in {v R:abs(v-p)<epsilon}
+        by def {k N+:k>=cutoff} $subset preimage_set(a,{v R:abs(v-p)<epsilon})
+        witness exist c N+ st {{k N+:k>=c} $subset preimage_set(a,{v R:abs(v-p)<epsilon})} from cutoff
+    by def $has_seq_limit(a,p)
+
+thm real_metric_cauchy_is_sequence_cauchy:
+    ? forall a seq(R):
+        $is_metric_cauchy(R,real_line_metric,a)
+        =>:
+            $is_seq_cauchy(a)
+    release thm real_line_metric_components()
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {cart({k N+:k>=cutoff},{k N+:k>=cutoff}) $subset {pair cart(N+,N+):abs(a(pair(1))-a(pair(2)))<epsilon}}
+        obtain cutoff from exist cutoff N+ st {$is_metric_cauchy_tail(R,real_line_metric,a,epsilon,cutoff)}
+        claim:
+            ? forall pair cart({k N+:k>=cutoff},{k N+:k>=cutoff}):
+                pair $in {p cart(N+,N+):abs(a(p(1))-a(p(2)))<epsilon}
+            pair(1) $in {k N+:k>=cutoff}
+            pair(2) $in {k N+:k>=cutoff}
+            pair(1)>=cutoff
+            pair(2)>=cutoff
+            real_line_metric.distance(a(pair(1)),a(pair(2)))<epsilon
+            real_line_metric.distance(a(pair(1)),a(pair(2)))=m::real_line_distance(a(pair(1)),a(pair(2)))=abs(a(pair(1))-a(pair(2)))
+            abs(a(pair(1))-a(pair(2)))<epsilon
+            release thm set_builder_member(pair,{p cart(N+,N+):abs(a(p(1))-a(p(2)))<epsilon})
+        by def cart({k N+:k>=cutoff},{k N+:k>=cutoff}) $subset {pair cart(N+,N+):abs(a(pair(1))-a(pair(2)))<epsilon}
+        witness exist c N+ st {cart({k N+:k>=c},{k N+:k>=c}) $subset {pair cart(N+,N+):abs(a(pair(1))-a(pair(2)))<epsilon}} from cutoff
+    release thm sequence_cauchy_from_epsilon(a)
+
+thm real_line_metric_is_complete:
+    ? forall :
+        $is_complete_metric_space(R,real_line_metric)
+    release thm real_line_metric_components()
+    claim:
+        ? forall a fn(k N+) real_line_metric.carrier:
+            $is_metric_cauchy(R,real_line_metric,a)
+            =>:
+                exist p real_line_metric.carrier st {$has_metric_limit(R,real_line_metric,a,p)}
+        a $in seq(R)
+        release thm real_metric_cauchy_is_sequence_cauchy(a)
+        release thm sequence_cauchy_convergent(a)
+        release thm sequence_limit_from_convergent(a)
+        obtain p from exist p R st {$has_seq_limit(a,p)}
+        release thm real_sequence_limit_is_metric_limit(a,p)
+        witness exist value real_line_metric.carrier st {$has_metric_limit(R,real_line_metric,a,value)} from p
+    by def $is_complete_metric_space(R,real_line_metric)
+
+thm nonnegative_natural_power:
+    ? forall q R,n N:
+        0<=q
+        =>:
+            0<=q^n
+    by induc n from 0:
+        ? 0<=q^n
+        ? from n=0:
+            q^0=1
+        ? induc:
+            0<=q^n*q
+            q^(n+1)=q^n*q
+            0<=q^(n+1)
+
+thm contraction_iterate_tail_bound:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier,n,k N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        n<=k
+        =>:
+            M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(k))<=q^n*M.distance(start,f(start))/(1-q)
+    release thm fn_set_member(\iterate<M.carrier,f,start>,fn(t N) M.carrier)
+    0<=q
+    0<1-q
+    k-n $in Z
+    0<=k-n
+    have gap N=k-n
+    n+gap=n+(k-n)=k
+    \iterate<M.carrier,f,start>(n+gap)=\iterate<M.carrier,f,start>(k)
+    release thm contraction_iterate_gap_bound(A,M,f,q,start,n,gap)
+    M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(k))=M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(n+gap))<=(q^n-q^(n+gap))*M.distance(start,f(start))/(1-q)
+    have exponent N=n+gap
+    release thm nonnegative_natural_power(q,exponent)
+    q^(n+gap)=q^exponent
+    0<=q^(n+gap)
+    0<=M.distance(start,f(start))
+    q^n-q^(n+gap)<=q^n
+    (q^n-q^(n+gap))*M.distance(start,f(start))<=q^n*M.distance(start,f(start))
+    (q^n-q^(n+gap))*M.distance(start,f(start))/(1-q)<=q^n*M.distance(start,f(start))/(1-q)
+    M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(k))<=q^n*M.distance(start,f(start))/(1-q)
+
+thm vanishing_tail_bound_implies_metric_cauchy:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,h seq(R):
+        $has_seq_limit(h,0)
+        forall n,k N+:
+            n<=k
+            =>:
+                M.distance(a(n),a(k))<=h(n)
+        =>:
+            $is_metric_cauchy(A,M,a)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {$is_metric_cauchy_tail(A,M,a,epsilon,cutoff)}
+        release thm seq_limit_tail(h,0,epsilon)
+        obtain cutoff from exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(h,{v R:abs(v-0)<epsilon})}
+        claim:
+            ? forall n,k N+:
+                n>=cutoff
+                k>=cutoff
+                =>:
+                    M.distance(a(n),a(k))<epsilon
+            release thm set_builder_member(n,{j N+:j>=cutoff})
+            release thm set_builder_member(k,{j N+:j>=cutoff})
+            n $in preimage_set(h,{v R:abs(v-0)<epsilon})
+            k $in preimage_set(h,{v R:abs(v-0)<epsilon})
+            h(n) $in {v R:abs(v-0)<epsilon}
+            h(k) $in {v R:abs(v-0)<epsilon}
+            h(n)<=abs(h(n))=abs(h(n)-0)<epsilon
+            h(k)<=abs(h(k))=abs(h(k)-0)<epsilon
+            by cases:
+                ? M.distance(a(n),a(k))<epsilon
+                case n<=k:
+                    M.distance(a(n),a(k))<=h(n)<epsilon
+                case n>k:
+                    k<=n
+                    M.distance(a(n),a(k))=M.distance(a(k),a(n))<=h(k)<epsilon
+        by def $is_metric_cauchy_tail(A,M,a,epsilon,cutoff)
+        witness exist c N+ st {$is_metric_cauchy_tail(A,M,a,epsilon,c)} from cutoff
+    by def $is_metric_cauchy(A,M,a)
+
+thm contraction_orbit_is_cauchy:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        =>:
+            $is_metric_cauchy(A,M,\orbit_sequence<M.carrier,f,start>)
+    0<=q
+    0<1-q
+    release thm fn_set_member(\iterate<M.carrier,f,start>,fn(n N) M.carrier)
+    release thm fn_set_member(\orbit_sequence<M.carrier,f,start>,fn(n N+) M.carrier)
+    have c R=M.distance(start,f(start))/(1-q)
+    have fn geometric(k N+) R=q^k
+    release thm rs::sequence_geometric_nonnegative_limit(geometric,q)
+    release thm seq_limit_scale(geometric,0,c)
+    have fn upper(k N+) R=c*geometric(k)
+    c*0=0
+    $has_seq_limit(upper,0)
+    claim:
+        ? forall n,k N+:
+            n<=k
+            =>:
+                M.distance(\orbit_sequence<M.carrier,f,start>(n),\orbit_sequence<M.carrier,f,start>(k))<=upper(n)
+        release thm contraction_iterate_tail_bound(A,M,f,q,start,n,k)
+        \orbit_sequence<M.carrier,f,start>(n)=\iterate<M.carrier,f,start>(n)
+        \orbit_sequence<M.carrier,f,start>(k)=\iterate<M.carrier,f,start>(k)
+        upper(n)=c*geometric(n)=(M.distance(start,f(start))/(1-q))*q^n=q^n*M.distance(start,f(start))/(1-q)
+        M.distance(\orbit_sequence<M.carrier,f,start>(n),\orbit_sequence<M.carrier,f,start>(k))=M.distance(\iterate<M.carrier,f,start>(n),\iterate<M.carrier,f,start>(k))<=q^n*M.distance(start,f(start))/(1-q)=upper(n)
+    release thm vanishing_tail_bound_implies_metric_cauchy(A,M,\orbit_sequence<M.carrier,f,start>,upper)
+
+thm contraction_orbit_limit_is_fixed:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start,p M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        $has_metric_limit(A,M,\orbit_sequence<M.carrier,f,start>,p)
+        =>:
+            f(p)=p
+    release thm fn_set_member(\iterate<M.carrier,f,start>,fn(n N) M.carrier)
+    release thm fn_set_member(\orbit_sequence<M.carrier,f,start>,fn(n N+) M.carrier)
+    release thm lipschitz_map_preserves_metric_limit(A,M,A,M,f,q,\orbit_sequence<M.carrier,f,start>,p)
+    release thm metric_limit_shift(A,M,\orbit_sequence<M.carrier,f,start>,p,1)
+    claim:
+        ? forall k N+:
+            \shifted_sequence<M.carrier,\orbit_sequence<M.carrier,f,start>,1>(k)=compose(f,\orbit_sequence<M.carrier,f,start>)(k)
+        k+1>=1
+        (k+1)-1=k
+        \iterate<M.carrier,f,start>(k+1)=f(\iterate<M.carrier,f,start>(k))
+        \shifted_sequence<M.carrier,\orbit_sequence<M.carrier,f,start>,1>(k)=\orbit_sequence<M.carrier,f,start>(k+1)=\iterate<M.carrier,f,start>(k+1)=f(\iterate<M.carrier,f,start>(k))=f(\orbit_sequence<M.carrier,f,start>(k))=compose(f,\orbit_sequence<M.carrier,f,start>)(k)
+    release thm metric_limit_extensional(A,M,\shifted_sequence<M.carrier,\orbit_sequence<M.carrier,f,start>,1>,compose(f,\orbit_sequence<M.carrier,f,start>),p)
+    release thm metric_limit_is_unique(A,M,compose(f,\orbit_sequence<M.carrier,f,start>),f(p),p)
+
+thm complete_contraction_orbit_has_fixed_limit:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier:
+        $is_complete_metric_space(A,M)
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        =>:
+            exist p M.carrier st {f(p)=p,$has_metric_limit(A,M,\orbit_sequence<M.carrier,f,start>,p)}
+    release thm contraction_orbit_is_cauchy(A,M,f,q,start)
+    obtain p from exist p M.carrier st {$has_metric_limit(A,M,\orbit_sequence<M.carrier,f,start>,p)}
+    release thm contraction_orbit_limit_is_fixed(A,M,f,q,start,p)
+    witness exist value M.carrier st {f(value)=value,$has_metric_limit(A,M,\orbit_sequence<M.carrier,f,start>,value)} from p
+
+thm banach_fixed_point:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier:
+        $is_complete_metric_space(A,M)
+        $is_nonempty_set(M.carrier)
+        $is_contraction_map(A,M,f)
+        =>:
+            exist! p M.carrier st {f(p)=p}
+    obtain q from exist q R st {0<=q,q<1,$m::is_lipschitz_map(A,M,A,M,f,q)}
+    have start M.carrier
+    release thm complete_contraction_orbit_has_fixed_limit(A,M,f,q,start)
+    obtain p from exist p M.carrier st {f(p)=p,$has_metric_limit(A,M,\orbit_sequence<M.carrier,f,start>,p)}
+    claim:
+        ? forall other M.carrier:
+            f(other)=other
+            =>:
+                other=p
+        release thm contraction_fixed_point_is_unique(A,M,f,q,other,p)
+    witness exist! value M.carrier st {f(value)=value} from p
+
+template<A set,M &m::MetricSpace<A>>:
+    have fn contraction_fixed_point by exist!:
+        ? forall f fn(x M.carrier) M.carrier:
+            $is_complete_metric_space(A,M)
+            $is_nonempty_set(M.carrier)
+            $is_contraction_map(A,M,f)
+            =>:
+                exist! p M.carrier st {f(p)=p}
+
+thm contraction_fixed_point_value:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,p M.carrier:
+        $is_complete_metric_space(A,M)
+        $is_nonempty_set(M.carrier)
+        $is_contraction_map(A,M,f)
+        f(p)=p
+        =>:
+            \contraction_fixed_point<A,M>(f)=p
+    obtain q from exist q R st {0<=q,q<1,$m::is_lipschitz_map(A,M,A,M,f,q)}
+    f(\contraction_fixed_point<A,M>(f))=\contraction_fixed_point<A,M>(f)
+    release thm contraction_fixed_point_is_unique(A,M,f,q,\contraction_fixed_point<A,M>(f),p)
+
+thm complete_contraction_orbit_converges_to_fixed_point:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start,p M.carrier:
+        $is_complete_metric_space(A,M)
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        =>:
+            $has_metric_limit(A,M,\orbit_sequence<M.carrier,f,start>,p)
+    release thm complete_contraction_orbit_has_fixed_limit(A,M,f,q,start)
+    obtain r from exist r M.carrier st {f(r)=r,$has_metric_limit(A,M,\orbit_sequence<M.carrier,f,start>,r)}
+    release thm contraction_fixed_point_is_unique(A,M,f,q,r,p)
+    $has_metric_limit(A,M,\orbit_sequence<M.carrier,f,start>,p)
+
+thm contraction_fixed_point_residual_bound:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,x,p M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        =>:
+            M.distance(x,p)<=M.distance(x,f(x))/(1-q)
+    0<1-q
+    M.distance(f(x),p)=M.distance(f(x),f(p))<=q*M.distance(x,p)
+    M.distance(x,p)<=M.distance(x,f(x))+M.distance(f(x),p)<=M.distance(x,f(x))+q*M.distance(x,p)
+    M.distance(x,p)<=M.distance(x,f(x))+q*M.distance(x,p)
+    (1-q)*M.distance(x,p)=M.distance(x,p)-q*M.distance(x,p)<=(M.distance(x,f(x))+q*M.distance(x,p))-q*M.distance(x,p)=M.distance(x,f(x))
+    M.distance(x,p)=((1-q)*M.distance(x,p))/(1-q)<=M.distance(x,f(x))/(1-q)
+
+thm contraction_iterate_fixed_point_bound:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start,p M.carrier,n N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        f(p)=p
+        =>:
+            M.distance(\iterate<M.carrier,f,start>(n),p)<=q^n*M.distance(start,p)
+    0<=q
+    release thm fn_set_member(\iterate<M.carrier,f,start>,fn(k N) M.carrier)
+    by induc n from 0:
+        ? M.distance(\iterate<M.carrier,f,start>(n),p)<=q^n*M.distance(start,p)
+        ? from n=0:
+            \iterate<M.carrier,f,start>(0)=start
+            q^0=1
+            M.distance(\iterate<M.carrier,f,start>(0),p)=M.distance(start,p)=1*M.distance(start,p)=q^0*M.distance(start,p)
+        ? induc:
+            n+1>=1
+            (n+1)-1=n
+            \iterate<M.carrier,f,start>(n+1)=f(\iterate<M.carrier,f,start>(n))
+            q^(n+1)=q^n*q
+            M.distance(\iterate<M.carrier,f,start>(n+1),p)=M.distance(f(\iterate<M.carrier,f,start>(n)),f(p))<=q*M.distance(\iterate<M.carrier,f,start>(n),p)<=q*(q^n*M.distance(start,p))=(q^n*q)*M.distance(start,p)=q^(n+1)*M.distance(start,p)
+
+thm contraction_iterate_a_priori_bound:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start,p M.carrier,n N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        =>:
+            M.distance(\iterate<M.carrier,f,start>(n),p)<=q^n*M.distance(start,f(start))/(1-q)
+    0<=q
+    0<1-q
+    release thm nonnegative_natural_power(q,n)
+    release thm contraction_fixed_point_residual_bound(A,M,f,q,start,p)
+    release thm contraction_iterate_fixed_point_bound(A,M,f,q,start,p,n)
+    q^n*M.distance(start,p)<=q^n*(M.distance(start,f(start))/(1-q))=q^n*M.distance(start,f(start))/(1-q)
+    M.distance(\iterate<M.carrier,f,start>(n),p)<=q^n*M.distance(start,p)<=q^n*M.distance(start,f(start))/(1-q)
+
+thm empty_metric_space_is_complete:
+    ? forall A set,M &m::MetricSpace<A>:
+        M.carrier={}
+        =>:
+            $is_complete_metric_space(A,M)
+    claim:
+        ? forall a fn(k N+) M.carrier:
+            $is_metric_cauchy(A,M,a)
+            =>:
+                exist p M.carrier st {$has_metric_limit(A,M,a,p)}
+        by contra:
+            ? exist p M.carrier st {$has_metric_limit(A,M,a,p)}
+            a(1) $in M.carrier
+            a(1) $in {}
+            impossible a(1) $in {}
+    by def $is_complete_metric_space(A,M)
+
+thm contraction_step_a_posteriori_bound:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,x,p M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        =>:
+            M.distance(f(x),p)<=q*M.distance(x,f(x))/(1-q)
+    0<1-q
+    release thm contraction_fixed_point_residual_bound(A,M,f,q,f(x),p)
+    M.distance(f(x),f(f(x)))<=q*M.distance(x,f(x))
+    M.distance(f(x),f(f(x)))/(1-q)<=q*M.distance(x,f(x))/(1-q)
+    M.distance(f(x),p)<=M.distance(f(x),f(f(x)))/(1-q)<=q*M.distance(x,f(x))/(1-q)

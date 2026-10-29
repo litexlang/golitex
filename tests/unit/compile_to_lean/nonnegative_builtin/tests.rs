@@ -221,7 +221,7 @@ fn nonnegative_builtins_retain_the_parent_constructor_wd_check() {
 }
 
 #[test]
-fn existing_nonnegative_strategies_remain_independent_consumers() {
+fn existing_nonnegative_goals_replay_current_structural_consumers() {
     for (source, law) in [
         (STRATEGY_SUM, "Litex.addNonnegative"),
         (STRATEGY_PRODUCT, "Litex.mulNonnegative"),
@@ -229,9 +229,9 @@ fn existing_nonnegative_strategies_remain_independent_consumers() {
         let (result, compiler) = super::execute(source);
         let output = compiler
             .compile_run(&result, "existing_nonnegative_strategy")
-            .expect("the previously supported strategy keeps its own evidence route");
+            .expect("the selected structural certificate retains the arithmetic bridge");
         assert!(output.contains(law));
-        assert!(output.contains("_litex_zero_bound"));
+        assert!(output.contains("_sign_sum"));
         assert!(!output.contains("_litex_nonnegative :="));
     }
 }

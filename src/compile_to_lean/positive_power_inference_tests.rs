@@ -93,7 +93,9 @@ fn positive_power_inference_replays_both_equality_orientations_and_original_chil
         (REVERSE, 1, false),
         (DOUBLE, 2, false),
         (SQUARE, 1, false),
-        (BASE, 1, true),
+        // Structural sign composition now proves this power positive before
+        // the inference pipeline reaches its base-positive fallback.
+        (BASE, 1, false),
     ] {
         let (mut result, compiler) = checked(source);
         let rule = original(&mut result);

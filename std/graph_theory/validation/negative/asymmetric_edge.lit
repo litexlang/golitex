@@ -1,0 +1,9 @@
+have asymmetric_vertices finite_set={1,2}
+
+1 $in asymmetric_vertices
+
+2 $in asymmetric_vertices
+
+(1,2) $in cart(asymmetric_vertices,asymmetric_vertices)
+
+have invalid_directed &graph::FiniteSimpleGraph<asymmetric_vertices> = (asymmetric_vertices,{(1,2)})

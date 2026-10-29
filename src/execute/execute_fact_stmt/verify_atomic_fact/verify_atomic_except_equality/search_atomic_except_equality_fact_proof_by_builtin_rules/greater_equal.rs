@@ -13,6 +13,9 @@ use crate::execute::execute_fact_stmt::VerifyFactResult;
 
 // Builtin rules for `a >= b`.
 pub enum GreaterEqualFactSearchProofByBuiltinRule {
+    StructuralRealSign(
+        crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignProof,
+    ),
     MulLeftNonpositiveReversesWeakGreaterEqual(super::order_negative_common_factor::MulLeftNonpositiveReversesWeakGreaterEqualProof),
     MulRightNonpositiveReversesWeakGreaterEqual(super::order_negative_common_factor::MulRightNonpositiveReversesWeakGreaterEqualProof),
     MulLeftRightNonpositiveReversesWeakGreaterEqual(super::order_negative_common_factor::MulLeftRightNonpositiveReversesWeakGreaterEqualProof),
@@ -109,6 +112,22 @@ impl Runtime {
     // B0: reflexivity + known `>`. A: match Obj shapes. B1: closed decimal.
     // Example: prove `a >= a`, `n >= 0`, `n - 1 >= 0`, `2 >= 1`.
     pub fn search_greater_equal_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &crate::ast::fact::GreaterEqualFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<GreaterEqualFactSearchProofByBuiltinRule>> {
+        let existing =
+            self.search_greater_equal_fact_proof_by_builtin_rule_existing(fact, verify_state)?;
+        if existing.is_some() {
+            return Ok(existing);
+        }
+        let goal = crate::ast::fact::AtomicFact::GreaterEqualFact(fact.clone());
+        Ok(self
+            .search_structural_real_sign_fact(&goal, verify_state)
+            .map(GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign))
+    }
+
+    fn search_greater_equal_fact_proof_by_builtin_rule_existing(
         &mut self,
         fact: &GreaterEqualFact,
         verify_state: VerifyState,

@@ -27734,6 +27734,14 @@ pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_ato
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LessFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::StructuralRealSign(f0) => {
+let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::StructuralRealSign");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
+let mut output = node("LessFactSearchProofByBuiltinRule", "StructuralRealSign", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound(f0) => {
 let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LessClosedSubtractionStrictBoundBuiltinRuleProof(f0, capture, runtime))];
@@ -28332,6 +28340,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__GreaterFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::StructuralRealSign(f0) => {
+let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::StructuralRealSign");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
+let mut output = node("GreaterFactSearchProofByBuiltinRule", "StructuralRealSign", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound(f0) => {
 let rule_id = Some("builtin.GreaterFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater__GreaterClosedSubtractionStrictBoundBuiltinRuleProof(f0, capture, runtime))];
@@ -28482,6 +28498,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::StructuralRealSign(f0) => {
+let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::StructuralRealSign");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
+let mut output = node("LessEqualFactSearchProofByBuiltinRule", "StructuralRealSign", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::FloorSumLowerBound(f0) => {
 let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::FloorSumLowerBound");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__elementary_bounds__FloorSumLowerBoundProof(f0, capture, runtime))];
@@ -29376,6 +29400,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__greater_equal__GreaterEqualFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign(f0) => {
+let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
+let mut output = node("GreaterEqualFactSearchProofByBuiltinRule", "StructuralRealSign", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::MulLeftNonpositiveReversesWeakGreaterEqual(f0) => {
 let rule_id = Some("builtin.GreaterEqualFactSearchProofByBuiltinRule::MulLeftNonpositiveReversesWeakGreaterEqual");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__order_negative_common_factor__MulLeftNonpositiveReversesWeakGreaterEqualProof(f0, capture, runtime))];
@@ -29640,6 +29672,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__InFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::SignedNumericMembership(f0) => {
+let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::SignedNumericMembership");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__SignedNumericMembershipProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByBuiltinRule", "SignedNumericMembership", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership(f0) => {
 let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__HomogeneousCartesianSequenceMembershipProof(f0, capture, runtime))];
@@ -30442,6 +30482,14 @@ pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_ato
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__not_equal__NotEqualFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::StructuralRealSign(f0) => {
+let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::StructuralRealSign");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
+let mut output = node("NotEqualFactSearchProofByBuiltinRule", "StructuralRealSign", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::SinComplementNonzeroFromCos(f0) => {
 let rule_id = Some("builtin.NotEqualFactSearchProofByBuiltinRule::SinComplementNonzeroFromCos");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_nonzero_relations__SinComplementNonzeroFromCosProof(f0, capture, runtime))];
@@ -38845,6 +38893,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignProof { element: f0, sign: f1, reason: f2 } => {
+let fields = vec![("element", capture_ast__obj__Obj(f0, capture, runtime)), ("sign", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__RealSign(f1, capture, runtime)), ("reason", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignReason(f2, capture, runtime))];
+let mut output = node("StructuralRealSignProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__LessClosedSubtractionStrictBoundBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessClosedSubtractionStrictBoundBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessClosedSubtractionStrictBoundBuiltinRuleProof { bound: f0 } => {
@@ -41336,6 +41395,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::FiniteSeqFromFiniteCodomainBuiltinRuleProof { proof_of_requirement_facts: f0 } => {
 let fields = vec![("proof_of_requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
 let mut output = node("FiniteSeqFromFiniteCodomainBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__SignedNumericMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::SignedNumericMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::SignedNumericMembershipProof { base_membership: f0, sign: f1 } => {
+let fields = vec![("base_membership", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("sign", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f1, capture, runtime))];
+let mut output = node("SignedNumericMembershipProof", "", fields);
 output
 },
 };
@@ -46125,6 +46195,168 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::SignatureMatchProof { cite_signature_fact_id: f0, signature_match: f1 } => {
 let fields = vec![("cite_signature_fact_id", capture.fact_reference(f0, runtime)), ("signature_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f1, capture, runtime))];
 let mut output = node("SignatureMatchProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__RealSign(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::RealSign, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::RealSign::Positive => {
+let fields = vec![];
+let mut output = node("RealSign", "Positive", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::RealSign::Negative => {
+let fields = vec![];
+let mut output = node("RealSign", "Negative", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::RealSign::Nonnegative => {
+let fields = vec![];
+let mut output = node("RealSign", "Nonnegative", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::RealSign::Nonpositive => {
+let fields = vec![];
+let mut output = node("RealSign", "Nonpositive", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::RealSign::Nonzero => {
+let fields = vec![];
+let mut output = node("RealSign", "Nonzero", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::RealSign::Zero => {
+let fields = vec![];
+let mut output = node("RealSign", "Zero", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignReason(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Known { real: f0, source: f1 } => {
+let fields = vec![("real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "Known", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::WeakAndNonzero { real: f0, weak: f1, nonzero: f2 } => {
+let fields = vec![("real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("weak", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime)), ("nonzero", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f2, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "WeakAndNonzero", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::WeakSignAndNonzero { weak: f0, nonzero: f1 } => {
+let fields = vec![("weak", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("nonzero", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "WeakSignAndNonzero", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Membership(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "Membership", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Closed(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__closed_calculation_proof__ClosedAtomicExceptEqualityCalculationProof(f0, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "Closed", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::ZeroLiteral => {
+let fields = vec![];
+let mut output = node("StructuralRealSignReason", "ZeroLiteral", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Neg { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "Neg", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Add { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Sub { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "Sub", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Mul { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "Mul", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Div { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "Div", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::MinBoth { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "MinBoth", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::MaxBoth { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "MaxBoth", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::MinLeft { selected: f0, other_real: f1 } => {
+let fields = vec![("selected", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("other_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "MinLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::MinRight { selected: f0, other_real: f1 } => {
+let fields = vec![("selected", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("other_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "MinRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::MaxLeft { selected: f0, other_real: f1 } => {
+let fields = vec![("selected", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("other_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "MaxLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::MaxRight { selected: f0, other_real: f1 } => {
+let fields = vec![("selected", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("other_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "MaxRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::PositivePower { base: f0, exponent_real: f1 } => {
+let fields = vec![("base", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("exponent_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "PositivePower", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::PositiveEvenPower { base: f0, exponent: f1 } => {
+let fields = vec![("base", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("exponent", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "PositiveEvenPower", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::NonnegativeEvenPower { base_real: f0, exponent: f1 } => {
+let fields = vec![("base_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("exponent", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "NonnegativeEvenPower", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::PositiveAbs { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "PositiveAbs", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::NonnegativeAbs { argument_real: f0 } => {
+let fields = vec![("argument_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "NonnegativeAbs", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::PositiveSqrt { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "PositiveSqrt", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::NonnegativeSqrt { argument_real: f0 } => {
+let fields = vec![("argument_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "NonnegativeSqrt", fields);
 output
 },
 };

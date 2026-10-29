@@ -205,7 +205,7 @@ fn function_limit_tests_negation_payload_substitution_and_parser_controls() {
 }
 
 #[test]
-fn function_limit_tests_provenance_ceiling_latex_and_lean_boundary() {
+fn function_limit_tests_provenance_ceiling_latex_and_lean_replay() {
     let source =
         "forall f fn(x R) R,x0,L R:\n    $has_limit_at(f,x0,L)\n    =>:\n        fn_lim(f,x0)=L";
     let mut rt = runtime();
@@ -238,10 +238,10 @@ fn function_limit_tests_provenance_ceiling_latex_and_lean_boundary() {
             "missing {fragment}: {detailed}"
         );
     }
-    let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+    let output = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "function_limit_boundary")
-        .unwrap_err();
-    assert!(error.message.contains("not supported"), "{error}");
+        .expect("supported limit evidence is replayed");
+    assert!(output.contains("Litex.") && !output.contains("sorry"));
     let latex =
         crate::compile_to_latex::to_latex_from_source(source, OutputLanguage::English).unwrap();
     assert!(
@@ -342,7 +342,7 @@ fn run_examples_function_limit_tracers() {
 }
 
 #[test]
-fn function_limit_tests_native_candidate_and_bt_lean_boundaries() {
+fn function_limit_tests_native_candidate_and_bt_lean_replay() {
     for source in [
         "forall af fn(x R) R,p,L R:\n    $has_limit_at(af,p,L)\n    =>:\n        $has_limit_at(af,p,L)",
         "release thm fn_limit_at_real_accumulation(0)",
@@ -350,8 +350,9 @@ fn function_limit_tests_native_candidate_and_bt_lean_boundaries() {
         let mut rt=runtime();
         let run=rt.run_litex_code(source).unwrap();
         assert!(run.success && run.session_error.is_none());
-        let error=crate::compile_to_lean::LitexToLeanCompiler::new(rt).compile_run(&run,"function_limit_native_boundary").unwrap_err();
-        assert!(error.message.contains("not supported"),"{error}");
+        let output = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run,"function_limit_native_boundary").expect("supported limit evidence is replayed");
+    assert!(output.contains("Litex.") && !output.contains("sorry"));
     }
 }
 

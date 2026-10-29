@@ -154,6 +154,7 @@ impl LitexToLeanCompiler {
                     rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(&success.fact, rule, position)?,
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match &success.fact {
                         AtomicFact::InFact(fact) => match rule {
+                            InFactSearchProofByBuiltinRule::SignedNumericMembership(proof) => self.compile_structural_signed_membership(fact, proof, position)?,
                             InFactSearchProofByBuiltinRule::IndexUnionMembershipFromIndex(p) => self.compile_index_union_member(fact,p.cite_index_in_index_set_fact_id,&p.element_in_fiber_proof,position)?,
                             InFactSearchProofByBuiltinRule::IntervalMembership(p) => self.compile_real_interval_member(fact,&[&p.in_real_proof,&p.lower_bound_proof,&p.upper_bound_proof],position)?,
                             InFactSearchProofByBuiltinRule::OneSideInfinityIntervalMembership(p) => self.compile_real_interval_member(fact,&[&p.in_real_proof,&p.endpoint_bound_proof],position)?,

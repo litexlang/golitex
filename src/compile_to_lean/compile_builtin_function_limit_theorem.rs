@@ -1,4 +1,5 @@
 //! Explicit function-limit invocations retain their native schema and premises.
+use super::compile_function_limit_constant::ElementaryLimit;
 use super::helper::*;
 use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
@@ -19,6 +20,10 @@ enum Rule {
     Exists,
     Selected,
     Constant,
+    Identity,
+    FromEpsilon,
+    Accumulation,
+    Control,
 }
 
 impl LitexToLeanCompiler {
@@ -39,6 +44,31 @@ impl LitexToLeanCompiler {
         let TheoremCallArguments::Parenthesized(args) = &call.arguments else {
             return Err(invalid("Arguments"));
         };
+        if matches!(
+            builtin.theorem,
+            FnLimitAtRealAccumulation
+                | FnLimitLeftRealAccumulation
+                | FnLimitRightRealAccumulation
+                | FnLimitPosInfRealAccumulation
+                | FnLimitNegInfRealAccumulation
+        ) {
+            if !matches!(derivation, TheoremDerivationProof::NativeSchema)
+                || !type_proofs.is_empty()
+                || !type_stores.is_empty()
+                || function_domain.is_some()
+                || !matches!(&call.name, AtomicName::Plain { name } if name == builtin.theorem.as_str())
+                || args != &builtin.arguments
+            {
+                return Err(invalid("RealAccumulationStages"));
+            }
+            return self.compile_real_limit_accumulation(
+                builtin,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         let rule = match builtin.theorem {
             FnLimitAtUnique | FnLimitLeftUnique | FnLimitRightUnique | FnLimitPosInfUnique
             | FnLimitNegInfUnique => Rule::Unique,
@@ -54,6 +84,19 @@ impl LitexToLeanCompiler {
             | FnLimitRightConstant
             | FnLimitPosInfConstant
             | FnLimitNegInfConstant => Rule::Constant,
+            FnLimitAtIdentity | FnLimitLeftIdentity | FnLimitRightIdentity => Rule::Identity,
+            FnLimitAtFromEpsilon
+            | FnLimitLeftFromEpsilon
+            | FnLimitRightFromEpsilon
+            | FnLimitPosInfFromEpsilon
+            | FnLimitNegInfFromEpsilon => Rule::FromEpsilon,
+            FnLimitAtAccumulation
+            | FnLimitLeftAccumulation
+            | FnLimitRightAccumulation
+            | FnLimitPosInfAccumulation
+            | FnLimitNegInfAccumulation => Rule::Accumulation,
+            FnLimitAtControl | FnLimitLeftControl | FnLimitRightControl | FnLimitPosInfControl
+            | FnLimitNegInfControl => Rule::Control,
             _ => return Err(invalid("Id")),
         };
         let finite = matches!(
@@ -67,22 +110,34 @@ impl LitexToLeanCompiler {
                 | FnLimitRightUnique
                 | FnLimitRightExists
                 | FnLimitRightSelected
+                | FnLimitAtIdentity
+                | FnLimitLeftIdentity
+                | FnLimitRightIdentity
                 | FnLimitAtConstant
                 | FnLimitLeftConstant
                 | FnLimitRightConstant
+                | FnLimitAtFromEpsilon
+                | FnLimitLeftFromEpsilon
+                | FnLimitRightFromEpsilon
+                | FnLimitAtAccumulation
+                | FnLimitLeftAccumulation
+                | FnLimitRightAccumulation
+                | FnLimitAtControl
+                | FnLimitLeftControl
+                | FnLimitRightControl
         );
         let offset = if finite { 2 } else { 1 };
         let arity = offset
             + match rule {
-                Rule::Unique => 2,
-                Rule::Exists | Rule::Constant => 1,
-                Rule::Selected => 0,
+                Rule::Unique | Rule::Control => 2,
+                Rule::Exists | Rule::Constant | Rule::FromEpsilon | Rule::Accumulation => 1,
+                Rule::Selected | Rule::Identity => 0,
             };
         let count = 3
             + usize::from(finite)
             + match rule {
-                Rule::Unique => 2,
-                Rule::Constant => 3,
+                Rule::Unique | Rule::Control => 2,
+                Rule::Constant | Rule::Identity | Rule::FromEpsilon => 3,
                 _ => 1,
             };
         if !matches!(derivation, TheoremDerivationProof::NativeSchema)
@@ -101,22 +156,44 @@ impl LitexToLeanCompiler {
             return Err(invalid("Stages"));
         }
         let approach = match builtin.theorem {
-            FnLimitAtUnique | FnLimitAtExists | FnLimitAtSelected | FnLimitAtConstant => {
-                LimitApproach::AtPoint(args[1].clone().into())
-            }
-            FnLimitLeftUnique | FnLimitLeftExists | FnLimitLeftSelected | FnLimitLeftConstant => {
-                LimitApproach::FromLeft(args[1].clone().into())
-            }
-            FnLimitRightUnique | FnLimitRightExists | FnLimitRightSelected
-            | FnLimitRightConstant => LimitApproach::FromRight(args[1].clone().into()),
+            FnLimitAtUnique
+            | FnLimitAtExists
+            | FnLimitAtSelected
+            | FnLimitAtConstant
+            | FnLimitAtIdentity
+            | FnLimitAtFromEpsilon
+            | FnLimitAtAccumulation
+            | FnLimitAtControl => LimitApproach::AtPoint(args[1].clone().into()),
+            FnLimitLeftUnique
+            | FnLimitLeftExists
+            | FnLimitLeftSelected
+            | FnLimitLeftConstant
+            | FnLimitLeftIdentity
+            | FnLimitLeftFromEpsilon
+            | FnLimitLeftAccumulation
+            | FnLimitLeftControl => LimitApproach::FromLeft(args[1].clone().into()),
+            FnLimitRightUnique
+            | FnLimitRightExists
+            | FnLimitRightSelected
+            | FnLimitRightConstant
+            | FnLimitRightIdentity
+            | FnLimitRightFromEpsilon
+            | FnLimitRightAccumulation
+            | FnLimitRightControl => LimitApproach::FromRight(args[1].clone().into()),
             FnLimitPosInfUnique
             | FnLimitPosInfExists
             | FnLimitPosInfSelected
-            | FnLimitPosInfConstant => LimitApproach::AtPositiveInfinity,
+            | FnLimitPosInfConstant
+            | FnLimitPosInfFromEpsilon
+            | FnLimitPosInfAccumulation
+            | FnLimitPosInfControl => LimitApproach::AtPositiveInfinity,
             FnLimitNegInfUnique
             | FnLimitNegInfExists
             | FnLimitNegInfSelected
-            | FnLimitNegInfConstant => LimitApproach::AtNegativeInfinity,
+            | FnLimitNegInfConstant
+            | FnLimitNegInfFromEpsilon
+            | FnLimitNegInfAccumulation
+            | FnLimitNegInfControl => LimitApproach::AtNegativeInfinity,
             _ => return Err(invalid("Id")),
         };
         let req = &builtin.requirements;
@@ -145,13 +222,19 @@ impl LitexToLeanCompiler {
             return Err(invalid("RealDomain"));
         }
         let candidate_start = 3 + usize::from(finite);
-        if !matches!(rule, Rule::Constant) {
-            for (fact, value) in req[candidate_start..].iter().zip(&args[offset..]) {
-                if !matches!(fact, Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f))
+        let candidates = match rule {
+            Rule::Unique => 2,
+            Rule::Exists | Rule::Accumulation | Rule::Control => 1,
+            _ => 0,
+        };
+        for (fact, value) in req[candidate_start..candidate_start + candidates]
+            .iter()
+            .zip(&args[offset..offset + candidates])
+        {
+            if !matches!(fact, Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f))
                 if f.function.ir() == args[0].ir() && f.approach == approach && f.value.ir() == value.ir())
-                {
-                    return Err(invalid("Candidate"));
-                }
+            {
+                return Err(invalid("Candidate"));
             }
         }
         let goal = &builtin.conclusions[0];
@@ -188,50 +271,61 @@ impl LitexToLeanCompiler {
                 }
                 Some(&f.value)
             }
-            Rule::Constant => {
+            Rule::Constant | Rule::Identity => {
                 let Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f)) = goal else {
                     return Err(invalid("ConstantConclusion"));
                 };
                 if f.function.ir() != args[0].ir()
                     || f.approach != approach
-                    || f.value.ir() != args[offset].ir()
+                    || f.value.ir()
+                        != (if matches!(rule, Rule::Identity) {
+                            &args[1]
+                        } else {
+                            &args[offset]
+                        })
+                        .ir()
                 {
                     return Err(invalid("ConstantSubject"));
                 }
-                super::compile_function_limit_constant::validate_constant_clauses(
+                super::compile_function_limit_constant::validate_elementary_clauses(
                     f,
                     &req[candidate_start..],
+                    if matches!(rule, Rule::Identity) {
+                        ElementaryLimit::Identity
+                    } else {
+                        ElementaryLimit::Constant
+                    },
                 )?;
                 None
             }
-        };
-        let mut definitions = Vec::new();
-        let mut references = Vec::new();
-        for (index, ((requirement, checked), stored)) in
-            req.iter().zip(dom_proofs).zip(dom_stores).enumerate()
-        {
-            if source_subject(checked)? != *requirement {
-                return Err(invalid("PremiseSubject"));
+            Rule::FromEpsilon => {
+                let Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f)) = goal else {
+                    return Err(invalid("EpsilonConclusion"));
+                };
+                if f.function.ir() != args[0].ir()
+                    || f.approach != approach
+                    || f.value.ir() != args[offset].ir()
+                {
+                    return Err(invalid("EpsilonSubject"));
+                }
+                super::compile_function_limit_definition::validate_clauses(
+                    f,
+                    &req[candidate_start + 1..],
+                )?;
+                None
             }
-            self.validate_store(&stored.store, requirement)?;
-            let prior = SourcePosition {
-                before: index,
-                ..*position
-            };
-            let compiled = self.compile_verify(checked, &prior)?;
-            definitions.push(self.emit_internal_fact(requirement, &compiled, &prior)?);
-            let reference = format!("h_{}", requirement.fact_id().value());
-            definitions.extend(self.compile_stored_inferences(
-                stored,
-                requirement,
-                &(compiled.0, reference.clone()),
-                &SourcePosition {
-                    before: index + 1,
-                    ..*position
-                },
-            )?);
-            references.push(reference);
-        }
+            Rule::Accumulation | Rule::Control => {
+                if matches!(rule, Rule::Control)
+                    && !matches!(&req[candidate_start + 1], Fact::AtomicFact(AtomicFact::InFact(f))
+                    if f.element.ir() == args[offset + 1].ir() && f.set == Obj::StandardSet(StandardSet::RPos))
+                {
+                    return Err(invalid("PositiveEpsilon"));
+                }
+                None
+            }
+        };
+        let (definitions, references) =
+            self.compile_function_limit_requirements(req, dom_proofs, dom_stores, position)?;
         let formed = SourcePosition {
             before: count,
             ..*position
@@ -249,14 +343,44 @@ impl LitexToLeanCompiler {
             Rule::Exists => "Exists",
             Rule::Selected => "Selected",
             Rule::Constant => "Constant",
+            Rule::Identity => "Identity",
+            Rule::FromEpsilon => "OfForall",
+            Rule::Accumulation => "Accumulation",
+            Rule::Control => "Control",
         };
-        let law = if matches!(rule, Rule::Constant) {
+        let law = if matches!(rule, Rule::Accumulation | Rule::Control) {
+            self.compile_function_limit_projection(
+                goal,
+                req,
+                &dom_proofs[candidate_start],
+                candidate_start,
+                matches!(rule, Rule::Control).then(|| &args[offset + 1]),
+                &references,
+                &formed,
+            )?
+        } else if matches!(rule, Rule::FromEpsilon) {
+            let Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f)) = goal else {
+                return Err(invalid("EpsilonConclusion"));
+            };
+            self.compile_function_limit_from_epsilon(
+                f,
+                wd,
+                &req[candidate_start..],
+                &references,
+                &scope,
+            )?
+        } else if matches!(rule, Rule::Constant | Rule::Identity) {
             let Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f)) = goal else {
                 return Err(invalid("ConstantConclusion"));
             };
-            self.compile_constant_function_limit(
+            self.compile_elementary_function_limit(
                 f,
                 wd,
+                if matches!(rule, Rule::Identity) {
+                    ElementaryLimit::Identity
+                } else {
+                    ElementaryLimit::Constant
+                },
                 &req[candidate_start..],
                 &references,
                 &scope,
@@ -287,5 +411,44 @@ impl LitexToLeanCompiler {
             format!("(show {statement} from {law})"),
             builtin.conclusions.clone(),
         ))
+    }
+    pub(super) fn compile_function_limit_requirements(
+        &self,
+        req: &[Fact],
+        dom_proofs: &[VerifyFactResult],
+        dom_stores: &[StoreFactAndInferResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+        if req.len() != dom_proofs.len() || req.len() != dom_stores.len() {
+            return Err(invalid("RequirementArity"));
+        }
+        let mut definitions = Vec::new();
+        let mut references = Vec::new();
+        for (index, ((requirement, checked), stored)) in
+            req.iter().zip(dom_proofs).zip(dom_stores).enumerate()
+        {
+            if source_subject(checked)? != *requirement {
+                return Err(invalid("PremiseSubject"));
+            }
+            self.validate_store(&stored.store, requirement)?;
+            let prior = SourcePosition {
+                before: index,
+                ..*position
+            };
+            let compiled = self.compile_verify(checked, &prior)?;
+            definitions.push(self.emit_internal_fact(requirement, &compiled, &prior)?);
+            let reference = format!("h_{}", requirement.fact_id().value());
+            definitions.extend(self.compile_stored_inferences(
+                stored,
+                requirement,
+                &(compiled.0, reference.clone()),
+                &SourcePosition {
+                    before: index + 1,
+                    ..*position
+                },
+            )?);
+            references.push(reference);
+        }
+        Ok((definitions, references))
     }
 }

@@ -1,0 +1,3 @@
+0=0
+
+release thm s::complete_contraction_orbit_has_fixed_limit(R,s::real_line_metric,identity,1,0)

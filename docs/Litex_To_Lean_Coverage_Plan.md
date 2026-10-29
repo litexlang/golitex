@@ -5039,7 +5039,7 @@ the pinned Lake environment. Their native theorem axiom audit contains only
 `propext`, `Classical.choice` and `Quot.sound`. Removing the generated proof
 binding makes the Adapter fail. This completes this handwritten native bridge;
 it does not extend the compiler's supported sequence-domain expressions.
-Local receipt: `tmp/2026-10-29/litex-to-lean-six-hour/sequence-native-adapter-checkpoint.json`.
+Local receipt: `scripts/litex_to_lean/acceptance/2026-10-29-limit-compiler/sequence-native-adapter-checkpoint.json`.
 
 ## Finite real function limits — 2026-10-29
 
@@ -5066,7 +5066,7 @@ also includes checked handwritten Adapter and native Final files. Final accepts
 proof makes the Adapter fail. Its axiom audit contains only `propext`,
 `Classical.choice` and `Quot.sound`. Infinite approaches and general explicit
 limit builtin-theorem calls remain separate coverage work. Local receipts:
-`tmp/2026-10-29/litex-to-lean-six-hour/`.
+`scripts/litex_to_lean/acceptance/2026-10-29-limit-compiler/`.
 
 
 ## Function-limit proof replay and explicit certificates — 2026-10-29
@@ -5100,13 +5100,67 @@ The first integration checkpoint checked all 50 pairs then present and four
 related pairs: 47 fresh Lean checks and seven reused identical checks under the
 same Core/toolchain. All 74 exports use only `propext`, `Classical.choice` and
 `Quot.sound`. The five constant-function pairs also pass strict source,
-deterministic regeneration and Lean. The source/generated files remain compiler
+deterministic regeneration and Lean. The final current-library harness passes
+222 tests, including one local diagnostic. A final focused Lean batch checks
+12 affected function/sequence definition and complete-proof examples after
+the shared domain-view extraction. The original 50 generated pairs remain
+byte-identical after that refactor. The source/generated files remain compiler
 output; Adapter and Final are handwritten. Three native bridges are checked:
 sequence uniqueness, finite-function uniqueness and punctured cancellation;
-removing the generated proof makes each Adapter fail.
+removing the generated proof makes each Adapter fail. A combined native Lake
+client imports all three Final modules and uses their ordinary Mathlib theorem
+statements; that client and its axiom audits pass on the final Core.
 
 Durable local receipts and the final affected-regression results are in
-`tmp/2026-10-29/litex-to-lean-six-hour/`. Full Cargo tests remain separate from
+`scripts/litex_to_lean/acceptance/2026-10-29-limit-compiler/`. Full Cargo tests remain separate from
 these compiler harnesses because the existing regression fixture is missing.
 General limit algebra, comparison/continuity calls, `limsup`/`liminf` selectors
 and later analysis families remain future coverage work.
+
+### Function-limit and sequence compiler batch — 2026-10-29
+
+This batch adds compilation for 99 existing builtin theorem IDs, with 109 new
+source/generated pairs:
+
+| Existing rule family | Newly covered IDs |
+| --- | ---: |
+| Function-limit epsilon introduction and accumulation/control projections | 15 |
+| Real-line accumulation and finite identity limits | 8 |
+| Negation, absolute value, real scaling, natural powers and four arithmetic limit laws | 40 |
+| One-sided restriction, combination and mismatch | 4 |
+| Eventual positivity and nonzero values | 10 |
+| Local comparison, local equality and squeeze | 15 |
+| Sequence Cauchy introduction/tail extraction, convergence, strict-to-weak order and boundedness | 7 |
+
+The function laws cover finite points, both one-sided approaches and both
+directions at infinity where the existing rule defines them. They consume the
+recorded complete signatures, domain equalities, local thresholds and exact
+premise citations. Division keeps the nonzero limiting denominator and
+pointwise nonzero-call obligations. Local equality keeps the two domains
+separate and requires target-domain accumulation and local inclusion evidence.
+
+The shared domain view reads the signature captured by the invocation. Nested
+quantified premises use semantic representations of the original objects.
+Compiler consumers were added for the structural positive-division and
+positive/even-power certificates selected by the current workspace. Other
+uncaptured or unsupported routes still return explicit compilation errors.
+No Runtime, AST, result-producer, native operation or reserved-name contract
+was changed by this compiler batch.
+
+The [polynomial chain](../lean/examples/function_limit_polynomial_chain/)
+proves `(x²+1)(x−2) → 0` at 2 in 17 source statements. It generates 187,428
+bytes of Lean and exports the ordinary Mathlib theorem
+`polynomialProductLimit` through handwritten Adapter/Final modules.
+
+Final acceptance checks all 109 new pairs and 14 related pairs on Core
+`8c492d71ba578bf6b5a6ca01e0bec5de4a622ff598145d3e91e5f8626a0b1648`
+with Lean/Mathlib 4.31.0: 119 fresh Lean checks and four reused identical
+checks, deterministic regeneration for all 123 pairs, and axiom audits for 184
+exports. All 109 new sources are strict; the existing explicit-assumption
+fixture is the sole non-strict related source. The related Rust harness passes
+268 tests. All four native Adapter/Final chains and their combined Lake client
+pass, including the controls that remove the generated proof citation. Axiom
+audits contain only `propext`, `Classical.choice` and `Quot.sound`.
+
+Local acceptance records: `scripts/litex_to_lean/acceptance/2026-10-29-limit-compiler/`.
+The delivered batch is closed; further compiler coverage remains paused.

@@ -9,6 +9,9 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin rules for `a > b`.
 pub enum GreaterFactSearchProofByBuiltinRule {
+    StructuralRealSign(
+        crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignProof,
+    ),
     ClosedSubtractionStrictBound(GreaterClosedSubtractionStrictBoundBuiltinRuleProof),
     MulLeftNegativeReversesStrictGreater(
         super::order_negative_common_factor::MulLeftNegativeReversesStrictGreaterProof,
@@ -103,6 +106,22 @@ impl Runtime {
     // Builtin: known strict less dual, add/mul congruence, R+ membership, native e/pi, then closed decimal.
     // Example: prove `0 > x` from known `x < 0`, or prove `a + c > b + c` from `a > b`.
     pub fn search_greater_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &crate::ast::fact::GreaterFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<GreaterFactSearchProofByBuiltinRule>> {
+        let existing =
+            self.search_greater_fact_proof_by_builtin_rule_existing(fact, verify_state)?;
+        if existing.is_some() {
+            return Ok(existing);
+        }
+        let goal = crate::ast::fact::AtomicFact::GreaterFact(fact.clone());
+        Ok(self
+            .search_structural_real_sign_fact(&goal, verify_state)
+            .map(GreaterFactSearchProofByBuiltinRule::StructuralRealSign))
+    }
+
+    fn search_greater_fact_proof_by_builtin_rule_existing(
         &mut self,
         fact: &GreaterFact,
         verify_state: VerifyState,

@@ -21,6 +21,33 @@ mod infinite_function_limit_tests;
 #[path = "../../tests/unit/compile_to_lean/function_limit_theorem_tests.rs"]
 mod function_limit_theorem_tests;
 
+#[path = "../../tests/unit/compile_to_lean/function_limit_epsilon_theorem_tests.rs"]
+mod function_limit_epsilon_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_projection_tests.rs"]
+mod function_limit_projection_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_elementary_tests.rs"]
+mod function_limit_elementary_tests;
+
+#[path = "../../tests/unit/compile_to_lean/structural_sign_tests.rs"]
+mod structural_sign_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_unary_tests.rs"]
+mod function_limit_unary_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_binary_tests.rs"]
+mod function_limit_binary_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_sides_tests.rs"]
+mod function_limit_sides_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_eventual_tests.rs"]
+mod function_limit_eventual_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_order_tests.rs"]
+mod function_limit_order_tests;
+
 #[path = "../../tests/unit/compile_to_lean/sequence_limit_theorem_tests.rs"]
 mod sequence_limit_theorem_tests;
 
@@ -424,12 +451,21 @@ fn absolute_value_command_after_supported_prefix_replays_complete_artifact() {
 }
 
 #[test]
-fn unsupported_command_after_supported_prefix_rejects_complete_artifact() {
-    let (result, compiler) = execute("1 = 1\neval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))\n");
+fn invalid_command_after_supported_prefix_rejects_complete_artifact() {
+    let (mut result, compiler) = execute("1 = 1\neval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))\n");
+    compile_run(&result, &compiler, "supported_radical_product")
+        .expect("the current compiler supports products of radical sums");
+    let ExecStmtResult::Command(crate::execute::ExecCommandStmtResult::Eval(
+        crate::execute::ExecEvalStmtResult::Success(command),
+    )) = &mut result.statement_results[1]
+    else {
+        panic!("actual successful evaluation");
+    };
+    command.evaluated_object = Obj::StandardSet(StandardSet::R);
     let error = compile_run(&result, &compiler, "unsupported_command")
-        .expect_err("products of radical sums have no Lean adapter");
+        .expect_err("a changed evaluated endpoint rejects the complete artifact");
     assert_eq!(error.statement_index, Some(2));
-    assert_eq!(error.route, "Eval/LinearRadicalDomain");
+    assert_eq!(error.route, "Eval/Endpoints");
 }
 
 #[test]
@@ -3627,3 +3663,14 @@ mod eval_linear_radical_tests;
 
 #[path = "../../tests/unit/compile_to_lean/finite_cases_cart_tests.rs"]
 mod finite_cases_cart_tests;
+#[path = "../../tests/unit/compile_to_lean/function_limit_local_equal_tests.rs"]
+mod function_limit_local_equal_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_limit_squeeze_tests.rs"]
+mod function_limit_squeeze_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_certificate_tests.rs"]
+mod sequence_certificate_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_order_tests.rs"]
+mod sequence_order_tests;

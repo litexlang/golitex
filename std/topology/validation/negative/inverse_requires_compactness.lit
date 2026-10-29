@@ -1,0 +1,10 @@
+0=0
+
+claim:
+    ? forall A,B set,source &top::TopologicalSpace<A>,target &top::TopologicalSpace<B>,f fn(x source.carrier) target.carrier:
+        $top::is_Hausdorff(B,target)
+        $top::is_topologically_continuous(A,B,source,target,f)
+        $bijective(source.carrier,target.carrier,f)
+        =>:
+            exist g fn(y target.carrier) source.carrier st {$top::is_homeomorphism(A,B,source,target,f,g)}
+    release thm top::compact_Hausdorff_bijection_has_continuous_inverse(A,B,source,target,f)

@@ -1,0 +1,8 @@
+0=0
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,p,q M.carrier:
+        $s::has_metric_limit(A,M,a,p)
+        =>:
+            p=q
+    release thm s::metric_limit_is_unique(A,M,a,p,q)

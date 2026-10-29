@@ -40,6 +40,9 @@ pub use real_arithmetic_constructor::{
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    SignedNumericMembership(
+        crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::SignedNumericMembershipProof,
+    ),
     HomogeneousCartesianSequenceMembership(HomogeneousCartesianSequenceMembershipProof),
     NativeMatrix(crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof),
     ExactIntegerQuotient(super::selected_scalar_bt_rules::ExactIntegerQuotientProof),
@@ -507,7 +510,7 @@ impl Runtime {
         if let Some(proof) = self.finite_set_min_membership_proof(fact) {
             return Ok(Some(proof));
         }
-        match &fact.set {
+        let existing = match &fact.set {
             Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => {
                 let Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) = &fact.element else {
                     return Ok(None);
@@ -561,7 +564,13 @@ impl Runtime {
                 self.one_side_infinity_interval_membership_proof(fact, verify_state)
             }
             _ => Ok(None),
+        }?;
+        if existing.is_some() {
+            return Ok(existing);
         }
+        Ok(self
+            .search_signed_numeric_membership(fact, verify_state)
+            .map(InFactSearchProofByBuiltinRule::SignedNumericMembership))
     }
 
     // Standard-set `$in`: closed numeric → C-arithmetic / N-predecessor by set

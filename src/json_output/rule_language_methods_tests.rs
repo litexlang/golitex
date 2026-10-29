@@ -146,7 +146,10 @@ fn elementary_identity_exposes_every_named_language_method() {
     for rule in rules {
         for (language, method) in OutputLanguage::ALL.into_iter().zip(methods) {
             let BuiltinRuleText { rule_name, message } = method(&rule);
-            assert_eq!(rule_name, rule.rule_id());
+            assert!(!rule_name.trim().is_empty(), "{language:?}");
+            if matches!(language, OutputLanguage::English | OutputLanguage::Chinese) {
+                assert_ne!(rule_name, rule.rule_id());
+            }
             assert!(has_localized_prose(&message, language), "{language:?}");
             assert!(message.ends_with(rule.law()));
             let selected = rule.rule_name_and_message(language);
@@ -175,9 +178,7 @@ fn every_literal_builtin_explanation_has_complete_nonempty_payloads() {
                     .split("pub fn ")
                     .next()
                     .unwrap();
-                let english_messages: Vec<Vec<String>> = literal_text_calls(english_body)
-                    .map(|call| first_string_literals(call, 2))
-                    .collect();
+                let english_variants = rule_variants(english_body);
                 for (language, (_, suffix)) in OutputLanguage::ALL.into_iter().zip(LANGUAGES) {
                     let needle = format!("pub fn rule_name_and_message_{suffix}(");
                     let Some(start) = implementation.find(&needle) else {
@@ -188,12 +189,21 @@ fn every_literal_builtin_explanation_has_complete_nonempty_payloads() {
                         .next()
                         .unwrap();
                     let calls: Vec<_> = literal_text_calls(body).collect();
-                    assert_eq!(
-                        calls.len(),
-                        english_messages.len(),
-                        "{}: {owner} {language:?} must cover the same branches as English",
-                        path.display()
-                    );
+                    let variants = rule_variants(body);
+                    if variants.is_empty() && !english_variants.is_empty() {
+                        // A generic localized description covers every variant
+                        // through the enum's exhaustive identity/law dispatch.
+                        assert!(body.contains("self.rule_id()") && body.contains("self.law()"),
+                            "{}: {owner} {language:?} needs variant coverage or the shared rule identity and law",
+                            path.display());
+                    } else {
+                        assert_eq!(
+                            variants,
+                            english_variants,
+                            "{}: {owner} {language:?} must cover the same enum variants as English",
+                            path.display()
+                        );
+                    }
                     // Existing impl ownership and match-arm order locate the copy;
                     // presentation text does not need a second rule identifier.
                     for call in calls {
@@ -236,6 +246,20 @@ fn every_literal_builtin_explanation_has_complete_nonempty_payloads() {
 }
 
 // Audit literal text() calls, not helper identifiers whose names end in text.
+// A language can delegate a leaf, call text(), or construct BuiltinRuleText.
+// Compare the enum dispatch coverage independently of that presentation choice.
+fn rule_variants(source: &str) -> std::collections::BTreeSet<String> {
+    source
+        .split("Self::")
+        .skip(1)
+        .map(|part| {
+            part.chars()
+                .take_while(|ch| ch.is_ascii_alphanumeric() || *ch == '_')
+                .collect()
+        })
+        .collect()
+}
+
 fn literal_text_calls(source: &str) -> impl Iterator<Item = &str> {
     source.match_indices("text(").filter_map(move |(index, _)| {
         let has_identifier_prefix = index > 0

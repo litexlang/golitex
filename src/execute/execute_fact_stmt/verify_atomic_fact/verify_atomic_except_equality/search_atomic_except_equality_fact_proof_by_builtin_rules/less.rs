@@ -20,6 +20,9 @@ use crate::runtime::FactId;
 
 // Builtin rules for `a < b`.
 pub enum LessFactSearchProofByBuiltinRule {
+    StructuralRealSign(
+        crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignProof,
+    ),
     ClosedSubtractionStrictBound(LessClosedSubtractionStrictBoundBuiltinRuleProof),
     QuotientScalarStrictUpperBound(super::selected_scalar_bt_rules::QuotientScalarBoundProof),
 
@@ -388,6 +391,21 @@ impl Runtime {
     // B1: closed decimal evaluation.
     // Example: prove `n - 1 < n`, `-pi/2 < arctan(x)`, or `1 < 2`.
     pub fn search_less_fact_proof_by_builtin_rule(
+        &mut self,
+        fact: &crate::ast::fact::LessFact,
+        verify_state: VerifyState,
+    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
+        let existing = self.search_less_fact_proof_by_builtin_rule_existing(fact, verify_state)?;
+        if existing.is_some() {
+            return Ok(existing);
+        }
+        let goal = crate::ast::fact::AtomicFact::LessFact(fact.clone());
+        Ok(self
+            .search_structural_real_sign_fact(&goal, verify_state)
+            .map(LessFactSearchProofByBuiltinRule::StructuralRealSign))
+    }
+
+    fn search_less_fact_proof_by_builtin_rule_existing(
         &mut self,
         fact: &LessFact,
         verify_state: VerifyState,

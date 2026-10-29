@@ -1,12 +1,12 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{greater::GreaterFactSearchProofByBuiltinRule, greater_equal::GreaterEqualFactSearchProofByBuiltinRule};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::{RealSign, StructuralRealSignProof, StructuralRealSignReason};
 use super::LitexToLeanCompiler;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::ElementaryArithmeticProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::RealArithmeticConstructorTree;
 use crate::execute::execute_proof_block_stmt::{ExecClaimBodyProof, ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::DivSharedPositiveDenomLessEqualStrategySingleStep;
 
 #[test]
 fn dvd_unified_lean_rejects_the_actual_native_rule_certificate() {
@@ -188,34 +188,31 @@ fn claim_step_at(result: &mut RunLitexCodeResult, index: usize) -> &mut VerifyFa
     &mut step.verify_result
 }
 
-fn zero_division_strategy(
-    result: &mut RunLitexCodeResult,
-) -> &mut DivSharedPositiveDenomLessEqualStrategySingleStep {
+fn selected_sign(result: &mut RunLitexCodeResult) -> &mut StructuralRealSignProof {
     let VerifyFactResult::AtomicExceptEquality(proof) = first_claim_step(result) else {
-        panic!("actual zero endpoint quotient order")
+        panic!("atomic")
     };
     let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
-        panic!("actual success")
+        panic!("success")
     };
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::DivSharedPositiveDenomLessEqual(
-            proof,
-        ),
-    ) = &mut proof.searched_proof
-    else {
-        panic!("actual original positive divisor strategy")
-    };
-    proof
-}
-
-fn selected_atomic_child(result: &mut VerifyFactResult) -> &mut AtomicFact {
-    let VerifyFactResult::AtomicExceptEquality(proof) = result else {
-        panic!("actual atomic requirement")
-    };
-    let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
-        panic!("actual requirement success")
-    };
-    &mut proof.fact
+    match &mut proof.searched_proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(
+                GreaterFactSearchProofByBuiltinRule::StructuralRealSign(p),
+            ),
+        )
+        | AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                LessEqualFactSearchProofByBuiltinRule::StructuralRealSign(p),
+            ),
+        )
+        | AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(
+                GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign(p),
+            ),
+        ) => p,
+        _ => panic!("actual selected structural sign"),
+    }
 }
 
 #[test]
@@ -232,16 +229,13 @@ fn selected_real_constructor_tree_replays_and_rejects_swapped_original_children(
     let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
         panic!("actual success")
     };
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(
-            InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(proof),
-        ),
-    ) = &mut proof.searched_proof
+    let AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(proof) =
+        &mut proof.searched_proof
     else {
-        panic!("actual selected real constructor tree")
+        panic!("shared membership")
     };
-    let RealArithmeticConstructorTree::Sub { left, right } = &mut proof.constructor_tree else {
-        panic!("actual ordered subtraction tree")
+    let StructuralMembershipReason::Sub { left, right } = &mut proof.reason else {
+        panic!("subtraction")
     };
     std::mem::swap(left, right);
     assert!(compiler
@@ -249,34 +243,12 @@ fn selected_real_constructor_tree_replays_and_rejects_swapped_original_children(
         .is_err());
 }
 
-fn positive_power_base(result: &mut RunLitexCodeResult) -> &mut VerifyFactResult {
-    let VerifyFactResult::AtomicExceptEquality(proof) = first_claim_step(result) else {
-        panic!("actual positive power")
-    };
-    let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
-        panic!("actual success")
-    };
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(
-        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(dual),
-    ) = &mut proof.searched_proof
+fn positive_power_base(result: &mut RunLitexCodeResult) -> &mut StructuralRealSignProof {
+    let StructuralRealSignReason::PositivePower { base, .. } = &mut selected_sign(result).reason
     else {
-        panic!("actual original order dual")
+        panic!("positive power")
     };
-    let VerifyFactResult::AtomicExceptEquality(proof) = &mut dual.proof_of_alternate_fact else {
-        panic!("actual original strict less result")
-    };
-    let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
-        panic!("actual success")
-    };
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
-            LessFactSearchProofByBuiltinRule::PowPositiveFromPositiveBase(selected),
-        ),
-    ) = &mut proof.searched_proof
-    else {
-        panic!("actual selected positive power")
-    };
-    &mut selected.base_positive_proof
+    base
 }
 
 fn power_law_children(result: &mut RunLitexCodeResult) -> &mut Vec<VerifyFactResult> {
@@ -349,31 +321,23 @@ fn selected_natural_power_laws_reject_deleted_original_requirement() {
 #[test]
 fn positive_power_rejects_changed_base_or_missing_actual_child_wd() {
     let (mut result, compiler) = checked(POSITIVE_POWER);
-    let VerifyFactResult::AtomicExceptEquality(child) = positive_power_base(&mut result) else {
-        panic!("actual positive base child")
-    };
-    let VerifyAtomicExceptEqualityFactResult::Success(child) = child.as_mut() else {
-        panic!("actual child success")
-    };
-    let AtomicFact::LessFact(bound) = &mut child.fact else {
-        panic!("actual original lower-zero orientation")
-    };
-    bound.right = Obj::Literal(Literal::Number(Number::new("2".into())));
+    positive_power_base(&mut result).element =
+        Obj::Literal(Literal::Number(Number::new("2".into())));
     assert_eq!(
         compiler
             .compile_run(&result, "positive_power_other_base")
             .unwrap_err()
             .route,
-        "PositivePower/ChildSubject"
+        "StructuralPositive/PositivePowerSubject"
     );
     let (mut result, compiler) = checked(POSITIVE_POWER);
-    let VerifyFactResult::AtomicExceptEquality(child) = positive_power_base(&mut result) else {
-        panic!("actual positive base child")
+    let VerifyFactResult::AtomicExceptEquality(proof) = first_claim_step(&mut result) else {
+        panic!("atomic")
     };
-    let VerifyAtomicExceptEqualityFactResult::Success(child) = child.as_mut() else {
-        panic!("actual child success")
+    let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
+        panic!("success")
     };
-    child
+    proof
         .well_defined_proof
         .as_detailed_mut()
         .unwrap()
@@ -515,34 +479,34 @@ fn original_weak_order_tranche_replays_exact_selected_children() {
 fn selected_weak_sum_rejects_deleted_or_wrong_ordered_evidence() {
     for deletion in [true, false] {
         let (mut result, compiler) = checked(WEAK_SUM);
-        let VerifyFactResult::AtomicExceptEquality(proof) = first_claim_step(&mut result) else {
-            panic!("actual weak sum")
-        };
-        let VerifyAtomicExceptEqualityFactResult::Success(proof) = proof.as_mut() else {
-            panic!("actual success")
-        };
-        let AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
-            AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NonnegativeSumIsNonnegative(
-                proof,
-            ),
-        ) = &mut proof.searched_proof
+        let StructuralRealSignReason::Add { left, right } = &mut selected_sign(&mut result).reason
         else {
-            panic!("actual selected weak sum")
+            panic!("sum")
         };
         if deletion {
-            proof.proof_of_requirement_facts.pop();
+            let StructuralRealSignReason::Known { source, .. } = &mut left.reason else {
+                panic!("known sign")
+            };
+            let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(citation) =
+                source.searched_proof.as_mut()
+            else {
+                panic!("citation")
+            };
+            citation
+                .why_parameters_of_known_fact_are_equal_to_givens
+                .clear();
         } else {
-            proof.requirement_facts.swap(0, 1);
+            std::mem::swap(left, right);
         }
-        let error = compiler
-            .compile_run(&result, "weak_sum_corrupted")
-            .unwrap_err();
         assert_eq!(
-            error.route,
+            compiler
+                .compile_run(&result, "weak_sum_corrupted")
+                .unwrap_err()
+                .route,
             if deletion {
-                "ZeroBound/Requirements"
+                "KnownAtomic"
             } else {
-                "ZeroBound/ChildSubject"
+                "StructuralPositive/BinaryOperands"
             }
         );
     }
@@ -593,7 +557,7 @@ fn selected_division_zero_endpoints_retain_original_quotient_and_both_orientatio
         ),
     ] {
         let (mut result, compiler) = checked(&source);
-        zero_division_strategy(&mut result);
+        selected_sign(&mut result);
         let lean = compiler
             .compile_run(&result, "original_zero_quotient_endpoint")
             .expect("actual original quotient zero endpoint strategy");
@@ -606,28 +570,41 @@ fn selected_division_zero_endpoints_reject_missing_swapped_and_wrong_identity_ch
     for source in [DIV_ZERO_LOWER, DIV_ZERO_UPPER] {
         for corruption in 0..3 {
             let (mut result, compiler) = checked(source);
-            let selected = zero_division_strategy(&mut result);
-            let expected = match corruption {
-                0 => {
-                    selected.proof_of_requirement_facts.pop();
-                    "DivMonotone/Requirements"
-                }
-                1 => {
-                    selected.requirement_facts.swap(0, 1);
-                    selected.proof_of_requirement_facts.swap(0, 1);
-                    "SelectedOrder/ChildSubject"
-                }
-                _ => {
-                    selected.requirement_facts.swap(0, 1);
-                    "DivMonotone/RequirementCapture"
-                }
+            let StructuralRealSignReason::Div { left, right } =
+                &mut selected_sign(&mut result).reason
+            else {
+                panic!("division")
             };
+            if corruption == 0 {
+                let StructuralRealSignReason::Known { source, .. } = &mut right.reason else {
+                    panic!("divisor citation")
+                };
+                let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(citation) =
+                    source.searched_proof.as_mut()
+                else {
+                    panic!("citation")
+                };
+                citation
+                    .why_parameters_of_known_fact_are_equal_to_givens
+                    .clear();
+            } else if corruption == 1 {
+                std::mem::swap(left, right);
+            } else {
+                let StructuralRealSignReason::Known { real, .. } = &mut right.reason else {
+                    panic!("divisor membership")
+                };
+                real.element = left.element.clone();
+            }
             assert_eq!(
                 compiler
                     .compile_run(&result, "corrupted_zero_quotient_children")
                     .unwrap_err()
                     .route,
-                expected
+                match corruption {
+                    0 => "KnownAtomic",
+                    1 => "StructuralPositive/DivisionOperands",
+                    _ => "StructuralPositive/KnownReal",
+                }
             );
         }
     }
@@ -638,28 +615,26 @@ fn selected_division_zero_endpoints_reject_changed_operands_and_weakened_divisor
     for source in [DIV_ZERO_LOWER, DIV_ZERO_UPPER] {
         for weaken in [false, true] {
             let (mut result, compiler) = checked(source);
-            let selected = zero_division_strategy(&mut result);
-            let child = selected_atomic_child(&mut selected.proof_of_requirement_facts[0]);
-            let AtomicFact::LessFact(positive) = child else {
-                panic!("actual strict original denominator sign")
+            let StructuralRealSignReason::Div { right, .. } =
+                &mut selected_sign(&mut result).reason
+            else {
+                panic!("division")
             };
             if weaken {
-                *child = AtomicFact::LessEqualFact(LessEqualFact {
-                    fact_id: positive.fact_id,
-                    left: positive.left.clone(),
-                    right: positive.right.clone(),
-                    line_file: positive.line_file.clone(),
-                });
+                right.sign = RealSign::Nonnegative;
             } else {
-                positive.right = Obj::Literal(Literal::Number(Number::new("2".into())));
+                right.element = Obj::Literal(Literal::Number(Number::new("2".into())));
             }
-            selected.requirement_facts[0] = Fact::AtomicFact(child.clone());
             assert_eq!(
                 compiler
                     .compile_run(&result, "corrupted_zero_quotient_sign")
                     .unwrap_err()
                     .route,
-                "SelectedOrder/ChildSubject"
+                if weaken {
+                    "StructuralPositive/Sign"
+                } else {
+                    "StructuralPositive/DivisionOperands"
+                }
             );
         }
     }
@@ -669,10 +644,15 @@ fn selected_division_zero_endpoints_reject_changed_operands_and_weakened_divisor
 fn selected_division_zero_endpoints_reject_changed_original_numerator_bound() {
     for (source, zero_left) in [(DIV_ZERO_LOWER, true), (DIV_ZERO_UPPER, false)] {
         let (mut result, compiler) = checked(source);
-        let selected = zero_division_strategy(&mut result);
-        let child = selected_atomic_child(&mut selected.proof_of_requirement_facts[1]);
-        let AtomicFact::LessEqualFact(bound) = child else {
-            panic!("actual weak numerator bound")
+        let StructuralRealSignReason::Div { left, .. } = &mut selected_sign(&mut result).reason
+        else {
+            panic!("division")
+        };
+        let StructuralRealSignReason::Known { source, .. } = &mut left.reason else {
+            panic!("numerator bound")
+        };
+        let AtomicFact::LessEqualFact(bound) = &mut source.fact else {
+            panic!("weak source bound")
         };
         let changed = Obj::Literal(Literal::Number(Number::new("2".into())));
         if zero_left {
@@ -680,13 +660,12 @@ fn selected_division_zero_endpoints_reject_changed_original_numerator_bound() {
         } else {
             bound.left = changed;
         }
-        selected.requirement_facts[1] = Fact::AtomicFact(child.clone());
         assert_eq!(
             compiler
                 .compile_run(&result, "corrupted_zero_quotient_numerator")
                 .unwrap_err()
                 .route,
-            "SelectedOrder/ChildSubject"
+            "StructuralPositive/KnownSubject"
         );
     }
 }

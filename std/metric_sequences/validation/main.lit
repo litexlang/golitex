@@ -1,0 +1,466 @@
+# Full generic calls, affine/constant contractions and empty/unit-factor boundaries.
+
+release thm s::real_line_metric_components()
+
+release obj def m::real_line_distance
+
+release thm s::real_line_metric_is_complete()
+
+have fn affine(x s::real_line_metric.carrier) s::real_line_metric.carrier=x/2+1
+
+claim:
+    ? forall x,y s::real_line_metric.carrier:
+        s::real_line_metric.distance(affine(x),affine(y))<=(1/2)*s::real_line_metric.distance(x,y)
+    x $in R
+    y $in R
+    affine(x)=x/2+1
+    affine(y)=y/2+1
+    affine(x)-affine(y)=(x/2+1)-(y/2+1)=(1/2)*(x-y)
+    s::real_line_metric.distance(affine(x),affine(y))=m::real_line_distance(affine(x),affine(y))=abs(affine(x)-affine(y))=abs((1/2)*(x-y))=abs(1/2)*abs(x-y)=(1/2)*abs(x-y)
+    s::real_line_metric.distance(x,y)=m::real_line_distance(x,y)=abs(x-y)
+    s::real_line_metric.distance(affine(x),affine(y))=(1/2)*s::real_line_metric.distance(x,y)
+
+by def $m::is_lipschitz_map(R,s::real_line_metric,R,s::real_line_metric,affine,1/2)
+
+witness exist q R st {0<=q,q<1,$m::is_lipschitz_map(R,s::real_line_metric,R,s::real_line_metric,affine,q)} from 1/2
+
+by def $s::is_contraction_map(R,s::real_line_metric,affine)
+
+$is_nonempty_set(s::real_line_metric.carrier)
+
+release thm s::banach_fixed_point(R,s::real_line_metric,affine)
+
+affine(2)=2/2+1=2
+
+release thm s::contraction_fixed_point_value(R,s::real_line_metric,affine,2)
+
+\s::contraction_fixed_point<R,s::real_line_metric>(affine)=2
+
+release thm fn_set_member(\s::iterate<s::real_line_metric.carrier,affine,0>,fn(n N) s::real_line_metric.carrier)
+
+\s::iterate<s::real_line_metric.carrier,affine,0>(0)=0
+
+\s::iterate<s::real_line_metric.carrier,affine,0>(1)=affine(\s::iterate<s::real_line_metric.carrier,affine,0>(0))=affine(0)=0/2+1=1
+
+\s::iterate<s::real_line_metric.carrier,affine,0>(2)=affine(\s::iterate<s::real_line_metric.carrier,affine,0>(1))=affine(1)=1/2+1=3/2
+
+\s::iterate<s::real_line_metric.carrier,affine,0>(3)=affine(\s::iterate<s::real_line_metric.carrier,affine,0>(2))=affine(3/2)=(3/2)/2+1=7/4
+
+release thm s::complete_contraction_orbit_converges_to_fixed_point(R,s::real_line_metric,affine,1/2,0,2)
+
+0+1 $in N
+
+\s::iterate<s::real_line_metric.carrier,affine,0>(0+1) $in s::real_line_metric.carrier
+
+release thm fn_set_member(s::real_line_metric.distance,fn(x,y s::real_line_metric.carrier) R)
+
+\s::iterate<s::real_line_metric.carrier,affine,0>(0) $in s::real_line_metric.carrier
+
+s::real_line_metric.distance(0,affine(0)) $in R
+
+(1/2)^0 $in R
+
+(1/2)^0*s::real_line_metric.distance(0,affine(0)) $in R
+
+s::real_line_metric.distance(\s::iterate<s::real_line_metric.carrier,affine,0>(0),\s::iterate<s::real_line_metric.carrier,affine,0>(0+1)) $in R
+
+release thm s::contraction_iterate_adjacent_bound(R,s::real_line_metric,affine,1/2,0,0)
+
+release thm s::contraction_iterate_adjacent_bound(R,s::real_line_metric,affine,1/2,0,1)
+
+release thm s::contraction_iterate_gap_bound(R,s::real_line_metric,affine,1/2,0,0,3)
+
+release thm s::contraction_iterate_a_priori_bound(R,s::real_line_metric,affine,1/2,0,2,3)
+
+s::real_line_metric.distance(\s::iterate<s::real_line_metric.carrier,affine,0>(3),2)=m::real_line_distance(7/4,2)=abs(7/4-2)=1/4
+
+release thm s::contraction_fixed_point_residual_bound(R,s::real_line_metric,affine,1/2,0,2)
+
+release thm s::contraction_step_a_posteriori_bound(R,s::real_line_metric,affine,1/2,0,2)
+
+claim:
+    ? forall q R:
+        q<1
+        =>:
+            1-q $in R+
+            1-q!=0
+    0<1-q
+    1-q $in R+
+    1-q!=0
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,p M.carrier:
+        $s::has_metric_limit(A,M,\s::constant_sequence<M.carrier,p>,p)
+    release thm s::constant_sequence_has_metric_limit(A,M,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,p,q M.carrier:
+        $s::has_metric_limit(A,M,a,p)
+        $s::has_metric_limit(A,M,a,q)
+        =>:
+            p=q
+    release thm s::metric_limit_is_unique(A,M,a,p,q)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,p M.carrier:
+        $s::has_metric_limit(A,M,a,p)
+        =>:
+            $s::is_metric_cauchy(A,M,a)
+    release thm s::metric_limit_implies_cauchy(A,M,a,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,a,b fn(k N+) M.carrier,p M.carrier:
+        $s::has_metric_limit(A,M,a,p)
+        forall k N+:
+            a(k)=b(k)
+        =>:
+            $s::has_metric_limit(A,M,b,p)
+    release thm s::metric_limit_extensional(A,M,a,b,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,p M.carrier,offset N:
+        $s::has_metric_limit(A,M,a,p)
+        =>:
+            $s::has_metric_limit(A,M,\s::shifted_sequence<M.carrier,a,offset>,p)
+    release thm s::metric_limit_shift(A,M,a,p,offset)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,B set,T &m::MetricSpace<B>,f fn(x M.carrier) T.carrier,a fn(k N+) M.carrier,p M.carrier:
+        $s::has_metric_limit(A,M,a,p)
+        $m::is_metric_continuous_at(A,M,B,T,f,p)
+        =>:
+            $s::has_metric_limit(B,T,compose(f,a),f(p))
+    release thm s::continuous_map_preserves_metric_limit(A,M,B,T,f,a,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,B set,T &m::MetricSpace<B>,f fn(x M.carrier) T.carrier,L R,a fn(k N+) M.carrier,p M.carrier:
+        $s::has_metric_limit(A,M,a,p)
+        $m::is_lipschitz_map(A,M,B,T,f,L)
+        =>:
+            $s::has_metric_limit(B,T,compose(f,a),f(p))
+    release thm s::lipschitz_map_preserves_metric_limit(A,M,B,T,f,L,a,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,p,r M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        f(r)=r
+        =>:
+            p=r
+    release thm s::contraction_fixed_point_is_unique(A,M,f,q,p,r)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier,n N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        =>:
+            M.distance(\s::iterate<M.carrier,f,start>(n),\s::iterate<M.carrier,f,start>(n+1))<=q^n*M.distance(start,f(start))
+    release thm s::contraction_iterate_adjacent_bound(A,M,f,q,start,n)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier,n,k N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        =>:
+            M.distance(\s::iterate<M.carrier,f,start>(n),\s::iterate<M.carrier,f,start>(n+k))<=(q^n-q^(n+k))*M.distance(start,f(start))/(1-q)
+    release thm s::contraction_iterate_gap_bound(A,M,f,q,start,n,k)
+
+claim:
+    ? forall :
+        s::real_line_metric.carrier=R
+        s::real_line_metric.distance=m::real_line_distance
+        s::real_line_metric.distance $in fn(x,y s::real_line_metric.carrier) R
+    release thm s::real_line_metric_components()
+
+claim:
+    ? forall p R,epsilon R+:
+        \m::open_ball<R,s::real_line_metric>(p,epsilon)={x R:abs(x-p)<epsilon}
+    release thm s::real_line_open_ball(p,epsilon)
+
+claim:
+    ? forall a seq(R),p R:
+        $has_seq_limit(a,p)
+        =>:
+            $s::has_metric_limit(R,s::real_line_metric,a,p)
+    release thm s::real_sequence_limit_is_metric_limit(a,p)
+
+claim:
+    ? forall a seq(R),p R:
+        $s::has_metric_limit(R,s::real_line_metric,a,p)
+        =>:
+            $has_seq_limit(a,p)
+    release thm s::real_metric_limit_is_sequence_limit(a,p)
+
+claim:
+    ? forall a seq(R):
+        $s::is_metric_cauchy(R,s::real_line_metric,a)
+        =>:
+            $is_seq_cauchy(a)
+    release thm s::real_metric_cauchy_is_sequence_cauchy(a)
+
+claim:
+    ? forall :
+        $s::is_complete_metric_space(R,s::real_line_metric)
+    release thm s::real_line_metric_is_complete()
+
+claim:
+    ? forall q R,n N:
+        0<=q
+        =>:
+            0<=q^n
+    release thm s::nonnegative_natural_power(q,n)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier,n,k N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        n<=k
+        =>:
+            M.distance(\s::iterate<M.carrier,f,start>(n),\s::iterate<M.carrier,f,start>(k))<=q^n*M.distance(start,f(start))/(1-q)
+    release thm s::contraction_iterate_tail_bound(A,M,f,q,start,n,k)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,a fn(k N+) M.carrier,h seq(R):
+        $has_seq_limit(h,0)
+        forall n,k N+:
+            n<=k
+            =>:
+                M.distance(a(n),a(k))<=h(n)
+        =>:
+            $s::is_metric_cauchy(A,M,a)
+    release thm s::vanishing_tail_bound_implies_metric_cauchy(A,M,a,h)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        =>:
+            $s::is_metric_cauchy(A,M,\s::orbit_sequence<M.carrier,f,start>)
+    release thm s::contraction_orbit_is_cauchy(A,M,f,q,start)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start,p M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        $s::has_metric_limit(A,M,\s::orbit_sequence<M.carrier,f,start>,p)
+        =>:
+            f(p)=p
+    release thm s::contraction_orbit_limit_is_fixed(A,M,f,q,start,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start M.carrier:
+        $s::is_complete_metric_space(A,M)
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        =>:
+            exist p M.carrier st {f(p)=p,$s::has_metric_limit(A,M,\s::orbit_sequence<M.carrier,f,start>,p)}
+    release thm s::complete_contraction_orbit_has_fixed_limit(A,M,f,q,start)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier:
+        $s::is_complete_metric_space(A,M)
+        $is_nonempty_set(M.carrier)
+        $s::is_contraction_map(A,M,f)
+        =>:
+            exist! p M.carrier st {f(p)=p}
+    release thm s::banach_fixed_point(A,M,f)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,p M.carrier:
+        $s::is_complete_metric_space(A,M)
+        $is_nonempty_set(M.carrier)
+        $s::is_contraction_map(A,M,f)
+        f(p)=p
+        =>:
+            \s::contraction_fixed_point<A,M>(f)=p
+    release thm s::contraction_fixed_point_value(A,M,f,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start,p M.carrier:
+        $s::is_complete_metric_space(A,M)
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        =>:
+            $s::has_metric_limit(A,M,\s::orbit_sequence<M.carrier,f,start>,p)
+    release thm s::complete_contraction_orbit_converges_to_fixed_point(A,M,f,q,start,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,x,p M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        =>:
+            M.distance(x,p)<=M.distance(x,f(x))/(1-q)
+    release thm s::contraction_fixed_point_residual_bound(A,M,f,q,x,p)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start,p M.carrier,n N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        f(p)=p
+        =>:
+            M.distance(\s::iterate<M.carrier,f,start>(n),p)<=q^n*M.distance(start,p)
+    release thm s::contraction_iterate_fixed_point_bound(A,M,f,q,start,p,n)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,start,p M.carrier,n N:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        =>:
+            M.distance(\s::iterate<M.carrier,f,start>(n),p)<=q^n*M.distance(start,f(start))/(1-q)
+    release thm s::contraction_iterate_a_priori_bound(A,M,f,q,start,p,n)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>:
+        M.carrier={}
+        =>:
+            $s::is_complete_metric_space(A,M)
+    release thm s::empty_metric_space_is_complete(A,M)
+
+claim:
+    ? forall A set,M &m::MetricSpace<A>,f fn(x M.carrier) M.carrier,q R,x,p M.carrier:
+        $m::is_lipschitz_map(A,M,A,M,f,q)
+        q<1
+        f(p)=p
+        =>:
+            M.distance(f(x),p)<=q*M.distance(x,f(x))/(1-q)
+    release thm s::contraction_step_a_posteriori_bound(A,M,f,q,x,p)
+
+have fn constant(x s::real_line_metric.carrier) s::real_line_metric.carrier=3
+
+claim:
+    ? forall x,y s::real_line_metric.carrier:
+        s::real_line_metric.distance(constant(x),constant(y))<=0*s::real_line_metric.distance(x,y)
+    constant(x)=3
+    constant(y)=3
+    s::real_line_metric.distance(constant(x),constant(y))=m::real_line_distance(3,3)=abs(3-3)=0
+    0*s::real_line_metric.distance(x,y)=0
+
+by def $m::is_lipschitz_map(R,s::real_line_metric,R,s::real_line_metric,constant,0)
+
+witness exist q R st {0<=q,q<1,$m::is_lipschitz_map(R,s::real_line_metric,R,s::real_line_metric,constant,q)} from 0
+
+by def $s::is_contraction_map(R,s::real_line_metric,constant)
+
+release thm s::banach_fixed_point(R,s::real_line_metric,constant)
+
+constant(3)=3
+
+release thm s::contraction_fixed_point_value(R,s::real_line_metric,constant,3)
+
+release thm fn_set_member(\s::iterate<s::real_line_metric.carrier,constant,0>,fn(n N) s::real_line_metric.carrier)
+
+\s::iterate<s::real_line_metric.carrier,constant,0>(0)=0
+
+\s::iterate<s::real_line_metric.carrier,constant,0>(1)=constant(\s::iterate<s::real_line_metric.carrier,constant,0>(0))=constant(0)=3
+
+\s::iterate<s::real_line_metric.carrier,constant,0>(2)=constant(\s::iterate<s::real_line_metric.carrier,constant,0>(1))=constant(3)=3
+
+release thm s::complete_contraction_orbit_converges_to_fixed_point(R,s::real_line_metric,constant,0,0,3)
+
+release thm s::contraction_iterate_a_priori_bound(R,s::real_line_metric,constant,0,0,3,0)
+
+release thm s::contraction_iterate_a_priori_bound(R,s::real_line_metric,constant,0,0,3,1)
+
+release thm s::contraction_step_a_posteriori_bound(R,s::real_line_metric,constant,0,0,3)
+
+s::real_line_metric.distance(constant(0),3)=m::real_line_distance(3,3)=abs(3-3)=0
+
+have fn empty_distance(x,y {}) R=0
+
+claim:
+    ? forall x,y {}:
+        0<=empty_distance(x,y)
+    empty_distance(x,y)=0
+
+claim:
+    ? forall x {}:
+        empty_distance(x,x)=0
+    empty_distance(x,x)=0
+
+claim:
+    ? forall x,y {}:
+        empty_distance(x,y)=0
+        =>:
+            x=y
+    by contra:
+        ? x=y
+        x $in {}
+        impossible x $in {}
+
+claim:
+    ? forall x,y {}:
+        empty_distance(x,y)=empty_distance(y,x)
+    empty_distance(x,y)=0=empty_distance(y,x)
+
+claim:
+    ? forall x,y,z {}:
+        empty_distance(x,z)<=empty_distance(x,y)+empty_distance(y,z)
+    empty_distance(x,z)=0
+    empty_distance(x,y)=0
+    empty_distance(y,z)=0
+    empty_distance(x,z)=0<=0+0=empty_distance(x,y)+empty_distance(y,z)
+
+release thm struct_member(({},empty_distance),&m::MetricSpace<{}>)
+
+have empty_metric &m::MetricSpace<{}> = ({},empty_distance)
+
+release struct def empty_metric
+
+empty_metric.carrier={}
+
+release thm s::empty_metric_space_is_complete({},empty_metric)
+
+have fn empty_map(x empty_metric.carrier) empty_metric.carrier=x
+
+claim:
+    ? forall x,y empty_metric.carrier:
+        empty_metric.distance(empty_map(x),empty_map(y))<=0*empty_metric.distance(x,y)
+    by contra:
+        ? empty_metric.distance(empty_map(x),empty_map(y))<=0*empty_metric.distance(x,y)
+        x $in {}
+        impossible x $in {}
+
+by def $m::is_lipschitz_map({},empty_metric,{},empty_metric,empty_map,0)
+
+witness exist q R st {0<=q,q<1,$m::is_lipschitz_map({},empty_metric,{},empty_metric,empty_map,q)} from 0
+
+by def $s::is_contraction_map({},empty_metric,empty_map)
+
+not $is_nonempty_set(empty_metric.carrier)
+
+claim:
+    ? not exist p empty_metric.carrier st {empty_map(p)=p}
+    by contra:
+        ? not exist p empty_metric.carrier st {empty_map(p)=p}
+        obtain p from exist p empty_metric.carrier st {empty_map(p)=p}
+        p $in {}
+        impossible p $in {}
+
+have fn identity(x s::real_line_metric.carrier) s::real_line_metric.carrier=x
+
+claim:
+    ? forall x,y s::real_line_metric.carrier:
+        s::real_line_metric.distance(identity(x),identity(y))<=1*s::real_line_metric.distance(x,y)
+    identity(x)=x
+    identity(y)=y
+    s::real_line_metric.distance(identity(x),identity(y))=s::real_line_metric.distance(x,y)=1*s::real_line_metric.distance(x,y)
+
+by def $m::is_lipschitz_map(R,s::real_line_metric,R,s::real_line_metric,identity,1)
+
+claim:
+    ? not $s::is_contraction_map(R,s::real_line_metric,identity)
+    by contra:
+        ? not $s::is_contraction_map(R,s::real_line_metric,identity)
+        obtain q from exist q R st {0<=q,q<1,$m::is_lipschitz_map(R,s::real_line_metric,R,s::real_line_metric,identity,q)}
+        identity(0)=0
+        identity(1)=1
+        s::real_line_metric.distance(0,1)=m::real_line_distance(0,1)=abs(0-1)=1
+        s::real_line_metric.distance(identity(0),identity(1))=s::real_line_metric.distance(0,1)=1
+        s::real_line_metric.distance(identity(0),identity(1))<=q*s::real_line_metric.distance(0,1)
+        1<=q*1=q
+        impossible q<1
+
+identity(0)=0
+
+identity(1)=1

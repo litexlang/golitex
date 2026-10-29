@@ -115,28 +115,42 @@ when project-local files are trusted: run `pi -a`, or pass
 `--skill .agents/skills/litex-formalizer` explicitly. Without either, the skill
 is not advertised (verified by inspecting the system prompt).
 
-## Incremental checking is the biggest single lever
+## Incremental checking: necessary, not sufficient
 
-A Litex file check (`litex -f`) is not incremental: it re-parses and re-checks
-the whole file and echoes every declaration. Measured on a 155-line artifact,
-one successful check emits **9.4 KB** (97% of it the echoed declarations) and
-takes about **1 s**. A live session (`litex -session`, driven by the `./step`
-helper that ships with the skill) emits **about 0.5 KB per statement** and takes
-**2–3 ms**, because accepted statements stay in the environment.
+A whole-file Litex check is not incremental: it re-parses, re-checks and
+re-prints every declaration. On a 155-line artifact one successful check emits
+9.4 KB (97% of it the echoed declarations) and takes about 1 s. A live session
+(`litex -session`, driven by the bundled `./step` helper) emits about 0.5 KB per
+statement in 2-3 ms.
 
-That difference multiplies: 80 checks against a whole file put roughly 750 KB of
-echoed declarations into the conversation, and the model re-reads that context on
-every later turn. The incremental loop puts in roughly 40 KB.
+That is a 20x reduction in checker output, and it halves context per turn. It is
+still not the main cost. Measured on the most expensive task of a local
+benchmark, same model, every cell passing unless stated:
 
-So the prompt should:
+| Interface in the task directory | Wall (min) | Turns | Tokens | Pass |
+| --- | ---: | ---: | ---: | --- |
+| whole-file `./check` only | 12.5 | 106 | 15.14 M | yes |
+| `./step` plus `./check` | 26.8 | 133 | 20.40 M | yes |
+| `./step` plus primer | 32.7 | 140 | 12.76 M | yes |
+| `./step` only | 29.1 | 106 | 12.03 M | **no** |
 
-* name `./step` as the default checker and `./check solution.lit` as the final
-  whole-file gate;
-* say "append, then step; never re-check the whole file after every line";
-* say "if `./step` prints `RESYNC`, you rewrote earlier lines and the whole file
-  was re-checked", so the agent prefers appending;
-* allow a few independent statements per step, since the report names the first
-  failing statement.
+Four lessons:
+
+1. **Turns dominate.** Context per turn fell 21% (143k to 113k tokens), but the
+   turn count did not move, so neither did the total.
+2. **Offering both checkers is the worst configuration.** The agent used both:
+   65 `./step` calls and 41 whole-file checks in the same run.
+3. **Removing the gate saves tokens and loses correctness.** Without a
+   whole-file check the artifact failed with a parse error the incremental path
+   had already accepted in a different shape.
+4. **Rewriting is the other multiplier.** The gate-free run issued 61 `--reset`,
+   because Litex proofs grow by inserting lemmas above the goal, and a rewrite
+   restarts the session and re-checks the whole file.
+
+So the prompt should ship both tools, say "`./step` while writing, `./check`
+once at the end", and ask for a file structure that appends: definitions and
+helper lemmas first, then the theorem. The lever that is left is per-turn
+batching — Litex wants one fact per line and the agent writes one line per turn.
 
 ## Ten rules
 

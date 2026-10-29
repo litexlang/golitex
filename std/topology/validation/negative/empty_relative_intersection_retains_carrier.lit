@@ -1,0 +1,15 @@
+release thm top::discrete_topology_laws({0})
+
+have empty_guard &top::TopologicalSpace<{0}> = ({0},power_set({0}))
+
+empty_guard.carrier={0}
+
+0 $in empty_guard.carrier
+
+empty_guard.carrier $in empty_guard.opens
+
+have fn whole_at_every_index(index N) empty_guard.opens=empty_guard.carrier
+
+release thm top::space_indexed_intersection_empty({0},empty_guard,N,whole_at_every_index,{})
+
+\top::space_indexed_intersection<{0},empty_guard,N,whole_at_every_index,{}> = {}

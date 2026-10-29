@@ -17,6 +17,12 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(br::not_equal::NotEqualFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::SignedNumericMembership(p)) => super::structural_real_sign::project_membership(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceMembership(p)) => object_for(runtime, vec![
             ("type", string("builtin_rule")), ("rule", string("HomogeneousCartesianSequenceMembership")),
             ("membership_fact", string(p.membership.fact.readable_string())),

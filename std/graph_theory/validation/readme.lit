@@ -1,0 +1,9 @@
+have demo_vertices finite_set={1,2,3}
+
+release thm graph::edgeless_graph_construction(demo_vertices)
+
+have demo &graph::FiniteSimpleGraph<demo_vertices> = (demo_vertices,{})
+
+finite_set_size(demo_vertices)=finite_set_size({1,2,3})=3
+
+release thm graph::finite_simple_graph_has_equal_degrees(demo_vertices,demo)

@@ -758,14 +758,48 @@ domain. Infinite limits preserve directional unboundedness as well as the
 original epsilon/threshold condition. Their selectors have fixed denotations
 independent of which WD evidence certified them.
 
-Explicit function-limit uniqueness, existence, selection and constant-function laws use the
+Explicit function-limit uniqueness, existence, selection, constant/identity laws,
+epsilon introduction and accumulation/control projections use the
 [function theorem consumer](compile_builtin_function_limit_theorem.rs).
+The [real accumulation consumer](compile_real_limit_accumulation.rs) constructs
+real-line witnesses without a function or limit hypothesis. Quantified premises
+and released universals range over semantic objects; known instantiations and
+renamings pass `semanticObject (denote a) (isSet a)`. This preserves the source
+object and its original membership fact across Lean host universes.
 It validates the reserved theorem ID, arguments, ordered premises, stores and
 returned conclusion before applying the corresponding proved Core law.
 The [sequence theorem consumer](compile_builtin_sequence_limit_theorem.rs)
-handles the same certificates plus epsilon introduction and tail extraction.
+handles the same certificates plus epsilon introduction, tail extraction,
+Cauchy introduction/tail extraction and the two directions between convergence
+and existence of a real candidate limit.
 The two function-limit consumers share the domain-view emitter and accumulation
 validator; both read the original captured signature and domain evidence.
+
+The [unary](compile_function_limit_unary.rs) and
+[binary](compile_function_limit_binary.rs) algebra consumers replay negation,
+absolute value, real scaling, natural powers and the four arithmetic limit laws
+for finite, one-sided and infinite approaches. Core proves the correspondence
+between its epsilon estimates and Mathlib `Tendsto`, then applies the native
+continuous-operation or division theorem on the same complete graph domain.
+The compiler validates the recorded operation, pointwise formula, parameter
+membership and domain equalities. Division retains separate proofs that the
+limiting denominator and every denominator call are nonzero.
+
+The [side](compile_function_limit_sides.rs),
+[eventual](compile_function_limit_eventual.rs),
+[comparison](compile_function_limit_order.rs),
+[local equality](compile_function_limit_local.rs) and
+[squeeze](compile_function_limit_squeeze.rs) consumers preserve the recorded
+neighborhood and its strict side or infinite direction. Local equality keeps
+the two complete domains separate and requires the target-domain accumulation
+and local inclusion evidence. Squeeze keeps all three signatures and both
+equal-domain proofs. These laws consume the source's selected premises through
+their `h_<fact_id>` citations; Core proves the transfer laws.
+
+The [polynomial chain](../../lean/examples/function_limit_polynomial_chain/)
+combines identity, constant, power, addition, subtraction and multiplication
+certificates. Its generated limit supplies the estimate used by a native
+`polynomialProductLimit` theorem through Adapter/Final.
 
 ## Current mathematical reach
 

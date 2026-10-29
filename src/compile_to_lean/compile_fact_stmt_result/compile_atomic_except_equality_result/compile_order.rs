@@ -130,6 +130,19 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let (kind, left, right) = source_order_parts(goal)?;
+        self.compile_closed_order_endpoints(kind, left, right, proof, negative, None, position)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_closed_order_endpoints(
+        &self,
+        kind: SourceOrderKind,
+        left: &Obj,
+        right: &Obj,
+        proof: &ClosedComparisonCalculationProof,
+        negative: bool,
+        real_membership: Option<(&str, &str)>,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
         let x = self.compile_numeric_observation(left, position)?;
         let y = self.compile_numeric_observation(right, position)?;
         let a =
@@ -179,11 +192,21 @@ impl LitexToLeanCompiler {
         let s = exact_rational_literal(b, "ℝ")?;
         // These are the actual real-domain facts replayed before truth. A
         // numeric view alone does not classify an arbitrary complex as real.
-        let ha = self.compile_real_membership_certificate(left, position)?;
-        let hb = self.compile_real_membership_certificate(right, position)?;
+        let (ha, hb) = match real_membership {
+            Some((a, b)) => (a.to_string(), b.to_string()),
+            None => (
+                self.compile_real_membership_certificate(left, position)?,
+                self.compile_real_membership_certificate(right, position)?,
+            ),
+        };
         let lhs = self.compile_object_reference(left, position)?;
         let rhs = self.compile_object_reference(right, position)?;
-        let (low, high, strict) = source_order_oriented(goal)?;
+        let (low, high, strict) = match kind {
+            SourceOrderKind::Less => (left, right, true),
+            SourceOrderKind::LessEqual => (left, right, false),
+            SourceOrderKind::Greater => (right, left, true),
+            SourceOrderKind::GreaterEqual => (right, left, false),
+        };
         let (low_r, high_r, low_value, high_value) = match kind {
             SourceOrderKind::Less | SourceOrderKind::LessEqual => {
                 (&ha, &hb, "_litex_left_value", "_litex_right_value")
@@ -331,6 +354,36 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (goal, rule) {
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::StructuralRealSign(proof),
+                ),
+            ) => self.compile_structural_nonzero_order(goal, proof, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::StructuralRealSign(proof),
+                ),
+            ) => self.compile_structural_positive_order(goal, proof, position),
+            (
+                AtomicFact::GreaterFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(
+                    GreaterFactSearchProofByBuiltinRule::StructuralRealSign(proof),
+                ),
+            ) => self.compile_structural_positive_order(goal, proof, position),
+            (
+                AtomicFact::LessEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::StructuralRealSign(proof),
+                ),
+            )
+            | (
+                AtomicFact::GreaterEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(
+                    GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign(proof),
+                ),
+            ) => self.compile_structural_nonnegative_order(goal, proof, position),
             (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(

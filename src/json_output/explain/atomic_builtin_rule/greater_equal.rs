@@ -19,6 +19,7 @@ use crate::json_output::explain::text::text;
 impl GreaterEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::English),
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_en(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_en(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_en(),
@@ -41,6 +42,9 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Chinese)
+            }
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_zh(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
@@ -70,6 +74,9 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::ChineseTraditional)
+            }
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => {
                 p.rule_name_and_message_zh_hant()
             }
@@ -103,6 +110,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::French),
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_fr(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_fr(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_fr(),
@@ -125,6 +133,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Russian),
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ru(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ru(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ru(),
@@ -147,6 +156,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Spanish),
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_es(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_es(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_es(),
@@ -169,6 +179,9 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Arabic)
+            }
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ar(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
@@ -200,6 +213,9 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Japanese)
+            }
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ja(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
@@ -231,6 +247,9 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Korean)
+            }
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_ko(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
@@ -263,6 +282,9 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::StructuralRealSign(p) => {
+                super::structural_real_sign::sign_text(p, OutputLanguage::Vietnamese)
+            }
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
             Self::MulRightNonpositiveReversesWeakGreaterEqual(p) => p.rule_name_and_message_vi(),
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(p) => {
@@ -309,6 +331,7 @@ impl GreaterEqualFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::StructuralRealSign(_) => None,
             Self::MulLeftNonpositiveReversesWeakGreaterEqual(_) => None,
             Self::MulRightNonpositiveReversesWeakGreaterEqual(_) => None,
             Self::MulLeftRightNonpositiveReversesWeakGreaterEqual(_) => None,

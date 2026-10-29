@@ -213,19 +213,15 @@ fn geometry_positive_left_sum_replays_and_rejects_reordered_children() {
         .contains("Litex.addPositiveLeft"));
     let forall = super::forall_proof_mut(&mut result.statement_results[0]);
     let proof = super::atomic_proof_mut(&mut forall.proved_then_facts[0].verify_result);
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
-        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StrictAdditiveLeftStrict(p),
-    ) = &mut proof.searched_proof
-    else {
-        panic!("positive-left strategy")
-    };
-    p.proof_of_requirement_facts.swap(0, 1);
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::greater::GreaterFactSearchProofByBuiltinRule::StructuralRealSign(p))) = &mut proof.searched_proof else { panic!("positive-left sign") };
+    let crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::Add { left, right } = &mut p.reason else { panic!("sum") };
+    std::mem::swap(left, right);
     assert_eq!(
         compiler
             .compile_run(&result, "wrong_positive_children")
             .unwrap_err()
             .route,
-        "ZeroBound/ChildSubject"
+        "StructuralPositive/BinaryOperands"
     );
 }
 

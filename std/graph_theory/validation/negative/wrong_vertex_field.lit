@@ -1,0 +1,5 @@
+have metadata_vertices finite_set={1,2}
+
+{1} $in power_set(metadata_vertices)
+
+have invalid_metadata &graph::FiniteSimpleGraph<metadata_vertices> = ({1},{})

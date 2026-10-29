@@ -471,7 +471,7 @@ fn checked_order_argument_function_return_is_replayed() {
 }
 
 #[test]
-fn checked_order_function_return_rejects_changed_argument_position() {
+fn checked_order_function_return_rejects_changed_membership_carrier() {
     let source = "forall f fn(x R:x>0) R,n R:\n    n>0\n    =>:\n        f(n+1)<=f(n+1)\n";
     let (mut result, compiler) = checked(source);
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
@@ -496,8 +496,10 @@ fn checked_order_function_return_rejects_changed_argument_position() {
     else {
         panic!("checked argument return evidence");
     };
-    let crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::CheckedArgument(checked) = &mut requirements[0].result else { panic!("checked argument") };
-    checked.argument_index = 1;
+    let Fact::AtomicFact(AtomicFact::InFact(member)) = &mut requirements[0].requirement else {
+        panic!("real membership requirement")
+    };
+    member.set = Obj::StandardSet(StandardSet::C);
     let error = compiler
         .compile_run(&result, "changed_return_argument")
         .unwrap_err();

@@ -11,11 +11,12 @@ import; these modules supply reusable source mathematics above them.
 | Sets, relations and order | [relations](relations/README.md): equivalence classes and partitions, partial orders, subset extrema, monotone maps and order embeddings. |
 | Abstract algebra and linear algebra | [algebra](algebra/README.md): groups, unital rings/ideals/homomorphisms, fields, vector spaces, linear maps, kernel/image, finite-dimensional rank-nullity, finite spans, independence, bases, exchange, basis extension, dimension, coordinate maps, direct sums and subspace sums. |
 | Real and complex matrices | [matrix](matrix/README.md): finite matrix relations and entrywise laws above native matrix operations. |
-| Number theory | [number_theory](number_theory/README.md): divisibility, congruence, Euclidean transformations, supplied Bezout witnesses and supplied modular inverses. General Bezout and CRT are not yet supplied. |
+| Finite graph theory | [graph_theory](graph_theory/README.md): simple undirected graphs, neighborhoods, degrees, complement/induced constructions and equal-degree vertices. Paths, trees and handshaking remain. |
+| Number theory | [number_theory](number_theory/README.md): divisibility, congruence, general Bezout existence, coprime modular inverses, integer-equation solvability and the two-modulus CRT with a canonical natural residue. |
 | Finite combinatorics | [combinatorics](combinatorics/README.md): finite maps, pigeonhole, cardinality, inclusion-exclusion and recursive natural binomial coefficients. |
 | Finite probability | [probability](probability/README.md): bundled finite spaces, conditioning, Bayes, moments, variance, covariance, correlation, tail inequalities and pushforward spaces. |
-| Metric spaces | [metric](metric/README.md): bundled distances, balls, reverse triangle and separation, Lipschitz maps and metric continuity; the standard real-line instance. |
-| General topology | [topology](topology/README.md): open-set spaces, continuity, homeomorphisms, connectedness, separation and compactness. |
+| Metric spaces and sequences | [metric](metric/README.md): bundled distances, balls, separation and Lipschitz/continuous maps; [metric_sequences](metric_sequences/README.md): limits, Cauchy, real-line completeness, actual iterates, Banach unique fixed points, convergence and error bounds. |
+| General topology | [topology](topology/README.md): open-set spaces, continuity, homeomorphisms, connectedness, separation, compactness, actual subspaces and compact-to-Hausdorff continuous inverse existence. |
 | Ordered real series | [real_series](real_series/README.md): partial sums, convergence, Cauchy, comparison, geometric and telescoping sums, ratio/root and alternating tests with remainder estimates. |
 | Numerical analysis | [numerical_analysis](numerical_analysis/README.md): general positive square-root Newton updates, exact identities, iterate error bounds and convergence for any positive seed. |
 | Real integration | [real_integral_laws](real_integral_laws/README.md): absolute-integral and integral-difference bounds, with exact orientation and integrability hypotheses. |

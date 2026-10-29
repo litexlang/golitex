@@ -1,4 +1,3 @@
-use super::result::NegatedOrderStrategySingleStep;
 use crate::prelude::*;
 
 impl Runtime {
@@ -6,7 +5,7 @@ impl Runtime {
         &mut self,
         fact: &AtomicFact,
         ctx: VerifyState,
-    ) -> RuntimeResult<Option<NegatedOrderStrategySingleStep>> {
+    ) -> RuntimeResult<Option<super::result::NegatedOrderStrategySingleStep>> {
         // Total real order: not (a > b) iff a <= b, and likewise for
         // the other three comparisons. Example: a <= 900 implies not a > 1070.
         // Only negative goals enter this branch. Remove their negation and
@@ -71,7 +70,7 @@ impl Runtime {
         else {
             return Ok(None);
         };
-        Ok(Some(NegatedOrderStrategySingleStep::new(
+        Ok(Some(super::result::NegatedOrderStrategySingleStep::new(
             requirement_facts,
             proof_of_requirement_facts,
         )))

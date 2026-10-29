@@ -93,7 +93,7 @@ fn infinity_direction_scope_and_substitution() {
     }
 }
 #[test]
-fn infinity_output_and_unsupported_lean() {
+fn infinity_output_and_lean_replay() {
     for side in ["pos_inf", "neg_inf"] {
         let source = format!(
             "forall f fn(x R) R,L R:\n    $has_limit_{side}(f,L)\n    =>:\n        lim_{side}(f)=L"
@@ -106,10 +106,10 @@ fn infinity_output_and_unsupported_lean() {
         assert!(
             json.contains("FunctionLimitSelectedValue") && json.contains(&format!("lim_{side}"))
         );
-        let e = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        let output = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
             .compile_run(&result, "infinity")
-            .unwrap_err();
-        assert!(e.message.contains("not supported"));
+            .expect("supported limit evidence is replayed");
+        assert!(output.contains("Litex.") && !output.contains("sorry"));
         let latex = crate::compile_to_latex::to_latex_from_source(&source, OutputLanguage::English)
             .unwrap();
         assert!(latex.contains("\\infty") && latex.contains("\\operatorname{dom}"));

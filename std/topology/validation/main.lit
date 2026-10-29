@@ -1,0 +1,512 @@
+# Generic contracts, a three-cycle inverse, subspaces and empty/infinite boundaries.
+
+claim:
+    ? forall Index set,J power_set(Index),selected Index:
+        union(J,{selected}) $in power_set(Index)
+    J $subset Index
+    {selected} $subset Index
+    union(J,{selected}) $subset Index
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        \top::subspace_space<A,space,K> $in &top::TopologicalSpace<K>
+    \top::subspace_space<A,space,K> = (K,\top::subspace_open_family<A,space,K>)
+    release thm top::subspace_topology_laws(A,space,K)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        \top::subspace_space<A,space,K>.carrier=K
+        \top::subspace_space<A,space,K>.opens=\top::subspace_open_family<A,space,K>
+    \top::subspace_space<A,space,K> = (K,\top::subspace_open_family<A,space,K>)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier),x \top::subspace_space<A,space,K>.carrier:
+        x $in space.carrier
+    \top::subspace_space<A,space,K>.carrier=K
+    x $in K
+    K $subset space.carrier
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,U,V space.opens:
+        union(U,V) $in space.opens
+    release thm top::union_of_two_opens_is_open(A,space,U,V)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,U power_set(space.carrier):
+        forall x U:
+            exist V space.opens st {x $in V,V $subset U}
+        =>:
+            U $in space.opens
+    release thm top::open_neighborhood_criterion(A,space,U)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K,F power_set(space.carrier):
+        $top::is_compact_subset(A,space,K)
+        $top::is_closed(A,space,F)
+        =>:
+            $top::is_compact_subset(A,space,intersect(K,F))
+    release thm top::closed_intersection_of_compact_is_compact(A,space,K,F)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K,F power_set(space.carrier):
+        $top::is_compact_subset(A,space,K)
+        $top::is_closed(A,space,F)
+        F $subset K
+        =>:
+            $top::is_compact_subset(A,space,F)
+    release thm top::closed_subset_of_compact_is_compact(A,space,K,F)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,Index set,cover fn(index Index) space.opens,J power_set(Index):
+        J={}
+        =>:
+            \top::space_indexed_intersection<A,space,Index,cover,J> = space.carrier
+    release thm top::space_indexed_intersection_empty(A,space,Index,cover,J)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,Index set,cover fn(index Index) space.opens,J power_set(Index),selected Index:
+        \top::space_indexed_intersection<A,space,Index,cover,union(J,{selected})> = intersect(\top::space_indexed_intersection<A,space,Index,cover,J>,cover(selected))
+    release thm top::space_indexed_intersection_insert(A,space,Index,cover,J,selected)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,Index set,cover fn(index Index) space.opens,J,L power_set(Index):
+        J=L
+        =>:
+            \top::space_indexed_intersection<A,space,Index,cover,J> = \top::space_indexed_intersection<A,space,Index,cover,L>
+    release thm top::space_indexed_intersection_equal_indices(A,space,Index,cover,J,L)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,Index set,cover fn(index Index) space.opens,J power_set(Index):
+        $is_finite_set(J)
+        =>:
+            \top::space_indexed_intersection<A,space,Index,cover,J> $in space.opens
+    release thm top::finite_space_intersection_is_open(A,space,Index,cover,J)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        $top::is_Hausdorff(A,space)
+        $top::is_compact_subset(A,space,K)
+        =>:
+            $top::is_closed(A,space,K)
+    release thm top::compact_subset_of_Hausdorff_is_closed(A,space,K)
+
+claim:
+    ? forall A,B set,source &top::TopologicalSpace<A>,target &top::TopologicalSpace<B>,f fn(x source.carrier) target.carrier:
+        $top::is_compact_space(A,source)
+        $top::is_Hausdorff(B,target)
+        $top::is_topologically_continuous(A,B,source,target,f)
+        =>:
+            $top::is_closed_map(A,B,source,target,f)
+    release thm top::compact_to_Hausdorff_continuous_map_is_closed(A,B,source,target,f)
+
+claim:
+    ? forall X,Y set,f fn(x X) Y,g fn(y Y) X,F power_set(X):
+        forall x X:
+            g(f(x))=x
+        forall y Y:
+            f(g(y))=y
+        =>:
+            preimage_set(g,F)=fn_range(\top::restricted_map<X,Y,f,F>)
+    release thm top::inverse_preimage_equals_forward_image(X,Y,f,g,F)
+
+claim:
+    ? forall A,B set,source &top::TopologicalSpace<A>,target &top::TopologicalSpace<B>,f fn(x source.carrier) target.carrier,g fn(y target.carrier) source.carrier:
+        $top::is_closed_map(A,B,source,target,f)
+        forall x source.carrier:
+            g(f(x))=x
+        forall y target.carrier:
+            f(g(y))=y
+        =>:
+            $top::is_topologically_continuous(B,A,target,source,g)
+    release thm top::inverse_of_closed_bijection_is_continuous(A,B,source,target,f,g)
+
+claim:
+    ? forall A,B set,source &top::TopologicalSpace<A>,target &top::TopologicalSpace<B>,f fn(x source.carrier) target.carrier,g fn(y target.carrier) source.carrier:
+        $top::is_compact_space(A,source)
+        $top::is_Hausdorff(B,target)
+        $top::is_topologically_continuous(A,B,source,target,f)
+        forall x source.carrier:
+            g(f(x))=x
+        forall y target.carrier:
+            f(g(y))=y
+        =>:
+            $top::is_homeomorphism(A,B,source,target,f,g)
+    release thm top::compact_Hausdorff_inverse_is_homeomorphism(A,B,source,target,f,g)
+
+claim:
+    ? forall A,B set,source &top::TopologicalSpace<A>,target &top::TopologicalSpace<B>,f fn(x source.carrier) target.carrier:
+        $top::is_compact_space(A,source)
+        $top::is_Hausdorff(B,target)
+        $top::is_topologically_continuous(A,B,source,target,f)
+        $bijective(source.carrier,target.carrier,f)
+        =>:
+            exist g fn(y target.carrier) source.carrier st {$top::is_homeomorphism(A,B,source,target,f,g)}
+    release thm top::compact_Hausdorff_bijection_has_continuous_inverse(A,B,source,target,f)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        $top::is_relative_open(A,space,K,{})
+    release thm top::relative_empty_is_open(A,space,K)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        $top::is_relative_open(A,space,K,K)
+    release thm top::relative_carrier_is_open(A,space,K)
+
+claim:
+    ? forall X,U,V set:
+        intersect(intersect(X,U),intersect(X,V))=intersect(X,intersect(U,V))
+    release thm top::intersect_traces(X,U,V)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier),U,V power_set(K):
+        $top::is_relative_open(A,space,K,U)
+        $top::is_relative_open(A,space,K,V)
+        =>:
+            $top::is_relative_open(A,space,K,intersect(U,V))
+    release thm top::relative_intersection_is_open(A,space,K,U,V)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier),family power_set(power_set(K)):
+        family $subset \top::subspace_open_family<A,space,K>
+        =>:
+            family_union(family) $in \top::subspace_open_family<A,space,K>
+    release thm top::subspace_open_family_closed_under_union(A,space,K,family)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        (K,\top::subspace_open_family<A,space,K>) $in &top::TopologicalSpace<K>
+    release thm top::subspace_topology_laws(A,space,K)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K,U power_set(space.carrier):
+        preimage_set(\top::subspace_inclusion<A,space,K>,U)=intersect(K,U)
+    release thm top::subspace_inclusion_preimage(A,space,K,U)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        $top::is_topologically_continuous(K,A,\top::subspace_space<A,space,K>,space,\top::subspace_inclusion<A,space,K>)
+    release thm top::subspace_inclusion_is_continuous(A,space,K)
+
+claim:
+    ? forall A,B set,space &top::TopologicalSpace<A>,target &top::TopologicalSpace<B>,K power_set(space.carrier),f fn(x space.carrier) target.carrier:
+        $top::is_topologically_continuous(A,B,space,target,f)
+        =>:
+            $top::is_topologically_continuous(K,B,\top::subspace_space<A,space,K>,target,compose(f,\top::subspace_inclusion<A,space,K>))
+    release thm top::continuous_map_restricts_to_subspace(A,B,space,target,K,f)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        $top::is_Hausdorff(A,space)
+        =>:
+            $top::is_Hausdorff(K,\top::subspace_space<A,space,K>)
+    release thm top::subspace_of_Hausdorff_is_Hausdorff(A,space,K)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        $top::is_compact_subset(A,space,K)
+        =>:
+            $top::is_compact_space(K,\top::subspace_space<A,space,K>)
+    release thm top::compact_subset_gives_compact_subspace(A,space,K)
+
+claim:
+    ? forall A set,space &top::TopologicalSpace<A>,K power_set(space.carrier):
+        $top::is_compact_space(K,\top::subspace_space<A,space,K>)
+        =>:
+            $top::is_compact_subset(A,space,K)
+    release thm top::compact_subspace_gives_compact_subset(A,space,K)
+
+have points finite_set={0,1,2}
+
+release thm top::discrete_topology_laws(points)
+
+have S &top::TopologicalSpace<points> = (points,power_set(points))
+
+S.carrier=points
+
+S.opens=power_set(points)
+
+power_set(S.carrier)=power_set(points)=S.opens
+
+0 $in S.carrier
+
+1 $in S.carrier
+
+2 $in S.carrier
+
+release thm top::discrete_is_Hausdorff(points,S)
+
+release thm top::finite_subsets_are_compact(points,S,S.carrier)
+
+by def $top::is_compact_space(points,S)
+
+claim:
+    ? forall x S.carrier:
+        x=0 or x=1 or x=2
+    x $in points
+    x $in {0,1,2}
+
+have fn cycle(x S.carrier) S.carrier by cases:
+    case x=0: 1
+    case x=1: 2
+    case x=2: 0
+
+cycle(0)=1
+
+cycle(1)=2
+
+cycle(2)=0
+
+release thm top::maps_from_discrete_are_continuous(points,points,S,S,cycle)
+
+claim:
+    ? forall x,y S.carrier:
+        cycle(x)=cycle(y)
+        =>:
+            x=y
+    x $in {0,1,2}
+    y $in {0,1,2}
+    by cases:
+        ? x=y
+        case x=0:
+            by cases:
+                ? x=y
+                case y=0:
+                    x=y
+                case y=1:
+                    by contra:
+                        ? x=y
+                        1=cycle(0)=cycle(x)=cycle(y)=cycle(1)=2
+                        impossible 1=2
+                case y=2:
+                    by contra:
+                        ? x=y
+                        1=cycle(0)=cycle(x)=cycle(y)=cycle(2)=0
+                        impossible 1=0
+        case x=1:
+            by cases:
+                ? x=y
+                case y=0:
+                    by contra:
+                        ? x=y
+                        2=cycle(1)=cycle(x)=cycle(y)=cycle(0)=1
+                        impossible 2=1
+                case y=1:
+                    x=y
+                case y=2:
+                    by contra:
+                        ? x=y
+                        2=cycle(1)=cycle(x)=cycle(y)=cycle(2)=0
+                        impossible 2=0
+        case x=2:
+            by cases:
+                ? x=y
+                case y=0:
+                    by contra:
+                        ? x=y
+                        0=cycle(2)=cycle(x)=cycle(y)=cycle(0)=1
+                        impossible 0=1
+                case y=1:
+                    by contra:
+                        ? x=y
+                        0=cycle(2)=cycle(x)=cycle(y)=cycle(1)=2
+                        impossible 0=2
+                case y=2:
+                    x=y
+
+by def $injective(S.carrier,S.carrier,cycle)
+
+claim:
+    ? forall y S.carrier:
+        exist x S.carrier st {y=cycle(x)}
+    y $in {0,1,2}
+    by cases:
+        ? exist x S.carrier st {y=cycle(x)}
+        case y=0:
+            witness exist x S.carrier st {y=cycle(x)} from 2
+        case y=1:
+            witness exist x S.carrier st {y=cycle(x)} from 0
+        case y=2:
+            witness exist x S.carrier st {y=cycle(x)} from 1
+
+by def $surjective(S.carrier,S.carrier,cycle)
+
+$bijective(S.carrier,S.carrier,cycle)
+
+release thm top::compact_to_Hausdorff_continuous_map_is_closed(points,points,S,S,cycle)
+
+release thm top::compact_Hausdorff_bijection_has_continuous_inverse(points,points,S,S,cycle)
+
+obtain inverse_cycle from exist g fn(y S.carrier) S.carrier st {$top::is_homeomorphism(points,points,S,S,cycle,g)}
+
+release thm fn_set_member(inverse_cycle,fn(y S.carrier) S.carrier)
+
+inverse_cycle(1)=inverse_cycle(cycle(0))=0
+
+inverse_cycle(2)=inverse_cycle(cycle(1))=1
+
+inverse_cycle(0)=inverse_cycle(cycle(2))=2
+
+$top::is_topologically_continuous(points,points,S,S,inverse_cycle)
+
+have K finite_set={0,2}
+
+K $in power_set(S.carrier)
+
+release thm top::subspace_topology_laws(points,S,K)
+
+have sub &top::TopologicalSpace<K> = (K,\top::subspace_open_family<points,S,K>)
+
+sub.carrier=K
+
+sub.opens=\top::subspace_open_family<points,S,K>
+
+\top::subspace_space<points,S,K> = (K,\top::subspace_open_family<points,S,K>)=sub
+
+\top::subspace_space<points,S,K>.carrier=K
+
+0 $in \top::subspace_space<points,S,K>.carrier
+
+2 $in \top::subspace_space<points,S,K>.carrier
+
+\top::subspace_inclusion<points,S,K>(0)=0
+
+\top::subspace_inclusion<points,S,K>(2)=2
+
+release thm top::subspace_inclusion_is_continuous(points,S,K)
+
+release thm top::continuous_map_restricts_to_subspace(points,points,S,S,K,cycle)
+
+release thm top::subspace_of_Hausdorff_is_Hausdorff(points,S,K)
+
+release thm top::finite_subsets_are_compact(points,S,K)
+
+release thm top::compact_subset_gives_compact_subspace(points,S,K)
+
+release thm top::compact_subspace_gives_compact_subset(points,S,K)
+
+release thm top::compact_subset_of_Hausdorff_is_closed(points,S,K)
+
+by def $top::is_closed(points,S,{0})
+
+release thm top::closed_intersection_of_compact_is_compact(points,S,K,{0})
+
+release thm top::subspace_inclusion_preimage(points,S,K,{0,1})
+
+release thm top::subspace_topology_laws(points,S,{})
+
+have empty_sub &top::TopologicalSpace<{}> = ({},\top::subspace_open_family<points,S,{}>)
+
+empty_sub.carrier={}
+
+release thm top::empty_is_compact(points,S)
+
+release thm top::compact_subset_gives_compact_subspace(points,S,{})
+
+release thm top::subspace_of_Hausdorff_is_Hausdorff(points,S,{})
+
+have fn constant_open(index N) S.opens=S.carrier
+
+release thm top::space_indexed_intersection_empty(points,S,N,constant_open,{})
+
+\top::space_indexed_intersection<points,S,N,constant_open,{}> = S.carrier
+
+release thm top::finite_space_intersection_is_open(points,S,N,constant_open,{})
+
+have selected_indices finite_set={0,4}
+
+selected_indices $in power_set(N)
+
+release thm top::finite_space_intersection_is_open(points,S,N,constant_open,selected_indices)
+
+$is_set(\top::space_indexed_intersection<points,S,N,constant_open,N>)
+
+release thm top::indiscrete_topology_laws(R)
+
+have T &top::TopologicalSpace<R> = (R,union({{}},{R}))
+
+T.carrier=R
+
+T.opens=union({{}},{R})
+
+claim:
+    ? forall U T.opens:
+        U={} or U=T.carrier
+    U $in union({{}},{R})
+    by cases:
+        ? U={} or U=T.carrier
+        case U $in {{}}:
+            U={}
+        case U $in {R}:
+            U=R=T.carrier
+
+by def $top::has_only_trivial_opens(R,T)
+
+release thm top::trivial_open_space_is_compact(R,T)
+
+release thm top::singleton_is_compact(R,T,0)
+
+by contra:
+    ? not $top::is_closed(R,T,{0})
+    set_minus(T.carrier,{0}) $in T.opens
+    set_minus(T.carrier,{0}) $in union({{}},{R})
+    1 $in T.carrier
+    not 1 $in {0}
+    1 $in set_minus(T.carrier,{0})
+    by cases:
+        ? set_minus(T.carrier,{0})={}
+        case set_minus(T.carrier,{0}) $in {{}}:
+            set_minus(T.carrier,{0})={}
+        case set_minus(T.carrier,{0}) $in {R}:
+            by contra:
+                ? set_minus(T.carrier,{0})={}
+                set_minus(T.carrier,{0})=R
+                0 $in set_minus(T.carrier,{0})
+                not 0 $in {0}
+                impossible 0 $in {0}
+    1 $in set_minus(T.carrier,{0})
+    1 $in {}
+    impossible 1 $in {}
+
+release thm top::trivial_opens_with_distinct_points_not_T0(R,T,0,1)
+
+release thm top::discrete_topology_laws({})
+
+have E &top::TopologicalSpace<{}> = ({},power_set({}))
+
+E.carrier={}
+
+E.opens=power_set({})
+
+power_set(E.carrier)=power_set({})=E.opens
+
+release thm top::discrete_is_Hausdorff({},E)
+
+release thm top::finite_subsets_are_compact({},E,E.carrier)
+
+by def $top::is_compact_space({},E)
+
+have fn empty_map(x E.carrier) E.carrier=x
+
+claim:
+    ? forall x,y E.carrier:
+        empty_map(x)=empty_map(y)
+        =>:
+            x=y
+    x=empty_map(x)=empty_map(y)=y
+
+by def $injective(E.carrier,E.carrier,empty_map)
+
+claim:
+    ? forall y E.carrier:
+        exist x E.carrier st {y=empty_map(x)}
+    empty_map(y)=y
+    witness exist x E.carrier st {y=empty_map(x)} from y
+
+by def $surjective(E.carrier,E.carrier,empty_map)
+
+$bijective(E.carrier,E.carrier,empty_map)
+
+release thm top::maps_from_discrete_are_continuous({},{},E,E,empty_map)
+
+release thm top::compact_Hausdorff_bijection_has_continuous_inverse({},{},E,E,empty_map)

@@ -1,3 +1,4 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::StructuralMembershipReason;
 use super::*;
 use crate::ast::fact::Fact;
 use crate::ast::stmt::Stmt;
@@ -118,26 +119,22 @@ fn real_arithmetic_constructor_closure_uses_parent_wd_for_tuple_function_leaves(
         !result.is_failed(),
         "R closure consumes parent WD, without replaying it below its ceiling"
     );
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(
-            InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(closure),
-        ),
-    ) = &atomic_success(&result).searched_proof
+    let AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(closure) =
+        &atomic_success(&result).searched_proof
     else {
-        panic!("real constructor route")
+        panic!("shared membership route")
     };
-    let RealArithmeticConstructorTree::Sub { left, .. } = &closure.constructor_tree else {
+    let StructuralMembershipReason::Sub { left, .. } = &closure.reason else {
         panic!("difference tree")
     };
-    let RealArithmeticConstructorTree::Leaf(terminal) = left.as_ref() else {
-        panic!("function return terminal")
+    let StructuralMembershipReason::FunctionReturn { proof, .. } = &left.reason else {
+        panic!("function return leaf")
     };
-    let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(property) =
-        terminal.searched_proof.as_ref()
+    let InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(returned) = proof.as_ref()
     else {
-        panic!("preserved signature route")
+        panic!("return signature")
     };
-    assert_eq!(property.cite_property_fact_id(), signature_fact_id);
+    assert_eq!(Some(returned.cite_property_fact_id), signature_fact_id);
     assert!(
         rt.lookup_known_atomic_fact(atomic_leaf).is_none(),
         "carrier search publishes no terminal membership"
@@ -146,13 +143,7 @@ fn real_arithmetic_constructor_closure_uses_parent_wd_for_tuple_function_leaves(
     assert!(!executed.is_failed());
     let detail = crate::json_output::project_stmt_detailed(&executed, &rt);
     let mut terminal_detail = &detail;
-    for key in [
-        "verify",
-        "searched_proof",
-        "constructor_tree",
-        "left",
-        "proof",
-    ] {
+    for key in ["verify", "searched_proof", "left"] {
         let crate::knowledge_base::JsonValue::Object(object) = terminal_detail else {
             panic!("JSON object at {key}")
         };
@@ -166,13 +157,13 @@ fn real_arithmetic_constructor_closure_uses_parent_wd_for_tuple_function_leaves(
         "WD remains on the parent verification stage"
     );
     assert_eq!(
-        object.get("fact"),
+        object.get("requirement"),
         Some(&crate::knowledge_base::JsonValue::String(
             "f((x, point(2))) $in R".into()
         ))
     );
     assert!(object
-        .get("searched_proof")
+        .get("return_evidence")
         .unwrap()
         .stringify()
         .contains("cite_property_fact_id"));
@@ -195,67 +186,49 @@ fn real_arithmetic_constructor_closure_retains_permissions_tree_and_citations() 
             .success
     );
     let goal = fact(&mut rt, "f(x)^2 / 4 $in R");
-    for level in [Direct, KnownSpecialProperty] {
+    for (level, accepted) in [(Direct, false), (KnownSpecialProperty, true)] {
         let Fact::AtomicFact(atomic) = &goal else {
-            panic!("atomic carrier goal")
+            panic!("atomic")
         };
-        assert!(
+        assert_eq!(
             rt.search_atomic_except_equality_fact_proof(atomic, VerifyState::new(level))
                 .unwrap()
-                .is_none(),
-            "truth search must retain its {level:?} ceiling"
+                .is_some(),
+            accepted
         );
-        assert!(
-            rt.verify_fact(&goal, VerifyState::new(level))
+        assert_eq!(
+            !rt.verify_fact(&goal, VerifyState::new(level))
                 .unwrap()
                 .is_failed(),
-            "must not grant constructor closure at {level:?}"
+            accepted
         );
     }
     let result = rt
-        .verify_fact(&goal, VerifyState::new(BuiltinRule))
+        .verify_fact(&goal, VerifyState::new(KnownSpecialProperty))
         .unwrap();
-    let proof = atomic_success(&result);
-    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(
-            InFactSearchProofByBuiltinRule::RealArithmeticConstructorClosure(closure),
-        ),
-    ) = &proof.searched_proof
+    let AtomicExceptEqualityFactSearchedProof::ByStructuralMembership(closure) =
+        &atomic_success(&result).searched_proof
     else {
-        panic!("dedicated builtin evidence")
+        panic!("shared membership evidence")
     };
-    let RealArithmeticConstructorTree::Div { left, right } = &closure.constructor_tree else {
+    let StructuralMembershipReason::Div { left, right } = &closure.reason else {
         panic!("division")
     };
-    let RealArithmeticConstructorTree::IntegerPow {
-        base,
-        exponent_in_integer_proof,
-    } = left.as_ref()
-    else {
-        panic!("integer power")
+    let StructuralMembershipReason::Pow { base, exponent } = &left.reason else {
+        panic!("power")
     };
-    assert_eq!(
-        format!(
-            "{} $in {}",
-            exponent_in_integer_proof.fact.element.readable_string(),
-            exponent_in_integer_proof.fact.set.readable_string()
-        ),
-        "2 $in Z"
-    );
+    assert_eq!(exponent.element.readable_string(), "2");
+    assert_eq!(exponent.set, StandardSet::Z);
     assert!(matches!(
-        right.as_ref(),
-        RealArithmeticConstructorTree::Leaf(_)
+        right.reason,
+        StructuralMembershipReason::Closed(_)
     ));
-    let RealArithmeticConstructorTree::Leaf(base_proof) = base.as_ref() else {
-        panic!("function return leaf")
+    let StructuralMembershipReason::FunctionReturn { proof, .. } = &base.reason else {
+        panic!("function-return leaf")
     };
-    let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
-        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
-            InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(codomain),
-        ),
-    ) = base_proof.searched_proof.as_ref()
+    let InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(codomain) = proof.as_ref()
     else {
-        panic!("original function-return route")
+        panic!("signature")
     };
     assert!(!codomain.signature_uses.is_empty());
     let independent = fact(&mut rt, "f(x) $in R");
@@ -276,10 +249,10 @@ fn real_arithmetic_constructor_closure_retains_permissions_tree_and_citations() 
     assert!(!executed.is_failed());
     let detail = crate::json_output::project_stmt_detailed(&executed, &rt).stringify();
     for text in [
-        "RealArithmeticConstructorClosure",
-        "constructor_tree",
-        "integer_pow",
-        "exponent_in_integer_proof",
+        "by_structural_membership",
+        "function_return",
+        "pow",
+        "exponent",
         "FnApplicationInCodomain",
         "cite_property_fact_id",
     ] {

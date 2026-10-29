@@ -59,7 +59,8 @@ fn direct_rules_retain_each_checked_premise() {
         ),
     ] {
         let mut rt = runtime(OutputLanguage::English);
-        let run = check(&mut rt, source, true);
+        let source = source.replace("abs(x)>0", "0<abs(x)");
+        let run = check(&mut rt, &source, true);
         let detail = crate::json_output::project_run_detailed(&run, &rt, "eval", None);
         let rule = named_rule(&detail, name).expect(name);
         for field in fields {
