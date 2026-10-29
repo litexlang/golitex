@@ -10,6 +10,7 @@ mod preimage;
 pub mod result;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_strategy;
 mod search_field_arithmetic_carrier_strategy;
+mod search_negated_order_strategy;
 pub mod set_membership;
 pub mod structural_order_strict;
 pub mod structural_order_weak;

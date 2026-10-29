@@ -25,6 +25,11 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_negated_order_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NegatedOrder(proof),
+            ));
+        }
         if let Some(proof) = self.search_multivariable_strategy(fact, ctx)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(proof),

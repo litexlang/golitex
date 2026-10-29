@@ -15,6 +15,71 @@ const EXISTS: &str =
 const SELECTED: &str =
     include_str!("../../../lean/examples/function_limit_at_selected_by_theorem/statement.lit");
 
+const CONSTANT: &str =
+    include_str!("../../../lean/examples/constant_function_limit_at_by_theorem/statement.lit");
+
+#[test]
+fn explicit_constant_limits_replay_all_five_approaches() {
+    for source in [
+        CONSTANT,
+        include_str!(
+            "../../../lean/examples/constant_function_limit_left_by_theorem/statement.lit"
+        ),
+        include_str!(
+            "../../../lean/examples/constant_function_limit_right_by_theorem/statement.lit"
+        ),
+        include_str!(
+            "../../../lean/examples/constant_function_limit_pos_inf_by_theorem/statement.lit"
+        ),
+        include_str!(
+            "../../../lean/examples/constant_function_limit_neg_inf_by_theorem/statement.lit"
+        ),
+    ] {
+        let (run, compiler) = super::execute(source);
+        assert!(compiler
+            .compile_run(&run, "constant_limit")
+            .unwrap()
+            .contains("FunctionLimitConstant"));
+    }
+}
+
+#[test]
+fn explicit_constant_limit_rejects_missing_or_changed_accumulation() {
+    for missing in [false, true] {
+        let (mut run, compiler) = super::execute(CONSTANT);
+        let p = invocation(&mut run);
+        if missing {
+            p.dom_proofs.remove(5);
+        } else {
+            let Fact::ForallFact(f) = &mut p.builtin.as_mut().unwrap().requirements[5] else {
+                panic!("accumulation")
+            };
+            f.typed_parameters.groups[0].param_type =
+                ParamType::Obj(Obj::StandardSet(StandardSet::R));
+        }
+        compiler
+            .compile_run(&run, "bad_constant_approach")
+            .expect_err("original nontrivial approach required");
+    }
+}
+
+#[test]
+fn explicit_constant_limit_rejects_a_different_pointwise_value() {
+    let (mut run, compiler) = super::execute(CONSTANT);
+    let Fact::ForallFact(f) = &mut invocation(&mut run).builtin.as_mut().unwrap().requirements[6]
+    else {
+        panic!("pointwise equation")
+    };
+    let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(e)) = &mut f.then_facts[0]
+    else {
+        panic!("equation")
+    };
+    e.right = Obj::StandardSet(StandardSet::R);
+    compiler
+        .compile_run(&run, "wrong_constant_value")
+        .expect_err("exact original pointwise value required");
+}
+
 pub(super) fn step(run: &mut RunLitexCodeResult) -> &mut ExecStmtResult {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
         p,

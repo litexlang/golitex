@@ -1,0 +1,68 @@
+# Tracer: integer/product bounds consumed by a negated comparison.
+# Before (rejected, with every preceding proof-body step accepted):
+# claim:
+#     ? forall n N+:
+#         7*n > 200
+#         =>:
+#             n >= 29
+#     by contra:
+#         ? n >= 29
+#         n < 29
+#         n <= 28
+#         7*n <= 7*28
+#         7*28 = 196
+#         7*n <= 196
+#         impossible 7*n > 200
+# Former behavior: negated_impossible, obligation `not (7 * n) > 200`.
+# Now: the same source checks the positive complement through shared verify.
+claim:
+    ? forall n N+:
+        7*n > 200
+        =>:
+            n >= 29
+    by contra:
+        ? n >= 29
+        n < 29
+        n <= 28
+        7*n <= 7*28
+        7*28 = 196
+        7*n <= 196
+        impossible 7*n > 200
+
+claim:
+    ? forall sides N+, omitted R:
+        0 < omitted
+        omitted < 180
+        180*(sides-2) = 1070 + omitted
+        =>:
+            sides = 8
+    180*(sides-2) > 1070
+    by contra:
+        ? 8 <= sides
+        sides < 8
+        sides <= 7
+        sides - 2 <= 5
+        180*(sides-2) <= 180*5
+        180*5 = 900
+        180*(sides-2) <= 900
+        900 < 1070
+        impossible 180*(sides-2) > 1070
+    1070 + omitted < 1070 + 180
+    1070 + 180 = 1250
+    1070 + omitted < 1250
+    180*(sides-2) < 1250
+    by contra:
+        ? sides <= 8
+        sides > 8
+        9 <= sides
+        sides - 2 >= 7
+        180*(sides-2) >= 180*7
+        180*7 = 1260
+        180*(sides-2) >= 1260
+        impossible 180*(sides-2) < 1250
+    sides = 8
+
+# Boundary: <= alone cannot disprove >= at the same endpoint; no order on C.
+# Executable negative controls: tests/unit/execute/negated_order/tests.rs.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_strategy/contra_integer_product_order.lit
+# Implementation: search_atomic_except_equality_fact_proof_by_builtin_strategy/search_negated_order_strategy.rs

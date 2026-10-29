@@ -1,0 +1,9 @@
+release obj def nt::chinese_remainder_residue
+
+by def $nt::is_congruent_mod(8,2,3)
+
+by def $nt::is_congruent_mod(8,3,5)
+
+release thm nt::chinese_remainder_residue_of_solution(2,3,3,5,8)
+
+nt::chinese_remainder_residue(2,3,3,5)=23

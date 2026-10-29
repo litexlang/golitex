@@ -39,6 +39,7 @@ mod compile_family_intersection_member;
 mod compile_finite_function_membership;
 mod compile_function_domain;
 mod compile_function_limit;
+mod compile_function_limit_constant;
 mod compile_function_limit_definition;
 mod compile_function_template;
 mod compile_have_fn_by_exist_result;

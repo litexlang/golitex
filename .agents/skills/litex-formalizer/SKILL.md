@@ -14,15 +14,24 @@ Then follow `task-template.md` for the task layout and the working rules.
 
 ## Working rules
 
-1. Write one declaration or fact, run the checker, then write the next one.
+1. Work incrementally. Append one declaration (or a few related facts) to
+   `solution.lit`, then run `./step`. It keeps a live session and checks only the
+   new statements, so it costs milliseconds and prints one line. Never re-run a
+   whole-file check after every line: that re-checks and re-prints the entire
+   file, which is the main way a Litex session becomes expensive.
 2. A rejected line reports `why_failed`. Add the missing fact before it. Never
-   rewrite an accepted line.
+   rewrite an accepted line. If `./step` prints `RESYNC`, you rewrote earlier
+   lines and the whole file was re-checked; prefer appending.
+3. `./check solution.lit` is the whole-file strict gate: run it once before you
+   report success.
 3. State the goal exactly as given. Do not weaken, rename or reorder the
    statement lines; if they look unprovable, say so instead of changing them.
 4. Everything you use must be declared in the file: objects, functions,
    predicates, lemmas. There is no import.
-5. Success is `litex -lang en -strict -f <file>` exiting 0 with `"errors": []`,
-   not the absence of an obvious error.
+5. Batch a few related statements per `./step` call when they are independent;
+   the checker reports the first failing statement.
+6. Success is `./check solution.lit` exiting 0 with `"errors": []`, not the
+   absence of an obvious error.
 
 ## What to report back
 

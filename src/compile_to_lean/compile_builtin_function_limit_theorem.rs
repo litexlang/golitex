@@ -18,6 +18,7 @@ enum Rule {
     Unique,
     Exists,
     Selected,
+    Constant,
 }
 
 impl LitexToLeanCompiler {
@@ -48,6 +49,11 @@ impl LitexToLeanCompiler {
             | FnLimitRightSelected
             | FnLimitPosInfSelected
             | FnLimitNegInfSelected => Rule::Selected,
+            FnLimitAtConstant
+            | FnLimitLeftConstant
+            | FnLimitRightConstant
+            | FnLimitPosInfConstant
+            | FnLimitNegInfConstant => Rule::Constant,
             _ => return Err(invalid("Id")),
         };
         let finite = matches!(
@@ -61,15 +67,24 @@ impl LitexToLeanCompiler {
                 | FnLimitRightUnique
                 | FnLimitRightExists
                 | FnLimitRightSelected
+                | FnLimitAtConstant
+                | FnLimitLeftConstant
+                | FnLimitRightConstant
         );
         let offset = if finite { 2 } else { 1 };
         let arity = offset
             + match rule {
                 Rule::Unique => 2,
-                Rule::Exists => 1,
+                Rule::Exists | Rule::Constant => 1,
                 Rule::Selected => 0,
             };
-        let count = 3 + usize::from(finite) + if matches!(rule, Rule::Unique) { 2 } else { 1 };
+        let count = 3
+            + usize::from(finite)
+            + match rule {
+                Rule::Unique => 2,
+                Rule::Constant => 3,
+                _ => 1,
+            };
         if !matches!(derivation, TheoremDerivationProof::NativeSchema)
             || !type_proofs.is_empty()
             || !type_stores.is_empty()
@@ -86,21 +101,22 @@ impl LitexToLeanCompiler {
             return Err(invalid("Stages"));
         }
         let approach = match builtin.theorem {
-            FnLimitAtUnique | FnLimitAtExists | FnLimitAtSelected => {
+            FnLimitAtUnique | FnLimitAtExists | FnLimitAtSelected | FnLimitAtConstant => {
                 LimitApproach::AtPoint(args[1].clone().into())
             }
-            FnLimitLeftUnique | FnLimitLeftExists | FnLimitLeftSelected => {
+            FnLimitLeftUnique | FnLimitLeftExists | FnLimitLeftSelected | FnLimitLeftConstant => {
                 LimitApproach::FromLeft(args[1].clone().into())
             }
-            FnLimitRightUnique | FnLimitRightExists | FnLimitRightSelected => {
-                LimitApproach::FromRight(args[1].clone().into())
-            }
-            FnLimitPosInfUnique | FnLimitPosInfExists | FnLimitPosInfSelected => {
-                LimitApproach::AtPositiveInfinity
-            }
-            FnLimitNegInfUnique | FnLimitNegInfExists | FnLimitNegInfSelected => {
-                LimitApproach::AtNegativeInfinity
-            }
+            FnLimitRightUnique | FnLimitRightExists | FnLimitRightSelected
+            | FnLimitRightConstant => LimitApproach::FromRight(args[1].clone().into()),
+            FnLimitPosInfUnique
+            | FnLimitPosInfExists
+            | FnLimitPosInfSelected
+            | FnLimitPosInfConstant => LimitApproach::AtPositiveInfinity,
+            FnLimitNegInfUnique
+            | FnLimitNegInfExists
+            | FnLimitNegInfSelected
+            | FnLimitNegInfConstant => LimitApproach::AtNegativeInfinity,
             _ => return Err(invalid("Id")),
         };
         let req = &builtin.requirements;
@@ -129,11 +145,13 @@ impl LitexToLeanCompiler {
             return Err(invalid("RealDomain"));
         }
         let candidate_start = 3 + usize::from(finite);
-        for (fact, value) in req[candidate_start..].iter().zip(&args[offset..]) {
-            if !matches!(fact, Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f))
+        if !matches!(rule, Rule::Constant) {
+            for (fact, value) in req[candidate_start..].iter().zip(&args[offset..]) {
+                if !matches!(fact, Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f))
                 if f.function.ir() == args[0].ir() && f.approach == approach && f.value.ir() == value.ir())
-            {
-                return Err(invalid("Candidate"));
+                {
+                    return Err(invalid("Candidate"));
+                }
             }
         }
         let goal = &builtin.conclusions[0];
@@ -169,6 +187,22 @@ impl LitexToLeanCompiler {
                     return Err(invalid("SelectedSubject"));
                 }
                 Some(&f.value)
+            }
+            Rule::Constant => {
+                let Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f)) = goal else {
+                    return Err(invalid("ConstantConclusion"));
+                };
+                if f.function.ir() != args[0].ir()
+                    || f.approach != approach
+                    || f.value.ir() != args[offset].ir()
+                {
+                    return Err(invalid("ConstantSubject"));
+                }
+                super::compile_function_limit_constant::validate_constant_clauses(
+                    f,
+                    &req[candidate_start..],
+                )?;
+                None
             }
         };
         let mut definitions = Vec::new();
@@ -214,8 +248,20 @@ impl LitexToLeanCompiler {
             Rule::Unique => "CandidatesEqual",
             Rule::Exists => "Exists",
             Rule::Selected => "Selected",
+            Rule::Constant => "Constant",
         };
-        let law = if matches!(rule, Rule::Selected) {
+        let law = if matches!(rule, Rule::Constant) {
+            let Fact::AtomicFact(AtomicFact::HasFunctionLimitFact(f)) = goal else {
+                return Err(invalid("ConstantConclusion"));
+            };
+            self.compile_constant_function_limit(
+                f,
+                wd,
+                &req[candidate_start..],
+                &references,
+                &scope,
+            )?
+        } else if matches!(rule, Rule::Selected) {
             format!(
                 "Litex.{}FunctionLimitSelected {}",
                 if finite { "finite" } else { "infinite" },

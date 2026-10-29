@@ -1549,11 +1549,18 @@ and [guarded domains](../lean/examples/function_limit_neg_infinity_guarded_defin
 The [constant-function example](../lean/examples/constant_function_limit_at_infinity/)
 proves the two definition clauses and then uses the selected limit.
 Explicit function-limit uniqueness, existence and selection calls have their own
-compiler routes: `fn_limit_{at,left,right,pos_inf,neg_inf}_{unique,exists,selected}`.
+compiler routes: `fn_limit_{at,left,right,pos_inf,neg_inf}_{unique,exists,selected,constant}`.
 Each invocation checks the reserved ID, original arguments, complete real-domain
 requirements, ordered proofs and returned fact before citing the corresponding
 Core theorem. See [an explicit uniqueness call](../lean/examples/function_limit_at_unique_by_theorem/)
 and [an explicit existence release](../lean/examples/function_limit_at_exists_by_theorem/).
+The constant-function calls retain the recorded accumulation clause and
+pointwise equation on the exact domain; see
+[a constant limit](../lean/examples/constant_function_limit_at_by_theorem/).
+Sequence calls also support `seq_limit_from_epsilon`, `seq_limit_tail`,
+`seq_limit_unique`, `seq_limit_exists` and `seq_limit_selected`; see
+[epsilon introduction](../lean/examples/sequence_limit_from_epsilon_by_theorem/)
+and [tail extraction](../lean/examples/sequence_limit_tail_by_theorem/).
 Other explicit limit laws remain outside these routes.
 
 Exact rational logarithms also compile when Litex evaluates them:

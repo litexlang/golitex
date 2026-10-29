@@ -175,6 +175,8 @@
 .lr-proof-rule-message { margin:6px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
 .lr-proof-rule-result { margin-top:9px; }
 .lr-forall-application,.lr-known-application,.lr-strategy-application { margin-top:0; padding-top:0; border-top:0; }
+.lr-proof-definition-source { margin:6px 0; }
+.lr-definition-expansion+.lr-definition-expansion { margin-top:10px; padding-top:10px; border-top:1px solid var(--reading-line); }
 .lr-proof-matches,.lr-instantiated-premises { margin:10px 0; }
 .lr-proof-matches>summary,.lr-proof-match>summary { cursor:pointer; color:var(--reading-accent); }
 .lr-proof-match { padding:6px 0; }

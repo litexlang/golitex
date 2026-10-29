@@ -1,0 +1,10 @@
+# A constant function has the stated pos_inf limit on an accumulating domain.
+claim:
+    ? forall f fn(x R) R, L R:
+        forall T R:
+            exist x R st {T < x}
+        forall x R:
+            f(x)=L
+        =>:
+            $has_limit_pos_inf(f,L)
+    by thm fn_limit_pos_inf_constant(f,L) => $has_limit_pos_inf(f,L)

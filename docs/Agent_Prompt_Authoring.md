@@ -115,6 +115,29 @@ when project-local files are trusted: run `pi -a`, or pass
 `--skill .agents/skills/litex-formalizer` explicitly. Without either, the skill
 is not advertised (verified by inspecting the system prompt).
 
+## Incremental checking is the biggest single lever
+
+A Litex file check (`litex -f`) is not incremental: it re-parses and re-checks
+the whole file and echoes every declaration. Measured on a 155-line artifact,
+one successful check emits **9.4 KB** (97% of it the echoed declarations) and
+takes about **1 s**. A live session (`litex -session`, driven by the `./step`
+helper that ships with the skill) emits **about 0.5 KB per statement** and takes
+**2–3 ms**, because accepted statements stay in the environment.
+
+That difference multiplies: 80 checks against a whole file put roughly 750 KB of
+echoed declarations into the conversation, and the model re-reads that context on
+every later turn. The incremental loop puts in roughly 40 KB.
+
+So the prompt should:
+
+* name `./step` as the default checker and `./check solution.lit` as the final
+  whole-file gate;
+* say "append, then step; never re-check the whole file after every line";
+* say "if `./step` prints `RESYNC`, you rewrote earlier lines and the whole file
+  was re-checked", so the agent prefers appending;
+* allow a few independent statements per step, since the report names the first
+  failing statement.
+
 ## Ten rules
 
 1. **Pin the goal verbatim.** Name the declaration; say it must not change; check

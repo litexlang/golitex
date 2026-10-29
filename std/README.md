@@ -17,6 +17,7 @@ import; these modules supply reusable source mathematics above them.
 | Metric spaces | [metric](metric/README.md): bundled distances, balls, reverse triangle and separation, Lipschitz maps and metric continuity; the standard real-line instance. |
 | General topology | [topology](topology/README.md): open-set spaces, continuity, homeomorphisms, connectedness, separation and compactness. |
 | Ordered real series | [real_series](real_series/README.md): partial sums, convergence, Cauchy, comparison, geometric and telescoping sums, ratio/root and alternating tests with remainder estimates. |
+| Numerical analysis | [numerical_analysis](numerical_analysis/README.md): general positive square-root Newton updates, exact identities, iterate error bounds and convergence for any positive seed. |
 | Real integration | [real_integral_laws](real_integral_laws/README.md): absolute-integral and integral-difference bounds, with exact orientation and integrability hypotheses. |
 | Multivariable analysis | [real_multivariable](real_multivariable/README.md): coordinate paths, local scalar/vector relations, directional and higher derivatives, cross products and ordered rectangular iterated integrals. |
 | Regularity and higher derivatives | [real_regularity](real_regularity/README.md), [real_regularity_laws](real_regularity_laws/README.md), [real_higher_order_laws](real_higher_order_laws/README.md). |

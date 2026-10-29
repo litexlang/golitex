@@ -262,3 +262,266 @@ thm congruence_power_remainder:
     a % m $in Z
     release thm congruence_remainder(a,m)
     release thm congruence_power(a,a % m,m,n)
+
+# Bezout existence, coprime inverses and the two-modulus CRT.
+
+thm bezout_positive_modulus:
+    ? forall a Z,m N+:
+        exist u,v Z st {gcd(a,m)=a*u+m*v}
+    prop has_bezout_coefficients_for_modulus(d N+):
+        forall x Z:
+            exist u,v Z st {gcd(x,d)=x*u+d*v}
+    by strong_induc d from 1:
+        ? $has_bezout_coefficients_for_modulus(d)
+        ? from d=1:
+            claim:
+                ? forall x Z:
+                    exist u,v Z st {gcd(x,1)=x*u+1*v}
+                release thm gcd_add_multiple(x,1,-x)
+                x+(-x)*1=0
+                gcd(x,1)=gcd(x+(-x)*1,1)=gcd(0,1)=1
+                witness exist u,v Z st {gcd(x,1)=x*u+1*v} from 0,1
+            by def $has_bezout_coefficients_for_modulus(1)
+        ? strong_induc:
+            d+1 $in N+
+            claim:
+                ? forall x Z:
+                    exist u,v Z st {gcd(x,d+1)=x*u+(d+1)*v}
+                have r N = x%(d+1)
+                have q Z = quot(x,d+1)
+                0<=r<d+1
+                x=(d+1)*quot(x,d+1)+x%(d+1)=(d+1)*q+r
+                r=(d+1)*q+r-(d+1)*q=x-(d+1)*q
+                release thm gcd_euclidean_step(x,d+1)
+                gcd(x,d+1)=gcd(d+1,x%(d+1))=gcd(d+1,r)
+                by cases:
+                    ? exist u,v Z st {gcd(x,d+1)=x*u+(d+1)*v}
+                    case r=0:
+                        gcd(d+1,r)=gcd(d+1,0)=abs(d+1)=d+1
+                        witness exist u,v Z st {gcd(x,d+1)=x*u+(d+1)*v} from 0,1
+                    case r!=0:
+                        by contra:
+                            ? r>0
+                            r<=0
+                            r=0
+                            impossible r!=0
+                        r $in N+
+                        r<=d
+                        $has_bezout_coefficients_for_modulus(r)
+                        obtain u,v from exist u,v Z st {gcd(d+1,r)=(d+1)*u+r*v}
+                        gcd(x,d+1)=gcd(d+1,r)=(d+1)*u+r*v=(d+1)*u+(x-(d+1)*q)*v=x*v+(d+1)*(u-q*v)
+                        witness exist left,right Z st {gcd(x,d+1)=x*left+(d+1)*right} from v,u-q*v
+            by def $has_bezout_coefficients_for_modulus(d+1)
+    $has_bezout_coefficients_for_modulus(m)
+
+thm bezout_identity:
+    ? forall a,b Z:
+        a!=0 or b!=0
+        =>:
+            exist u,v Z st {gcd(a,b)=a*u+b*v}
+    by cases:
+        ? exist u,v Z st {gcd(a,b)=a*u+b*v}
+        case b>0:
+            b $in N+
+            release thm bezout_positive_modulus(a,b)
+        case b=0:
+            by contra:
+                ? a!=0
+                impossible a!=0 or b!=0
+            gcd(a,b)=gcd(a,0)=abs(a)
+            by cases:
+                ? exist u,v Z st {gcd(a,b)=a*u+b*v}
+                case a>=0:
+                    abs(a)=a
+                    witness exist u,v Z st {gcd(a,b)=a*u+b*v} from 1,0
+                case a<0:
+                    abs(a)=-a
+                    witness exist u,v Z st {gcd(a,b)=a*u+b*v} from -1,0
+        case b<0:
+            -b > 0
+            -b $in Z
+            -b $in N+
+            release thm bezout_positive_modulus(a,-b)
+            obtain u,v from exist u,v Z st {gcd(a,-b)=a*u+(-b)*v}
+            gcd(a,b)=gcd(b,a)=gcd(-b,a)=gcd(a,-b)=a*u+(-b)*v=a*u+b*(-v)
+            witness exist left,right Z st {gcd(a,b)=a*left+b*right} from u,-v
+
+thm coprime_modular_inverse_exists:
+    ? forall a Z,m N+:
+        gcd(a,m)=1
+        =>:
+            exist u Z st {$is_modular_inverse(a,u,m)}
+    release thm bezout_positive_modulus(a,m)
+    obtain u,v from exist u,v Z st {gcd(a,m)=a*u+m*v}
+    a*u+m*v=gcd(a,m)=1
+    release thm modular_inverse_from_bezout(a,u,v,m)
+    witness exist inverse Z st {$is_modular_inverse(a,inverse,m)} from u
+
+thm linear_equation_from_gcd:
+    ? forall a,b,c Z:
+        a!=0 or b!=0
+        $dvd(c,gcd(a,b))
+        =>:
+            exist x,y Z st {a*x+b*y=c}
+    release thm bezout_identity(a,b)
+    obtain u,v from exist u,v Z st {gcd(a,b)=a*u+b*v}
+    a*u+b*v=gcd(a,b)
+    release thm linear_equation_from_bezout(a,b,u,v,c,gcd(a,b))
+
+thm coprime_common_multiple:
+    ? forall a Z,m,n N+:
+        gcd(m,n)=1
+        $dvd(a,m)
+        $dvd(a,n)
+        =>:
+            exist k Z st {a=k*m*n}
+    release thm bezout_positive_modulus(m,n)
+    obtain u,v from exist u,v Z st {gcd(m,n)=m*u+n*v}
+    m*u+n*v=gcd(m,n)=1
+    obtain left from exist left Z st {a=left*m}
+    obtain right from exist right Z st {a=right*n}
+    a*m*u=(right*n)*m*u
+    a*n*v=(left*m)*n*v
+    a=a*(m*u+n*v)=a*m*u+a*n*v=(right*n)*m*u+(left*m)*n*v=(right*u+left*v)*(m*n)
+    witness exist k Z st {a=k*m*n} from right*u+left*v
+
+thm chinese_remainder_exists:
+    ? forall a,b Z,m,n N+:
+        gcd(m,n)=1
+        =>:
+            exist x Z st {$is_congruent_mod(x,a,m),$is_congruent_mod(x,b,n)}
+    release thm coprime_modular_inverse_exists(m,n)
+    obtain u from exist u Z st {$is_modular_inverse(m,u,n)}
+    $is_congruent_mod(m*u,1,n)
+    $dvd(m*u-1,n)
+    obtain v from exist v Z st {m*u-1=v*n}
+    have x Z=a+m*u*(b-a)
+    x-a=a+m*u*(b-a)-a=m*u*(b-a)=(u*(b-a))*m
+    $dvd(x-a,m)
+    by def $is_congruent_mod(x,a,m)
+    x-b=a+m*u*(b-a)-b=(m*u-1)*(b-a)=(v*n)*(b-a)=(v*(b-a))*n
+    $dvd(x-b,n)
+    by def $is_congruent_mod(x,b,n)
+    witness exist result Z st {$is_congruent_mod(result,a,m),$is_congruent_mod(result,b,n)} from x
+
+thm chinese_remainder_unique:
+    ? forall a,b,x,y Z,m,n N+:
+        gcd(m,n)=1
+        $is_congruent_mod(x,a,m)
+        $is_congruent_mod(x,b,n)
+        $is_congruent_mod(y,a,m)
+        $is_congruent_mod(y,b,n)
+        =>:
+            exist k Z st {x-y=k*m*n}
+    release thm congruence_symmetric(y,a,m)
+    release thm congruence_transitive(x,a,y,m)
+    release thm congruence_symmetric(y,b,n)
+    release thm congruence_transitive(x,b,y,n)
+    $dvd(x-y,m)
+    $dvd(x-y,n)
+    release thm coprime_common_multiple(x-y,m,n)
+
+thm chinese_remainder_bounded_exists:
+    ? forall a,b Z,m,n N+:
+        gcd(m,n)=1
+        =>:
+            exist r N st {r<m*n,$is_congruent_mod(r,a,m),$is_congruent_mod(r,b,n)}
+    release thm chinese_remainder_exists(a,b,m,n)
+    obtain x from exist x Z st {$is_congruent_mod(x,a,m),$is_congruent_mod(x,b,n)}
+    m*n>0
+    m*n $in Z
+    m*n $in N+
+    have modulus N+=m*n
+    have r N=x%modulus
+    r<modulus=m*n
+    release thm congruence_remainder(x,modulus)
+    modulus=m*n=n*m
+    $dvd(modulus,m)
+    $dvd(modulus,n)
+    release thm congruence_modulus_divisor(x,r,m,modulus)
+    release thm congruence_modulus_divisor(x,r,n,modulus)
+    release thm congruence_symmetric(x,r,m)
+    release thm congruence_symmetric(x,r,n)
+    release thm congruence_transitive(r,x,a,m)
+    release thm congruence_transitive(r,x,b,n)
+    witness exist result N st {result<m*n,$is_congruent_mod(result,a,m),$is_congruent_mod(result,b,n)} from r
+
+thm chinese_remainder_bounded_unique:
+    ? forall a,b Z,m,n N+,x,y N:
+        gcd(m,n)=1
+        x<m*n
+        y<m*n
+        $is_congruent_mod(x,a,m)
+        $is_congruent_mod(x,b,n)
+        $is_congruent_mod(y,a,m)
+        $is_congruent_mod(y,b,n)
+        =>:
+            x=y
+    release thm chinese_remainder_unique(a,b,x,y,m,n)
+    obtain k from exist k Z st {x-y=k*m*n}
+    m*n>0
+    m*n $in Z
+    m*n $in N+
+    have modulus N+=m*n
+    0<=x<modulus
+    0<=y<modulus
+    x=(x-y)+y=k*m*n+y=k*(m*n)+y=k*modulus+y
+    x%modulus=y
+    x=0*modulus+x
+    x%modulus=x
+
+thm chinese_remainder_unique_residue:
+    ? forall a,b Z,m,n N+:
+        gcd(m,n)=1
+        =>:
+            exist! r N st {r<m*n,$is_congruent_mod(r,a,m),$is_congruent_mod(r,b,n)}
+    release thm chinese_remainder_bounded_exists(a,b,m,n)
+    obtain r from exist r N st {r<m*n,$is_congruent_mod(r,a,m),$is_congruent_mod(r,b,n)}
+    claim:
+        ? forall left,right N:
+            left<m*n
+            right<m*n
+            $is_congruent_mod(left,a,m)
+            $is_congruent_mod(left,b,n)
+            $is_congruent_mod(right,a,m)
+            $is_congruent_mod(right,b,n)
+            =>:
+                left=right
+        release thm chinese_remainder_bounded_unique(a,b,m,n,left,right)
+    witness exist! result N st {result<m*n,$is_congruent_mod(result,a,m),$is_congruent_mod(result,b,n)} from r
+
+have fn chinese_remainder_residue by exist!:
+    ? forall a,b Z,m,n N+:
+        gcd(m,n)=1
+        =>:
+            exist! r N st {r<m*n,$is_congruent_mod(r,a,m),$is_congruent_mod(r,b,n)}
+
+thm chinese_remainder_residue_of_solution:
+    ? forall a,b Z,m,n N+,r N:
+        gcd(m,n)=1
+        r<m*n
+        $is_congruent_mod(r,a,m)
+        $is_congruent_mod(r,b,n)
+        =>:
+            chinese_remainder_residue(a,b,m,n)=r
+    release thm chinese_remainder_bounded_unique(a,b,m,n,chinese_remainder_residue(a,b,m,n),r)
+
+thm modular_inverse_implies_coprime:
+    ? forall a,u Z,m N+:
+        $is_modular_inverse(a,u,m)
+        =>:
+            gcd(a,m)=1
+    $is_congruent_mod(a*u,1,m)
+    $dvd(a*u-1,m)
+    obtain v from exist v Z st {a*u-1=v*m}
+    1=a*u-(a*u-1)=a*u-v*m=a*u+m*(-v)
+    have d N+=gcd(a,m)
+    $dvd(a,d)
+    $dvd(m,d)
+    release thm divisibility_linear_combination(a,m,u,-v,d)
+    $dvd(1,d)
+    1%d=0
+    0%d=0
+    d<=gcd(1,0)=1
+    1<=d
+    gcd(a,m)=d=1

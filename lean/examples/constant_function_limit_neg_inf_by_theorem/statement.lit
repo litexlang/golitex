@@ -1,0 +1,10 @@
+# A constant function has the stated neg_inf limit on an accumulating domain.
+claim:
+    ? forall f fn(x R) R, L R:
+        forall T R:
+            exist x R st {x < T}
+        forall x R:
+            f(x)=L
+        =>:
+            $has_limit_neg_inf(f,L)
+    by thm fn_limit_neg_inf_constant(f,L) => $has_limit_neg_inf(f,L)

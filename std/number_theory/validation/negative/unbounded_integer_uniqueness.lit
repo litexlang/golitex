@@ -1,0 +1,11 @@
+by def $nt::is_congruent_mod(8,2,3)
+
+by def $nt::is_congruent_mod(8,3,5)
+
+by def $nt::is_congruent_mod(23,2,3)
+
+by def $nt::is_congruent_mod(23,3,5)
+
+release thm nt::chinese_remainder_unique(2,3,8,23,3,5)
+
+8=23

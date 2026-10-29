@@ -6,7 +6,8 @@
 task/
 ├── problem.md     the statement, nothing else
 ├── TASK.md        the exact declaration to produce, plus these rules
-├── check          ./check solution.lit  ->  litex -lang en -strict -f
+├── step           incremental check: ./step  (keeps a live session)
+├── check          whole-file gate: ./check solution.lit
 └── solution.lit   the artifact (single file, no imports)
 ```
 
@@ -39,10 +40,10 @@ Read problem.md and TASK.md, then do the task.
 Rules:
 - Work only inside this directory.
 - Do not change the statement lines.
-- `./check solution.lit` is the only permitted outside command.
-- Write one fact, run the check, then add the next fact. Never rewrite an
-  accepted line.
-- Success: exit 0 and `"errors": []`. Then reply DONE.
+- Append to `solution.lit`, then run `./step`; it checks only what is new and
+  prints one line. Never re-check the whole file after every line.
+- Never rewrite an accepted line. `RESYNC` means the whole file was re-checked.
+- Finish with `./check solution.lit`; success is exit 0 and `"errors": []`.
 ```
 
 ## Notes

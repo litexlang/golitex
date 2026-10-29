@@ -14532,3 +14532,79 @@ theorem sequenceLimitTail {M : Semantics.{u}} [FunctionSemantics M]
   h (denote epsilon) hepsilon
 
 end Litex
+
+namespace Litex
+
+
+theorem sequenceEpsilonBall_self {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (value : Obj (M := M) α) (epsilon : Obj (M := M) β)
+    (hv : In value R) (he : In epsilon RPos) :
+    M.mem (denote value) (sequenceEpsilonBallValue (denote value) (denote epsilon)) := by
+  apply (F.sep_members _ _ _).mpr
+  refine ⟨hv, hv, ?_⟩
+  change RealLtValue M (absValue (M.subValue (denote value) (denote value))) (denote epsilon)
+  obtain ⟨r, hr⟩ := (M.real_members _).mp hv
+  have hzero : absValue (M.subValue (denote value) (denote value)) = M.number 0 := by
+    rw [hr, M.sub_numbers, sub_self, show (0 : ℂ) = ((0 : ℝ) : ℂ) by rfl,
+      absValue_number, abs_zero]
+  rw [hzero]
+  exact inRPos_positive epsilon he
+
+theorem finiteFunctionLimitConstant {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type y}
+    [Representation M α] [Representation M β] [Representation M γ] [Representation M δ]
+    (side : FiniteLimitSide) (f : Obj (M := M) α) (point : Obj (M := M) β)
+    (value : Obj (M := M) γ) (domain : Obj (M := M) δ)
+    (hf : RealFunctionValue M (denote f))
+    (hD : denote domain = F.domainValue (denote f))
+    (hp : In point R) (hv : In value R)
+    (ha : ∀ {σ : Type z} [Representation M σ], (radius : Obj (M := M) σ) →
+      In radius RPos → FiniteLimitAccumulationClauseValue M side (denote domain) (denote point) (denote radius))
+    (hconstant : ∀ {σ : Type t} [Representation M σ], (input : Obj (M := M) σ) →
+      In input domain → F.callValue (denote f) (denote input) = denote value) :
+    HasFiniteFunctionLimit side f point value := by
+  apply finiteFunctionLimitOfForall.{u,v,w,x,y,z,0} side f point value domain hf hD hp hv ha
+  intro σ rep epsilon hepsilon
+  have hone : M.mem (M.number (1 : ℂ)) (denote (RPos (M := M))) := numberInRPos 1 zero_lt_one
+  let cutoff := semanticObject (M.number (1 : ℂ)) (M.member_isSet hone)
+  refine ⟨cutoff, hone, ?_⟩
+  intro input hneighborhood
+  have hinput : M.mem input (denote domain) := ((F.sep_members _ _ _).mp hneighborhood).1
+  have image := forallMembersOfRepresentations (P := fun x => F.callValue (denote f) x = denote value) domain (fun {_} [_] x hx => hconstant x hx) input hinput
+  obtain ⟨signature, hfn, _, _⟩ := hf
+  have hd : denote domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  apply (F.preimage_mem_iff _ signature.domain_isSet hfn).mpr
+  refine ⟨hd ▸ hinput, ?_⟩
+  rw [image]
+  exact sequenceEpsilonBall_self value epsilon hv hepsilon
+
+theorem infiniteFunctionLimitConstant {M : Semantics.{u}} [F : FunctionSemantics M]
+    {α : Type v} {β : Type w} {γ : Type x}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (direction : InfiniteLimitDirection) (f : Obj (M := M) α)
+    (value : Obj (M := M) β) (domain : Obj (M := M) γ)
+    (hf : RealFunctionValue M (denote f))
+    (hD : denote domain = F.domainValue (denote f))
+    (hv : In value R)
+    (ha : ∀ {σ : Type y} [Representation M σ], (bound : Obj (M := M) σ) →
+      In bound R → InfiniteLimitAccumulationClauseValue M direction (denote domain) (denote bound))
+    (hconstant : ∀ {σ : Type z} [Representation M σ], (input : Obj (M := M) σ) →
+      In input domain → F.callValue (denote f) (denote input) = denote value) :
+    HasInfiniteFunctionLimit direction f value := by
+  apply infiniteFunctionLimitOfForall.{u,v,w,x,y,0} direction f value domain hf hD hv ha
+  intro σ rep epsilon hepsilon
+  have hzero : M.mem (M.number (0 : ℂ)) (denote (R (M := M))) := NativeBridge.numberInR 0
+  let cutoff := semanticObject (M.number (0 : ℂ)) (M.member_isSet hzero)
+  refine ⟨cutoff, hzero, ?_⟩
+  intro input htail
+  have hinput : M.mem input (denote domain) := ((F.sep_members _ _ _).mp htail).1
+  have image := forallMembersOfRepresentations (P := fun x => F.callValue (denote f) x = denote value) domain (fun {_} [_] x hx => hconstant x hx) input hinput
+  obtain ⟨signature, hfn, _, _⟩ := hf
+  have hd : denote domain = signature.domain := hD.trans (F.domainValue_eq signature.domain_isSet hfn)
+  apply (F.preimage_mem_iff _ signature.domain_isSet hfn).mpr
+  refine ⟨hd ▸ hinput, ?_⟩
+  rw [image]
+  exact sequenceEpsilonBall_self value epsilon hv hepsilon
+
+end Litex

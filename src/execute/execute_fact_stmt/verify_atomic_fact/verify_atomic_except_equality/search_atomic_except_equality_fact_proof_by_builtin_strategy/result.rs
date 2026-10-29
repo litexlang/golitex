@@ -8,6 +8,7 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::runtime::FactId;
 
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
+    NegatedOrder(NegatedOrderStrategySingleStep),
     MultivariableAnalysis(
         crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof,
     ),
@@ -150,6 +151,25 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     FunctionSpaceNonemptyFromEmptyDomain(FunctionSpaceNonemptyFromEmptyDomainStrategySingleStep),
     FiniteSeqSetNonemptyFromCodomain(FiniteSeqSetNonemptyFromCodomainStrategySingleStep),
     SeqSetNonemptyFromCodomain(SeqSetNonemptyFromCodomainStrategySingleStep),
+}
+
+// Remove one negated comparison using total real order. The ordered
+// requirements are left in R, right in R, and the positive complement.
+pub struct NegatedOrderStrategySingleStep {
+    pub requirement_facts: Vec<Fact>,
+    pub proof_of_requirement_facts: Vec<VerifyFactResult>,
+}
+
+impl NegatedOrderStrategySingleStep {
+    pub fn new(
+        requirement_facts: Vec<Fact>,
+        proof_of_requirement_facts: Vec<VerifyFactResult>,
+    ) -> Self {
+        Self {
+            requirement_facts,
+            proof_of_requirement_facts,
+        }
+    }
 }
 
 pub struct FunctionSetMembershipStrategySingleStep {

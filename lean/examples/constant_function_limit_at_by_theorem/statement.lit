@@ -1,0 +1,10 @@
+# A constant function has the stated at limit on an accumulating domain.
+claim:
+    ? forall f fn(x R) R, p R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-p) and abs(x-p) < r}
+        forall x R:
+            f(x)=L
+        =>:
+            $has_limit_at(f,p,L)
+    by thm fn_limit_at_constant(f,p,L) => $has_limit_at(f,p,L)

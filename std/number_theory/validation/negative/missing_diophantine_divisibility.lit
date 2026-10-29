@@ -1,0 +1,3 @@
+gcd(84,30)=6
+
+release thm nt::linear_equation_from_gcd(84,30,5)

@@ -1,0 +1,3 @@
+gcd(2,6)=2
+
+release thm nt::coprime_modular_inverse_exists(2,6)

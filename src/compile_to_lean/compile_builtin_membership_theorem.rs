@@ -65,6 +65,11 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::FnLimitPosInfSelected
                 | BuiltinTheoremId::FnLimitNegInfExists
                 | BuiltinTheoremId::FnLimitNegInfSelected
+                | BuiltinTheoremId::FnLimitAtConstant
+                | BuiltinTheoremId::FnLimitLeftConstant
+                | BuiltinTheoremId::FnLimitRightConstant
+                | BuiltinTheoremId::FnLimitPosInfConstant
+                | BuiltinTheoremId::FnLimitNegInfConstant
         ) {
             return self.compile_builtin_function_limit_theorem(
                 call,

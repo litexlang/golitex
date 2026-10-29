@@ -47,10 +47,10 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
       exact (
         (by
           intro _Host_i1 _rep_i1 _value_i1 h_14 _Host_i3 _rep_i3 _value_i3 h_15 h_2
-          have h_440 : Litex.In _value_i1 (let _checked_header : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i2 = M.number (_s : ℂ) ∧ _r < _s)) _raw_i2) → True := (by
-              intro _raw_i2 h_431 h_1
-              let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_431)
-              have h_431 : Litex.In _value_i2 (Litex.R (M := M)) := h_431
+          have h_533 : Litex.In _value_i1 (let _checked_header : ∀ (_raw_i2 : M.Value), M.mem _raw_i2 (M.standard Litex.StandardSetValue.real) → ((fun (_raw_i2 : M.Value) => (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i2 = M.number (_s : ℂ) ∧ _r < _s)) _raw_i2) → True := (by
+              intro _raw_i2 h_524 h_1
+              let _value_i2 := Litex.semanticObject (M := M) _raw_i2 (M.member_isSet h_524)
+              have h_524 : Litex.In _value_i2 (Litex.R (M := M)) := h_524
               have h_1 : Litex.Lt (Litex.number (M := M) (0 : ℂ)) _value_i2 :=
                 (by
                   litex_checked_step =>
@@ -68,7 +68,7 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                   h_14
                 )
             )
-          have h_441 : Litex.In _value_i3 (Litex.R (M := M)) :=
+          have h_534 : Litex.In _value_i3 (Litex.R (M := M)) :=
             (by
               litex_checked_step =>
                 exact (
@@ -76,11 +76,11 @@ theorem h_4 : ∀ {_Host_i1 : Type v1} [_rep_i1 : Litex.Representation M _Host_i
                 )
             )
           exact (by
-            let _atomic_wd_1_0 := (let _object_w14 := (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ h_441) (Litex.numberInC (M := M) (1 : ℂ)));
-            (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i2 = M.number (_s : ℂ) ∧ _r < _s)) _value_i1 _object_w14 h_440 (by
-              let _atomic_wd_2_0 := _object_w14
-              exact (Litex.addInR _value_i3 (Litex.number (M := M) (1 : ℂ)) h_441 (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)))) (by
-              let _atomic_wd_2_0 := _object_w14
+            let _atomic_wd_1_0 := (let _object_w15 := (Litex.add _value_i3 (Litex.number (M := M) (1 : ℂ)) (M.real_subset_complex _ h_534) (Litex.numberInC (M := M) (1 : ℂ)));
+            (Litex.call Litex.StandardSetValue.real Litex.StandardSetValue.real (fun (_raw_i2 : M.Value) => (∃ (_r _s : ℝ), (M.number (0 : ℂ)) = M.number (_r : ℂ) ∧ _raw_i2 = M.number (_s : ℂ) ∧ _r < _s)) _value_i1 _object_w15 h_533 (by
+              let _atomic_wd_2_0 := _object_w15
+              exact (Litex.addInR _value_i3 (Litex.number (M := M) (1 : ℂ)) h_534 (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num)))) (by
+              let _atomic_wd_2_0 := _object_w15
               exact (by
                 let _litex_positive_result := _atomic_wd_2_0
                 exact Litex.addPositive _litex_positive_result.val.left _litex_positive_result.val.right _litex_positive_result.wd.1 _litex_positive_result.wd.2 h_2 ((Litex.NativeBridge.lt_iff_asReal (Litex.number (M := M) (0 : ℂ)) (Litex.number (M := M) (1 : ℂ)) (Litex.NativeBridge.numberInROfEq (M := M) (0 : ℂ) (0 : ℝ) (by norm_num)) (Litex.NativeBridge.numberInROfEq (M := M) (1 : ℂ) (1 : ℝ) (by norm_num))).mpr (by
