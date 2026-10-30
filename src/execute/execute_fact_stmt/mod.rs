@@ -28,6 +28,7 @@ pub(crate) mod sequence_extrema;
 mod sequence_liminf;
 pub(crate) mod sequence_limit;
 mod sequence_limsup;
+pub(crate) mod structural_limit;
 mod template_membership;
 mod verify;
 pub mod verify_and_fact;
@@ -48,6 +49,7 @@ pub use crate::execute::exec_stmt_result::{
 };
 pub use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 pub use crate::store_fact_and_infer::StoreFactAndInferResult;
+pub(crate) use helper::multiply_derivative_terms;
 pub use result::{ExecFactStmtResult, ExecFactStmtSuccessResult};
 pub use verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRule;
 pub use verify_atomic_fact::verify_equality::by_they_are_the_same::helper::fn_sets_alpha_equal;

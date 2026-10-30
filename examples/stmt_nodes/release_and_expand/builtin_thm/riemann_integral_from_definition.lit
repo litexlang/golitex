@@ -1,5 +1,12 @@
 # Darboux definition introduction without assuming an integral candidate.
 # Check: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_from_definition.lit
+claim:
+    ? forall k Z:
+        1 <= k
+        =>:
+            0 <= k
+    0 <= 1 <= k
+
 thm integral_from_darboux:
     ? forall f fn(x R) R,I R:
         $is_real_bounded(fn_range(fn(x '[0,1]) R {f(x)}))

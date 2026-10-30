@@ -20,6 +20,195 @@ fn alias_body(
 }
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_template_search_reference(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        let Some((source, expansions, producer)) = position.template_search_conversion(object)
+        else {
+            return Ok(None);
+        };
+        self.validate_template_membership_expansions(source, expansions, &producer)?;
+        Ok(Some(self.compile_object_reference(&source.set, &producer)?))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_template_inferred_reference(
+        &self,
+        object: &Obj,
+        store: &StoreFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        let Some((conversion, index, producer)) = position.template_inference_conversion(store)
+        else {
+            return Ok(None);
+        };
+        let expansion = conversion
+            .expansions
+            .get(index)
+            .ok_or_else(|| LeanCompileError::unsupported("TemplateInference/Stores"))?;
+        if object.ir() != expansion.set.ir() {
+            return Ok(None);
+        }
+        self.validate_store(
+            store,
+            &Fact::AtomicFact(AtomicFact::InFact(expansion.clone())),
+        )?;
+        let source = self.resolve_fact(conversion.source_fact_id, &producer)?;
+        let Fact::AtomicFact(AtomicFact::InFact(source)) = &source else {
+            return Err(LeanCompileError::unsupported("TemplateInference/Seed"));
+        };
+        self.validate_template_membership_expansions(source, &conversion.expansions, &producer)?;
+        Ok(Some(self.compile_object_reference(&source.set, &producer)?))
+    }
+
+    fn validate_template_membership_expansions(
+        &self,
+        member: &InFact,
+        expansions: &[InFact],
+        position: &SourcePosition<'_>,
+    ) -> Result<(), LeanCompileError> {
+        if expansions.is_empty() {
+            return Err(LeanCompileError::unsupported(
+                "TemplateMembership/Expansions",
+            ));
+        }
+        let mut carrier = &member.set;
+        let mut seen = std::collections::HashSet::new();
+        let mut ids = std::collections::HashSet::from([member.fact_id]);
+        for expansion in expansions {
+            let Obj::InstantiatedTemplateObj(instance) = carrier else {
+                return Err(LeanCompileError::unsupported("TemplateMembership/Carrier"));
+            };
+            if !seen.insert(carrier.ir()) || !ids.insert(expansion.fact_id) {
+                return Err(LeanCompileError::unsupported(
+                    "TemplateMembership/RepeatedStage",
+                ));
+            }
+            let (template, _, _) = position.visible_template(&instance.template_name)?;
+            let body = alias_body(template)?;
+            let parameters = template.statement.template_arg_def.ordered_param_ids();
+            if parameters.len() != instance.args.len() || body.statement.objs_equal_to.len() != 1 {
+                return Err(LeanCompileError::unsupported("TemplateMembership/Arity"));
+            }
+            let substitution = parameters
+                .into_iter()
+                .zip(instance.args.iter().cloned())
+                .collect::<HashMap<_, _>>();
+            if expansion.element != member.element
+                || !instantiated_object_matches(
+                    &body.statement.objs_equal_to[0],
+                    &expansion.set,
+                    &substitution,
+                )
+            {
+                return Err(LeanCompileError::unsupported(
+                    "TemplateMembership/ExpandedSubject",
+                ));
+            }
+            carrier = &expansion.set;
+        }
+        Ok(())
+    }
+
+    pub(in crate::compile_to_lean) fn compile_template_membership_inference(
+        &self,
+        proof: &crate::store_fact_and_infer::InferTemplateMembershipResult,
+        seed: &Fact,
+        compiled: &(String, String),
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let Fact::AtomicFact(AtomicFact::InFact(member)) = seed else {
+            return Err(LeanCompileError::unsupported("TemplateInference/Seed"));
+        };
+        if member.fact_id != proof.source_fact_id || proof.stores.len() != proof.expansions.len() {
+            return Err(LeanCompileError::unsupported("TemplateInference/Stores"));
+        }
+        self.validate_template_membership_expansions(member, &proof.expansions, position)?;
+        if proof.native_rules.iter().any(|rule| {
+            matches!(
+                rule,
+                crate::store_fact_and_infer::InferInFactResult::Template(_)
+            )
+        }) {
+            return Err(LeanCompileError::unsupported(
+                "TemplateInference/RecursivePass",
+            ));
+        }
+        let scope = SourcePosition::new(Some(position), SourceOwner::TemplateInference(proof), 0);
+        let mut declarations = Vec::new();
+        let mut current = compiled.clone();
+        for (index, (expansion, captured)) in proof.expansions.iter().zip(&proof.stores).enumerate()
+        {
+            let fact = Fact::AtomicFact(AtomicFact::InFact(expansion.clone()));
+            self.validate_store(&captured.store, &fact)?;
+            let prior = SourcePosition {
+                before: index,
+                ..scope
+            };
+            let formed = SourcePosition::new(
+                Some(&prior),
+                SourceOwner::InferredStore(&captured.store),
+                usize::MAX,
+            );
+            let proposition = self.fact_proposition(&fact, &formed)?;
+            let term = format!("(show {proposition} from {})", current.1);
+            declarations.push(self.emit_internal_fact(
+                &fact,
+                &(proposition.clone(), term),
+                &formed,
+            )?);
+            let name = format!("h_{}", expansion.fact_id.value());
+            let reference = if prior.is_local() {
+                name
+            } else {
+                self.context_application(&name, &prior)
+            };
+            current = (proposition, reference);
+        }
+        let native = Fact::AtomicFact(AtomicFact::InFact(proof.expansions.last().unwrap().clone()));
+        let complete = SourcePosition {
+            before: proof.stores.len(),
+            ..scope
+        };
+        declarations.extend(self.compile_membership_inference_rules(
+            &proof.native_rules,
+            &native,
+            &current,
+            &complete,
+        )?);
+        Ok(declarations)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_template_membership(
+        &self,
+        goal: &AtomicFact,
+        proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::TemplateMembershipProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let AtomicFact::InFact(member) = goal else {
+            return Err(LeanCompileError::unsupported("TemplateMembership/Family"));
+        };
+        self.validate_template_membership_expansions(member, &proof.expansions, position)?;
+        let prior = position.atomic_search_prior(0)?;
+        let residual_position = SourcePosition::new(
+            Some(&prior),
+            SourceOwner::AtomicSearch(&proof.residual),
+            usize::MAX,
+        );
+        let residual = AtomicFact::InFact(proof.expansions.last().unwrap().clone());
+        let compiled = self.compile_atomic_searched_proof(
+            &residual,
+            &proof.residual,
+            None,
+            &residual_position,
+        )?;
+        Ok(format!(
+            "(show {} from {compiled})",
+            self.atomic_proposition(goal, position)?
+        ))
+    }
+
     pub(super) fn compile_template_equality(
         &self,
         fact: &EqualFact,

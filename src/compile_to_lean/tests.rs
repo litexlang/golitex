@@ -10,6 +10,21 @@ mod unique_contra_tests;
 #[path = "../../tests/unit/compile_to_lean/not_forall_tests.rs"]
 mod not_forall_tests;
 
+#[path = "../../tests/unit/compile_to_lean/complex_guarded_strategy_tests.rs"]
+mod complex_guarded_strategy_tests;
+#[path = "../../tests/unit/compile_to_lean/cos_integer_offset_tests.rs"]
+mod cos_integer_offset_tests;
+#[path = "../../tests/unit/compile_to_lean/extremum_strategy_tests.rs"]
+mod extremum_strategy_tests;
+#[path = "../../tests/unit/compile_to_lean/finite_product_pointwise_tests.rs"]
+mod finite_product_pointwise_tests;
+#[path = "../../tests/unit/compile_to_lean/mod_congruence_tests.rs"]
+mod mod_congruence_tests;
+#[path = "../../tests/unit/compile_to_lean/native_matrix_law_tests.rs"]
+mod native_matrix_law_tests;
+#[path = "../../tests/unit/compile_to_lean/template_membership_replay_tests.rs"]
+mod template_membership_replay_tests;
+
 use super::{compile_run as compile_run_owned_runtime, LeanCompileError, LitexToLeanCompiler};
 
 #[path = "../../tests/unit/compile_to_lean/function_limit_tests.rs"]
@@ -2800,22 +2815,18 @@ fn phase2_order_transitivity_replays_oriented_actual_premise_ids() {
     let proof = atomic_proof_mut(
         &mut forall_proof_mut(&mut result.statement_results[0]).proved_then_facts[0].verify_result,
     );
-    match &mut proof.searched_proof {
-        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
-            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
-                LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity(proof),
-            ),
-        ) => std::mem::swap(
-            &mut proof.left_to_mid_cite_fact_id,
-            &mut proof.mid_to_right_cite_fact_id,
-        ),
-        _ => panic!("actual weak transitivity route"),
-    }
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinRewrite as Rule;
+    let AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(Rule::OrderTransitivity(p)) =
+        &mut proof.searched_proof
+    else {
+        panic!("actual weak transitivity rewrite")
+    };
+    p.application.known_left_fact_id = FactId::new(u64::MAX);
     phase2_rejected(
         &result,
         &compiler,
-        "phase2_reversed_transitivity_citations",
-        &["Order/", "Atomic/", "FactId/"],
+        "phase2_bad_transitivity_citation",
+        &["Transitivity/", "FactId/"],
     );
 }
 
@@ -3555,8 +3566,8 @@ mod enumeration_product_tests;
 #[path = "../../tests/unit/compile_to_lean/weak_additive_shift_tests.rs"]
 mod weak_additive_shift_tests;
 
-#[path = "../../tests/unit/compile_to_lean/numeric_bound_weakening_tests.rs"]
-mod numeric_bound_weakening_tests;
+#[path = "../../tests/unit/compile_to_lean/order_transitivity_tests.rs"]
+mod order_transitivity_tests;
 
 #[path = "../../tests/unit/compile_to_lean/componentwise_additive_tests.rs"]
 mod componentwise_additive_tests;
@@ -3672,5 +3683,24 @@ mod function_limit_squeeze_tests;
 #[path = "../../tests/unit/compile_to_lean/sequence_certificate_tests.rs"]
 mod sequence_certificate_tests;
 
+#[path = "../../tests/unit/compile_to_lean/continuity_arithmetic_tests.rs"]
+mod continuity_arithmetic_tests;
+#[path = "../../tests/unit/compile_to_lean/function_continuity_tests.rs"]
+mod function_continuity_tests;
+#[path = "../../tests/unit/compile_to_lean/real_accumulation_tests.rs"]
+mod real_accumulation_tests;
+#[path = "../../tests/unit/compile_to_lean/sequence_metric_tests.rs"]
+mod sequence_metric_tests;
 #[path = "../../tests/unit/compile_to_lean/sequence_order_tests.rs"]
 mod sequence_order_tests;
+#[path = "../../tests/unit/compile_to_lean/shared_theorem_release_tests.rs"]
+mod shared_theorem_release_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_extremum_tests.rs"]
+mod sequence_extremum_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_derivative_tests.rs"]
+mod function_derivative_tests;
+
+#[path = "../../tests/unit/compile_to_lean/automatic_derivative_tests.rs"]
+mod automatic_derivative_tests;

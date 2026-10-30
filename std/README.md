@@ -10,10 +10,11 @@ import; these modules supply reusable source mathematics above them.
 | --- | --- |
 | Sets, relations and order | [relations](relations/README.md): equivalence classes and partitions, partial orders, subset extrema, monotone maps and order embeddings. |
 | Abstract algebra and linear algebra | [algebra](algebra/README.md): groups, unital rings/ideals/homomorphisms, fields, vector spaces, linear maps, kernel/image, finite-dimensional rank-nullity, finite spans, independence, bases, exchange, basis extension, dimension, coordinate maps, direct sums and subspace sums. |
+| Elementary real algebra | [real_quadratics](real_quadratics/README.md): actual quadratic solution sets, discriminant and degenerate classification, Vieta/converse, factorization, sign-dependent root order and attained extrema. |
 | Real and complex matrices | [matrix](matrix/README.md): finite matrix relations and entrywise laws above native matrix operations. |
-| Finite graph theory | [graph_theory](graph_theory/README.md): simple undirected graphs, neighborhoods, degrees, complement/induced constructions and equal-degree vertices. Paths, trees and handshaking remain. |
+| Finite graph theory | [graph_theory](graph_theory/README.md): simple undirected graphs, neighborhoods, degrees, complement/induced constructions, actual unordered edges, handshaking, regular-graph edge counts and equal-degree vertices. Paths, trees and odd-degree subset parity remain. |
 | Number theory | [number_theory](number_theory/README.md): divisibility, congruence, general Bezout existence, coprime modular inverses, integer-equation solvability and the two-modulus CRT with a canonical natural residue. |
-| Finite combinatorics | [combinatorics](combinatorics/README.md): finite maps, pigeonhole, cardinality, inclusion-exclusion and recursive natural binomial coefficients. |
+| Finite combinatorics | [combinatorics](combinatorics/README.md): finite maps, cardinality, inclusion-exclusion, binomial coefficients/expansion and finite fiber counting, with checked full-domain imported callers and refusal boundaries. Subset counting and Vandermonde remain. |
 | Finite probability | [probability](probability/README.md): bundled finite spaces, conditioning, Bayes, moments, variance, covariance, correlation, tail inequalities and pushforward spaces. |
 | Metric spaces and sequences | [metric](metric/README.md): bundled distances, balls, separation and Lipschitz/continuous maps; [metric_sequences](metric_sequences/README.md): limits, Cauchy, real-line completeness, actual iterates, Banach unique fixed points, convergence and error bounds. |
 | General topology | [topology](topology/README.md): open-set spaces, continuity, homeomorphisms, connectedness, separation, compactness, actual subspaces and compact-to-Hausdorff continuous inverse existence. |
@@ -29,6 +30,12 @@ A module's presence does not imply that a complete course is covered. Its
 README states the implemented interface and boundaries; `math_collections.md`
 explains the mathematical dependency spine. The [coverage plan](coverage-plan.md)
 separates present source, planned mathematics and blocked obligations.
+The [secondary and undergraduate curriculum map](curriculum-map.md) records
+the full planned subject scope, chapter clusters and the evidence needed to
+claim coverage. Planned subjects do not imply implemented public modules.
+The [chapter specifications](chapter-specifications.md) expand 21
+clusters into precise mathematical obligations and distinguish reusable std,
+native and showcase material from work still to implement.
 
 ## Use and verification
 

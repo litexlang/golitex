@@ -16,6 +16,7 @@ pub(super) fn project_pointwise_continuity(
             ("strategy", string("PointwiseContinuity")),
             ("function", string(p.function.readable_string())),
             ("point", string(p.point.readable_string())),
+            ("side", string(p.side.continuity_name())),
             ("domain", string(p.domain.domain.readable_string())),
             (
                 "complete_source",
@@ -41,7 +42,7 @@ pub(super) fn project_pointwise_continuity(
             ),
             (
                 "body_well_defined",
-                super::wd::project_obj_wd_proof(&p.body_well_defined, rt),
+                super::function_domain::project_checked_body(&p.body_well_defined, rt),
             ),
             ("expression", expression(&p.expression, rt)),
         ],
@@ -113,6 +114,14 @@ pub(super) fn expression(p: &PointwiseContinuityExpressionProof, rt: &Runtime) -
                 project_verify_fact(exponent_natural, rt),
             ));
             "NaturalPower"
+        }
+        C::Leaf {
+            function,
+            continuity,
+        } => {
+            fields.push(("function", string(function.readable_string())));
+            fields.push(("continuity", project_verify_fact(continuity, rt)));
+            "ContinuityLeaf"
         }
         C::Compose {
             function,

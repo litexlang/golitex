@@ -305,6 +305,30 @@ checked, without reopening general rewrite search.
 
 Authors choose definitions, constructions and key intermediate results; Litex checks supported local steps against current knowledge. The boundary depends on the work a step requires: following a fixed structure to check available grounds, or choosing a proof route that has not yet been supplied. It cannot be drawn simply by counting automatic steps.
 
+**Combine known analysis facts through a checked body.** Arithmetic sequence
+and real-function limit goals can consume known leaf candidates directly,
+without naming an arithmetic theorem at every node. The checker follows the
+visible function body and checks the resulting limit value. Left/right
+continuity uses the same approach-sensitive workflow. Actual domains,
+nonzero denominators and limit accumulation remain mathematical obligations;
+an opaque leaf without evidence is still a miss. Selector WD consumes a proved
+candidate instead of starting this analysis. These are bounded strategy
+branches under the existing permissions, rather than unrestricted theorem
+search. Their typed evidence is retained in JSON/reading; direct structural
+certificates still require a Lean replay implementation before they can be
+compiled. See the [direct sequence tracer](../examples/proof_nodes/atomic/by_builtin_strategy/structural_sequence_limit_arithmetic.lit).
+
+**Check fixed matrix identities directly.** A displayed equality such as
+`matrix_mul(identity_matrix(m),A,m,m,n)=A` can use the native unit law once
+`A` has the exact finite domain. The same bounded branch handles the
+[supported matrix equations](../examples/proof_nodes/equal/by_builtin_rule/native_matrix_laws.lit).
+It extracts parameters from the displayed operator, compares both complete
+endpoints and checks the existing mathematical premises. It neither enumerates
+theorem names nor searches for a matrix factorization. Missing invertibility,
+wrong dimensions and wrong conjugations remain failures. Detailed/Reading
+output retains the selected law and child evidence; this route has no Lean
+replay implementation yet.
+
 **Check types through a uniform structure.** This expression contains several layers of addition, but the author need not supply a separate type fact for each layer:
 
 ```litex
@@ -1601,6 +1625,14 @@ Litex aims to uphold these mathematical values, echoing related principles in th
 5. **Responsibility.** In [human–AI–Litex collaboration](#interaction-loop), people choose the mathematical route and remain responsible.
 6. **Openness.** [Open source](https://github.com/litexlang/golitex) and multilingual feedback invite participation; reused work still needs attribution.
 7. **Honesty.** [Independent Lean rechecking](#compatibility) (still being extended).
+
+<a id="litex-reliability"></a>
+
+### Reliability of Litex
+
+Litex's reliability is strengthened through testing, code review and independent proof checking. The project has around 4,000 examples and over 3,000 test functions. Before each release, the maintainer also uses the frontier language models available to review the source code and look for bugs.
+
+Compilation to Lean provides an additional check: supported Litex proofs can be reconstructed as Lean proofs and checked by Lean's kernel. This coverage continues to expand.
 
 <details>
 <summary><strong>A note from the author</strong></summary>

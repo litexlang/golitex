@@ -105,9 +105,32 @@ impl LitexToLeanCompiler {
         let signature = self.compile_complete_domain_signature(&proof.source, position)?;
         let input = self.compile_verify(&proof.input_real, position)?.1;
         let output = self.compile_verify(&proof.output_real, position)?.1;
+        let input_body = self
+            .compile_real_function_input_body(&proof.source.signature, "_limit_input", position)?
+            .replace('\n', "\n  ");
         let base = self.compile_object_reference(base, position)?;
         let value = self.compile_object_reference(function, position)?;
-        Ok(format!("(show Litex.RealFunctionValue M (Litex.denote {value}) from by\n  let _limit_signature := {signature}\n  have _limit_function : Litex.In {value} (Litex.fnSet _limit_signature) := {member}\n  have _limit_input : Litex.Subset {base} (Litex.R (M := M)) := {input}\n  have _limit_output : ∀ y, M.mem y _limit_signature.output → M.mem y (Litex.denote (Litex.R (M := M))) := {output}\n  refine ⟨_limit_signature, _limit_function, ?_, _limit_output⟩\n  intro x hx\n  exact _limit_input x ((Litex.SetSemantics.sep_members _ _ _).mp hx).1\n)"))
+        Ok(format!("(show Litex.RealFunctionValue M (Litex.denote {value}) from by\n  let _limit_signature := {signature}\n  have _limit_function : Litex.In {value} (Litex.fnSet _limit_signature) := {member}\n  have _limit_input : Litex.Subset {base} (Litex.R (M := M)) := {input}\n  have _limit_output : ∀ y, M.mem y _limit_signature.output → M.mem y (Litex.denote (Litex.R (M := M))) := {output}\n  refine ⟨_limit_signature, _limit_function, ?_, _limit_output⟩\n  intro x hx\n  {input_body}\n)"))
+    }
+
+    pub(super) fn compile_real_function_input_body(
+        &self,
+        signature: &FnSet,
+        input_proof: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if self
+            .compile_function_positive_inputs(signature, position)?
+            .is_empty()
+        {
+            return Ok(format!(
+                "exact {input_proof} x ((Litex.SetSemantics.sep_members _ _ _).mp hx).1"
+            ));
+        }
+        let (mut parts, _, _) = self.compile_preimage_domain_parts(signature, "x", position)?;
+        parts.insert(0, "have _preimage_domain := hx".into());
+        parts.push(format!("exact {input_proof} x _preimage_base"));
+        Ok(parts.join("\n"))
     }
 
     pub(super) fn compile_function_limit_predicate_domain(

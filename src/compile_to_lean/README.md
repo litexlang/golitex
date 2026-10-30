@@ -621,6 +621,59 @@ because the goal happens to be `a + 0 = a`. Fixed `ring` or guarded normalizatio
 checks the recorded certificate family; it is not a second search for a proof
 route missing from the source result.
 
+The selected `ExtremumEquality` strategy consumes its two original ordered
+weak-order proofs and applies `Litex.sameOfLeAntisymm`. The
+[`extremum_order_strategy`](../../lean/examples/extremum_order_strategy/statement.lit)
+pair exercises maximum and reversed minimum conclusions. The selected
+`ComplexWithNonzeroPremises` strategy retains whole-denominator guards,
+derives required multiplicative-factor nonzero proofs, and invokes the fixed
+`litex_normalize_guarded_complex` adapter. The
+[`complex_guarded_normalization`](../../lean/examples/complex_guarded_normalization/statement.lit)
+pair covers an atomic denominator and an explicitly nonzero product. Both
+pairs have strict source, deterministic generation and real Lean checks.
+Coverage remains specific to the selected certificate and its checked guard
+profiles. The selected `FiniteSetProductPointwiseEquality` strategy now borrows
+its captured local environment, introduces the original parameter and membership
+store, and replays the actual pointwise proof under that binder. The existing
+finite-aggregate congruence law consumes this proof. Function objects retain
+their own complete domains; the call/body bridge uses their certified graphs.
+The [integer](../../lean/examples/finite_product_pointwise/statement.lit),
+[mixed-domain](../../lean/examples/finite_product_mixed_domains/statement.lit)
+and [real](../../lean/examples/finite_product_real_factors/statement.lit) pairs
+have deterministic generation and pinned Lean checks. Tests reject changed
+endpoints, missing or changed binder evidence, future references, escaped local
+membership and a pointwise proof borrowed from a sibling scope. These examples
+establish anonymous unary factor cases; named-function discovery and other
+function/domain profiles remain separate work.
+
+The selected `CosZeroIntegerOffset` strategy validates the original
+`(angle - pi/2)/pi` subject, requirement IDs and order, and replays its integer
+membership evidence. The native cosine-zero law then consumes that exact
+offset. The [direct](../../lean/examples/cosine_integer_offset/statement.lit)
+and [reversed](../../lean/examples/cosine_integer_offset_reversed/statement.lit)
+pairs check both conclusion orientations; the latter preserves the original
+equality transport within its membership child. Both actual selected results
+have one requirement. The separate equality-plus-membership certificate
+profile still needs actual generated acceptance. The existing `PiNonzero`
+builtin also has a [checked pair](../../lean/examples/pi_nonzero/statement.lit),
+so offset formation can replay its original denominator guard. These consumers
+change no source search policy.
+
+The selected `ModCongruence` strategy replays modulus identity, first-residue
+equality and second-residue equality in that order. It validates the original
+IDs and endpoints, retains each modulus's WD and applies the fixed
+`integerModAddCongr`, `integerModSubCongr` or `integerModMulCongr` law. When the
+producer elides a repeated residue wrapper, `integerModValueIdempotent` supplies
+that exact semantic identity. Checked pairs cover
+[all three operations](../../lean/examples/mod_congruence_operations/statement.lit),
+[different equal modulus objects](../../lean/examples/mod_congruence_equal_moduli/statement.lit),
+[partly reduced operands](../../lean/examples/mod_congruence_nested_residues/statement.lit)
+and a [negative modulus](../../lean/examples/mod_congruence_negative_modulus/statement.lit).
+The fully reduced compatibility clause retains its earlier equality route.
+Ten focused tests also reject missing, reordered and mismatched evidence and
+an unavailable later proof of the same modulus identity. All four actual pairs
+have deterministic generation, pinned Lean checks and standard-axiom audits.
+
 Unsupported statements, objects, proof variants, references or scopes reject
 the complete artifact. [LeanCompileError](lean_compile_error.rs) records the
 route and, for statement failures, the statement index. The compiler returns
@@ -801,6 +854,132 @@ combines identity, constant, power, addition, subtraction and multiplication
 certificates. Its generated limit supplies the estimate used by a native
 `polynomialProductLimit` theorem through Adapter/Final.
 
+## Shared results and pointwise continuity
+
+An expanded theorem call now emits one proof package and projects its returned
+facts under their original `h_<fact_id>` names. Its package type uses the
+callee's ordered `conclusions_wd`. The caller's `stored_wd` is replayed as each
+result becomes visible; it can legitimately cite an earlier returned fact.
+The [reciprocal example](../../lean/examples/shared_reciprocal_theorem_results/)
+checks this dependency, and the [constant-sequence example](../../lean/examples/constant_sequence_properties_by_theorem/)
+shares one call across five properties.
+
+The [continuity consumer](compile_function_continuity.rs) checks the complete
+real-function domain and the point's original membership evidence. The
+[definition consumer](compile_function_continuity_definition.rs) replays its
+stored epsilon-delta clause and definition folding. The inference result retains
+the complete-domain proof used to construct that clause in `function_domain`.
+The [theorem consumer](compile_builtin_continuity_theorem.rs) handles the eighteen
+existing introduction/control/constant/identity and continuity/limit connection
+rules for two-sided, left and right continuity.
+The [unary](compile_function_continuity_unary.rs),
+[binary](compile_function_continuity_binary.rs) and
+[composition](compile_function_continuity_composition.rs) consumers add 27
+existing IDs. They keep output-domain inclusions, the original pointwise
+formula and its WD, scalar/exponent membership, and divisor nonzero evidence.
+Composition also checks that inner values lie in the outer domain. The `R+`
+domain bridge reconstructs positive membership from the normalized signature.
+See [restricted division](../../lean/examples/function_continuity_divide_restricted_domain/),
+[positive-domain composition](../../lean/examples/function_continuity_compose_positive_domain/)
+and [the square continuity-to-limit chain](../../lean/examples/function_continuity_square_limit/).
+One-sided neighborhoods include the point (`x ≤ p` or `p ≤ x`), matching Litex.
+Examples cover [epsilon introduction](../../lean/examples/function_continuity_at_from_epsilon_by_theorem/),
+[control extraction](../../lean/examples/function_continuity_at_control_by_theorem/),
+[a guarded domain](../../lean/examples/function_continuity_guarded_citations/)
+and [equality transport](../../lean/examples/function_continuity_semantic_transport/).
+Core proves the equivalence with Mathlib `ContinuousWithinAt` on the same
+closed-side domain. `NativeBridge.ofRealFunction` wraps a native `ℝ → ℝ`;
+its call, observation and continuity laws prove the ordinary `ContinuousAt`
+interface. The [constant](../../lean/examples/function_continuity_at_constant_by_theorem/Final.lean)
+and [identity](../../lean/examples/function_continuity_at_identity_by_theorem/Final.lean)
+native interfaces consume the generated proofs through Adapter.
+Global and uniform continuity and Lipschitz conditions remain
+separate routes.
+
+The [accumulation consumer](compile_real_accumulation.rs) handles positive and
+negative real-subset accumulation facts, their definition clauses and equality
+transport. Formation requires `A ⊆ R` and `p ∈ R`; the predicate keeps its
+original approach side. Conversion from continuity to a limit cites the
+recorded accumulation fact. The [identity limit example](../../lean/examples/function_continuity_identity_limit/)
+combines the function formula, continuity, accumulation, limit selection and a
+subsequent arithmetic use in eight statements, generating 41,701 bytes of Lean.
+Standard-set membership lifting also uses its recorded child proof for ordinary
+objects as well as function calls.
+
+For sequences, Core proves the epsilon-limit and Cauchy correspondences with
+Mathlib. `NativeBridge.ofRealSequence` wraps a native `ℕ → ℝ` while preserving
+Litex's positive-natural input domain. The [limit-to-Cauchy example](../../lean/examples/sequence_limit_cauchy_by_theorem/)
+exports a native `CauchySeq` theorem through its handwritten Adapter/Final.
+
+## Finite sequence extrema and object WD
+
+The [selector consumer](compile_sequence_extremum.rs) replays both finite
+`limsup` and `liminf` from the original candidate or existence evidence. Their
+[definition consumer](compile_sequence_extremum_definition.rs) validates both
+the eventual bound and hits on every tail; neither clause alone defines the
+candidate. Core proves uniqueness and construction preserves the positive
+natural index domain. Positive/negative facts, citations and selected-value
+equality retain their original subjects and IDs.
+
+Ten existing [explicit theorem routes](compile_builtin_sequence_extremum_theorem.rs)
+cover constant sequences, existing limits, existence, selected candidates and
+uniqueness for both extrema. The
+[nested-object example](../../lean/examples/sequence_extrema_nested_objects/statement.lit)
+uses the selectors in arithmetic, a tuple and a formula-function body. Its
+nine source statements generate 50,663 bytes. Numeric selectors remain opaque
+atoms in the recorded rational normalization; their original WD and proved
+codomain supply the observations.
+
+The current all-object/WD plan is tracked locally under
+`scripts/litex_to_lean/plans/`. Constructor entries and their legal WD branches
+are counted separately.
+
+The [derivative consumer](compile_function_derivative.rs) constructs a derivative
+only from the source's candidate or existence evidence. Core uses the original
+interior-point and punctured difference-quotient definition, proves its
+correspondence with `HasDerivAt`, and proves uniqueness. It does not replace
+source WD with Mathlib's totalized `deriv`. The
+[inference consumer](compile_function_derivative_definition.rs) replays the
+stored interior, quotient-limit, existence and differentiability consequences.
+The result retains the original domain lookup, including its optional route;
+it adds no proof search or facts. Source fact IDs and projected run output are
+unchanged. See [candidate selection](../../lean/examples/derivative_candidate_selection/),
+[existence selection](../../lean/examples/derivative_existence_selection/),
+[positive domains](../../lean/examples/derivative_positive_domain_selection/)
+and [explicit guards](../../lean/examples/derivative_guarded_domain_selection/).
+The [definition example](../../lean/examples/derivative_from_definition/) and
+[positive-domain version](../../lean/examples/derivative_positive_from_definition/)
+compile both original clauses through `by def`. A
+[captured formula body](../../lean/examples/derivative_formula_body/) and
+[nested-use example](../../lean/examples/derivative_nested_objects/) retain selector WD.
+
+The [pointwise consumer](compile_pointwise_derivative.rs) replays the recorded
+constant, variable, arithmetic, natural-power, exp/sin/cos/log/sqrt and chain
+rules. [Composition](../../lean/examples/derivative_composition_candidate/)
+uses the exact cited outer derivative; [selection](../../lean/examples/derivative_composition_selected/)
+uses the original differentiability and selector WD. The
+[interior consumer](compile_derivative_interior.rs) proves neighbourhood stability
+from recorded guard operands and point facts. See the
+[positive guard](../../lean/examples/derivative_guarded_positive_calculation/),
+[nonzero guard](../../lean/examples/derivative_guarded_nonzero_calculation/),
+[weak inequality with strict slack](../../lean/examples/derivative_guarded_weak_calculation/),
+[interval](../../lean/examples/derivative_guarded_interval_calculation/) and
+[absolute-value guard](../../lean/examples/derivative_guarded_absolute_calculation/).
+It rejects a relative-continuity leaf without the neighbourhood evidence needed
+for a classical derivative. Isolated-domain continuity and boundary membership
+do not supply that evidence.
+
+The current derivative checkpoint freshly checks 28 derivative-related and two
+existing function-limit pairs: strict source verification, deterministic
+generation, Lean/Mathlib 4.31.0 and 90 audited exports with only `propext`,
+`Classical.choice` and `Quot.sound`. Core SHA256:
+`f996608710475852e20b3e730ffe8f93f7810a182084c6522a5565ae93b43cae`.
+Twenty focused derivative compiler tests pass. A local handwritten Adapter/Final
+check consumes the generated square-derivative theorem and exports ordinary
+`HasDerivAt (fun x : ℝ => x ^ 2) 6 3` and `deriv (fun x : ℝ => x ^ 2) 3 = 6`.
+Explicit differentiation theorem calls and exhaustive constructor/WD context
+coverage remain separate work.
+
 ## Current mathematical reach
 
 The implemented subset connects elementary algebra and real inequalities over
@@ -814,3 +993,30 @@ extrema, real sequence limits and finite real function limits at finite points,
 one-sided points and positive/negative infinity have checked compilation routes.
 The [punctured cancellation example](../../lean/examples/function_limit_punctured_cancellation/)
 also exposes its proved limit as an ordinary Mathlib theorem.
+
+
+Template membership now replays the original declaration-owned carrier expansion
+and its actual residual search, followed by the original converted and native
+inference stores. Checked examples cover [Cartesian membership](../../lean/examples/template_membership_conversion/),
+[nested instances](../../lean/examples/template_membership_nested/),
+[function sets](../../lean/examples/template_membership_function/),
+[guarded instances](../../lean/examples/template_membership_guarded/),
+[identifier stopping](../../lean/examples/template_membership_identifier_stop/)
+and [opaque local binders](../../lean/examples/template_membership_binder/).
+All six strict sources regenerate identically and pass actual pinned Lean with
+the standard three axioms. Twelve replay tests retain altered-evidence and stage
+visibility controls. Further native inference combinations remain independent
+profiles; this does not establish KnownStrategy or module proof closure.
+
+
+The native determinant search routes now replay their original selected laws
+and direct endpoint matches: [identity](../../lean/examples/native_determinant_identity/),
+[transpose](../../lean/examples/native_determinant_transpose/),
+[adjoint](../../lean/examples/native_determinant_adjoint/) and
+[stored equality transport](../../lean/examples/native_determinant_transport/).
+They share fixed schema validation and proved Core bridges with explicit theorem
+calls while preserving each result's original stages. The checkpoint passes six
+focused controls, all 1,674 compiler Rust tests and ten actual Lean pairs,
+including existing theorem/inverse regressions and
+[named exact coordinate evaluation](../../lean/examples/matrix_exact_named_determinant/).
+The other 30 native matrix laws remain independent unsupported search variants.

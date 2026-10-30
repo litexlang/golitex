@@ -32,7 +32,7 @@ def envelope(data):
 
 
 def positive():
-    for path, count in [(HERE.parent / 'main.lit', 36), (HERE / 'main.lit', 96), (HERE / 'readme.lit', 5)]:
+    for path, count in [(HERE.parent / 'main.lit', 60), (HERE / 'main.lit', 96), (HERE / 'readme.lit', 5)]:
         result = subprocess.run(
             [str(BINARY), '-lang', 'en', '-strict', '-f', str(path)],
             cwd=ROOT, env=ENV, text=True, capture_output=True, timeout=600,

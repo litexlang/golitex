@@ -46,6 +46,107 @@ DEFINITION_CONTROLS = {
     'missing-body-guard': ('forall f fn(x R) R:\n    f = fn(x R: x!=0) R {1/x}\n    =>:\n        f(0)=0\n', False),
     'wrong-reciprocal': ('have fn reciprocal(x R: x != 0) R = 1 / x\nreciprocal(2) = 2\n', False),
 }
+GLOSSARY_CASES = {
+    'glossary-by-thm': 'examples/reading/lessons/en/definitions.lit',
+    'glossary-have-equal': 'examples/stmt_nodes/definition/have_obj_equal.lit',
+    'glossary-have-arbitrary': 'examples/stmt_nodes/definition/have_obj_in_nonempty_set.lit',
+    'glossary-function-cases': 'examples/stmt_nodes/definition/have_fn_equal_case_by_case.lit',
+    'glossary-algorithm': 'examples/stmt_nodes/definition/def_algo.lit',
+    'glossary-preimage': 'examples/stmt_nodes/definition/have_by_fn_preimage.lit',
+    'glossary-release-tuple': 'examples/stmt_nodes/release_and_expand/release_tuple_def.lit',
+    'glossary-enumerate': 'examples/stmt_nodes/by/by_enumerate_finite_set.lit',
+    'glossary-extension': 'examples/stmt_nodes/by/by_extension.lit',
+    'glossary-cases': 'examples/stmt_nodes/by/by_cases.lit',
+    'glossary-injective': 'examples/proof_nodes/atomic/by_definition/builtin_injective.lit',
+    'glossary-syllogism': 'examples/reading/lessons/en/syllogism.lit',
+    'glossary-continuity': 'examples/real_analysis/continuity_limits.lit',
+    'glossary-lipschitz': 'examples/real_analysis/lipschitz_uniform_continuous.lit',
+    'glossary-sequence': 'examples/wd/sequence_limit_interfaces.lit',
+    'glossary-symmetric-difference': 'examples/proof_nodes/equal/by_builtin_rule/symmetric_difference.lit',
+    'glossary-unicode': 'examples/tokenize/unicode_math_aliases.lit',
+    'glossary-composition': 'examples/wd/function_composition.lit',
+}
+THEOREM_CASES = {
+    'selected': 'examples/stmt_nodes/by/by_thm.lit',
+    'selection': 'examples/stmt_nodes/by/by_thm_strict_selection.lit',
+    'predicate': 'examples/reading/lessons/en/definitions.lit',
+    'release': 'examples/stmt_nodes/definition/release_thm.lit',
+    'builtin': 'examples/stmt_nodes/release_and_expand/builtin_thm/rational_has_unique_reduced_fraction.lit',
+    'existential': 'examples/stmt_nodes/release_and_expand/builtin_thm/finite_set_has_bijective_index.lit',
+    'missing-premise': 'examples/test_statements/negative/release_thm_stmt/unsatisfied-theorem-premise.lit',
+}
+OBJECT_CASES = {
+    'matrix-basic': 'examples/test_objs/matrix_operators.lit',
+    'matrix-arithmetic': 'examples/test_objs/matrix_arithmetic.lit',
+    'matrix-inverse': 'examples/test_objs/matrix_minors_inverse.lit',
+    'inner-product': 'examples/test_objs/finite_inner_product_norm.lit',
+    'ranges': 'examples/test_objs/finite_set_size.lit',
+    'finite-sequences': 'examples/test_objs/finite_seq_set.lit',
+    'cartesian': 'examples/test_objs/cart.lit',
+    'index-cartesian': 'examples/wd/obj/index_cart.lit',
+    'image': 'examples/test_objs/fn_range.lit',
+    'preimages': 'examples/wd/function_preimages.lit',
+    'composition': 'examples/wd/function_composition.lit',
+    'sum-product': 'examples/wd/obj/sum_product.lit',
+    'finite-product': 'examples/test_objs/product_of_finite_set.lit',
+    'ordered-fold': 'examples/test_objs/reduce.lit',
+    'set-fold': 'examples/test_objs/finite_set_reduce.lit',
+    'finite-extrema': 'examples/wd/finite_extrema_real_carrier.lit',
+    'sequence-limit': 'examples/wd/sequence_limit_interfaces.lit',
+    'sequence-extrema': 'examples/wd/sequence_extrema_convergent.lit',
+    'function-limit': 'examples/wd/real_function_limit_interfaces.lit',
+    'side-limits': 'examples/wd/real_function_limit_sides_interfaces.lit',
+    'positive-infinity': 'examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_pos_inf_selected.lit',
+    'negative-infinity': 'examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_neg_inf_selected.lit',
+    'real-bounds': 'examples/real_analysis/open_interval_bounds.lit',
+    'derivative': 'examples/real_analysis/antiderivative_relations.lit',
+    'integral': 'examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_add.lit',
+    'preimage-command': 'examples/stmt_nodes/definition/have_by_fn_preimage.lit',
+}
+OBJECT_REJECTIONS = {
+    'fractional-index': 'examples/test_objs/negative/sum__n02.lit',
+    'noncommutative-fold': 'examples/test_objs/negative/finite_set_reduce__n01.lit',
+    'missing-integral-proof': 'examples/wd_negative/riemann_integral_without_proof.lit',
+}
+MULTIVARIABLE_CASES = {
+    'calculus': ('examples/real_analysis/multivariable/main.lit', True),
+    'wrong-coordinate': ('examples/wd_negative/multivariable_wrong_coordinate.lit', False),
+    'without-proof': ('examples/wd_negative/multivariable_without_proof.lit', False),
+}
+SYMBOL_CASES = {
+    'factorial': ('examples/test_objs/factorial.lit', True),
+    'factorial-negative': ('examples/test_objs/negative/factorial__n01.lit', False),
+    'factorial-fractional': ('examples/test_objs/negative/factorial__n02.lit', False),
+    'factorial-wrong-value': ('examples/test_objs/negative/factorial__n03.lit', False),
+    'structure': ('examples/test_objs/struct_obj.lit', True),
+    'field': ('examples/test_objs/field_access.lit', True),
+    'template': ('examples/test_objs/instantiated_template_obj.lit', True),
+    'closed-range': ('examples/proof_nodes/or/by_builtin_rule/closed_integer_range_equality_cover.lit', True),
+    'unique': ('examples/tokenize/unicode_math_aliases.lit', True),
+}
+REPEATED_CASES = {
+    'sets': 'examples/test_objs/list_set.lit',
+    'body-braces': 'examples/proof_nodes/equal/by_builtin_rule/fn_range_of_constant_anonymous_fn.lit',
+    'fields-calls': 'examples/test_objs/field_access.lit',
+}
+CONTEXT_CASES = {
+    'open-open': 'examples/test_objs/interval_open_open.lit',
+    'open-closed': 'examples/test_objs/interval_open_closed.lit',
+    'closed-open': 'examples/test_objs/interval_closed_open.lit',
+    'closed-closed': 'examples/test_objs/interval_closed_closed.lit',
+    'lower-open': 'examples/test_objs/one_side_interval_lower_open.lit',
+    'lower-closed': 'examples/test_objs/one_side_interval_lower_closed.lit',
+    'upper-open': 'examples/test_objs/one_side_interval_upper_open.lit',
+    'upper-closed': 'examples/test_objs/one_side_interval_upper_closed.lit',
+    'listed-set': 'examples/wd/obj/list_set.lit',
+    'set-builder': 'examples/test_objs/set_builder.lit',
+    'anonymous': 'examples/wd/obj/anonymous_fn.lit',
+    'function-space': 'examples/wd/obj/fn_set.lit',
+    'structure': 'examples/test_objs/struct_obj.lit',
+    'field': 'examples/test_objs/field_access.lit',
+    'template': 'examples/test_objs/instantiated_template_obj.lit',
+    'call': 'examples/reading/homepage/17-reciprocal-definition.lit',
+}
 
 
 def main():
@@ -55,9 +156,140 @@ def main():
     parser.add_argument('--lessons', action='store_true', help='Also verify the bilingual lessons and their concrete repair exercises.')
     parser.add_argument('--correspondence', action='store_true', help='Also export the four atomic proof routes and named strategy examples.')
     parser.add_argument('--definitions', action='store_true', help='Also export definition applications, tuple properties and rejection controls.')
+    parser.add_argument('--glossary', action='store_true', help='Also export mathematical language-reference hover cases.')
+    parser.add_argument('--theorems', action='store_true', help='Also export actual theorem applications and their rejection control.')
+    parser.add_argument('--objects', action='store_true', help='Also export native object-operation help and domain controls.')
+    parser.add_argument('--contexts', action='store_true', help='Also export AST-owned expression-position help.')
+    parser.add_argument('--multivariable', action='store_true', help='Also export multivariable expression help and domain controls.')
+    parser.add_argument('--symbols', action='store_true', help='Also export postfix and structural-symbol help controls.')
+    parser.add_argument('--repeated', action='store_true', help='Also export repeated-expression anchors and mixed-role brace controls.')
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     report = {}
+    if args.repeated:
+        for name, relative in REPEATED_CASES.items():
+            content = (ROOT / relative).read_text()
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True, timeout=120)
+            bundle = json.loads(run.stdout)
+            if run.returncode != 0 or bundle.get('run_result') != 'success':
+                raise RuntimeError(f'{name}: unexpected repeated-expression result\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: repeated-expression source snapshot mismatch')
+            (args.output / f'repeated-{name}.json').write_text(run.stdout)
+            report[f'repeated-{name}'] = {'source': relative, 'exit': 0, 'run_result': 'success'}
+    if args.symbols:
+        for name, (relative, succeeds) in SYMBOL_CASES.items():
+            content = (ROOT / relative).read_text()
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True, timeout=120)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected:
+                raise RuntimeError(f'{name}: unexpected symbol-source result\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: symbol source snapshot mismatch')
+            (args.output / f'symbol-{name}.json').write_text(run.stdout)
+            report[f'symbol-{name}'] = {'source': relative, 'exit': run.returncode, 'run_result': expected}
+    if args.multivariable:
+        for name, (relative, succeeds) in MULTIVARIABLE_CASES.items():
+            content = (ROOT / relative).read_text()
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True, timeout=120)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected:
+                raise RuntimeError(f'{name}: unexpected multivariable result\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: multivariable source snapshot mismatch')
+            (args.output / f'multivariable-{name}.json').write_text(run.stdout)
+            report[f'multivariable-{name}'] = {'source': relative, 'exit': run.returncode, 'run_result': expected}
+    if args.contexts:
+        for name, relative in CONTEXT_CASES.items():
+            content = (ROOT / relative).read_text()
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True, timeout=60)
+            bundle = json.loads(run.stdout)
+            if run.returncode != 0 or bundle.get('run_result') != 'success':
+                raise RuntimeError(f'{name}: unexpected contextual result\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: contextual source snapshot mismatch')
+            (args.output / f'context-{name}.json').write_text(run.stdout)
+            report[f'context-{name}'] = {'source': relative, 'exit': 0, 'run_result': 'success'}
+        # Same regression as tests/reading_expression_hints.rs: field names
+        # must not receive the identity of a same-spelled bound variable.
+        content = 'struct Point:\n    x R\n    y R\nforall x R, p &Point:\n    p.x + x = p.x + x\n'
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                              '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+        bundle = json.loads(run.stdout)
+        if run.returncode != 0 or bundle.get('run_result') != 'success':
+            raise RuntimeError(f'field-shadow: unexpected result\n{run.stderr}')
+        (args.output / 'context-field-shadow.json').write_text(run.stdout)
+        report['context-field-shadow'] = {'source': '<native field-shadow regression>', 'exit': 0, 'run_result': 'success'}
+    if args.objects:
+        for name, relative in {**OBJECT_CASES, **OBJECT_REJECTIONS}.items():
+            content = (ROOT / relative).read_text()
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True, timeout=60)
+            bundle = json.loads(run.stdout)
+            expected = 'failure' if name in OBJECT_REJECTIONS else 'success'
+            if run.returncode != (1 if expected == 'failure' else 0) or bundle.get('run_result') != expected:
+                raise RuntimeError(f'{name}: unexpected object result\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: object source snapshot mismatch')
+            (args.output / f'object-{name}.json').write_text(run.stdout)
+            report[f'object-{name}'] = {'source': relative, 'exit': run.returncode, 'run_result': expected}
+    if args.theorems:
+        for name, relative in THEOREM_CASES.items():
+            content = (ROOT / relative).read_text()
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'failure' if name == 'missing-premise' else 'success'
+            if run.returncode != (1 if expected == 'failure' else 0) or bundle.get('run_result') != expected:
+                raise RuntimeError(f'{name}: unexpected theorem result\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: theorem source snapshot mismatch')
+            (args.output / f'theorem-{name}.json').write_text(run.stdout)
+            report[f'theorem-{name}'] = {'source': relative, 'exit': run.returncode, 'run_result': expected}
+        # The same checked two-conclusion theorem, invoked with release.
+        content = (ROOT / THEOREM_CASES['selected']).read_text().replace(
+            'by thm zero_sides(2) => 2 + 0 = 2', 'release thm zero_sides(2)')
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                              '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+        bundle = json.loads(run.stdout)
+        if run.returncode != 0 or bundle.get('run_result') != 'success':
+            raise RuntimeError(f'theorem-multiple: unexpected result\n{run.stderr}')
+        (args.output / 'theorem-multiple.json').write_text(run.stdout)
+        report['theorem-multiple'] = {'source': THEOREM_CASES['selected'],
+                                     'variation': 'release both conclusions', 'exit': 0, 'run_result': 'success'}
+    if args.glossary:
+        for name, relative in GLOSSARY_CASES.items():
+            content = (ROOT / relative).read_text()
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            if run.returncode != 0 or bundle.get('run_result') != 'success':
+                raise RuntimeError(f'{name}: public glossary example failed\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: glossary source snapshot mismatch')
+            (args.output / f'{name}.json').write_text(run.stdout)
+            report[name] = {'source': relative, 'exit': 0, 'run_result': 'success'}
+        tuple_source = (ROOT / GLOSSARY_CASES['glossary-release-tuple']).read_text()
+        controls = {
+            'glossary-release-spaced': (tuple_source.replace('release tuple def', 'release   tuple\t def'), True),
+            'glossary-release-comment': (tuple_source.replace('release tuple def', 'release # tuple def\n'), False),
+            'glossary-removed-predicate': ('$fn_eq(1, 1)\n', False),
+        }
+        for name, (content, succeeds) in controls.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != ('success' if succeeds else 'failure'):
+                raise RuntimeError(f'{name}: glossary boundary result mismatch\n{run.stderr}')
+            (args.output / f'{name}.json').write_text(run.stdout)
+            report[name] = {'source': '<glossary-control>', 'exit': run.returncode,
+                            'run_result': bundle['run_result']}
     if args.definitions:
         # Isolate these public files from their containing project's exports;
         # the CLI still verifies and retains every exact source byte.

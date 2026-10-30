@@ -159,12 +159,14 @@ fn matrix_exact_determinants_reject_changed_function_evaluations() {
         MatrixDefinitionResidualProof, MatrixEqualityProof,
     };
     for changed in 0..7 {
-        let (mut run, compiler) = super::execute("det(identity_matrix(2),2) = 1");
+        let (mut run, compiler) = super::execute(include_str!(
+            "../../../lean/examples/matrix_exact_named_determinant/statement.lit"
+        ));
         compiler
             .compile_run(&run, "valid_exact_determinant")
             .unwrap();
         let equality = super::equality_proof_mut(
-            &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
+            &mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result,
         );
         let EqualFactSearchedProof::ByObjectDefinition(
             EqualitySearchProofByObjectDefinition::NativeMatrix(

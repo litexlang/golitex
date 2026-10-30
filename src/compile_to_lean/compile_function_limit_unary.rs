@@ -104,9 +104,12 @@ impl LitexToLeanCompiler {
             .map(|line| line.strip_prefix("  ").unwrap_or(line))
             .collect::<Vec<_>>()
             .join("\n");
+        let input_body = self
+            .compile_real_function_input_body(source, &references[1], position)?
+            .replace('\n', "\n  ");
         Ok(vec![
             view,
-            format!("have _law_real_{index} : Litex.RealFunctionValue M (Litex.denote {function}) := by\n  refine ⟨_law{index}_signature, _law{index}_member, ?_, {}⟩\n  intro x hx\n  exact {} x ((Litex.SetSemantics.sep_members _ _ _).mp hx).1", references[2], references[1]),
+            format!("have _law_real_{index} : Litex.RealFunctionValue M (Litex.denote {function}) := by\n  refine ⟨_law{index}_signature, _law{index}_member, ?_, {}⟩\n  intro x hx\n  {input_body}", references[2]),
             format!("have _law_domain_{index} : Litex.denote _law{index}_domain = Litex.FunctionSemantics.domainValue (Litex.denote {function}) := {equal}"),
         ])
     }

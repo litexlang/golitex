@@ -25,14 +25,6 @@ impl SumStrictOperandsProof {
         }
     }
 }
-pub struct LiteralWeakBoundProof {
-    pub source_order: AtomicExceptEqualityFactKnownProof,
-}
-impl LiteralWeakBoundProof {
-    pub fn new(source_order: AtomicExceptEqualityFactKnownProof) -> Self {
-        Self { source_order }
-    }
-}
 pub struct IntegerSuccessorGapProof {
     pub left_integer: VerifyFactResult,
     pub right_integer: VerifyFactResult,
@@ -182,28 +174,6 @@ impl Runtime {
                     return Ok(Some(P::AbsFromIntervalBounds(
                         AbsFromIntervalBoundsProof::new(lower_bound, upper_bound),
                     )));
-                }
-            }
-        }
-        // Real literal-bound weakening: x<k<=c => x<=c; c<=k<x => c<=x.
-        // The literal comparison is exact; named or symbolic bounds are not resolved.
-        for (source, lower, upper, _) in scalar_order_sources(self) {
-            let lower_bound = EvalRational::from_obj(&lower);
-            let upper_bound = EvalRational::from_obj(&upper);
-            let target_left = EvalRational::from_obj(&fact.left);
-            let target_right = EvalRational::from_obj(&fact.right);
-            let weaker = if same(&upper, &fact.right) {
-                matches!((target_left,lower_bound), (Some(a),Some(b)) if matches!(a.compare(&b),Some(NumberCompareResult::Less|NumberCompareResult::Equal)))
-            } else if same(&lower, &fact.left) {
-                matches!((upper_bound,target_right), (Some(a),Some(b)) if matches!(a.compare(&b),Some(NumberCompareResult::Less|NumberCompareResult::Equal)))
-            } else {
-                false
-            };
-            if weaker {
-                if let Some(source_order) = self.lookup_known_atomic_premise(source) {
-                    return Ok(Some(P::LiteralWeakBound(LiteralWeakBoundProof::new(
-                        source_order,
-                    ))));
                 }
             }
         }

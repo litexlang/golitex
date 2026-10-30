@@ -3,6 +3,7 @@
 mod aggregate_evaluation;
 mod aggregate_identity;
 mod atomic_builtin_rewrite;
+mod atomic_known_rewrite;
 mod builtin_atomic_gen;
 pub(in crate::json_output) mod by_failure;
 mod composition;
@@ -31,6 +32,7 @@ pub(in crate::json_output) mod stmt;
 mod store;
 mod strategy_gen;
 mod theorem;
+mod transitive_relation;
 mod verify;
 mod wd;
 mod wd_by_def;
@@ -53,6 +55,7 @@ pub(in crate::json_output) use wd::project_verify_obj_wd;
 
 mod closed_calculation;
 
+mod structural_limit;
 mod structural_membership;
 
 pub(in crate::json_output) mod witness_failure;

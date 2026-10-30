@@ -164,6 +164,14 @@ litex -strict -session -e 'let a = 1'
 
 Litex 仍处于 beta 阶段。`-strict` 拒绝用户书写的 `trust` 和 `axiom`；验证仍依赖 Litex 的检查器与数学基础。
 
+<a id="litex-reliability"></a>
+
+## Litex 的可靠性
+
+Litex 通过持续测试、代码审阅和独立证明复核来提高可靠性。项目目前有约 4,000 个示例和 3,000 多个测试函数；每次发布前，维护者还会使用能用到的前沿大模型审阅源码、排查 bug。
+
+Lean 编译提供了另一层检查：受支持的 Litex 证明可以重建为 Lean 证明，交由 Lean 内核独立复核。这一覆盖范围仍在持续扩大。
+
 ## 关于
 
 我是沈嘉辰（Jiachen Shen），复旦大学数学博士生。我希望 Litex 让更多人能够书写可检查的数学，也理解其中的定义、条件与推理。欢迎交流与反馈：litexlang@outlook.com。

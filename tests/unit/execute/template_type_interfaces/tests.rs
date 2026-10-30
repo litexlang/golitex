@@ -312,7 +312,7 @@ fn template_type_interfaces_convert_only_the_seed_not_derived_builder_conditions
 }
 
 #[test]
-fn template_type_interfaces_lean_export_fails_closed() {
+fn template_type_interfaces_lean_export_replays_original_conversion() {
     let mut rt = runtime();
     let result = run(
         &mut rt,
@@ -320,9 +320,10 @@ fn template_type_interfaces_lean_export_fails_closed() {
         true,
     );
     let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(rt);
-    assert!(compiler
+    let output = compiler
         .compile_run(&result, "template_membership")
-        .is_err());
+        .expect("the actual carrier conversion and residual proof replay");
+    assert!(output.contains("Litex.tupleInCart"));
 }
 
 #[test]

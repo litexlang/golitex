@@ -48,11 +48,30 @@ impl Runtime {
                 InferAtomicFactResult::NotFunctionRiemannIntegrableFact(Vec::new()),
             ),
             AtomicFact::HasDerivativeAtFact(f) => {
+                let function_domain =
+                    self.checked_real_function_limit_domain(&f.function, state)?;
+                let mut derived = Vec::new();
+                if let Some(domain) = &function_domain {
+                    for clause in self.derivative_clauses_in_domain(f, domain) {
+                        derived.push(self.store_inferred_fact(&clause)?);
+                    }
+                }
+                let existence = self.derivative_existence(f.function.clone(), f.point.clone());
+                derived.push(self.store_inferred_fact(&existence)?);
+                let differentiable: Fact = FunctionDifferentiableAtFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    function: f.function.clone(),
+                    point: f.point.clone(),
+                    line_file: None,
+                }
+                .into();
+                derived.push(self.store_inferred_fact(&differentiable)?);
                 Ok(InferAtomicFactResult::HasDerivativeAtFact(vec![
                     InferHasDerivativeAtFactResult::Definition(
                         InferHasDerivativeAtDefinitionResult {
                             source_fact_id: f.fact_id,
-                            derived: self.store_real_analysis_definition(fact, state)?,
+                            function_domain,
+                            derived,
                         },
                     ),
                 ]))
@@ -61,11 +80,24 @@ impl Runtime {
                 Ok(InferAtomicFactResult::NotHasDerivativeAtFact(Vec::new()))
             }
             AtomicFact::FunctionDifferentiableAtFact(f) => {
+                let existence_fact = self.derivative_existence(f.function.clone(), f.point.clone());
+                let existence = self.store_inferred_fact(&existence_fact)?;
+                let function_domain =
+                    self.checked_real_function_limit_domain(&f.function, state)?;
+                let interior = if let Some(domain) = &function_domain {
+                    let fact =
+                        self.derivative_interior_condition(domain.domain.clone(), f.point.clone());
+                    Some(self.store_inferred_fact(&fact)?)
+                } else {
+                    None
+                };
                 Ok(InferAtomicFactResult::FunctionDifferentiableAtFact(vec![
                     InferFunctionDifferentiableAtFactResult::Definition(
                         InferFunctionDifferentiableAtDefinitionResult {
                             source_fact_id: f.fact_id,
-                            derived: self.store_real_analysis_definition(fact, state)?,
+                            existence,
+                            function_domain,
+                            interior,
                         },
                     ),
                 ]))
@@ -122,11 +154,24 @@ impl Runtime {
                 Ok(InferAtomicFactResult::NotRealAccumulationFact(Vec::new()))
             }
             AtomicFact::FunctionContinuousAtFact(f) => {
+                let Some(function_domain) =
+                    self.checked_real_function_limit_domain(&f.function, state)?
+                else {
+                    return Ok(InferAtomicFactResult::FunctionContinuousAtFact(Vec::new()));
+                };
+                let clause = self.continuity_epsilon(
+                    f.function.clone(),
+                    function_domain.domain.clone(),
+                    f.point.clone(),
+                    f.side,
+                );
+                let derived = vec![self.store_inferred_fact(&clause)?];
                 Ok(InferAtomicFactResult::FunctionContinuousAtFact(vec![
                     InferFunctionContinuousAtFactResult::Definition(
                         InferFunctionContinuousAtDefinitionResult {
                             source_fact_id: f.fact_id,
-                            derived: self.store_real_analysis_definition(fact, state)?,
+                            function_domain,
+                            derived,
                         },
                     ),
                 ]))

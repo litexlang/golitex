@@ -247,9 +247,8 @@ impl LitexToLeanCompiler {
             .collect::<Result<Vec<_>, _>>()?;
         if matches!(rule, Rule::Definition) {
             // The recorded leastness proof accepts a source forall. Project the
-            // semantic bound to precisely that forall; its carrier level is
-            // inferred from the recorded proof, not forced to the model level.
-            references[4] = format!("(by intro _Host _rep c hc bound; exact {} c hc (by intro _X _rx x hx; exact bound (Litex.denote x) hx))", references[4]);
+            // semantic bound to its nested semantic-object parameter.
+            references[4] = format!("(by intro _Host _rep c hc bound; exact {} c hc (by intro x hx; exact bound (Litex.denote x) hx))", references[4]);
         }
         let law = format!(
             "(Litex.real{title}{suffix} {} {})",

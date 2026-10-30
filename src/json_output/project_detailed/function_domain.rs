@@ -8,6 +8,15 @@ use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
 use crate::runtime::Runtime;
 
+pub(super) fn project_checked_body(proof: &CheckedFunctionBodyProof, rt: &Runtime) -> JsonValue {
+    match proof {
+        CheckedFunctionBodyProof::AtomicSubject => {
+            object_for(rt, vec![("type", string("enclosing_atomic_subject_wd"))])
+        }
+        CheckedFunctionBodyProof::IndependentlyChecked(proof) => project_obj_wd_proof(proof, rt),
+    }
+}
+
 fn signature(signature: &crate::ast::obj::FnSet) -> JsonValue {
     string(Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())).readable_string())
 }

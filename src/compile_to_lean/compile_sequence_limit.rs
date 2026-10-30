@@ -86,7 +86,7 @@ impl LitexToLeanCompiler {
 
     /// Only use the original typed parameter's own membership producer; do
     /// not search the environment for an unrelated substitute domain fact.
-    fn sequence_parameter_raw_domain(
+    pub(super) fn sequence_parameter_raw_domain(
         &self,
         sequence: &Obj,
         position: &SourcePosition<'_>,
@@ -124,34 +124,8 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         ensure_object(&object.sequence, &proof.sequence_wd)?;
         let sequence = self.compile_wd(&proof.sequence_wd, position)?;
-        let domain = match &proof.sequence_domain {
-            RealSequenceDomainProof::CompleteSignature(domain) => {
-                let signature = &domain.signature;
-                if !matches!(signature.set_bound_parameters.groups.as_slice(), [g] if g.params.len() == 1 && g.param_type.as_ref() == &Obj::StandardSet(StandardSet::NPos))
-                    || !signature.dom_facts.is_empty()
-                    || signature.ret_set.as_ref() != &Obj::StandardSet(StandardSet::R)
-                {
-                    return Err(LeanCompileError::unsupported("SequenceLimit/Signature"));
-                }
-                self.compile_complete_domain_member(&object.sequence, domain, position)?
-            }
-            RealSequenceDomainProof::Membership(membership) => {
-                let Fact::AtomicFact(AtomicFact::InFact(f)) = source_subject(membership)? else {
-                    return Err(LeanCompileError::unsupported("SequenceLimit/Domain"));
-                };
-                let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) = &f.set else {
-                    return Err(LeanCompileError::unsupported("SequenceLimit/Signature"));
-                };
-                if f.element.ir() != object.sequence.ir()
-                    || !matches!(signature.set_bound_parameters.groups.as_slice(), [g] if g.params.len() == 1 && g.param_type.as_ref() == &Obj::StandardSet(StandardSet::NPos))
-                    || !signature.dom_facts.is_empty()
-                    || signature.ret_set.as_ref() != &Obj::StandardSet(StandardSet::R)
-                {
-                    return Err(LeanCompileError::unsupported("SequenceLimit/Signature"));
-                }
-                self.compile_verify(membership, position)?.1
-            }
-        };
+        let domain =
+            self.compile_real_sequence_domain(&object.sequence, &proof.sequence_domain, position)?;
         let convergence = match &proof.convergence {
             SequenceConvergenceProof::Candidate(candidate) => {
                 let AtomicFact::HasSequenceLimitFact(f) = &candidate.fact else {
@@ -181,5 +155,41 @@ impl LitexToLeanCompiler {
             }
         };
         Ok(format!("(let _sequence := {sequence}; Litex.sequenceLimit _sequence (Litex.unguardedFunctionDomain _sequence (Litex.denote (Litex.NPos (M := M))) (Litex.denote (Litex.R (M := M))) (Litex.isSet (Litex.NPos (M := M))) (Litex.isSet (Litex.R (M := M))) {domain}) {convergence})"))
+    }
+    pub(super) fn compile_real_sequence_domain(
+        &self,
+        sequence: &Obj,
+        proof: &RealSequenceDomainProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let member = match proof {
+            RealSequenceDomainProof::CompleteSignature(domain) => {
+                let signature = &domain.signature;
+                if !matches!(signature.set_bound_parameters.groups.as_slice(), [g] if g.params.len() == 1 && g.param_type.as_ref() == &Obj::StandardSet(StandardSet::NPos))
+                    || !signature.dom_facts.is_empty()
+                    || signature.ret_set.as_ref() != &Obj::StandardSet(StandardSet::R)
+                {
+                    return Err(LeanCompileError::unsupported("SequenceLimit/Signature"));
+                }
+                self.compile_complete_domain_member(sequence, domain, position)?
+            }
+            RealSequenceDomainProof::Membership(membership) => {
+                let Fact::AtomicFact(AtomicFact::InFact(f)) = source_subject(membership)? else {
+                    return Err(LeanCompileError::unsupported("SequenceLimit/Domain"));
+                };
+                let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) = &f.set else {
+                    return Err(LeanCompileError::unsupported("SequenceLimit/Signature"));
+                };
+                if f.element.ir() != sequence.ir()
+                    || !matches!(signature.set_bound_parameters.groups.as_slice(), [g] if g.params.len() == 1 && g.param_type.as_ref() == &Obj::StandardSet(StandardSet::NPos))
+                    || !signature.dom_facts.is_empty()
+                    || signature.ret_set.as_ref() != &Obj::StandardSet(StandardSet::R)
+                {
+                    return Err(LeanCompileError::unsupported("SequenceLimit/Signature"));
+                }
+                self.compile_verify(membership, position)?.1
+            }
+        };
+        Ok(member)
     }
 }

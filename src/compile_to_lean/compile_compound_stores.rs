@@ -430,31 +430,27 @@ impl LitexToLeanCompiler {
             }
             InferAtomicFactResult::NotSequenceAnalysisFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::RealAccumulationFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+                self.compile_real_accumulation_inferences(infer, seed, compiled, position)
             }
-            InferAtomicFactResult::NotRealAccumulationFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
-            }
+            InferAtomicFactResult::NotRealAccumulationFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::HasRiemannIntegralFact(_)
             | InferAtomicFactResult::NotHasRiemannIntegralFact(_)
             | InferAtomicFactResult::FunctionRiemannIntegrableFact(_)
             | InferAtomicFactResult::NotFunctionRiemannIntegrableFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/RiemannIntegral"))
             }
-            InferAtomicFactResult::HasDerivativeAtFact(_)
-            | InferAtomicFactResult::NotHasDerivativeAtFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/DerivativeAt"))
+            InferAtomicFactResult::NotHasDerivativeAtFact(_)
+            | InferAtomicFactResult::NotFunctionDifferentiableAtFact(_) => Ok(Vec::new()),
+            InferAtomicFactResult::HasDerivativeAtFact(_) => {
+                self.compile_derivative_inferences(infer, seed, compiled, position)
             }
-            InferAtomicFactResult::FunctionDifferentiableAtFact(_)
-            | InferAtomicFactResult::NotFunctionDifferentiableAtFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/DerivativeAt"))
+            InferAtomicFactResult::FunctionDifferentiableAtFact(_) => {
+                self.compile_differentiability_inferences(infer, seed, compiled, position)
             }
             InferAtomicFactResult::FunctionContinuousAtFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+                self.compile_function_continuity_inferences(infer, seed, compiled, position)
             }
-            InferAtomicFactResult::NotFunctionContinuousAtFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
-            }
+            InferAtomicFactResult::NotFunctionContinuousAtFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::FunctionContinuousFact(_) => {
                 Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
             }
@@ -472,13 +468,9 @@ impl LitexToLeanCompiler {
             InferAtomicFactResult::HasSequenceLimitFact(_)
             | InferAtomicFactResult::NotHasSequenceLimitFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::HasSequenceLimsupFact(_)
-            | InferAtomicFactResult::NotHasSequenceLimsupFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/SequenceLimsup"))
-            }
-            InferAtomicFactResult::HasSequenceLiminfFact(_)
-            | InferAtomicFactResult::NotHasSequenceLiminfFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/SequenceLiminf"))
-            }
+            | InferAtomicFactResult::NotHasSequenceLimsupFact(_)
+            | InferAtomicFactResult::HasSequenceLiminfFact(_)
+            | InferAtomicFactResult::NotHasSequenceLiminfFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::EqualFact(rules) => {
                 let AtomicFact::EqualFact(source) = atomic else {
                     unreachable!()
@@ -489,195 +481,7 @@ impl LitexToLeanCompiler {
                 self.compile_prop_inference_rules(rules, seed, compiled, position)
             }
             InferAtomicFactResult::InFact(rules) => {
-                let mut declarations = Vec::new();
-                let mut completed = position.before;
-                for rule in rules {
-                    let prior = SourcePosition {
-                        before: completed,
-                        ..*position
-                    };
-                    match rule {
-                        InferInFactResult::PowerSet(p) => {
-                            declarations.extend(
-                                self.compile_power_set_inference(p, seed, compiled, &prior)?,
-                            );
-                        }
-                        InferInFactResult::Preimage(p) => {
-                            declarations.extend(self.compile_preimage_inference(
-                                false,
-                                p.source_fact_id,
-                                &p.source_equal,
-                                &p.construction,
-                                &p.derived,
-                                seed,
-                                compiled,
-                                &prior,
-                            )?)
-                        }
-                        InferInFactResult::PreimageSet(p) => {
-                            declarations.extend(self.compile_preimage_inference(
-                                true,
-                                p.source_fact_id,
-                                &p.source_equal,
-                                &p.construction,
-                                &p.derived,
-                                seed,
-                                compiled,
-                                &prior,
-                            )?)
-                        }
-                        InferInFactResult::Template(_) => {
-                            return Err(LeanCompileError::unsupported(
-                                "Inference/TemplateMembership",
-                            ));
-                        }
-                        InferInFactResult::SignedStandardSetSign(sign) => {
-                            declarations.extend(
-                                self.compile_natural_sign_inference(sign, seed, compiled, &prior)?,
-                            );
-                        }
-                        InferInFactResult::SetBuilder(proof) => {
-                            declarations.extend(
-                                self.compile_set_builder_projections(
-                                    proof, seed, compiled, &prior,
-                                )?,
-                            );
-                        }
-                        InferInFactResult::CartCoordinates(proof) => {
-                            declarations.extend(self.compile_cart_coordinate_inferences(
-                                proof, seed, compiled, &prior,
-                            )?);
-                        }
-                        InferInFactResult::FnRange(proof) => {
-                            declarations.extend(
-                                self.compile_range_inference(proof, seed, compiled, &prior)?,
-                            );
-                        }
-                        InferInFactResult::SeqExpand(_)
-                        | InferInFactResult::FiniteSeqExpand(_)
-                        | InferInFactResult::MatrixExpand(_) => {
-                            declarations.extend(
-                                self.compile_sequence_inference(rule, seed, compiled, &prior)?,
-                            );
-                        }
-                        InferInFactResult::RealInterval(p) => {
-                            declarations.extend(self.compile_real_interval_inference(
-                                &[&p.real_membership, &p.lower_bound, &p.upper_bound],
-                                seed,
-                                compiled,
-                                &prior,
-                            )?);
-                        }
-                        InferInFactResult::OneSideRealInterval(p) => {
-                            declarations.extend(self.compile_real_interval_inference(
-                                &[&p.real_membership, &p.bound],
-                                seed,
-                                compiled,
-                                &prior,
-                            )?);
-                        }
-                        InferInFactResult::Range(proof) => {
-                            declarations.extend(self.compile_integer_interval_inference(
-                                &proof.bounds,
-                                false,
-                                seed,
-                                compiled,
-                                &prior,
-                            )?);
-                        }
-                        InferInFactResult::ClosedRange(proof) => {
-                            declarations.extend(self.compile_integer_interval_inference(
-                                &proof.bounds,
-                                true,
-                                seed,
-                                compiled,
-                                &prior,
-                            )?);
-                        }
-                        InferInFactResult::ListSetSingletonEqual(proof) => {
-                            declarations.extend(self.compile_singleton_member_inference(
-                                seed,
-                                compiled,
-                                &proof.derived.store,
-                                &prior,
-                            )?);
-                        }
-                        InferInFactResult::SetMinusSplit(proof) => {
-                            declarations.extend(
-                                self.compile_set_minus_inference(proof, seed, compiled, &prior)?,
-                            );
-                        }
-                        InferInFactResult::IntersectBoth(proof) => {
-                            declarations.extend(
-                                self.compile_intersection_inference(proof, seed, compiled, &prior)?,
-                            );
-                        }
-                        InferInFactResult::UnionOr(proof) => {
-                            let AtomicFact::InFact(member) = atomic else {
-                                unreachable!()
-                            };
-                            let Obj::SetOperator(SetOperator::Union(union)) = &member.set else {
-                                return Err(LeanCompileError::unsupported("Inference/UnionSource"));
-                            };
-                            let fact =
-                                self.resolve_fact(proof.derived.primary_fact_id(), &prior)?;
-                            let Fact::OrFact(or) = &fact else {
-                                return Err(LeanCompileError::unsupported(
-                                    "Inference/UnionConclusion",
-                                ));
-                            };
-                            if or.facts.len() != 2 || or.facts.iter().zip([&union.left, &union.right]).any(|(branch, set)| {
-                                !matches!(branch, AndChainAtomicFact::AtomicFact(AtomicFact::InFact(f))
-                                    if f.element.ir() == member.element.ir() && f.set.ir() == set.ir())
-                            }) {
-                                return Err(LeanCompileError::new("Inference/UnionConclusion", "The original union projection has different ordered membership branches."));
-                            }
-                            self.validate_store(&proof.derived.store, &fact)?;
-                            let term = format!(
-                                "((Litex.inUnion_iff {} {} {}).mp {})",
-                                self.compile_object_reference(&member.element, &prior)?,
-                                self.compile_object_reference(&union.left, &prior)?,
-                                self.compile_object_reference(&union.right, &prior)?,
-                                compiled.1
-                            );
-                            let formed = SourcePosition::new(
-                                Some(&prior),
-                                SourceOwner::InferredStore(&proof.derived.store),
-                                usize::MAX,
-                            );
-                            declarations.push(self.emit_internal_fact(
-                                &fact,
-                                &(self.fact_proposition(&fact, &formed)?, term),
-                                &formed,
-                            )?);
-                        }
-                        _ => {}
-                    }
-                    if matches!(
-                        rule,
-                        InferInFactResult::SetBuilder(_)
-                            | InferInFactResult::PowerSet(_)
-                            | InferInFactResult::Preimage(_)
-                            | InferInFactResult::PreimageSet(_)
-                            | InferInFactResult::SignedStandardSetSign(_)
-                            | InferInFactResult::CartCoordinates(_)
-                            | InferInFactResult::FnRange(_)
-                            | InferInFactResult::RealInterval(_)
-                            | InferInFactResult::OneSideRealInterval(_)
-                            | InferInFactResult::SeqExpand(_)
-                            | InferInFactResult::FiniteSeqExpand(_)
-                            | InferInFactResult::MatrixExpand(_)
-                            | InferInFactResult::Range(_)
-                            | InferInFactResult::ClosedRange(_)
-                            | InferInFactResult::UnionOr(_)
-                            | InferInFactResult::IntersectBoth(_)
-                            | InferInFactResult::SetMinusSplit(_)
-                            | InferInFactResult::ListSetSingletonEqual(_)
-                    ) {
-                        completed += rule.stored_conclusions().len();
-                    }
-                }
-                Ok(declarations)
+                self.compile_membership_inference_rules(rules, seed, compiled, position)
             }
             InferAtomicFactResult::LessFact(_)
             | InferAtomicFactResult::GreaterFact(_)
@@ -781,5 +585,197 @@ impl LitexToLeanCompiler {
             &(format!("Litex.Same {receiver} {element}"), term),
             &formed,
         )?])
+    }
+
+    pub(in crate::compile_to_lean) fn compile_membership_inference_rules(
+        &self,
+        rules: &[InferInFactResult],
+        seed: &Fact,
+        compiled: &(String, String),
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let Fact::AtomicFact(atomic @ AtomicFact::InFact(_)) = seed else {
+            return Err(LeanCompileError::unsupported("Inference/MembershipSeed"));
+        };
+        let mut declarations = Vec::new();
+        let mut completed = position.before;
+        for rule in rules {
+            let prior = SourcePosition {
+                before: completed,
+                ..*position
+            };
+            match rule {
+                InferInFactResult::PowerSet(p) => {
+                    declarations
+                        .extend(self.compile_power_set_inference(p, seed, compiled, &prior)?);
+                }
+                InferInFactResult::Preimage(p) => {
+                    declarations.extend(self.compile_preimage_inference(
+                        false,
+                        p.source_fact_id,
+                        &p.source_equal,
+                        &p.construction,
+                        &p.derived,
+                        seed,
+                        compiled,
+                        &prior,
+                    )?)
+                }
+                InferInFactResult::PreimageSet(p) => {
+                    declarations.extend(self.compile_preimage_inference(
+                        true,
+                        p.source_fact_id,
+                        &p.source_equal,
+                        &p.construction,
+                        &p.derived,
+                        seed,
+                        compiled,
+                        &prior,
+                    )?)
+                }
+                InferInFactResult::Template(proof) => {
+                    declarations.extend(
+                        self.compile_template_membership_inference(proof, seed, compiled, &prior)?,
+                    );
+                }
+                InferInFactResult::SignedStandardSetSign(sign) => {
+                    declarations
+                        .extend(self.compile_natural_sign_inference(sign, seed, compiled, &prior)?);
+                }
+                InferInFactResult::SetBuilder(proof) => {
+                    declarations.extend(
+                        self.compile_set_builder_projections(proof, seed, compiled, &prior)?,
+                    );
+                }
+                InferInFactResult::CartCoordinates(proof) => {
+                    declarations.extend(
+                        self.compile_cart_coordinate_inferences(proof, seed, compiled, &prior)?,
+                    );
+                }
+                InferInFactResult::FnRange(proof) => {
+                    declarations
+                        .extend(self.compile_range_inference(proof, seed, compiled, &prior)?);
+                }
+                InferInFactResult::SeqExpand(_)
+                | InferInFactResult::FiniteSeqExpand(_)
+                | InferInFactResult::MatrixExpand(_) => {
+                    declarations
+                        .extend(self.compile_sequence_inference(rule, seed, compiled, &prior)?);
+                }
+                InferInFactResult::RealInterval(p) => {
+                    declarations.extend(self.compile_real_interval_inference(
+                        &[&p.real_membership, &p.lower_bound, &p.upper_bound],
+                        seed,
+                        compiled,
+                        &prior,
+                    )?);
+                }
+                InferInFactResult::OneSideRealInterval(p) => {
+                    declarations.extend(self.compile_real_interval_inference(
+                        &[&p.real_membership, &p.bound],
+                        seed,
+                        compiled,
+                        &prior,
+                    )?);
+                }
+                InferInFactResult::Range(proof) => {
+                    declarations.extend(self.compile_integer_interval_inference(
+                        &proof.bounds,
+                        false,
+                        seed,
+                        compiled,
+                        &prior,
+                    )?);
+                }
+                InferInFactResult::ClosedRange(proof) => {
+                    declarations.extend(self.compile_integer_interval_inference(
+                        &proof.bounds,
+                        true,
+                        seed,
+                        compiled,
+                        &prior,
+                    )?);
+                }
+                InferInFactResult::ListSetSingletonEqual(proof) => {
+                    declarations.extend(self.compile_singleton_member_inference(
+                        seed,
+                        compiled,
+                        &proof.derived.store,
+                        &prior,
+                    )?);
+                }
+                InferInFactResult::SetMinusSplit(proof) => {
+                    declarations
+                        .extend(self.compile_set_minus_inference(proof, seed, compiled, &prior)?);
+                }
+                InferInFactResult::IntersectBoth(proof) => {
+                    declarations.extend(
+                        self.compile_intersection_inference(proof, seed, compiled, &prior)?,
+                    );
+                }
+                InferInFactResult::UnionOr(proof) => {
+                    let AtomicFact::InFact(member) = atomic else {
+                        unreachable!()
+                    };
+                    let Obj::SetOperator(SetOperator::Union(union)) = &member.set else {
+                        return Err(LeanCompileError::unsupported("Inference/UnionSource"));
+                    };
+                    let fact = self.resolve_fact(proof.derived.primary_fact_id(), &prior)?;
+                    let Fact::OrFact(or) = &fact else {
+                        return Err(LeanCompileError::unsupported("Inference/UnionConclusion"));
+                    };
+                    if or.facts.len() != 2 || or.facts.iter().zip([&union.left, &union.right]).any(|(branch, set)| {
+                                !matches!(branch, AndChainAtomicFact::AtomicFact(AtomicFact::InFact(f))
+                                    if f.element.ir() == member.element.ir() && f.set.ir() == set.ir())
+                            }) {
+                                return Err(LeanCompileError::new("Inference/UnionConclusion", "The original union projection has different ordered membership branches."));
+                            }
+                    self.validate_store(&proof.derived.store, &fact)?;
+                    let term = format!(
+                        "((Litex.inUnion_iff {} {} {}).mp {})",
+                        self.compile_object_reference(&member.element, &prior)?,
+                        self.compile_object_reference(&union.left, &prior)?,
+                        self.compile_object_reference(&union.right, &prior)?,
+                        compiled.1
+                    );
+                    let formed = SourcePosition::new(
+                        Some(&prior),
+                        SourceOwner::InferredStore(&proof.derived.store),
+                        usize::MAX,
+                    );
+                    declarations.push(self.emit_internal_fact(
+                        &fact,
+                        &(self.fact_proposition(&fact, &formed)?, term),
+                        &formed,
+                    )?);
+                }
+                _ => {}
+            }
+            if matches!(
+                rule,
+                InferInFactResult::Template(_)
+                    | InferInFactResult::SetBuilder(_)
+                    | InferInFactResult::PowerSet(_)
+                    | InferInFactResult::Preimage(_)
+                    | InferInFactResult::PreimageSet(_)
+                    | InferInFactResult::SignedStandardSetSign(_)
+                    | InferInFactResult::CartCoordinates(_)
+                    | InferInFactResult::FnRange(_)
+                    | InferInFactResult::RealInterval(_)
+                    | InferInFactResult::OneSideRealInterval(_)
+                    | InferInFactResult::SeqExpand(_)
+                    | InferInFactResult::FiniteSeqExpand(_)
+                    | InferInFactResult::MatrixExpand(_)
+                    | InferInFactResult::Range(_)
+                    | InferInFactResult::ClosedRange(_)
+                    | InferInFactResult::UnionOr(_)
+                    | InferInFactResult::IntersectBoth(_)
+                    | InferInFactResult::SetMinusSplit(_)
+                    | InferInFactResult::ListSetSingletonEqual(_)
+            ) {
+                completed += rule.stored_conclusions().len();
+            }
+        }
+        Ok(declarations)
     }
 }

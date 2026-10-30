@@ -112,7 +112,7 @@ thm unary_c_zero_from_continuity:
             ? $Calc::unary_higher_order::is_n_times_differentiable_on(D,m,f,D)
             m>=1
             m<=0
-            m<1
+            m<=0<1
             impossible m>=1
     claim:
         ? forall m closed_range(1,0),p R:
@@ -124,7 +124,7 @@ thm unary_c_zero_from_continuity:
             ? $is_continuous_at(\Calc::unary_higher_order::nth_derivative_function<D,D,m>(f),p)
             m>=1
             m<=0
-            m<1
+            m<=0<1
             impossible m>=1
     by def $is_unary_c_k_on_open(D,0,f)
 
@@ -147,7 +147,7 @@ thm scalar_c_zero_from_continuity:
             ? $Calc::higher_order::is_ordered_partially_differentiable_on(n,D,m,f,D,indices)
             m>=1
             m<=0
-            m<1
+            m<=0<1
             impossible m>=1
     claim:
         ? forall m closed_range(1,0),indices finite_seq(closed_range(1,n),m),p cart_n(R,n):
@@ -159,7 +159,7 @@ thm scalar_c_zero_from_continuity:
             ? $is_multi_continuous_at(\Calc::higher_order::ordered_partial_function<n,D,D,m>(f,indices),p,n)
             m>=1
             m<=0
-            m<1
+            m<=0<1
             impossible m>=1
     by def $is_scalar_c_k_on_open(n,D,0,f)
 
@@ -293,6 +293,7 @@ thm unary_c_k_from_profiles:
                 j-1 $in closed_range(0,m)
                 =>:
                     $has_derivative_at(prefix(j-1),x,prefix(j)(x))
+            j<=m<=k
             j $in closed_range(1,k)
             j $in closed_range(0,k)
             j-1 $in closed_range(0,k)

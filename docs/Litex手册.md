@@ -3589,7 +3589,7 @@ $same(a, a)
 |---|---|---|
 |`register reflexive`|`P(x, x)`|关闭自反正目标。|
 |`register symmetric`|一种非平凡的参数排列|在该排列中重试正目标。|
-|`register transitive`|`P(x, y)` 和 `P(y, z)` 意味着 `P(x, z)`|存储非相邻链后果。|
+|`register transitive`|`P(x, y)` 和 `P(y, z)` 意味着 `P(x, z)`|普通正目标可选一个已知左边并验证剩余一边；链仍存储非相邻后果。|
 
 > **预览：** 旧拼写 `by reflexive_prop` / `by symmetric_prop` / `by transitive_prop` 已删除。
 
@@ -7944,11 +7944,13 @@ forall a, b, c R:
     b <= c
     =>:
         a <= c
-forall a, b, c R:
-    a <= b
-    b < c
-    =>:
-        a < c
+claim:
+    ? forall a, b, c R:
+        a <= b
+        b < c
+        =>:
+            a < c
+    a <= b < c
 forall a, b R:
     a < b
     =>:
@@ -8769,7 +8771,7 @@ claim:
         =>:
             a^m < a^n
     0 < n-m
-    a <= a^(n-m)
+    1 < a <= a^(n-m)
     a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n
 ```
 
@@ -11132,6 +11134,14 @@ eval sum(1, 3, fn(k Z) Z {k})
 条目与示例说明已覆盖的规则形状，不是对每个实例化相等、每条内核规则或每个导入定理的穷尽列表。历史验证结果不代表当前版本重新运行了全部示例。
 
 表达式定义的函数的当前正常 `statement` 渲染省略了写入的返回载体。保留原始隔离的源码，用于返回界故障的解释。源码事实、执行证据和用户假设在整个条目​​ 中保持不同。
+
+<a id="litex-reliability"></a>
+
+## Litex 的可靠性
+
+Litex 通过持续测试、代码审阅和独立证明复核来提高可靠性。项目目前有约 4,000 个示例和 3,000 多个测试函数；每次发布前，维护者还会使用能用到的前沿大模型审阅源码、排查 bug。
+
+Lean 编译提供了另一层检查：受支持的 Litex 证明可以重建为 Lean 证明，交由 Lean 内核独立复核。这一覆盖范围仍在持续扩大。
 
 <a id="design-context-and-references"></a>
 

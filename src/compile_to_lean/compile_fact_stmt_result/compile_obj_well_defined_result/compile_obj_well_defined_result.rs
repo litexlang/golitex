@@ -157,6 +157,9 @@ impl LitexToLeanCompiler {
                 let term = match (obj, proof) {
                     (Obj::LimitOperator(LimitOperator::Function(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Function(evidence))) => self.compile_function_limit_wd(object, evidence, position)?,
                     (Obj::LimitOperator(LimitOperator::Sequence(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Sequence(evidence))) => self.compile_sequence_limit_wd(object, evidence, position)?,
+                    (Obj::LimitOperator(LimitOperator::SequenceLimsup(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::SequenceLimsup(p))) => self.compile_sequence_extremum_wd(true, &object.sequence, &p.sequence_wd, &p.sequence_domain, &p.convergence, position)?,
+                    (Obj::LimitOperator(LimitOperator::SequenceLiminf(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::SequenceLiminf(p))) => self.compile_sequence_extremum_wd(false, &object.sequence, &p.sequence_wd, &p.sequence_domain, &p.convergence, position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::AtPoint(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p))) => self.compile_derivative_wd(object,p,position)?,
                     (Obj::BoundOperator(object), ObjWellDefinedProofByDef::BoundOperator(evidence)) => self.compile_real_extremum_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(object @ (IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_))), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_finite_aggregate_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(IteratedOperator::Reduce(object)), ObjWellDefinedProofByDef::IteratedOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef::Reduce(evidence))) => self.compile_range_fold_wd(object, evidence, position)?,
@@ -569,6 +572,18 @@ impl LitexToLeanCompiler {
                     },
                 )?);
             }
+            PredicateDomainProof::FunctionAnalysis(p)
+                if crate::compile_to_lean::compile_function_continuity::continuity_parts(fact)
+                    .is_some() =>
+            {
+                bindings.extend(self.compile_function_continuity_domain(fact, p, position)?);
+            }
+            PredicateDomainProof::FunctionAnalysis(p)
+                if crate::compile_to_lean::compile_function_derivative::derivative_parts(fact)
+                    .is_some() =>
+            {
+                bindings.extend(self.compile_derivative_domain(fact, p, position)?);
+            }
             PredicateDomainProof::FunctionAnalysis(_) => {
                 return Err(LeanCompileError::unsupported("WD/RealAnalysisPredicate"))
             }
@@ -578,6 +593,10 @@ impl LitexToLeanCompiler {
             PredicateDomainProof::SequenceLimit(p) => {
                 let (_, value, _) =
                     crate::compile_to_lean::compile_sequence_epsilon::limit_parts(fact)
+                        .or_else(|| {
+                            crate::compile_to_lean::compile_sequence_extremum::extremum_parts(fact)
+                                .map(|(a, v, _, negative)| (a, v, negative))
+                        })
                         .ok_or_else(|| {
                             LeanCompileError::unsupported("SequenceLimit/DomainSubject")
                         })?;
@@ -613,6 +632,13 @@ impl LitexToLeanCompiler {
                     }
                 }
                 self.validate_real_bound_domain(
+                    fact,
+                    &requirements
+                        .iter()
+                        .map(|r| &r.requirement)
+                        .collect::<Vec<_>>(),
+                )?;
+                self.validate_real_accumulation_domain(
                     fact,
                     &requirements
                         .iter()

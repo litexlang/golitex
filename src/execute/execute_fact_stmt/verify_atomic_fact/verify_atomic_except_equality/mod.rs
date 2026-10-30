@@ -19,6 +19,7 @@ pub mod search_atomic_except_equality_fact_proof_by_known_special_property;
 pub mod search_atomic_except_equality_fact_proof_by_known_strategy;
 pub mod search_atomic_except_equality_fact_proof_directly;
 mod search_in_fact_proof;
+pub mod search_transitive_relation;
 pub mod verify_atomic_except_equality;
 
 pub use search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinRewrite;
@@ -47,3 +48,7 @@ pub(crate) use search_in_fact_proof::TemplateMembershipProof;
 pub(crate) mod known_real_array_return;
 
 pub mod known_power_set_closure;
+
+#[cfg(test)]
+#[path = "../../../../../tests/unit/execute/negated_order/tests.rs"]
+mod explicit_order_complement_tests;

@@ -172,12 +172,6 @@ pub enum LessFactSearchProofByBuiltinRule {
     // Mathematical property: `c < 0` and `b < a` ⇒ `a / c < b / c`.
     // Example: known `c < 0` and `y < x` prove `x / c < y / c`.
     DivMonotoneStrictSameNegDivisor(DivMonotoneStrictSameNegDivisorBuiltinRuleProof),
-    // Weaken a known numeric lower bound to a smaller literal strict goal.
-    // Example: known `4 < x` proves `2 < x`.
-    NumericLowerBoundWeakenLt(NumericLowerBoundWeakenLtBuiltinRuleProof),
-    // Weaken a known numeric upper bound to a larger literal strict goal.
-    // Example: known `x < 4` proves `x < 6`.
-    NumericUpperBoundWeakenLt(NumericUpperBoundWeakenLtBuiltinRuleProof),
     // Positive even integer exceeds one.
     // Mathematical property: `i $in N+` and `$dvd(i, 2)` ⇒ `1 < i`.
     // Example: after `have i N+` and `trust $dvd(i, 2)`, prove `1 < i`.
@@ -343,14 +337,6 @@ pub struct DivByGtOneLessSelfBuiltinRuleProof {
 pub struct DivMonotoneStrictSameNegDivisorBuiltinRuleProof {
     pub divisor_neg_proof: VerifyFactResult,
     pub numerators_order_proof: VerifyFactResult,
-}
-
-pub struct NumericLowerBoundWeakenLtBuiltinRuleProof {
-    pub cite_fact_id: FactId,
-}
-
-pub struct NumericUpperBoundWeakenLtBuiltinRuleProof {
-    pub cite_fact_id: FactId,
 }
 
 pub struct PositiveEvenGtOneBuiltinRuleProof {

@@ -33,6 +33,135 @@ fn count_facts(rt: &Runtime) -> usize {
 }
 
 #[test]
+fn prime_divisor_builtin_produces_usable_existence_for_generic_and_concrete_inputs() {
+    for code in [
+        r#"claim:
+    ? forall m N+:
+        2 <= m
+        =>:
+            exist p N+ st {$prime(p), m % p = 0}
+    release thm prime_divisor(m)
+    obtain p from exist p N+ st {$prime(p), m % p = 0}
+    $dvd(m, p)
+    witness exist q N+ st {$prime(q), m % q = 0} from p
+"#,
+        r#"claim:
+    ? forall m Z:
+        1 < m
+        =>:
+            exist p N+ st {$prime(p), m % p = 0}
+    release thm prime_divisor(m)
+"#,
+        r#"release thm prime_divisor(2)
+obtain p from exist p N+ st {$prime(p), 2 % p = 0}
+$dvd(2, p)
+release thm prime_divisor(12)
+obtain q from exist q N+ st {$prime(q), 12 % q = 0}
+$dvd(12, q)
+release thm prime_divisor(97)
+obtain r from exist r N+ st {$prime(r), 97 % r = 0}
+$dvd(97, r)
+"#,
+    ] {
+        let mut rt = runtime();
+        let result = rt.run_litex_code(code).unwrap();
+        assert!(
+            result.success && result.session_error.is_none(),
+            "{code}\n{}",
+            crate::json_output::emit_run_detailed(&result, &rt, "test", None)
+        );
+    }
+}
+
+#[test]
+fn prime_divisor_builtin_retains_native_contract_and_checked_caller_evidence() {
+    let id = BuiltinTheoremId::from_name("prime_divisor").unwrap();
+    assert_eq!(id.as_str(), "prime_divisor");
+    assert_eq!(id.arity(), 1);
+    assert!(crate::builtin_theorem::is_reserved_builtin_name(
+        "prime_divisor"
+    ));
+
+    let mut rt = runtime();
+    let result = execute(&mut rt, "release thm prime_divisor(12)");
+    let ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
+        ExecReleaseThmStmtResult::Success(ref success),
+    )) = result
+    else {
+        panic!("expected native prime-divisor release success")
+    };
+    let application = success.builtin.as_ref().unwrap();
+    assert_eq!(application.theorem, id);
+    assert_eq!(application.requirements.len(), 2);
+    assert_eq!(application.conclusions.len(), 1);
+    assert_eq!(success.dom_proofs.len(), 2);
+    assert_eq!(success.conclusions_wd.len(), 1);
+    assert_eq!(success.stored_wd.len(), 1);
+    assert_eq!(success.stored.len(), 1);
+    let detailed = project_stmt_detailed(&result, &rt).stringify();
+    assert!(detailed.contains("prime_divisor") && detailed.contains("builtin_theorem"));
+    crate::knowledge_base::JsonValue::parse(&detailed).unwrap();
+}
+
+#[test]
+fn prime_divisor_builtin_rejects_invalid_domains_arity_and_unproved_lower_bound() {
+    for (setup, code, phase) in [
+        ("", "release thm prime_divisor(1)", "premise"),
+        ("", "release thm prime_divisor(0)", "premise"),
+        ("", "release thm prime_divisor(-2)", "premise"),
+        ("", "release thm prime_divisor(5/2)", "premise"),
+        ("", "release thm prime_divisor(i)", "premise"),
+        ("", "release thm prime_divisor({2})", "premise"),
+        ("have m N+", "release thm prime_divisor(m)", "premise"),
+        ("have m R+", "release thm prime_divisor(m)", "premise"),
+        ("", "release thm prime_divisor", "arity"),
+        ("", "release thm prime_divisor()", "arity"),
+        ("", "release thm prime_divisor(12, 2)", "arity"),
+    ] {
+        let mut rt = runtime();
+        assert!(rt.run_litex_code(setup).unwrap().success, "{setup}");
+        let before = count_facts(&rt);
+        let result = execute(&mut rt, code);
+        assert!(result.is_failed(), "unexpected success: {setup}\n{code}");
+        assert_eq!(
+            count_facts(&rt),
+            before,
+            "failed release published facts: {code}"
+        );
+        let normal = project_stmt_normal(&result, &rt).stringify();
+        assert!(normal.contains(phase), "{code}: {normal}");
+        assert!(
+            !execute(&mut rt, "release thm prime_divisor(2)").is_failed(),
+            "failed release left the runtime unusable: {code}"
+        );
+    }
+}
+
+#[test]
+fn prime_divisor_builtin_does_not_assert_the_input_is_prime_or_search_without_a_call() {
+    for (setup, code) in [
+        ("release thm prime_divisor(12)", "$prime(12)"),
+        (
+            "",
+            r#"claim:
+    ? forall m N+:
+        2 <= m
+        =>:
+            exist p N+ st {$prime(p), m % p = 0}
+    m = m
+"#,
+        ),
+    ] {
+        let mut rt = runtime();
+        assert!(rt.run_litex_code(setup).unwrap().success, "{setup}");
+        let before = count_facts(&rt);
+        let result = execute(&mut rt, code);
+        assert!(result.is_failed(), "unexpected success: {setup}\n{code}");
+        assert_eq!(count_facts(&rt), before, "failed goal published facts");
+    }
+}
+
+#[test]
 fn exact_function_finite_values_support_named_calls_carriers_aliases_and_complete_domains() {
     for code in [
         "have p cart(R,Z) = (1,2)\np(1)=1\np(2) $in Z",

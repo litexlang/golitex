@@ -498,6 +498,19 @@ impl LitexToLeanCompiler {
             Obj::Literal(Literal::Number(number)) => {
                 Ok(format!("(M.number {})", number_literal(number, "ℂ")?))
             }
+            Obj::DerivativeOperator(DerivativeOperator::AtPoint(a)) => Ok(format!("(Litex.derivativeValue {} {})",expression(&a.function)?,expression(&a.point)?)),
+            Obj::LimitOperator(LimitOperator::Sequence(a)) => Ok(format!("(Litex.sequenceLimitValue {})",expression(&a.sequence)?)),
+            Obj::LimitOperator(LimitOperator::SequenceLimsup(a)) => Ok(format!("(Litex.sequenceExtremumValue true {})",expression(&a.sequence)?)),
+            Obj::LimitOperator(LimitOperator::SequenceLiminf(a)) => Ok(format!("(Litex.sequenceExtremumValue false {})",expression(&a.sequence)?)),
+            Obj::LimitOperator(LimitOperator::Function(a)) => {
+                if a.approach.point().is_some(){
+                    let (side,point)=super::compile_function_limit::finite_side(&a.approach)?;
+                    Ok(format!("(Litex.finiteFunctionLimitValue .{side} {} {})",expression(&a.function)?,expression(point)?))
+                }else{
+                    let direction=super::compile_function_limit::infinite_direction(&a.approach)?;
+                    Ok(format!("(Litex.infiniteFunctionLimitValue .{direction} {})",expression(&a.function)?))
+                }
+            }
             Obj::BoundOperator(BoundOperator::Supremum(a)) => Ok(format!("(Litex.supremumValue {})", expression(&a.set)?)),
             Obj::BoundOperator(BoundOperator::Infimum(a)) => Ok(format!("(Litex.infimumValue {})", expression(&a.set)?)),
             Obj::MatrixOperator(MatrixOperator::Rank(m)) => {
@@ -1043,7 +1056,13 @@ impl LitexToLeanCompiler {
                 | AtomicFact::NotDvdFact(_)
                 | AtomicFact::NotSequenceAnalysisFact(_)
                 | AtomicFact::NotHasSequenceLimitFact(_)
+                | AtomicFact::NotHasSequenceLimsupFact(_)
+                | AtomicFact::NotHasSequenceLiminfFact(_)
                 | AtomicFact::NotHasFunctionLimitFact(_)
+                | AtomicFact::NotFunctionContinuousAtFact(_)
+                | AtomicFact::NotHasDerivativeAtFact(_)
+                | AtomicFact::NotFunctionDifferentiableAtFact(_)
+                | AtomicFact::NotRealAccumulationFact(_)
                 | AtomicFact::NotRealSetBoundFact(_)
                 | AtomicFact::NotRealSetBoundedFact(_)
         ) {
@@ -1096,6 +1115,35 @@ impl LitexToLeanCompiler {
                     format!("(Litex.{name}Value M {})", arguments[0])
                 }
             }
+            AtomicFact::FunctionContinuousAtFact(f) => format!(
+                "(Litex.FunctionContinuousAtValue M .{} {} {})",
+                super::compile_function_continuity::continuity_side(f.side),
+                arguments[0],
+                arguments[1]
+            ),
+            f @ (AtomicFact::HasSequenceLimsupFact(_) | AtomicFact::HasSequenceLiminfFact(_)) => {
+                let (_, _, upper, _) = super::compile_sequence_extremum::extremum_parts(f).unwrap();
+                format!(
+                    "(Litex.HasSequenceExtremumValue M {upper} {} {})",
+                    arguments[0], arguments[1]
+                )
+            }
+            f @ (AtomicFact::HasDerivativeAtFact(_)
+            | AtomicFact::FunctionDifferentiableAtFact(_)) => {
+                let (_, _, value, _) =
+                    super::compile_function_derivative::derivative_parts(f).unwrap();
+                if value.is_some() {
+                    format!(
+                        "(Litex.HasDerivativeAtValue M {} {} {})",
+                        arguments[0], arguments[1], arguments[2]
+                    )
+                } else {
+                    format!(
+                        "(Litex.DerivativeExistsValue M {} {})",
+                        arguments[0], arguments[1]
+                    )
+                }
+            }
             AtomicFact::HasSequenceLimitFact(_) => format!(
                 "(Litex.HasSequenceLimitValue M {} {})",
                 arguments[0], arguments[1]
@@ -1118,6 +1166,13 @@ impl LitexToLeanCompiler {
             AtomicFact::SequenceAnalysisFact(f) => {
                 let name = super::compile_sequence_analysis::sequence_name(f.property)?;
                 format!("(Litex.Sequence{name}Value M {})", arguments[0])
+            }
+            AtomicFact::RealAccumulationFact(f) => {
+                let side = super::compile_function_continuity::continuity_side(f.side);
+                format!(
+                    "(Litex.RealAccumulationValue M .{side} {} {})",
+                    arguments[0], arguments[1]
+                )
             }
             AtomicFact::PrimeFact(_) => format!("(Litex.PrimeValue M {})", arguments[0]),
             AtomicFact::CoprimeFact(_) => {

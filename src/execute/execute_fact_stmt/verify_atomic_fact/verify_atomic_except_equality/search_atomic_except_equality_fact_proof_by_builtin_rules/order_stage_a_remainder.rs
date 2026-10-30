@@ -1,5 +1,5 @@
 //! Stage A remainder order builtins: negative-divisor flip, div↔product bridges,
-//! numeric bound chase, integer successor/predecessor, positive even > 1,
+//! integer successor/predecessor, positive even > 1,
 //! finite-set max/min membership, union cardinality, surjection cardinality.
 //!
 //! One matcher ↔ one dedicated proof struct (see less_equal.rs / less.rs).
@@ -13,7 +13,6 @@ use crate::ast::obj::{
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::{
     DivMonotoneStrictSameNegDivisorBuiltinRuleProof, LessFactSearchProofByBuiltinRule,
-    NumericLowerBoundWeakenLtBuiltinRuleProof, NumericUpperBoundWeakenLtBuiltinRuleProof,
     PositiveEvenGtOneBuiltinRuleProof,
 };
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::{
@@ -26,7 +25,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     LessEqualFromPosDenomQuotientBoundBuiltinRuleProof,
     LessEqualFromPosDivProductBoundBuiltinRuleProof,
     NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof,
-    NumericLowerBoundWeakenLeBuiltinRuleProof, NumericUpperBoundWeakenLeBuiltinRuleProof,
 };
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -59,15 +57,9 @@ impl Runtime {
         {
             return Ok(Some(p));
         }
-        if let Some(p) = self.numeric_lower_bound_weaken_le_proof(fact)? {
-            return Ok(Some(p));
-        }
         if let Some(p) =
             self.numeric_lower_bound_from_strict_predecessor_le_proof(fact, verify_state.clone())?
         {
-            return Ok(Some(p));
-        }
-        if let Some(p) = self.numeric_upper_bound_weaken_le_proof(fact)? {
             return Ok(Some(p));
         }
         if let Some(p) = self.integer_successor_le_proof(fact, verify_state.clone())? {
@@ -103,12 +95,6 @@ impl Runtime {
         if let Some(p) =
             self.div_monotone_strict_same_neg_divisor_proof(fact, verify_state.clone())?
         {
-            return Ok(Some(p));
-        }
-        if let Some(p) = self.numeric_lower_bound_weaken_lt_proof(fact)? {
-            return Ok(Some(p));
-        }
-        if let Some(p) = self.numeric_upper_bound_weaken_lt_proof(fact)? {
             return Ok(Some(p));
         }
         self.positive_even_gt_one_proof(fact, verify_state)
@@ -257,33 +243,6 @@ impl Runtime {
         Ok(None)
     }
 
-    // Weaken a known numeric lower bound to a smaller literal weak goal.
-    // Example: known `4 < x` or `4 <= x` proves `2 <= x`.
-    fn numeric_lower_bound_weaken_le_proof(
-        &self,
-        fact: &LessEqualFact,
-    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        let Some(target) = literal_integer_value(&fact.left) else {
-            return Ok(None);
-        };
-        for (cite_fact_id, bound, right, _) in self.known_order_edges() {
-            if right.ir() != fact.right.ir() {
-                continue;
-            }
-            let Some(known) = literal_integer_value(&bound) else {
-                continue;
-            };
-            if target <= known {
-                return Ok(Some(
-                    LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLe(
-                        NumericLowerBoundWeakenLeBuiltinRuleProof { cite_fact_id },
-                    ),
-                ));
-            }
-        }
-        Ok(None)
-    }
-
     // Integer discreteness lifts a strict predecessor lower bound.
     // Example: known `4 < x` and `x $in Z` prove `5 <= x`.
     fn numeric_lower_bound_from_strict_predecessor_le_proof(
@@ -316,97 +275,6 @@ impl Runtime {
                     },
                 ),
             ));
-        }
-        Ok(None)
-    }
-
-    // Weaken a known numeric upper bound to a larger literal weak goal.
-    // Example: known `x < 4` or `x <= 4` proves `x <= 6`.
-    fn numeric_upper_bound_weaken_le_proof(
-        &self,
-        fact: &LessEqualFact,
-    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        let Some(target) = literal_integer_value(&fact.right) else {
-            return Ok(None);
-        };
-        for (cite_fact_id, left, bound, _) in self.known_order_edges() {
-            if left.ir() != fact.left.ir() {
-                continue;
-            }
-            let Some(known) = literal_integer_value(&bound) else {
-                continue;
-            };
-            if known <= target {
-                return Ok(Some(
-                    LessEqualFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLe(
-                        NumericUpperBoundWeakenLeBuiltinRuleProof { cite_fact_id },
-                    ),
-                ));
-            }
-        }
-        Ok(None)
-    }
-
-    // Weaken a known numeric lower bound to a smaller literal strict goal.
-    // Example: known `4 < x` proves `2 < x`; known `5 <= x` proves `2 < x`.
-    fn numeric_lower_bound_weaken_lt_proof(
-        &self,
-        fact: &LessFact,
-    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
-        let Some(target) = literal_integer_value(&fact.left) else {
-            return Ok(None);
-        };
-        for (cite_fact_id, bound, right, strict) in self.known_order_edges() {
-            if right.ir() != fact.right.ir() {
-                continue;
-            }
-            let Some(known) = literal_integer_value(&bound) else {
-                continue;
-            };
-            let ok = if strict {
-                target <= known
-            } else {
-                target < known
-            };
-            if ok {
-                return Ok(Some(
-                    LessFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLt(
-                        NumericLowerBoundWeakenLtBuiltinRuleProof { cite_fact_id },
-                    ),
-                ));
-            }
-        }
-        Ok(None)
-    }
-
-    // Weaken a known numeric upper bound to a larger literal strict goal.
-    // Example: known `x < 4` proves `x < 6`; known `x <= 4` proves `x < 6`.
-    fn numeric_upper_bound_weaken_lt_proof(
-        &self,
-        fact: &LessFact,
-    ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
-        let Some(target) = literal_integer_value(&fact.right) else {
-            return Ok(None);
-        };
-        for (cite_fact_id, left, bound, strict) in self.known_order_edges() {
-            if left.ir() != fact.left.ir() {
-                continue;
-            }
-            let Some(known) = literal_integer_value(&bound) else {
-                continue;
-            };
-            let ok = if strict {
-                known <= target
-            } else {
-                known < target
-            };
-            if ok {
-                return Ok(Some(
-                    LessFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLt(
-                        NumericUpperBoundWeakenLtBuiltinRuleProof { cite_fact_id },
-                    ),
-                ));
-            }
         }
         Ok(None)
     }

@@ -13,8 +13,8 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     LogNegativeFromBaseGtOneArgInUnitIntervalBuiltinRuleProof,
     LogOrderPreservingStrictBuiltinRuleProof, LogPositiveFromBaseAndArgGtOneBuiltinRuleProof,
     ModRemainderStrictUpperBoundBuiltinRuleProof, MulLeftPositiveMonotoneStrictBuiltinRuleProof,
-    MulRightPositiveMonotoneStrictBuiltinRuleProof, NumericLowerBoundWeakenLtBuiltinRuleProof,
-    NumericUpperBoundWeakenLtBuiltinRuleProof, PosDifferenceFromLessBuiltinRuleProof,
+    MulRightPositiveMonotoneStrictBuiltinRuleProof,
+     PosDifferenceFromLessBuiltinRuleProof,
     PositiveEvenGtOneBuiltinRuleProof, PowPositiveFromPositiveBaseBuiltinRuleProof,
     ProductBothPositiveBuiltinRuleProof, SqrtMonotoneIncreasingBuiltinRuleProof,
     SqrtPositiveBuiltinRuleProof, SubtractOneLessBuiltinRuleProof,
@@ -129,8 +129,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_en(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_en(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_en(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_en(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_en(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_en(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_en(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_en(),
@@ -240,8 +238,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_zh(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_zh(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_zh(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_zh(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_zh(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_zh(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_zh(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_zh(),
@@ -343,8 +339,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_zh_hant(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_zh_hant(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_zh_hant(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_zh_hant(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_zh_hant(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_zh_hant(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_zh_hant(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_zh_hant(),
@@ -450,8 +444,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_fr(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_fr(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_fr(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_fr(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_fr(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_fr(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_fr(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_fr(),
@@ -557,8 +549,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_ru(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_ru(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_ru(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_ru(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_ru(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_ru(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_ru(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_ru(),
@@ -664,8 +654,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_es(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_es(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_es(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_es(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_es(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_es(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_es(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_es(),
@@ -771,8 +759,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_ar(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_ar(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_ar(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_ar(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_ar(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_ar(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_ar(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_ar(),
@@ -877,8 +863,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_ja(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_ja(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_ja(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_ja(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_ja(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_ja(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_ja(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_ja(),
@@ -983,8 +967,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_ko(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_ko(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_ko(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_ko(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_ko(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_ko(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_ko(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_ko(),
@@ -1090,8 +1072,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::DivMonotoneStrictSamePosDivisor(p) => p.rule_name_and_message_vi(),
             Self::DivByGtOneLessSelf(p) => p.rule_name_and_message_vi(),
             Self::DivMonotoneStrictSameNegDivisor(p) => p.rule_name_and_message_vi(),
-            Self::NumericLowerBoundWeakenLt(p) => p.rule_name_and_message_vi(),
-            Self::NumericUpperBoundWeakenLt(p) => p.rule_name_and_message_vi(),
             Self::PositiveEvenGtOne(p) => p.rule_name_and_message_vi(),
             Self::AddRightCongruenceStrict(p) => p.rule_name_and_message_vi(),
             Self::AddLeftCongruenceStrict(p) => p.rule_name_and_message_vi(),
@@ -1144,8 +1124,6 @@ impl LessFactSearchProofByBuiltinRule {
             Self::NegativeDifferenceFromLess(p) => p.premise_proof.cite_fact_id(),
 
             Self::PosDifferenceFromLess(p) => p.premise_proof.cite_fact_id(),
-            Self::NumericLowerBoundWeakenLt(p) => Some(p.cite_fact_id),
-            Self::NumericUpperBoundWeakenLt(p) => Some(p.cite_fact_id),
             Self::OrderSignFromPositiveLiteralBound(p) => Some(p.cite_fact_id),
             Self::OrderFlipMulMinusOne(p) => p.premise_proof.cite_fact_id(),
             _ => None,
@@ -3133,144 +3111,6 @@ impl DivMonotoneStrictSameNegDivisorBuiltinRuleProof {
             "Đơn điệu nghiêm ngặt với số chia âm",
             "Chia cùng số chia âm đảo chiều và bảo toàn thứ tự nghiêm ngặt",
         )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl NumericLowerBoundWeakenLtBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Weaken numeric lower (<)",
-            "A numeric lower bound weakens under <",
-        )
-    }
-
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("放宽数值下界（<）", "数值下界在 < 下可放宽")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("放寬數值下界（<）", "數值下界依 < 放寬")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Relâchement de borne inférieure (<)",
-            "Une borne inférieure numérique se relâche sous <",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Ослабление нижней границы (<)",
-            "Числовая нижняя граница ослабляется по <",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Debilitar cota inferior (<)",
-            "Una cota inferior numérica se debilita bajo <",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("إضعاف الحد الأدنى (<)", "الحد الأدنى العددي يضعف تحت <")
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("数値下界の緩和（<）", "数値の下界を < で緩めます")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("수치 하한 완화 (<)", "수치 하한을 <로 완화합니다")
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Nới cận dưới (<)", "Cận dưới số được nới theo <")
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl NumericUpperBoundWeakenLtBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Weaken numeric upper (<)",
-            "A numeric upper bound weakens under <",
-        )
-    }
-
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("放宽数值上界（<）", "数值上界在 < 下可放宽")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("放寬數值上界（<）", "數值上界依 < 放寬")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Relâchement de borne supérieure (<)",
-            "Une borne supérieure numérique se relâche sous <",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Ослабление верхней границы (<)",
-            "Числовая верхняя граница ослабляется по <",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Debilitar cota superior (<)",
-            "Una cota superior numérica se debilita bajo <",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("إضعاف الحد الأعلى (<)", "الحد الأعلى العددي يضعف تحت <")
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("数値上界の緩和（<）", "数値の上界を < で緩めます")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("수치 상한 완화 (<)", "수치 상한을 <로 완화합니다")
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Nới cận trên (<)", "Cận trên số được nới theo <")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

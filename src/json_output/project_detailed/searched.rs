@@ -110,8 +110,8 @@ pub(super) fn project_atomic_except_searched(
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(p) => {
             super::atomic_builtin_rewrite::project_atomic_builtin_rewrite(p, runtime)
         }
-        AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(_) => {
-            object_for(runtime, vec![("type", string("by_known_rewrite"))])
+        AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(p) => {
+            super::atomic_known_rewrite::project_atomic_known_rewrite(p, runtime)
         }
     }
 }

@@ -1,0 +1,77 @@
+# Before: the direct statement below failed at conclusion/proof_search.
+# thm direct_sequence_add:
+#     ? forall a,b seq(R),A,B R:
+#         $has_seq_limit(a,A)
+#         $has_seq_limit(b,B)
+#         =>:
+#             $has_seq_limit(fn(k N+) R {a(k)+b(k)},A+B)
+# Former result: Could not prove the goal.
+# Now: direct structural checks retain the original leaf and domain premises.
+# Boundary: missing leaves, wrong values/directions and invalid domains stay rejected.
+# Check: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_strategy/structural_sequence_limit_arithmetic.lit
+
+thm direct_seq_limit_constant:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(fn(k N+) R {c},c)
+
+thm direct_seq_limit_neg:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        =>:
+            $has_seq_limit(fn(k N+) R {-a(k)},-A)
+
+thm direct_seq_limit_abs:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        =>:
+            $has_seq_limit(fn(k N+) R {abs(a(k))},abs(A))
+
+thm direct_seq_limit_scale:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        =>:
+            $has_seq_limit(fn(k N+) R {c*a(k)},c*A)
+
+thm direct_seq_limit_power:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k)^n},A^n)
+
+thm direct_seq_limit_add:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        $has_seq_limit(b,B)
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k)+b(k)},A+B)
+
+thm direct_seq_limit_subtract:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        $has_seq_limit(b,B)
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k)-b(k)},A-B)
+
+thm direct_seq_limit_multiply:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        $has_seq_limit(b,B)
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k)*b(k)},A*B)
+
+thm direct_seq_limit_divide:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        $has_seq_limit(b,B)
+        B!=0
+        forall k N+:
+            b(k)!=0
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k)/b(k)},A/B)
+
+thm direct_seq_limit_shift:
+    ? forall a,b seq(R),A,B,c R,n,s N:
+        $has_seq_limit(a,A)
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k+s)},A)
+

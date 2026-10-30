@@ -16,6 +16,8 @@ mod fact_capture;
 mod inference_capture;
 #[path = "mathematical_meaning.rs"]
 mod mathematical_meaning;
+#[path = "source_hints.rs"]
+mod source_hints;
 #[path = "source_statements.rs"]
 mod source_statements;
 #[path = "well_defined_capture.rs"]
@@ -582,7 +584,12 @@ impl Capture {
                 .iter()
                 .enumerate()
                 .skip(*cursor)
-                .find(|(_, (token, _, _))| token == &name);
+                .find(|(index, (token, _, _))| {
+                    // Field path segments are literal names in FieldAccess,
+                    // not Identifier mentions. A later variable with the same
+                    // spelling must not bind to `p.x`'s field token.
+                    token == &name && (*index == 0 || entries[*index - 1].0 != ".")
+                });
             let Some((index, (_, start, end))) = found else {
                 complete = false;
                 continue;

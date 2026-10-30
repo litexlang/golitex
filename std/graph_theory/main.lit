@@ -482,3 +482,397 @@ thm induced_graph_degree_bound:
     $is_finite_set(intersect(U,\graph_neighbors<V,G>(v)))
     finite_set_size(intersect(U,\graph_neighbors<V,G>(v)))<=finite_set_size(\graph_neighbors<V,G>(v))
     \graph_degree<U,\induced_graph<V,G,U>>(v)=finite_set_size(\graph_neighbors<U,\induced_graph<V,G,U>>(v))=finite_set_size(intersect(U,\graph_neighbors<V,G>(v)))<=finite_set_size(\graph_neighbors<V,G>(v))=\graph_degree<V,G>(v)
+
+thm graph_arcs_are_finite:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        $is_finite_set(G.arcs)
+    G.arcs $subset cart(V,V)
+    $is_finite_set(cart(V,V))
+    $is_finite_set(G.arcs)
+
+claim:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        $is_finite_set(G.arcs)
+    release thm graph_arcs_are_finite(V,G)
+
+claim:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,arc G.arcs:
+        arc $in cart(V,V)
+    G.arcs $subset cart(V,V)
+    arc $in cart(V,V)
+
+template<V finite_set,G &FiniteSimpleGraph<V>>:
+    have fn graph_arc_source(arc G.arcs) V=fn(pair cart(V,V)) V {pair(1)}(arc)
+
+claim:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,S set:
+        $is_finite_set(preimage_set(\graph_arc_source<V,G>,S))
+    release thm count::finite_map_preimage_is_finite(G.arcs,V,\graph_arc_source<V,G>,S)
+
+thm graph_arc_source_fiber_degree:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,v V:
+        finite_set_size(preimage_set(\graph_arc_source<V,G>,{v}))=\graph_degree<V,G>(v)
+    release thm graph_neighbors_are_finite(V,G,v)
+    \graph_neighbors<V,G>(v)={w V:(v,w) $in G.arcs}
+    have neighbors finite_set=\graph_neighbors<V,G>(v)
+    neighbors={w V:(v,w) $in G.arcs}
+    have fiber finite_set=preimage_set(\graph_arc_source<V,G>,{v})
+    claim:
+        ? forall w neighbors:
+            (v,w) $in fiber
+        w $in {t V:(v,t) $in G.arcs}
+        w $in V
+        (v,w) $in G.arcs
+        \graph_arc_source<V,G>((v,w))=fn(pair cart(V,V)) V {pair(1)}((v,w))=v
+        \graph_arc_source<V,G>((v,w)) $in {v}
+        (v,w) $in preimage_set(\graph_arc_source<V,G>,{v})
+        (v,w) $in fiber
+    have fn pack(w neighbors) fiber=(v,w)
+    claim:
+        ? forall x,y neighbors:
+            pack(x)=pack(y)
+            =>:
+                x=y
+        pack(x)=(v,x)
+        pack(y)=(v,y)
+        (v,x)=pack(x)=pack(y)=(v,y)
+        x=(v,x)(2)=(v,y)(2)=y
+    by def $injective(neighbors,fiber,pack)
+    claim:
+        ? forall arc fiber:
+            exist w neighbors st {arc=pack(w)}
+        arc $in preimage_set(\graph_arc_source<V,G>,{v})
+        arc $in G.arcs
+        arc $in cart(V,V)
+        have pair cart(V,V)=arc
+        pair $in G.arcs
+        \graph_arc_source<V,G>(arc) $in {v}
+        \graph_arc_source<V,G>(arc)=v
+        \graph_arc_source<V,G>(arc)=fn(t cart(V,V)) V {t(1)}(arc)=fn(t cart(V,V)) V {t(1)}(pair)=pair(1)
+        pair(1)=v
+        pair=(pair(1),pair(2))=(v,pair(2))
+        (v,pair(2)) $in G.arcs
+        pair(2) $in {w V:(v,w) $in G.arcs}
+        pair(2) $in neighbors
+        pack(pair(2))=(v,pair(2))=pair=arc
+        witness exist w neighbors st {arc=pack(w)} from pair(2)
+    by def $surjective(neighbors,fiber,pack)
+    release thm count::injection_size_le(neighbors,fiber,pack)
+    release thm count::surjection_size_ge(neighbors,fiber,pack)
+    finite_set_size(fiber)=finite_set_size(neighbors)
+    finite_set_size(preimage_set(\graph_arc_source<V,G>,{v}))=finite_set_size(fiber)=finite_set_size(neighbors)=finite_set_size(\graph_neighbors<V,G>(v))=\graph_degree<V,G>(v)
+
+thm graph_degree_sum_equals_arc_count:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        finite_set_sum(V,fn(v V) N {\graph_degree<V,G>(v)})=finite_set_size(G.arcs)
+    release thm count::finite_fiber_sum(G.arcs,V,\graph_arc_source<V,G>)
+    claim:
+        ? forall v V:
+            \graph_degree<V,G>(v)=finite_set_size(preimage_set(\graph_arc_source<V,G>,{v}))
+        release thm graph_arc_source_fiber_degree(V,G,v)
+        \graph_degree<V,G>(v)=finite_set_size(preimage_set(\graph_arc_source<V,G>,{v}))
+    release thm finite_set_sum_substitution(finite_set_sum(V,fn(v V) N {\graph_degree<V,G>(v)}),finite_set_sum(V,fn(v V) N {finite_set_size(preimage_set(\graph_arc_source<V,G>,{v}))}))
+    finite_set_sum(V,fn(v V) N {\graph_degree<V,G>(v)})=finite_set_sum(V,fn(v V) N {finite_set_size(preimage_set(\graph_arc_source<V,G>,{v}))})=finite_set_size(G.arcs)
+
+claim:
+    ? forall V finite_set,pair cart(V,V):
+        union({pair(1)},{pair(2)}) $in power_set(V)
+    pair(1) $in V
+    pair(2) $in V
+    {pair(1)} $subset V
+    {pair(2)} $subset V
+    union({pair(1)},{pair(2)}) $subset V
+    union({pair(1)},{pair(2)}) $in power_set(V)
+
+template<V finite_set,G &FiniteSimpleGraph<V>>:
+    have fn graph_arc_to_vertex_set(arc G.arcs) power_set(V)=fn(pair cart(V,V)) power_set(V) {union({pair(1)},{pair(2)})}(arc)
+
+template<V finite_set,G &FiniteSimpleGraph<V>>:
+    have graph_edges power_set(power_set(V))=fn_range(\graph_arc_to_vertex_set<V,G>)
+
+thm graph_edges_are_finite:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        $is_finite_set(\graph_edges<V,G>)
+    \graph_edges<V,G> = fn_range(\graph_arc_to_vertex_set<V,G>)
+    $is_finite_set(power_set(V))
+    fn_range(\graph_arc_to_vertex_set<V,G>) $subset power_set(V)
+    $is_finite_set(fn_range(\graph_arc_to_vertex_set<V,G>))
+    $is_finite_set(\graph_edges<V,G>)
+
+claim:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        $is_finite_set(\graph_edges<V,G>)
+    release thm graph_edges_are_finite(V,G)
+
+claim:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,S set:
+        $is_finite_set(preimage_set(\graph_arc_to_vertex_set<V,G>,S))
+    release thm count::finite_map_preimage_is_finite(G.arcs,power_set(V),\graph_arc_to_vertex_set<V,G>,S)
+
+thm graph_edge_has_two_arcs:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,edge \graph_edges<V,G>:
+        finite_set_size(preimage_set(\graph_arc_to_vertex_set<V,G>,{edge}))=2
+    \graph_edges<V,G> = fn_range(\graph_arc_to_vertex_set<V,G>)
+    edge $in fn_range(\graph_arc_to_vertex_set<V,G>)
+    have mapping fn(arc G.arcs) power_set(V)=\graph_arc_to_vertex_set<V,G>
+    fn_range(mapping)=fn_range(\graph_arc_to_vertex_set<V,G>)
+    edge $in fn_range(mapping)
+    have by fn_preimage: arc from edge $in fn_range(mapping)
+    edge=mapping(arc)=\graph_arc_to_vertex_set<V,G>(arc)
+    arc $in cart(V,V)
+    have pair cart(V,V)=arc
+    have u V=pair(1)
+    have v V=pair(2)
+    pair=(pair(1),pair(2))=(u,pair(2))=(u,v)
+    arc=pair=(u,v)
+    (u,v) $in G.arcs
+    (v,u) $in G.arcs
+    by contra:
+        ? u!=v
+        u=v
+        (u,v)=(u,u)
+        (u,u) $in G.arcs
+        impossible (u,u) $in G.arcs
+    by contra:
+        ? (u,v)!=(v,u)
+        (u,v)=(v,u)
+        u=(u,v)(1)=(v,u)(1)=v
+        impossible u=v
+    \graph_arc_to_vertex_set<V,G>(arc)=fn(t cart(V,V)) power_set(V) {union({t(1)},{t(2)})}(arc)=fn(t cart(V,V)) power_set(V) {union({t(1)},{t(2)})}(pair)=union({pair(1)},{pair(2)})
+    {pair(1)}={u}
+    {pair(2)}={v}
+    edge=\graph_arc_to_vertex_set<V,G>(arc)=union({pair(1)},{pair(2)})=union({u},{pair(2)})=union({u},{v})
+    by extension:
+        ? preimage_set(\graph_arc_to_vertex_set<V,G>,{edge})={(u,v),(v,u)}
+        claim:
+            ? forall other preimage_set(\graph_arc_to_vertex_set<V,G>,{edge}):
+                other $in {(u,v),(v,u)}
+            other $in G.arcs
+            other $in cart(V,V)
+            have q cart(V,V)=other
+            q $in G.arcs
+            q(1) $in V
+            q(2) $in V
+            \graph_arc_to_vertex_set<V,G>(other) $in {edge}
+            \graph_arc_to_vertex_set<V,G>(other)=edge
+            \graph_arc_to_vertex_set<V,G>(other)=fn(t cart(V,V)) power_set(V) {union({t(1)},{t(2)})}(other)=fn(t cart(V,V)) power_set(V) {union({t(1)},{t(2)})}(q)=union({q(1)},{q(2)})
+            union({q(1)},{q(2)})=\graph_arc_to_vertex_set<V,G>(other)=edge=union({u},{v})
+            q(1) $in union({q(1)},{q(2)})
+            q(2) $in union({q(1)},{q(2)})
+            q(1) $in union({u},{v})
+            q(2) $in union({u},{v})
+            q(1) $in {u} or q(1) $in {v}
+            q(2) $in {u} or q(2) $in {v}
+            by contra:
+                ? q(1)!=q(2)
+                q(1)=q(2)
+                q=(q(1),q(2))=(q(1),q(1))
+                (q(1),q(1)) $in G.arcs
+                impossible (q(1),q(1)) $in G.arcs
+            by cases:
+                ? other $in {(u,v),(v,u)}
+                case q(1) $in {u}:
+                    q(1)=u
+                    by cases:
+                        ? other $in {(u,v),(v,u)}
+                        case q(2) $in {u}:
+                            q(2)=u
+                            q(1)=q(2)
+                            impossible q(1)=q(2)
+                        case q(2) $in {v}:
+                            q(2)=v
+                            other=q=(q(1),q(2))=(u,q(2))=(u,v)
+                            other $in {(u,v),(v,u)}
+                case q(1) $in {v}:
+                    q(1)=v
+                    by cases:
+                        ? other $in {(u,v),(v,u)}
+                        case q(2) $in {u}:
+                            q(2)=u
+                            other=q=(q(1),q(2))=(v,q(2))=(v,u)
+                            other $in {(u,v),(v,u)}
+                        case q(2) $in {v}:
+                            q(2)=v
+                            q(1)=q(2)
+                            impossible q(1)=q(2)
+        claim:
+            ? forall other {(u,v),(v,u)}:
+                other $in preimage_set(\graph_arc_to_vertex_set<V,G>,{edge})
+            other=(u,v) or other=(v,u)
+            by cases:
+                ? other $in preimage_set(\graph_arc_to_vertex_set<V,G>,{edge})
+                case other=(u,v):
+                    other $in G.arcs
+                    other=arc
+                    \graph_arc_to_vertex_set<V,G>(other)=\graph_arc_to_vertex_set<V,G>(arc)=edge
+                    \graph_arc_to_vertex_set<V,G>(other) $in {edge}
+                    other $in preimage_set(\graph_arc_to_vertex_set<V,G>,{edge})
+                case other=(v,u):
+                    other $in G.arcs
+                    (v,u)(1)=v
+                    (v,u)(2)=u
+                    {(v,u)(1)}={v}
+                    {(v,u)(2)}={u}
+                    \graph_arc_to_vertex_set<V,G>((v,u))=fn(t cart(V,V)) power_set(V) {union({t(1)},{t(2)})}((v,u))=union({(v,u)(1)},{(v,u)(2)})=union({v},{(v,u)(2)})=union({v},{u})=union({u},{v})=edge
+                    \graph_arc_to_vertex_set<V,G>(other)=\graph_arc_to_vertex_set<V,G>((v,u))=edge
+                    \graph_arc_to_vertex_set<V,G>(other) $in {edge}
+                    other $in preimage_set(\graph_arc_to_vertex_set<V,G>,{edge})
+    finite_set_size(preimage_set(\graph_arc_to_vertex_set<V,G>,{edge}))=finite_set_size({(u,v),(v,u)})=2
+
+claim:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,arc G.arcs:
+        \graph_arc_to_vertex_set<V,G>(arc) $in \graph_edges<V,G>
+    have mapping fn(t G.arcs) power_set(V)=\graph_arc_to_vertex_set<V,G>
+    mapping(arc) $in fn_range(mapping)
+    mapping(arc)=\graph_arc_to_vertex_set<V,G>(arc)
+    fn_range(mapping)=fn_range(\graph_arc_to_vertex_set<V,G>)=\graph_edges<V,G>
+    \graph_arc_to_vertex_set<V,G>(arc) $in \graph_edges<V,G>
+
+thm graph_arc_count_twice_edge_count:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        finite_set_size(G.arcs)=2*finite_set_size(\graph_edges<V,G>)
+    have fn projection(arc G.arcs) \graph_edges<V,G> = \graph_arc_to_vertex_set<V,G>(arc)
+    claim:
+        ? forall S set:
+            $is_finite_set(preimage_set(projection,S))
+        release thm count::finite_map_preimage_is_finite(G.arcs,\graph_edges<V,G>,projection,S)
+    claim:
+        ? forall edge \graph_edges<V,G>:
+            finite_set_size(preimage_set(projection,{edge}))=2
+        by extension:
+            ? preimage_set(projection,{edge})=preimage_set(\graph_arc_to_vertex_set<V,G>,{edge})
+            claim:
+                ? forall arc preimage_set(projection,{edge}):
+                    arc $in preimage_set(\graph_arc_to_vertex_set<V,G>,{edge})
+                arc $in G.arcs
+                projection(arc) $in {edge}
+                projection(arc)=edge
+                projection(arc)=\graph_arc_to_vertex_set<V,G>(arc)
+                \graph_arc_to_vertex_set<V,G>(arc)=edge
+                \graph_arc_to_vertex_set<V,G>(arc) $in {edge}
+                arc $in preimage_set(\graph_arc_to_vertex_set<V,G>,{edge})
+            claim:
+                ? forall arc preimage_set(\graph_arc_to_vertex_set<V,G>,{edge}):
+                    arc $in preimage_set(projection,{edge})
+                arc $in G.arcs
+                \graph_arc_to_vertex_set<V,G>(arc) $in {edge}
+                \graph_arc_to_vertex_set<V,G>(arc)=edge
+                projection(arc)=\graph_arc_to_vertex_set<V,G>(arc)=edge
+                projection(arc) $in {edge}
+                arc $in preimage_set(projection,{edge})
+        release thm graph_edge_has_two_arcs(V,G,edge)
+        finite_set_size(preimage_set(projection,{edge}))=finite_set_size(preimage_set(\graph_arc_to_vertex_set<V,G>,{edge}))=2
+    release thm count::uniform_fiber_count(G.arcs,\graph_edges<V,G>,projection,2)
+
+thm graph_handshake:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        finite_set_sum(V,fn(v V) N {\graph_degree<V,G>(v)})=2*finite_set_size(\graph_edges<V,G>)
+    release thm graph_degree_sum_equals_arc_count(V,G)
+    release thm graph_arc_count_twice_edge_count(V,G)
+    finite_set_sum(V,fn(v V) N {\graph_degree<V,G>(v)})=finite_set_size(G.arcs)=2*finite_set_size(\graph_edges<V,G>)
+
+claim:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,edge \graph_edges<V,G>:
+        $is_finite_set(edge)
+    \graph_edges<V,G> = fn_range(\graph_arc_to_vertex_set<V,G>)
+    fn_range(\graph_arc_to_vertex_set<V,G>) $subset power_set(V)
+    \graph_edges<V,G> $subset power_set(V)
+    edge $in power_set(V)
+    edge $subset V
+    $is_finite_set(edge)
+
+thm graph_edge_endpoints:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,edge \graph_edges<V,G>:
+        exist u,v V st {u!=v,(u,v) $in G.arcs,edge=union({u},{v})}
+    \graph_edges<V,G> = fn_range(\graph_arc_to_vertex_set<V,G>)
+    edge $in fn_range(\graph_arc_to_vertex_set<V,G>)
+    have mapping fn(t G.arcs) power_set(V)=\graph_arc_to_vertex_set<V,G>
+    fn_range(mapping)=fn_range(\graph_arc_to_vertex_set<V,G>)
+    edge $in fn_range(mapping)
+    have by fn_preimage: arc from edge $in fn_range(mapping)
+    edge=mapping(arc)=\graph_arc_to_vertex_set<V,G>(arc)
+    arc $in cart(V,V)
+    have pair cart(V,V)=arc
+    have u V=pair(1)
+    have v V=pair(2)
+    pair=(pair(1),pair(2))=(u,pair(2))=(u,v)
+    arc=pair=(u,v)
+    (u,v) $in G.arcs
+    by contra:
+        ? u!=v
+        u=v
+        (u,v)=(u,u)
+        (u,u) $in G.arcs
+        impossible (u,u) $in G.arcs
+    \graph_arc_to_vertex_set<V,G>(arc)=fn(t cart(V,V)) power_set(V) {union({t(1)},{t(2)})}(arc)=fn(t cart(V,V)) power_set(V) {union({t(1)},{t(2)})}(pair)=union({pair(1)},{pair(2)})
+    {pair(1)}={u}
+    {pair(2)}={v}
+    edge=\graph_arc_to_vertex_set<V,G>(arc)=union({pair(1)},{pair(2)})=union({u},{pair(2)})=union({u},{v})
+    witness exist x,y V st {x!=y,(x,y) $in G.arcs,edge=union({x},{y})} from u,v
+
+thm graph_edge_has_two_vertices:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,edge \graph_edges<V,G>:
+        finite_set_size(edge)=2
+    release thm graph_edge_endpoints(V,G,edge)
+    obtain u,v from exist u,v V st {u!=v,(u,v) $in G.arcs,edge=union({u},{v})}
+    by extension:
+        ? intersect({u},{v})={}
+        claim:
+            ? forall x intersect({u},{v}):
+                x $in {}
+            by contra:
+                ? x $in {}
+                x $in {u}
+                x $in {v}
+                x=u
+                x=v
+                u=v
+                impossible u=v
+    release thm count::union_size({u},{v})
+    finite_set_size(intersect({u},{v}))=finite_set_size({})=0
+    finite_set_size(edge)=finite_set_size(union({u},{v}))=finite_set_size({u})+finite_set_size({v})-finite_set_size(intersect({u},{v}))=1+1-0=2
+
+thm graph_edge_from_arc:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,u,v V:
+        (u,v) $in G.arcs
+        =>:
+            union({u},{v}) $in \graph_edges<V,G>
+    \graph_arc_to_vertex_set<V,G>((u,v)) $in \graph_edges<V,G>
+    (u,v)(1)=u
+    (u,v)(2)=v
+    {(u,v)(1)}={u}
+    {(u,v)(2)}={v}
+    \graph_arc_to_vertex_set<V,G>((u,v))=fn(t cart(V,V)) power_set(V) {union({t(1)},{t(2)})}((u,v))=union({(u,v)(1)},{(u,v)(2)})=union({u},{(u,v)(2)})=union({u},{v})
+    union({u},{v}) $in \graph_edges<V,G>
+
+thm graph_regular_edge_count:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>,r N:
+        forall v V:
+            \graph_degree<V,G>(v)=r
+        =>:
+            r*finite_set_size(V)=2*finite_set_size(\graph_edges<V,G>)
+    release thm graph_handshake(V,G)
+    release thm finite_set_sum_substitution(finite_set_sum(V,fn(v V) N {\graph_degree<V,G>(v)}),finite_set_sum(V,fn(v V) N {r}))
+    finite_set_sum(V,fn(v V) N {r})=finite_set_size(V)*r=r*finite_set_size(V)
+    r*finite_set_size(V)=finite_set_sum(V,fn(v V) N {r})=finite_set_sum(V,fn(v V) N {\graph_degree<V,G>(v)})=2*finite_set_size(\graph_edges<V,G>)
+
+thm graph_no_arcs_has_no_edges:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        G.arcs={}
+        =>:
+            \graph_edges<V,G> = {}
+    release thm graph_arc_count_twice_edge_count(V,G)
+    finite_set_size(G.arcs)=finite_set_size({})=0
+    2*finite_set_size(\graph_edges<V,G>)=finite_set_size(G.arcs)=0
+    finite_set_size(\graph_edges<V,G>)=(2*finite_set_size(\graph_edges<V,G>))/2=0/2=0
+    \graph_edges<V,G> = {}
+
+thm graph_no_edges_has_no_arcs:
+    ? forall V finite_set,G &FiniteSimpleGraph<V>:
+        \graph_edges<V,G> = {}
+        =>:
+            G.arcs={}
+    release thm graph_arc_count_twice_edge_count(V,G)
+    finite_set_size(\graph_edges<V,G>)=finite_set_size({})=0
+    finite_set_size(G.arcs)=2*finite_set_size(\graph_edges<V,G>)=2*0=0
+    G.arcs={}

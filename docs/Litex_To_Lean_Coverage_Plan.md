@@ -1,7 +1,7 @@
 # Litex-to-Lean coverage plan
 
 For the latest source audit, see [remaining compiler coverage, 2026-10-26](#remaining-compiler-coverage-2026-10-26).
-The latest checked increment is [formula-function evaluation](#formula-function-eval-2026-10-27).
+The latest checked increment is [sequence metrics and pointwise continuity](#sequence-metrics-and-pointwise-continuity-2026-10-30).
 
 Inventory totals were measured on 2026-10-23. The dated checkpoints below
 record subsequent implementations and checks. Geo is outside this plan's
@@ -5163,4 +5163,110 @@ pass, including the controls that remove the generated proof citation. Axiom
 audits contain only `propext`, `Classical.choice` and `Quot.sound`.
 
 Local acceptance records: `scripts/litex_to_lean/acceptance/2026-10-29-limit-compiler/`.
-The delivered batch is closed; further compiler coverage remains paused.
+That delivered batch is closed. The following continuation is tracked separately.
+
+### Sequence metrics and pointwise continuity, 2026-10-30
+
+This batch adds **47 existing builtin theorem IDs and 69 source/generated
+pairs**. No new mathematical operation names are introduced.
+
+- Sequences: limit-to-Cauchy and constant-sequence properties, with shared
+  multi-result theorem applications.
+- Continuity: epsilon introduction, control extraction, constant and identity
+  functions, negation, absolute value, scalar multiplication, natural powers,
+  addition, subtraction, multiplication, division and composition. Each route
+  covers two-sided, left and right continuity.
+- Accumulation: positive and negative real-subset facts, their definition
+  clauses, citations and equality transport. Continuity-to-limit conversion
+  consumes the original accumulation evidence; continuity on the isolated
+  domain `{0}` cannot supply a punctured limit.
+
+Function domains may be restricted subsets. Division preserves both the
+pointwise formula's WD and the denominator's nonzero proof at the point.
+Composition preserves the mapping into the outer function's domain and its
+continuity at the inner value. The `R+` domain bridge retains positivity when
+unpacking an optimized real-function signature. One-sided continuity uses
+closed-side neighborhoods, as Litex's definitions require.
+
+The stored continuity definition result captures its already-computed
+`function_domain` proof. This is a localized evidence-capture change; AST
+shapes and Runtime state are unchanged. Shared theorem results use one proof
+package and project the returned facts under their original FactIds.
+
+The [square-function chain](../lean/examples/function_continuity_square_limit/statement.lit)
+combines function definitions, continuity, accumulation, a limit, selector
+identification and a final arithmetic use in eleven statements. Its generated
+Lean file is 78,799 bytes. The
+[positive-domain composition](../lean/examples/function_continuity_compose_positive_domain/statement.lit)
+and [restricted-domain division](../lean/examples/function_continuity_divide_restricted_domain/statement.lit)
+check the domain and WD boundaries directly.
+
+Final acceptance uses Lean/Mathlib 4.31.0 and Core
+`9ebfd3dc94913ec001a279afbfa19783ae66882e48fc6f8d8117ece3e05e4983`:
+all 69 new and three related pairs pass fresh Lean checks, strict source
+verification and deterministic regeneration. Axiom audits cover 208 exports
+and contain only `propext`, `Classical.choice` and `Quot.sound`. The complete
+compiler Rust test selection passes **1,593 tests**. Reading result capture
+and its rule catalogue are current. These are compiler checks, not a full
+repository release gate.
+
+The sequence uniqueness/Cauchy and constant/identity continuity examples also
+have handwritten Adapter/Final modules for ordinary Mathlib statements.
+Their acceptance records include controls that delete the generated proof
+citation. Global and uniform continuity, Lipschitz and later analysis routes
+remain separate work.
+
+Local acceptance records:
+`scripts/litex_to_lean/acceptance/2026-10-30-continuity-compiler/`.
+
+
+### Finite sequence extrema and object WD, 2026-10-30
+
+The all-object continuation adds constructor/WD consumers for finite real
+`limsup` and `liminf`. Both candidate and existence selection are implemented,
+as are their real codomains, positive/negative citations, definition folding,
+semantic equality transport and candidate uniqueness. The source definition
+requires an eventual bound and hits on every tail; no global two-sided
+boundedness hypothesis is added.
+
+Ten existing theorem IDs now compile:
+`seq_{limsup,liminf}_{constant,from_limit,exists,selected,unique}`.
+The [nested-object example](../lean/examples/sequence_extrema_nested_objects/statement.lit)
+combines both selectors, arithmetic, a tuple and a formula-function body in nine
+statements, generating 50,663 bytes. Selector denotations now work inside raw
+formula bodies, and reviewed scalar selectors can be opaque atoms in the
+original rational-normalization route. Constructor WD is still replayed.
+
+The common-Core checkpoint checks 21 new and four related pairs afresh, with
+strict source verification, deterministic regeneration and audits for 62
+exports. Core `486e41aa4b60aeaecfbecec064b7ff56d17da659bf7476891d53efc6f5cc0c54`, Lean/Mathlib 4.31.0;
+only `Classical.choice`, `Quot.sound` and `propext`. All 1,602 compiler Rust tests
+pass, including nine focused extremum tests. Reading capture/catalogue are
+current. Local receipts: `obj-wd-extrema-common-{0,1,2}` and
+`tmp/2026-10-30/obj-wd-completion-ten-hours/extrema-common-checkpoint.json`.
+
+The subsequent derivative checkpoint covers candidate/existence selection,
+signed citations, definition folding, captured and nested objects, automatic
+arithmetic and elementary differentiation, chain rules, and guarded-domain
+interior proofs. There are 28 derivative-related and two existing function-limit
+pairs, all checked afresh with strict source verification and deterministic
+regeneration. Lean/Mathlib 4.31.0 audits 90 exports with only the standard three
+axioms. Core: `f996608710475852e20b3e730ffe8f93f7810a182084c6522a5565ae93b43cae`.
+Twenty focused derivative compiler tests pass. The local native Adapter/Final
+check consumes the generated square proof to obtain ordinary Mathlib
+`HasDerivAt` and, under that proof, `deriv` equality.
+
+Core retains the source interior-point and punctured difference-quotient
+contract and proves its correspondence with `HasDerivAt`; totalized `deriv`
+is never a substitute for source WD. Guarded domains retain their original
+continuity/differentiability operand certificates and point facts; weak guards
+require strict slack. Relative-continuity leaves without neighbourhood evidence
+are rejected. Exact source IDs and projected run output are unchanged by the
+localized derivative inference capture.
+
+Explicit differentiation theorem consumers, the other twelve mathematical
+selector entries, and the exhaustive constructor/context/WD-branch audit remain
+open. The common Rust run passed 1,309 tests and exposed two tests selecting a
+new native matrix-law route; that shared consumer is being checked separately.
+The derivative Lean receipt is
+`tmp/2026-10-30/obj-wd-completion-ten-hours/derivative-automatic-checkpoint.json`.

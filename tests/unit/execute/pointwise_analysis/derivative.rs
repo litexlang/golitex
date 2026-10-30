@@ -308,13 +308,10 @@ fn pointwise_derivative_tests_parser_latex_and_lean_boundary() {
     ] {
         assert!(json.contains(tag), "{tag}");
     }
-    let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+    let lean = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "derivative_boundary")
-        .unwrap_err();
-    assert!(
-        error.message.contains("not supported") || error.message.contains("Unsupported"),
-        "{error}"
-    );
+        .expect("proved derivative candidate now has a Lean replay consumer");
+    assert!(lean.contains("Litex.derivativeEqCandidate"));
 }
 #[test]
 fn pointwise_derivative_tests_min_max_carriers_and_safe_natural_difference() {

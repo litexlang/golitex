@@ -102,6 +102,48 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("ReleaseThm/CallerStages"));
         }
         let mut emitted = Vec::new();
+        let shared_application = if facts.len() > 1 {
+            let name = format!("_release_h_{}", facts[0].fact_id().value());
+            let mut propositions = Vec::new();
+            // Caller WD may cite earlier returned facts; only the callee WD
+            // is available before the publication loop below.
+            let head = proof.type_proofs.len() + proof.dom_proofs.len();
+            for (returned_index, (fact, wd)) in facts.iter().zip(&proof.conclusions_wd).enumerate()
+            {
+                let formation = SourcePosition {
+                    before: head + returned_index,
+                    ..invocation
+                };
+                self.compile_fact_wd(wd, fact, &formation)?;
+                propositions.push(self.compile_formed_fact_proposition(wd, fact, &formation)?);
+            }
+            let proposition = format!(
+                "(by\n  {}\n  exact {}\n)",
+                definitions.join("\n").replace('\n', "\n  "),
+                conjunction_proposition(propositions)?
+            );
+            let evidence = format!(
+                "(by\n  {}\n  exact {application}\n)",
+                definitions.join("\n").replace('\n', "\n  ")
+            );
+            emitted.push(format!(
+                "{} {name}{} : {proposition} :=\n  {}",
+                if local { "have" } else { "private theorem" },
+                if local {
+                    String::new()
+                } else {
+                    self.context_header(position)?
+                },
+                evidence.replace('\n', "\n  ")
+            ));
+            Some(if local {
+                name
+            } else {
+                self.context_application(&name, position)
+            })
+        } else {
+            None
+        };
         for (returned_index, ((fact, wd), store)) in facts
             .iter()
             .zip(&proof.stored_wd)
@@ -123,11 +165,19 @@ impl LitexToLeanCompiler {
             let captured_formation =
                 SourcePosition::new(Some(&formed), SourceOwner::FactWD(wd), usize::MAX);
             let proposition = self.fact_proposition(fact, &captured_formation)?;
-            let conclusion = conjunction_projection(&application, returned_index, facts.len());
-            let evidence = format!(
-                "(by\n  {}\n  exact {conclusion}\n)",
-                definitions.join("\n").replace('\n', "\n  ")
+            let conclusion = conjunction_projection(
+                shared_application.as_ref().unwrap_or(&application),
+                returned_index,
+                facts.len(),
             );
+            let evidence = if shared_application.is_some() {
+                conclusion
+            } else {
+                format!(
+                    "(by\n  {}\n  exact {conclusion}\n)",
+                    definitions.join("\n").replace('\n', "\n  ")
+                )
+            };
             let retained_primary = matches!(proof.call.arguments, TheoremCallArguments::Bare)
                 && Some(fact.fact_id()) == retained_fact_id;
             if !retained_primary {

@@ -106,7 +106,7 @@ claim:
         ? $has_derivative_at(terms(j),0,values(j))
         j>=1
         j<=0
-        j<1
+        j<=0<1
         impossible j>=1
 
 release thm Sums::main::unary_function_prefix_derivative(R,3,terms,values,0,0)

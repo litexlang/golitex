@@ -1,9 +1,7 @@
 //! Native contracts for elementary prime / gcd / divisibility theorems.
 use super::helper::*;
-use crate::ast::fact::{AndChainAtomicFact, AtomicFact, DvdFact, Fact, OrFact, PrimeFact};
-use crate::ast::obj::{ArithmeticOperator, Gcd, IntegerOperator, Mul, Obj, Pow, StandardSet};
 use crate::builtin_theorem::BuiltinTheoremId;
-use crate::runtime::Runtime;
+use crate::prelude::*;
 
 pub(super) fn prepare_number_theory(
     rt: &mut Runtime,
@@ -13,6 +11,33 @@ pub(super) fn prepare_number_theory(
     use BuiltinTheoremId::*;
     let integers = Obj::StandardSet(StandardSet::Z);
     match id {
+        // Every positive integer m >= 2 has a prime divisor; e.g. prime_divisor(12).
+        // This is existence only: no least divisor or factorization is selected.
+        PrimeDivisor => {
+            let m = args[0].clone();
+            let positive_integers = Obj::StandardSet(StandardSet::NPos);
+            let requirements = vec![
+                atomic_in(rt, m.clone(), positive_integers.clone()).into(),
+                le(rt, number("2"), m.clone()).into(),
+            ];
+            let p = rt.fresh_internal_param();
+            let p_obj = identifier(&p);
+            let remainder = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
+                left: Box::new(m),
+                right: Box::new(p_obj.clone()),
+            }));
+            let body = vec![prime(rt, p_obj), equal(rt, remainder, number("0"))];
+            let conclusion = Fact::ExistFact(PlainExistFact {
+                fact_id: rt.global_ids.allocate_fact_id(),
+                typed_parameters: typed(p, positive_integers),
+                facts: body
+                    .into_iter()
+                    .map(QuantifierFreeFact::AtomicFact)
+                    .collect(),
+                line_file: None,
+            });
+            Ok((requirements, vec![conclusion]))
+        }
         GcdWithPrimeIsOneOrPrime => {
             let a = args[0].clone();
             let p = args[1].clone();

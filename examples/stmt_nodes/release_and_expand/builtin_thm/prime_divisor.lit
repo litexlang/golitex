@@ -1,0 +1,49 @@
+# Tracer: native prime-divisor existence, with a reusable Euclid consumer.
+#
+# Before (the bare builtin call was unavailable):
+# release thm prime_divisor(12)
+# Former behavior: theorem `prime_divisor` was not found; a source helper was needed.
+#
+# Now: for m in N+ with 2 <= m, the native theorem returns
+# exist p N+ st {$prime(p), m % p = 0}, without a prior prime witness.
+# Boundary: no selected or unique divisor; missing guards and invalid arities fail.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/release_and_expand/builtin_thm/prime_divisor.lit
+# Negative controls: src/execute/execute_by_stmt/builtin_thm/tests.rs (prime_divisor_builtin_*).
+
+release thm prime_divisor(12)
+
+obtain factor from exist p N+ st {$prime(p), 12 % p = 0}
+
+$dvd(12, factor)
+
+claim:
+    ? forall m N+:
+        2 <= m
+        =>:
+            exist p N+ st {$prime(p), m % p = 0}
+    release thm prime_divisor(m)
+
+# Euclid: a prime divisor of n! + 1 must exceed n.
+claim:
+    ? forall n N+:
+        2 <= n
+        =>:
+            exist p N+ st {p > n, $prime(p)}
+    have m N+ = n! + 1
+    n! $in N+
+    2 = 1 + 1 <= n! + 1 = m
+    release thm prime_divisor(m)
+    obtain p from exist p N+ st {$prime(p), m % p = 0}
+    by contra:
+        ? p > n
+        p <= n
+        p! = p * (p - 1)!
+        $dvd(n!,p!)
+        obtain q from exist q Z st {n! = q*p!}
+        n! = q*p! = q*(p*(p-1)!) = (q*(p-1)!)*p
+        q*(p-1)! $in Z
+        $dvd(n!,p)
+        1 % p = 1
+        m % p = (n! + 1) % p = (n! % p + 1 % p) % p = 1
+        impossible m % p = 0
+    witness exist q N+ st {q > n, $prime(q)} from p

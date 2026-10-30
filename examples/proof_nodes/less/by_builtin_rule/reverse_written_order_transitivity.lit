@@ -1,5 +1,8 @@
-forall a,b,c R:
-    b>a
-    c>=b
-    =>:
-        c>a
+# Mixed reverse-written comparisons retain their explicit common middle point.
+claim:
+    ? forall a,b,c R:
+        b>a
+        c>=b
+        =>:
+            c>a
+    c>=b>a

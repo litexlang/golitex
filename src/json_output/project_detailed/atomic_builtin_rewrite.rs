@@ -56,6 +56,22 @@ pub(super) fn project_atomic_builtin_rewrite(
                 ],
             );
         }
+        AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderTransitivity(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("by_builtin_rewrite")),
+                    ("rule", string("OrderTransitivity")),
+                    (
+                        "application",
+                        super::transitive_relation::project_transitive_relation(
+                            &p.application,
+                            runtime,
+                        ),
+                    ),
+                ],
+            );
+        }
     };
     let cites = cited_equal_fact_ids
         .iter()

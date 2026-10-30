@@ -9,6 +9,128 @@ Explanations and proof grounds open on demand beside the selected source.
 There is no standing mathematical-meaning pane; readers close the contextual
 explanation to return to the unobstructed source.
 
+## Mathematical language help
+
+`language_reference.json` owns bilingual semantic descriptions of statement
+forms and selected mathematical operations. Shared keyword spellings refer to
+the statement owner rather than duplicating its prose. The offline generator
+embeds this data in the existing shared reader; no extra network request,
+runtime service or standing information pane is required.
+
+Equivalent infix spellings may reference one canonical entry in this source
+catalogue, with only syntax and lexical role overridden. The generator rejects
+missing targets and reference chains, then emits ordinary complete cards; the
+browser keeps no second reference resolver. In particular, `∪`, `∩`, `×` and
+`∘` share the mathematical descriptions of their named operations. Native
+tokenizer aliases such as `ℝ+`, `∀`, `∈` and `∃!` retain canonical-token help.
+
+Postfix `!` shares the factorial description; it is distinct from the complete
+`exist!` keyword. Structure prefixes, field dots, template backslashes and the
+closed-integer-range `...` spelling also retain their semantic cards without
+expression-position metadata. Exact expression hints and resolved declaration
+identities continue to take precedence. These fallback cards describe the
+spelling, not a newly established fact or a guessed field declaration.
+
+```sh
+python3 src/reading/generate_language_reference.py --check
+python3 src/reading/generate_highlighting.py --check
+python3 src/reading/audit_language_reference.py --output <task-owned-report.json>
+```
+
+The audit inventories current AST dispatcher branches separately from parser
+spellings. An explanation card, a short label, a removed spelling, a
+context-dependent user definition and an unresolved surface are distinct
+states. A catalogue entry is not proof of correct hover anchoring or coverage
+of the associated verification result. The report deliberately retains missing
+and unresolved entries; it must not be used to claim all proof forms are covered.
+Nested property-kind fields are not separate AST-branch counts, and the three
+identifier encodings share one identifier form.
+
+Builtin theorem identities have a separate audit denominator. A resolved
+theorem category or successful application is not counted as an authored
+mathematical description of that theorem. The report distinguishes specific
+name-hover explanations, generic labels and available bilingual catalogue
+comments; AST `Identifier` coverage cannot substitute for this check.
+
+Leading keywords use the actual captured statement kind: `have` for an arbitrary
+element differs from `have` for an equality definition, and a function defined by
+cases differs from one given by a single body. The longest documented phrase is
+recognized over adjacent tokenizer spans, including three-word commands such as
+`release tuple def`. Phrases cannot cross comments, newlines or resolved symbol
+occurrences. Clicking and hovering use the same statement-specific card, while
+the public keyword-selection identity remains the authored syntax spelling.
+Mapped equality operators retain their own proof selection. Resolved builtin
+set identities receive full number-set descriptions; user symbols keep their
+own declarations. Missing statement kinds fall back to language-level help.
+
+Object-operation cards describe the actual parameter order, domains and result
+meaning. Integer `range` is half-open while `sum` and `product` include both
+endpoints; ordered folds differ from commutative finite-set folds; complex inner
+products conjugate the first argument while outer products do not. Matrix
+dimensions and coordinates are explicit. Preimages retain complete guarded
+input domains, and real limit, bound, derivative and integral selectors require
+established mathematical evidence. Their descriptions do not confer convergence,
+existence, invertibility or membership on an unchecked expression. Documented
+lexical roles distinguish set constructors and command components.
+
+Multivariable cards distinguish scalar and vector limits, coordinate partials,
+total differentials, gradients, Jacobians, Hessians, divergence, curl and the
+Laplacian. Dimensions, coordinate order and matrix orientation follow the native
+signature and defining clauses. A gradient/Jacobian records coordinate partials;
+it does not alone assert total differentiability. Iterated second partials use
+the declared first-coordinate-then-second-coordinate order; Hessian symmetry
+requires additional hypotheses. Selector help requires an established candidate
+or existence proof and remains available on rejected source without presenting
+that source as verified. Source-backed bowl, identity-field and oscillation
+examples explain the corresponding values in both languages.
+
+Statement records may include optional `expression_hints`: an exact UTF-8 byte
+range, its original `source_text` and a semantic `reference_key`. These come
+from the original typed AST observed by `SourceStatements`, independently of
+the statement's proof verdict. The native tokenizer first checks that the
+retained rendering agrees with its owning source header; redundant grouping is
+normalized while call, tuple and interval delimiters remain significant. An
+expression's source candidates must be fully accounted for by the original
+AST's occurrence count on the owning line. Repeated sets, fields and calls can
+therefore receive separate byte ranges. Identical brace spellings in a function
+body and a list set are withheld when the counts disagree. Changed spellings
+that cannot be matched and unsupported multiline layouts receive no hint.
+Hints carry semantic reference cards, never declaration or proof identities;
+they do not borrow a neighboring expression. No parser, AST, Runtime or
+execution-state contract is changed.
+
+The shared reader validates the original bytes again before attaching contextual
+help to punctuation or unresolved field-name tokens. This covers the eight real
+interval/ray forms, bounded set comprehension, enumerated sets, function values
+and spaces, applications, structure types, field access and template instances
+where an exact match is available. Resolved symbol declarations and individual
+equality proofs keep priority. Editing invalidates these positions, and older
+exports retain their existing help without a guessed expression map. Contextual
+punctuation does not create extra keyword-selection buttons or a standing pane.
+
+Semantic documentation describes mathematical conditions without establishing
+an instance. For example, injectivity takes explicit `(A, B, f)` arguments;
+divisibility uses dividend first and divisor second. The removed spellings
+`fn_eq`, `fn_eq_in`, `is_cart` and `is_tuple` are labeled as removed rather than
+documented as supported predicates. Syntax patterns in reference cards are not
+claimed as verified examples; existing checked tutorial examples remain attached
+to their corresponding keyword cards.
+
+`by thm` and `release thm` have separate language-help and application views.
+The application view uses the successful execution's resolved callee, actual
+arguments, premise proofs and direct stored conclusion identities. User theorem
+parameters are paired with arguments from that same captured declaration;
+builtin calls show their arguments without inventing formal parameter names.
+Theorem links navigate to the resolved declaration. `by thm` exposes its exact
+selected-conclusion proof on demand; `release thm` displays its directly returned
+conclusions at the invocation's source row, including generated existentials.
+Parameter and expression checks remain in the final closed disclosure. Later
+reuse of a conclusion keeps its own citation route, rather than borrowing the
+producer's entire theorem application. Missing records and failed applications
+receive no fabricated bindings or successful-application explanation. This
+adapter does not yet explain every internal theorem derivation or complete
+function-domain certificate step by step.
+
 This module connects the source to its actual verification evidence, so readers
 can follow citations back to facts, definitions and rules. Concept highlighting
 follows resolved symbol identity, separately from proof dependencies.

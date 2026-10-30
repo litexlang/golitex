@@ -18,10 +18,12 @@ pub(super) struct SourceStatements {
     node_scopes: BTreeMap<usize, Vec<String>>,
     named_bindings: BTreeMap<(String, String), String>,
     declarations: BTreeSet<String>,
+    hints: source_hints::SourceHints,
 }
 
 impl Capture {
     pub fn prepare_source_statements(&mut self, block: &TokenBlock) {
+        self.source_statements.hints = source_hints::SourceHints::from_block(block);
         self.source_statements.spans.clear();
         self.source_statements.current = None;
         self.source_statements.gaps.clear();
@@ -129,6 +131,19 @@ impl Capture {
                 node = child;
             }
             let declared = declaration_symbol_ids(node, &path);
+            let rendered = self
+                .current_statement
+                .strip_prefix("statement")
+                .and_then(|id| id.parse::<usize>().ok())
+                .and_then(|index| self.statements.get(index))
+                .map(|record| field_text(record, "source_text"))
+                .unwrap_or_default();
+            let hints = self.source_statements.hints.for_syntax(
+                syntax,
+                self.current_line,
+                &self.current_source,
+                &rendered,
+            );
             if let Some(JsonValue::Object(fields)) = self
                 .current_statement
                 .strip_prefix("statement")
@@ -136,6 +151,9 @@ impl Capture {
                 .and_then(|index| self.statements.get_mut(index))
             {
                 fields.insert("statement_kind".into(), text(&path.join(".")));
+                if !hints.is_empty() {
+                    fields.insert("expression_hints".into(), JsonValue::Array(hints));
+                }
                 if !declared.is_empty() {
                     fields.insert("declaration_symbol_ids".into(), strings(&declared));
                 }

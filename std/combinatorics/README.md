@@ -2,9 +2,10 @@
 
 This strict source library derives finite-map counting, the pigeonhole
 principle, omitted values, equal-cardinality bijection criteria and finite-set
-inclusion-exclusion, together with natural-valued binomial coefficients.
-It contains 31 named source theorems, one recursive function and two internal
-quantified closure facts, with no new predicates or native operations.
+inclusion-exclusion, natural-valued binomial coefficients, the complex binomial
+theorem and finite fiber counting. It contains 61 named source theorems in 69
+source statements, including one recursive function, a zero-extended binomial
+term template and internal closure facts, with no new native operations.
 Native finite_set_size and injective/surjective/bijective keep their contracts.
 There are no user axioms, trust blocks or new native rules.
 
@@ -100,7 +101,7 @@ alone does not make an arbitrary map bijective.
 
 The source reuses native image cardinality, inclusion bounds, strict-subset
 cardinality and finite difference/union rules. surjection_size_ge already
-closes by its native rule. General fiber sums, graphs,
+closes by its native rule. General indexed inclusion-exclusion,
 recurrence solving and generating functions remain future work. The original
 discrete showcase is unchanged. No full course coverage is claimed.
 
@@ -148,10 +149,41 @@ the new diagonal's strict growth and equality of zero entries above the row.
 The [generic contracts](../../examples/combinatorics/binomial/contracts/main.lit)
 preserve every theorem's full domain and required hypotheses.
 
-The recursive natural construction establishes its stated numeric laws.
-The factorial formula, row sums, binomial theorem and interpretation as the
-cardinality of k-element subsets require separate proofs and remain outside
-this delivery.
+The source additionally proves `binomial_factorial_product(n,k)` and
+`binomial_factorial_formula(n,k)` for natural k<=n, including row zero.
+The factorial quotient follows from the product identity and factorial
+positivity; it does not assume a nonzero denominator as an extra hypothesis.
+
+`binomial_terms<n,x,y>(k)` is a complex-valued function on all natural k.
+It equals B(n,k)*x^k*y^(n-k) when k<=n and zero above the row, so zero x or y
+does not introduce negative powers. `binomial_expansion(n,x,y)` proves the
+actual sum of these terms equals (x+y)^n for all natural n and complex x,y.
+`binomial_theorem(n,x,y,terms)` also accepts an actual natural-indexed complex
+function agreeing with those terms on the finite prefix; it places no
+conditions on values above n. `binomial_row_sum(n)` gives 2^n, and
+`binomial_alternating_row_sum(n)` gives zero for positive natural n.
+Reindexing, weighted successor sums and finite-prefix extensionality are
+provided as supporting source theorems.
+
+Interpreting B(n,k) as the cardinality of k-element subsets, Vandermonde's
+identity and generating functions still require separate proofs.
+
+## Finite fibers
+
+Fiber counts use native `preimage_set(f,{y})` and `finite_set_size`; no second
+cardinality or fiber operation is introduced. Named preimage closure, empty,
+codomain, union and disjointness theorems supply the set-level dependencies.
+`preimage_fiber_sum(X,Y,f,S)` sums fiber sizes over a subset S of finite Y and
+equals the size of its preimage. `finite_fiber_sum(X,Y,f)` specializes to Y
+and equals the size of finite X, without assuming surjectivity.
+
+`uniform_fiber_count(X,Y,f,r)` derives size(X)=r*size(Y) from uniform fibers.
+Pointwise upper and lower bounds give the corresponding cardinality bounds;
+`generalized_pigeonhole_fiber(X,Y,f,r)` derives a fiber larger than r from
+size(X)>r*size(Y). Empty finite sets and r=0 are allowed by the signatures.
+Further theorems relate positive fibers to surjectivity and fibers of size at
+most one to injectivity, and prove omitted fibers empty and distinct fibers
+disjoint. Functions retain their exact complete domain X.
 
 ## Verification
 
@@ -170,13 +202,24 @@ records the dependency spine and remaining scope.
 
 The finite-set checker adds 62 concrete statements, 12 generic contract/closure
 claims, a four-statement README excerpt and 16 final-only semantic controls.
-It also checks both installed layouts and the full std/WiX payload. The source
-now has 34 statements: 31 named theorems, one natural-valued function and two
-internal closure facts. General indexed inclusion-exclusion and the finite
+It also checks both installed layouts and the full std/WiX payload. That earlier
+suite covers the 34-statement baseline: 31 named theorems, one natural-valued
+function and two internal closure facts. General indexed inclusion-exclusion and the finite
 probability library remain unfinished.
 
 The binomial checker covers 39 concrete statements,14 independent generic
 statements, the six-statement README excerpt,21 final-only controls, both
 installed layouts and the same complete std/WiX payload. Its controls include
 omitting definition release separately from false mathematical claims and
-invalid indices. All source and callers pass strict verification.
+invalid indices. These suites describe the earlier baseline validation.
+
+The 2026-10-30 resumed extension gate passes all 69 source statements and an
+independent 71-statement strict imported consumer, including full-domain
+contracts for all 30 added theorems. It checks (1+i)^5=-4-4i, an actual
+five-element map with fiber sizes 2,3,0, empty source/codomain cases and uniform
+zero fibers. A fresh Session replays all 71 positive statements and rejects
+20 final-only false claims or missing hypotheses at their intended phases.
+At the user's subsequent pause request, this round's receipt, imported test
+project, journals and pinned executable were removed. These numbers record
+the historical checkpoint. The earlier installed-layout and
+packaging checks were not rerun. Subset counting and Vandermonde remain open.

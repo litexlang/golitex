@@ -819,6 +819,24 @@ impl LitexToLeanCompiler {
                     term
                 })
             }
+            f @ (AtomicFact::HasSequenceLimsupFact(_)
+            | AtomicFact::NotHasSequenceLimsupFact(_)
+            | AtomicFact::HasSequenceLiminfFact(_)
+            | AtomicFact::NotHasSequenceLiminfFact(_)) => {
+                let (sequence, value, upper, negative) =
+                    super::compile_sequence_extremum::extremum_parts(f).unwrap();
+                let name = if upper { "Limsup" } else { "Liminf" };
+                let term = format!(
+                    "Litex.HasSequence{name} {} {}",
+                    self.compile_object_reference(sequence, position)?,
+                    self.compile_object_reference(value, position)?
+                );
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
             f @ (AtomicFact::HasFunctionLimitFact(_) | AtomicFact::NotHasFunctionLimitFact(_)) => {
                 let (function, approach, value, negative) =
                     super::compile_function_limit::limit_parts(f).unwrap();
@@ -844,28 +862,70 @@ impl LitexToLeanCompiler {
                     term
                 })
             }
+            fact @ (AtomicFact::FunctionContinuousAtFact(_)
+            | AtomicFact::NotFunctionContinuousAtFact(_)) => {
+                let (function, point, side, negative) =
+                    super::compile_function_continuity::continuity_parts(fact).unwrap();
+                let side = super::compile_function_continuity::continuity_side(side);
+                let term = format!(
+                    "Litex.FunctionContinuousAt .{side} {} {}",
+                    self.compile_object_reference(function, position)?,
+                    self.compile_object_reference(point, position)?
+                );
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
+            fact @ (AtomicFact::RealAccumulationFact(_)
+            | AtomicFact::NotRealAccumulationFact(_)) => {
+                let (domain, point, side, negative) =
+                    super::compile_real_accumulation::accumulation_parts(fact).unwrap();
+                let side = super::compile_function_continuity::continuity_side(side);
+                let term = format!(
+                    "Litex.RealAccumulation .{side} {} {}",
+                    self.compile_object_reference(domain, position)?,
+                    self.compile_object_reference(point, position)?
+                );
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
+            f @ (AtomicFact::HasDerivativeAtFact(_)
+            | AtomicFact::NotHasDerivativeAtFact(_)
+            | AtomicFact::FunctionDifferentiableAtFact(_)
+            | AtomicFact::NotFunctionDifferentiableAtFact(_)) => {
+                let (function, point, value, negative) =
+                    super::compile_function_derivative::derivative_parts(f).unwrap();
+                let f = self.compile_object_reference(function, position)?;
+                let p = self.compile_object_reference(point, position)?;
+                let term = if let Some(value) = value {
+                    format!(
+                        "Litex.HasDerivativeAt {f} {p} {}",
+                        self.compile_object_reference(value, position)?
+                    )
+                } else {
+                    format!("Litex.DerivativeExistsValue M (Litex.denote {f}) (Litex.denote {p})")
+                };
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
             AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::FunctionRiemannIntegrableFact(_)
             | AtomicFact::NotFunctionRiemannIntegrableFact(_)
             | AtomicFact::MultivariableAnalysisFact(_)
             | AtomicFact::NotMultivariableAnalysisFact(_)
-            | AtomicFact::HasDerivativeAtFact(_)
-            | AtomicFact::NotHasDerivativeAtFact(_)
-            | AtomicFact::FunctionDifferentiableAtFact(_)
-            | AtomicFact::NotFunctionDifferentiableAtFact(_)
-            | AtomicFact::RealAccumulationFact(_)
-            | AtomicFact::NotRealAccumulationFact(_)
-            | AtomicFact::FunctionContinuousAtFact(_)
-            | AtomicFact::NotFunctionContinuousAtFact(_)
             | AtomicFact::FunctionContinuousFact(_)
             | AtomicFact::NotFunctionContinuousFact(_)
             | AtomicFact::FunctionLipschitzFact(_)
             | AtomicFact::NotFunctionLipschitzFact(_)
-            | AtomicFact::HasSequenceLimsupFact(_)
-            | AtomicFact::HasSequenceLiminfFact(_)
-            | AtomicFact::NotHasSequenceLimsupFact(_)
-            | AtomicFact::NotHasSequenceLiminfFact(_)
             | AtomicFact::InjectiveFact(_)
             | AtomicFact::SurjectiveFact(_)
             | AtomicFact::BijectiveFact(_)
@@ -970,8 +1030,16 @@ impl LitexToLeanCompiler {
         if let Some(term) = self.compile_obtain_constructor_reference(object, position)? {
             return Ok(term);
         }
+        if let Some(term) = self.compile_template_search_reference(object, position)? {
+            return Ok(term);
+        }
         if let Some(term) =
             position.with_visible_inferred_subject(object, &mut |store, producer| {
+                if let Some(term) =
+                    self.compile_template_inferred_reference(object, store, producer)?
+                {
+                    return Ok(term);
+                }
                 if let Some(carrier) = self.compile_released_struct_carrier(object, producer)? {
                     return Ok(carrier);
                 }

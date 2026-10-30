@@ -597,21 +597,34 @@ projections. The tracers are `signed_difference_order.lit` and
 boundaries. The earlier `positive_difference_order` tests retain prior-route
 coverage.
 
-## Local finite aggregation and constructor proofs (2026-10-05)
+## One-step transitivity (2026-10-30)
 
-Negated real comparisons have a bounded `NegatedOrder` strategy. It checks
-left/right membership in R, then verifies the positive complement using the
-strategy's existing BuiltinRule child state, without rewrite. For example,
-`x <= 900` can prove `not x > 1070` through verification of `x <= 1070`.
-The four negative order forms remove one negated comparison constructor;
-positive comparisons do not enter this branch. Known-complement rules keep
-priority. All three requirement facts and their verification results remain
-in Detailed and reading evidence. `by contra` uses shared verification
-unchanged. False/missing bounds, weak-to-strict promotion, nonreal operands,
-and undefined expressions remain rejected. The focused regressions live in
-`tests/unit/execute/negated_order/tests.rs`; the stable tracer is
-`examples/proof_nodes/atomic/by_builtin_strategy/contra_integer_product_order.lit`.
-Lean compilation rejects this new strategy explicitly until an adapter exists.
+Order and registered-predicate transitivity share `search_transitive_relation`.
+The builtin rewrite dispatcher handles each positive order relation separately;
+KnownRewrite adds Transitivity after Reflexivity and Symmetry. Both scan the
+existing positive predicate bucket for a known `P(a,b)` matching the goal's
+left object, then verify `P(b,c)` with the inherited ceiling and rewrite off.
+Candidates are tried in inner-scope/source order; no right-anchored scan,
+invented middle term or second rewrite is permitted. Existing Env storage,
+registration flags, merge/rollback and global stage order are unchanged.
+
+Successful evidence retains the known left FactId and the exact residual
+subject/proof. Registered evidence also cites its predicate/property through
+the existing registration interface. The compiler resolves the original visible
+registration theorem and premise IDs, validates both endpoints, then applies
+the law without searching. The `NumericUpperBoundWeaken*` / `NumericLowerBoundWeaken*` variants,
+`LiteralWeakBound` and the NegatedOrder strategy were removed. Authors now establish
+`x<=1070` before `not x>1070`, including before `impossible`; mixed strict/weak
+steps use an explicit chain. Integer predecessor/successor rules are separate
+mathematical laws and remain. The old default two-known-edge transitivity
+entries were removed; the independent trig-interval leaf still consumes its
+own captured pair of known strict-order bounds.
+
+Acceptance: `examples/proof_nodes/atomic/by_builtin_rewrite/one_step_order_transitivity.lit`,
+`examples/proof_nodes/atomic/by_known_rewrite/transitivity.lit`, and
+`tests/unit/execute/registered_transitivity/tests.rs`.
+
+## Local finite aggregation and constructor proofs (2026-10-05)
 
 Function-space membership now checks complete domains before pointwise return
 typing. `function_domain` reads checked function constructions, existing exact
@@ -793,3 +806,63 @@ Focused tests cover arithmetic, ordinary calls, numeric predicates, all output
 modes, inherited ceilings, guards, alternative signatures and failed-statement
 rollback. Goal WD still runs before proof bodies; no search ceiling or
 Env/Runtime state contract changes.
+
+### Structural arithmetic limits and directional continuity
+
+`execute_fact_stmt/structural_limit.rs` owns the `StructuralLimit` strategy:
+sequence limits and all five finite-real function-limit approaches share one
+constructor traversal. It reads checked function bodies and known leaf
+candidates, preserving complete input domains and the approach. Constructors
+retain child certificates, nonzero limiting denominators and natural-power or
+shift premises. Geometry is a positive-natural sequence, real-line accumulation,
+a same-domain established function candidate, or separately checked accumulation.
+No statement execution, unbounded witness search or selector-WD analysis occurs.
+
+The existing strategy dispatcher selects this new branch without changing the
+relative order or permissions of earlier branches. The traversal limits are
+512 expression nodes, depth 64, 16 indexed body alternatives and 128 inspected
+candidate entries per leaf. Alias lookup uses the existing checked equality
+index. These bounds do not imply a performance improvement or cover arbitrary
+extensional `forall` equations. Existing explicit BT names and arities remain.
+
+`CheckedFunctionBodyProof` distinguishes reuse of the enclosing atomic WD for
+its exact anonymous subject from independent checking of an unfolded endpoint
+at the inherited ceiling. The owning atomic success still retains the actual
+subject WD. The strategy does not register a new WD cache entry or reopen
+quantified search to repeat it. `PointwiseContinuity` uses this same evidence
+view, carries the requested side, and distinguishes direct function leaves from
+composition: only composition requires both-sided outer continuity at the
+changed centre.
+
+Detailed JSON and generated reading capture retain the new evidence. Lean
+compilation continues to reject direct structural strategy certificates until
+an explicit replay consumer exists. The three direct analysis tracers cover
+10 sequence, 48 function-limit and 22 directional-continuity interfaces;
+independent tests additionally check original explicit calls, false neighbours,
+permission ceilings, complete domains and failed-scope publication.
+
+
+### Fixed native matrix equalities
+
+`verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_native_matrix_laws.rs`
+owns 33 direct conclusion rules with dedicated success structs. A pure matcher
+reads only an equality endpoint and immediate operator children (at most three
+candidates per endpoint). It constructs the existing pure matrix contract,
+checks both endpoints by direct equality, then verifies all dimensions, full
+function domains and additional premises at the caller's inherited ceiling.
+It never executes a statement, resets permissions, stores inferred contracts,
+iterates rewrites or searches for a factorization. Known equality reuse and
+the relative order of old equality branches remain unchanged.
+
+The explicit BT and direct paths share the same mathematical schemas. The two
+trace laws share their equation builders but check only their own operands;
+the direct path does not invent an unused scalar or second matrix. Explicit
+`matrix_trace_linearity/4` retains its original combined premises and outputs.
+`NativeMatrixLawProof` mirrors the selected law; its common application stage
+retains arguments, exact requirements, schema conclusion, orientation, both
+endpoint comparisons and ordered premise results. Normal text names the law;
+Detailed and generated Reading capture retain the children. Matrix objects and
+these new equality certificates have no Lean replay support and fail closed.
+The canonical `native_matrix_laws.lit` and focused Rust tests cover direct and
+reversed statements, unchanged explicit calls, false neighbours, missing
+conditions, empty dimensions, inherited ceilings and failed publication.

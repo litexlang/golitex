@@ -357,6 +357,30 @@ proof debt rather than repairing a verification route.
 | Real sequence limits | Prove `$has_seq_limit(a,L)` for `a seq(R)` (equivalently `fn(k N+) R`), then use `lim(a)=L`. WD consumes convergence evidence. |
 | Finite-point function limits | Prove `$has_limit_at(f,x0,L)`, including accumulation and epsilon-delta control on the actual guarded domain, then use `fn_lim(f,x0)=L`. WD does not guess a limit; `f(x0)` need not be legal. |
 
+Preview: after leaf candidates are known, write arithmetic limit conclusions
+directly. Checked bodies support constants, negation, absolute value, real
+scaling, natural powers and four operations; sequences also support fixed
+nonnegative integer shifts. Function limits retain their exact finite/left/
+right/infinite-input approach and actual domain. Quotients still need their
+domain and nonzero-limit conditions. [Direct cases](../examples/proof_nodes/atomic/by_builtin_strategy/structural_function_limit_arithmetic.lit)
+show the supported shapes. Proving a candidate and then using a selector are
+separate steps.
+
+The same direct workflow covers left/right continuity. A quotient may use
+`fn(x R:g(x)!=0) R {f(x)/g(x)}` with `g(x0)!=0`; composition needs outer
+continuity at `f(x0)`, rather than at `x0`. Existing explicit BT names remain
+valid. Direct structural limit/continuity certificates currently fail closed
+at Lean compilation.
+
+Fixed matrix equalities can also be written directly: with `A matrix(C,m,n)`,
+`matrix_mul(identity_matrix(m),A,m,m,n)=A` checks the left unit law. The
+[33 native matrix cases](../examples/proof_nodes/equal/by_builtin_rule/native_matrix_laws.lit)
+cover the supported products, traces, powers, determinants, ranks and norms.
+Dimensions remain exact; inverse products and full rank require `det(A,n)!=0`.
+Use `C_abs(z)` for complex scaling. These rules preserve the explicit BT
+interfaces and retain their evidence in Detailed/Reading; matrix Lean replay
+remains unsupported.
+
 Function parameter carriers and the return carrier use the enclosing scope;
 they cannot refer to that signature's own parameters. Guards and the body can.
 For example, `fn(x R: x > 0) R {x + 1}` has a guard-dependent domain. Do not

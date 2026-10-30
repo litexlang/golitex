@@ -29,6 +29,141 @@ impl LitexToLeanCompiler {
         };
         if matches!(
             builtin.theorem,
+            BuiltinTheoremId::FnContinuousAtCompose
+                | BuiltinTheoremId::FnContinuousLeftCompose
+                | BuiltinTheoremId::FnContinuousRightCompose
+        ) {
+            return self.compile_builtin_continuity_composition(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnContinuousAtAdd
+                | BuiltinTheoremId::FnContinuousLeftAdd
+                | BuiltinTheoremId::FnContinuousRightAdd
+                | BuiltinTheoremId::FnContinuousAtSubtract
+                | BuiltinTheoremId::FnContinuousLeftSubtract
+                | BuiltinTheoremId::FnContinuousRightSubtract
+                | BuiltinTheoremId::FnContinuousAtMultiply
+                | BuiltinTheoremId::FnContinuousLeftMultiply
+                | BuiltinTheoremId::FnContinuousRightMultiply
+                | BuiltinTheoremId::FnContinuousAtDivide
+                | BuiltinTheoremId::FnContinuousLeftDivide
+                | BuiltinTheoremId::FnContinuousRightDivide
+        ) {
+            return self.compile_builtin_continuity_binary(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnContinuousAtNeg
+                | BuiltinTheoremId::FnContinuousLeftNeg
+                | BuiltinTheoremId::FnContinuousRightNeg
+                | BuiltinTheoremId::FnContinuousAtAbs
+                | BuiltinTheoremId::FnContinuousLeftAbs
+                | BuiltinTheoremId::FnContinuousRightAbs
+                | BuiltinTheoremId::FnContinuousAtScale
+                | BuiltinTheoremId::FnContinuousLeftScale
+                | BuiltinTheoremId::FnContinuousRightScale
+                | BuiltinTheoremId::FnContinuousAtPower
+                | BuiltinTheoremId::FnContinuousLeftPower
+                | BuiltinTheoremId::FnContinuousRightPower
+        ) {
+            return self.compile_builtin_continuity_unary(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnContinuousAtFromEpsilon
+                | BuiltinTheoremId::FnContinuousAtControl
+                | BuiltinTheoremId::FnContinuousLeftFromEpsilon
+                | BuiltinTheoremId::FnContinuousLeftControl
+                | BuiltinTheoremId::FnContinuousRightFromEpsilon
+                | BuiltinTheoremId::FnContinuousRightControl
+                | BuiltinTheoremId::FnContinuousAtConstant
+                | BuiltinTheoremId::FnContinuousLeftConstant
+                | BuiltinTheoremId::FnContinuousRightConstant
+                | BuiltinTheoremId::FnContinuousAtIdentity
+                | BuiltinTheoremId::FnContinuousLeftIdentity
+                | BuiltinTheoremId::FnContinuousRightIdentity
+                | BuiltinTheoremId::FnContinuousAtFromLimit
+                | BuiltinTheoremId::FnContinuousLeftFromLimit
+                | BuiltinTheoremId::FnContinuousRightFromLimit
+                | BuiltinTheoremId::FnContinuousAtToLimit
+                | BuiltinTheoremId::FnContinuousLeftToLimit
+                | BuiltinTheoremId::FnContinuousRightToLimit
+        ) {
+            return self.compile_builtin_continuity_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::SequenceLimsupConstant
+                | BuiltinTheoremId::SequenceLiminfConstant
+                | BuiltinTheoremId::SequenceLimsupFromLimit
+                | BuiltinTheoremId::SequenceLiminfFromLimit
+                | BuiltinTheoremId::SequenceLimsupUnique
+                | BuiltinTheoremId::SequenceLiminfUnique
+                | BuiltinTheoremId::SequenceLimsupExists
+                | BuiltinTheoremId::SequenceLiminfExists
+                | BuiltinTheoremId::SequenceLimsupSelected
+                | BuiltinTheoremId::SequenceLiminfSelected
+        ) {
+            return self.compile_builtin_sequence_extremum_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
             BuiltinTheoremId::SequenceLimitUnique
                 | BuiltinTheoremId::SequenceLimitExists
                 | BuiltinTheoremId::SequenceLimitSelected
@@ -41,6 +176,8 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::SequenceStrictIncreasingNondecreasing
                 | BuiltinTheoremId::SequenceStrictDecreasingNonincreasing
                 | BuiltinTheoremId::SequenceBoundedFromBounds
+                | BuiltinTheoremId::SequenceLimitCauchy
+                | BuiltinTheoremId::SequenceConstantProperties
         ) {
             return self.compile_builtin_sequence_limit_theorem(
                 call,

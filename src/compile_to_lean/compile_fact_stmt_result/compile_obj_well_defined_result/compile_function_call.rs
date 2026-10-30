@@ -1040,18 +1040,6 @@ impl LitexToLeanCompiler {
                     lift_fn_return(&call, &output, target, &member)
                 })?.ok_or_else(|| LeanCompileError::new("FunctionReturn/Producer", "No original literal call constructor supplies this scalar codomain."))
             }
-            InFactSearchProofByBuiltinRule::StandardSetSubsetMembership(p) => {
-                if p.source_set == *target || !matches!(&goal.element, Obj::FnObj(_)) {
-                    return Err(LeanCompileError::new("FunctionReturn/SubsetSubject", "The subset route must be a proper numeric inclusion for this call."));
-                }
-                let subject = source_subject(&p.source_membership_proof)?;
-                if !matches!(&subject, Fact::AtomicFact(AtomicFact::InFact(source)) if source.element.ir() == goal.element.ir() && source.set == Obj::StandardSet(p.source_set.clone())) {
-                    return Err(LeanCompileError::new("FunctionReturn/SubsetSubject", "The child membership differs from the same call and recorded source carrier."));
-                }
-                let proof = self.compile_verify(&p.source_membership_proof, position)?.1;
-                let call = self.compile_object_reference(&goal.element, position)?;
-                lift_fn_return(&call, &p.source_set, target, &proof)
-            }
             _ => Err(LeanCompileError::new("FunctionReturn/BuiltinRule", &format!(
                 "Unsupported membership builtin {} for {} in {}.",
                 rule.rule_name_and_message(OutputLanguage::English).rule_name,

@@ -541,11 +541,11 @@ fn fact_uses_sets(fact: &Fact) -> bool {
             fact_uses_sets(&Fact::ForallFact(fact.forall_fact.clone()))
                 || fact.iff_facts.iter().any(|clause| fact_uses_sets(&clause.clone().into()))
         }
-        Fact::AtomicFact(f) => atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a)),
+        Fact::AtomicFact(f) => atomic_fact_uses_sets(f),
         Fact::AndFact(f) => f
             .facts
             .iter()
-            .any(|f| atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a))),
+            .any(atomic_fact_uses_sets),
         Fact::ChainFact(f) => f.objs.iter().any(object_uses_sets),
         Fact::OrFact(f) => f
             .facts
@@ -566,12 +566,12 @@ fn fact_uses_sets(fact: &Fact) -> bool {
                 || f.dom_facts.iter().any(fact_uses_sets)
                 || f.then_facts.iter().any(|f| match f {
                     ExistOrAndChainAtomicFact::AtomicFact(a) => {
-                        atomic_fact_args_ref(a).iter().any(|a| object_uses_sets(a))
+                        atomic_fact_uses_sets(a)
                     }
                     ExistOrAndChainAtomicFact::AndFact(f) => f
                         .facts
                         .iter()
-                        .any(|f| atomic_fact_args_ref(f).iter().any(|a| object_uses_sets(a))),
+                        .any(atomic_fact_uses_sets),
                     ExistOrAndChainAtomicFact::ChainFact(f) => f.objs.iter().any(object_uses_sets),
                     ExistOrAndChainAtomicFact::OrFact(f) => {
                         fact_uses_sets(&Fact::OrFact(f.clone()))
@@ -584,6 +584,15 @@ fn fact_uses_sets(fact: &Fact) -> bool {
                 })
         }
     }
+}
+
+fn atomic_fact_uses_sets(fact: &AtomicFact) -> bool {
+    matches!(
+        fact,
+        AtomicFact::RealAccumulationFact(_) | AtomicFact::NotRealAccumulationFact(_)
+    ) || atomic_fact_args_ref(fact)
+        .iter()
+        .any(|a| object_uses_sets(a))
 }
 
 fn statement_uses_sets(statement: &ExecStmtResult) -> bool {

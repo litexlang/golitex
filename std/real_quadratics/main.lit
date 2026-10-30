@@ -1,0 +1,395 @@
+# Real quadratic equations: actual solution sets, formula branches and classification.
+have fn quadratic_value(a,b,c,x R) R=a*x^2+b*x+c
+
+have fn quadratic_discriminant(a,b,c R) R=b^2-4*a*c
+
+have fn quadratic_solutions(a,b,c R) power_set(R)={x R:quadratic_value(a,b,c,x)=0}
+
+have fn quadratic_root_minus(a,b,c R:a!=0,quadratic_discriminant(a,b,c)>=0) R=((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2
+
+have fn quadratic_root_plus(a,b,c R:a!=0,quadratic_discriminant(a,b,c)>=0) R=((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2
+
+thm quadratic_square_identity:
+    ? forall a,b,c,x R:
+        (2*a*x+b)^2=4*a*quadratic_value(a,b,c,x)+quadratic_discriminant(a,b,c)
+    (2*a*x+b)^2=4*a*(a*x^2+b*x+c)+(b^2-4*a*c)=4*a*quadratic_value(a,b,c,x)+quadratic_discriminant(a,b,c)
+
+thm quadratic_root_implies_square:
+    ? forall a,b,c,x R:
+        quadratic_value(a,b,c,x)=0
+        =>:
+            (2*a*x+b)^2=quadratic_discriminant(a,b,c)
+    release thm quadratic_square_identity(a,b,c,x)
+    4*a*quadratic_value(a,b,c,x)=4*a*0=0
+    (2*a*x+b)^2=4*a*quadratic_value(a,b,c,x)+quadratic_discriminant(a,b,c)=0+quadratic_discriminant(a,b,c)=quadratic_discriminant(a,b,c)
+
+thm quadratic_square_implies_root:
+    ? forall a,b,c,x R:
+        a!=0
+        (2*a*x+b)^2=quadratic_discriminant(a,b,c)
+        =>:
+            quadratic_value(a,b,c,x)=0
+    release thm quadratic_square_identity(a,b,c,x)
+    4*a*quadratic_value(a,b,c,x)=(4*a*quadratic_value(a,b,c,x)+quadratic_discriminant(a,b,c))-quadratic_discriminant(a,b,c)=(2*a*x+b)^2-quadratic_discriminant(a,b,c)=quadratic_discriminant(a,b,c)-quadratic_discriminant(a,b,c)=0
+    quadratic_value(a,b,c,x)=(4*a*quadratic_value(a,b,c,x)/a)/4=(0/a)/4=0
+
+thm quadratic_complete_square:
+    ? forall a,b,c,x R:
+        a!=0
+        =>:
+            quadratic_value(a,b,c,x)=a*(x+(b/a)/2)^2+(c-(b^2/a)/4)
+    quadratic_value(a,b,c,x)=a*x^2+b*x+c=a*(x+(b/a)/2)^2+(c-(b^2/a)/4)
+
+thm quadratic_formula_roots:
+    ? forall a,b,c R:
+        a!=0
+        quadratic_discriminant(a,b,c)>=0
+        =>:
+            quadratic_value(a,b,c,quadratic_root_minus(a,b,c))=0
+            quadratic_value(a,b,c,quadratic_root_plus(a,b,c))=0
+    quadratic_discriminant(a,b,c) $in R
+    sqrt(quadratic_discriminant(a,b,c))^2=quadratic_discriminant(a,b,c)
+    quadratic_root_minus(a,b,c)=((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2
+    quadratic_root_plus(a,b,c)=((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2
+    2*a*quadratic_root_minus(a,b,c)+b=2*a*(((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2)+b=-sqrt(quadratic_discriminant(a,b,c))
+    2*a*quadratic_root_plus(a,b,c)+b=2*a*(((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2)+b=sqrt(quadratic_discriminant(a,b,c))
+    (2*a*quadratic_root_minus(a,b,c)+b)^2=(-sqrt(quadratic_discriminant(a,b,c)))^2=sqrt(quadratic_discriminant(a,b,c))^2=quadratic_discriminant(a,b,c)
+    (2*a*quadratic_root_plus(a,b,c)+b)^2=sqrt(quadratic_discriminant(a,b,c))^2=quadratic_discriminant(a,b,c)
+    release thm quadratic_square_implies_root(a,b,c,quadratic_root_minus(a,b,c))
+    release thm quadratic_square_implies_root(a,b,c,quadratic_root_plus(a,b,c))
+
+thm quadratic_negative_discriminant:
+    ? forall a,b,c R:
+        quadratic_discriminant(a,b,c)<0
+        =>:
+            quadratic_solutions(a,b,c)={}
+    quadratic_solutions(a,b,c)={t R:quadratic_value(a,b,c,t)=0}
+    by extension:
+        ? quadratic_solutions(a,b,c)={}
+        claim:
+            ? forall x quadratic_solutions(a,b,c):
+                x $in {}
+            by contra:
+                ? x $in {}
+                x $in {t R:quadratic_value(a,b,c,t)=0}
+                x $in R
+                quadratic_value(a,b,c,x)=0
+                release thm quadratic_root_implies_square(a,b,c,x)
+                (2*a*x+b)^2>=0
+                quadratic_discriminant(a,b,c)>=0
+                impossible quadratic_discriminant(a,b,c)<0
+
+thm quadratic_root_exhaustiveness:
+    ? forall a,b,c,x R:
+        a!=0
+        quadratic_discriminant(a,b,c)>=0
+        quadratic_value(a,b,c,x)=0
+        =>:
+            x=quadratic_root_minus(a,b,c) or x=quadratic_root_plus(a,b,c)
+    release thm quadratic_root_implies_square(a,b,c,x)
+    by cases:
+        ? x=quadratic_root_minus(a,b,c) or x=quadratic_root_plus(a,b,c)
+        case 2*a*x+b>=0:
+            sqrt((2*a*x+b)^2)=2*a*x+b
+            sqrt(quadratic_discriminant(a,b,c))=sqrt((2*a*x+b)^2)=2*a*x+b
+            quadratic_root_plus(a,b,c)=((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2=((-b+(2*a*x+b))/a)/2=x
+            x=quadratic_root_plus(a,b,c)
+        case 2*a*x+b<0:
+            -(2*a*x+b)>0
+            (-(2*a*x+b))^2=(2*a*x+b)^2
+            sqrt((-(2*a*x+b))^2)=-(2*a*x+b)
+            sqrt(quadratic_discriminant(a,b,c))=sqrt((2*a*x+b)^2)=sqrt((-(2*a*x+b))^2)=-(2*a*x+b)
+            quadratic_root_minus(a,b,c)=((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2=((-b-(-(2*a*x+b)))/a)/2=x
+            x=quadratic_root_minus(a,b,c)
+
+thm quadratic_solution_formula:
+    ? forall a,b,c R:
+        a!=0
+        quadratic_discriminant(a,b,c)>=0
+        =>:
+            quadratic_solutions(a,b,c)=union({quadratic_root_minus(a,b,c)},{quadratic_root_plus(a,b,c)})
+    quadratic_solutions(a,b,c)={t R:quadratic_value(a,b,c,t)=0}
+    release thm quadratic_formula_roots(a,b,c)
+    by extension:
+        ? quadratic_solutions(a,b,c)=union({quadratic_root_minus(a,b,c)},{quadratic_root_plus(a,b,c)})
+        claim:
+            ? forall x quadratic_solutions(a,b,c):
+                x $in union({quadratic_root_minus(a,b,c)},{quadratic_root_plus(a,b,c)})
+            x $in {t R:quadratic_value(a,b,c,t)=0}
+            x $in R
+            quadratic_value(a,b,c,x)=0
+            release thm quadratic_root_exhaustiveness(a,b,c,x)
+            by cases:
+                ? x $in union({quadratic_root_minus(a,b,c)},{quadratic_root_plus(a,b,c)})
+                case x=quadratic_root_minus(a,b,c):
+                    x $in union({quadratic_root_minus(a,b,c)},{quadratic_root_plus(a,b,c)})
+                case x=quadratic_root_plus(a,b,c):
+                    x $in union({quadratic_root_minus(a,b,c)},{quadratic_root_plus(a,b,c)})
+        claim:
+            ? forall x union({quadratic_root_minus(a,b,c)},{quadratic_root_plus(a,b,c)}):
+                x $in quadratic_solutions(a,b,c)
+            x $in {quadratic_root_minus(a,b,c)} or x $in {quadratic_root_plus(a,b,c)}
+            by cases:
+                ? x $in quadratic_solutions(a,b,c)
+                case x $in {quadratic_root_minus(a,b,c)}:
+                    x=quadratic_root_minus(a,b,c)
+                    x $in R
+                    quadratic_value(a,b,c,x)=quadratic_value(a,b,c,quadratic_root_minus(a,b,c))=0
+                    x $in {t R:quadratic_value(a,b,c,t)=0}
+                    x $in quadratic_solutions(a,b,c)
+                case x $in {quadratic_root_plus(a,b,c)}:
+                    x=quadratic_root_plus(a,b,c)
+                    x $in R
+                    quadratic_value(a,b,c,x)=quadratic_value(a,b,c,quadratic_root_plus(a,b,c))=0
+                    x $in {t R:quadratic_value(a,b,c,t)=0}
+                    x $in quadratic_solutions(a,b,c)
+
+thm linear_solution_set:
+    ? forall b,c R:
+        b!=0
+        =>:
+            quadratic_solutions(0,b,c)={-c/b}
+    quadratic_solutions(0,b,c)={t R:quadratic_value(0,b,c,t)=0}
+    by extension:
+        ? quadratic_solutions(0,b,c)={-c/b}
+        claim:
+            ? forall x quadratic_solutions(0,b,c):
+                x $in {-c/b}
+            x $in {t R:quadratic_value(0,b,c,t)=0}
+            x $in R
+            quadratic_value(0,b,c,x)=0
+            b*x+c=quadratic_value(0,b,c,x)=0
+            x=(b*x)/b=((b*x+c)-c)/b=(0-c)/b=-c/b
+            x $in {-c/b}
+        claim:
+            ? forall x {-c/b}:
+                x $in quadratic_solutions(0,b,c)
+            x=-c/b
+            x $in R
+            quadratic_value(0,b,c,x)=b*x+c=b*(-c/b)+c=0
+            x $in {t R:quadratic_value(0,b,c,t)=0}
+            x $in quadratic_solutions(0,b,c)
+
+thm nonzero_constant_solution_set:
+    ? forall c R:
+        c!=0
+        =>:
+            quadratic_solutions(0,0,c)={}
+    quadratic_solutions(0,0,c)={t R:quadratic_value(0,0,c,t)=0}
+    by extension:
+        ? quadratic_solutions(0,0,c)={}
+        claim:
+            ? forall x quadratic_solutions(0,0,c):
+                x $in {}
+            by contra:
+                ? x $in {}
+                x $in {t R:quadratic_value(0,0,c,t)=0}
+                x $in R
+                quadratic_value(0,0,c,x)=0
+                c=quadratic_value(0,0,c,x)=0
+                impossible c=0
+
+thm zero_polynomial_solution_set:
+    ? quadratic_solutions(0,0,0)=R
+    quadratic_solutions(0,0,0)={t R:quadratic_value(0,0,0,t)=0}
+    by extension:
+        ? quadratic_solutions(0,0,0)=R
+        claim:
+            ? forall x quadratic_solutions(0,0,0):
+                x $in R
+            x $in {t R:quadratic_value(0,0,0,t)=0}
+            x $in R
+        claim:
+            ? forall x R:
+                x $in quadratic_solutions(0,0,0)
+            quadratic_value(0,0,0,x)=0
+            x $in {t R:quadratic_value(0,0,0,t)=0}
+            x $in quadratic_solutions(0,0,0)
+
+thm quadratic_vieta:
+    ? forall a,b,c R:
+        a!=0
+        quadratic_discriminant(a,b,c)>=0
+        =>:
+            quadratic_root_minus(a,b,c)+quadratic_root_plus(a,b,c)=-b/a
+            quadratic_root_minus(a,b,c)*quadratic_root_plus(a,b,c)=c/a
+            quadratic_root_plus(a,b,c)-quadratic_root_minus(a,b,c)=sqrt(quadratic_discriminant(a,b,c))/a
+    quadratic_root_minus(a,b,c)=((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2
+    quadratic_root_plus(a,b,c)=((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2
+    sqrt(quadratic_discriminant(a,b,c))^2=quadratic_discriminant(a,b,c)
+    quadratic_root_minus(a,b,c)+quadratic_root_plus(a,b,c)=((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2+((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2=-b/a
+    4*a*a*quadratic_root_minus(a,b,c)*quadratic_root_plus(a,b,c)=4*a*a*(((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2)*(((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2)=b^2-sqrt(quadratic_discriminant(a,b,c))^2=b^2-quadratic_discriminant(a,b,c)=4*a*c
+    quadratic_root_minus(a,b,c)*quadratic_root_plus(a,b,c)=((4*a*a*quadratic_root_minus(a,b,c)*quadratic_root_plus(a,b,c)/a)/a)/4=((4*a*c/a)/a)/4=c/a
+    quadratic_root_plus(a,b,c)-quadratic_root_minus(a,b,c)=((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2-((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2=sqrt(quadratic_discriminant(a,b,c))/a
+
+thm quadratic_factorization:
+    ? forall a,b,c,x R:
+        a!=0
+        quadratic_discriminant(a,b,c)>=0
+        =>:
+            quadratic_value(a,b,c,x)=a*(x-quadratic_root_minus(a,b,c))*(x-quadratic_root_plus(a,b,c))
+    release thm quadratic_vieta(a,b,c)
+    a*(quadratic_root_minus(a,b,c)+quadratic_root_plus(a,b,c))=a*(-b/a)=-b
+    a*(quadratic_root_minus(a,b,c)*quadratic_root_plus(a,b,c))=a*(c/a)=c
+    a*(x-quadratic_root_minus(a,b,c))*(x-quadratic_root_plus(a,b,c))=a*x^2-a*(quadratic_root_minus(a,b,c)+quadratic_root_plus(a,b,c))*x+a*(quadratic_root_minus(a,b,c)*quadratic_root_plus(a,b,c))=a*x^2-(-b)*x+a*(quadratic_root_minus(a,b,c)*quadratic_root_plus(a,b,c))=a*x^2+b*x+a*(quadratic_root_minus(a,b,c)*quadratic_root_plus(a,b,c))=a*x^2+b*x+c=quadratic_value(a,b,c,x)
+
+thm quadratic_repeated_root_values:
+    ? forall a,b,c R:
+        a!=0
+        quadratic_discriminant(a,b,c)=0
+        =>:
+            quadratic_root_minus(a,b,c)=(-b/a)/2
+            quadratic_root_plus(a,b,c)=(-b/a)/2
+    quadratic_discriminant(a,b,c)>=0
+    sqrt(quadratic_discriminant(a,b,c))=sqrt(0)=0
+    quadratic_root_minus(a,b,c)=((-b-sqrt(quadratic_discriminant(a,b,c)))/a)/2=((-b-0)/a)/2=(-b/a)/2
+    quadratic_root_plus(a,b,c)=((-b+sqrt(quadratic_discriminant(a,b,c)))/a)/2=((-b+0)/a)/2=(-b/a)/2
+
+thm quadratic_positive_discriminant_distinct:
+    ? forall a,b,c R:
+        a!=0
+        quadratic_discriminant(a,b,c)>0
+        =>:
+            quadratic_root_minus(a,b,c)!=quadratic_root_plus(a,b,c)
+    quadratic_discriminant(a,b,c)>=0
+    sqrt(quadratic_discriminant(a,b,c))>0
+    release thm quadratic_vieta(a,b,c)
+    by contra:
+        ? quadratic_root_minus(a,b,c)!=quadratic_root_plus(a,b,c)
+        quadratic_root_minus(a,b,c)=quadratic_root_plus(a,b,c)
+        quadratic_root_plus(a,b,c)-quadratic_root_minus(a,b,c)=quadratic_root_minus(a,b,c)-quadratic_root_minus(a,b,c)=0
+        sqrt(quadratic_discriminant(a,b,c))=a*(sqrt(quadratic_discriminant(a,b,c))/a)=a*(quadratic_root_plus(a,b,c)-quadratic_root_minus(a,b,c))=a*0=0
+        impossible sqrt(quadratic_discriminant(a,b,c))>0
+
+thm quadratic_repeated_solution_set:
+    ? forall a,b,c R:
+        a!=0
+        quadratic_discriminant(a,b,c)=0
+        =>:
+            quadratic_solutions(a,b,c)={(-b/a)/2}
+    quadratic_discriminant(a,b,c)>=0
+    release thm quadratic_repeated_root_values(a,b,c)
+    release thm quadratic_solution_formula(a,b,c)
+    {quadratic_root_minus(a,b,c)}={(-b/a)/2}
+    {quadratic_root_plus(a,b,c)}={(-b/a)/2}
+    quadratic_solutions(a,b,c)=union({quadratic_root_minus(a,b,c)},{quadratic_root_plus(a,b,c)})=union({(-b/a)/2},{(-b/a)/2})={(-b/a)/2}
+
+thm quadratic_two_distinct_roots:
+    ? forall a,b,c R:
+        a!=0
+        quadratic_discriminant(a,b,c)>0
+        =>:
+            exist r,s R st {r!=s,quadratic_value(a,b,c,r)=0,quadratic_value(a,b,c,s)=0,quadratic_solutions(a,b,c)=union({r},{s})}
+    quadratic_discriminant(a,b,c)>=0
+    release thm quadratic_positive_discriminant_distinct(a,b,c)
+    release thm quadratic_formula_roots(a,b,c)
+    release thm quadratic_solution_formula(a,b,c)
+    witness exist r,s R st {r!=s,quadratic_value(a,b,c,r)=0,quadratic_value(a,b,c,s)=0,quadratic_solutions(a,b,c)=union({r},{s})} from quadratic_root_minus(a,b,c),quadratic_root_plus(a,b,c)
+
+thm quadratic_vieta_converse:
+    ? forall a,b,c,r,s,x R:
+        a!=0
+        r+s=-b/a
+        r*s=c/a
+        =>:
+            quadratic_value(a,b,c,x)=a*(x-r)*(x-s)
+    a*(r+s)=a*(-b/a)=-b
+    a*(r*s)=a*(c/a)=c
+    a*(x-r)*(x-s)=a*x^2-a*(r+s)*x+a*(r*s)=a*x^2-(-b)*x+a*(r*s)=a*x^2+b*x+a*(r*s)=a*x^2+b*x+c=quadratic_value(a,b,c,x)
+
+thm quadratic_solution_set_from_vieta:
+    ? forall a,b,c,r,s R:
+        a!=0
+        r+s=-b/a
+        r*s=c/a
+        =>:
+            quadratic_solutions(a,b,c)=union({r},{s})
+    quadratic_solutions(a,b,c)={t R:quadratic_value(a,b,c,t)=0}
+    by extension:
+        ? quadratic_solutions(a,b,c)=union({r},{s})
+        claim:
+            ? forall x quadratic_solutions(a,b,c):
+                x $in union({r},{s})
+            x $in {t R:quadratic_value(a,b,c,t)=0}
+            x $in R
+            quadratic_value(a,b,c,x)=0
+            release thm quadratic_vieta_converse(a,b,c,r,s,x)
+            a*(x-r)*(x-s)=quadratic_value(a,b,c,x)=0
+            by cases:
+                ? x $in union({r},{s})
+                case x=r:
+                    x $in {r}
+                    x $in union({r},{s})
+                case x!=r:
+                    x-r!=0
+                    x-s=(a*(x-r)*(x-s)/a)/(x-r)=(0/a)/(x-r)=0
+                    x=(x-s)+s=0+s=s
+                    x $in {s}
+                    x $in union({r},{s})
+        claim:
+            ? forall x union({r},{s}):
+                x $in quadratic_solutions(a,b,c)
+            x $in {r} or x $in {s}
+            by cases:
+                ? x $in quadratic_solutions(a,b,c)
+                case x $in {r}:
+                    x=r
+                    x $in R
+                    release thm quadratic_vieta_converse(a,b,c,r,s,r)
+                    quadratic_value(a,b,c,x)=quadratic_value(a,b,c,r)=a*(r-r)*(r-s)=0
+                    x $in {t R:quadratic_value(a,b,c,t)=0}
+                    x $in quadratic_solutions(a,b,c)
+                case x $in {s}:
+                    x=s
+                    x $in R
+                    release thm quadratic_vieta_converse(a,b,c,r,s,s)
+                    quadratic_value(a,b,c,x)=quadratic_value(a,b,c,s)=a*(s-r)*(s-s)=0
+                    x $in {t R:quadratic_value(a,b,c,t)=0}
+                    x $in quadratic_solutions(a,b,c)
+
+thm quadratic_positive_leading_order:
+    ? forall a R+,b,c R:
+        quadratic_discriminant(a,b,c)>0
+        =>:
+            quadratic_root_minus(a,b,c)<quadratic_root_plus(a,b,c)
+    quadratic_discriminant(a,b,c)>=0
+    sqrt(quadratic_discriminant(a,b,c))>0
+    sqrt(quadratic_discriminant(a,b,c))/a>0
+    release thm quadratic_vieta(a,b,c)
+    quadratic_root_plus(a,b,c)-quadratic_root_minus(a,b,c)>0
+    quadratic_root_minus(a,b,c)<quadratic_root_plus(a,b,c)
+
+thm quadratic_negative_leading_order:
+    ? forall a,b,c R:
+        a<0
+        quadratic_discriminant(a,b,c)>0
+        =>:
+            quadratic_root_plus(a,b,c)<quadratic_root_minus(a,b,c)
+    a!=0
+    quadratic_discriminant(a,b,c)>=0
+    sqrt(quadratic_discriminant(a,b,c))>0
+    sqrt(quadratic_discriminant(a,b,c))/a<0
+    release thm quadratic_vieta(a,b,c)
+    quadratic_root_plus(a,b,c)-quadratic_root_minus(a,b,c)<0
+    quadratic_root_plus(a,b,c)<quadratic_root_minus(a,b,c)
+
+thm quadratic_positive_leading_minimum:
+    ? forall a R+,b,c,x R:
+        quadratic_value(a,b,c,x)>=c-(b^2/a)/4
+        quadratic_value(a,b,c,(-b/a)/2)=c-(b^2/a)/4
+    release thm quadratic_complete_square(a,b,c,x)
+    a*(x+(b/a)/2)^2>=0
+    quadratic_value(a,b,c,x)=a*(x+(b/a)/2)^2+(c-(b^2/a)/4)>=0+(c-(b^2/a)/4)=c-(b^2/a)/4
+    quadratic_value(a,b,c,(-b/a)/2)=a*((-b/a)/2)^2+b*((-b/a)/2)+c=c-(b^2/a)/4
+
+thm quadratic_negative_leading_maximum:
+    ? forall a,b,c,x R:
+        a<0
+        =>:
+            quadratic_value(a,b,c,x)<=c-(b^2/a)/4
+            quadratic_value(a,b,c,(-b/a)/2)=c-(b^2/a)/4
+    a!=0
+    release thm quadratic_complete_square(a,b,c,x)
+    a*(x+(b/a)/2)^2<=0
+    quadratic_value(a,b,c,x)=a*(x+(b/a)/2)^2+(c-(b^2/a)/4)<=0+(c-(b^2/a)/4)=c-(b^2/a)/4
+    quadratic_value(a,b,c,(-b/a)/2)=a*((-b/a)/2)^2+b*((-b/a)/2)+c=c-(b^2/a)/4

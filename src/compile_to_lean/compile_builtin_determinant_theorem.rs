@@ -23,12 +23,6 @@ impl LitexToLeanCompiler {
         conclusions_wd: &[FactWellDefinedProof],
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, String, Vec<Fact>), LeanCompileError> {
-        let identity = match builtin.theorem {
-            BuiltinTheoremId::MatrixDetIdentity => true,
-            BuiltinTheoremId::MatrixDetTranspose | BuiltinTheoremId::MatrixDetAdjoint => false,
-            _ => return Err(LeanCompileError::unsupported("Determinant/Theorem")),
-        };
-        let adjoint = builtin.theorem == BuiltinTheoremId::MatrixDetAdjoint;
         if !matches!(derivation, TheoremDerivationProof::NativeSchema)
             || !type_proofs.is_empty()
             || !type_stores.is_empty()
@@ -39,69 +33,27 @@ impl LitexToLeanCompiler {
         let TheoremCallArguments::Parenthesized(arguments) = &call.arguments else {
             return Err(LeanCompileError::unsupported("Determinant/Arguments"));
         };
-        let count = if identity { 1 } else { 3 };
+        let Fact::AtomicFact(AtomicFact::EqualFact(conclusion)) = builtin
+            .conclusions
+            .first()
+            .ok_or_else(|| LeanCompileError::unsupported("Determinant/Conclusion"))?
+        else {
+            return Err(LeanCompileError::unsupported("Determinant/Conclusion"));
+        };
+        let count = validate_determinant_law(
+            builtin.theorem,
+            arguments,
+            &builtin.requirements,
+            conclusion,
+        )?;
         if call.name.local_name() != builtin.theorem.as_str()
             || arguments != &builtin.arguments
-            || arguments.len() != if identity { 1 } else { 2 }
-            || builtin.requirements.len() != count
             || dom_proofs.len() != count
             || dom_stores.len() != count
             || builtin.conclusions.len() != 1
             || conclusions_wd.len() != 1
         {
             return Err(LeanCompileError::unsupported("Determinant/TheoremStages"));
-        }
-        let n = &arguments[usize::from(!identity)];
-        let Fact::AtomicFact(AtomicFact::EqualFact(conclusion)) = &builtin.conclusions[0] else {
-            return Err(LeanCompileError::unsupported("Determinant/Conclusion"));
-        };
-        let Obj::MatrixOperator(MatrixOperator::Determinant(det)) = &conclusion.left else {
-            return Err(LeanCompileError::unsupported(
-                "Determinant/ConclusionSubject",
-            ));
-        };
-        if det.order.ir() != n.ir() {
-            return Err(LeanCompileError::unsupported("Determinant/ConclusionOrder"));
-        }
-        if identity {
-            if !matches!(det.matrix.as_ref(), Obj::MatrixOperator(MatrixOperator::IdentityMatrix(p)) if p.order.ir()==n.ir())
-                || closed_integer(&conclusion.right) != Some(1)
-            {
-                return Err(LeanCompileError::unsupported(
-                    "Determinant/IdentityConclusion",
-                ));
-            }
-        } else {
-            let valid = match det.matrix.as_ref() {
-                Obj::MatrixOperator(MatrixOperator::Transpose(p)) if !adjoint => {
-                    p.matrix.ir() == arguments[0].ir()
-                        && p.rows.ir() == n.ir()
-                        && p.cols.ir() == n.ir()
-                }
-                Obj::MatrixOperator(MatrixOperator::ConjugateTranspose(p)) if adjoint => {
-                    p.matrix.ir() == arguments[0].ir()
-                        && p.rows.ir() == n.ir()
-                        && p.cols.ir() == n.ir()
-                }
-                _ => false,
-            };
-            let right = if adjoint {
-                let Obj::ComplexOperator(ComplexOperator::Conjugate(p)) = &conclusion.right else {
-                    return Err(LeanCompileError::unsupported(
-                        "Determinant/AdjointConclusion",
-                    ));
-                };
-                p.arg.as_ref()
-            } else {
-                &conclusion.right
-            };
-            if !valid
-                || !matches!(right, Obj::MatrixOperator(MatrixOperator::Determinant(p)) if p.matrix.ir()==arguments[0].ir() && p.order.ir()==n.ir())
-            {
-                return Err(LeanCompileError::unsupported(
-                    "Determinant/TransposeConclusion",
-                ));
-            }
         }
         let mut definitions = Vec::new();
         for (index, ((requirement, checked), store)) in builtin
@@ -111,12 +63,7 @@ impl LitexToLeanCompiler {
             .zip(dom_stores)
             .enumerate()
         {
-            let expected = if index < 2 || identity {
-                matches!(requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==n.ir() && f.set==Obj::StandardSet(StandardSet::N))
-            } else {
-                matches!(requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==arguments[0].ir() && matches!(&f.set,Obj::SetFormer(SetFormer::MatrixSet(m)) if m.set.as_ref()==&Obj::StandardSet(StandardSet::C) && m.rows.ir()==n.ir() && m.cols.ir()==n.ir()))
-            };
-            if !expected || source_subject(checked)? != *requirement {
+            if source_subject(checked)? != *requirement {
                 return Err(LeanCompileError::unsupported("Determinant/TheoremPremise"));
             }
             let prior = SourcePosition {
@@ -152,19 +99,99 @@ impl LitexToLeanCompiler {
             &builtin.conclusions[0],
             &formed,
         )?;
-        let law = if identity {
-            "Litex.matrixDeterminantIdentity _det.val.order _det.wd.1".to_string()
-        } else {
-            let name = if adjoint {
-                "matrixDeterminantAdjoint"
-            } else {
-                "matrixDeterminantTranspose"
-            };
-            format!(
-                "Litex.{name} _det.val.matrix.val.matrix _det.val.order _det.wd.1 _det.val.matrix.wd.2.2"
-            )
-        };
-        let proof = format!("(show {statement} from by\n  let _det := {root}\n  exact {law}\n)");
+        let proof = determinant_law_term(builtin.theorem, &root, &statement)?;
         Ok((definitions, proof, builtin.conclusions.clone()))
     }
+}
+
+/// Validate the fixed source schema without executing a theorem call or
+/// allocating replacement facts. Both actual theorem and search results use it.
+pub(in crate::compile_to_lean) fn validate_determinant_law(
+    theorem: BuiltinTheoremId,
+    arguments: &[Obj],
+    requirements: &[Fact],
+    conclusion: &EqualFact,
+) -> Result<usize, LeanCompileError> {
+    let identity = match theorem {
+        BuiltinTheoremId::MatrixDetIdentity => true,
+        BuiltinTheoremId::MatrixDetTranspose | BuiltinTheoremId::MatrixDetAdjoint => false,
+        _ => return Err(LeanCompileError::unsupported("Determinant/Theorem")),
+    };
+    let adjoint = theorem == BuiltinTheoremId::MatrixDetAdjoint;
+    let count = if identity { 1 } else { 3 };
+    if arguments.len() != if identity { 1 } else { 2 } || requirements.len() != count {
+        return Err(LeanCompileError::unsupported("Determinant/TheoremStages"));
+    }
+    let n = &arguments[usize::from(!identity)];
+    let Obj::MatrixOperator(MatrixOperator::Determinant(det)) = &conclusion.left else {
+        return Err(LeanCompileError::unsupported(
+            "Determinant/ConclusionSubject",
+        ));
+    };
+    if det.order.ir() != n.ir() {
+        return Err(LeanCompileError::unsupported("Determinant/ConclusionOrder"));
+    }
+    if identity {
+        if !matches!(det.matrix.as_ref(), Obj::MatrixOperator(MatrixOperator::IdentityMatrix(p)) if p.order.ir()==n.ir())
+            || closed_integer(&conclusion.right) != Some(1)
+        {
+            return Err(LeanCompileError::unsupported(
+                "Determinant/IdentityConclusion",
+            ));
+        }
+    } else {
+        let valid = match det.matrix.as_ref() {
+            Obj::MatrixOperator(MatrixOperator::Transpose(p)) if !adjoint => {
+                p.matrix.ir() == arguments[0].ir() && p.rows.ir() == n.ir() && p.cols.ir() == n.ir()
+            }
+            Obj::MatrixOperator(MatrixOperator::ConjugateTranspose(p)) if adjoint => {
+                p.matrix.ir() == arguments[0].ir() && p.rows.ir() == n.ir() && p.cols.ir() == n.ir()
+            }
+            _ => false,
+        };
+        let right = if adjoint {
+            let Obj::ComplexOperator(ComplexOperator::Conjugate(p)) = &conclusion.right else {
+                return Err(LeanCompileError::unsupported(
+                    "Determinant/AdjointConclusion",
+                ));
+            };
+            p.arg.as_ref()
+        } else {
+            &conclusion.right
+        };
+        if !valid
+            || !matches!(right, Obj::MatrixOperator(MatrixOperator::Determinant(p)) if p.matrix.ir()==arguments[0].ir() && p.order.ir()==n.ir())
+        {
+            return Err(LeanCompileError::unsupported(
+                "Determinant/TransposeConclusion",
+            ));
+        }
+    }
+    for (index, requirement) in requirements.iter().enumerate() {
+        let expected = if index < 2 || identity {
+            matches!(requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==n.ir() && f.set==Obj::StandardSet(StandardSet::N))
+        } else {
+            matches!(requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==arguments[0].ir() && matches!(&f.set,Obj::SetFormer(SetFormer::MatrixSet(m)) if m.set.as_ref()==&Obj::StandardSet(StandardSet::C) && m.rows.ir()==n.ir() && m.cols.ir()==n.ir()))
+        };
+        if !expected {
+            return Err(LeanCompileError::unsupported("Determinant/TheoremPremise"));
+        }
+    }
+    Ok(count)
+}
+
+pub(in crate::compile_to_lean) fn determinant_law_term(
+    theorem: BuiltinTheoremId,
+    root: &str,
+    statement: &str,
+) -> Result<String, LeanCompileError> {
+    let law = match theorem {
+        BuiltinTheoremId::MatrixDetIdentity => "Litex.matrixDeterminantIdentity _det.val.order _det.wd.1",
+        BuiltinTheoremId::MatrixDetTranspose => "Litex.matrixDeterminantTranspose _det.val.matrix.val.matrix _det.val.order _det.wd.1 _det.val.matrix.wd.2.2",
+        BuiltinTheoremId::MatrixDetAdjoint => "Litex.matrixDeterminantAdjoint _det.val.matrix.val.matrix _det.val.order _det.wd.1 _det.val.matrix.wd.2.2",
+        _ => return Err(LeanCompileError::unsupported("Determinant/Theorem")),
+    };
+    Ok(format!(
+        "(show {statement} from by\n  let _det := {root}\n  exact {law}\n)"
+    ))
 }

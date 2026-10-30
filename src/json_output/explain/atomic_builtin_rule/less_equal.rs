@@ -42,15 +42,15 @@ LessEqualFactSearchProofByBuiltinRule,
 
     LessEqualFromPosDenomQuotientBoundBuiltinRuleProof,
     LessEqualFromPosDivProductBoundBuiltinRuleProof,
-    LessEqualTransitivityBuiltinRuleProof,
+
     LogOrderPreservingWeakBuiltinRuleProof,
     ModRemainderNonnegativeBuiltinRuleProof,
     MulLeftNonnegativeMonotoneBuiltinRuleProof,
     MulRightNonnegativeMonotoneBuiltinRuleProof,
     NonnegDifferenceFromLessEqualBuiltinRuleProof,
     NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof,
-    NumericLowerBoundWeakenLeBuiltinRuleProof,
-    NumericUpperBoundWeakenLeBuiltinRuleProof,
+
+
     OrderReflexivityBuiltinRuleProof,
     PowNonnegFromNonnegBasePosIntExpBuiltinRuleProof,
     PowNonnegFromPositiveBaseBuiltinRuleProof,
@@ -82,7 +82,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::QuotientScalarUpperBound(_) => crate::json_output::explain::text::text("Upper bound of a quotient", "For real a,b,M with b>0, a≤M·b implies a/b≤M."),
             Self::NonnegativeSquareOrderReflection(_) => crate::json_output::explain::text::text("Compare nonnegative numbers by their squares", "For nonnegative reals x,y, x²≤y² implies x≤y. Nonnegativity is essential."),
             Self::ProductNonnegativeNegativeWeak(_) => crate::json_output::explain::text::text("Product with opposite weak signs", "The product of a nonnegative real and a nonpositive real is nonpositive."),
-            Self::LiteralWeakBound(_) => crate::json_output::explain::text::text("Weaken a numeric bound", "A known numeric lower or upper bound implies a weaker bound in the same direction. For example, x≤2 implies x≤3."),
             Self::IntegerSuccessorGap(_) => crate::json_output::explain::text::text("A strict integer gap", "For integers a<b, a+1≤b."),
             Self::NegationWeakOrder(_) => crate::json_output::explain::text::text("Negation reverses weak order", "For real a≤b, −b≤−a."),
             Self::AbsFromIntervalBounds(_) => crate::json_output::explain::text::text("Absolute value from symmetric bounds", "For real x,b, −b≤x≤b implies |x|≤b."),
@@ -158,7 +157,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_en(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_en(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_en(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_en(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_en(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_en(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_en(),
@@ -172,9 +170,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_en(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_en(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_en(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_en(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_en(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_en(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_en(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_en(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_en(),
@@ -229,10 +225,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::ProductNonnegativeNegativeWeak(_) => crate::json_output::explain::text::text(
                 "异号非严格符号的乘积",
                 "非负实数与非正实数的乘积为非正实数。",
-            ),
-            Self::LiteralWeakBound(_) => crate::json_output::explain::text::text(
-                "放宽数值界",
-                "已知数值上界或下界可推出同方向的较弱界。例如 x≤2 推出 x≤3。",
             ),
             Self::IntegerSuccessorGap(_) => {
                 crate::json_output::explain::text::text("整数的严格间隔", "对整数 a<b，a+1≤b。")
@@ -352,7 +344,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_zh(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_zh(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_zh(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_zh(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_zh(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_zh(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_zh(),
@@ -366,9 +357,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_zh(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_zh(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_zh(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_zh(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_zh(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_zh(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_zh(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_zh(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_zh(),
@@ -419,9 +408,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
                 "ProductNonnegativeNegativeWeak",
                 "Apply the fixed scalar sign property with checked guards",
             ),
-            Self::LiteralWeakBound(_) => {
-                text("LiteralWeakBound", "Weaken a checked exact literal bound")
-            }
             Self::IntegerSuccessorGap(_) => {
                 text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
             }
@@ -522,7 +508,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_zh_hant(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_zh_hant(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_zh_hant(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_zh_hant(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_zh_hant(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_zh_hant(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_zh_hant(),
@@ -536,9 +521,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_zh_hant(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_zh_hant(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_zh_hant(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_zh_hant(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_zh_hant(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_zh_hant(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_zh_hant(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_zh_hant(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_zh_hant(),
@@ -567,7 +550,6 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
             Self::NonnegativeSquareOrderReflection(_) => text("Réflexion de l’ordre des carrés non négatifs", "0<=x, 0<=y, x^2<=y^2 => x<=y"),
 Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
             Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
             Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
@@ -643,7 +625,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_fr(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_fr(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_fr(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_fr(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_fr(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_fr(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_fr(),
@@ -657,9 +638,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_fr(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_fr(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_fr(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_fr(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_fr(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_fr(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_fr(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_fr(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_fr(),
@@ -688,7 +667,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
             Self::NonnegativeSquareOrderReflection(_) => text("Порядок неотрицательных чисел по квадратам", "0<=x, 0<=y, x^2<=y^2 => x<=y"),
 Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
             Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
             Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
@@ -764,7 +742,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ru(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_ru(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_ru(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_ru(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ru(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_ru(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_ru(),
@@ -778,9 +755,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_ru(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_ru(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_ru(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_ru(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_ru(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_ru(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_ru(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_ru(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_ru(),
@@ -809,7 +784,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
             Self::NonnegativeSquareOrderReflection(_) => text("Reflexión del orden de cuadrados no negativos", "0<=x, 0<=y, x^2<=y^2 => x<=y"),
 Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak","Apply the fixed scalar sign property with checked guards"),
-            Self::LiteralWeakBound(_) => text("LiteralWeakBound", "Weaken a checked exact literal bound"),
             Self::IntegerSuccessorGap(_) => text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b"),
             Self::NegationWeakOrder(_) => text("NegationWeakOrder", "a<=b => -b<=-a"),
             Self::AbsFromIntervalBounds(_) => text("AbsFromIntervalBounds", "-b<=x<=b => abs(x)<=b"),
@@ -885,7 +859,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_es(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_es(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_es(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_es(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_es(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_es(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_es(),
@@ -899,9 +872,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_es(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_es(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_es(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_es(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_es(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_es(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_es(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_es(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_es(),
@@ -953,9 +924,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
                 "ProductNonnegativeNegativeWeak",
                 "Apply the fixed scalar sign property with checked guards",
             ),
-            Self::LiteralWeakBound(_) => {
-                text("LiteralWeakBound", "Weaken a checked exact literal bound")
-            }
             Self::IntegerSuccessorGap(_) => {
                 text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
             }
@@ -1067,7 +1035,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ar(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_ar(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_ar(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_ar(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ar(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_ar(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_ar(),
@@ -1081,9 +1048,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_ar(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_ar(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_ar(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_ar(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_ar(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_ar(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_ar(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_ar(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_ar(),
@@ -1135,9 +1100,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
                 "ProductNonnegativeNegativeWeak",
                 "Apply the fixed scalar sign property with checked guards",
             ),
-            Self::LiteralWeakBound(_) => {
-                text("LiteralWeakBound", "Weaken a checked exact literal bound")
-            }
             Self::IntegerSuccessorGap(_) => {
                 text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
             }
@@ -1238,7 +1200,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ja(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_ja(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_ja(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_ja(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ja(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_ja(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_ja(),
@@ -1252,9 +1213,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_ja(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_ja(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_ja(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_ja(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_ja(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_ja(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_ja(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_ja(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_ja(),
@@ -1306,9 +1265,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
                 "ProductNonnegativeNegativeWeak",
                 "Apply the fixed scalar sign property with checked guards",
             ),
-            Self::LiteralWeakBound(_) => {
-                text("LiteralWeakBound", "Weaken a checked exact literal bound")
-            }
             Self::IntegerSuccessorGap(_) => {
                 text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
             }
@@ -1414,7 +1370,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_ko(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_ko(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_ko(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_ko(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_ko(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_ko(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_ko(),
@@ -1428,9 +1383,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_ko(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_ko(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_ko(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_ko(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_ko(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_ko(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_ko(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_ko(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_ko(),
@@ -1482,9 +1435,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
                 "ProductNonnegativeNegativeWeak",
                 "Apply the fixed scalar sign property with checked guards",
             ),
-            Self::LiteralWeakBound(_) => {
-                text("LiteralWeakBound", "Weaken a checked exact literal bound")
-            }
             Self::IntegerSuccessorGap(_) => {
                 text("IntegerSuccessorGap", "a,b integer, a<b => a+1<=b")
             }
@@ -1596,7 +1546,6 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::FromKnownInPositiveNatural(p) => p.rule_name_and_message_vi(),
             Self::LogOrderPreservingWeak(p) => p.rule_name_and_message_vi(),
             Self::LogWeakDecreasing(p) => p.rule_name_and_message_vi(),
-            Self::LessEqualTransitivity(p) => p.rule_name_and_message_vi(),
             Self::LessEqualFromNonnegDifference(p) => p.rule_name_and_message_vi(),
             Self::LessEqualFromNonpositiveDifference(p) => p.rule_name_and_message_vi(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.rule_name_and_message_vi(),
@@ -1610,9 +1559,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::DivMonotoneWeakSameNegDivisor(p) => p.rule_name_and_message_vi(),
             Self::LessEqualFromPosDivProductBound(p) => p.rule_name_and_message_vi(),
             Self::LessEqualFromPosDenomQuotientBound(p) => p.rule_name_and_message_vi(),
-            Self::NumericLowerBoundWeakenLe(p) => p.rule_name_and_message_vi(),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => p.rule_name_and_message_vi(),
-            Self::NumericUpperBoundWeakenLe(p) => p.rule_name_and_message_vi(),
             Self::IntegerSuccessorLe(p) => p.rule_name_and_message_vi(),
             Self::IntegerAdjacencyLe(p) => p.rule_name_and_message_vi(),
             Self::IntegerPredecessorLe(p) => p.rule_name_and_message_vi(),
@@ -1650,8 +1597,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::QuotientScalarUpperBound(_) => None,
 
             Self::ProductNonnegativeNegativeWeak(_) => None,
-            Self::LiteralWeakBound(_)
-            | Self::IntegerSuccessorGap(_)
+            Self::IntegerSuccessorGap(_)
             | Self::NegationWeakOrder(_)
             | Self::AbsFromIntervalBounds(_)
             | Self::SqrtMonotoneFromDefinedRoots(_) => None,
@@ -1668,15 +1614,12 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
             Self::AbsLeImpliesUpper(p) => p.premise_proof.cite_fact_id(),
             Self::AbsLeImpliesNegUpper(p) => p.premise_proof.cite_fact_id(),
             Self::FromKnownInPositiveNatural(p) => p.premise_proof.cite_fact_id(),
-            Self::LessEqualTransitivity(_) => None,
             Self::LessEqualFromNonnegDifference(p) => p.premise_proof.cite_fact_id(),
             Self::LessEqualFromNonpositiveDifference(p) => p.premise_proof.cite_fact_id(),
             Self::NonpositiveDifferenceFromLessEqual(p) => p.premise_proof.cite_fact_id(),
 
             Self::NonnegDifferenceFromLessEqual(p) => p.premise_proof.cite_fact_id(),
-            Self::NumericLowerBoundWeakenLe(p) => Some(p.cite_fact_id),
             Self::NumericLowerBoundFromStrictPredecessorLe(p) => Some(p.cite_fact_id),
-            Self::NumericUpperBoundWeakenLe(p) => Some(p.cite_fact_id),
             Self::OrderFlipMulMinusOne(p) => p.premise_proof.cite_fact_id(),
             Self::OrderSignFromNegativeLiteralBound(p) => Some(p.cite_fact_id),
             _ => None,
@@ -4225,69 +4168,6 @@ impl LogOrderPreservingWeakBuiltinRuleProof {
     }
 }
 
-impl LessEqualTransitivityBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text("≤ transitivity", "Less-or-equal is transitive")
-    }
-
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("≤ 传递性", "≤ 具有传递性")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("≤ 遞移性", "小於或等於具遞移性")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Transitivité de ≤",
-            "La relation inférieure ou égale est transitive",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text("Транзитивность ≤", "Отношение меньше или равно транзитивно")
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text("Transitividad de ≤", "Menor o igual es transitivo")
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("تعدي ≤", "علاقة أصغر أو يساوي متعدية")
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("≤ の推移性", "以下の関係は推移的です")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("≤ 추이성", "작거나 같음은 추이적입니다")
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text(
-            "Tính bắc cầu của ≤",
-            "Quan hệ nhỏ hơn hoặc bằng có tính bắc cầu",
-        )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
 impl LessEqualFromNonnegDifferenceBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
@@ -5086,75 +4966,6 @@ impl LessEqualFromPosDenomQuotientBoundBuiltinRuleProof {
     }
 }
 
-impl NumericLowerBoundWeakenLeBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Weaken numeric lower (≤)",
-            "A numeric lower bound weakens under ≤",
-        )
-    }
-
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("放宽数值下界（≤）", "数值下界在 ≤ 下可放宽")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("放寬數值下界（≤）", "數值下界依 ≤ 放寬")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Relâchement de borne inférieure (≤)",
-            "Une borne inférieure numérique se relâche sous ≤",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Ослабление нижней границы (≤)",
-            "Числовая нижняя граница ослабляется по ≤",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Debilitar cota inferior (≤)",
-            "Una cota inferior numérica se debilita bajo ≤",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("إضعاف الحد الأدنى (≤)", "الحد الأدنى العددي يضعف تحت ≤")
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("数値下界の緩和（≤）", "数値の下界を ≤ で緩めます")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("수치 하한 완화 (≤)", "수치 하한을 ≤로 완화합니다")
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Nới cận dưới (≤)", "Cận dưới số được nới theo ≤")
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
 impl NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         text(
@@ -5218,75 +5029,6 @@ impl NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof {
             "Cận dưới qua giá trị liền trước",
             "Cận dưới số suy ra từ so sánh nghiêm ngặt với giá trị liền trước",
         )
-    }
-
-    pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {
-        match lang {
-            OutputLanguage::English => self.rule_name_and_message_en(),
-            OutputLanguage::Chinese => self.rule_name_and_message_zh(),
-            OutputLanguage::ChineseTraditional => self.rule_name_and_message_zh_hant(),
-            OutputLanguage::French => self.rule_name_and_message_fr(),
-            OutputLanguage::Russian => self.rule_name_and_message_ru(),
-            OutputLanguage::Spanish => self.rule_name_and_message_es(),
-            OutputLanguage::Arabic => self.rule_name_and_message_ar(),
-            OutputLanguage::Japanese => self.rule_name_and_message_ja(),
-            OutputLanguage::Korean => self.rule_name_and_message_ko(),
-            OutputLanguage::Vietnamese => self.rule_name_and_message_vi(),
-        }
-    }
-}
-
-impl NumericUpperBoundWeakenLeBuiltinRuleProof {
-    pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
-        text(
-            "Weaken numeric upper (≤)",
-            "A numeric upper bound weakens under ≤",
-        )
-    }
-
-    pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
-        text("放宽数值上界（≤）", "数值上界在 ≤ 下可放宽")
-    }
-
-    pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
-        text("放寬數值上界（≤）", "數值上界依 ≤ 放寬")
-    }
-
-    pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
-        text(
-            "Relâchement de borne supérieure (≤)",
-            "Une borne supérieure numérique se relâche sous ≤",
-        )
-    }
-
-    pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
-        text(
-            "Ослабление верхней границы (≤)",
-            "Числовая верхняя граница ослабляется по ≤",
-        )
-    }
-
-    pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
-        text(
-            "Debilitar cota superior (≤)",
-            "Una cota superior numérica se debilita bajo ≤",
-        )
-    }
-
-    pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
-        text("إضعاف الحد الأعلى (≤)", "الحد الأعلى العددي يضعف تحت ≤")
-    }
-
-    pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
-        text("数値上界の緩和（≤）", "数値の上界を ≤ で緩めます")
-    }
-
-    pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
-        text("수치 상한 완화 (≤)", "수치 상한을 ≤로 완화합니다")
-    }
-
-    pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
-        text("Nới cận trên (≤)", "Cận trên số được nới theo ≤")
     }
 
     pub fn rule_name_and_message(&self, lang: OutputLanguage) -> BuiltinRuleText {

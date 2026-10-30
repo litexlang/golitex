@@ -502,18 +502,6 @@ impl LitexToLeanCompiler {
             (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
-                    LessFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLt(p),
-                ),
-            ) => self.compile_numeric_bound_weaken(goal, p.cite_fact_id, false, true, position),
-            (
-                AtomicFact::LessFact(_),
-                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
-                    LessFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLt(p),
-                ),
-            ) => self.compile_numeric_bound_weaken(goal, p.cite_fact_id, true, true, position),
-            (
-                AtomicFact::LessFact(_),
-                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
                     LessFactSearchProofByBuiltinRule::ModRemainderStrictUpperBound(p),
                 ),
             ) => self.compile_mod_bound(
@@ -569,12 +557,6 @@ impl LitexToLeanCompiler {
                     ),
                 LessEqualFactSearchProofByBuiltinRule::OrderReflexivity(p) => {
                     self.compile_order_reflexivity(goal, &p.repeated_object, position)
-                }
-                LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLe(p) => {
-                    self.compile_numeric_bound_weaken(goal, p.cite_fact_id, false, false, position)
-                }
-                LessEqualFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLe(p) => {
-                    self.compile_numeric_bound_weaken(goal, p.cite_fact_id, true, false, position)
                 }
                 LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundFromStrictPredecessorLe(
                     p,
@@ -708,13 +690,6 @@ impl LitexToLeanCompiler {
                 LessEqualFactSearchProofByBuiltinRule::AddLeftCongruence(p) => {
                     self.compile_weak_add_congruence(goal, &p.premise_proof, true, position)
                 }
-                LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity(p) => self
-                    .compile_weak_order_transitivity(
-                        goal,
-                        p.left_to_mid_cite_fact_id,
-                        p.mid_to_right_cite_fact_id,
-                        position,
-                    ),
                 LessEqualFactSearchProofByBuiltinRule::MinLowerBound(_) => {
                     self.compile_min_max_bound(goal, false, position)
                 }
@@ -1126,6 +1101,12 @@ impl LitexToLeanCompiler {
             (
                 AtomicFact::NotEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::PiNonzero(_),
+                ),
+            ) => self.compile_pi_nonzero(goal, position),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
                     NotEqualFactSearchProofByBuiltinRule::SignNonzeroFromArgument(p),
                 ),
             ) => self.compile_sign_nonzero(goal, &p.argument_nonzero, position),
@@ -1409,54 +1390,6 @@ impl LitexToLeanCompiler {
         };
         source_order_parts(atomic)?;
         Ok((atomic, reference))
-    }
-
-    pub(in crate::compile_to_lean) fn compile_weak_order_transitivity(
-        &self,
-        goal: &AtomicFact,
-        first_id: FactId,
-        second_id: FactId,
-        position: &SourcePosition<'_>,
-    ) -> Result<String, LeanCompileError> {
-        let (left, right, strict) = source_order_oriented(goal)?;
-        if strict {
-            return Err(LeanCompileError::unsupported("Order/StrictTransitivity"));
-        }
-        let first = self.compile_registered_order(first_id, position)?;
-        let second = self.compile_registered_order(second_id, position)?;
-        let first_atomic = first.0;
-        let second_atomic = second.0;
-        let (a, b, first_strict) = source_order_oriented(first_atomic)?;
-        let (b2, c, second_strict) = source_order_oriented(second_atomic)?;
-        if a.ir() != left.ir() || b.ir() != b2.ir() || c.ir() != right.ir() {
-            return Err(LeanCompileError::new("Order/TransitivitySubject", "The exact two recorded citations do not form this ordered left-middle-right chain."));
-        }
-        let first_proof = if first_strict {
-            format!(
-                "(Litex.ltToLe {} {} {})",
-                self.compile_object_reference(a, position)?,
-                self.compile_object_reference(b, position)?,
-                first.1
-            )
-        } else {
-            first.1
-        };
-        let second_proof = if second_strict {
-            format!(
-                "(Litex.ltToLe {} {} {})",
-                self.compile_object_reference(b2, position)?,
-                self.compile_object_reference(c, position)?,
-                second.1
-            )
-        } else {
-            second.1
-        };
-        Ok(format!(
-            "(Litex.leTrans {} {} {} {first_proof} {second_proof})",
-            self.compile_object_reference(a, position)?,
-            self.compile_object_reference(b, position)?,
-            self.compile_object_reference(c, position)?
-        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_order_dual(

@@ -10,8 +10,9 @@ induced subgraph changes its type to the chosen subset U. Empty carriers are
 legitimate.
 
 An undirected edge has both ordered adjacency pairs in arcs. Degree counts
-distinct neighbors. It does not count arcs twice at a vertex, and no claim
-about an undirected edge cardinality or the handshaking identity is made here.
+distinct neighbors. The actual unordered-edge image and its two-arc fibers
+now justify the handshaking identity; neither the graph data nor degree
+definition has changed.
 
 ## Neighborhoods, extremal degrees and isolation
 
@@ -75,6 +76,32 @@ proves the constructor memberships explicitly before nesting constructor
 values in degree expressions. The standalone README example builds a typed
 raw pair from a construction theorem and verifies independently.
 
+## Actual unordered edges and degree counting
+
+The source route follows Levin, *Discrete Mathematics: An Open Introduction*,
+third edition, [4.1, Lemma 4.1.5](https://discrete.openmathbooks.org/dmoi3/sec_gt-intro.html).
+The 36-statement baseline is preserved exactly. The new 24 statements add
+13 named theorems. Before the requested cleanup, clean source/imported gates
+and all 28 final-only refusals passed, including a fresh replay of the 147
+positive statements. The extension fixtures and temporary evidence were
+subsequently removed; the mathematical source remains unchanged.
+
+The actual source-coordinate map on arcs is the restriction of the first
+coordinate map on cart(V,V). A fiber over v is in bijection with the actual
+neighbor set of v; the existing finite-fiber theorem then gives the degree sum
+as the size of G.arcs. Typed coordinate maps are applied to arc members after
+explicitly proving their product membership; no WD or verifier change is used.
+
+`graph_arc_to_vertex_set` similarly restricts the map sending (u,v) to the
+union of its singleton endpoints. `graph_edges` is its actual image, a subset
+of power_set(V). Symmetry and irreflexivity prove that each edge has exactly the two distinct
+arcs (u,v) and (v,u). Uniform fiber counting then proves
+size(G.arcs)=2*size(graph_edges) and the handshake identity.
+The image and its proof, rather than a quotient count or an arbitrary vertex
+ordering, own the unordered-edge construction. Empty graphs remain allowed.
+A local corestriction into the actual image is constructed for the counting call;
+it does not retype a larger-codomain function or assume a representative.
+
 ## Source proof and acceptance evidence
 
 The dependency spine is finite sets and relation laws -> actual neighborhoods
@@ -83,14 +110,23 @@ two pigeonhole branches and equal-degree vertices. In parallel, actual
 complete/complement/induced adjacency sets -> graph-law certificates ->
 neighborhood formulas -> degree identities and monotonicity.
 
-The canonical source contains 21 theorems in 36 statements. The public checker
-passes those statements, 96 imported consumer statements, a fresh five-statement
-README example, and ten final-only refusals. The concrete path on `{1,2,3}`
+The canonical source contains 34 theorems in 60 statements. Before cleanup, the positive gates
+passed those statements, 147 imported consumer statements, the five-statement
+original README example and an independent eleven-statement handshake example.
+The final run confirmed 28 final-only refusals after replaying the 147 positives. The concrete path on `{1,2,3}`
 has neighborhoods `{2}`, `{1,3}`, `{2}` and degrees 1,2,1. Its complement has
 center degree 0 and endpoint degree 1. Its induced graph on `{1,3}` has no
 neighbors. Empty, singleton and empty-induced examples verify too.
 
 All proofs and data live under std. No trust declaration, axiom, parser,
 verifier, compiler or other std-external change is part of this batch. Paths,
-connectedness, unordered edge counting/handshaking, trees, coloring and graph
-isomorphism require further source mathematics and are not inferred here.
+connectedness, trees, coloring and graph isomorphism require further source
+mathematics and are not inferred here. The native-divisibility convenience
+corollary has an unpublished source-proof follow-up in [todo.md](todo.md); no
+trust or kernel repair was used to hide it.
+
+At the user's pause request, this round's added caller cases, refusals,
+handshake project, failed reproduction and temporary verification directory
+were removed. The original 96-statement caller, five-statement example and
+ten refusals remain; the retained checker only aligns the source count with
+the 60 retained statements. No new verifier run was started during cleanup.

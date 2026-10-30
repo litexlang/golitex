@@ -158,11 +158,66 @@ impl LitexToLeanCompiler {
                 position,
             ),
             (
+                AtomicFact::HasSequenceLimsupFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::SequenceLimsup(p),
+                ),
+            ) => self.compile_sequence_extremum_definition(
+                true,
+                &f.sequence,
+                &f.value,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::HasSequenceLiminfFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::SequenceLiminf(p),
+                ),
+            ) => self.compile_sequence_extremum_definition(
+                false,
+                &f.sequence,
+                &f.value,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
                 AtomicFact::HasFunctionLimitFact(f),
                 AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
                     BuiltinPropDefinitionProof::FunctionLimit(p),
                 ),
             ) => self.compile_function_limit_definition(f, wd, p, position),
+            (
+                AtomicFact::FunctionContinuousAtFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::FunctionContinuousAt(p),
+                ),
+            ) => self.compile_function_continuity_definition(f, wd, p, position),
+            (
+                AtomicFact::RealAccumulationFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::RealAccumulation(p),
+                ),
+            ) => self.compile_real_accumulation_definition(
+                f,
+                &p.requirement_facts,
+                &p.proof_of_requirement_facts,
+                position,
+            ),
+            (
+                AtomicFact::HasDerivativeAtFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::HasDerivativeAt(p),
+                ),
+            ) => self.compile_derivative_definition(f, wd, p, position),
+            (
+                AtomicFact::FunctionDifferentiableAtFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::FunctionDifferentiableAt(p),
+                ),
+            ) => self.compile_differentiability_definition(f, p, position),
             (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(_)) => {
                 Err(LeanCompileError::unsupported("Prop/BuiltinDefinition"))
             }

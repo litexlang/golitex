@@ -5,6 +5,29 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_standard_subset_member(
+        &self,
+        goal: &InFact,
+        proof:&crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::StandardSetSubsetMembershipBuiltinRuleProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let target = self.compile_numeric_carrier(&goal.set, position)?;
+        if proof.source_set == target
+            || !matches!(source_subject(&proof.source_membership_proof)?,
+            Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==goal.element.ir()&&f.set==Obj::StandardSet(proof.source_set.clone()))
+        {
+            return Err(LeanCompileError::unsupported("StandardSubset/Subject"));
+        }
+        let member = self
+            .compile_verify(
+                &proof.source_membership_proof,
+                &position.atomic_search_prior(0)?,
+            )?
+            .1;
+        let object = self.compile_object_reference(&goal.element, position)?;
+        standard_inclusion_term(&proof.source_set, &target, &object, &member)
+    }
+
     pub(in crate::compile_to_lean) fn compile_known_subset_member(
         &self,
         goal: &InFact,
@@ -783,6 +806,40 @@ impl LitexToLeanCompiler {
                 }
                 let term = self.compile_object_reference(&proof.element, position)?;
                 Ok(format!("(by\n  let _litex_sqrt := {term}\n  exact Litex.sqrtInR _litex_sqrt.val.arg _litex_sqrt.wd.1 _litex_sqrt.wd.2\n)"))
+            }
+            StructuralMembershipReason::Intrinsic(
+                kind @ (IntrinsicCodomain::SequenceLimsup | IntrinsicCodomain::SequenceLiminf),
+            ) => {
+                let upper = matches!(kind, IntrinsicCodomain::SequenceLimsup);
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        (&proof.element, upper),
+                        (Obj::LimitOperator(LimitOperator::SequenceLimsup(_)), true)
+                            | (Obj::LimitOperator(LimitOperator::SequenceLiminf(_)), false)
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "SequenceExtremum/IntrinsicSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.sequenceExtremumInR {upper} {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::DerivativeAt) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::DerivativeOperator(DerivativeOperator::AtPoint(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported("Derivative/IntrinsicSubject"));
+                }
+                Ok(format!(
+                    "(Litex.derivativeInR {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
             }
             StructuralMembershipReason::Intrinsic(IntrinsicCodomain::SequenceLimit) => {
                 if proof.set != StandardSet::R

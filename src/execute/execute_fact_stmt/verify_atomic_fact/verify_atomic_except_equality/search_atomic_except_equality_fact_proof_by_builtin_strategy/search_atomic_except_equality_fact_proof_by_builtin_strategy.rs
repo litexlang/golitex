@@ -25,11 +25,6 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
-        if let Some(proof) = self.search_negated_order_strategy(fact, ctx)? {
-            return Ok(Some(
-                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NegatedOrder(proof),
-            ));
-        }
         if let Some(proof) = self.search_multivariable_strategy(fact, ctx)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(proof),
@@ -43,6 +38,11 @@ impl Runtime {
         if let Some(proof) = self.search_pointwise_derivative_strategy(fact, ctx)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(proof),
+            ));
+        }
+        if let Some(proof) = self.search_structural_limit_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(proof),
             ));
         }
         if let Some(proof) =

@@ -1,9 +1,5 @@
-use crate::ast::fact::{AtomicFact, Fact, NormalAtomicFact};
-use crate::ast::names::AtomicName;
 use crate::exec_env::exec_env::PropRewriteProperty;
-use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
-use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::prelude::*;
 
 // Known / registered rewrite for atomic-except-equality facts.
 //
@@ -16,6 +12,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 pub enum AtomicExceptEqualityFactSearchProofByKnownRewrite {
     Reflexivity(AtomicExceptEqualityFactSearchProofByKnownReflexivity),
     Symmetry(AtomicExceptEqualityFactSearchProofByKnownSymmetry),
+    Transitivity(AtomicExceptEqualityFactSearchProofByKnownTransitivity),
 }
 
 pub struct AtomicExceptEqualityFactSearchProofByKnownReflexivity {
@@ -29,8 +26,13 @@ pub struct AtomicExceptEqualityFactSearchProofByKnownSymmetry {
     pub proof_of_alternate_fact: VerifyFactResult,
 }
 
+pub struct AtomicExceptEqualityFactSearchProofByKnownTransitivity {
+    pub cite_prop: AtomicName,
+    pub application: super::search_transitive_relation::TransitiveRelationProof,
+}
+
 impl Runtime {
-    // Search registered Reflexivity then Symmetry (admitted once by the shared rewrite gate).
+    // Registered properties share the existing single-rewrite permission.
     pub fn search_atomic_except_equality_fact_proof_by_known_rewrite(
         &mut self,
         fact: &AtomicFact,
@@ -45,6 +47,24 @@ impl Runtime {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByKnownRewrite::Symmetry(proof),
             ));
+        }
+        if let AtomicFact::NormalAtomicFact(normal) = fact {
+            if normal.body.len() == 2
+                && self.prop_has_rewrite_property(&normal.predicate, |property| {
+                    matches!(property, PropRewriteProperty::Transitive)
+                })
+            {
+                if let Some(application) = self.search_transitive_relation(fact, verify_state)? {
+                    return Ok(Some(
+                        AtomicExceptEqualityFactSearchProofByKnownRewrite::Transitivity(
+                            AtomicExceptEqualityFactSearchProofByKnownTransitivity {
+                                cite_prop: normal.predicate.clone(),
+                                application,
+                            },
+                        ),
+                    ));
+                }
+            }
         }
         Ok(None)
     }

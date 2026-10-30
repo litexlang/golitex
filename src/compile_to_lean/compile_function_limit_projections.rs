@@ -94,9 +94,12 @@ impl LitexToLeanCompiler {
         };
         let proof = &references[candidate_index];
         let (extra, body) = if let Some(epsilon) = epsilon {
+            let input_body = self
+                .compile_real_function_input_body(signature_source, &references[1], position)?
+                .replace('\n', "\n    ");
             let epsilon = self.compile_object_reference(epsilon, position)?;
             let member = &references[candidate_index + 1];
-            (format!("  have _control_real_domain : Litex.RealFunctionValue M (Litex.denote {function}) := by\n    refine ⟨_signature, _member, ?_, {}⟩\n    intro x hx\n    exact {} x ((Litex.SetSemantics.sep_members _ _ _).mp hx).1\n", references[2], references[1]),
+            (format!("  have _control_real_domain : Litex.RealFunctionValue M (Litex.denote {function}) := by\n    refine ⟨_signature, _member, ?_, {}⟩\n    intro x hx\n    {input_body}\n", references[2]),
                 format!("  obtain ⟨_limit_threshold, _limit_threshold_member, _limit_control⟩ := Litex.{prefix}FunctionLimitControl {arguments} _control_real_domain {equality} {proof} {epsilon} {member}\n  refine ⟨_limit_threshold, _limit_threshold_member, ?_⟩\n  exact _limit_control"))
         } else {
             let result = if finite {

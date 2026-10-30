@@ -180,6 +180,22 @@ impl LitexToLeanCompiler {
                 let premise = self.compile_verify(&p.proof_of_alternate_fact, position)?.1;
                 self.apply_registered_law(proof, &declaration, &arguments, &[premise], position)
             }
+            Rule::Transitivity(p) => {
+                if p.cite_prop != target.predicate || target.body.len() != 2 {
+                    return Err(LeanCompileError::unsupported("Register/TransitiveSubject"));
+                }
+                let (law, declaration) = position.visible_registration(|r| matches!(r,
+                    ExecRegisterStmtResult::TransitiveProp(ExecRegisterTransitivePropStmtResult::Success(s)) if s.prop == p.cite_prop))?;
+                let law = registration_proof(law)?;
+                let terms = self.compile_transitive_relation(fact, &p.application, position)?;
+                self.apply_registered_law(
+                    law,
+                    &declaration,
+                    &[&target.body[0], &terms.middle, &target.body[1]],
+                    &[terms.known_left_proof, terms.residual_proof],
+                    position,
+                )
+            }
         }
     }
 }

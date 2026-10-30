@@ -12,6 +12,24 @@ pub(super) fn project_equality_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::NativeMatrixLaw(p) => {
+            let a = p.application();
+            object_for(runtime, vec![
+                ("type", string("builtin_rule")),
+                ("rule", string(p.rule_name())),
+                ("arguments", JsonValue::Array(a.arguments.iter().map(|x| string(x.readable_string())).collect())),
+                ("requirements", JsonValue::Array(a.requirements.iter().map(|x| string(x.readable_string())).collect())),
+                ("conclusion", string(crate::ast::fact::AtomicFact::EqualFact(a.conclusion.clone()).readable_string())),
+                ("orientation", string(match a.orientation {
+                    crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawOrientation::Forward => "forward",
+                    crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawOrientation::Reverse => "reverse",
+                })),
+                ("left_equal", super::searched::project_equal_searched(&a.left_equal, runtime)),
+                ("right_equal", super::searched::project_equal_searched(&a.right_equal, runtime)),
+                ("requirement_proofs", JsonValue::Array(a.requirement_proofs.iter().map(|x| super::verify::project_verify_fact(x,runtime)).collect())),
+            ])
+        }
+
         EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(p) => {
             object_for(
                 runtime,

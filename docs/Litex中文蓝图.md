@@ -1483,6 +1483,14 @@ Litex 希望维护以下数学价值，与[《莱顿人工智能与数学宣言�
 6. **开放。**[开源](https://github.com/litexlang/golitex)与多语种反馈帮助更多人参与；复用仍须注明来源。
 7. **诚实。**[Lean 独立复核](#compatibility)（仍在扩展）。
 
+<a id="litex-reliability"></a>
+
+### Litex 的可靠性
+
+Litex 通过持续测试、代码审阅和独立证明复核来提高可靠性。项目目前有约 4,000 个示例和 3,000 多个测试函数；每次发布前，维护者还会使用能用到的前沿大模型审阅源码、排查 bug。
+
+Lean 编译提供了另一层检查：受支持的 Litex 证明可以重建为 Lean 证明，交由 Lean 内核独立复核。这一覆盖范围仍在持续扩大。
+
 <details>
 <summary><strong>作者的话</strong></summary>
 

@@ -30,8 +30,8 @@ thm punctured_real_ball_witness:
     min(r,epsilon)<=epsilon
     have step R+=min(r,epsilon)/2
     step<min(r,epsilon)
-    step<r
-    step<epsilon
+    step<min(r,epsilon)<=r
+    step<min(r,epsilon)<=epsilon
     abs((p+step)-p)=abs(step)=step
     witness exist x {t R: 0<abs(t-p),abs(t-p)<r} st {0<abs(x-p) and abs(x-p)<epsilon} from p+step
 
@@ -148,8 +148,8 @@ thm real_derivatives_intersection_unique:
             x $in D
             x $in E
         abs(x-p)<min(r,s)
-        abs(x-p)<r
-        abs(x-p)<s
+        abs(x-p)<min(r,s)<=r
+        abs(x-p)<min(r,s)<=s
         x $in {t R:abs(t-p)<r}
         x $in {t R:abs(t-p)<s}
     by def {t R:abs(t-p)<min(r,s)} $subset D
@@ -187,8 +187,8 @@ thm real_partials_intersection_unique:
         abs(h-0)=abs(h)
         0<abs(h)
         abs(h)<min(r,s)
-        abs(h)<r
-        abs(h)<s
+        abs(h)<min(r,s)<=r
+        abs(h)<min(r,s)<=s
         h $in {t R:abs(t)<r}
         h $in {t R:abs(t)<s}
         h $in {t R:fn(k closed_range(1,n)) R {p(k)+t*identity_matrix(n)(k,axis)} $in D}

@@ -79,3 +79,8 @@ pub(crate) use result::SequenceCauchyConvergentProof;
 pub(crate) use result::SequenceConvergentBoundedProof;
 pub(crate) use result::SequenceMonotoneBoundedAboveProof;
 pub(crate) use result::SequenceMonotoneBoundedBelowProof;
+
+// Pure matrix contracts shared with fixed-shape equality checking; no statements run.
+pub(crate) use builtin_thm::matrices::{
+    prepare_matrices, prepare_matrix_trace_add, prepare_matrix_trace_scale,
+};

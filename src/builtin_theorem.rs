@@ -539,6 +539,7 @@ pub enum BuiltinTheoremId {
     GcdWithPrimeIsOneOrPrime,
     PrimeDividesProduct,
     PrimeDividesPower,
+    PrimeDivisor,
 }
 
 impl BuiltinTheoremId {
@@ -1091,6 +1092,7 @@ impl BuiltinTheoremId {
             "gcd_with_prime_is_one_or_prime" => Self::GcdWithPrimeIsOneOrPrime,
             "prime_divides_product" => Self::PrimeDividesProduct,
             "prime_divides_power" => Self::PrimeDividesPower,
+            "prime_divisor" => Self::PrimeDivisor,
             _ => return None,
         })
     }
@@ -1643,6 +1645,7 @@ impl BuiltinTheoremId {
             Self::GcdWithPrimeIsOneOrPrime => "gcd_with_prime_is_one_or_prime",
             Self::PrimeDividesProduct => "prime_divides_product",
             Self::PrimeDividesPower => "prime_divides_power",
+            Self::PrimeDivisor => "prime_divisor",
         }
     }
 }
@@ -2150,7 +2153,8 @@ impl BuiltinTheoremId {
             | Self::RationalHasUniqueReducedFraction
             | Self::IndexCartesianNonemptyByChoiceFromFamily
             | Self::IndexCartesianNonemptyByChoiceFromPointwise
-            | Self::RealArchimedeanNaturalUpperBound => 1,
+            | Self::RealArchimedeanNaturalUpperBound
+            | Self::PrimeDivisor => 1,
             Self::RealMemberLeLeastUpperBound
             | Self::RealLeastUpperBoundUnique
             | Self::RealGreatestLowerBoundUnique

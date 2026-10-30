@@ -7,6 +7,7 @@ mod compile_cartesian_definition;
 mod compile_closed_range_literal;
 mod compile_complex_calculation;
 mod compile_congruence;
+mod compile_cos_integer_offset;
 mod compile_difference_zero;
 mod compile_equal_from_known_difference_zero;
 mod compile_equality_result;
@@ -14,6 +15,7 @@ mod compile_equivalence_class;
 mod compile_finite_coordinate_expansion;
 mod compile_function_definition;
 mod compile_known_special_property;
+mod compile_mod_congruence;
 mod compile_natural_power_laws;
 mod compile_order_antisymmetry;
 mod compile_positive_power_zero;
@@ -55,5 +57,6 @@ mod compile_matrix_reduction;
 mod compile_matrix_evaluation;
 
 mod compile_matrix_residual;
+mod compile_native_matrix_law;
 
 mod compile_homogeneous_cart;

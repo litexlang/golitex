@@ -79,10 +79,11 @@ fn order_stage_a_div_product_bridges() {
 }
 
 #[test]
-fn order_stage_a_numeric_bound_chase() {
+fn order_stage_a_explicit_numeric_bridges_and_integer_discreteness() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have x R").is_failed());
     assert!(!exec_one(&mut runtime, "trust 4 < x").is_failed());
+    assert!(!exec_one(&mut runtime, "2 <= 4 < x").is_failed());
     assert!(
         !exec_one(&mut runtime, "2 <= x").is_failed(),
         "weaken lower bound to weak"
@@ -103,6 +104,7 @@ fn order_stage_a_numeric_bound_chase() {
     let mut runtime = runtime_with_file_env();
     assert!(!exec_one(&mut runtime, "have x R").is_failed());
     assert!(!exec_one(&mut runtime, "trust x < 4").is_failed());
+    assert!(!exec_one(&mut runtime, "x < 4 <= 6").is_failed());
     assert!(
         !exec_one(&mut runtime, "x <= 6").is_failed(),
         "weaken upper bound to weak"

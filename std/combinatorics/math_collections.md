@@ -29,7 +29,7 @@ to bounds/deletion, from bounds to pigeonhole/omitted value, from image equality
 to injection-bijection, and from deletion+surjection to collision bound then
 surjection-bijection. No choice or existence of an arbitrary bijection is
 selected. The ten source proofs and full-domain imported use probes are checked in strict mode. General
-fiber sums, graphs, recurrence solving and generating functions remain future
+indexed inclusion-exclusion, recurrence solving and generating functions remain future
 work. The original discrete showcase is preserved and not treated as a full
 course. No compiler/Lean or global release certification is implied.
 
@@ -95,9 +95,9 @@ positive-column Pascal relation is checked without evaluation-wrapper
 theorems. In particular, column1 must not inherit the showcase's extra r>1
 restriction.
 
-This design does not establish the factorial formula, binomial theorem,
-row-sum identities or the cardinality of k-element subsets. Those require
-separate proofs and consumers. The natural interface, nine source theorems and
+The original numeric layer does not by itself establish the factorial formula,
+binomial theorem, row-sum identities or the cardinality of k-element subsets.
+The natural interface, nine original source theorems and
 full-domain imported use probes pass strict verification. Imported use starts
 with release obj def on the actual function: imports expose definitions, while
 the explicit release supplies the callable membership and guarded equations
@@ -111,3 +111,36 @@ the diagonal; the first column precedes the second; the diagonal supports
 symmetry, which supports penultimate entries; positivity supports strict row
 growth. Weak row growth follows directly from the natural codomain and the
 Pascal step. Local generalized row invariants stay inside three proof bodies.
+
+## Binomial expansion and finite fibers
+
+The extension derives the factorial product identity by row induction and
+Pascal recursion, then divides by proved positive factorials. A complex-valued
+`binomial_terms<n,x,y>` function is defined on all natural indices, using zero
+above the row. This avoids negative powers at zero bases. Reindexing and
+weighted successor sums support the row induction for the actual binomial
+expansion. Finite-prefix extensionality then transfers that expansion to any
+supplied function agreeing with the terms through n. The expansion theorem
+also exposes the actual constructed terms directly; it requires no supplied
+candidate. Row sums specialize the two complex parameters to 1,1 or -1,1.
+The alternating sum retains the necessary positive-row condition.
+
+Fiber counting uses existing preimages and native cardinality. Disjoint target
+subsets have disjoint preimages; finite-subset cardinality induction therefore
+proves the sum over S equals the cardinality of its preimage. Taking S=Y gives
+the total fiber sum. Constant or bounded summands yield uniform, upper and
+lower counts; contradiction gives generalized pigeonhole. Positive fibers
+characterize surjectivity and fibers of size at most one characterize
+injectivity. These contracts allow empty finite carriers and uniform value
+zero, without adding nonemptiness or surjectivity to total counting.
+
+The resumed 2026-10-30 checkpoint passes the clean 69-statement strict source,
+71 clean imported statements and generic contracts for every added theorem.
+A fresh Session replays the 71 positive statements and confirms 20 final-only
+refusals at the intended premise, argument, WD or proof-search phase. Actual
+models include the complex expansion, fibers of sizes 2,3,0 and empty/zero
+boundaries. The user subsequently requested removal of this round's tests,
+journals and temporary verification directory; the earlier cleanup remains
+in effect. These are historical checkpoint results. This checkpoint does
+not establish the subset-cardinality interpretation of binomial coefficients,
+Vandermonde's identity, generating functions or indexed inclusion-exclusion.

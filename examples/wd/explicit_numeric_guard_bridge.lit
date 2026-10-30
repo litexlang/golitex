@@ -1,0 +1,19 @@
+# A proved numeric guard bridge supplies function-call WD through ordinary forall reuse.
+# Before: 1<=k used literal-bound weakening to discharge the required 0<=k.
+# Now: prove that bridge explicitly once; no extra function guard is assumed.
+have fn prefix_value(k Z: 0 <= k) R = k
+
+claim:
+    ? forall k Z:
+        1 <= k
+        =>:
+            0 <= k
+    0 <= 1 <= k
+
+forall k Z:
+    1 <= k
+    =>:
+        prefix_value(k) = k
+
+# Boundary: without the checked bridge, the last function-call WD rejects.
+# Evidence: target/release/litex -lang en -strict -f examples/wd/explicit_numeric_guard_bridge.lit

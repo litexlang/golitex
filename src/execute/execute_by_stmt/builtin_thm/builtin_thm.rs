@@ -613,7 +613,7 @@ fn prepare_contract(
         | FiniteSetSummandLessEqualSum
         | FiniteSetSumSubstitution
         | SumOverBijectiveFiniteSetEnumerations => sums::prepare_sums(rt, id, args)?,
-        GcdWithPrimeIsOneOrPrime | PrimeDividesProduct | PrimeDividesPower => {
+        GcdWithPrimeIsOneOrPrime | PrimeDividesProduct | PrimeDividesPower | PrimeDivisor => {
             number_theory::prepare_number_theory(rt, id, args)
         }
         _ => real_analysis::prepare_real_analysis(rt, id, args),

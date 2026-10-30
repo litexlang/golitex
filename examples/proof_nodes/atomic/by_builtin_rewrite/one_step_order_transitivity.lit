@@ -1,0 +1,41 @@
+# Tracer: one known left edge supplies the middle point of real-order transitivity.
+# Before:
+# forall x R:
+#     x <= 900
+#     =>:
+#         not x > 1070
+# Former route: NegatedOrder plus specialized NumericUpperBoundWeakenLe.
+# Now: write the positive intermediate explicitly; its proof uses one shared
+# transitivity search and a checked numeric residual, with no numeric-bound scan.
+forall x R:
+    x <= 900
+    =>:
+        x <= 1070
+        not x > 1070
+
+forall a, b, c R:
+    a <= b
+    b <= c
+    =>:
+        a <= c
+
+forall x R:
+    x >= 1260
+    =>:
+        x >= 1250
+
+forall x R:
+    x < 900
+    =>:
+        x < 1070
+
+forall x R:
+    x > 1260
+    =>:
+        x > 1250
+
+# Boundary: no reverse search, mixed-relation search, or second transitivity.
+# The bare negative goal above now requires the explicit positive intermediate.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_rewrite/one_step_order_transitivity.lit
+# Rejection controls: tests/unit/execute/registered_transitivity/tests.rs.
+# Implementation: search_transitive_relation.rs and builtin rewrite dispatcher.

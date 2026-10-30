@@ -31,7 +31,6 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     AbsFromIntervalBounds(super::scalar_order_relations::AbsFromIntervalBoundsProof),
     NegationWeakOrder(super::scalar_order_relations::NegationWeakOrderProof),
     IntegerSuccessorGap(super::scalar_order_relations::IntegerSuccessorGapProof),
-    LiteralWeakBound(super::scalar_order_relations::LiteralWeakBoundProof),
     SignLowerBound(super::sign_extremum_order::SignLowerBoundProof),
     SignUpperBound(super::sign_extremum_order::SignUpperBoundProof),
     SignWeakMonotone(super::sign_extremum_order::SignWeakMonotoneProof),
@@ -172,9 +171,6 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     LogOrderPreservingWeak(LogOrderPreservingWeakBuiltinRuleProof),
     // 0<a<1 and positive arguments: x<=y implies log(a,y)<=log(a,x).
     LogWeakDecreasing(super::log_unit_interval_order::LogWeakDecreasingProof),
-    // Order transitivity: known `a <= b`/`a < b` and `b <= c`/`b < c` prove `a <= c`.
-    // Example: known `x <= y` and `y <= z` prove `x <= z`.
-    LessEqualTransitivity(LessEqualTransitivityBuiltinRuleProof),
     // Subtraction bridge: known `0 <= b - a` prove `a <= b`.
     // Example: known `0 <= y - x` proves `x <= y`.
     LessEqualFromNonnegDifference(LessEqualFromNonnegDifferenceBuiltinRuleProof),
@@ -212,15 +208,9 @@ pub enum LessEqualFactSearchProofByBuiltinRule {
     // Mathematical property: `0 < c` and `a / c <= b` ⇒ `a <= b * c`.
     // Example: known `0 < c` and `x / c <= y` prove `x <= y * c`.
     LessEqualFromPosDenomQuotientBound(LessEqualFromPosDenomQuotientBoundBuiltinRuleProof),
-    // Weaken a known numeric lower bound to a smaller literal weak goal.
-    // Example: known `4 < x` proves `2 <= x`.
-    NumericLowerBoundWeakenLe(NumericLowerBoundWeakenLeBuiltinRuleProof),
     // Integer discreteness from a strict predecessor lower bound.
     // Example: known `4 < x` and `x $in Z` prove `5 <= x`.
     NumericLowerBoundFromStrictPredecessorLe(NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof),
-    // Weaken a known numeric upper bound to a larger literal weak goal.
-    // Example: known `x < 4` proves `x <= 6`.
-    NumericUpperBoundWeakenLe(NumericUpperBoundWeakenLeBuiltinRuleProof),
     // Integer successor: `a < b` ⇒ `a + 1 <= b`.
     // Example: known `m < n` for integers proves `m + 1 <= n`.
     IntegerSuccessorLe(IntegerSuccessorLeBuiltinRuleProof),
@@ -376,11 +366,6 @@ pub struct LogOrderPreservingWeakBuiltinRuleProof {
     pub args_order_proof: VerifyFactResult,
 }
 
-pub struct LessEqualTransitivityBuiltinRuleProof {
-    pub left_to_mid_cite_fact_id: FactId,
-    pub mid_to_right_cite_fact_id: FactId,
-}
-
 pub struct LessEqualFromNonnegDifferenceBuiltinRuleProof {
     pub premise_proof: AtomicExceptEqualityFactKnownProof,
 }
@@ -427,17 +412,9 @@ pub struct LessEqualFromPosDenomQuotientBoundBuiltinRuleProof {
     pub quotient_bound_proof: VerifyFactResult,
 }
 
-pub struct NumericLowerBoundWeakenLeBuiltinRuleProof {
-    pub cite_fact_id: FactId,
-}
-
 pub struct NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof {
     pub cite_fact_id: FactId,
     pub in_z_proof: VerifyFactResult,
-}
-
-pub struct NumericUpperBoundWeakenLeBuiltinRuleProof {
-    pub cite_fact_id: FactId,
 }
 
 pub struct IntegerSuccessorLeBuiltinRuleProof {

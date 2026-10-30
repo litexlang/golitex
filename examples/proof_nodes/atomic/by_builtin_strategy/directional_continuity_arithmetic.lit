@@ -1,0 +1,148 @@
+# Before: the direct statement below failed at conclusion/proof_search.
+# thm direct_left_continuity_add:
+#     ? forall f,g fn(x R) R,x0 R:
+#         $is_continuous_left(f,x0)
+#         $is_continuous_left(g,x0)
+#         =>:
+#             $is_continuous_left(fn(x R) R {f(x)+g(x)},x0)
+# Former result: Could not prove the goal.
+# Now: direct structural checks retain the original leaf and domain premises.
+# Boundary: missing leaves, wrong values/directions and invalid domains stay rejected.
+# Check: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_strategy/directional_continuity_arithmetic.lit
+
+thm direct_fn_continuous_left_constant:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(fn(x R) R {c},x0)
+
+thm direct_fn_continuous_left_neg:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        =>:
+            $is_continuous_left(fn(x R) R {-f(x)},x0)
+
+thm direct_fn_continuous_left_abs:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        =>:
+            $is_continuous_left(fn(x R) R {abs(f(x))},x0)
+
+thm direct_fn_continuous_left_scale:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        =>:
+            $is_continuous_left(fn(x R) R {c*f(x)},x0)
+
+thm direct_fn_continuous_left_power:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        =>:
+            $is_continuous_left(fn(x R) R {f(x)^n},x0)
+
+thm direct_fn_continuous_left_add:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        $is_continuous_left(g,x0)
+        =>:
+            $is_continuous_left(fn(x R) R {f(x)+g(x)},x0)
+
+thm direct_fn_continuous_left_subtract:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        $is_continuous_left(g,x0)
+        =>:
+            $is_continuous_left(fn(x R) R {f(x)-g(x)},x0)
+
+thm direct_fn_continuous_left_multiply:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        $is_continuous_left(g,x0)
+        =>:
+            $is_continuous_left(fn(x R) R {f(x)*g(x)},x0)
+
+thm direct_fn_continuous_left_divide:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        $is_continuous_left(g,x0)
+        g(x0)!=0
+        =>:
+            $is_continuous_left(fn(x R:g(x)!=0) R {f(x)/g(x)},x0)
+
+thm direct_fn_continuous_left_identity:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(fn(x R) R {x},x0)
+
+thm direct_fn_continuous_left_compose:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_left(f,x0)
+        $is_continuous_at(g,f(x0))
+        =>:
+            $is_continuous_left(fn(x R) R {g(f(x))},x0)
+
+thm direct_fn_continuous_right_constant:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(fn(x R) R {c},x0)
+
+thm direct_fn_continuous_right_neg:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        =>:
+            $is_continuous_right(fn(x R) R {-f(x)},x0)
+
+thm direct_fn_continuous_right_abs:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        =>:
+            $is_continuous_right(fn(x R) R {abs(f(x))},x0)
+
+thm direct_fn_continuous_right_scale:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        =>:
+            $is_continuous_right(fn(x R) R {c*f(x)},x0)
+
+thm direct_fn_continuous_right_power:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        =>:
+            $is_continuous_right(fn(x R) R {f(x)^n},x0)
+
+thm direct_fn_continuous_right_add:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        $is_continuous_right(g,x0)
+        =>:
+            $is_continuous_right(fn(x R) R {f(x)+g(x)},x0)
+
+thm direct_fn_continuous_right_subtract:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        $is_continuous_right(g,x0)
+        =>:
+            $is_continuous_right(fn(x R) R {f(x)-g(x)},x0)
+
+thm direct_fn_continuous_right_multiply:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        $is_continuous_right(g,x0)
+        =>:
+            $is_continuous_right(fn(x R) R {f(x)*g(x)},x0)
+
+thm direct_fn_continuous_right_divide:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        $is_continuous_right(g,x0)
+        g(x0)!=0
+        =>:
+            $is_continuous_right(fn(x R:g(x)!=0) R {f(x)/g(x)},x0)
+
+thm direct_fn_continuous_right_identity:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(fn(x R) R {x},x0)
+
+thm direct_fn_continuous_right_compose:
+    ? forall f,g fn(x R) R,x0,c R,n N:
+        $is_continuous_right(f,x0)
+        $is_continuous_at(g,f(x0))
+        =>:
+            $is_continuous_right(fn(x R) R {g(f(x))},x0)
+

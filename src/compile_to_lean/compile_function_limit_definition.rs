@@ -452,10 +452,24 @@ impl LitexToLeanCompiler {
             &signature_source.set_bound_parameters.groups[0].param_type,
             position,
         )?;
-        let (domain_set, compare) = if signature_source.dom_facts.is_empty() {
-            (format!("(Litex.isSet {base})"), format!("change M.mem x (Litex.denote {base}) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) (fun _ => True))\n    rw [Litex.SetSemantics.sep_members]\n    exact ⟨fun hx => ⟨hx, True.intro⟩, And.left⟩"))
+        let domain_set = if signature_source.dom_facts.is_empty() {
+            format!("(Litex.isSet {base})")
         } else {
-            (format!("(Litex.SetSemantics.sep_isSet (Litex.denote {base}) _ (Litex.isSet {base}))"), format!("change M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _)\n    rw [Litex.SetSemantics.sep_members, Litex.SetSemantics.sep_members]\n    exact ⟨fun ⟨hx, _, hg⟩ => ⟨hx, hg⟩, fun ⟨hx, hg⟩ => ⟨hx, hx, hg⟩⟩"))
+            format!("(Litex.SetSemantics.sep_isSet (Litex.denote {base}) _ (Litex.isSet {base}))")
+        };
+        let compare = if !self
+            .compile_function_positive_inputs(signature_source, position)?
+            .is_empty()
+        {
+            self.compile_positive_input_domain_comparison(signature_source, position)?
+        } else if signature_source.dom_facts.is_empty() {
+            format!("change M.mem x (Litex.denote {base}) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) (fun _ => True))\n    rw [Litex.SetSemantics.sep_members]\n    exact ⟨fun hx => ⟨hx, True.intro⟩, And.left⟩")
+        } else {
+            let guards = (0..signature_source.dom_facts.len())
+                .map(|i| format!("_domain_guard_{i}"))
+                .collect::<Vec<_>>()
+                .join(", ");
+            format!("change M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _)\n    rw [Litex.SetSemantics.sep_members, Litex.SetSemantics.sep_members]\n    exact ⟨fun ⟨hx, _, {guards}⟩ => ⟨hx, {guards}⟩, fun ⟨hx, {guards}⟩ => ⟨hx, hx, {guards}⟩⟩")
         };
         let sig = format!("_{name_prefix}signature");
         let mem = format!("_{name_prefix}member");
@@ -465,5 +479,49 @@ impl LitexToLeanCompiler {
         let object = format!("_{name_prefix}domain");
         let prefix = format!("  let {sig} := {signature}\n  have {mem} : Litex.In {function} (Litex.fnSet {sig}) := {member}\n  let {raw} := {raw_domain}\n  have {set} : M.isSet {raw} := {domain_set}\n  have {matched} : {raw} = {sig}.domain := by\n    apply Litex.SetSemantics.ext _ _ {set} {sig}.domain_isSet\n    intro x\n    {compare}\n  let {object} := Litex.semanticObject {raw} {set}");
         Ok((prefix, format!("({matched}.trans (Litex.FunctionSemantics.domainValue_eq {sig}.domain_isSet {mem}).symm)")))
+    }
+
+    fn compile_positive_input_domain_comparison(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (base, base_set) = self.compile_function_semantic_base_domain(signature, position)?;
+        let output = self.compile_object_reference(&signature.ret_set, position)?;
+        let guard = self.compile_function_packed_guard_template(signature, position)?;
+        let names = (0..signature.dom_facts.len())
+            .map(|i| format!("_domain_guard_{i}"))
+            .collect::<Vec<_>>();
+        let mut forward = if names.is_empty() {
+            vec!["have _domain_base := hx".into()]
+        } else {
+            vec![format!(
+                "obtain ⟨_domain_base, _, {}⟩ := (Litex.SetSemantics.sep_members _ _ _).mp hx",
+                names.join(", ")
+            )]
+        };
+        forward.push(
+            "let _domain_value := Litex.semanticObject x (M.member_isSet _domain_base)".into(),
+        );
+        let requirements = std::iter::once("_domain_base".to_string())
+            .chain(names)
+            .collect::<Vec<_>>();
+        let (members, guards) = self.compile_function_domain_certificates(
+            signature,
+            &["_domain_value".into()],
+            &requirements,
+            position,
+        )?;
+        forward.push(format!("exact (Litex.FunctionSignature.withGuard_domain {base} (Litex.denote {output}) {base_set} (Litex.isSet {output}) {guard} x).mpr ⟨{}, {guards}⟩",members[0]));
+        let (mut reverse, _, explicit) =
+            self.compile_preimage_domain_parts(signature, "x", position)?;
+        reverse.insert(0, "have _preimage_domain := hx".into());
+        reverse.push(if explicit.is_empty(){"exact _preimage_base".into()}
+            else{format!("exact (Litex.SetSemantics.sep_members _ _ _).mpr ⟨_preimage_base, _preimage_base, {}⟩",explicit.join(", "))});
+        Ok(format!(
+            "constructor\n    · intro hx\n      {}\n    · intro hx\n      {}",
+            forward.join("\n      "),
+            reverse.join("\n      ")
+        ))
     }
 }

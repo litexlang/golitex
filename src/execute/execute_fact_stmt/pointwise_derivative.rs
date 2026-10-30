@@ -318,6 +318,7 @@ impl Runtime {
                     operand,
                     builder.param_binding.id,
                     point,
+                    RealApproachSide::Both,
                     state,
                     depth + 1,
                     budget,

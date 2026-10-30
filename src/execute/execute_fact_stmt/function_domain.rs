@@ -23,6 +23,33 @@ pub(crate) fn function_domains_alpha_equal(source: &FnSet, target: &FnSet) -> bo
     fn_sets_alpha_equal(&source_domain, &target_domain)
 }
 
+// A truth strategy's subject was checked by its enclosing atomic WD stage.
+// Only that exact subject may reuse the parent proof. An unfolded endpoint
+// still needs independently available WD at the inherited premise ceiling.
+pub enum CheckedFunctionBodyProof {
+    AtomicSubject,
+    IndependentlyChecked(Box<ObjWellDefinedProof>),
+}
+
+impl Runtime {
+    pub(crate) fn checked_function_body_well_definedness(
+        &mut self,
+        subject: &Obj,
+        body: &Obj,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<CheckedFunctionBodyProof>> {
+        if subject == body {
+            return Ok(Some(CheckedFunctionBodyProof::AtomicSubject));
+        }
+        match self.verify_obj_well_definedness(body, state)? {
+            VerifyObjWellDefinedResult::Success(proof) => Ok(Some(
+                CheckedFunctionBodyProof::IndependentlyChecked(Box::new(proof)),
+            )),
+            VerifyObjWellDefinedResult::Failed { .. } => Ok(None),
+        }
+    }
+}
+
 pub struct FunctionCallDomainsAlphaMatchProof {
     pub layers: Vec<FunctionCallLayerDomainsAlphaMatchProof>,
 }

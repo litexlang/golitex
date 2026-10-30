@@ -40,10 +40,17 @@ impl LitexToLeanCompiler {
             SequenceLimitFromConvergent => (1, 2),
             SequenceStrictIncreasingNondecreasing | SequenceStrictDecreasingNonincreasing => (1, 2),
             SequenceBoundedFromBounds => (3, 4),
+            SequenceLimitCauchy => (2, 2),
+            SequenceConstantProperties => (2, 3),
             _ => return Err(invalid("Id")),
         };
         let TheoremCallArguments::Parenthesized(args) = &call.arguments else {
             return Err(invalid("Arguments"));
+        };
+        let output_count = if builtin.theorem == SequenceConstantProperties {
+            5
+        } else {
+            1
         };
         if !matches!(derivation, TheoremDerivationProof::NativeSchema)
             || !type_proofs.is_empty()
@@ -55,8 +62,8 @@ impl LitexToLeanCompiler {
             || builtin.requirements.len() != count
             || dom_proofs.len() != count
             || dom_stores.len() != count
-            || builtin.conclusions.len() != 1
-            || conclusions_wd.len() != 1
+            || builtin.conclusions.len() != output_count
+            || conclusions_wd.len() != output_count
         {
             return Err(invalid("Stages"));
         }
@@ -71,7 +78,10 @@ impl LitexToLeanCompiler {
         }
         let candidates = match builtin.theorem {
             SequenceLimitUnique => 2,
-            SequenceLimitExists | SequenceLimitTail | SequenceConvergentFromLimit => 1,
+            SequenceLimitExists
+            | SequenceLimitTail
+            | SequenceConvergentFromLimit
+            | SequenceLimitCauchy => 1,
             _ => 0,
         };
         for (premise, value) in req[1..1 + candidates].iter().zip(&args[1..1 + candidates]) {
@@ -83,6 +93,42 @@ impl LitexToLeanCompiler {
         }
         let goal = &builtin.conclusions[0];
         let selected = match builtin.theorem {
+            SequenceConstantProperties => {
+                if !matches!(&req[1],Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==args[1].ir() && f.set==Obj::StandardSet(StandardSet::R))
+                {
+                    return Err(invalid("ConstantReal"));
+                }
+                let Fact::ForallFact(f) = &req[2] else {
+                    return Err(invalid("ConstantEquation"));
+                };
+                let n = super::compile_real_set_bounds::parameter(
+                    &f.typed_parameters,
+                    &Obj::StandardSet(StandardSet::NPos),
+                )?;
+                let input = Obj::Identifier(IdentifierObj::from_bound_name(n));
+                if !f.dom_facts.is_empty()
+                    || args
+                        .iter()
+                        .any(|a| super::compile_real_set_bounds::contains_parameter(a, n.id))
+                    || !matches!(f.then_facts.as_slice(),[ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(eq))] if super::compile_sequence_analysis::call_matches(&eq.left,&args[0],&input) && eq.right.ir()==args[1].ir())
+                {
+                    return Err(invalid("ConstantEquationSubject"));
+                }
+                let properties = [
+                    SequenceAnalysisProperty::Nondecreasing,
+                    SequenceAnalysisProperty::Nonincreasing,
+                    SequenceAnalysisProperty::Bounded,
+                    SequenceAnalysisProperty::Cauchy,
+                    SequenceAnalysisProperty::Convergent,
+                ];
+                for (fact, property) in builtin.conclusions.iter().zip(properties) {
+                    if !matches!(fact,Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f)) if f.sequence.ir()==args[0].ir() && f.property==property)
+                    {
+                        return Err(invalid("ConstantConclusions"));
+                    }
+                }
+                None
+            }
             SequenceStrictIncreasingNondecreasing | SequenceStrictDecreasingNonincreasing => {
                 let (strict, weak) = if builtin.theorem == SequenceStrictIncreasingNondecreasing {
                     (
@@ -175,9 +221,14 @@ impl LitexToLeanCompiler {
                 )?;
                 None
             }
-            SequenceConvergentFromLimit => {
+            SequenceConvergentFromLimit | SequenceLimitCauchy => {
+                let property = if builtin.theorem == SequenceLimitCauchy {
+                    SequenceAnalysisProperty::Cauchy
+                } else {
+                    SequenceAnalysisProperty::Convergent
+                };
                 if !matches!(goal, Fact::AtomicFact(AtomicFact::SequenceAnalysisFact(f))
-                    if f.sequence.ir() == args[0].ir() && f.property == SequenceAnalysisProperty::Convergent)
+                    if f.sequence.ir() == args[0].ir() && f.property == property)
                 {
                     return Err(invalid("ConvergentConclusion"));
                 }
@@ -283,9 +334,17 @@ impl LitexToLeanCompiler {
             ..*position
         };
         let wd = &conclusions_wd[0];
-        self.compile_fact_wd(wd, goal, &formed)?;
+        for (conclusion, evidence) in builtin.conclusions.iter().zip(conclusions_wd) {
+            self.compile_fact_wd(evidence, conclusion, &formed)?;
+        }
         let scope = SourcePosition::new(Some(&formed), SourceOwner::FactWD(wd), usize::MAX);
-        let statement = self.compile_formed_fact_proposition(wd, goal, &formed)?;
+        let statement = builtin
+            .conclusions
+            .iter()
+            .zip(conclusions_wd)
+            .map(|(fact, evidence)| self.compile_formed_fact_proposition(evidence, fact, &formed))
+            .collect::<Result<Vec<_>, _>>()?
+            .join(" ∧ ");
         let objects = args
             .iter()
             .map(|a| self.compile_object_reference(a, &scope))
@@ -297,6 +356,8 @@ impl LitexToLeanCompiler {
         )
         };
         let law = match builtin.theorem {
+            SequenceLimitCauchy => format!("Litex.sequenceCauchyOfCandidate {} {} {} {} {}",objects[0],objects[1],domain(),self.compile_real_membership_certificate(&args[1],&scope)?,references[1]),
+            SequenceConstantProperties => format!("Litex.sequenceConstantProperties {} {} {} {} (by\n  intro n hn\n  exact {} (Litex.semanticObject n (M.member_isSet hn)) hn\n)",objects[0],objects[1],domain(),references[1],references[2]),
             SequenceStrictIncreasingNondecreasing | SequenceStrictDecreasingNonincreasing => {
                 let reverse=builtin.theorem==SequenceStrictDecreasingNonincreasing;
                 let domain = domain();

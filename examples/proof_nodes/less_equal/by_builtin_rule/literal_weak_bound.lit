@@ -1,4 +1,7 @@
-forall x R:
-    x>4
-    =>:
-        2<=x
+# The former literal-bound shortcut is removed; supply the numeric bridge.
+claim:
+    ? forall x R:
+        x > 4
+        =>:
+            2 <= x
+    2 <= 4 < x

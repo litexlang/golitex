@@ -26,7 +26,7 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     is_zero_obj, zero_obj, DivMonotoneWeakSamePosDivisorBuiltinRuleProof,
     FiniteSetSizeAtLeastOneLeBuiltinRuleProof, FiniteSetSizeNonnegativeLeBuiltinRuleProof,
     FiniteSetSizeSubsetLeBuiltinRuleProof, LessEqualFactSearchProofByBuiltinRule,
-    LessEqualFromNonnegDifferenceBuiltinRuleProof, LessEqualTransitivityBuiltinRuleProof,
+    LessEqualFromNonnegDifferenceBuiltinRuleProof,
     ModRemainderNonnegativeBuiltinRuleProof, NonnegDifferenceFromLessEqualBuiltinRuleProof,
 };
 use super::signed_difference::{difference_spellings, difference_parts};
@@ -44,9 +44,6 @@ impl Runtime {
         fact: &LessEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        if let Some(proof) = self.less_equal_transitivity_proof(fact)? {
-            return Ok(Some(proof));
-        }
         if let Some(proof) =
             self.less_equal_from_nonneg_difference_proof(fact, verify_state.clone())?
         {
@@ -91,9 +88,6 @@ impl Runtime {
         fact: &LessFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessFactSearchProofByBuiltinRule>> {
-        if let Some(proof) = self.less_transitivity_proof(fact)? {
-            return Ok(Some(proof));
-        }
         if let Some(proof) = self.less_from_pos_difference_proof(fact, verify_state.clone())? {
             return Ok(Some(proof));
         }
@@ -140,36 +134,6 @@ impl Runtime {
         if is_one_literal(right) {
             if let Some(proof) = self.finite_set_size_at_least_one_ge_proof(left, verify_state)? {
                 return Ok(Some(proof));
-            }
-        }
-        Ok(None)
-    }
-
-    // `a <= b` / `a < b` chained through a shared middle term prove `a <= c`.
-    // Example: known `x <= y` and `y <= z` prove `x <= z`.
-    fn less_equal_transitivity_proof(
-        &self,
-        fact: &LessEqualFact,
-    ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
-        let left_ir = fact.left.ir();
-        let right_ir = fact.right.ir();
-        let edges = self.known_order_edges();
-        for (left_cite, left_left, mid, _) in edges.iter() {
-            if left_left.ir() != left_ir {
-                continue;
-            }
-            let mid_ir = mid.ir();
-            for (right_cite, mid2, right_right, _) in edges.iter() {
-                if mid2.ir() == mid_ir && right_right.ir() == right_ir {
-                    return Ok(Some(
-                        LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity(
-                            LessEqualTransitivityBuiltinRuleProof {
-                                left_to_mid_cite_fact_id: *left_cite,
-                                mid_to_right_cite_fact_id: *right_cite,
-                            },
-                        ),
-                    ));
-                }
             }
         }
         Ok(None)

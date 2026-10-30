@@ -112,6 +112,9 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             // supply the scalar observation; the field stays an opaque leaf.
             Ok(())
         }
+        Obj::DerivativeOperator(DerivativeOperator::AtPoint(_)) => Ok(()),
+        Obj::BoundOperator(_) | Obj::LimitOperator(LimitOperator::Sequence(_)
+            | LimitOperator::SequenceLimsup(_) | LimitOperator::SequenceLiminf(_) | LimitOperator::Function(_)) => Ok(()),
         Obj::ComplexOperator(_) => Ok(()),
         Obj::TrigOperator(_) | Obj::HyperbolicOperator(_) => Ok(()),
         Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_)) => Ok(()),
@@ -2403,4 +2406,52 @@ pub(super) fn fold_application(
         head: Box::new(head),
         body,
     }))
+}
+
+pub(super) fn finite_product_parameter(
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::FiniteSetProductPointwiseEqualityStrategySingleStep,
+) -> Result<(&BoundName, &Obj, &StoreFactAndInferResult), LeanCompileError> {
+    let [store] = proof
+        .introduced_parameter
+        .store_and_infer_results
+        .as_slice()
+    else {
+        return Err(LeanCompileError::unsupported(
+            "FiniteProductPointwise/ParameterStores",
+        ));
+    };
+    let StoreFactResult::AtomicFact(stored) = &store.store else {
+        return Err(LeanCompileError::unsupported(
+            "FiniteProductPointwise/ParameterStore",
+        ));
+    };
+    let AtomicFact::InFact(member) = &stored.fact else {
+        return Err(LeanCompileError::unsupported(
+            "FiniteProductPointwise/ParameterMembership",
+        ));
+    };
+    let Obj::Identifier(IdentifierObj::Plain { id, name }) = &member.element else {
+        return Err(LeanCompileError::unsupported(
+            "FiniteProductPointwise/ParameterIdentity",
+        ));
+    };
+    let Some(crate::exec_env::StoredIdentifierDefinition::ParamType((
+        parameter,
+        ParamType::Obj(carrier),
+    ))) = proof.local_env.definitions.identifiers.get(name)
+    else {
+        return Err(LeanCompileError::unsupported(
+            "FiniteProductPointwise/ParameterDefinition",
+        ));
+    };
+    if parameter.id != *id
+        || parameter.name != *name
+        || carrier.ir() != member.set.ir()
+        || stored.fact_id != member.fact_id
+    {
+        return Err(LeanCompileError::unsupported(
+            "FiniteProductPointwise/ParameterSubject",
+        ));
+    }
+    Ok((parameter, carrier, store))
 }

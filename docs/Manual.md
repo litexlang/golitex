@@ -607,6 +607,35 @@ naturals.
   function space and `A(r,c)` for a component; dimensions start at zero and
   indices run from 1 through the corresponding dimension.
 
+### Direct finite matrix equalities (preview)
+
+Fixed native matrix laws can be stated directly, including multiplication
+associativity and distribution, left/right identity and zero laws, matrix
+application, transpose/adjoint products, trace linearity and cyclicity, natural
+powers, determinant laws, adjugate/inverse products, selected rank laws,
+conjugate inner-product symmetry, squared Euclidean norm and Frobenius scaling.
+The [33-case tracer](../examples/proof_nodes/equal/by_builtin_rule/native_matrix_laws.lit)
+records the exact supported equations. For example:
+
+```litex
+thm direct_matrix_unit:
+    ? forall m,n N,A matrix(C,m,n):
+        matrix_mul(identity_matrix(m),A,m,m,n)=A
+```
+
+Every complete matrix/vector domain and natural dimension is checked; zero
+sizes are allowed. Inverse products and full rank still require `det(A,n)!=0`.
+Complex scaling uses `C_abs(z)`, and adjoints retain conjugation. The rule
+matches a displayed root and its immediate children, checks both endpoints
+with direct equality evidence, then checks its premises at the inherited
+builtin ceiling. It does not rewrite recursively or search for a factorization.
+It runs after existing analysis selector equalities and before elementary
+arithmetic rules, retaining the relative order of old routes. A miss publishes
+no result. Typed `NativeMatrixLaw` evidence and its individual law, endpoint
+comparisons and premise results appear in Detailed/Reading output; Normal
+output names the individual law. Direct matrix Lean replay is unsupported and
+fails explicitly. Existing explicit BT names and arities remain available.
+
 ### Unicode mathematical input aliases (preview)
 
 Litex accepts the following Unicode mathematical input. Simple aliases are
@@ -4045,6 +4074,8 @@ the predicate after the required existential fact has already been proved.
 
 **Nearest boundary.** There is one shaped goal and no indented proof body. Registration cannot assume an unproved law or attach this interface to an arbitrary arity.
 
+**Preview: one-step search.** To prove `$P(a,c)`, the final known-rewrite phase scans visible positive facts for this exact predicate, selects a known `$P(a,b)` with the same left object, and verifies `$P(b,c)` with rewrite disabled. It tries the next candidate after an ordinary failed residual. Inner scopes precede outer scopes; candidates within one predicate bucket retain source order. It does not invent a middle term, search from the right endpoint, or recursively apply registered properties in the residual. Registration may occur after the known facts. The result records the predicate, selected known FactId, residual subject and child proof. Lean applies a matching previously checked, visible registration theorem and those two premises; it does not repeat the search.
+
 **Checked example.**
 
 ```litex
@@ -4076,7 +4107,7 @@ rewrite property.
 |---|---|---|
 | `register reflexive` | `P(x, x)` | Close reflexive positive goals. |
 | `register symmetric` | One nontrivial argument permutation | Retry positive goals in that permutation. |
-| `register transitive` | `P(x, y)` and `P(y, z)` imply `P(x, z)` | Store non-adjacent chain consequences. |
+| `register transitive` | `P(x, y)` and `P(y, z)` imply `P(x, z)` | Try one known left edge for an ordinary positive goal; also store non-adjacent chain consequences. |
 
 > **Preview:** older spellings `by reflexive_prop` / `by symmetric_prop` /
 > `by transitive_prop` are removed.
@@ -4094,6 +4125,8 @@ rewrite property.
 **Execution and result.** Check the shape and predicate arity, verify the law in a local scope, then store the reusable rewrite-property route.
 
 **Nearest boundary.** There is one shaped goal and no indented proof body. Registration cannot assume an unproved law or attach this interface to an arbitrary arity.
+
+**Preview: one-step search.** To prove `$P(a,c)`, the final known-rewrite phase scans visible positive facts for this exact predicate, selects a known `$P(a,b)` with the same left object, and verifies `$P(b,c)` with rewrite disabled. It tries the next candidate after an ordinary failed residual. Inner scopes precede outer scopes; candidates within one predicate bucket retain source order. It does not invent a middle term, search from the right endpoint, or recursively apply registered properties in the residual. Registration may occur after the known facts. The result records the predicate, selected known FactId, residual subject and child proof. Lean applies a matching previously checked, visible registration theorem and those two premises; it does not repeat the search.
 
 **Checked example.**
 
@@ -4130,6 +4163,8 @@ forall a, b set:
 **Execution and result.** Check the shape and predicate arity, verify the law in a local scope, then store the reusable rewrite-property route.
 
 **Nearest boundary.** There is one shaped goal and no indented proof body. Registration cannot assume an unproved law or attach this interface to an arbitrary arity.
+
+**Preview: one-step search.** To prove `$P(a,c)`, the final known-rewrite phase scans visible positive facts for this exact predicate, selects a known `$P(a,b)` with the same left object, and verifies `$P(b,c)` with rewrite disabled. It tries the next candidate after an ordinary failed residual. Inner scopes precede outer scopes; candidates within one predicate bucket retain source order. It does not invent a middle term, search from the right endpoint, or recursively apply registered properties in the residual. Registration may occur after the known facts. The result records the predicate, selected known FactId, residual subject and child proof. Lean applies a matching previously checked, visible registration theorem and those two premises; it does not repeat the search.
 
 **Checked example.**
 
@@ -7737,6 +7772,13 @@ example below, with its retained fixture-consumer boundary recorded separately.
 | `gcd_with_prime_is_one_or_prime` | 2 | From `$prime(p)`, conclude `gcd(a, p) = 1 or gcd(a, p) = p`. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/gcd_with_prime_is_one_or_prime.lit) |
 | `prime_divides_product` | 3 | Euclid's lemma: `$prime(p)` and `$dvd(a * b, p)` imply `$dvd(a, p) or $dvd(b, p)`. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/prime_divides_product.lit) |
 | `prime_divides_power` | 3 | From `$prime(p)` and `$dvd(a ^ k, p)` with `k $in N+`, conclude `$dvd(a, p)`. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/prime_divides_power.lit) |
+| `prime_divisor` | 1 | For `m $in N+` and `2 <= m`, produce `exist p N+ st {$prime(p), m % p = 0}`. | [fixture](../examples/stmt_nodes/release_and_expand/builtin_thm/prime_divisor.lit) |
+
+`prime_divisor(m)` requires no prior prime witness. It proves existence without
+selecting a least divisor or a unique factor. Use `obtain` on the returned
+existential to introduce a witness. The bare name `prime_divisor` is reserved;
+remove an old same-name source helper before calling this builtin. This native
+theorem does not yet have Lean replay support.
 
 For membership interfaces, pass the complete constructor where the fixture
 shows one: `family_intersect_member(x, family_intersect(F))` takes the
@@ -8375,11 +8417,13 @@ forall a, b, c R:
     b <= c
     =>:
         a <= c
-forall a, b, c R:
-    a <= b
-    b < c
-    =>:
-        a < c
+claim:
+    ? forall a, b, c R:
+        a <= b
+        b < c
+        =>:
+            a < c
+    a <= b < c
 forall a, b R:
     a < b
     =>:
@@ -9249,7 +9293,7 @@ claim:
         =>:
             a^m < a^n
     0 < n-m
-    a <= a^(n-m)
+    1 < a <= a^(n-m)
     a^m = a^m*1 < a^m*a^(n-m) = a^(m+(n-m)) = a^n
 ```
 
@@ -10269,6 +10313,28 @@ forall a seq(R), L R:
         lim(a) $in R
 ```
 
+**Preview: direct structural limit laws.** After the leaf limits are known,
+the checker can follow a checked anonymous function body through negation,
+absolute value, constant real scaling, natural powers and the four arithmetic
+operations. For example, this theorem needs no explicit `seq_limit_add` call:
+
+```litex
+thm sum_limit:
+    ? forall a,b seq(R),A,B R:
+        $has_seq_limit(a,A)
+        $has_seq_limit(b,B)
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k)+b(k)},A+B)
+```
+
+Fixed shifts `a(k+s)` additionally require `s N`. The
+[sequence examples](../examples/proof_nodes/atomic/by_builtin_strategy/structural_sequence_limit_arithmetic.lit)
+cover all ten interfaces. Division retains both a nonzero denominator limit
+and a well-defined quotient at every positive index. This strategy does not
+discover a limit for an opaque leaf or make `lim(a)` well-defined by inspecting
+its body. Prove the candidate first; the existing explicit BT calls remain
+available.
+
 ### Finite-point real function limits (preview)
 
 `$has_limit_at(f,x0,L)` includes both nontrivial approach through the actual
@@ -10287,6 +10353,33 @@ forall f fn(x R) R, x0,L R:
         fn_lim(f,x0) = L
         fn_lim(f,x0) $in R
 ```
+
+The same bounded arithmetic strategy checks finite real limit candidates at a
+finite point, from the left or right, and as the input tends to either infinity.
+It retains the actual complete domain and the exact approach direction.
+Constant and finite identity rules require accumulation; an established leaf
+candidate can supply that geometric evidence on the same domain, and the
+real line supplies its standard accumulation evidence. The identity function
+does not acquire a finite limit at infinity. See the
+[48 direct function-limit cases](../examples/proof_nodes/atomic/by_builtin_strategy/structural_function_limit_arithmetic.lit).
+
+Pointwise continuity has matching structural checks for both-sided, left and
+right continuity. Direct calls `f(x)` use the requested side; a composite
+`g(f(x))` requires the outer function to be both-sided continuous at `f(x0)`.
+Continuity retains point membership and permits isolated domains; it does not
+require limit accumulation. For a quotient, supply `g(x0)!=0` and use its
+actual checked domain, including a guard when necessary. The
+[directional examples](../examples/proof_nodes/atomic/by_builtin_strategy/directional_continuity_arithmetic.lit)
+cover 22 left/right interfaces.
+
+These routes run at the existing strategy stage with lower-ceiling leaf
+checks. They descend a visible checked body, reuse the enclosing atomic WD
+for that exact subject, and independently check any unfolded body endpoint.
+They do not search arbitrary extensional equations or raise WD permissions.
+Detailed output records `StructuralLimit` or `PointwiseContinuity`, the child
+evidence, domain/direction and final value comparison. The direct structural
+certificates currently remain unsupported by Lean compilation and produce an
+explicit compiler error; supported explicit theorem routes remain available.
 
 ### Native real trigonometry (beta preview)
 
@@ -11099,7 +11192,7 @@ controls in `examples/wd_negative/`. The order layer recognizes these contracts:
 | Group | Recognized premises and consequences |
 |---|---|
 | Totality and complements | For reals, the trichotomy permutations and the complementary pairs `<`/`>=`, `>`/`<=`, `<=`/`>=` are exhaustive. Known equality or strict order weakens to `<=`/`>=`; a known negated comparison can supply its exact complementary comparison. |
-| Transitivity and differences | Strict/weak real comparisons compose through a shared middle term. `a<=b` is equivalent to `0<=b-a`, and similarly for `<`; a saved `0<b-a` or `b-a>0` proves `a<b`. A nonnegative difference supplies only weak order. The corresponding shifted addition/subtraction forms are recognized. |
+| Transitivity and differences | Same-relation real comparisons use one known left edge and a rewrite-disabled residual. Explicit chains also compose mixed strict/weak steps. `a<=b` is equivalent to `0<=b-a`, and similarly for `<`; a saved `0<b-a` or `b-a>0` proves `a<b`. A nonnegative difference supplies only weak order. The corresponding shifted addition/subtraction forms are recognized. |
 | Integer discreteness | For integers, `a<b` gives `a+1<=b`, `a<=b-1`, and `b-a>=1`; `a<b+1` gives `a<=b`. Bounds `n<=x<n+1` or `n<x<=n+1` isolate `n` or `n+1`. |
 | Addition and subtraction | Componentwise weak inequalities add; any strict component makes the result strict. Common translation preserves order. Subtraction uses the opposite ordering on the subtrahend. Nonnegative or positive increments give the corresponding one-sided bounds. |
 | Products | Same weak signs give a nonnegative product; same strict signs give a positive product; opposite signs give a negative/nonpositive product. Multiplying an inequality preserves its direction for a positive factor and reverses it for a negative factor; weak zero factors only support weak conclusions. |
@@ -11109,24 +11202,36 @@ controls in `examples/wd_negative/`. The order layer recognizes these contracts:
 | Finite aggregates and extrema | Pointwise weak/strict order on the relevant index set gives sum order. A nonnegative finite-set summand is at most the total. Finite-set extrema bound every member. Finite subset inclusion bounds cardinality, and union cardinality is at most the sum. |
 | Native ordered objects | Floor and ceiling preserve weak order but not strict order. `min` and `max` expose argument bounds and componentwise monotonicity. Native `exp`/`ln` and trigonometric order use the dedicated sections below; complex modulus uses the [complex scalar contract](#complex-scalars-beta-preview). |
 
-For a negated real comparison, the `NegatedOrder` builtin strategy can verify
-its positive complement: `not a>b` requires `a<=b`, `not a<b` requires
-`a>=b`, `not a>=b` requires `a<b`, and `not a<=b` requires `a>b`.
-It checks both real carriers, then the complement through shared verification
-at the existing BuiltinRule premise ceiling, with rewrite disabled. The
-complement may compose already checked bounds; it need not be stored first.
-Known complements and closed calculations retain priority. This applies to
-ordinary goals and the opposite checked by `impossible` alike; a search miss
-is never evidence of negation. The strategy retains all three child proofs.
-See the [integer/product contradiction tracer](../examples/proof_nodes/atomic/by_builtin_strategy/contra_integer_product_order.lit).
-This strategy has no Lean replay adapter yet.
+Real-order transitivity uses the same one-step search as registered predicates.
+For a goal `a<=c`, it scans known `a<=b` facts and checks `b<=c` with rewrite
+disabled. `<`, `>` and `>=` use their own same-relation transitivity laws.
+The residual may be a closed calculation, so `x<=900` can prove `x<=1070`
+without a numeric-bound-specific rule. The result retains the known edge's
+FactId and the actual residual proof for Detailed output, reading and Lean replay.
+The old numeric upper/lower bound weakening rules and `NegatedOrder` strategy
+are removed. A negative goal consumes an explicitly established positive
+comparison; it does not start another transitivity search. For example:
 
 ```litex
 forall x R:
     x <= 900
     =>:
+        x <= 1070
         not x > 1070
 ```
+
+The bare `not x>1070` conclusion from `x<=900` now requires that intermediate.
+Likewise `by contra` must establish the positive complementary bound before
+`impossible`. Mixed strict/weak comparisons or a proof needing a different
+left endpoint can be supplied as an explicit chain, such as `2<=4<x`.
+No reverse search or second transitivity rewrite is performed. Function-call
+WD may also need an explicit guard bridge: for example, a checked
+`forall k Z: 1<=k => 0<=k` proved by the chain `0<=1<=k` lets a function
+requiring `0<=k` be called under `1<=k`. This uses ordinary forall reuse;
+it adds no WD exception or unproved assumption. See the
+[guard-bridge example](../examples/wd/explicit_numeric_guard_bridge.lit) and the
+[one-step order tracer](../examples/proof_nodes/atomic/by_builtin_rewrite/one_step_order_transitivity.lit)
+and the [integer/product contradiction tracer](../examples/proof_nodes/atomic/by_builtin_strategy/contra_integer_product_order.lit).
 
 Two real upper bounds `a<=M` and `b<=M` also prove `a+b<=2*M` directly,
 including negative `M`. The bounded strategy accepts `M*2` and a closed
@@ -12494,6 +12599,14 @@ The current Normal `statement` rendering of expression-defined functions
 omits the written return carrier. Original fenced source is retained for
 interpretation of return-bound failures. Source facts, execution evidence and
 user assumptions remain distinct throughout the entries.
+
+<a id="litex-reliability"></a>
+
+## Reliability of Litex
+
+Litex's reliability is strengthened through testing, code review and independent proof checking. The project has around 4,000 examples and over 3,000 test functions. Before each release, the maintainer also uses the frontier language models available to review the source code and look for bugs.
+
+Compilation to Lean provides an additional check: supported Litex proofs can be reconstructed as Lean proofs and checked by Lean's kernel. This coverage continues to expand.
 
 ## Design context and references
 

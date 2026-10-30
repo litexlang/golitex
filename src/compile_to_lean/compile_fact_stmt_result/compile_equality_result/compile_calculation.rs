@@ -3,6 +3,12 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
+enum NumericNormalization {
+    Polynomial,
+    GuardedRational,
+    GuardedComplex,
+}
+
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_builtin_closed_equality(
         &self,
@@ -246,16 +252,75 @@ impl LitexToLeanCompiler {
         guarded: bool,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        self.compile_numeric_normalization(
+            fact,
+            requirements,
+            proofs,
+            if guarded {
+                NumericNormalization::GuardedRational
+            } else {
+                NumericNormalization::Polynomial
+            },
+            position,
+        )
+    }
+
+    pub(super) fn compile_guarded_complex(
+        &self,
+        fact: &EqualFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if !crate::rational_expression::contains_imaginary_unit(&fact.left)
+            && !crate::rational_expression::contains_imaginary_unit(&fact.right)
+        {
+            return Err(LeanCompileError::unsupported(
+                "ComplexNormalization/Subject",
+            ));
+        }
+        self.compile_numeric_normalization(
+            fact,
+            requirements,
+            proofs,
+            NumericNormalization::GuardedComplex,
+            position,
+        )
+    }
+
+    fn compile_numeric_normalization(
+        &self,
+        fact: &EqualFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        mode: NumericNormalization,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let guarded = !matches!(mode, NumericNormalization::Polynomial);
+        let complex = matches!(mode, NumericNormalization::GuardedComplex);
+        let route = if complex {
+            "ComplexNormalization"
+        } else {
+            "Rational"
+        };
         validate_arithmetic_expression(&fact.left)?;
         validate_arithmetic_expression(&fact.right)?;
-        let expected = normalization_nonzero_subjects(&fact.left, &fact.right)?;
+        let expected = if complex {
+            crate::rational_expression::algebraic_normalization_nonzero_requirements(
+                &fact.left,
+                &fact.right,
+            )
+        } else {
+            normalization_nonzero_subjects(&fact.left, &fact.right)?
+        };
         if requirements.len() != expected.len()
             || proofs.len() != expected.len()
             || guarded != !expected.is_empty()
         {
-            return Err(LeanCompileError::new("Rational/Requirements", "The selected normalization family or ordered guard arity differs from the source expression."));
+            return Err(LeanCompileError::new(&format!("{route}/Requirements"), "The selected normalization family or ordered guard arity differs from the source expression."));
         }
         let mut native_guards = Vec::new();
+        let mut guard_names = Vec::new();
         for (index, ((requirement, proof), object)) in
             requirements.iter().zip(proofs).zip(expected).enumerate()
         {
@@ -263,7 +328,7 @@ impl LitexToLeanCompiler {
             let proved = self.compile_verify(proof, position)?;
             if &source_subject(proof)? != requirement {
                 return Err(LeanCompileError::new(
-                    "Rational/RequirementSubject",
+                    &format!("{route}/RequirementSubject"),
                     "A guard's verify result differs from its exact ordered requirement.",
                 ));
             }
@@ -272,21 +337,45 @@ impl LitexToLeanCompiler {
             // A tactic-valued observation needs its expected scalar type before
             // elaborating the zero in this standalone nonzero proposition.
             native_guards.push(format!("have _litex_nz_{index} : ({} : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote {term} {} {} {}", native.0, native.0, native.1, proved.1));
+            let mut factors = vec![(&object, format!("_litex_nz_{index}"))];
+            while let Some((object, name)) = factors.pop() {
+                if let Obj::ArithmeticOperator(ArithmeticOperator::Mul(product)) = object {
+                    if complex {
+                        let left = format!("{name}_left");
+                        let right = format!("{name}_right");
+                        native_guards.push(format!("have {left} := (mul_ne_zero_iff.mp {name}).1"));
+                        native_guards
+                            .push(format!("have {right} := (mul_ne_zero_iff.mp {name}).2"));
+                        factors.push((&product.right, right));
+                        factors.push((&product.left, left));
+                        continue;
+                    }
+                }
+                guard_names.push(name);
+            }
         }
         let x = self.compile_numeric_observation(&fact.left, position)?;
         let y = self.compile_numeric_observation(&fact.right, position)?;
         // The empty Rational tag contains no monomial trace. The Lean kernel
         // checks the fixed normalization proof, including forged false tags.
         let normalization = if guarded {
-            let guard_names = (0..native_guards.len())
-                .map(|i| format!("_litex_nz_{i}"))
-                .collect::<Vec<_>>();
             let exact_guards = guard_names
                 .iter()
                 .map(|n| format!("exact {n}"))
                 .collect::<Vec<_>>()
                 .join(" | ");
-            format!("(by\n  {}\n  litex_normalize_rational (disch := repeat' first | {exact_guards} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)\n)", native_guards.join("\n  "))
+            let discharger = format!("(disch := repeat' first | {exact_guards} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)");
+            if complex {
+                format!(
+                    "(by\n  {}\n  litex_normalize_guarded_complex {discharger}\n)",
+                    native_guards.join("\n  ")
+                )
+            } else {
+                format!(
+                    "(by\n  {}\n  litex_normalize_rational {discharger}\n)",
+                    native_guards.join("\n  ")
+                )
+            }
         } else {
             // The same source atom can occur through different projections of
             // certified objects. Compare those definitions at default transparency.

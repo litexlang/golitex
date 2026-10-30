@@ -4,6 +4,83 @@ These tests run the unmodified public `LitexReading.mount` API and its actual
 DOM event handlers using real CLI-generated reading bundles. They need Node.js
 and Python, with no npm package installation or browser access.
 
+Generate `--glossary` fixtures and run
+`node src/reading/web/tests/language-reference.cjs <fixture-directory>` for
+bilingual statement-specific help, three-word commands, exact injectivity arity,
+resolved number-set identities, native Unicode aliases, infix union/intersection,
+Cartesian product and composition, numerals, preserved tutorial examples, focus,
+click/hover consistency and honest unknown-kind fallback. Source and execution
+records remain unchanged. The examples are real public CLI inputs. Static
+catalogue checks live in `src/reading/test_language_reference.py`; they require
+an authored entry for every current statement dispatcher leaf and explicit
+associations or gaps for every inventoried object/fact branch. These checks do
+not establish complete hover or proof-form coverage.
+
+Generate `--theorems` fixtures and run
+`node src/reading/web/tests/theorem-proofs.cjs <fixture-directory>` for bilingual
+`by thm` and `release thm` applications. Real exports cover user and builtin
+theorems, exact parameter substitution, verified premises, multiple outputs,
+generated existential conclusions, definition navigation and return, equality
+operator selection, final closed WD and an unproved-premise rejection. Missing
+callee, argument, premise or output records must not create guessed bindings
+or application provenance. The two-output release variation reuses the same
+public theorem unchanged. This suite does not assert browser geometry or
+complete step-by-step coverage of internal theorem derivations.
+
+Generate `--objects` fixtures and run
+`node src/reading/web/tests/object-language.cjs <fixture-directory>` for 56
+newly documented named object operations. Twenty-six real positive sources
+cover matrix domains and conjugation conventions, ranges, folds, preimages,
+function composition, finite extrema and proof-consuming real selectors. The
+suite exercises 112 bilingual hovers, keyboard focus, lexical roles, unchanged
+selection and unchanged source/evidence records. Three native rejections cover
+fractional summation indices, a noncommutative finite-set fold and an integral
+without existence evidence. It does not establish contextual brace anchoring
+or complete AST-expression/proof coverage.
+
+Generate `--contexts` fixtures and run
+`node src/reading/web/tests/context-language.cjs <fixture-directory>` for 32
+bilingual contextual cases from 16 real positive sources. Actual AST-owned byte
+ranges distinguish all eight intervals/rays, listed sets, comprehension,
+function values/spaces, calls, structures, fields and template instances.
+Hover and focus retain selection, symbol definitions and equality proof access.
+Controls remove hints, alter source bytes, introduce conflicting/unknown keys,
+use invalid byte coordinates or null metadata, and edit checked source. These
+must preserve legacy behavior without attributing stale or guessed meanings.
+
+Generate `--multivariable` fixtures and run
+`node src/reading/web/tests/multivariable-language.cjs <fixture-directory>` for
+all 11 native multivariable selectors and 16 predicates. The existing calculus
+example supplies real accepted token spans, with invalid-coordinate and
+missing-selection-proof examples as rejection controls. Bilingual hover and
+keyboard focus expose the exact signatures and mathematical help, preserve
+selection and leave all source/evidence records unchanged. The catalogue tests
+compare card arities with the live AST dispatchers and preserve matrix,
+second-partial-order and differentiability distinctions. These checks establish
+semantic help access, not complete multivariable proof-tree explanations or
+browser geometry.
+
+Generate `--symbols` fixtures and run
+`node src/reading/web/tests/symbol-language.cjs <fixture-directory>` for named
+and postfix factorial, structure prefixes, field access, template instances and
+the closed integer-range ellipsis. Bilingual hover/focus checks cover current
+and metadata-free exports. Unique existence must keep its distinct `exist!`
+card; negative/fractional factorial arguments and an incorrect result remain
+rejected. The range tracer uses the public equality-cover example. The older
+`test_objs/closed_range.lit` empty-range claim has a separately observed proof
+failure and is not used as a passing fixture or pinned as an intended rejection.
+
+Native checks are `cargo test --release --test reading_expression_hints` and
+`cargo test --release --lib reading::capture::source_hints::tests`. They check real parsed
+AST kinds and exact source slices, Unicode normalization, comment exclusion,
+redundant grouping, AST/source occurrence counts and missing locations. Generate
+`--repeated` fixtures and run
+`node src/reading/web/tests/repeated-language.cjs <fixture-directory>` for both
+occurrences of sets, field paths and calls through public hover/focus events.
+The function-body/list-set brace boundary remains unassigned when the counts
+disagree. These assertions do not claim complete source matching for all
+spellings, mixed-role ambiguities, multiline layouts or browser geometry.
+
 ```sh
 python3 src/reading/web/tests/fixtures.py tmp/reading-web-tests
 node src/reading/web/tests/run.cjs tmp/reading-web-tests

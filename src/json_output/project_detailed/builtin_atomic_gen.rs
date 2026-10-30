@@ -144,10 +144,6 @@ pub(super) fn project_atomic_builtin_rule(
             ("strict_order", super::searched::project_known_premise(&p.strict_order,runtime)),
         ]),
 
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LiteralWeakBound(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("LiteralWeakBound")),
-            ("source_order", super::searched::project_known_premise(&p.source_order,runtime)),
-        ]),
-
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::SumStrictOperands(p)) => object_for(runtime,vec![("type",string("builtin_rule")),("rule",string("SumStrictOperands")),
             ("first_order", super::searched::project_known_premise(&p.first_order,runtime)),
             ("second_order", super::searched::project_known_premise(&p.second_order,runtime)),
@@ -911,30 +907,6 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("numerators_order_proof", project_verify_fact(&p.numerators_order_proof, runtime)));
             object_for(runtime, entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLt(p)) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("family", string("LessFact")),
-                ("rule", string("NumericLowerBoundWeakenLt")),
-            ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
-            object_for(runtime, entries)
-        },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLt(p)) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("family", string("LessFact")),
-                ("rule", string("NumericUpperBoundWeakenLt")),
-            ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
-            object_for(runtime, entries)
-        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::PositiveEvenGtOne(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1409,22 +1381,6 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("args_order_proof", project_verify_fact(&p.args_order_proof, runtime)));
             object_for(runtime, entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity(p)) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("family", string("LessEqualFact")),
-                ("rule", string("LessEqualTransitivity")),
-            ];
-            entries.push(("cite_fact_id", string(p.left_to_mid_cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.left_to_mid_cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
-            entries.push(("cite_fact_id", string(p.mid_to_right_cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.mid_to_right_cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
-            object_for(runtime, entries)
-        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonpositiveDifference(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1539,18 +1495,6 @@ pub(super) fn project_atomic_builtin_rule(
             entries.push(("quotient_bound_proof", project_verify_fact(&p.quotient_bound_proof, runtime)));
             object_for(runtime, entries)
         },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLe(p)) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("family", string("LessEqualFact")),
-                ("rule", string("NumericLowerBoundWeakenLe")),
-            ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
-            object_for(runtime, entries)
-        },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundFromStrictPredecessorLe(p)) => {
             let mut entries = vec![
                 ("type", string("builtin_rule")),
@@ -1562,18 +1506,6 @@ pub(super) fn project_atomic_builtin_rule(
                 entries.push(("cite", string(fact.readable_string())));
             }
             entries.push(("in_z_proof", project_verify_fact(&p.in_z_proof, runtime)));
-            object_for(runtime, entries)
-        },
-        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLe(p)) => {
-            let mut entries = vec![
-                ("type", string("builtin_rule")),
-                ("family", string("LessEqualFact")),
-                ("rule", string("NumericUpperBoundWeakenLe")),
-            ];
-            entries.push(("cite_fact_id", string(p.cite_fact_id.to_string())));
-            if let Some(fact) = runtime.fact_by_id_in_stack(p.cite_fact_id) {
-                entries.push(("cite", string(fact.readable_string())));
-            }
             object_for(runtime, entries)
         },
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorLe(p)) => {

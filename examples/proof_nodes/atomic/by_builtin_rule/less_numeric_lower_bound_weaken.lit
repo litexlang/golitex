@@ -1,7 +1,7 @@
-# Node: atomic.ByBuiltinRule.Less.NumericLowerBoundWeakenLt
-# Run: litex -f examples/proof_nodes/atomic/by_builtin_rule/less_numeric_lower_bound_weaken.lit
-
-forall x R:
-    4 < x
-    =>:
-        2 < x
+# Former NumericLowerBoundWeakenLt: the numerical middle point is now explicit.
+claim:
+    ? forall x R:
+        4 < x
+        =>:
+            2 < x
+    2 < 4 < x

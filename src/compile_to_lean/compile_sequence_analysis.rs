@@ -132,6 +132,10 @@ impl LitexToLeanCompiler {
             sequence
         } else if let Some((sequence, _, _)) = super::compile_sequence_epsilon::limit_parts(fact) {
             sequence
+        } else if let Some((sequence, _, _, _)) =
+            super::compile_sequence_extremum::extremum_parts(fact)
+        {
+            sequence
         } else {
             return Err(invalid("DomainSubject"));
         };

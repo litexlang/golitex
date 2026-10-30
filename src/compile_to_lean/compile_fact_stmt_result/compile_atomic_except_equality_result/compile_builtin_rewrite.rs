@@ -35,6 +35,27 @@ impl LitexToLeanCompiler {
             AtomicExceptEqualityFactSearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(proof) =>
                 self.compile_atomic_function_unfold(goal, proof, position),
             AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(proof) => self.compile_order_dual(goal, proof, position),
+            AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderTransitivity(proof) => {
+                let (strict, reverse) = match goal {
+                    AtomicFact::LessEqualFact(_) => (false, false),
+                    AtomicFact::LessFact(_) => (true, false),
+                    AtomicFact::GreaterEqualFact(_) => (false, true),
+                    AtomicFact::GreaterFact(_) => (true, true),
+                    _ => return Err(LeanCompileError::unsupported("Transitivity/OrderTarget")),
+                };
+                let terms = self.compile_transitive_relation(goal, &proof.application, position)?;
+                let arguments = atomic_fact_args_ref(goal);
+                let a = self.compile_object_reference(arguments[0], position)?;
+                let b = self.compile_object_reference(&terms.middle, position)?;
+                let c = self.compile_object_reference(arguments[1], position)?;
+                let law = if strict { "ltTrans" } else { "leTrans" };
+                let (a, c, first, second) = if reverse {
+                    (c, a, terms.residual_proof, terms.known_left_proof)
+                } else {
+                    (a, c, terms.known_left_proof, terms.residual_proof)
+                };
+                Ok(format!("(Litex.{law} {a} {b} {c} {first} {second})"))
+            }
         }
     }
 

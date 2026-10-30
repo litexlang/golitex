@@ -2,7 +2,7 @@
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/pointwise_analysis/continuity.rs"]
 mod pointwise_continuity_tests;
-use super::function_domain::function_domains_alpha_equal;
+use super::function_domain::{function_domains_alpha_equal, CheckedFunctionBodyProof};
 use super::function_limit::RealFunctionLimitDomainProof;
 use super::pointwise_elementary::ElementaryRealFunction;
 use crate::prelude::*;
@@ -11,10 +11,11 @@ use std::collections::{HashMap, HashSet};
 pub struct PointwiseContinuityProof {
     pub function: Obj,
     pub point: Obj,
+    pub side: RealApproachSide,
     pub domain: Box<RealFunctionLimitDomainProof>,
     pub body: AnonymousFn,
     pub body_equal: KnownEqualityPathProof,
-    pub body_well_defined: Box<ObjWellDefinedProof>,
+    pub body_well_defined: CheckedFunctionBodyProof,
     pub expression: PointwiseContinuityExpressionProof,
 }
 pub struct PointwiseContinuityExpressionProof {
@@ -58,6 +59,10 @@ pub enum PointwiseContinuityConstructorProof {
         base: Box<PointwiseContinuityExpressionProof>,
         exponent_natural: Box<VerifyFactResult>,
     },
+    Leaf {
+        function: Obj,
+        continuity: Box<VerifyFactResult>,
+    },
     Compose {
         function: Obj,
         argument: Box<PointwiseContinuityExpressionProof>,
@@ -73,9 +78,6 @@ impl Runtime {
         let AtomicFact::FunctionContinuousAtFact(goal) = fact else {
             return Ok(None);
         };
-        if goal.side != RealApproachSide::Both {
-            return Ok(None);
-        }
         let Some(domain) = self.checked_real_function_limit_domain(&goal.function, state)? else {
             return Ok(None);
         };
@@ -100,8 +102,8 @@ impl Runtime {
                 continue;
             }
             let param = params[0].id;
-            let VerifyObjWellDefinedResult::Success(body_well_defined) =
-                self.verify_obj_well_definedness(&value, state)?
+            let Some(body_well_defined) =
+                self.checked_function_body_well_definedness(&goal.function, &value, state)?
             else {
                 continue;
             };
@@ -109,6 +111,7 @@ impl Runtime {
                 &body.equal_to,
                 param,
                 &goal.point,
+                goal.side,
                 state,
                 0,
                 &mut remaining,
@@ -119,10 +122,11 @@ impl Runtime {
             return Ok(Some(PointwiseContinuityProof {
                 function: goal.function.clone(),
                 point: goal.point.clone(),
+                side: goal.side,
                 domain: Box::new(domain),
                 body: body.clone(),
                 body_equal: KnownEqualityPathProof::new(path),
-                body_well_defined: Box::new(body_well_defined),
+                body_well_defined,
                 expression,
             }));
         }
@@ -133,6 +137,7 @@ impl Runtime {
         expression: &Obj,
         parameter: IdentifierId,
         point: &Obj,
+        side: RealApproachSide,
         state: VerifyState,
         depth: usize,
         remaining: &mut usize,
@@ -169,6 +174,7 @@ impl Runtime {
                 input,
                 parameter,
                 point,
+                side,
                 state,
                 depth + 1,
                 remaining,
@@ -193,6 +199,7 @@ impl Runtime {
                         &a.arg,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -209,6 +216,7 @@ impl Runtime {
                         &a.arg,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -225,6 +233,7 @@ impl Runtime {
                         &a.left,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -236,6 +245,7 @@ impl Runtime {
                         &a.right,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -253,6 +263,7 @@ impl Runtime {
                         &a.left,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -264,6 +275,7 @@ impl Runtime {
                         &a.right,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -281,6 +293,7 @@ impl Runtime {
                         &a.left,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -292,6 +305,7 @@ impl Runtime {
                         &a.right,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -309,6 +323,7 @@ impl Runtime {
                         &a.left,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -320,6 +335,7 @@ impl Runtime {
                         &a.right,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -358,6 +374,7 @@ impl Runtime {
                         &a.base,
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,
@@ -404,10 +421,37 @@ impl Runtime {
                     if function_free.contains(&parameter) {
                         return Ok(None);
                     }
+                    // An unchanged input keeps the requested approach side. A
+                    // genuine composition below needs both-sided outer continuity.
+                    if matches!(call.body[0][0].as_ref(), Obj::Identifier(IdentifierObj::Plain { id, .. }) if *id == parameter)
+                    {
+                        let required = FunctionContinuousAtFact {
+                            fact_id: self.global_ids.allocate_fact_id(),
+                            function: function.clone(),
+                            point: point.clone(),
+                            side,
+                            line_file: None,
+                        }
+                        .into();
+                        let continuity = self.verify_fact(&required, state)?;
+                        if continuity.is_failed() {
+                            return Ok(None);
+                        }
+                        return Ok(Some(PointwiseContinuityExpressionProof {
+                            expression: expression.clone(),
+                            value,
+                            value_real: Box::new(value_real),
+                            constructor: C::Leaf {
+                                function,
+                                continuity: Box::new(continuity),
+                            },
+                        }));
+                    }
                     let Some(argument) = self.prove_continuous_expression(
                         &call.body[0][0],
                         parameter,
                         point,
+                        side,
                         state,
                         depth + 1,
                         remaining,

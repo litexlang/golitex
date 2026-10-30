@@ -241,6 +241,14 @@ fn sequence_limit_tests_reject_missing_limit_and_tail_premises() {
         "have fn a(k N+) R=0\nrelease thm seq_limit_neg(a,0)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_shift(a,0,1)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_exists(a,0)",
+    ] {
+        check(&mut runtime(), code, true);
+    }
+    // Structural candidate checking can discharge these explicit BT premises.
+    // Selection still requires independent convergence evidence, and an opaque
+    // arbitrary sequence does not acquire a limit merely from its signature.
+    for code in [
+        "forall a seq(R):\n    $has_seq_limit(a,0)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_selected(a)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_constant(a,0)\nrelease thm seq_limit_tail(a,0,0)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_constant(a,0)\nrelease thm seq_limit_scale(a,0,i)",

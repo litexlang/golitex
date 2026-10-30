@@ -1,0 +1,150 @@
+# Tracer: fixed native matrix equality laws (33 direct conclusions).
+# Before (release snapshot):
+# thm direct_mul_identity_left:
+#     ? forall m,n N,A matrix(C,m,n):
+#         matrix_mul(identity_matrix(m),A,m,m,n)=A
+# Former behavior: conclusion / proof_search: Could not prove the goal.
+# The same target passed with matrix_mul_identity(A,m,n).
+# Now: all 33 bodyless theorems below verify their actual domains and premises.
+# Boundary: no product commutativity, factorization discovery or missing inverse condition.
+# Existing explicit BT interfaces remain available. Direct matrix Lean replay is unsupported.
+# Run: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/native_matrix_laws.lit
+# Implementation: src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_native_matrix_laws.rs
+
+thm direct_mul_identity_left:
+    ? forall m,n N,A matrix(C,m,n):
+        matrix_mul(identity_matrix(m),A,m,m,n)=A
+
+thm direct_mul_associative:
+    ? forall m,k,p,n N,A matrix(C,m,k),B matrix(C,k,p),D matrix(C,p,n):
+        matrix_mul(matrix_mul(A,B,m,k,p),D,m,p,n)=matrix_mul(A,matrix_mul(B,D,k,p,n),m,k,n)
+
+thm direct_mul_distributive_left:
+    ? forall m,k,n N,A matrix(C,m,k),B,D matrix(C,k,n):
+        matrix_mul(A,matrix_add(B,D,k,n),m,k,n)=matrix_add(matrix_mul(A,B,m,k,n),matrix_mul(A,D,m,k,n),m,n)
+
+thm direct_mul_distributive_right:
+    ? forall m,k,n N,A,B matrix(C,m,k),D matrix(C,k,n):
+        matrix_mul(matrix_add(A,B,m,k),D,m,k,n)=matrix_add(matrix_mul(A,D,m,k,n),matrix_mul(B,D,m,k,n),m,n)
+
+thm direct_mul_identity_right:
+    ? forall m,n N,A matrix(C,m,n):
+        matrix_mul(A,identity_matrix(n),m,n,n)=A
+
+thm direct_mul_zero_right:
+    ? forall m,n,p N,A matrix(C,m,n):
+        matrix_mul(A,zero_matrix(n,p),m,n,p)=zero_matrix(m,p)
+
+thm direct_mul_zero_left:
+    ? forall m,n,p N,A matrix(C,m,n):
+        matrix_mul(zero_matrix(p,m),A,p,m,n)=zero_matrix(p,n)
+
+thm direct_apply_identity:
+    ? forall n N,v cart_n(C,n):
+        matrix_apply(identity_matrix(n),v,n,n)=v
+
+thm direct_apply_compose:
+    ? forall m,k,n N,A matrix(C,m,k),B matrix(C,k,n),v cart_n(C,n):
+        matrix_apply(matrix_mul(A,B,m,k,n),v,m,n)=matrix_apply(A,matrix_apply(B,v,k,n),m,k)
+
+thm direct_matrix_transpose_mul:
+    ? forall m,k,n N,A matrix(C,m,k),B matrix(C,k,n):
+        transpose(matrix_mul(A,B,m,k,n),m,n)=matrix_mul(transpose(B,k,n),transpose(A,m,k),n,k,m)
+
+thm direct_matrix_adjoint_mul:
+    ? forall m,k,n N,A matrix(C,m,k),B matrix(C,k,n):
+        conjugate_transpose(matrix_mul(A,B,m,k,n),m,n)=matrix_mul(conjugate_transpose(B,k,n),conjugate_transpose(A,m,k),n,k,m)
+
+thm direct_trace_add:
+    ? forall n N,A,B matrix(C,n,n):
+        trace(matrix_add(A,B,n,n),n)=trace(A,n)+trace(B,n)
+
+thm direct_trace_scale:
+    ? forall n N,A matrix(C,n,n),z C:
+        trace(matrix_scale(z,A,n,n),n)=z*trace(A,n)
+
+thm direct_trace_cyclic:
+    ? forall m,n N,A matrix(C,m,n),B matrix(C,n,m):
+        trace(matrix_mul(A,B,m,n,m),m)=trace(matrix_mul(B,A,n,m,n),n)
+
+thm direct_power_zero:
+    ? forall n N,A matrix(C,n,n):
+        matrix_power(A,n,0)=identity_matrix(n)
+
+thm direct_power_successor:
+    ? forall n,p N,A matrix(C,n,n):
+        matrix_power(A,n,p+1)=matrix_mul(matrix_power(A,n,p),A,n,n,n)
+
+thm direct_power_add:
+    ? forall n,p,q N,A matrix(C,n,n):
+        matrix_power(A,n,p+q)=matrix_mul(matrix_power(A,n,p),matrix_power(A,n,q),n,n,n)
+
+thm direct_det_identity:
+    ? forall n N:
+        det(identity_matrix(n),n)=1
+
+thm direct_det_transpose:
+    ? forall n N,A matrix(C,n,n):
+        det(transpose(A,n,n),n)=det(A,n)
+
+thm direct_det_adjoint:
+    ? forall n N,A matrix(C,n,n):
+        det(conjugate_transpose(A,n,n),n)=conj(det(A,n))
+
+thm direct_det_mul:
+    ? forall n N,A,B matrix(C,n,n):
+        det(matrix_mul(A,B,n,n,n),n)=det(A,n)*det(B,n)
+
+thm direct_adjugate_left:
+    ? forall n N,A matrix(C,n,n):
+        matrix_mul(matrix_adjugate(A,n),A,n,n,n)=matrix_scale(det(A,n),identity_matrix(n),n,n)
+
+thm direct_inverse_left:
+    ? forall n N,A matrix(C,n,n):
+        det(A,n)!=0
+        =>:
+            matrix_mul(matrix_inverse(A,n),A,n,n,n)=identity_matrix(n)
+
+thm direct_adjugate_right:
+    ? forall n N,A matrix(C,n,n):
+        matrix_mul(A,matrix_adjugate(A,n),n,n,n)=matrix_scale(det(A,n),identity_matrix(n),n,n)
+
+thm direct_inverse_right:
+    ? forall n N,A matrix(C,n,n):
+        det(A,n)!=0
+        =>:
+            matrix_mul(A,matrix_inverse(A,n),n,n,n)=identity_matrix(n)
+
+thm direct_rank_zero:
+    ? forall m,n N:
+        matrix_rank(zero_matrix(m,n),m,n)=0
+
+thm direct_rank_identity:
+    ? forall n N:
+        matrix_rank(identity_matrix(n),n,n)=n
+
+thm direct_matrix_rank_transpose:
+    ? forall m,n N,A matrix(C,m,n):
+        matrix_rank(transpose(A,m,n),n,m)=matrix_rank(A,m,n)
+
+thm direct_matrix_rank_adjoint:
+    ? forall m,n N,A matrix(C,m,n):
+        matrix_rank(conjugate_transpose(A,m,n),n,m)=matrix_rank(A,m,n)
+
+thm direct_rank_invertible:
+    ? forall n N,A matrix(C,n,n):
+        det(A,n)!=0
+        =>:
+            matrix_rank(A,n,n)=n
+
+thm direct_inner_conjugate_symmetry:
+    ? forall n N,u,v cart_n(C,n):
+        inner_product(u,v,n)=conj(inner_product(v,u,n))
+
+thm direct_euclidean_norm_square:
+    ? forall n N,v cart_n(C,n):
+        euclidean_norm(v,n)^2=inner_product(v,v,n)
+
+thm direct_frobenius_norm_scale:
+    ? forall m,n N,z C,A matrix(C,m,n):
+        frobenius_norm(matrix_scale(z,A,m,n),m,n)=C_abs(z)*frobenius_norm(A,m,n)

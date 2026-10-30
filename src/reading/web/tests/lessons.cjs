@@ -26,9 +26,9 @@ async function run(){
       const application=view.line("release thm prime_divides_power(p, 2, 2)");
       assert(application.querySelector(".lr-inference-toggle"),"the divisibility prompt points to actual published grey consequences");
       const theorem=application.querySelectorAll('.lr-token').find(node=>node.textContent==='prime_divides_power');assert(theorem);
-      await view.hover(theorem);assert(view.root.querySelector('.lr-token-help').textContent.includes(locale==='zh'?'内置定理':'Builtin theorem'),'a retained builtin theorem does not fall back to object help');
+      await view.hover(theorem);assert((view.root.querySelector('.lr-proof-symbol:not([hidden])')||view.root.querySelector('.lr-token-help')).textContent.includes(locale==='zh'?'内置定理':'Builtin theorem'),'a retained builtin theorem keeps its own help alongside the application proof');
       const keyword=application.querySelector('[data-keyword="release thm"]');assert(keyword,'the complete theorem-release keyword is one help target');
-      await view.hover(keyword);assert(view.root.querySelector('.lr-token-help').textContent.includes('prime_divides_power(6, 2, 2)'),'the keyword reference contains its concrete instantiation example');
+      await view.hover(keyword);assert((view.root.querySelector('.lr-proof-symbol:not([hidden])')||view.root.querySelector('.lr-token-help')).textContent.includes('prime_divides_power(6, 2, 2)'),'the keyword reference contains its concrete instantiation example');
     }
     if(item.id==="syllogism"){
       const row=view.line("$is_mortal(socrates)",true);await view.hover(row.querySelector(".lr-syntax-predicate"));

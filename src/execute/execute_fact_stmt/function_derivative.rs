@@ -179,19 +179,7 @@ impl Runtime {
                 else {
                     return Ok(None);
                 };
-                let interior =
-                    self.derivative_interior_condition(domain.domain.clone(), f.point.clone());
-                let quotient = self.derivative_difference_quotient(
-                    f.function.clone(),
-                    f.point.clone(),
-                    domain.domain,
-                );
-                let candidate = self.function_limit_candidate(
-                    quotient,
-                    LimitApproach::AtPoint(Box::new(f.point.clone())),
-                    f.value.clone(),
-                );
-                Ok(Some(vec![interior, candidate.into()]))
+                Ok(Some(self.derivative_clauses_in_domain(f, &domain)))
             }
             AtomicFact::FunctionDifferentiableAtFact(f) => {
                 Ok(Some(vec![self.derivative_existence(
@@ -202,6 +190,25 @@ impl Runtime {
             _ => Ok(None),
         }
     }
+    pub(crate) fn derivative_clauses_in_domain(
+        &mut self,
+        f: &HasDerivativeAtFact,
+        domain: &RealFunctionLimitDomainProof,
+    ) -> Vec<Fact> {
+        let interior = self.derivative_interior_condition(domain.domain.clone(), f.point.clone());
+        let quotient = self.derivative_difference_quotient(
+            f.function.clone(),
+            f.point.clone(),
+            domain.domain.clone(),
+        );
+        let candidate = self.function_limit_candidate(
+            quotient,
+            LimitApproach::AtPoint(Box::new(f.point.clone())),
+            f.value.clone(),
+        );
+        vec![interior, candidate.into()]
+    }
+
     pub(crate) fn verify_derivative_well_definedness(
         &mut self,
         derivative: &DerivativeAt,

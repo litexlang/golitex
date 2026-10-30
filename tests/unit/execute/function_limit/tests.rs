@@ -75,15 +75,13 @@ fn function_limit_tests_distinct_names_and_rendering() {
 fn function_limit_tests_proof_before_selection_and_failure_recovery() {
     let mut rt = runtime();
     check(&mut rt, "have fn c(x R) R=3", true);
-    for source in [
-        "fn_lim(c,0)=3",
-        "fn_lim(c,0) $in R",
-        "0*fn_lim(c,0)=0",
-        "release thm fn_limit_at_exists(c,0,3)",
-    ] {
+    for source in ["fn_lim(c,0)=3", "fn_lim(c,0) $in R", "0*fn_lim(c,0)=0"] {
         check(&mut rt, source, false);
     }
     check(&mut rt, "c(2)=3", true);
+    // An explicit existence proof may check its supplied candidate structurally;
+    // the selector-only expressions above must not start that search.
+    check(&mut rt, "release thm fn_limit_at_exists(c,0,3)", true);
     check(
         &mut rt,
         "release thm fn_limit_at_real_accumulation(0)",
@@ -133,10 +131,15 @@ fn function_limit_tests_invalid_domains_and_no_vacuous_anchor() {
         "have fn f(x {}) R=7\nrelease thm fn_limit_at_constant(f,0,7)",
         "have fn f(x {0}) R=7\nrelease thm fn_limit_at_constant(f,0,7)",
         "have fn f(x R:x!=0) R=x^2/x\nf(0)=0",
-        "have fn f(x R) R=0\nrelease thm fn_limit_at_add(f,f,f,0,0,0)",
+        "forall f fn(x R) R:\n    $has_limit_at(f,0,0)",
     ] {
         check(&mut runtime(), source, false);
     }
+    check(
+        &mut runtime(),
+        "have fn f(x R) R=0\nrelease thm fn_limit_at_add(f,f,f,0,0,0)",
+        true,
+    );
     for carrier in ["{}", "{0}"] {
         check(
             &mut runtime(),

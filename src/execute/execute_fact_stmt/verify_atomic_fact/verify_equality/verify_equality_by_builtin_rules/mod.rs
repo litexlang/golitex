@@ -102,3 +102,5 @@ pub(crate) use by_trig_quotient_relations::TanSquareReciprocalCosineBuiltinRuleP
 
 pub mod by_elementary_identities;
 mod elementary_identity_helpers;
+
+pub mod by_native_matrix_laws;

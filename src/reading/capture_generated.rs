@@ -12051,6 +12051,13 @@ let mut output = node("BuiltinTheoremId", "PrimeDividesPower", fields);
 if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PrimeDividesPower", ""); }
 output
 },
+crate::builtin_theorem::BuiltinTheoremId::PrimeDivisor => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::PrimeDivisor");
+let fields = vec![];
+let mut output = node("BuiltinTheoremId", "PrimeDivisor", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "PrimeDivisor", ""); }
+output
+},
 };
 capture.intern_evidence(output)
 }
@@ -17964,6 +17971,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__search_equal_fact_builtin_rule_result__EqualitySearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::NativeMatrixLaw(f0) => {
+let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::NativeMatrixLaw");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__NativeMatrixLawProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinRule", "NativeMatrixLaw", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence(f0) => {
 let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::HomogeneousCartesianEqualsFiniteSequence");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_homogeneous_cart__HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof(f0, capture, runtime))];
@@ -20452,9 +20467,9 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__AtomicExceptEqualityFactSearchProofByBuiltinStrategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::NegatedOrder(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__NegatedOrderStrategySingleStep(f0, capture, runtime))];
-let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "NegatedOrder", fields);
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "StructuralLimit", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(f0) => {
@@ -21183,6 +21198,11 @@ let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRewrite", "OrderDual", fields);
 output
 },
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderTransitivity(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rewrite__AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRewrite", "OrderTransitivity", fields);
+output
+},
 };
 capture.intern_evidence(output)
 }
@@ -21197,6 +21217,11 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByKnownRewrite::Symmetry(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_rewrite__AtomicExceptEqualityFactSearchProofByKnownSymmetry(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByKnownRewrite", "Symmetry", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByKnownRewrite::Transitivity(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_rewrite__AtomicExceptEqualityFactSearchProofByKnownTransitivity(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByKnownRewrite", "Transitivity", fields);
 output
 },
 };
@@ -22839,8 +22864,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferHasDerivativeAtDefinitionResult(value: &crate::store_fact_and_infer::InferHasDerivativeAtDefinitionResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferHasDerivativeAtDefinitionResult { source_fact_id: f0, derived: f1 } => {
-let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("derived", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+crate::store_fact_and_infer::InferHasDerivativeAtDefinitionResult { source_fact_id: f0, function_domain: f1, derived: f2 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("function_domain", match (f1).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(item, capture, runtime), None => JsonValue::Null }), ("derived", JsonValue::Array((f2).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
 let mut output = node("InferHasDerivativeAtDefinitionResult", "", fields);
 output
 },
@@ -22850,8 +22875,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferFunctionDifferentiableAtDefinitionResult(value: &crate::store_fact_and_infer::InferFunctionDifferentiableAtDefinitionResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferFunctionDifferentiableAtDefinitionResult { source_fact_id: f0, derived: f1 } => {
-let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("derived", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+crate::store_fact_and_infer::InferFunctionDifferentiableAtDefinitionResult { source_fact_id: f0, existence: f1, function_domain: f2, interior: f3 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("existence", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime)), ("function_domain", match (f2).as_ref() { Some(item) => capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(item, capture, runtime), None => JsonValue::Null }), ("interior", match (f3).as_ref() { Some(item) => capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime), None => JsonValue::Null })];
 let mut output = node("InferFunctionDifferentiableAtDefinitionResult", "", fields);
 output
 },
@@ -22905,8 +22930,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferFunctionContinuousAtDefinitionResult(value: &crate::store_fact_and_infer::InferFunctionContinuousAtDefinitionResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferFunctionContinuousAtDefinitionResult { source_fact_id: f0, derived: f1 } => {
-let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("derived", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+crate::store_fact_and_infer::InferFunctionContinuousAtDefinitionResult { source_fact_id: f0, function_domain: f1, derived: f2 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f1, capture, runtime)), ("derived", JsonValue::Array((f2).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
 let mut output = node("InferFunctionContinuousAtDefinitionResult", "", fields);
 output
 },
@@ -23575,6 +23600,177 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_proof_by_known_special_property::FnTupleValueKnownProof { reversed: f0, subject_equal: f1, function: f2, value_equal: f3 } => {
 let fields = vec![("reversed", JsonValue::Bool(*(f0))), ("subject_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("function", capture_execute__execute_fact_stmt__known_tuple__KnownFunctionTupleValueProof(f2, capture, runtime)), ("value_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f3, capture, runtime))];
 let mut output = node("FnTupleValueKnownProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__NativeMatrixLawProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MulAssociative(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulAssociativeBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MulAssociative", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MulDistributiveLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulDistributiveLeftBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MulDistributiveLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MulDistributiveRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulDistributiveRightBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MulDistributiveRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MulIdentityLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulIdentityLeftBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MulIdentityLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MulIdentityRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulIdentityRightBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MulIdentityRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MulZeroRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulZeroRightBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MulZeroRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MulZeroLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulZeroLeftBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MulZeroLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::ApplyIdentity(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__ApplyIdentityBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "ApplyIdentity", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::ApplyCompose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__ApplyComposeBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "ApplyCompose", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MatrixTransposeMul(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixTransposeMulBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MatrixTransposeMul", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MatrixAdjointMul(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixAdjointMulBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MatrixAdjointMul", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::TraceAdd(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__TraceAddBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "TraceAdd", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::TraceScale(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__TraceScaleBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "TraceScale", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::TraceCyclic(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__TraceCyclicBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "TraceCyclic", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::PowerZero(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__PowerZeroBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "PowerZero", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::PowerSuccessor(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__PowerSuccessorBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "PowerSuccessor", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::PowerAdd(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__PowerAddBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "PowerAdd", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::DetIdentity(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__DetIdentityBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "DetIdentity", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::DetTranspose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__DetTransposeBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "DetTranspose", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::DetAdjoint(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__DetAdjointBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "DetAdjoint", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::DetMul(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__DetMulBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "DetMul", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::AdjugateLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__AdjugateLeftBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "AdjugateLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::InverseLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__InverseLeftBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "InverseLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::AdjugateRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__AdjugateRightBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "AdjugateRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::InverseRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__InverseRightBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "InverseRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::RankZero(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__RankZeroBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "RankZero", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::RankIdentity(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__RankIdentityBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "RankIdentity", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MatrixRankTranspose(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixRankTransposeBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MatrixRankTranspose", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MatrixRankAdjoint(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixRankAdjointBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "MatrixRankAdjoint", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::RankInvertible(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__RankInvertibleBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "RankInvertible", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::InnerConjugateSymmetry(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__InnerConjugateSymmetryBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "InnerConjugateSymmetry", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::EuclideanNormSquare(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__EuclideanNormSquareBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "EuclideanNormSquare", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::FrobeniusNormScale(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__FrobeniusNormScaleBuiltinRuleProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixLawProof", "FrobeniusNormScale", fields);
 output
 },
 };
@@ -28254,22 +28450,6 @@ if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.
 if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLt(f0) => {
-let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLt");
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__NumericLowerBoundWeakenLtBuiltinRuleProof(f0, capture, runtime))];
-let mut output = node("LessFactSearchProofByBuiltinRule", "NumericLowerBoundWeakenLt", fields);
-if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
-if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLt(f0) => {
-let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLt");
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__NumericUpperBoundWeakenLtBuiltinRuleProof(f0, capture, runtime))];
-let mut output = node("LessFactSearchProofByBuiltinRule", "NumericUpperBoundWeakenLt", fields);
-if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
-if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
-output
-},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule::PositiveEvenGtOne(f0) => {
 let rule_id = Some("builtin.LessFactSearchProofByBuiltinRule::PositiveEvenGtOne");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__PositiveEvenGtOneBuiltinRuleProof(f0, capture, runtime))];
@@ -28630,14 +28810,6 @@ crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equa
 let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorGap");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__IntegerSuccessorGapProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "IntegerSuccessorGap", fields);
-if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
-if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LiteralWeakBound(f0) => {
-let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LiteralWeakBound");
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__LiteralWeakBoundProof(f0, capture, runtime))];
-let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LiteralWeakBound", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
 if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
@@ -29178,14 +29350,6 @@ if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.
 if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity(f0) => {
-let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LessEqualTransitivity");
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualTransitivityBuiltinRuleProof(f0, capture, runtime))];
-let mut output = node("LessEqualFactSearchProofByBuiltinRule", "LessEqualTransitivity", fields);
-if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
-if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
-output
-},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(f0) => {
 let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFromNonnegDifferenceBuiltinRuleProof(f0, capture, runtime))];
@@ -29282,26 +29446,10 @@ if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.
 if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
 },
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLe(f0) => {
-let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundWeakenLe");
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericLowerBoundWeakenLeBuiltinRuleProof(f0, capture, runtime))];
-let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NumericLowerBoundWeakenLe", fields);
-if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
-if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
-output
-},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundFromStrictPredecessorLe(f0) => {
 let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundFromStrictPredecessorLe");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof(f0, capture, runtime))];
 let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NumericLowerBoundFromStrictPredecessorLe", fields);
-if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
-if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
-output
-},
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLe(f0) => {
-let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NumericUpperBoundWeakenLe");
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericUpperBoundWeakenLeBuiltinRuleProof(f0, capture, runtime))];
-let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NumericUpperBoundWeakenLe", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
 if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
 output
@@ -31224,11 +31372,11 @@ pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_ato
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotIsChoiceFunctionForFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::search_atomic_except_equality_fact_proof_by_builtin_rule_result::NotIsChoiceFunctionForFactSearchProofByBuiltinRule, _capture: &mut Capture, _runtime: &Runtime) -> JsonValue { match *value {} }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__NegatedOrderStrategySingleStep(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NegatedOrderStrategySingleStep, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitProof(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::NegatedOrderStrategySingleStep { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
-let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
-let mut output = node("NegatedOrderStrategySingleStep", "", fields);
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitProof { function: f0, approach: f1, domain: f2, body: f3, body_equal: f4, body_well_defined: f5, geometry: f6, expression: f7, result_equal: f8 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("approach", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitApproach(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f3, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f4, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__function_domain__CheckedFunctionBodyProof(f5, capture, runtime)), ("geometry", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitGeometryProof(f6, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f7, capture, runtime)), ("result_equal", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f8, capture, runtime))];
+let mut output = node("StructuralLimitProof", "", fields);
 output
 },
 };
@@ -31334,8 +31482,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityProof(value: &crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityProof { function: f0, point: f1, domain: f2, body: f3, body_equal: f4, body_well_defined: f5, expression: f6 } => {
-let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f3, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f4, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f5, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityExpressionProof(f6, capture, runtime))];
+crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityProof { function: f0, point: f1, side: f2, domain: f3, body: f4, body_equal: f5, body_well_defined: f6, expression: f7 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("point", capture_ast__obj__Obj(f1, capture, runtime)), ("side", capture_ast__fact__atomic__RealApproachSide(f2, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f4, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f5, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__function_domain__CheckedFunctionBodyProof(f6, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityExpressionProof(f7, capture, runtime))];
 let mut output = node("PointwiseContinuityProof", "", fields);
 output
 },
@@ -32991,6 +33139,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rewrite__AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_transitive_relation__TransitiveRelationProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_rewrite__AtomicExceptEqualityFactSearchProofByKnownReflexivity(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_rewrite::AtomicExceptEqualityFactSearchProofByKnownReflexivity, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_rewrite::AtomicExceptEqualityFactSearchProofByKnownReflexivity { cite_prop: f0 } => {
@@ -33007,6 +33166,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_rewrite::AtomicExceptEqualityFactSearchProofByKnownSymmetry { cite_prop: f0, argument_permutation: f1, alternate_fact: f2, proof_of_alternate_fact: f3 } => {
 let fields = vec![("cite_prop", capture.atomic_name(f0, runtime)), ("argument_permutation", JsonValue::Array((f1).iter().map(|item| JsonValue::String((item).to_string())).collect())), ("alternate_fact", capture_ast__fact__fact__Fact(f2, capture, runtime)), ("proof_of_alternate_fact", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByKnownSymmetry", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_known_rewrite__AtomicExceptEqualityFactSearchProofByKnownTransitivity(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_rewrite::AtomicExceptEqualityFactSearchProofByKnownTransitivity, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_rewrite::AtomicExceptEqualityFactSearchProofByKnownTransitivity { cite_prop: f0, application: f1 } => {
+let fields = vec![("cite_prop", capture.atomic_name(f0, runtime)), ("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_transitive_relation__TransitiveRelationProof(f1, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByKnownTransitivity", "", fields);
 output
 },
 };
@@ -35819,6 +35989,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(value: &crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof { source: f0, domain: f1, input_real: f2, output_real: f3 } => {
+let fields = vec![("source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("input_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("output_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let mut output = node("RealFunctionLimitDomainProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_positive_real_power_transport_result__InferPositiveRealPowerTransportResult(value: &crate::store_fact_and_infer::InferPositiveRealPowerTransportResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::store_fact_and_infer::InferPositiveRealPowerTransportResult { source_fact_id: f0, power: f1, positivity: f2, exponent_real: f3, derived: f4 } => {
@@ -35934,6 +36115,369 @@ let output = match value {
 crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleValueProof { function_equal: f0, applicability: f1, value: f2 } => {
 let fields = vec![("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f0, capture, runtime)), ("applicability", capture_execute__execute_fact_stmt__known_tuple__KnownFunctionTupleApplicability(f1, capture, runtime)), ("value", capture_ast__obj__Tuple(f2, capture, runtime))];
 let mut output = node("KnownFunctionTupleValueProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulAssociativeBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulAssociativeBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulAssociativeBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MulAssociativeBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulDistributiveLeftBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulDistributiveLeftBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulDistributiveLeftBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MulDistributiveLeftBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulDistributiveRightBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulDistributiveRightBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulDistributiveRightBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MulDistributiveRightBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulIdentityLeftBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulIdentityLeftBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulIdentityLeftBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MulIdentityLeftBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulIdentityRightBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulIdentityRightBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulIdentityRightBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MulIdentityRightBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulZeroRightBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulZeroRightBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulZeroRightBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MulZeroRightBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MulZeroLeftBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulZeroLeftBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MulZeroLeftBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MulZeroLeftBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__ApplyIdentityBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::ApplyIdentityBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::ApplyIdentityBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("ApplyIdentityBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__ApplyComposeBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::ApplyComposeBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::ApplyComposeBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("ApplyComposeBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixTransposeMulBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixTransposeMulBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixTransposeMulBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MatrixTransposeMulBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixAdjointMulBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixAdjointMulBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixAdjointMulBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MatrixAdjointMulBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__TraceAddBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::TraceAddBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::TraceAddBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("TraceAddBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__TraceScaleBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::TraceScaleBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::TraceScaleBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("TraceScaleBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__TraceCyclicBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::TraceCyclicBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::TraceCyclicBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("TraceCyclicBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__PowerZeroBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::PowerZeroBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::PowerZeroBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("PowerZeroBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__PowerSuccessorBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::PowerSuccessorBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::PowerSuccessorBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("PowerSuccessorBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__PowerAddBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::PowerAddBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::PowerAddBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("PowerAddBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__DetIdentityBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::DetIdentityBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::DetIdentityBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("DetIdentityBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__DetTransposeBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::DetTransposeBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::DetTransposeBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("DetTransposeBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__DetAdjointBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::DetAdjointBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::DetAdjointBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("DetAdjointBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__DetMulBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::DetMulBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::DetMulBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("DetMulBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__AdjugateLeftBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::AdjugateLeftBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::AdjugateLeftBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("AdjugateLeftBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__InverseLeftBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::InverseLeftBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::InverseLeftBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("InverseLeftBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__AdjugateRightBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::AdjugateRightBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::AdjugateRightBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("AdjugateRightBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__InverseRightBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::InverseRightBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::InverseRightBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("InverseRightBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__RankZeroBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::RankZeroBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::RankZeroBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("RankZeroBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__RankIdentityBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::RankIdentityBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::RankIdentityBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("RankIdentityBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixRankTransposeBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixRankTransposeBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixRankTransposeBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MatrixRankTransposeBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixRankAdjointBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixRankAdjointBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixRankAdjointBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("MatrixRankAdjointBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__RankInvertibleBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::RankInvertibleBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::RankInvertibleBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("RankInvertibleBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__InnerConjugateSymmetryBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::InnerConjugateSymmetryBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::InnerConjugateSymmetryBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("InnerConjugateSymmetryBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__EuclideanNormSquareBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::EuclideanNormSquareBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::EuclideanNormSquareBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("EuclideanNormSquareBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__FrobeniusNormScaleBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::FrobeniusNormScaleBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::FrobeniusNormScaleBuiltinRuleProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(f0, capture, runtime))];
+let mut output = node("FrobeniusNormScaleBuiltinRuleProof", "", fields);
 output
 },
 };
@@ -39608,28 +40152,6 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__NumericLowerBoundWeakenLtBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::NumericLowerBoundWeakenLtBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::NumericLowerBoundWeakenLtBuiltinRuleProof { cite_fact_id: f0 } => {
-let fields = vec![("cite_fact_id", capture.fact_reference(f0, runtime))];
-let mut output = node("NumericLowerBoundWeakenLtBuiltinRuleProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__NumericUpperBoundWeakenLtBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::NumericUpperBoundWeakenLtBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::NumericUpperBoundWeakenLtBuiltinRuleProof { cite_fact_id: f0 } => {
-let fields = vec![("cite_fact_id", capture.fact_reference(f0, runtime))];
-let mut output = node("NumericUpperBoundWeakenLtBuiltinRuleProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less__PositiveEvenGtOneBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::PositiveEvenGtOneBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::PositiveEvenGtOneBuiltinRuleProof { in_n_pos_proof: f0, even_proof: f1 } => {
@@ -40064,17 +40586,6 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::scalar_order_relations::IntegerSuccessorGapProof { left_integer: f0, right_integer: f1, strict_order: f2 } => {
 let fields = vec![("left_integer", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("right_integer", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("strict_order", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f2, capture, runtime))];
 let mut output = node("IntegerSuccessorGapProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__scalar_order_relations__LiteralWeakBoundProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::scalar_order_relations::LiteralWeakBoundProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::scalar_order_relations::LiteralWeakBoundProof { source_order: f0 } => {
-let fields = vec![("source_order", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
-let mut output = node("LiteralWeakBoundProof", "", fields);
 output
 },
 };
@@ -40796,17 +41307,6 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualTransitivityBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualTransitivityBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualTransitivityBuiltinRuleProof { left_to_mid_cite_fact_id: f0, mid_to_right_cite_fact_id: f1 } => {
-let fields = vec![("left_to_mid_cite_fact_id", capture.fact_reference(f0, runtime)), ("mid_to_right_cite_fact_id", capture.fact_reference(f1, runtime))];
-let mut output = node("LessEqualTransitivityBuiltinRuleProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFromNonnegDifferenceBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFromNonnegDifferenceBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFromNonnegDifferenceBuiltinRuleProof { premise_proof: f0 } => {
@@ -40939,33 +41439,11 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericLowerBoundWeakenLeBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::NumericLowerBoundWeakenLeBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::NumericLowerBoundWeakenLeBuiltinRuleProof { cite_fact_id: f0 } => {
-let fields = vec![("cite_fact_id", capture.fact_reference(f0, runtime))];
-let mut output = node("NumericLowerBoundWeakenLeBuiltinRuleProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof { cite_fact_id: f0, in_z_proof: f1 } => {
 let fields = vec![("cite_fact_id", capture.fact_reference(f0, runtime)), ("in_z_proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
 let mut output = node("NumericLowerBoundFromStrictPredecessorLeBuiltinRuleProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__NumericUpperBoundWeakenLeBuiltinRuleProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::NumericUpperBoundWeakenLeBuiltinRuleProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::NumericUpperBoundWeakenLeBuiltinRuleProof { cite_fact_id: f0 } => {
-let fields = vec![("cite_fact_id", capture.fact_reference(f0, runtime))];
-let mut output = node("NumericUpperBoundWeakenLeBuiltinRuleProof", "", fields);
 output
 },
 };
@@ -43318,6 +43796,75 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitApproach(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitApproach, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitApproach::Sequence => {
+let fields = vec![];
+let mut output = node("StructuralLimitApproach", "Sequence", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitApproach::Function(f0) => {
+let fields = vec![("0", capture_ast__obj__LimitApproach(f0, capture, runtime))];
+let mut output = node("StructuralLimitApproach", "Function", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__function_domain__CheckedFunctionBodyProof(value: &crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof::AtomicSubject => {
+let fields = vec![];
+let mut output = node("CheckedFunctionBodyProof", "AtomicSubject", fields);
+output
+},
+crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof::IndependentlyChecked(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime))];
+let mut output = node("CheckedFunctionBodyProof", "IndependentlyChecked", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitGeometryProof(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitGeometryProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitGeometryProof::PositiveNaturalSequence => {
+let fields = vec![];
+let mut output = node("StructuralLimitGeometryProof", "PositiveNaturalSequence", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitGeometryProof::RealLine { domain_equal: f0, approach_real: f1 } => {
+let fields = vec![("domain_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f0, capture, runtime)), ("approach_real", capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__FunctionLimitApproachRealProof(f1, capture, runtime))];
+let mut output = node("StructuralLimitGeometryProof", "RealLine", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitGeometryProof::EstablishedCandidate { domain: f0, candidate: f1 } => {
+let fields = vec![("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f0, capture, runtime)), ("candidate", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime))];
+let mut output = node("StructuralLimitGeometryProof", "EstablishedCandidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitGeometryProof::Known { requirement: f0, proof: f1 } => {
+let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("StructuralLimitGeometryProof", "Known", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitExpressionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitExpressionProof { expression: f0, limit: f1, constructor: f2, limit_real: f3 } => {
+let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("limit", capture_ast__obj__Obj(f1, capture, runtime)), ("constructor", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitConstructorProof(f2, capture, runtime)), ("limit_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let mut output = node("StructuralLimitExpressionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__ScalarLimitStrategyProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::ScalarLimitStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::ScalarLimitStrategyProof { stages: f0 } => {
@@ -43488,17 +44035,6 @@ let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::LaplacianAtStrategyProof { stages: f0 } => {
 let fields = vec![("stages", capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(f0, capture, runtime))];
 let mut output = node("LaplacianAtStrategyProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(value: &crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof { source: f0, domain: f1, input_real: f2, output_real: f3 } => {
-let fields = vec![("source", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("input_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("output_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
-let mut output = node("RealFunctionLimitDomainProof", "", fields);
 output
 },
 };
@@ -44024,6 +44560,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinDvdDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
 let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
 let mut output = node("BuiltinDvdDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_transitive_relation__TransitiveRelationProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_transitive_relation::TransitiveRelationProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_transitive_relation::TransitiveRelationProof { known_left_fact_id: f0, residual_fact: f1, proof_of_residual_fact: f2 } => {
+let fields = vec![("known_left_fact_id", capture.fact_reference(f0, runtime)), ("residual_fact", capture_ast__fact__fact__Fact(f1, capture, runtime)), ("proof_of_residual_fact", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("TransitiveRelationProof", "", fields);
 output
 },
 };
@@ -45816,6 +46363,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawApplicationProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawApplicationProof { arguments: f0, requirements: f1, conclusion: f2, orientation: f3, left_equal: f4, right_equal: f5, requirement_proofs: f6 } => {
+let fields = vec![("arguments", JsonValue::Array((f0).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("requirements", JsonValue::Array((f1).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("conclusion", capture_ast__fact__atomic__EqualFact(f2, capture, runtime)), ("orientation", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawOrientation(f3, capture, runtime)), ("left_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f4, capture, runtime)), ("right_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f5, capture, runtime)), ("requirement_proofs", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("MatrixLawApplicationProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(value: &crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionProof { source: f0, result: f1, steps: f2 } => {
@@ -46680,6 +47238,67 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitConstructorProof(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Constant => {
+let fields = vec![];
+let mut output = node("StructuralLimitConstructorProof", "Constant", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::FiniteIdentity => {
+let fields = vec![];
+let mut output = node("StructuralLimitConstructorProof", "FiniteIdentity", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Candidate { function_domain: f0, candidate: f1 } => {
+let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f0, capture, runtime)), ("candidate", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "Candidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::SequenceShift { function_domain: f0, offset: f1, offset_natural: f2, candidate: f3 } => {
+let fields = vec![("function_domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f0, capture, runtime)), ("offset", capture_ast__obj__Obj(f1, capture, runtime)), ("offset_natural", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("candidate", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f3, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "SequenceShift", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Neg { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f0, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "Neg", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Abs { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f0, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "Abs", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Add { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f1, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Sub { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f1, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "Sub", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Mul { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f1, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "Mul", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Div { left: f0, right: f1, limit_nonzero: f2 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f1, capture, runtime)), ("limit_nonzero", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "Div", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::NaturalPower { exponent: f0, exponent_natural: f1, base: f2 } => {
+let fields = vec![("exponent", capture_ast__obj__Obj(f0, capture, runtime)), ("exponent_natural", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("base", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f2, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "NaturalPower", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__SmoothMultivariableStages(value: &crate::execute::execute_fact_stmt::multivariable::strategy::SmoothMultivariableStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::SmoothMultivariableStages { relation: f0, function_domain: f1, body: f2, body_equal: f3, body_well_defined: f4, geometry: f5, coordinates: f6, conclusion_equalities: f7 } => {
@@ -46808,6 +47427,11 @@ output
 crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityConstructorProof::NaturalPower { base: f0, exponent_natural: f1 } => {
 let fields = vec![("base", capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityExpressionProof(f0, capture, runtime)), ("exponent_natural", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
 let mut output = node("PointwiseContinuityConstructorProof", "NaturalPower", fields);
+output
+},
+crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityConstructorProof::Leaf { function: f0, continuity: f1 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("continuity", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("PointwiseContinuityConstructorProof", "Leaf", fields);
 output
 },
 crate::execute::execute_fact_stmt::pointwise_continuity::PointwiseContinuityConstructorProof::Compose { function: f0, argument: f1, outer_continuity: f2 } => {
@@ -47265,6 +47889,22 @@ let output = match value {
 crate::execute::execute_fact_stmt::known_tuple::KnownTemplateSignatureMatchProof { function_equal: f0, instance: f1, signature_match: f2 } => {
 let fields = vec![("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f0, capture, runtime)), ("instance", capture_ast__obj__InstantiatedTemplateObj(f1, capture, runtime)), ("signature_match", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(f2, capture, runtime))];
 let mut output = node("KnownTemplateSignatureMatchProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawOrientation(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawOrientation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawOrientation::Forward => {
+let fields = vec![];
+let mut output = node("MatrixLawOrientation", "Forward", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawOrientation::Reverse => {
+let fields = vec![];
+let mut output = node("MatrixLawOrientation", "Reverse", fields);
 output
 },
 };

@@ -233,8 +233,8 @@ thm nth_derivative_linear_combination:
             t $in R
             min(r,s)<=r
             min(r,s)<=s
-            abs(t-x)<r
-            abs(t-x)<s
+            abs(t-x)<min(r,s)<=r
+            abs(t-x)<min(r,s)<=s
             t $in {u R:abs(u-x)<r}
             t $in {u R:abs(u-x)<s}
             t $in {u R:u $in c.regions(j-1)}
@@ -403,8 +403,8 @@ thm ordered_partial_linear_combination:
             t $in R
             min(r,s)<=r
             min(r,s)<=s
-            abs(t)<r
-            abs(t)<s
+            abs(t)<min(r,s)<=r
+            abs(t)<min(r,s)<=s
             t $in {u R:abs(u)<r}
             t $in {u R:abs(u)<s}
             t $in {v R:fn(coord closed_range(1,n)) R {x(coord)+v*identity_matrix(n)(coord,indices(j))} $in {u cart_n(R,n):u $in c.regions(j-1)}}

@@ -61,7 +61,7 @@ claim:
                     sign(b)=1
                     sign(a)<=sign(b)
         case a>0:
-            0<a
+            0<a<=b
             0<b
             sign(a)=1
             sign(b)=1

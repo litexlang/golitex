@@ -129,3 +129,59 @@ fn registered_rewrite_rejects_missing_producer_and_corrupt_permutation() {
         assert!(compiler.compile_run(&run, "registered").is_err());
     }
 }
+
+fn transitivity_source() -> String {
+    let source =
+        include_str!("../../../../examples/proof_nodes/atomic/by_known_rewrite/transitivity.lit");
+    let prefix = source.split("# Now:").next().unwrap();
+    format!("{prefix}\nhave rel_a R=1\nhave rel_b R=2\nhave rel_c R=3\nby def $below(rel_a,rel_b)\nby def $below(rel_b,rel_c)\n$below(rel_a,rel_c)\n")
+}
+
+#[test]
+fn one_step_registered_transitivity_replays_the_checked_registration_and_two_premises() {
+    let (run, compiler) = select_recorded_rewrite(&transitivity_source());
+    let output = compiler
+        .compile_run(&run, "registered_transitivity")
+        .unwrap();
+    assert!(output.contains("Litex.leTrans"));
+    assert!(!output.contains("sorry"));
+    if let Some(directory) = std::env::var_os("LITEX_LEAN_PHASE2_OUTPUT_DIR") {
+        std::fs::write(
+            std::path::Path::new(&directory).join("registered_transitivity.lean"),
+            output,
+        )
+        .unwrap();
+    }
+}
+
+#[test]
+fn one_step_registered_transitivity_rejects_late_registration_and_wrong_known_edge() {
+    for change in 0..3 {
+        let (mut run, compiler) = select_recorded_rewrite(&transitivity_source());
+        if change == 0 {
+            let registration = run.statement_results.remove(2);
+            run.statement_results.push(registration);
+        } else {
+            let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) =
+                run.statement_results.last_mut().unwrap()
+            else {
+                panic!()
+            };
+            let proof = super::atomic_proof_mut(&mut p.verify_result);
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByKnownRewrite as Rule;
+            let AtomicExceptEqualityFactSearchedProof::ByKnownRewrite(Rule::Transitivity(p)) =
+                &mut proof.searched_proof
+            else {
+                panic!("registered transitivity")
+            };
+            if change == 1 {
+                p.application.known_left_fact_id = FactId::new(u64::MAX);
+            } else {
+                p.cite_prop = AtomicName::plain("another_relation".into());
+            }
+        }
+        assert!(compiler
+            .compile_run(&run, "bad_registered_transitivity")
+            .is_err());
+    }
+}

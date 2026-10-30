@@ -169,13 +169,19 @@ instance. Its explicit smaller-call equality is a proof step; the existing
 proof search may still need that step for recursive arithmetic evaluation.
 
 Native builtin release tracers: `release_and_expand/builtin_thm/` contains one
-strict runnable example for each of the 29 reserved theorem names. The
+strict runnable example for each represented reserved theorem name. The
 examples verify the actual required premises before release and then reuse
 the conclusion. Parser migration tracers include
 `fact/inline_forall_premise.lit` and
 `by/induction_reuses_goal_parameter.lit`. Wrong arity, unsupported argument
 shape, missing premises, selected-fact failure and transaction rollback are
 covered by `src/execute/execute_by_stmt/builtin_thm/tests.rs`.
+
+[Prime-divisor existence](release_and_expand/builtin_thm/prime_divisor.lit)
+uses `prime_divisor(m)` with a positive integer `m >= 2`, obtains a prime witness,
+and applies the builtin in Euclid's proof using `n! + 1`. No source helper or
+prior prime witness is required; the focused Rust tests reject 1, nonpositive
+and noninteger inputs, missing lower bounds and incorrect arities.
 
 [Exact function membership](release_and_expand/builtin_thm/fn_set_member.lit)
 requires the complete input domain before pointwise return checks. It covers

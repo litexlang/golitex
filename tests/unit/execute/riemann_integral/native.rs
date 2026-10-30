@@ -149,6 +149,7 @@ fn check(rt: &mut Runtime, source: &str, expected: bool) -> crate::run::RunLitex
 #[test]
 fn riemann_integral_native_candidate_selection_and_provenance() {
     let mut rt = runtime();
+    check(&mut rt, "claim:\n    ? forall k Z:\n        1 <= k\n        =>:\n            0 <= k\n    0 <= 1 <= k\n\n", true);
     check(&mut rt, "have fn square(x R) R=x^2", true);
     check(&mut rt, "integral(square,0,1)=1/3", false);
     check(&mut rt, "0*integral(square,0,1)=0", false);

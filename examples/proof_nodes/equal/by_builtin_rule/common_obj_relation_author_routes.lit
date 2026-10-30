@@ -120,7 +120,7 @@ sketch:
         floor(n)=n
         floor(n)<=floor(x)
         n<=floor(x)
-        floor(x)<n+1
+        floor(x)<=x<n+1
         floor(x)<=n
         floor(x)=n
     claim:
@@ -158,7 +158,7 @@ sketch:
         floor(n)=n
         floor(n)<=floor(x)
         n<=floor(x)
-        floor(x)<n+1
+        floor(x)<=x<n+1
         floor(x)<=n
         floor(x)=n
     claim:
@@ -655,7 +655,7 @@ sketch:
         floor(n)=n
         floor(n)<=floor(x)
         n<=floor(x)
-        floor(x)<n+1
+        floor(x)<=x<n+1
         floor(x)<=n
         floor(x)=n
 

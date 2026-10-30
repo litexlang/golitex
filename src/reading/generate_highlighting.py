@@ -8,11 +8,21 @@ import argparse
 import json
 from pathlib import Path
 import re
+from generate_capture import clean, closing
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
 BEGIN = '  // BEGIN GENERATED LEXICAL KINDS'
 END = '  // END GENERATED LEXICAL KINDS'
+
+
+def delegated_spellings(relative, method):
+    """Literal names from an arity dispatcher actually called by the parser."""
+    source = (ROOT / relative).read_text()
+    marker = 'pub fn ' + method + '('
+    start = source.index('{', source.index(marker))
+    body = source[start:closing(clean(source), start) + 1]
+    return set(re.findall(r'"([a-z_]+)"', body))
 
 
 def catalogue():
@@ -46,6 +56,10 @@ def catalogue():
     # These predicates are deliberately enumerated by the parser's arity table.
     analysis = (ROOT / 'parse/real_analysis_fact.rs').read_text().split('impl Runtime', 1)[0]
     groups['predicate'].update(re.findall(r'"([a-z_]+)"', analysis))
+    # These are delegated from primary.rs / real_analysis_fact.rs rather than
+    # declared as parser constants. Omitting them falsely inflates coverage.
+    groups['function'].update(delegated_spellings('ast/obj.rs', 'multivariable_selector_arity'))
+    groups['predicate'].update(delegated_spellings('ast/fact/atomic.rs', 'predicate_arity'))
     symbols = (ROOT / 'tokenize/symbols.rs').read_text().split('let mut symbols = vec![', 1)[1].split('];', 1)[0]
     known = set().union(*groups.values())
     for literal in re.findall(r'"(?:[^"\\]|\\.)*"', symbols):

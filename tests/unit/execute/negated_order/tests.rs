@@ -1,15 +1,16 @@
 use crate::prelude::*;
 
 #[test]
-fn negated_order_composes_all_four_positive_complements() {
-    for (premise, goal) in [
-        ("x <= 900", "not x > 1070"),
-        ("x >= 1260", "not x < 1250"),
-        ("x <= 900", "not x >= 1070"),
-        ("x >= 1260", "not x <= 1250"),
+fn explicit_positive_comparisons_supply_all_four_complements() {
+    for (premise, bridge, goal) in [
+        ("x <= 900", "x <= 1070", "not x > 1070"),
+        ("x >= 1260", "x >= 1250", "not x < 1250"),
+        ("x < 900", "x < 1070", "not x >= 1070"),
+        ("x > 1260", "x > 1250", "not x <= 1250"),
     ] {
         let mut rt = runtime();
-        let source = format!("forall x R:\n    {premise}\n    =>:\n        {goal}\n");
+        let source =
+            format!("forall x R:\n    {premise}\n    =>:\n        {bridge}\n        {goal}\n");
         let result = rt.run_litex_code(&source).unwrap();
         let output = crate::json_output::emit_run_detailed(&result, &rt, "eval", None);
         assert!(
@@ -18,10 +19,10 @@ fn negated_order_composes_all_four_positive_complements() {
             crate::json_output::emit_run_normal(&result, &rt, "eval", None)
         );
         assert!(
-            output.contains("\"strategy\": \"NegatedOrder\""),
+            output.contains("\"rule\": \"OrderTransitivity\""),
             "{output}"
         );
-        assert!(output.contains("proof_of_requirement_facts"));
+        assert!(output.contains("proof_of_residual_fact"));
         assert!(output.contains("$in R"));
     }
 }
@@ -61,7 +62,7 @@ fn negated_order_closes_integer_product_contradictions() {
         "{}",
         crate::json_output::emit_run_normal(&result, &rt, "eval", None)
     );
-    assert!(output.contains("\"strategy\": \"NegatedOrder\""));
+    assert!(output.contains("\"rule\": \"OrderTransitivity\""));
     assert_eq!(rt.execution_environments_stack.len(), 1);
 }
 
@@ -79,29 +80,31 @@ fn negated_order_does_not_manufacture_a_contradiction() {
 fn negated_order_keeps_certificates_in_reading() {
     let reading = crate::reading::build_reading(
         &crate::reading::ReadingInput::Source(
-            "forall x R:\n    x <= 900\n    =>:\n        not x > 1070\n".into(),
+            "forall x R:\n    x <= 900\n    =>:\n        x <= 1070\n        not x > 1070\n".into(),
         ),
         true,
         OutputLanguage::English,
     );
     assert!(reading.success);
     let output = reading.document.stringify();
-    assert!(output.contains("NegatedOrderStrategySingleStep"));
-    assert!(output.contains("requirement_facts"));
-    assert!(output.contains("proof_of_requirement_facts"));
+    assert!(output.contains("TransitiveRelationProof"));
+    assert!(output.contains("residual_fact"));
+    assert!(output.contains("proof_of_residual_fact"));
 }
 
 #[test]
-fn negated_order_lean_replay_stays_explicitly_unsupported() {
+fn explicit_order_transitivity_and_complement_compile_together() {
     let mut rt = runtime();
     let run = rt
-        .run_litex_code("forall x R:\n    x <= 900\n    =>:\n        not x > 1070\n")
+        .run_litex_code(
+            "forall x R:\n    x <= 900\n    =>:\n        x <= 1070\n        not x > 1070\n",
+        )
         .unwrap();
     assert!(run.success);
-    let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
-        .compile_run(&run, "negated_order")
-        .unwrap_err();
-    assert_eq!(error.route, "Atomic/BuiltinStrategy");
+    let output = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run, "explicit_order_complement")
+        .unwrap();
+    assert!(output.contains("Litex.leTrans"));
 }
 
 fn runtime() -> Runtime {

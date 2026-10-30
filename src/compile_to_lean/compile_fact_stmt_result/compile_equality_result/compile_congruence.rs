@@ -304,7 +304,10 @@ impl LitexToLeanCompiler {
                 }
                 let left = self.compile_object_reference(left, position)?;
                 let right = self.compile_object_reference(right, position)?;
-                Ok(format!("(by\n  let _left : Litex.Obj (M := M) (Litex.FunctionSignature M) := {left}\n  let _right : Litex.Obj (M := M) (Litex.FunctionSignature M) := {right}\n  exact (show Litex.Same _left _right from rfl))"))
+                // A visible template conversion can retain a semanticObject
+                // representation. Same compares denotations, so infer each
+                // compiled endpoint's actual host independently.
+                Ok(format!("(by\n  let _left := {left}\n  let _right := {right}\n  exact (show Litex.Same _left _right from rfl))"))
             }
             TheyAreTheSameProof::SameFreeParamShape(SameFreeParamShapeProof::AnonymousFn(_)) => {
                 let (
@@ -321,7 +324,7 @@ impl LitexToLeanCompiler {
                 }
                 let left = self.compile_object_reference(left, position)?;
                 let right = self.compile_object_reference(right, position)?;
-                Ok(format!("(by\n  let _left : Litex.Obj (M := M) (Litex.FormulaFn M) := {left}\n  let _right : Litex.Obj (M := M) (Litex.FormulaFn M) := {right}\n  exact (show Litex.Same _left _right from rfl))"))
+                Ok(format!("(by\n  let _left := {left}\n  let _right := {right}\n  exact (show Litex.Same _left _right from rfl))"))
             }
             TheyAreTheSameProof::SameFreeParamShape(SameFreeParamShapeProof::Compound(_)) => {
                 let supported = matches!(

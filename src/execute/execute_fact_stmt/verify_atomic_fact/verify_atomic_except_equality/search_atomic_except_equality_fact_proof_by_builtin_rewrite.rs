@@ -40,6 +40,7 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinRewrite {
         AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution,
     ),
     OrderDual(AtomicExceptEqualityFactSearchProofByBuiltinOrderDual),
+    OrderTransitivity(AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity),
 }
 
 // Closed-numeric index substitution on a non-equality atomic goal.
@@ -91,6 +92,10 @@ pub struct AtomicExceptEqualityFactSearchProofByBuiltinOrderDual {
     pub proof_of_alternate_fact: VerifyFactResult,
 }
 
+pub struct AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity {
+    pub application: super::search_transitive_relation::TransitiveRelationProof,
+}
+
 impl Runtime {
     // Builtin rewrite dispatcher: ClosedNumeric, KnownEqualObj, FnUnfold, then OrderDual.
     pub fn search_atomic_except_equality_fact_proof_by_builtin_rewrite(
@@ -136,6 +141,25 @@ impl Runtime {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(proof),
             ));
+        }
+        // Each real-order relation is transitive: e.g. a<=b, b<=c => a<=c.
+        // Negative goals and mixed strict/weak edges need explicit bridges.
+        if matches!(
+            fact,
+            AtomicFact::LessEqualFact(_)
+                | AtomicFact::LessFact(_)
+                | AtomicFact::GreaterEqualFact(_)
+                | AtomicFact::GreaterFact(_)
+        ) {
+            if let Some(application) = self.search_transitive_relation(fact, verify_state)? {
+                return Ok(Some(
+                    AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderTransitivity(
+                        AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity {
+                            application,
+                        },
+                    ),
+                ));
+            }
         }
         Ok(None)
     }

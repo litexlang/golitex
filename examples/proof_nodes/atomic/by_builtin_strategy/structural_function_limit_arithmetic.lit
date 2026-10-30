@@ -1,0 +1,319 @@
+# Before: the direct statement below failed at conclusion/proof_search.
+# thm direct_function_add:
+#     ? forall f,g fn(x R) R,A,B,x0 R:
+#         $has_limit_at(f,x0,A)
+#         $has_limit_at(g,x0,B)
+#         =>:
+#             $has_limit_at(fn(x R) R {f(x)+g(x)},x0,A+B)
+# Former result: Could not prove the goal.
+# Now: direct structural checks retain the original leaf and domain premises.
+# Boundary: missing leaves, wrong values/directions and invalid domains stay rejected.
+# Check: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_strategy/structural_function_limit_arithmetic.lit
+
+thm direct_fn_limit_at_constant:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(fn(x R) R {c},x0,c)
+
+thm direct_fn_limit_at_neg:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(f,x0,A)
+        =>:
+            $has_limit_at(fn(x R) R {-f(x)},x0,-A)
+
+thm direct_fn_limit_at_abs:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(f,x0,A)
+        =>:
+            $has_limit_at(fn(x R) R {abs(f(x))},x0,abs(A))
+
+thm direct_fn_limit_at_scale:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(f,x0,A)
+        =>:
+            $has_limit_at(fn(x R) R {c*f(x)},x0,c*A)
+
+thm direct_fn_limit_at_power:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(f,x0,A)
+        =>:
+            $has_limit_at(fn(x R) R {f(x)^n},x0,A^n)
+
+thm direct_fn_limit_at_add:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(f,x0,A)
+        $has_limit_at(g,x0,B)
+        =>:
+            $has_limit_at(fn(x R) R {f(x)+g(x)},x0,A+B)
+
+thm direct_fn_limit_at_subtract:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(f,x0,A)
+        $has_limit_at(g,x0,B)
+        =>:
+            $has_limit_at(fn(x R) R {f(x)-g(x)},x0,A-B)
+
+thm direct_fn_limit_at_multiply:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(f,x0,A)
+        $has_limit_at(g,x0,B)
+        =>:
+            $has_limit_at(fn(x R) R {f(x)*g(x)},x0,A*B)
+
+thm direct_fn_limit_at_divide:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(f,x0,A)
+        $has_limit_at(g,x0,B)
+        B!=0
+        forall x R:
+            g(x)!=0
+        =>:
+            $has_limit_at(fn(x R) R {f(x)/g(x)},x0,A/B)
+
+thm direct_fn_limit_at_identity:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_at(fn(x R) R {x},x0,x0)
+
+thm direct_fn_limit_left_constant:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(fn(x R) R {c},x0,c)
+
+thm direct_fn_limit_left_neg:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(f,x0,A)
+        =>:
+            $has_limit_left(fn(x R) R {-f(x)},x0,-A)
+
+thm direct_fn_limit_left_abs:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(f,x0,A)
+        =>:
+            $has_limit_left(fn(x R) R {abs(f(x))},x0,abs(A))
+
+thm direct_fn_limit_left_scale:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(f,x0,A)
+        =>:
+            $has_limit_left(fn(x R) R {c*f(x)},x0,c*A)
+
+thm direct_fn_limit_left_power:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(f,x0,A)
+        =>:
+            $has_limit_left(fn(x R) R {f(x)^n},x0,A^n)
+
+thm direct_fn_limit_left_add:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(f,x0,A)
+        $has_limit_left(g,x0,B)
+        =>:
+            $has_limit_left(fn(x R) R {f(x)+g(x)},x0,A+B)
+
+thm direct_fn_limit_left_subtract:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(f,x0,A)
+        $has_limit_left(g,x0,B)
+        =>:
+            $has_limit_left(fn(x R) R {f(x)-g(x)},x0,A-B)
+
+thm direct_fn_limit_left_multiply:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(f,x0,A)
+        $has_limit_left(g,x0,B)
+        =>:
+            $has_limit_left(fn(x R) R {f(x)*g(x)},x0,A*B)
+
+thm direct_fn_limit_left_divide:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(f,x0,A)
+        $has_limit_left(g,x0,B)
+        B!=0
+        forall x R:
+            g(x)!=0
+        =>:
+            $has_limit_left(fn(x R) R {f(x)/g(x)},x0,A/B)
+
+thm direct_fn_limit_left_identity:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_left(fn(x R) R {x},x0,x0)
+
+thm direct_fn_limit_right_constant:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(fn(x R) R {c},x0,c)
+
+thm direct_fn_limit_right_neg:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(f,x0,A)
+        =>:
+            $has_limit_right(fn(x R) R {-f(x)},x0,-A)
+
+thm direct_fn_limit_right_abs:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(f,x0,A)
+        =>:
+            $has_limit_right(fn(x R) R {abs(f(x))},x0,abs(A))
+
+thm direct_fn_limit_right_scale:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(f,x0,A)
+        =>:
+            $has_limit_right(fn(x R) R {c*f(x)},x0,c*A)
+
+thm direct_fn_limit_right_power:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(f,x0,A)
+        =>:
+            $has_limit_right(fn(x R) R {f(x)^n},x0,A^n)
+
+thm direct_fn_limit_right_add:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(f,x0,A)
+        $has_limit_right(g,x0,B)
+        =>:
+            $has_limit_right(fn(x R) R {f(x)+g(x)},x0,A+B)
+
+thm direct_fn_limit_right_subtract:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(f,x0,A)
+        $has_limit_right(g,x0,B)
+        =>:
+            $has_limit_right(fn(x R) R {f(x)-g(x)},x0,A-B)
+
+thm direct_fn_limit_right_multiply:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(f,x0,A)
+        $has_limit_right(g,x0,B)
+        =>:
+            $has_limit_right(fn(x R) R {f(x)*g(x)},x0,A*B)
+
+thm direct_fn_limit_right_divide:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(f,x0,A)
+        $has_limit_right(g,x0,B)
+        B!=0
+        forall x R:
+            g(x)!=0
+        =>:
+            $has_limit_right(fn(x R) R {f(x)/g(x)},x0,A/B)
+
+thm direct_fn_limit_right_identity:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_right(fn(x R) R {x},x0,x0)
+
+thm direct_fn_limit_neg_inf_constant:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(fn(x R) R {c},c)
+
+thm direct_fn_limit_neg_inf_neg:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(f,A)
+        =>:
+            $has_limit_neg_inf(fn(x R) R {-f(x)},-A)
+
+thm direct_fn_limit_neg_inf_abs:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(f,A)
+        =>:
+            $has_limit_neg_inf(fn(x R) R {abs(f(x))},abs(A))
+
+thm direct_fn_limit_neg_inf_scale:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(f,A)
+        =>:
+            $has_limit_neg_inf(fn(x R) R {c*f(x)},c*A)
+
+thm direct_fn_limit_neg_inf_power:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(f,A)
+        =>:
+            $has_limit_neg_inf(fn(x R) R {f(x)^n},A^n)
+
+thm direct_fn_limit_neg_inf_add:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(f,A)
+        $has_limit_neg_inf(g,B)
+        =>:
+            $has_limit_neg_inf(fn(x R) R {f(x)+g(x)},A+B)
+
+thm direct_fn_limit_neg_inf_subtract:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(f,A)
+        $has_limit_neg_inf(g,B)
+        =>:
+            $has_limit_neg_inf(fn(x R) R {f(x)-g(x)},A-B)
+
+thm direct_fn_limit_neg_inf_multiply:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(f,A)
+        $has_limit_neg_inf(g,B)
+        =>:
+            $has_limit_neg_inf(fn(x R) R {f(x)*g(x)},A*B)
+
+thm direct_fn_limit_neg_inf_divide:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_neg_inf(f,A)
+        $has_limit_neg_inf(g,B)
+        B!=0
+        forall x R:
+            g(x)!=0
+        =>:
+            $has_limit_neg_inf(fn(x R) R {f(x)/g(x)},A/B)
+
+thm direct_fn_limit_pos_inf_constant:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(fn(x R) R {c},c)
+
+thm direct_fn_limit_pos_inf_neg:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(f,A)
+        =>:
+            $has_limit_pos_inf(fn(x R) R {-f(x)},-A)
+
+thm direct_fn_limit_pos_inf_abs:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(f,A)
+        =>:
+            $has_limit_pos_inf(fn(x R) R {abs(f(x))},abs(A))
+
+thm direct_fn_limit_pos_inf_scale:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(f,A)
+        =>:
+            $has_limit_pos_inf(fn(x R) R {c*f(x)},c*A)
+
+thm direct_fn_limit_pos_inf_power:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(f,A)
+        =>:
+            $has_limit_pos_inf(fn(x R) R {f(x)^n},A^n)
+
+thm direct_fn_limit_pos_inf_add:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(f,A)
+        $has_limit_pos_inf(g,B)
+        =>:
+            $has_limit_pos_inf(fn(x R) R {f(x)+g(x)},A+B)
+
+thm direct_fn_limit_pos_inf_subtract:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(f,A)
+        $has_limit_pos_inf(g,B)
+        =>:
+            $has_limit_pos_inf(fn(x R) R {f(x)-g(x)},A-B)
+
+thm direct_fn_limit_pos_inf_multiply:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(f,A)
+        $has_limit_pos_inf(g,B)
+        =>:
+            $has_limit_pos_inf(fn(x R) R {f(x)*g(x)},A*B)
+
+thm direct_fn_limit_pos_inf_divide:
+    ? forall f,g fn(x R) R,x0,A,B,c R,n N:
+        $has_limit_pos_inf(f,A)
+        $has_limit_pos_inf(g,B)
+        B!=0
+        forall x R:
+            g(x)!=0
+        =>:
+            $has_limit_pos_inf(fn(x R) R {f(x)/g(x)},A/B)
+

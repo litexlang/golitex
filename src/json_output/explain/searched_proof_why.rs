@@ -281,100 +281,100 @@ pub fn explain_searched_proof_why(kind: &str, lang: OutputLanguage) -> SearchedP
         ("builtin_rewrite", OutputLanguage::English) => (
             "builtin_rewrite",
             "Builtin rewrite",
-            "Verified by a builtin equality rewrite",
+            "Verified by a builtin rewrite",
         ),
         ("builtin_rewrite", OutputLanguage::ChineseTraditional) => (
             "內建改寫",
             "內建改寫",
-            "由內建等式改寫驗證",
+            "由內建改寫規則驗證",
         ),
         ("builtin_rewrite", OutputLanguage::French) => (
             "Réécriture intégrée",
             "Réécriture intégrée",
-            "Vérifié par une réécriture d'égalité intégrée",
+            "Vérifié par une réécriture intégrée",
         ),
         ("builtin_rewrite", OutputLanguage::Russian) => (
             "Встроенное переписывание",
             "Встроенное переписывание",
-            "Проверено встроенным переписыванием равенства",
+            "Проверено встроенным правилом переписывания",
         ),
         ("builtin_rewrite", OutputLanguage::Spanish) => (
             "Reescritura incorporada",
             "Reescritura incorporada",
-            "Verificado mediante una reescritura de igualdad incorporada",
+            "Verificado mediante una reescritura incorporada",
         ),
         ("builtin_rewrite", OutputLanguage::Arabic) => (
             "إعادة كتابة مدمجة",
             "إعادة كتابة مدمجة",
-            "تم التحقق بإعادة كتابة مساواة مدمجة",
+            "تم التحقق بقاعدة إعادة كتابة مدمجة",
         ),
         ("builtin_rewrite", OutputLanguage::Japanese) => (
             "組み込みの書き換え",
             "組み込みの書き換え",
-            "組み込みの等式書き換えで検証しました",
+            "組み込みの書き換え規則で検証しました",
         ),
         ("builtin_rewrite", OutputLanguage::Korean) => (
             "내장 재작성",
             "내장 재작성",
-            "내장 등식 재작성으로 검증했습니다",
+            "내장 재작성 규칙으로 검증했습니다",
         ),
         ("builtin_rewrite", OutputLanguage::Vietnamese) => (
             "Viết lại tích hợp",
             "Viết lại tích hợp",
-            "Đã kiểm chứng bằng cách viết lại đẳng thức tích hợp",
+            "Đã kiểm chứng bằng quy tắc viết lại tích hợp",
         ),
 
         ("builtin_rewrite", OutputLanguage::Chinese) => {
-            ("内置改写", "内置改写", "由内置等式改写验证")
+            ("内置改写", "内置改写", "由内置改写规则验证")
         }
         ("known_rewrite", OutputLanguage::English) => (
             "known_rewrite",
             "Known rewrite",
-            "Verified by rewriting with a known equality",
+            "Verified using a registered predicate property",
         ),
         ("known_rewrite", OutputLanguage::ChineseTraditional) => (
             "已知改寫",
             "已知改寫",
-            "用已知等式改寫驗證",
+            "應用已註冊的謂詞性質驗證",
         ),
         ("known_rewrite", OutputLanguage::French) => (
             "Réécriture connue",
             "Réécriture connue",
-            "Vérifié en réécrivant avec une égalité connue",
+            "Vérifié avec une propriété de prédicat enregistrée",
         ),
         ("known_rewrite", OutputLanguage::Russian) => (
             "Переписывание по известному равенству",
             "Переписывание по известному равенству",
-            "Проверено переписыванием по известному равенству",
+            "Проверено по зарегистрированному свойству предиката",
         ),
         ("known_rewrite", OutputLanguage::Spanish) => (
             "Reescritura conocida",
             "Reescritura conocida",
-            "Verificado al reescribir con una igualdad conocida",
+            "Verificado con una propiedad registrada del predicado",
         ),
         ("known_rewrite", OutputLanguage::Arabic) => (
             "إعادة كتابة معلومة",
             "إعادة كتابة معلومة",
-            "تم التحقق بإعادة الكتابة باستخدام مساواة معلومة",
+            "تم التحقق باستخدام خاصية مسجلة للمحمول",
         ),
         ("known_rewrite", OutputLanguage::Japanese) => (
             "既知の書き換え",
             "既知の書き換え",
-            "既知の等式で書き換えて検証しました",
+            "登録済みの述語の性質を使って検証しました",
         ),
         ("known_rewrite", OutputLanguage::Korean) => (
             "알려진 재작성",
             "알려진 재작성",
-            "알려진 등식으로 재작성하여 검증했습니다",
+            "등록된 술어 성질을 사용하여 검증했습니다",
         ),
         ("known_rewrite", OutputLanguage::Vietnamese) => (
             "Viết lại đã biết",
             "Viết lại đã biết",
-            "Đã kiểm chứng bằng cách viết lại với đẳng thức đã biết",
+            "Đã kiểm chứng bằng tính chất vị từ đã đăng ký",
         ),
 
         ("known_rewrite", OutputLanguage::Chinese) => {
-            ("已知改写", "已知改写", "用已知等式改写验证")
+            ("已知改写", "已知改写", "应用已注册的谓词性质验证")
         }
         ("they_are_the_same", OutputLanguage::English) => (
             "they_are_the_same",

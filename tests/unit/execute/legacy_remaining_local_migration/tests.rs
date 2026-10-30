@@ -131,7 +131,6 @@ const EVIDENCE_CASES: &[(&str,&str,&[&str])] = &[
     ("forall x,y R+:\n    ln(x)=ln(y)\n    =>:\n        x=y\n","LnInjective",&["left_positive","right_positive","image_equality"]),
     ("forall a,x R+,n Z:\n    a!=1\n    a^n=x\n    =>:\n        log(a,x)=n\n","LogFromKnownPower",&["base_proof","exponent_integer","power_equality"]),
     ("forall a,b,c R:\n    b!=0\n    a/b=c\n    =>:\n        a=c*b\n","ProductFromDivision",&["division_equation"]),
-    ("forall x R:\n    (-4)<x\n    =>:\n        (-6)<=x\n","LiteralWeakBound",&["source_order"]),
     ("forall x Z:\n    4>x\n    =>:\n        x<=3\n","IntegerSuccessorGap",&["left_integer","right_integer","strict_order"]),
     ("forall a,b,c,d R:\n    b>a\n    d>c\n    =>:\n        a+c<b+d\n","SumStrictOperands",&["first_order","second_order"]),
     ("forall x,b R:\n    -b<=x\n    x<=b\n    =>:\n        abs(x)<=b\n","AbsFromIntervalBounds",&["lower_bound","upper_bound"]),

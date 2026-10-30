@@ -1,5 +1,5 @@
-//! Explicit finite linear algebra contracts. All actual domains and premises
-//! are verified by the ordinary theorem invocation pipeline.
+//! Finite linear algebra contracts shared by explicit calls and fixed-shape rules.
+//! Consumers verify every actual domain and premise through the shared verifier.
 use super::helper::{atomic_in, equal, identifier, le, number};
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::execute::execute_fact_stmt::matrix_operations::{
@@ -9,7 +9,7 @@ use crate::execute::execute_fact_stmt::matrix_operations::{
 use crate::execute::execute_fact_stmt::native_matrix::{matrix_call, matrix_space};
 use crate::prelude::*;
 
-pub(super) fn prepare_matrices(
+pub(crate) fn prepare_matrices(
     rt: &mut Runtime,
     id: BuiltinTheoremId,
     args: &[Obj],
@@ -178,18 +178,8 @@ pub(super) fn prepare_matrices(
             matrices(rt, &mut req, &[(a, n, n), (b, n, n)]);
             scalar(rt, &mut req, z);
             out.extend([
-                equal(
-                    rt,
-                    trace(&madd(a, b, n, n), n),
-                    add(trace(a, n), trace(b, n)),
-                )
-                .into(),
-                equal(
-                    rt,
-                    trace(&scale(z, a, n, n), n),
-                    mul(z.clone(), trace(a, n)),
-                )
-                .into(),
+                trace_add_equation(rt, a, b, n).into(),
+                trace_scale_equation(rt, a, z, n).into(),
             ]);
         }
         MatrixTraceCyclic => {
@@ -852,5 +842,35 @@ fn vector_combination(rt: &mut Runtime, u: &Obj, v: &Obj, a: &Obj, b: &Obj, n: &
         vec![(k, index_set(n))],
         Obj::StandardSet(StandardSet::C),
         body,
+    )
+}
+
+// The two trace laws have independent premises; direct checking must not invent
+// a scalar or second matrix merely to instantiate the combined explicit BT.
+pub(crate) fn prepare_matrix_trace_add(rt: &mut Runtime, args: &[Obj]) -> (Vec<Fact>, Vec<Fact>) {
+    let [a, b, n] = args else { unreachable!() };
+    let mut req = Vec::new();
+    matrices(rt, &mut req, &[(a, n, n), (b, n, n)]);
+    (req, vec![trace_add_equation(rt, a, b, n).into()])
+}
+pub(crate) fn prepare_matrix_trace_scale(rt: &mut Runtime, args: &[Obj]) -> (Vec<Fact>, Vec<Fact>) {
+    let [z, a, n] = args else { unreachable!() };
+    let mut req = Vec::new();
+    matrices(rt, &mut req, &[(a, n, n)]);
+    scalar(rt, &mut req, z);
+    (req, vec![trace_scale_equation(rt, a, z, n).into()])
+}
+fn trace_add_equation(rt: &mut Runtime, a: &Obj, b: &Obj, n: &Obj) -> AtomicFact {
+    equal(
+        rt,
+        trace(&madd(a, b, n, n), n),
+        add(trace(a, n), trace(b, n)),
+    )
+}
+fn trace_scale_equation(rt: &mut Runtime, a: &Obj, z: &Obj, n: &Obj) -> AtomicFact {
+    equal(
+        rt,
+        trace(&scale(z, a, n, n), n),
+        mul(z.clone(), trace(a, n)),
     )
 }

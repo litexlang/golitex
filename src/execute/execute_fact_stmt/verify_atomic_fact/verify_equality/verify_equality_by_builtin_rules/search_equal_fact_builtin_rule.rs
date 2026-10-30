@@ -51,6 +51,11 @@ impl Runtime {
         if let Some(proof) = self.search_sequence_limit_equality(fact) {
             return Ok(Some(EqualitySearchProofByBuiltinRule::SequenceLimit(proof)));
         }
+        if let Some(proof) = self.search_native_matrix_law(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRule::NativeMatrixLaw(
+                proof,
+            )));
+        }
         if let Some(proof) = super::by_elementary_definitions::elementary_definition(fact) {
             return Ok(Some(proof));
         }

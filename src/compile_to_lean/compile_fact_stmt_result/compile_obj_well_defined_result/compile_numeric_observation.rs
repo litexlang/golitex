@@ -427,6 +427,30 @@ impl LitexToLeanCompiler {
             return Ok((literal, proof, member, Some(value)));
         }
         match (wd).detailed_ref() {
+            DetailedObjWellDefinedProof::ByDef {obj, proof} if matches!((obj,proof),
+                (Obj::DerivativeOperator(DerivativeOperator::AtPoint(_)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(_)))|
+                (Obj::BoundOperator(_),ObjWellDefinedProofByDef::BoundOperator(_))|
+                (Obj::LimitOperator(LimitOperator::Sequence(_) | LimitOperator::SequenceLimsup(_) | LimitOperator::SequenceLiminf(_) | LimitOperator::Function(_)), ObjWellDefinedProofByDef::LimitOperator(_))) => {
+                // A scalar selector is an opaque normalization atom. Replaying
+                // its original WD constructs it; the proved codomain law then
+                // supplies its numeric observation without choosing a new route.
+                let term=self.compile_wd(wd,position)?;
+                let law=match obj{
+                    Obj::DerivativeOperator(DerivativeOperator::AtPoint(_))=>"Litex.derivativeInR",
+                    Obj::BoundOperator(BoundOperator::Supremum(_))=>"Litex.supremumInR",
+                    Obj::BoundOperator(BoundOperator::Infimum(_))=>"Litex.infimumInR",
+                    Obj::LimitOperator(LimitOperator::Sequence(_))=>"Litex.sequenceLimitInR",
+                    Obj::LimitOperator(LimitOperator::SequenceLimsup(_))=>"Litex.sequenceExtremumInR true",
+                    Obj::LimitOperator(LimitOperator::SequenceLiminf(_))=>"Litex.sequenceExtremumInR false",
+                    Obj::LimitOperator(LimitOperator::Function(f)) if f.approach.point().is_some()=>"Litex.finiteFunctionLimitInR",
+                    Obj::LimitOperator(LimitOperator::Function(_))=>"Litex.infiniteFunctionLimitInR",
+                    _=>unreachable!(),
+                };
+                let setup=format!("let _litex_scalar_selector := {term}; let _litex_selector_member := Litex.realToComplex _litex_scalar_selector ({law} _litex_scalar_selector);");
+                Ok((format!("({setup} Litex.NativeBridge.asComplex _litex_scalar_selector _litex_selector_member)"),
+                    format!("({setup} Litex.NativeBridge.asComplex_spec _litex_scalar_selector _litex_selector_member)"),
+                    format!("({setup} _litex_selector_member)"),None))
+            }
             DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::ComplexOperator(_),
                 proof: ObjWellDefinedProofByDef::ComplexOperator(_),

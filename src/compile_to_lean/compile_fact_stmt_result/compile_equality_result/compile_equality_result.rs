@@ -183,7 +183,11 @@ impl LitexToLeanCompiler {
                 "(show @Eq M.Value _ _ from Eq.refl _)".to_string()
                 }
             }
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::NativeMatrixLaw(p)) => self.compile_native_matrix_law(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::RealBounds(p)) => self.compile_real_extremum_equality(fact,p,position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLimsup(p)) => self.compile_sequence_limsup_equality(fact,p,position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLiminf(p)) => self.compile_sequence_liminf_equality(fact,p,position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::DerivativeSelectedValue(p)) => self.compile_derivative_equality(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLimit(p)) => self.compile_sequence_limit_equality(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FunctionLimit(p)) => self.compile_function_limit_equality(fact,p,position)?,
             EqualFactSearchedProof::ByTheyAreTheSame(
@@ -556,9 +560,31 @@ impl LitexToLeanCompiler {
                 &proof.proof_of_requirement_facts,
                 position,
             )?,
-            EqualFactSearchedProof::ByBuiltinStrategy(_) => {
-                return Err(LeanCompileError::unsupported("Equality/BuiltinStrategy"))
-            }
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::ExtremumEquality(proof),
+            ) => self.compile_extremum_equality_strategy(
+                fact,
+                &proof.requirement_facts,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::ComplexWithNonzeroPremises(proof),
+            ) => self.compile_guarded_complex(
+                fact,
+                &proof.requirement_facts,
+                &proof.proof_of_requirement_facts,
+                position,
+            )?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::FiniteSetProductPointwiseEquality(proof),
+            ) => self.compile_finite_product_pointwise(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(proof),
+            ) => self.compile_cos_integer_offset(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::ModCongruence(proof),
+            ) => self.compile_mod_congruence(fact, proof, position)?,
             EqualFactSearchedProof::ByMatchingOneArgByOne(proof) => self
                 .compile_matching_one_arg_by_one(
                     fact,

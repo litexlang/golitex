@@ -67,6 +67,8 @@ pub enum InferFunctionContinuousAtFactResult {
 }
 pub struct InferFunctionContinuousAtDefinitionResult {
     pub source_fact_id: FactId,
+    pub function_domain:
+        crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof,
     pub derived: Vec<StoreInferredFactResult>,
 }
 impl InferFunctionContinuousAtFactResult {
@@ -431,6 +433,9 @@ pub enum InferHasDerivativeAtFactResult {
 }
 pub struct InferHasDerivativeAtDefinitionResult {
     pub source_fact_id: FactId,
+    /// The original optional domain lookup; None retains the old no-clause route.
+    pub function_domain:
+        Option<crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof>,
     pub derived: Vec<StoreInferredFactResult>,
 }
 impl InferHasDerivativeAtFactResult {
@@ -447,12 +452,17 @@ pub enum InferFunctionDifferentiableAtFactResult {
 }
 pub struct InferFunctionDifferentiableAtDefinitionResult {
     pub source_fact_id: FactId,
-    pub derived: Vec<StoreInferredFactResult>,
+    pub existence: StoreInferredFactResult,
+    pub function_domain:
+        Option<crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof>,
+    pub interior: Option<StoreInferredFactResult>,
 }
 impl InferFunctionDifferentiableAtFactResult {
     pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
         match self {
-            Self::Definition(p) => p.derived.iter().collect(),
+            Self::Definition(p) => std::iter::once(&p.existence)
+                .chain(p.interior.iter())
+                .collect(),
         }
     }
 }

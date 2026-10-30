@@ -1,0 +1,41 @@
+'use strict';
+// Actual theorem applications through the public reader and native exports.
+const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm'),assert=require('node:assert/strict');
+const {createDOM}=require('./dom.cjs'),directory=process.argv[2];
+if(!directory)throw new Error('Usage: node theorem-proofs.cjs <theorem-fixtures>');
+const code=fs.readFileSync(path.join(__dirname,'../reader.js'),'utf8');
+const fixture=name=>JSON.parse(fs.readFileSync(path.join(directory,'theorem-'+name+'.json'),'utf8'));
+function records(bundle){const nodes=new Map(bundle.evidence_nodes.map(item=>[item.id,item.node]));function resolve(value){while(value?.kind==='evidence_reference')value=nodes.get(value.evidence_id);return value||{};}function result(value){let node=resolve(value);while(node.fields?.['0'])node=resolve(node.fields['0']);return node;}return {nodes,resolve,result};}
+function mount(bundle,locale){
+ const dom=createDOM(),root=dom.root(),before=JSON.stringify(bundle),timers=new Map();let serial=0;
+ vm.runInContext(code,vm.createContext({...dom,console,TextEncoder,URL,Map,Set,setTimeout(fn){timers.set(++serial,fn);return serial;},clearTimeout(id){timers.delete(id);}}));
+ const reader=dom.window.LitexReading.mount(root,{document:bundle,locale,onCheck:async()=>bundle});
+ return {...dom,root,reader,async hover(statement,target){const row=root.querySelector('[data-line="'+statement.line+'"]');assert(row);dom.document.elementFromPoint=()=>target||row.querySelector('.lr-source-code');await root.querySelector('.lr-ide-input').trigger('pointermove',{clientX:100,clientY:80});for(let round=0;round<3;round++)for(const [id,fn] of [...timers])if(timers.has(id)){timers.delete(id);fn();}const card=root.querySelector('.lr-proof-popover');assert(card);return card;},done(){assert.equal(JSON.stringify(bundle),before,'rendering never rewrites proof records or source locations');reader.destroy();}};
+}
+function application(bundle,kind){return bundle.statements.find(s=>s.status==='accepted'&&s.statement_kind?.endsWith(kind));}
+async function run(){
+ for(const locale of ['zh','en']){
+  for(const [name,needle] of [['selected','x = 2'],['predicate','x = 3'],['selection','x = 7']]){
+   const bundle=fixture(name),statement=application(bundle,'ByThmStmt'),view=mount(bundle,locale),card=await view.hover(statement),part=card.querySelector('.lr-theorem-application');assert(part,name);assert(part.textContent.includes(needle),part.textContent);assert(part.querySelector('.lr-definition-link'));assert(card.querySelector('.lr-atomic-wd'));assert(!card.querySelector('.lr-atomic-wd').open);assert.equal(card.querySelector('.lr-atomic-wd').parentNode.children.at(-1),card.querySelector('.lr-atomic-wd'));
+   const selection=part.querySelector('.lr-theorem-selection');assert(selection&&!selection.open);await selection.querySelector('summary').click();assert(selection.textContent.includes(locale==='zh'?'引用':'Known')||selection.querySelector('.lr-fact-link'),selection.textContent);
+   await part.querySelector('.lr-definition-link').click();assert.equal(view.reader.getSelection().statement,bundle.statements.find(s=>s.statement_kind?.endsWith('DefThmStmt')).id);await view.root.querySelector('.lr-back').click();assert(view.root.querySelector('.lr-detail-body .lr-theorem-application'),'return restores the invocation explanation');view.done();
+  }
+  const b=fixture('release'),stmt=application(b,'ReleaseThmStmt'),view=mount(b,locale),card=await view.hover(stmt),part=card.querySelector('.lr-theorem-application');assert(part);assert(part.textContent.includes('x = 1'));const premise=part.querySelector('.lr-proof-requirements .lr-proof-step');assert(premise.textContent.includes('1 > 0'));await premise.querySelector('summary').click();assert(!premise.textContent.includes('cannot be matched'));assert(part.querySelector('.lr-theorem-conclusions').textContent.includes('1 ≠ 0'));const tail=card.querySelector('.lr-atomic-wd');assert(tail&&!tail.open);await tail.querySelector('summary').click();assert(tail.textContent.includes('1 ∈ R'),tail.textContent);assert(!premise.querySelector('summary').textContent.includes('1 ∈ R'));
+  const uses=b.statements.find(s=>s.statement_kind==='Fact'&&s.line>stmt.line);const usedCard=await view.hover(uses);assert(!usedCard.querySelector('.lr-theorem-application'),'later reuse keeps its own known-fact route');assert(usedCard.querySelector('.lr-fact-link'));view.done();
+  for(const name of ['builtin','existential']){const bundle=fixture(name),statement=application(bundle,'ReleaseThmStmt'),bv=mount(bundle,locale),bc=await bv.hover(statement),app=bc.querySelector('.lr-theorem-application');assert(app,name);assert(app.textContent.includes(locale==='zh'?'使用内置定理':'Builtin theorem applied'));assert(!app.querySelector('.lr-proof-substitutions'),'builtin formal names are not invented');assert(app.querySelector('.lr-theorem-conclusions').textContent.includes(locale==='zh'?'存在':'There exists'),app.querySelector('.lr-theorem-conclusions').textContent);if(name==='builtin')assert(app.textContent.includes(locale==='zh'?'既约分数':'reduced-fraction'));bv.done();}
+  const equalBundle=fixture('selected'),eqStmt=application(equalBundle,'ByThmStmt'),ev=mount(equalBundle,locale),eq=ev.root.querySelector('[data-line="'+eqStmt.line+'"] .lr-chain-equality');assert(eq,'the theorem equality keeps operator-specific navigation');assert((await ev.hover(eqStmt,eq)).querySelector('.lr-theorem-application'));await eq.click();assert.equal(ev.reader.getSelection().chainStep,0);assert(ev.root.querySelector('.lr-detail-body .lr-theorem-application'));ev.done();
+  const multiple=fixture('multiple'),ms=application(multiple,'ReleaseThmStmt'),mv=mount(multiple,locale),mc=await mv.hover(ms),parts=mc.querySelectorAll('.lr-theorem-application');assert.equal(parts.length,2,'each direct conclusion retains its own identity');for(const part of parts){assert(part.querySelector('.lr-theorem-conclusions').textContent.includes('2 + 0'));assert(part.querySelector('.lr-theorem-conclusions').textContent.includes('0 + 2'));assert(part.querySelector('.lr-theorem-conclusions .lr-fact-link'));}mv.done();
+ }
+ const failure=fixture('missing-premise'),fv=mount(failure,'en'),failed=failure.statements.find(s=>s.status==='rejected');assert.equal(failure.run_result,'failure');assert(!(await fv.hover(failed)).querySelector('.lr-theorem-application'),'a rejected application gets no successful theorem label');fv.done();
+ for(const kind of ['callee','arguments','premises','output']){
+  const bundle=fixture('predicate'),data=records(bundle),success=[...data.nodes.values()].find(n=>n.type==='ExecByThmStmtSuccess');
+  if(kind==='callee')delete success.fields.callee;
+  if(kind==='arguments')delete data.resolve(success.fields.call).fields.arguments;
+  if(kind==='premises')delete success.fields.dom_proofs;
+  if(kind==='output')delete success.fields.stored;
+  const view=mount(bundle,'en'),statement=application(bundle,'ByThmStmt');if(kind==='output'){assert(!(await view.hover(statement)).querySelector('.lr-theorem-application'),'missing output identity retains the legacy selected proof without inventing an application');view.done();continue;}
+  const app=(await view.hover(statement)).querySelector('.lr-theorem-application');assert(app);assert(/incomplete|not fully exported/.test(app.textContent),app.textContent);if(['callee','arguments'].includes(kind))assert(!app.textContent.includes('x = 3'),'missing binding records never produce guessed substitution');view.done();
+ }
+ console.log(JSON.stringify({passed:true,bilingualTheoremAndRelease:true,actualBindingsAndPremises:true,builtinAndExistentialConclusions:true,definitionNavigationAndReturn:true,equalityOperatorNavigation:true,wdLastAndClosed:true,failedAndMissingRecordsNotGuessed:true,readingRecordsUnchanged:true}));
+}
+run().catch(error=>{console.error(error);process.exitCode=1;});

@@ -188,6 +188,14 @@ Enter `a = 2`: it is rejected. Then enter `a + 2 = 3`: it succeeds using the ret
 
 Litex is in beta. `-strict` rejects user-written `trust` and `axiom`; verification still relies on Litex's checker and mathematical foundations.
 
+<a id="litex-reliability"></a>
+
+## Reliability of Litex
+
+Litex's reliability is strengthened through testing, code review and independent proof checking. The project has around 4,000 examples and over 3,000 test functions. Before each release, the maintainer also uses the frontier language models available to review the source code and look for bugs.
+
+Compilation to Lean provides an additional check: supported Litex proofs can be reconstructed as Lean proofs and checked by Lean's kernel. This coverage continues to expand.
+
 ## About
 
 I am Jiachen Shen (沈嘉辰), a mathematics PhD student at Fudan University. I hope Litex helps more people write checkable mathematics and understand the definitions, conditions and reasoning behind it. Questions and feedback: litexlang@outlook.com.

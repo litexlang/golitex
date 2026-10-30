@@ -174,28 +174,8 @@ impl LitexToLeanCompiler {
     ) -> Result<Option<String>, LeanCompileError> {
         let mut current = Some(position);
         while let Some(cursor) = current {
-            let inference = match cursor.owner {
-                SourceOwner::AtomicInference(
-                    Fact::AtomicFact(AtomicFact::InFact(source)),
-                    crate::store_fact_and_infer::InferAtomicFactResult::InFact(rules),
-                ) => Some((source, rules)),
-                SourceOwner::PropInference(captured) => match (&captured.store, &captured.infer) {
-                    (
-                        StoreFactResult::AtomicFact(seed),
-                        Some(crate::store_fact_and_infer::InferResult::AtomicFact(
-                            crate::store_fact_and_infer::InferAtomicFactResult::InFact(rules),
-                        )),
-                    ) => match &seed.fact {
-                        AtomicFact::InFact(source) => Some((source, rules)),
-                        _ => None,
-                    },
-                    _ => None,
-                },
-                _ => None,
-            };
-            if let Some((source, rules)) = inference {
+            for (source, rules) in cursor.membership_inference_groups() {
                 if source_membership.is_some_and(|expected| expected != source) {
-                    current = cursor.parent;
                     continue;
                 }
                 for rule in rules {
