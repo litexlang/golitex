@@ -394,6 +394,23 @@ Child indices count actual proofs, so omitted pairs do not shift citation scopes
 The [nonmembership consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_set_nonmembership.rs)
 likewise checks the element and each factor before applying its Core law.
 
+Stored literal-tuple equalities now retain `TupleCoordinates` inference results:
+the original equality FactId, its orientation, and the ordered direct stores.
+The [coordinate inference consumer](compile_tuple_coordinate_inference.rs)
+validates those subjects and identities, constructs each call from the tuple's
+singleton Cartesian contract, and proves its value by equality transport and
+`Litex.tuple_coordinate`. `let` retains its actual store/infer result, and typed
+declarations replay their equality inferences after publishing the seed. Later
+consumers see those constructors only after the declaration completes.
+Literal-coordinate numeric membership replays the recorded component
+calculation or structural certificate through
+[its adapter](compile_tuple_coordinate_membership.rs). Inferred template
+publications retain the original body constructors instead of requesting a
+second WD result for a substituted call. This is one-layer publication;
+explicitly reusing a tuple-valued coordinate as a new equality seed starts its
+next step. The tracer is
+[`tuple_coordinates.lit`](../../examples/infer/equal/tuple_coordinates.lit).
+
 The [tuple-release consumer](compile_release_tuple_def_result.rs) is one complete
 example of this dispatch. It reads the existing finite shape and domain result,
 compiles the return and coordinate proofs, then emits the ordered stores. Its
@@ -1957,7 +1974,13 @@ and target equations, finiteness and both bijections. A repeated bijection may
 inherit its WD from a prior citation; the compiler also borrows the enumerator's
 original typed parameter membership to establish that its calls land in the
 target. The bijection proposition alone does not supply that typing fact.
-Concrete literal-set profiles remain under elaboration-performance investigation.
+The [concrete selected](../../lean/examples/range_sum_bijective_enumerations/)
+and [release](../../lean/examples/range_sum_bijective_enumerations_release/)
+profiles also pass the default Lean budget. Literal numeric memberships keep
+their original payload validation and use direct standard cast certificates;
+this avoids elaborating hundreds of repeated numeric tactics inside dependent
+theorems. [Zero, one, unbounded integers and decimal fallbacks](../../lean/examples/integer_literal_carrier_certificates/)
+are checked separately.
 
 [Self inner-product positivity](../../lean/examples/inner_product_positive_theorem/)
 preserves the original natural dimension and complex-vector memberships, then

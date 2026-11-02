@@ -5,6 +5,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import re
 import subprocess
 
 HERE = Path(__file__).resolve().parent
@@ -50,8 +51,16 @@ def boundaries(force=False):
     prefix = [r["source"] for r in journal["runs"]
               if r["response"]["run_result"] == "success"]
     assert len(prefix) == journal["accepted_statements"]
-    cases = [(s, True) for s in prefix]
-    cases += [(r["source"], r["expected_success"])
+    names = ("linear_coefficients", "linear_value", "padded_coefficients",
+             "padded_for_representation", "empty_coefficients", "zero_value",
+             "zero_terms", "zero_coefficients")
+    pattern = re.compile(r"\b(" + "|".join(names) + r")\b")
+    def qualify(source):
+        return pattern.sub(lambda match: "main::" + match.group(), source)
+    cases = [("release obj def main::" + name, True) for name in names[:-1]]
+    cases += [(qualify(s), True) for s in prefix
+              if not s.startswith(("have ", "template<"))]
+    cases += [(qualify(r["source"]), r["expected_success"])
               for r in journal["boundaries"]]
     command = [str(common.BINARY), "-lang", "en", "-strict",
                "-f", str(HERE / "main.lit"), "-session"]
@@ -68,6 +77,8 @@ def boundaries(force=False):
             assert (data["run_result"] == "success") == expected, (source, data)
             assert len(data["statement_results"]) == 1, data
             assert len(data["errors"]) == (0 if expected else 1), data
+            if not expected:
+                assert data["errors"][0]["phase"] in ("requirement", "search_proof", "premise"), data
             records.append({"source": source, "expected_success": expected,
                             "errors": data["errors"]})
         process.stdin.write("exit\n")

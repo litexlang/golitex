@@ -40,6 +40,44 @@ zero-length vectors, n=0 sums and nonzero zero-tail examples pass. Invalid
 termwise bounds, a false zero-tail premise, a wrong sum and index 0 are refused.
 See [acceptance](validation/.ladr/acceptance.json).
 
+## Growth and coefficient uniqueness
+
+The `growth` export proves modulus of real scalars and natural complex powers,
+monotonicity of natural powers for real bases at least one, and positivity of
+the modulus of a nonzero complex scalar. These feed the highest-term estimate:
+if x>=1, lower coefficient moduli are at most M>0, and
+x*C_abs(c(n+1))>n*M, the represented sum is nonzero.
+
+`complex_power_representation_has_nonzero_value(n,c,p)` constructs a positive
+real input with nonzero value when n>0 and the last coefficient is nonzero.
+`complex_zero_power_representation_coefficients(n,c,p,j)` proves every
+coefficient zero when the represented function is zero on the positive real
+axis, including n=0. `complex_power_representation_coefficients_unique` compares
+two coefficient vectors with the same exponent bound.
+
+All these representation functions have domain R+ and codomain C. Apply them
+to an explicit restriction of a polynomial on R or C. They do not identify
+function objects with different complete input domains.
+
+The `coefficients` export provides
+`complex_finite_sequence_zero_padding<n,m,c>`, for vector lengths n<=m. Its
+head and tail theorems preserve entries through n and give zero after n;
+both lengths may be zero. `complex_power_representation_padding` preserves a
+power representation when its exponent bound increases. The comparison
+theorems `complex_power_representations_common_coefficients` and
+`complex_power_representation_excess_coefficients_zero` prove agreement at
+common positions and zero coefficients beyond a shorter bound. Original
+vectors of different lengths are never asserted equal.
+
+The [power check](validation/.ladr/power_use/check.py) passes the 9-declaration
+coefficient source target, strictly replaying its 10 sum and 15 growth
+predecessors, plus 64 independent imported statements and seven refusals.
+Examples cover i+x with bounds 1 and 3, the zero function at bounds 0 and 3,
+nonreal coefficients and empty padding. Shrinking a padding, index zero, a
+missing nonzero leading term, a missing zero-function premise, incompatible
+representations, an invalid head index and a false entry are rejected while
+retaining valid context. See [acceptance](validation/.ladr/power_use/acceptance.json).
+
 No axiom, trust, native rule, strategy, kernel, parser or compiler change is
-introduced. These are dependencies for LADR polynomial growth. Coefficient
-uniqueness, exact polynomial degree and complete FTA remain unfinished.
+introduced. These are polynomial dependencies. Exact polynomial degree, a
+general root count and complete FTA remain unfinished.

@@ -1,6 +1,11 @@
 # Tracer: storing a tuple equality publishes its coordinate equalities.
 #
-# Before:
+# Before (the shorter input failed):
+# have tilted cart_n(C,2) = (3/5,4/5)
+# tilted(1)^2 + tilted(2)^2 = 1
+# Former result: search_proof: Could not prove the goal.
+#
+# Former workaround:
 # have zero cart_n(C,2) = (1,0)
 # have tilted cart_n(C,2) = (3/5,4/5)
 # zero(1) = 1
@@ -27,6 +32,11 @@ let singleton = (7,)
 singleton(1) + 1 = 8
 let empty = tuple()
 empty $in cart()
+
+# An explicit coordinate equality starts the next one-layer inference step.
+let nested = ((1,2),3)
+nested(1) = (1,2)
+nested(1)(1) + nested(1)(2) = 3
 
 # Boundary: only the direct literal tuple is projected, one layer per seed.
 # No function-body unfolding or transitive alias traversal is added.

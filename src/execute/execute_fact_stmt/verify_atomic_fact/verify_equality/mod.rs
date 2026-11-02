@@ -7,6 +7,7 @@ pub mod equivalence_class_graph;
 pub mod fn_application_unfold_substitution_builtin_rewrite_proof;
 pub mod helper;
 pub mod result;
+pub mod ring;
 pub mod search_equal_fact_by_closed_numeric_equal_substitution;
 mod search_equal_fact_by_complex_with_nonzero_premises;
 pub mod search_equal_fact_by_composed_structure;

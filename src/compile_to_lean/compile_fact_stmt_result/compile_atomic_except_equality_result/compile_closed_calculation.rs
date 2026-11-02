@@ -249,8 +249,9 @@ impl LitexToLeanCompiler {
             };
             // Literal objects already have this exact native payload. Their
             // closed certificate needs no round trip through denotation.
+            let equality = literal_carrier_cast_certificate(number, target);
             return Ok(format!(
-                "(Litex.NativeBridge.{bridge} (M := M) {} {representative} (by norm_num))",
+                "(Litex.NativeBridge.{bridge} (M := M) {} {representative} {equality})",
                 native.0
             ));
         }
@@ -415,4 +416,50 @@ impl LitexToLeanCompiler {
         let element = self.compile_object_reference(element, position)?;
         Ok(format!("(by\n  let _range := {term}\n  exact Litex.in{family}OfDenote _range.val.start _range.val.finish {element} _range.wd.1 _range.wd.2 ({lower} : ℤ) ({upper} : ℤ) ({value} : ℤ) {h_lower} {h_upper} {h_value} (by norm_num) (by norm_num))"))
     }
+}
+
+/// Integer literal casts have direct library certificates. Repeated tactic
+/// elaboration here can exhaust a surrounding dependent theorem's budget.
+/// Decimal/rational and other expression certificates retain their old path.
+fn literal_carrier_cast_certificate(number: &Number, target: &StandardSet) -> String {
+    let value = number.normalized_value.as_str();
+    let unsigned = value.strip_prefix('-').unwrap_or(value);
+    if unsigned.is_empty() || !unsigned.bytes().all(|b| b.is_ascii_digit()) {
+        return "(by norm_num)".into();
+    }
+    let canonical = unsigned.trim_start_matches('0');
+    let proof = match target {
+        StandardSet::Z => {
+            let positive = if canonical.is_empty() {
+                "Int.cast_zero.symm".to_string()
+            } else if canonical == "1" {
+                "Int.cast_one.symm".to_string()
+            } else {
+                format!("(Int.cast_ofNat ({unsigned} : ℕ)).symm")
+            };
+            if value.starts_with('-') {
+                format!("((congrArg (fun _literal : ℂ => -_literal) ({positive})).trans ((Int.cast_neg ({unsigned} : ℤ)).symm))")
+            } else {
+                positive
+            }
+        }
+        StandardSet::N if !value.starts_with('-') => {
+            if canonical.is_empty() {
+                "Nat.cast_zero.symm".to_string()
+            } else if canonical == "1" {
+                "Nat.cast_one.symm".to_string()
+            } else {
+                "rfl".to_string()
+            }
+        }
+        StandardSet::R if !value.starts_with('-') => {
+            if canonical.is_empty() || canonical == "1" {
+                "rfl".to_string()
+            } else {
+                format!("(Complex.ofReal_ofNat ({unsigned} : ℕ)).symm")
+            }
+        }
+        _ => return "(by norm_num)".into(),
+    };
+    format!("({proof})")
 }
