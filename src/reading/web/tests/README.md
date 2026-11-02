@@ -4,6 +4,24 @@ These tests run the unmodified public `LitexReading.mount` API and its actual
 DOM event handlers using real CLI-generated reading bundles. They need Node.js
 and Python, with no npm package installation or browser access.
 
+Generate mathematical-view fixtures with
+`python3 src/reading/web/tests/latex-mode.py --output <directory>`, then run
+`node src/reading/web/tests/latex-mode.cjs <directory>`. All 52 current statement
+fixtures use real `-reading -latex -json` bundles and the bundled KaTeX engine.
+The tests check native block layout, exact nested/repeated source identities,
+bilingual hover, original source, shared proof references, pinning, citation
+navigation, source editing, stale-evidence invalidation and malformed/missing
+mapping fallback. Native verdict/evidence identity, byte equality in all ten
+locales, projects/file prefixes and actual CLI/static exports are covered by
+`cargo test --release --test reading_latex`; preview/upload is covered by
+`reading_http`. These checks do not model browser geometry or certify every
+proof explanation. Actual browser layout is a separate acceptance step.
+
+Run `node src/reading/web/tests/latex-host.cjs <directory>/proof-en.json
+<release-litex> <scratch-directory>` to exercise the public upload host with
+actual CLI recheck/upload responses and verify that both requests retain the
+mathematical document layout.
+
 Generate `--failed-case-context` fixtures and run
 `node src/reading/web/tests/failed-case-context.cjs <fixture-directory>` for
 actual failed-case assumptions, completed body prefixes, exact failing steps,
@@ -1195,3 +1213,81 @@ source and Back restores the exact equality. This does not certify a different
 source's unloaded universal or ordinary-source registered Ref/Sym reachability.
 The nominal numeric `via_symmetry.lit` example is an arithmetic-route control,
 not a certificate for this branch. No browser geometry is claimed.
+
+## Tuple coordinate inference and later citations
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --tuple-coordinates
+node src/reading/web/tests/tuple-coordinate-inferences.cjs <output> [reader-source] [<output>/tuple-coordinate-book]
+```
+
+Actual stores cover direct and reversed equalities, symbolic components,
+conjunct assumptions, nested one-layer publication, singleton/empty tuples,
+aliases and rejected values/indices. Bilingual editable/read-only source
+events open the initially closed inline results, select each actual FactId,
+follow its seed and return to the exact source address. A later sum cites both
+coordinate equalities. Local coordinates of a rejected claim are not published
+by the claim. Editing invalidates old semantic results without adding code rows.
+
+Malformed controls corrupt seeds, orientation, coordinate order/count,
+subject/index/value, stores, scope and source identity. A qualified two-source
+book exercises `release obj def`, the retained original declaration, on-demand
+source loading and exact return through both addresses. Additional controls
+corrupt its declaration, public symbol, parameter name/domain and original
+value. The suite accepts a lazy export or actual compiler JSON and leaves
+Native evidence unchanged. It does not claim browser layout or exhaustive
+result-branch coverage.
+
+## Numeric equality substitution
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --numeric-rewrites
+node src/reading/web/tests/numeric-rewrites.cjs <output> [reader-source] [<output>/numeric-rewrite-book]
+```
+
+Actual certificates cover retained constants, tuple-coordinate citations,
+both operands, reversed source equalities, individual chain equalities, local
+assumptions, a checked prefix inside a rejected theorem, whole numeric
+subterms and arithmetic-operation representatives. Bilingual editable/read-only
+events check the actual rule, cited equalities, retained rewritten equality
+and independently expandable residual. Symbol help, keyboard focus, equality
+selection, pinning, citations, exact Back and edit invalidation preserve source
+rows and Native records. Local premises already in the context are not
+repeated, and a residual never becomes a stored-fact link. Browser-style
+iterable/indexed collections expose no Array-only filter/at APIs.
+
+Rejected goals and actual calculation, congruence, definition and theorem
+routes cannot receive the numeric-substitution label. Malformed controls
+remove or conflict with payloads, operands, residuals, citations, published
+stores, source identities and scopes. The optional two-source native export
+follows a released coordinate through its defining source and returns to the
+exact sum. The suite accepts lazy files or actual compiler JSON. It does not
+reconstruct individual replacement positions or claim browser geometry or
+exhaustive result coverage.
+
+## Unexecuted enumeration bodies
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --unexecuted-loops --processes
+node src/reading/web/tests/unexecuted-loops.cjs <output> [reader-source] [<output>/unexecuted-loop-book] [mechanics-export]
+node src/reading/web/tests/proof-processes.cjs <output>
+```
+
+Actual sources cover empty finite sets and integer ranges, a later empty
+parameter domain, all-skipped conditional assignments, nested source-only
+definitions and clauses, repeated executions, and a local enumeration inside
+a rejected theorem. Ordinary and failed executions, a failed body suffix,
+undefined quantified goals and a false assertion after a vacuous universal
+remain distinct controls. No unexecuted row receives invented proof, WD,
+assumption, inference or publication data.
+
+Bilingual editable/read-only source events check pointer and line-number
+focus, symbol help, pinning, exact parent/goal navigation and Back, unchanged
+source rows, no additional inline action and edit invalidation. Malformed
+controls remove or conflict with result, store, WD, source range, ancestry,
+scope, skipped-premise or repeated-execution correspondence. A two-source
+export checks real lazy chunks; a JSON path may be supplied instead to exercise
+actual compiler output. The optional Mechanics export checks the four existing
+empty-loop body rows in Chapters 5, 7 and 9 without re-verifying or changing the
+book. The tests model no browser geometry and do not certify every unexecuted
+or partially recorded statement history.

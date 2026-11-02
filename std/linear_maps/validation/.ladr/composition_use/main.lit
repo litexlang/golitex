@@ -1,0 +1,174 @@
+# Independent composition-law consumers.
+
+claim:
+    ? forall U,V,W,X nonempty_set,first fn(u U) V,middle fn(v V) W,last fn(w W) X:
+        \Algebra::vector_space::map_compose<U,W,X>(last,\Algebra::vector_space::map_compose<U,V,W>(middle,first))=\Algebra::vector_space::map_compose<U,V,X>(\Algebra::vector_space::map_compose<V,W,X>(last,middle),first)
+    release thm comp::map_composition_associative(U,V,W,X,first,middle,last)
+
+claim:
+    ? forall U,V nonempty_set,T fn(u U) V:
+        \Algebra::vector_space::map_compose<U,U,V>(T,\Algebra::vector_space::identity<U>)=T
+        \Algebra::vector_space::map_compose<U,V,V>(\Algebra::vector_space::identity<V>,T)=T
+    release thm comp::map_composition_identities(U,V,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,U,V,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(u U) V,first,second fn(v V) W:
+        \Algebra::vector_space::map_compose<U,V,W>(\space::pointwise_map_add<K,F,V,W,target>(first,second),T)=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(first,T),\Algebra::vector_space::map_compose<U,V,W>(second,T))
+    release thm comp::composition_distributes_over_outer_sum(K,F,U,V,W,target,T,first,second)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,U,V,W nonempty_set,middle &Algebra::vector_space::VectorSpace<K,F,V>,target &Algebra::vector_space::VectorSpace<K,F,W>,S fn(v V) W,first,second fn(u U) V:
+        $Algebra::vector_space::is_linear_map(K,F,V,middle,W,target,S)
+        =>:
+            \Algebra::vector_space::map_compose<U,V,W>(S,\space::pointwise_map_add<K,F,U,V,middle>(first,second))=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(S,first),\Algebra::vector_space::map_compose<U,V,W>(S,second))
+    release thm comp::composition_distributes_over_inner_sum(K,F,U,V,W,middle,target,S,first,second)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,U,V,W nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,U>,middle &Algebra::vector_space::VectorSpace<K,F,V>,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(u U) V,first,second fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,U,source,V,middle,T)
+        $Algebra::vector_space::is_linear_map(K,F,V,middle,W,target,first)
+        $Algebra::vector_space::is_linear_map(K,F,V,middle,W,target,second)
+        =>:
+            \Algebra::vector_space::map_compose<U,V,W>(\space::pointwise_map_add<K,F,V,W,target>(first,second),T)=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(first,T),\Algebra::vector_space::map_compose<U,V,W>(second,T))
+    release thm comp::composition_distributes_over_outer_sum(K,F,U,V,W,target,T,first,second)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,U,V,W nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,U>,middle &Algebra::vector_space::VectorSpace<K,F,V>,target &Algebra::vector_space::VectorSpace<K,F,W>,S fn(v V) W,first,second fn(u U) V:
+        $Algebra::vector_space::is_linear_map(K,F,V,middle,W,target,S)
+        $Algebra::vector_space::is_linear_map(K,F,U,source,V,middle,first)
+        $Algebra::vector_space::is_linear_map(K,F,U,source,V,middle,second)
+        =>:
+            \Algebra::vector_space::map_compose<U,V,W>(S,\space::pointwise_map_add<K,F,U,V,middle>(first,second))=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(S,first),\Algebra::vector_space::map_compose<U,V,W>(S,second))
+    release thm comp::composition_distributes_over_inner_sum(K,F,U,V,W,middle,target,S,first,second)
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+release obj def Algebra::field::complex_add
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        \Algebra::vector_space::scalar_space<K,F> $in &Algebra::vector_space::VectorSpace<K,F,K>
+    release thm Algebra::vector_space::scalar_space_carrier(K,F)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        \Algebra::finite_span::coordinate_space<K,F,n> $in &Algebra::vector_space::VectorSpace<K,F,finite_seq(K,n)>
+    release thm Algebra::finite_span::coordinate_space_carrier(K,F,n)
+
+have composition_first fn(z C) C=fn(z C) C {i*z}
+
+have composition_second fn(z C) C=fn(z C) C {z+1}
+
+have composition_inner fn(z C) C=fn(z C) C {z^2}
+
+release struct def Algebra::field::complex_field
+
+\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field> =(Algebra::field::complex_field.zero,Algebra::field::complex_field.add,Algebra::field::complex_field.mul)
+
+release struct def \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>
+
+\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add=Algebra::field::complex_field.add
+
+have composition_outer_left fn(z C) C=\Algebra::vector_space::map_compose<C,C,C>(\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second),composition_inner)
+
+have composition_outer_right fn(z C) C=\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(\Algebra::vector_space::map_compose<C,C,C>(composition_first,composition_inner),\Algebra::vector_space::map_compose<C,C,C>(composition_second,composition_inner))
+
+release thm comp::composition_distributes_over_outer_sum(C,Algebra::field::complex_field,C,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,composition_inner,composition_first,composition_second)
+
+composition_outer_left=composition_outer_right
+
+composition_inner(1+i)=2*i
+
+composition_first(composition_inner(1+i))=-2
+
+composition_second(composition_inner(1+i))=1+2*i
+
+\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second)(composition_inner(1+i))=\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(composition_first(composition_inner(1+i)),composition_second(composition_inner(1+i)))
+
+composition_first(composition_inner(1+i))+composition_second(composition_inner(1+i))=(-2)+(1+2*i)
+
+(-2)+(1+2*i)=-1+2*i
+
+\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(composition_first(composition_inner(1+i)),composition_second(composition_inner(1+i)))=Algebra::field::complex_field.add(composition_first(composition_inner(1+i)),composition_second(composition_inner(1+i)))=composition_first(composition_inner(1+i))+composition_second(composition_inner(1+i))=-1+2*i
+
+have composition_outer_sum fn(z C) C=\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second)
+
+claim:
+    ? forall U,V,W nonempty_set,S fn(v V) W,T fn(u U) V,x U:
+        \Algebra::vector_space::map_compose<U,V,W>(S,T)(x)=S(T(x))
+    \Algebra::vector_space::map_compose<U,V,W>(S,T)(x)=S(T(x))
+
+\Algebra::vector_space::map_compose<C,C,C>(\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second),composition_inner)(1+i)=\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second)(composition_inner(1+i))
+
+\Algebra::vector_space::map_compose<C,C,C>(composition_first,composition_inner)(1+i)=composition_first(composition_inner(1+i))
+
+\Algebra::vector_space::map_compose<C,C,C>(composition_outer_sum,composition_inner)(1+i)=composition_outer_sum(composition_inner(1+i))
+
+composition_outer_left(1+i)=\Algebra::vector_space::map_compose<C,C,C>(\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second),composition_inner)(1+i)=\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second)(composition_inner(1+i))=-1+2*i
+
+composition_outer_right(1+i)=composition_outer_left(1+i)=-1+2*i
+
+release thm Algebra::vector_space::identity_linear(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>)
+
+have composition_inner_left fn(z C) C=\Algebra::vector_space::map_compose<C,C,C>(\Algebra::vector_space::identity<C>,\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second))
+
+have composition_inner_right fn(z C) C=\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(\Algebra::vector_space::map_compose<C,C,C>(\Algebra::vector_space::identity<C>,composition_first),\Algebra::vector_space::map_compose<C,C,C>(\Algebra::vector_space::identity<C>,composition_second))
+
+release thm comp::composition_distributes_over_inner_sum(C,Algebra::field::complex_field,C,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,\Algebra::vector_space::identity<C>,composition_first,composition_second)
+
+composition_inner_left=composition_inner_right
+
+composition_first(1+i)=-1+i
+
+composition_second(1+i)=2+i
+
+composition_first(1+i)+composition_second(1+i)=(-1+i)+(2+i)
+
+(-1+i)+(2+i)=1+2*i
+
+\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second)(1+i)=\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(composition_first(1+i),composition_second(1+i))=Algebra::field::complex_field.add(composition_first(1+i),composition_second(1+i))=composition_first(1+i)+composition_second(1+i)=1+2*i
+
+composition_inner_left(1+i)=\Algebra::vector_space::map_compose<C,C,C>(\Algebra::vector_space::identity<C>,\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second))(1+i)=\Algebra::vector_space::identity<C>(\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second)(1+i))=\space::pointwise_map_add<C,Algebra::field::complex_field,C,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>(composition_first,composition_second)(1+i)=1+2*i
+
+composition_inner_right(1+i)=composition_inner_left(1+i)=1+2*i
+
+have composition_associative_left fn(z C) C=\Algebra::vector_space::map_compose<C,C,C>(composition_second,\Algebra::vector_space::map_compose<C,C,C>(composition_first,composition_inner))
+
+have composition_associative_right fn(z C) C=\Algebra::vector_space::map_compose<C,C,C>(\Algebra::vector_space::map_compose<C,C,C>(composition_second,composition_first),composition_inner)
+
+release thm comp::map_composition_associative(C,C,C,C,composition_inner,composition_first,composition_second)
+
+composition_associative_left=composition_associative_right
+
+\Algebra::vector_space::map_compose<C,C,C>(composition_first,composition_inner)(1+i)=composition_first(composition_inner(1+i))=-2
+
+composition_associative_left(1+i)=\Algebra::vector_space::map_compose<C,C,C>(composition_second,\Algebra::vector_space::map_compose<C,C,C>(composition_first,composition_inner))(1+i)=composition_second(\Algebra::vector_space::map_compose<C,C,C>(composition_first,composition_inner)(1+i))=composition_second(-2)=-1
+
+have composition_real_square fn(t R) R=fn(t R) R {t^2}
+
+have composition_real_identity fn(t R) R=\Algebra::vector_space::map_compose<R,R,R>(composition_real_square,\Algebra::vector_space::identity<R>)
+
+release thm comp::map_composition_identities(R,R,composition_real_square)
+
+composition_real_identity=composition_real_square
+
+composition_real_identity(3)=composition_real_square(3)=9
+
+release thm Algebra::vector_space::identity_linear(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)
+
+release thm comp::map_composition_identities(finite_seq(R,0),finite_seq(R,0),\Algebra::vector_space::identity<finite_seq(R,0)>)
+
+release thm comp::map_composition_associative(finite_seq(R,0),finite_seq(R,0),finite_seq(R,0),finite_seq(R,0),\Algebra::vector_space::identity<finite_seq(R,0)>,\Algebra::vector_space::identity<finite_seq(R,0)>,\Algebra::vector_space::identity<finite_seq(R,0)>)
+
+release thm comp::composition_distributes_over_inner_sum(R,Algebra::field::real_field,finite_seq(R,0),finite_seq(R,0),finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,\Algebra::vector_space::identity<finite_seq(R,0)>,\Algebra::vector_space::identity<finite_seq(R,0)>,\Algebra::vector_space::identity<finite_seq(R,0)>)
+
+release thm Algebra::vector_space::identity_linear(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)
+
+release thm comp::map_composition_identities(finite_seq(C,0),finite_seq(C,0),\Algebra::vector_space::identity<finite_seq(C,0)>)
+
+release thm comp::map_composition_associative(finite_seq(C,0),finite_seq(C,0),finite_seq(C,0),finite_seq(C,0),\Algebra::vector_space::identity<finite_seq(C,0)>,\Algebra::vector_space::identity<finite_seq(C,0)>,\Algebra::vector_space::identity<finite_seq(C,0)>)
+
+release thm comp::composition_distributes_over_inner_sum(C,Algebra::field::complex_field,finite_seq(C,0),finite_seq(C,0),finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,\Algebra::vector_space::identity<finite_seq(C,0)>,\Algebra::vector_space::identity<finite_seq(C,0)>,\Algebra::vector_space::identity<finite_seq(C,0)>)
+

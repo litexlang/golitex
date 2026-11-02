@@ -1,8 +1,15 @@
 use crate::prelude::*;
-use crate::reading::{build_reading, export_reading, serve_reading, ReadingAction, ReadingCommand};
+use crate::reading::{
+    build_reading_with_layout, export_reading, serve_reading, ReadingAction, ReadingCommand,
+};
 
 pub fn run_reading(command: ReadingCommand) -> RuntimeResult<bool> {
-    let result = build_reading(&command.input, command.strict, command.language);
+    let result = build_reading_with_layout(
+        &command.input,
+        command.strict,
+        command.language,
+        command.layout,
+    );
     match command.action {
         ReadingAction::Json => {
             super::output::write_stdout(format_args!("{}\n", result.document.stringify_pretty()))?

@@ -23,6 +23,9 @@ use super::superset::SupersetFactSearchProofByBuiltinRule;
 /// Mirrors atomic-except-equality `AtomicFact` constructors; each variant owns that
 /// fact family's builtin-rule evidence.
 pub enum AtomicExceptEqualityFactSearchProofByBuiltinRule {
+    IsMatrixInvFact(crate::execute::execute_fact_stmt::matrix_inverse_predicates::IsMatrixInvSelectedProof),
+    MatrixInversibleFact(crate::execute::execute_fact_stmt::matrix_inverse_predicates::MatrixInversibleFromDeterminantProof),
+    NotMatrixInversibleFact(crate::execute::execute_fact_stmt::matrix_inverse_predicates::NotMatrixInversibleFromDeterminantProof),
     NormalAtomicFact(NormalAtomicFactSearchProofByBuiltinRule),
     LessFact(LessFactSearchProofByBuiltinRule),
     GreaterFact(GreaterFactSearchProofByBuiltinRule),

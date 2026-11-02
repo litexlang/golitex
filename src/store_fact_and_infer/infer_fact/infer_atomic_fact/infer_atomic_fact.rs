@@ -8,6 +8,72 @@ impl Runtime {
         state: VerifyState,
     ) -> RuntimeResult<InferAtomicFactResult> {
         match fact {
+            AtomicFact::IsMatrixInvFact(f) => {
+                let mut clauses = self.matrix_inverse_candidate_clauses(f);
+                clauses.push(self.matrix_inverse_existence(&f.matrix, &f.order));
+                clauses.push(
+                    crate::ast::fact::MatrixInversibleFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        matrix: f.matrix.clone(),
+                        order: f.order.clone(),
+                        line_file: None,
+                    }
+                    .into(),
+                );
+                clauses.push(self.matrix_inverse_nonzero(&f.matrix, &f.order));
+                let mut derived = Vec::new();
+                for clause in clauses {
+                    derived.push(self.store_inferred_fact(&clause)?);
+                }
+                Ok(InferAtomicFactResult::IsMatrixInvFact(vec![
+                    InferIsMatrixInvFactResult::DefinitionAndDeterminant(
+                        InferIsMatrixInvDefinitionAndDeterminantResult {
+                            source_fact_id: f.fact_id,
+                            derived,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::MatrixInversibleFact(f) => {
+                let clauses = vec![
+                    self.matrix_inverse_existence(&f.matrix, &f.order),
+                    self.matrix_inverse_nonzero(&f.matrix, &f.order),
+                ];
+                let mut derived = Vec::new();
+                for clause in clauses {
+                    derived.push(self.store_inferred_fact(&clause)?);
+                }
+                Ok(InferAtomicFactResult::MatrixInversibleFact(vec![
+                    InferMatrixInversibleFactResult::DefinitionAndDeterminant(
+                        InferMatrixInversibleDefinitionAndDeterminantResult {
+                            source_fact_id: f.fact_id,
+                            derived,
+                        },
+                    ),
+                ]))
+            }
+            AtomicFact::NotIsMatrixInvFact(_) => {
+                Ok(InferAtomicFactResult::NotIsMatrixInvFact(Vec::new()))
+            }
+            AtomicFact::NotMatrixInversibleFact(_) => {
+                Ok(InferAtomicFactResult::NotMatrixInversibleFact(Vec::new()))
+            }
+            AtomicFact::CommRingFact(f) => {
+                let mut derived = Vec::new();
+                for clause in self.comm_ring_definition_requirements(f) {
+                    derived.push(self.store_inferred_fact(&clause)?);
+                }
+                Ok(InferAtomicFactResult::CommRingFact(vec![
+                    InferCommRingFactResult::Definition(InferCommRingDefinitionResult {
+                        source_fact_id: f.fact_id,
+                        derived,
+                    }),
+                ]))
+            }
+            AtomicFact::NotCommRingFact(_) => {
+                Ok(InferAtomicFactResult::NotCommRingFact(Vec::new()))
+            }
+
             AtomicFact::MultivariableAnalysisFact(f) => {
                 Ok(InferAtomicFactResult::MultivariableAnalysisFact(vec![
                     InferMultivariableAnalysisFactResult::Definition(

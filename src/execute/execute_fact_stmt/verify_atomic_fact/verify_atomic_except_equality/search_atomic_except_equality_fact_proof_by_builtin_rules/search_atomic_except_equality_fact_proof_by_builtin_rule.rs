@@ -24,6 +24,11 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinRule>> {
         match fact {
+            AtomicFact::IsMatrixInvFact(f) => Ok(self.prove_selected_matrix_inverse(f, verify_state)?.map(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact)),
+            AtomicFact::NotIsMatrixInvFact(_) => Ok(None),
+            AtomicFact::MatrixInversibleFact(f) => Ok(self.prove_matrix_inversible_from_determinant(f, verify_state)?.map(AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact)),
+            AtomicFact::NotMatrixInversibleFact(f) => Ok(self.prove_matrix_not_inversible_from_determinant(f, verify_state)?.map(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact)),
+            AtomicFact::CommRingFact(_) | AtomicFact::NotCommRingFact(_) => Ok(None),
             AtomicFact::MultivariableAnalysisFact(_) | AtomicFact::NotMultivariableAnalysisFact(_) => Ok(None),
             AtomicFact::HasRiemannIntegralFact(_) | AtomicFact::NotHasRiemannIntegralFact(_) | AtomicFact::FunctionRiemannIntegrableFact(_) | AtomicFact::NotFunctionRiemannIntegrableFact(_) |
             AtomicFact::HasDerivativeAtFact(_) | AtomicFact::NotHasDerivativeAtFact(_) | AtomicFact::FunctionDifferentiableAtFact(_) | AtomicFact::NotFunctionDifferentiableAtFact(_) | AtomicFact::RealSetBoundFact(_) | AtomicFact::NotRealSetBoundFact(_) | AtomicFact::RealSetBoundedFact(_) | AtomicFact::NotRealSetBoundedFact(_) | AtomicFact::SequenceAnalysisFact(_) | AtomicFact::NotSequenceAnalysisFact(_) | AtomicFact::RealAccumulationFact(_) | AtomicFact::NotRealAccumulationFact(_) | AtomicFact::FunctionContinuousAtFact(_) | AtomicFact::NotFunctionContinuousAtFact(_) | AtomicFact::FunctionContinuousFact(_) | AtomicFact::NotFunctionContinuousFact(_) | AtomicFact::FunctionLipschitzFact(_) | AtomicFact::NotFunctionLipschitzFact(_) => Ok(None),

@@ -66,18 +66,18 @@ impl LitexToLeanCompiler {
             return Err(invalid("WDArguments"));
         }
         let mut binders = Vec::new();
+        let mut certified_arguments = Vec::new();
         for (i, (arg, child)) in args.iter().zip(&stages.argument_well_defined).enumerate() {
             ensure_object(arg, child)?;
-            binders.push(format!(
-                "let _multivariable_arg_{i} := {}",
-                self.compile_wd(
-                    child,
-                    &SourcePosition {
-                        before: i,
-                        ..*position
-                    }
-                )?
-            ));
+            let compiled = self.compile_wd(
+                child,
+                &SourcePosition {
+                    before: i,
+                    ..*position
+                },
+            )?;
+            binders.push(format!("let _multivariable_arg_{i} := {compiled}"));
+            certified_arguments.push(format!("({compiled})"));
         }
         let mut lines = self.compile_hessian_domain(
             args[0],
@@ -117,7 +117,7 @@ impl LitexToLeanCompiler {
                     return Err(invalid("ExistenceProof"));
                 }
                 let (ty, term) = self.compile_verify(proof, position)?;
-                format!("(by obtain ⟨v,hv,hc⟩ := (show {ty} from {term}); exact ⟨v,hv,hc⟩)")
+                format!("(by\n  have _original_hessian_exists : {ty} := {term}\n  obtain ⟨v,hv,hc⟩ := _original_hessian_exists\n  exact ⟨v,hv,hc⟩\n)")
             }
         };
         lines.push(format!(
@@ -126,8 +126,9 @@ impl LitexToLeanCompiler {
             stages.domains[3].requirement.fact_id().value()
         ));
         Ok(format!(
-            "({}; @Litex.Obj.mk M _ (Litex.hessianRepresentation (M := M)) (Litex.HessianObj.mk _multivariable_arg_0 _multivariable_arg_1 _multivariable_arg_2) (by\n  {}\n))",
+            "({}; @Litex.Obj.mk M _ (Litex.hessianRepresentation (M := M)) (Litex.HessianObj.mk {}) (by\n  {}\n))",
             binders.join("; "),
+            certified_arguments.join(" "),
             lines.join("\n").replace('\n', "\n  ")
         ))
     }
@@ -194,7 +195,10 @@ fn index_set(n: &Obj) -> Obj {
         end: Box::new(n.clone()),
     }))
 }
-fn validate_clauses(r: &HessianAtRelation, facts: &[Fact]) -> Result<(), LeanCompileError> {
+pub(super) fn validate_clauses(
+    r: &HessianAtRelation,
+    facts: &[Fact],
+) -> Result<(), LeanCompileError> {
     use crate::execute::execute_fact_stmt::multivariable::helper::apply;
     let [Fact::ForallFact(f)] = facts else {
         return Err(invalid("DefinitionClauses"));
@@ -342,9 +346,9 @@ impl LitexToLeanCompiler {
         let mut lines = Vec::new();
         if p.function_domain.is_some() {
             validate_clauses(r, &facts[..1])?;
-            let ty = self.compile_function_raw_predicate(&facts[0], position, &HashMap::new())?;
+            let ty = self.compile_coordinate_clause_value_proposition(&facts[0], position)?;
             let term = format!(
-                "(by intro row h_row col h_col; exact ({}).2 row h_row col h_col)",
+                "(by intro row h_row col h_col; exact ({}).2 (Litex.denote row) h_row (Litex.denote col) h_col)",
                 compiled.1
             );
             lines.push(self.emit_internal_fact(&facts[0], &(ty, term), position)?);

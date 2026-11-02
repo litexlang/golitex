@@ -1,5 +1,22 @@
 # Repository working agreements
 
+## Verification artifact lifecycle
+
+For Litex-to-Lean work, keep the mathematical deliverables as canonical `.lit`
+files paired with their actual compiler-generated `.lean` files. Keep necessary
+compiler source and focused regression tests in their normal source locations.
+Verify in place with the existing shared build and dependency caches.
+
+Do not accumulate full source/workspace snapshots, copied executables, or
+per-round verification archives. After completing a step, remove its disposable
+test copies, temporary logs, and redundant task-local build outputs. Preserve
+unrelated work and shared caches used by other tasks.
+
+Before creating large additional artifacts, report their destination, expected
+size, purpose, and cleanup plan, and obtain the user's agreement. Report any
+temporary artifacts that remain when finishing or stopping a task. Do not
+reconstruct temporary directories the user has deliberately deleted.
+
 ## Start with the Agent Guide
 
 Read [docs/AgentGuide.md](docs/AgentGuide.md) before iterative Litex proof work.

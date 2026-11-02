@@ -1,0 +1,319 @@
+# Finite degree of nonzero polynomial functions; the total selector is separate.
+
+claim:
+    ? forall n N:
+        n+1 $in closed_range(1,n+1)
+    n+1 $in Z
+    n+1>=1
+    n+1 $in closed_range(1,n+1)
+
+prop has_complex_polynomial_degree(p fn(x C) C,degree N):
+    exist coefficients finite_seq(C,degree+1) st {p=\poly::complex_polynomial_from_coefficients<degree>(coefficients),coefficients(degree+1)!=0}
+
+prop has_real_polynomial_degree(p fn(x R) R,degree N):
+    exist coefficients finite_seq(R,degree+1) st {p=\poly::real_polynomial_from_coefficients<degree>(coefficients),coefficients(degree+1)!=0}
+
+thm nonzero_complex_polynomial_representation_has_degree:
+    ? forall n N,coefficients finite_seq(C,n+1):
+        \poly::complex_polynomial_from_coefficients<n>(coefficients)!=fn(x C) C {0}
+        =>:
+            exist degree N st {$has_complex_polynomial_degree(\poly::complex_polynomial_from_coefficients<n>(coefficients),degree)}
+    have active finite_set={idx closed_range(1,n+1):coefficients(idx)!=0}
+    active={idx closed_range(1,n+1):coefficients(idx)!=0}
+    by contra:
+        ? $is_nonempty_set(active)
+        claim:
+            ? forall idx closed_range(1,n+1):
+                coefficients(idx)=0
+            by contra:
+                ? coefficients(idx)=0
+                coefficients(idx)!=0
+                idx $in active
+                witness $is_nonempty_set(active) from idx
+                impossible $is_nonempty_set(active)
+        release thm truncation::complex_polynomial_zero_from_zero_coefficients(n,coefficients)
+        impossible \poly::complex_polynomial_from_coefficients<n>(coefficients)!=fn(x C) C {0}
+    active $subset closed_range(1,n+1)
+    closed_range(1,n+1) $subset R
+    active $subset R
+    finite_set_max(active) $in active
+    finite_set_max(active) $in closed_range(1,n+1)
+    finite_set_max(active) $in Z
+    finite_set_max(active)>=1
+    finite_set_max(active) $in N+
+    have k N+=finite_set_max(active)
+    k=finite_set_max(active)
+    k $in active
+    k $in closed_range(1,n+1)
+    coefficients(k)!=0
+    k<=n+1
+    have degree N=k-1
+    degree=k-1
+    degree+1=(k-1)+1=k
+    degree=k-1<=(n+1)-1=n
+    degree<=n
+    claim:
+        ? forall idx closed_range(1,degree+1):
+            idx $in closed_range(1,n+1)
+        idx $in Z
+        1<=idx<=degree+1=k<=n+1
+        idx<=n+1
+        idx $in closed_range(1,n+1)
+    have fn prefix(idx closed_range(1,degree+1)) C=coefficients(idx)
+    prefix $in finite_seq(C,degree+1)
+    claim:
+        ? forall idx N+:
+            idx<=degree+1
+            idx<=n+1
+            =>:
+                prefix(idx)=coefficients(idx)
+        idx $in closed_range(1,degree+1)
+        prefix(idx)=coefficients(idx)
+    claim:
+        ? forall idx closed_range(1,n+1):
+            idx>degree+1
+            =>:
+                coefficients(idx)=0
+        by contra:
+            ? coefficients(idx)=0
+            coefficients(idx)!=0
+            idx $in active
+            idx<=finite_set_max(active)=k
+            idx>k
+            impossible idx>k
+    release thm truncation::complex_polynomial_truncation(n,degree,coefficients,prefix)
+    degree+1 $in closed_range(1,degree+1)
+    prefix(degree+1)=coefficients(degree+1)=coefficients(k)
+    prefix(degree+1)!=0
+    witness exist values finite_seq(C,degree+1) st {\poly::complex_polynomial_from_coefficients<n>(coefficients)=\poly::complex_polynomial_from_coefficients<degree>(values),values(degree+1)!=0} from prefix
+    $has_complex_polynomial_degree(\poly::complex_polynomial_from_coefficients<n>(coefficients),degree)
+    witness exist d N st {$has_complex_polynomial_degree(\poly::complex_polynomial_from_coefficients<n>(coefficients),d)} from degree
+
+thm nonzero_real_polynomial_representation_has_degree:
+    ? forall n N,coefficients finite_seq(R,n+1):
+        \poly::real_polynomial_from_coefficients<n>(coefficients)!=fn(x R) R {0}
+        =>:
+            exist degree N st {$has_real_polynomial_degree(\poly::real_polynomial_from_coefficients<n>(coefficients),degree)}
+    have active finite_set={idx closed_range(1,n+1):coefficients(idx)!=0}
+    active={idx closed_range(1,n+1):coefficients(idx)!=0}
+    by contra:
+        ? $is_nonempty_set(active)
+        claim:
+            ? forall idx closed_range(1,n+1):
+                coefficients(idx)=0
+            by contra:
+                ? coefficients(idx)=0
+                coefficients(idx)!=0
+                idx $in active
+                witness $is_nonempty_set(active) from idx
+                impossible $is_nonempty_set(active)
+        release thm truncation::real_polynomial_zero_from_zero_coefficients(n,coefficients)
+        impossible \poly::real_polynomial_from_coefficients<n>(coefficients)!=fn(x R) R {0}
+    active $subset closed_range(1,n+1)
+    closed_range(1,n+1) $subset R
+    active $subset R
+    finite_set_max(active) $in active
+    finite_set_max(active) $in closed_range(1,n+1)
+    finite_set_max(active) $in Z
+    finite_set_max(active)>=1
+    finite_set_max(active) $in N+
+    have k N+=finite_set_max(active)
+    k=finite_set_max(active)
+    k $in active
+    k $in closed_range(1,n+1)
+    coefficients(k)!=0
+    k<=n+1
+    have degree N=k-1
+    degree=k-1
+    degree+1=(k-1)+1=k
+    degree=k-1<=(n+1)-1=n
+    degree<=n
+    claim:
+        ? forall idx closed_range(1,degree+1):
+            idx $in closed_range(1,n+1)
+        idx $in Z
+        1<=idx<=degree+1=k<=n+1
+        idx<=n+1
+        idx $in closed_range(1,n+1)
+    have fn prefix(idx closed_range(1,degree+1)) R=coefficients(idx)
+    prefix $in finite_seq(R,degree+1)
+    claim:
+        ? forall idx N+:
+            idx<=degree+1
+            idx<=n+1
+            =>:
+                prefix(idx)=coefficients(idx)
+        idx $in closed_range(1,degree+1)
+        prefix(idx)=coefficients(idx)
+    claim:
+        ? forall idx closed_range(1,n+1):
+            idx>degree+1
+            =>:
+                coefficients(idx)=0
+        by contra:
+            ? coefficients(idx)=0
+            coefficients(idx)!=0
+            idx $in active
+            idx<=finite_set_max(active)=k
+            idx>k
+            impossible idx>k
+    release thm truncation::real_polynomial_truncation(n,degree,coefficients,prefix)
+    degree+1 $in closed_range(1,degree+1)
+    prefix(degree+1)=coefficients(degree+1)=coefficients(k)
+    prefix(degree+1)!=0
+    witness exist values finite_seq(R,degree+1) st {\poly::real_polynomial_from_coefficients<n>(coefficients)=\poly::real_polynomial_from_coefficients<degree>(values),values(degree+1)!=0} from prefix
+    $has_real_polynomial_degree(\poly::real_polynomial_from_coefficients<n>(coefficients),degree)
+    witness exist d N st {$has_real_polynomial_degree(\poly::real_polynomial_from_coefficients<n>(coefficients),d)} from degree
+
+thm complex_polynomial_degree_unique:
+    ? forall p fn(x C) C,n,m N:
+        $has_complex_polynomial_degree(p,n)
+        $has_complex_polynomial_degree(p,m)
+        =>:
+            n=m
+    obtain left from $has_complex_polynomial_degree(p,n)
+    obtain right from $has_complex_polynomial_degree(p,m)
+    \poly::complex_polynomial_from_coefficients<n>(left)=p=\poly::complex_polynomial_from_coefficients<m>(right)
+    release thm coefficients::complex_polynomial_leading_bounds_unique(n,m,left,right)
+
+thm nonzero_complex_polynomial_has_degree:
+    ? forall p fn(x C) C:
+        $poly::is_complex_polynomial(p)
+        p!=fn(x C) C {0}
+        =>:
+            exist degree N st {$has_complex_polynomial_degree(p,degree)}
+    release thm poly::complex_polynomial_representation(p)
+    obtain bound,values from exist n N,coefficients finite_seq(C,n+1) st {p=\poly::complex_polynomial_from_coefficients<n>(coefficients)}
+    claim:
+        ? \poly::complex_polynomial_from_coefficients<bound>(values)!=fn(x C) C {0}
+        by contra:
+            ? \poly::complex_polynomial_from_coefficients<bound>(values)!=fn(x C) C {0}
+            p=\poly::complex_polynomial_from_coefficients<bound>(values)=fn(x C) C {0}
+            impossible p!=fn(x C) C {0}
+    release thm nonzero_complex_polynomial_representation_has_degree(bound,values)
+    obtain degree from exist n N st {$has_complex_polynomial_degree(\poly::complex_polynomial_from_coefficients<bound>(values),n)}
+    $has_complex_polynomial_degree(p,degree)
+    witness exist n N st {$has_complex_polynomial_degree(p,n)} from degree
+
+thm real_polynomial_degree_unique:
+    ? forall p fn(x R) R,n,m N:
+        $has_real_polynomial_degree(p,n)
+        $has_real_polynomial_degree(p,m)
+        =>:
+            n=m
+    obtain left from $has_real_polynomial_degree(p,n)
+    obtain right from $has_real_polynomial_degree(p,m)
+    \poly::real_polynomial_from_coefficients<n>(left)=p=\poly::real_polynomial_from_coefficients<m>(right)
+    release thm coefficients::real_polynomial_leading_bounds_unique(n,m,left,right)
+
+thm nonzero_real_polynomial_has_degree:
+    ? forall p fn(x R) R:
+        $poly::is_real_polynomial(p)
+        p!=fn(x R) R {0}
+        =>:
+            exist degree N st {$has_real_polynomial_degree(p,degree)}
+    release thm poly::real_polynomial_representation(p)
+    obtain bound,values from exist n N,coefficients finite_seq(R,n+1) st {p=\poly::real_polynomial_from_coefficients<n>(coefficients)}
+    claim:
+        ? \poly::real_polynomial_from_coefficients<bound>(values)!=fn(x R) R {0}
+        by contra:
+            ? \poly::real_polynomial_from_coefficients<bound>(values)!=fn(x R) R {0}
+            p=\poly::real_polynomial_from_coefficients<bound>(values)=fn(x R) R {0}
+            impossible p!=fn(x R) R {0}
+    release thm nonzero_real_polynomial_representation_has_degree(bound,values)
+    obtain degree from exist n N st {$has_real_polynomial_degree(\poly::real_polynomial_from_coefficients<bound>(values),n)}
+    $has_real_polynomial_degree(p,degree)
+    witness exist n N st {$has_real_polynomial_degree(p,n)} from degree
+
+thm complex_polynomial_degree_properties:
+    ? forall p fn(x C) C,degree N:
+        $has_complex_polynomial_degree(p,degree)
+        =>:
+            $poly::is_complex_polynomial(p)
+            p!=fn(x C) C {0}
+    obtain values from $has_complex_polynomial_degree(p,degree)
+    p=\poly::complex_polynomial_from_coefficients<degree>(values)
+    values(degree+1)!=0
+    release thm poly::complex_polynomial_from_coefficients_is_polynomial(degree,values)
+    $poly::is_complex_polynomial(p)
+    by contra:
+        ? p!=fn(x C) C {0}
+        p=fn(x C) C {0}
+        have zeros finite_seq(C,degree+1)=fn(j closed_range(1,degree+1)) C {0}
+        claim:
+            ? forall j closed_range(1,degree+1):
+                zeros(j)=0
+            zeros(j)=0
+        release thm truncation::complex_polynomial_zero_from_zero_coefficients(degree,zeros)
+        \poly::complex_polynomial_from_coefficients<degree>(values)=p=fn(x C) C {0}=\poly::complex_polynomial_from_coefficients<degree>(zeros)
+        release thm coefficients::complex_polynomial_coefficient_vector_unique(degree,values,zeros)
+        values=zeros
+        degree+1 $in closed_range(1,degree+1)
+        values(degree+1)=zeros(degree+1)=0
+        impossible values(degree+1)!=0
+
+thm real_polynomial_degree_properties:
+    ? forall p fn(x R) R,degree N:
+        $has_real_polynomial_degree(p,degree)
+        =>:
+            $poly::is_real_polynomial(p)
+            p!=fn(x R) R {0}
+    obtain values from $has_real_polynomial_degree(p,degree)
+    p=\poly::real_polynomial_from_coefficients<degree>(values)
+    values(degree+1)!=0
+    release thm poly::real_polynomial_from_coefficients_is_polynomial(degree,values)
+    $poly::is_real_polynomial(p)
+    by contra:
+        ? p!=fn(x R) R {0}
+        p=fn(x R) R {0}
+        have zeros finite_seq(R,degree+1)=fn(j closed_range(1,degree+1)) R {0}
+        claim:
+            ? forall j closed_range(1,degree+1):
+                zeros(j)=0
+            zeros(j)=0
+        release thm truncation::real_polynomial_zero_from_zero_coefficients(degree,zeros)
+        \poly::real_polynomial_from_coefficients<degree>(values)=p=fn(x R) R {0}=\poly::real_polynomial_from_coefficients<degree>(zeros)
+        release thm coefficients::real_polynomial_coefficient_vector_unique(degree,values,zeros)
+        values=zeros
+        degree+1 $in closed_range(1,degree+1)
+        values(degree+1)=zeros(degree+1)=0
+        impossible values(degree+1)!=0
+
+thm complex_polynomial_degree_le_representation_bound:
+    ? forall p fn(x C) C,degree,bound N,coefficients finite_seq(C,bound+1):
+        $has_complex_polynomial_degree(p,degree)
+        p=\poly::complex_polynomial_from_coefficients<bound>(coefficients)
+        =>:
+            degree<=bound
+    obtain values from $has_complex_polynomial_degree(p,degree)
+    values(degree+1)!=0
+    \poly::complex_polynomial_from_coefficients<bound>(coefficients)=p=\poly::complex_polynomial_from_coefficients<degree>(values)
+    by contra:
+        ? degree<=bound
+        degree>bound
+        bound<degree
+        degree+1 $in N+
+        degree+1>bound+1
+        release thm coefficients::complex_polynomial_excess_coefficients_zero(bound,degree,coefficients,values,degree+1)
+        values(degree+1)=0
+        impossible values(degree+1)!=0
+
+thm real_polynomial_degree_le_representation_bound:
+    ? forall p fn(x R) R,degree,bound N,coefficients finite_seq(R,bound+1):
+        $has_real_polynomial_degree(p,degree)
+        p=\poly::real_polynomial_from_coefficients<bound>(coefficients)
+        =>:
+            degree<=bound
+    obtain values from $has_real_polynomial_degree(p,degree)
+    values(degree+1)!=0
+    \poly::real_polynomial_from_coefficients<bound>(coefficients)=p=\poly::real_polynomial_from_coefficients<degree>(values)
+    by contra:
+        ? degree<=bound
+        degree>bound
+        bound<degree
+        degree+1 $in N+
+        degree+1>bound+1
+        release thm coefficients::real_polynomial_excess_coefficients_zero(bound,degree,coefficients,values,degree+1)
+        values(degree+1)=0
+        impossible values(degree+1)!=0
+

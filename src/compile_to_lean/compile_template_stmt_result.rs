@@ -694,7 +694,20 @@ impl LitexToLeanCompiler {
             let object_name = format!("_template_i{}", binding.id.value());
             let (carrier, result) = match p.statement.template_def_stmt {
                 TemplateDefEnum::HaveFnEqualStmt(_) => ("(Litex.FormulaFn M)", value),
-                TemplateDefEnum::HaveFnByInducStmt(_) => ("(Litex.RecursiveNatFn M)", value),
+                TemplateDefEnum::HaveFnByInducStmt(_) => {
+                    let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+                        ExecHaveFnByInducStmtResult::Success(body),
+                    )) = p.body.as_ref()
+                    else {
+                        return Err(LeanCompileError::unsupported("Template/BodyCapture"));
+                    };
+                    let carrier = if self.recursive_uses_nat_representation(body, &complete)? {
+                        "(Litex.RecursiveNatFn M)"
+                    } else {
+                        "(Litex.RecursiveFn M)"
+                    };
+                    (carrier, value)
+                }
                 TemplateDefEnum::HaveFnEqualCaseByCaseStmt(_) => ("(Litex.PiecewiseFn M)", value),
                 TemplateDefEnum::HaveFnByForallExistUniqueStmt(_) => {
                     ("(Litex.SelectedFn M)", value)
@@ -834,12 +847,22 @@ impl LitexToLeanCompiler {
             if !proof_introductions.is_empty() {
                 proof.push(format!("intro {}", proof_introductions.join(" ")));
             }
-            let reference = complete
+            let source_reference = complete
                 .visible_fact(published.source_fact_id, &self.runtime)?
                 .1;
+            let reference = self.compile_local_recursive_equation_citation(
+                &source,
+                source_reference.clone(),
+                &complete,
+            )?;
             // Preserve the body's polymorphic parameters when returning a
             // universal proof, rather than inserting unresolved implicit hosts.
-            let reference = if universal {
+            let reference = if universal && reference != source_reference {
+                format!(
+                    "(let _published_source := {reference}; @_published_source {})",
+                    body_arguments.join(" ")
+                )
+            } else if universal {
                 format!("(@{reference} {})", body_arguments.join(" "))
             } else {
                 reference

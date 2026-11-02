@@ -1,0 +1,64 @@
+# Tracer: checked commutative-ring laws enable automatic polynomial equality.
+# Before: this bare equality needed distribution, mul_neg and equality chains:
+# mul(add(a,b),add(a,neg(b)))=add(mul(a,a),neg(mul(b,b)))
+# Now: a visible native comm_ring proof enables the final Ring rewrite branch.
+# Run: target/release/litex -lang en -strict -f examples/proof_nodes/equal/by_builtin_rewrite/comm_ring_polynomial.lit
+# Rejection, scope, permission and output controls: tests/native_comm_ring.rs.
+
+forall K nonempty_set, add,mul fn(x,y K) K, neg fn(x K) K, zero,one,a,b K:
+    $comm_ring(K,add,mul,neg,zero,one)
+    =>:
+        mul(add(a,b),add(a,neg(b)))=add(mul(a,a),neg(mul(b,b)))
+
+forall K nonempty_set, add,mul fn(x,y K) K, neg fn(x K) K, zero,one,a,b,c K, f fn(x K) K:
+    $comm_ring(K,add,mul,neg,zero,one)
+    =>:
+        add(f(add(a,b)),c)=add(c,f(add(b,a)))
+
+forall K nonempty_set, add,mul fn(x,y K) K, neg fn(x K) K, zero,one,a,b,c K, plus fn(x,y K) K:
+    $comm_ring(K,add,mul,neg,zero,one)
+    plus=add
+    =>:
+        plus(plus(a,b),c)=add(c,add(b,a))
+
+forall K nonempty_set, add,mul fn(x,y K) K, neg fn(x K) K, zero,one,a,b,c K, factory fn(t R) fn(x,y K) K:
+    $comm_ring(K,add,mul,neg,zero,one)
+    factory(0)=add
+    =>:
+        factory(0)(a,add(b,c))=add(c,add(b,a))
+
+have fn real_add(x,y R) R = x+y
+
+have fn real_mul(x,y R) R = x*y
+
+have fn real_neg(x R) R = -x
+
+by def $comm_ring(R,real_add,real_mul,real_neg,0,1)
+
+have fn trivial_add(x,y {0}) {0} = 0
+
+have fn trivial_mul(x,y {0}) {0} = 0
+
+have fn trivial_neg(x {0}) {0} = 0
+
+by def $comm_ring({0},trivial_add,trivial_mul,trivial_neg,0,0)
+
+have fn shifted_add(x,y R) R = x+y+1
+
+have fn shifted_mul(x,y R) R = x*y+x+y
+
+have fn shifted_neg(x R) R = -x-2
+
+by def $comm_ring(R,shifted_add,shifted_mul,shifted_neg,-1,0)
+
+forall a,b R:
+    shifted_mul(shifted_add(a,b),shifted_add(a,shifted_neg(b)))=shifted_add(shifted_mul(a,a),shifted_neg(shifted_mul(b,b)))
+
+# Boundary: native 2 is an ordinary element of the shifted ring; the ring's
+# coefficient two is shifted_add(0,0)=1, not the native scalar 2.
+# forall a R:
+#     shifted_add(a,a)=shifted_mul(2,a)
+# This false equality is executed as a rejection control in the Rust test.
+# General division, coefficient cancellation and noncommutative multiplication
+# are not ring-normalization rules. The Lean backend explicitly rejects this
+# new native predicate and certificate until a replay adapter is implemented.

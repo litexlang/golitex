@@ -75,7 +75,7 @@ Every current leaf type has a format below. Mathematical precedence, domains, di
 | `MatrixOperator.Multiply` | `matrix_mul(A,B,m,k,n)` | `(AB)_{[m,k,n]}` |
 | `MatrixOperator.Apply` | `matrix_apply(A,v,m,n)` | `(Av)_{[m,n]}` |
 | `MatrixOperator.Power` | `matrix_power(A,n,k)` | `(A^k)_{[n]}` |
-| `MatrixOperator.Inverse` | `matrix_inverse(A,n)` | `(A^{-1})_{[n]}` |
+| `MatrixOperator.Inverse` | `matrix_inv(A,n)` | `(A^{-1})_{[n]}` |
 | `MatrixOperator.Rank` | `matrix_rank(A,m,n)` | `\operatorname{rank}_{[m,n]}(A)` |
 | `MatrixOperator.Minor` | `matrix_minor(A,n,k,j)` | `A_{\widehat k,\widehat j}^{[n]}` |
 | `MatrixOperator.Cofactor` | `matrix_cofactor(A,n,k,j)` | `\operatorname{cof}_{k,j}^{[n]}(A)` |

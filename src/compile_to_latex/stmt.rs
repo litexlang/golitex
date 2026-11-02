@@ -8,6 +8,7 @@ use super::helper::{
 };
 use super::language::{phrase, sentence, Phrase};
 use super::obj::{fn_set, function_space, obj};
+use super::source_map::StatementAnnotations;
 use crate::ast::fact::{Fact, ForallFact};
 use crate::ast::names::BoundName;
 use crate::ast::stmt::*;
@@ -20,9 +21,18 @@ pub(super) fn statements(
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
 ) -> RuntimeResult<String> {
+    render_statements(values, modules, lang, &mut None)
+}
+
+pub(super) fn render_statements(
+    values: &[Stmt],
+    modules: &GlobalModuleManager,
+    lang: OutputLanguage,
+    annotations: &mut Option<StatementAnnotations<'_>>,
+) -> RuntimeResult<String> {
     let mut out = String::new();
     for value in values {
-        out.push_str(&statement(value, modules, lang)?);
+        out.push_str(&statement(value, modules, lang, annotations)?);
         if !out.ends_with('\n') {
             out.push('\n');
         }
@@ -34,10 +44,11 @@ fn proof_steps(
     values: &[Stmt],
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    annotations: &mut Option<StatementAnnotations<'_>>,
 ) -> RuntimeResult<String> {
     let mut out = String::new();
     for value in values {
-        out.push_str(&statement(value, modules, lang)?);
+        out.push_str(&statement(value, modules, lang, annotations)?);
         out.push_str("\\par\n");
     }
     Ok(out)
@@ -47,11 +58,13 @@ fn statement(
     value: &Stmt,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    annotations: &mut Option<StatementAnnotations<'_>>,
 ) -> RuntimeResult<String> {
+    let marker = annotations.as_mut().and_then(|owner| owner.record(value));
     let o = |x| obj(x, modules, lang);
     let f = |x| fact(x, modules, lang);
     let say = |key, a: &str, b: &str, c: &str| paragraph(&sentence(lang, key, a, b, c));
-    Ok(match value {
+    let rendered = match value {
         Stmt::Fact(x) => fact_paragraph(x, modules, lang)?,
         Stmt::Trust(x) => match x {
             TrustBoundaryStmt::TrustStmt(x) => format!(
@@ -75,7 +88,7 @@ fn statement(
                 )
             ),
         },
-        Stmt::Definition(x) => definition(x, modules, lang)?,
+        Stmt::Definition(x) => definition(x, modules, lang, annotations)?,
         Stmt::By(x) => match x {
             ByStmt::ByThmStmt(x) => say(
                 Phrase::ByTheorem,
@@ -101,7 +114,7 @@ fn statement(
                         "",
                         ""
                     ),
-                    proof_steps(&x.proof, modules, lang)?
+                    proof_steps(&x.proof, modules, lang, annotations)?
                 )),
                 say(
                     Phrase::Contradiction,
@@ -136,7 +149,7 @@ fn statement(
                             ""
                         ),
                     ));
-                    out.push_str(&proof_steps(&x.proofs[i], modules, lang)?);
+                    out.push_str(&proof_steps(&x.proofs[i], modules, lang, annotations)?);
                     if let Some(impossible) = &x.impossible_facts[i] {
                         out.push_str(&say(
                             Phrase::Contradiction,
@@ -159,6 +172,7 @@ fn statement(
                 &x.step_proof,
                 modules,
                 lang,
+                annotations,
             )?,
             ByStmt::ByStrongInducStmt(x) => induction(
                 Phrase::StrongInduction,
@@ -170,6 +184,7 @@ fn statement(
                 &x.step_proof,
                 modules,
                 lang,
+                annotations,
             )?,
             ByStmt::ByEnumerateFiniteSetStmt(x) => format!(
                 "{}{}",
@@ -179,7 +194,7 @@ fn statement(
                     "",
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang)?)
+                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
             ),
             ByStmt::ByForStmt(x) => format!(
                 "{}{}",
@@ -189,7 +204,7 @@ fn statement(
                     "",
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang)?)
+                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
             ),
             ByStmt::ByExtensionStmt(x) => format!(
                 "{}{}",
@@ -199,7 +214,7 @@ fn statement(
                     "",
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang)?)
+                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
             ),
             ByStmt::ByFnExtensionStmt(x) => format!(
                 "{}{}",
@@ -209,7 +224,7 @@ fn statement(
                     "",
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang)?)
+                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
             ),
         },
         Stmt::ReleaseAndExpand(x) => match x {
@@ -257,7 +272,7 @@ fn statement(
             ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(x) => format!(
                 "{}{}",
                 say(Phrase::Choice, &inline(&o(&x.family)?), "", ""),
-                quote(&proof_steps(&x.proof, modules, lang)?)
+                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
             ),
             ReleaseAndExpandStmt::ReleaseRegularityAxiomStmt(x) => {
                 say(Phrase::Regularity, &inline(&o(&x.set)?), "", "")
@@ -272,7 +287,7 @@ fn statement(
                 format!(
                     "{}{}",
                     say(Phrase::Zorn, &inline(&o(&x.set)?), &inline(&names), ""),
-                    quote(&proof_steps(&x.proof, modules, lang)?)
+                    quote(&proof_steps(&x.proof, modules, lang, annotations)?)
                 )
             }
         },
@@ -308,7 +323,7 @@ fn statement(
                         )?),
                         ""
                     ),
-                    quote(&proof_steps(&x.proof, modules, lang)?)
+                    quote(&proof_steps(&x.proof, modules, lang, annotations)?)
                 )
             }
             WitnessStmt::WitnessAtomicFact(x) => {
@@ -332,7 +347,7 @@ fn statement(
                         &inline(&goal),
                         ""
                     ),
-                    quote(&proof_steps(&x.proof, modules, lang)?)
+                    quote(&proof_steps(&x.proof, modules, lang, annotations)?)
                 )
             }
             WitnessStmt::WitnessNonemptySet(x) => format!(
@@ -343,7 +358,7 @@ fn statement(
                     &inline(&format!(r"{}\ne\varnothing", o(&x.set)?)),
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang)?)
+                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
             ),
         },
         Stmt::ProofBlock(x) => match x {
@@ -351,17 +366,21 @@ fn statement(
                 "{}{}{}",
                 heading(Phrase::Claim, "", lang),
                 fact_paragraph(&x.fact, modules, lang)?,
-                proof(&x.proof, modules, lang)?
+                proof(&x.proof, modules, lang, annotations)?
             ),
             ProofBlockStmt::SketchStmt(x) => format!(
                 "{}{}",
                 heading(Phrase::Sketch, "", lang),
-                quote(&proof_steps(&x.proof, modules, lang)?)
+                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
             ),
         },
         Stmt::Command(CommandStmt::EvalStmt(x)) => {
             say(Phrase::Evaluate, &inline(&o(&x.obj_to_eval)?), "", "")
         }
+    };
+    Ok(match marker {
+        Some(index) => StatementAnnotations::wrap(index, &rendered),
+        None => rendered,
     })
 }
 
@@ -369,6 +388,7 @@ fn definition(
     value: &DefinitionStmt,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    annotations: &mut Option<StatementAnnotations<'_>>,
 ) -> RuntimeResult<String> {
     let say = |key, a: &str, b: &str, c: &str| paragraph(&sentence(lang, key, a, b, c));
     Ok(match value {
@@ -499,7 +519,7 @@ fn definition(
             "{}{}{}",
             heading(Phrase::Theorem, &x.name, lang),
             fact_paragraph(&x.fact, modules, lang)?,
-            proof(&x.prove_process, modules, lang)?
+            proof(&x.prove_process, modules, lang, annotations)?
         ),
         DefinitionStmt::AxiomStmt(x) => format!(
             "{}{}",
@@ -510,7 +530,7 @@ fn definition(
             "{}{}{}",
             heading(Phrase::Strategy, &x.name, lang),
             forall_paragraph(&x.forall_fact, modules, lang)?,
-            proof(&x.prove_process, modules, lang)?
+            proof(&x.prove_process, modules, lang, annotations)?
         ),
         DefinitionStmt::DefStructStmt(x) => {
             let mut out = heading(Phrase::Structure, &x.name, lang);
@@ -567,6 +587,7 @@ fn definition(
                     &Stmt::Trust(TrustBoundaryStmt::TrustHaveStmt(y.clone())),
                     modules,
                     lang,
+                    annotations,
                 )?,
                 TemplateDefEnum::ObtainObjFromExistFact(y) => define_obj(
                     &DefineObjStmt::ObtainObjFromExistFact(y.clone()),
@@ -578,21 +599,29 @@ fn definition(
                     modules,
                     lang,
                 )?,
-                TemplateDefEnum::HaveFnEqualStmt(y) => {
-                    definition(&DefinitionStmt::HaveFnEqualStmt(y.clone()), modules, lang)?
-                }
+                TemplateDefEnum::HaveFnEqualStmt(y) => definition(
+                    &DefinitionStmt::HaveFnEqualStmt(y.clone()),
+                    modules,
+                    lang,
+                    annotations,
+                )?,
                 TemplateDefEnum::HaveFnEqualCaseByCaseStmt(y) => definition(
                     &DefinitionStmt::HaveFnEqualCaseByCaseStmt(y.clone()),
                     modules,
                     lang,
+                    annotations,
                 )?,
-                TemplateDefEnum::HaveFnByInducStmt(y) => {
-                    definition(&DefinitionStmt::HaveFnByInducStmt(y.clone()), modules, lang)?
-                }
+                TemplateDefEnum::HaveFnByInducStmt(y) => definition(
+                    &DefinitionStmt::HaveFnByInducStmt(y.clone()),
+                    modules,
+                    lang,
+                    annotations,
+                )?,
                 TemplateDefEnum::HaveFnByForallExistUniqueStmt(y) => definition(
                     &DefinitionStmt::HaveFnByForallExistUniqueStmt(y.clone()),
                     modules,
                     lang,
+                    annotations,
                 )?,
             };
             let mut out = heading(Phrase::Template, &x.template_name, lang);
@@ -956,6 +985,7 @@ fn induction(
     step: &Option<Vec<Stmt>>,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    annotations: &mut Option<StatementAnnotations<'_>>,
 ) -> RuntimeResult<String> {
     let mut out = paragraph(&sentence(
         lang,
@@ -977,19 +1007,19 @@ fn induction(
             out.push_str(&format!(
                 "\\item[\\textbf{{{}.}}]\n{}",
                 phrase(lang, Phrase::Base),
-                proof_steps(base, modules, lang)?
+                proof_steps(base, modules, lang, annotations)?
             ));
         }
         if let Some(step) = step {
             out.push_str(&format!(
                 "\\item[\\textbf{{{}.}}]\n{}",
                 phrase(lang, Phrase::Step),
-                proof_steps(step, modules, lang)?
+                proof_steps(step, modules, lang, annotations)?
             ));
         }
         out.push_str("\\end{description}\n");
     }
-    out.push_str(&proof_steps(body, modules, lang)?);
+    out.push_str(&proof_steps(body, modules, lang, annotations)?);
     Ok(out)
 }
 fn bound_names(names: &[BoundName]) -> String {
@@ -1017,6 +1047,7 @@ fn proof(
     body: &[Stmt],
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    annotations: &mut Option<StatementAnnotations<'_>>,
 ) -> RuntimeResult<String> {
     if body.is_empty() {
         Ok(String::new())
@@ -1024,7 +1055,7 @@ fn proof(
         Ok(format!(
             "{}{}\\par\\nobreak\\hfill$\\square$\\par\n",
             heading(Phrase::Proof, "", lang),
-            proof_steps(body, modules, lang)?
+            proof_steps(body, modules, lang, annotations)?
         ))
     }
 }

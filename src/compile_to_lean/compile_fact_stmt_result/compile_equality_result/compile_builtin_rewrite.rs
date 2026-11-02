@@ -13,6 +13,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let (rewritten_left, rewritten_right, cited_equal_fact_ids, residual_equal) = match proof {
+            EqualitySearchProofByBuiltinRewrite::Ring(_) => {
+                return Err(LeanCompileError::unsupported("EqualityRewrite/CommRing"));
+            }
             EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(p) => (
                 &p.rewritten_left,
                 &p.rewritten_right,

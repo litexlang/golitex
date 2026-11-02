@@ -1,0 +1,60 @@
+# Finite-dimensional isomorphism criteria over a supplied field.
+
+thm equal_dimension_injection_is_linear_isomorphism:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        $injective(V,W,T)
+        =>:
+            $inverse::is_linear_isomorphism(K,F,V,source,W,target,T)
+    release thm Algebra::linear_criteria::equal_dimension_injective_is_bijective(K,F,V,source,W,target,T)
+    release thm inverse::linear_bijection_is_isomorphism(K,F,V,source,W,target,T)
+
+thm equal_dimension_surjection_is_linear_isomorphism:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        $surjective(V,W,T)
+        =>:
+            $inverse::is_linear_isomorphism(K,F,V,source,W,target,T)
+    release thm Algebra::linear_criteria::equal_dimension_surjective_is_bijective(K,F,V,source,W,target,T)
+    release thm inverse::linear_bijection_is_isomorphism(K,F,V,source,W,target,T)
+
+thm linear_isomorphism_preserves_finite_dimension:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $inverse::is_linear_isomorphism(K,F,V,source,W,target,T)
+        =>:
+            \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+    release thm inverse::linear_isomorphism_is_bijective(K,F,V,source,W,target,T)
+    $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+    release thm Algebra::linear_criteria::bijective_preserves_dimension(K,F,V,source,W,target,T)
+
+thm equal_finite_dimensions_are_linearly_isomorphic:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        =>:
+            $inverse::are_linearly_isomorphic(K,F,V,source,W,target)
+    release thm Algebra::coordinate_maps::equal_finite_dimensions_have_linear_bijection(K,F,V,source,W,target)
+    obtain T from exist T fn(v V) W st {$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T),$bijective(V,W,T)}
+    release thm inverse::linear_bijection_is_isomorphism(K,F,V,source,W,target,T)
+    witness exist S fn(v V) W st {$inverse::is_linear_isomorphism(K,F,V,source,W,target,S)} from T
+    by def $inverse::are_linearly_isomorphic(K,F,V,source,W,target)
+
+thm linearly_isomorphic_finite_spaces_have_equal_dimensions:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $inverse::are_linearly_isomorphic(K,F,V,source,W,target)
+        =>:
+            \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+    obtain T from $inverse::are_linearly_isomorphic(K,F,V,source,W,target)
+    release thm linear_isomorphism_preserves_finite_dimension(K,F,V,source,W,target,T)
+

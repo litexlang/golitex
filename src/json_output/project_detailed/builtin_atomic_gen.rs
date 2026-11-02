@@ -17,6 +17,9 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact(p) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("IsMatrixInvSelected")), ("determinant_nonzero", project_verify_fact(&p.determinant_nonzero, runtime))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact(p) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("MatrixInversibleFromDeterminant")), ("determinant_nonzero", project_verify_fact(&p.determinant_nonzero, runtime))]),
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact(p) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("NotMatrixInversibleFromDeterminant")), ("determinant_zero", project_verify_fact(&p.determinant_zero, runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(br::greater::GreaterFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(br::less::LessFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(br::greater_equal::GreaterEqualFactSearchProofByBuiltinRule::StructuralRealSign(p)) => super::structural_real_sign::project_sign(p, runtime),

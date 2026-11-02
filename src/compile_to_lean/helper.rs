@@ -1045,6 +1045,15 @@ pub(super) fn unsupported_atomic_builtin(
     proof: &AtomicExceptEqualityFactSearchProofByBuiltinRule,
 ) -> LeanCompileError {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact(_) => {
+            LeanCompileError::unsupported("Atomic/IsMatrixInv")
+        }
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact(_) => {
+            LeanCompileError::unsupported("Atomic/MatrixInversible")
+        }
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact(_) => {
+            LeanCompileError::unsupported("Atomic/NotMatrixInversible")
+        }
         AtomicExceptEqualityFactSearchProofByBuiltinRule::DvdFact(_) => {
             LeanCompileError::unsupported("Atomic/DvdBuiltin")
         }
@@ -1273,6 +1282,12 @@ pub(super) fn validate_statement_capture(
         return Ok(());
     }
     let matches = match (source, result) {
+        (
+            Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(source)),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+                crate::execute::ExecHaveFnByInducStmtResult::Success(proof),
+            )),
+        ) => source == &proof.statement,
         (
             Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByReplacementAxiomStmt(source))),
             ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
@@ -2905,6 +2920,19 @@ pub(super) fn conjunction_projection(proof: &str, index: usize, count: usize) ->
     proof
 }
 
+// Explicit projection heads preserve an implicit forall on a component instead
+// of letting expected-type elaboration insert its binders around the projection.
+pub(super) fn conjunction_projection_explicit(proof: &str, index: usize, count: usize) -> String {
+    let mut proof = proof.to_string();
+    for _ in 0..index {
+        proof = format!("(@And.right _ _ {proof})");
+    }
+    if index + 1 < count {
+        proof = format!("(@And.left _ _ {proof})");
+    }
+    proof
+}
+
 pub(super) fn validate_namespace(value: &str) -> Result<(), LeanCompileError> {
     let mut bytes = value.bytes();
     let valid_start = bytes
@@ -3465,4 +3493,25 @@ pub(super) fn curried_value_congruence(
         proof = format!("(congrArg₂ {apply} {proof} {argument})");
     }
     Ok(proof)
+}
+
+/// The reviewed denotation-only predicate used by rendering and equality transport.
+pub(super) fn multivariable_value_predicate_name(
+    relation: &MultivariableAnalysisRelation,
+) -> Result<&'static str, LeanCompileError> {
+    Ok(match relation {
+        MultivariableAnalysisRelation::ScalarLimit(_) => "HasMultivariableScalarLimitValue",
+        MultivariableAnalysisRelation::VectorLimit(_) => "HasMultivariableVectorLimitValue",
+        MultivariableAnalysisRelation::PartialDerivativeAt(_) => "HasPartialDerivativeAtValue",
+        MultivariableAnalysisRelation::GradientAt(_) => "HasGradientAtValue",
+        MultivariableAnalysisRelation::HessianAt(_) => "HasHessianAtValue",
+        MultivariableAnalysisRelation::ScalarDifferentialAt(_) => "HasScalarDifferentialAtValue",
+        MultivariableAnalysisRelation::TotalDerivativeAt(_) => "HasTotalDifferentialAtValue",
+        MultivariableAnalysisRelation::LaplacianAt(_) => "HasLaplacianAtValue",
+        MultivariableAnalysisRelation::JacobianAt(_) => "HasJacobianAtValue",
+        MultivariableAnalysisRelation::DivergenceAt(_) => "HasDivergenceAtValue",
+        MultivariableAnalysisRelation::CurlAt(_) => "HasCurlAtValue",
+        MultivariableAnalysisRelation::SecondPartialDerivativeAt(_) => "HasSecondPartialAtValue",
+        _ => return Err(LeanCompileError::unsupported("Atomic/MultivariableFamily")),
+    })
 }

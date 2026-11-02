@@ -122,6 +122,30 @@
 .lr-step-nav { display:flex; justify-content:space-between; align-items:center; gap:10px; border-bottom:1px solid var(--reading-line); padding:8px 12px; color:var(--reading-muted); font-size:11px; }
 .lr-step-nav .lr-button { border:0; color:var(--reading-accent); font-size:12px; padding:4px; }
 .lr-code { overflow:auto; max-height:calc(100vh - 260px); padding:12px 0 20px; font:12.5px/1.85 var(--reading-code); tab-size:4; }
+.lr-code.lr-mathematical-source { padding:26px 30px 32px; max-height:none; overflow:visible; }
+.lr-manuscript { font:17px/1.95 Cambria,"STIX Two Text",Georgia,"Songti SC",serif; color:var(--reading-ink); overflow-wrap:anywhere; }
+.lr-manuscript .lr-tex-paragraph { margin:0 0 .4em; min-width:0; }
+.lr-manuscript .lr-tex-medium { margin-top:1em; }
+.lr-manuscript .lr-tex-heading { font-weight:650; }
+.lr-manuscript .lr-tex-quote { margin:.6em 0 .8em 1.4em; padding:0; }
+.lr-manuscript .lr-tex-description { margin:.7em 0 .8em; }
+.lr-manuscript .lr-tex-item { display:grid; grid-template-columns:auto minmax(0,1fr); column-gap:1em; margin:.7em 0; }
+.lr-manuscript .lr-tex-label { font-weight:600; }
+.lr-manuscript .lr-tex-item-body { margin:0; min-width:0; }
+.lr-manuscript .lr-tex-display { text-align:center; margin:.7em 0; max-width:100%; overflow:auto; }
+.lr-manuscript .lr-tex-right { text-align:right; }
+.lr-manuscript .lr-latex-unit { display:inline; border:0; margin:0; padding:2px 0; color:inherit; background:transparent; font:inherit; text-align:inherit; border-radius:3px; }
+.lr-manuscript .lr-latex-unit:has(math) { display:inline-block; max-width:100%; overflow-x:auto; vertical-align:middle; }
+.lr-manuscript .lr-latex-unit:hover,.lr-manuscript .lr-latex-unit.lr-proof-target { background:var(--reading-soft); outline:1px solid var(--reading-line); }
+.lr-manuscript .lr-latex-unit.lr-selected { background:var(--reading-select); }
+.lr-manuscript .lr-latex-rejected { text-decoration:underline wavy #c62828; text-underline-offset:4px; }
+.lr-manuscript .lr-latex-unchecked { color:var(--reading-muted); }
+.lr-manuscript .lr-empty-note { margin-top:1.5em; font:12px/1.8 system-ui,sans-serif; }
+.lr-formal-source { margin:0 0 16px; }
+.lr-formal-source pre,.lr-latex-original pre { max-height:210px; overflow:auto; margin:7px 0; padding:12px; border-radius:4px; background:var(--reading-hover); white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.8 var(--reading-code); }
+.lr-layout-choice { font-size:11px; padding:3px 8px; }
+.lr-layout-choice[aria-pressed="true"] { color:var(--reading-accent); border-color:var(--reading-accent); background:var(--reading-soft); }
+@media(max-width:600px) { .lr-code.lr-mathematical-source { padding:20px 16px; }.lr-manuscript { font-size:16px; }.lr-manuscript .lr-tex-quote { margin-left:.6em; }.lr-manuscript .lr-tex-item { column-gap:.5em; }.lr-source-pane>.lr-pane-header { flex-wrap:wrap; } }
 .lr-code-row { display:grid; grid-template-columns:44px max-content; width:max-content; min-width:100%; min-height:30px; padding-right:12px; border-left:3px solid transparent; scroll-margin:100px; }
 .lr-code-row[data-statement] { cursor:pointer; }
 .lr-code-row[data-statement]:hover { background:var(--reading-hover); }

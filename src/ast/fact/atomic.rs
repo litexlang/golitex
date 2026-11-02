@@ -5,6 +5,11 @@ use crate::runtime::FactId;
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum AtomicFact {
+    IsMatrixInvFact(IsMatrixInvFact),
+    NotIsMatrixInvFact(NotIsMatrixInvFact),
+    MatrixInversibleFact(MatrixInversibleFact),
+    NotMatrixInversibleFact(NotMatrixInversibleFact),
+
     MultivariableAnalysisFact(MultivariableAnalysisFact),
     NotMultivariableAnalysisFact(NotMultivariableAnalysisFact),
     HasRiemannIntegralFact(HasRiemannIntegralFact),
@@ -59,6 +64,8 @@ pub enum AtomicFact {
     DvdFact(DvdFact),
     InjectiveFact(InjectiveFact),
     SurjectiveFact(SurjectiveFact),
+    CommRingFact(CommRingFact),
+    NotCommRingFact(NotCommRingFact),
     BijectiveFact(BijectiveFact),
     IsChoiceFunctionForFact(IsChoiceFunctionForFact),
     NotNormalAtomicFact(NotNormalAtomicFact),
@@ -386,6 +393,30 @@ pub struct NotSurjectiveFact {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
+pub struct CommRingFact {
+    pub fact_id: FactId,
+    pub carrier: Obj,
+    pub add: Obj,
+    pub mul: Obj,
+    pub neg: Obj,
+    pub zero: Obj,
+    pub one: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotCommRingFact {
+    pub fact_id: FactId,
+    pub carrier: Obj,
+    pub add: Obj,
+    pub mul: Obj,
+    pub neg: Obj,
+    pub zero: Obj,
+    pub one: Obj,
+    pub line_file: Option<SourceLine>,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct BijectiveFact {
     pub fact_id: FactId,
     pub domain: Obj,
@@ -477,6 +508,13 @@ impl AtomicFact {
             AtomicFact::DvdFact(f) => f.fact_id,
             AtomicFact::InjectiveFact(f) => f.fact_id,
             AtomicFact::SurjectiveFact(f) => f.fact_id,
+            AtomicFact::CommRingFact(f) => f.fact_id,
+            AtomicFact::IsMatrixInvFact(f) => f.fact_id,
+            AtomicFact::NotIsMatrixInvFact(f) => f.fact_id,
+            AtomicFact::MatrixInversibleFact(f) => f.fact_id,
+            AtomicFact::NotMatrixInversibleFact(f) => f.fact_id,
+
+            AtomicFact::NotCommRingFact(f) => f.fact_id,
             AtomicFact::BijectiveFact(f) => f.fact_id,
             AtomicFact::IsChoiceFunctionForFact(f) => f.fact_id,
             AtomicFact::NotNormalAtomicFact(f) => f.fact_id,
@@ -640,6 +678,21 @@ impl AtomicFact {
             AtomicFact::SurjectiveFact(_) | AtomicFact::NotSurjectiveFact(_) => AtomicName::Plain {
                 name: SURJECTIVE.into(),
             },
+            AtomicFact::IsMatrixInvFact(_) => {
+                AtomicName::plain(crate::parse::keywords::IS_MATRIX_INV.into())
+            }
+            AtomicFact::NotIsMatrixInvFact(_) => {
+                AtomicName::plain(crate::parse::keywords::IS_MATRIX_INV.into())
+            }
+            AtomicFact::MatrixInversibleFact(_) => {
+                AtomicName::plain(crate::parse::keywords::MATRIX_INVERSIBLE.into())
+            }
+            AtomicFact::NotMatrixInversibleFact(_) => {
+                AtomicName::plain(crate::parse::keywords::MATRIX_INVERSIBLE.into())
+            }
+            AtomicFact::CommRingFact(_) | AtomicFact::NotCommRingFact(_) => {
+                AtomicName::plain(crate::parse::keywords::COMM_RING.into())
+            }
             AtomicFact::BijectiveFact(_) | AtomicFact::NotBijectiveFact(_) => AtomicName::Plain {
                 name: BIJECTIVE.into(),
             },
@@ -1508,4 +1561,35 @@ impl MultivariableAnalysisRelation {
             _ => None,
         }
     }
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct IsMatrixInvFact {
+    pub fact_id: FactId,
+    pub matrix: Obj,
+    pub inverse: Obj,
+    pub order: Obj,
+    pub line_file: Option<SourceLine>,
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotIsMatrixInvFact {
+    pub fact_id: FactId,
+    pub matrix: Obj,
+    pub inverse: Obj,
+    pub order: Obj,
+    pub line_file: Option<SourceLine>,
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct MatrixInversibleFact {
+    pub fact_id: FactId,
+    pub matrix: Obj,
+    pub order: Obj,
+    pub line_file: Option<SourceLine>,
+}
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct NotMatrixInversibleFact {
+    pub fact_id: FactId,
+    pub matrix: Obj,
+    pub order: Obj,
+    pub line_file: Option<SourceLine>,
 }

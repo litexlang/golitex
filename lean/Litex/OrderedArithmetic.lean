@@ -1213,6 +1213,40 @@ end Litex
 
 namespace Litex
 
+-- Replay the two endpoint alignments selected by the integer-gap rule.
+-- The numeric observations belong to the original objects; they do not
+-- replace their representations or introduce a new membership assumption.
+theorem integerGapLe {M : Semantics.{u}}
+    {α : Type v} {β : Type w} {γ : Type x} {δ : Type*}
+    [Representation M α] [Representation M β]
+    [Representation M γ] [Representation M δ]
+    (a : Obj (M := M) α) (b : Obj (M := M) β)
+    (l : Obj (M := M) γ) (r : Obj (M := M) δ)
+    (ha : In a Z) (hb : In b Z) (hlt : Lt a b)
+    (z w s t : ℂ)
+    (hz : denote a = M.number z) (hw : denote b = M.number w)
+    (hs : denote l = M.number s) (ht : denote r = M.number t)
+    (h : (s = z + 1 ∧ t = w) ∨ (s = z ∧ t = w - 1)) : Le l r := by
+  obtain ⟨m, hm⟩ := (M.integer_members _).mp ha
+  obtain ⟨n, hn⟩ := (M.integer_members _).mp hb
+  have hmr : denote a = M.number ((m : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_intCast] using hm
+  have hnr : denote b = M.number ((n : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_intCast] using hn
+  have hmn : m < n := by
+    exact_mod_cast (NativeBridge.lt_iff_ofDenoteReal _ _ _ _ hmr hnr).mp hlt
+  have hz' : z = ((m : ℝ) : ℂ) := M.number_injective (hz.symm.trans hmr)
+  have hw' : w = ((n : ℝ) : ℂ) := M.number_injective (hw.symm.trans hnr)
+  rcases h with ⟨hs', ht'⟩ | ⟨hs', ht'⟩
+  · refine ⟨(m : ℝ) + 1, (n : ℝ), ?_, ?_, ?_⟩
+    · simpa only [hs', hz', Complex.ofReal_add, Complex.ofReal_one] using hs
+    · simpa only [ht', hw'] using ht
+    · exact_mod_cast (show m + 1 ≤ n by omega)
+  · refine ⟨(m : ℝ), (n : ℝ) - 1, ?_, ?_, ?_⟩
+    · simpa only [hs', hz'] using hs
+    · simpa only [ht', hw', Complex.ofReal_sub, Complex.ofReal_one] using ht
+    · exact_mod_cast (show m ≤ n - 1 by omega)
+
 theorem integerPredecessorLe {M : Semantics.{u}} {α : Type v} {β : Type w} {γ : Type x}
     [Representation M α] [Representation M β] [Representation M γ]
     (a : Obj (M := M) α) (p : Obj (M := M) (SubObj (M := M) β γ))

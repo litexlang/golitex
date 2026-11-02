@@ -99,6 +99,12 @@ pub fn calculate_closed_atomic_except_equality_fact(
         | BijectiveFact(_)
         | NotBijectiveFact(_)
         | IsChoiceFunctionForFact(_)
+        | IsMatrixInvFact(_)
+        | NotIsMatrixInvFact(_)
+        | MatrixInversibleFact(_)
+        | NotMatrixInversibleFact(_)
+        | CommRingFact(_)
+        | NotCommRingFact(_)
         | NotIsChoiceFunctionForFact(_) => return None,
     };
     Some(proof)

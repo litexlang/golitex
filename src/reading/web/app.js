@@ -30,7 +30,7 @@
     }
     const titles={};for(const source of project.sources)if(source.titles)titles[source.path]=source.titles;
     files.push({path:"reading-titles.json",content:JSON.stringify({kind:"reading_titles",sources:titles})});
-    const response=await fetch(buildEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({files,entry:{kind:"file",path:sourcePath},language:locale,strict:project.strict})});
+    const response=await fetch(buildEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({files,entry:{kind:"file",path:sourcePath},language:locale,strict:project.strict,...(project.reading_layout==="latex"?{latex:true}:{})})});
     const result=await response.json();
     if(!response.ok||result.kind!=="reading")throw new Error(result.error||"Reading check failed");
     // A failed prefix may never execute later chapters. Retain only their
@@ -99,7 +99,7 @@
       if(entries.reduce((sum,entry)=>sum+entry.file.size,0)>8*1024*1024)throw new Error(zh?"源码与配置总大小不能超过 8 MiB。":"Source/config input must not exceed 8 MiB.");
       report(zh?"正在验证并生成阅读数据…":"Verifying and preparing the reading data…");
       const files=await Promise.all(entries.map(async entry=>({path:entry.path,content:await entry.file.text()})));
-      const response=await fetch(buildEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({files,language:language.value})});
+      const response=await fetch(buildEndpoint,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({files,language:language.value,...(reader.getReadingLayout()==="latex"?{latex:true}:{})})});
       const data=await response.json();
       if(data.kind!=="reading")throw new Error(data.error||"Reading build failed");
       projectSnapshot=null;reader.update(data);report(data.run_result==="success"?"":(zh?"部分源码未通过验证；可查看已接受的步骤与失败原因。":"Some source was not accepted. Inspect the accepted steps and diagnostics."),data.run_result!=="success");

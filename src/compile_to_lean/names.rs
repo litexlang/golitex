@@ -934,33 +934,7 @@ impl LitexToLeanCompiler {
                     AtomicFact::NotMultivariableAnalysisFact(f) => (&f.relation, true),
                     _ => unreachable!(),
                 };
-                let predicate = match relation {
-                    MultivariableAnalysisRelation::ScalarLimit(_) => {
-                        "HasMultivariableScalarLimitValue"
-                    }
-                    MultivariableAnalysisRelation::VectorLimit(_) => {
-                        "HasMultivariableVectorLimitValue"
-                    }
-                    MultivariableAnalysisRelation::PartialDerivativeAt(_) => {
-                        "HasPartialDerivativeAtValue"
-                    }
-                    MultivariableAnalysisRelation::GradientAt(_) => "HasGradientAtValue",
-                    MultivariableAnalysisRelation::HessianAt(_) => "HasHessianAtValue",
-                    MultivariableAnalysisRelation::ScalarDifferentialAt(_) => {
-                        "HasScalarDifferentialAtValue"
-                    }
-                    MultivariableAnalysisRelation::TotalDerivativeAt(_) => {
-                        "HasTotalDifferentialAtValue"
-                    }
-                    MultivariableAnalysisRelation::LaplacianAt(_) => "HasLaplacianAtValue",
-                    MultivariableAnalysisRelation::JacobianAt(_) => "HasJacobianAtValue",
-                    MultivariableAnalysisRelation::DivergenceAt(_) => "HasDivergenceAtValue",
-                    MultivariableAnalysisRelation::CurlAt(_) => "HasCurlAtValue",
-                    MultivariableAnalysisRelation::SecondPartialDerivativeAt(_) => {
-                        "HasSecondPartialAtValue"
-                    }
-                    _ => return Err(LeanCompileError::unsupported("Atomic/MultivariableFamily")),
-                };
+                let predicate = super::helper::multivariable_value_predicate_name(relation)?;
                 let args = relation
                     .argument_refs()
                     .into_iter()
@@ -1003,6 +977,22 @@ impl LitexToLeanCompiler {
                     })
                     .collect::<Result<Vec<_>, _>>()?;
                 super::compile_riemann_integral::raw_proposition(fact, &args)
+            }
+            f @ (AtomicFact::IsMatrixInvFact(_)
+            | AtomicFact::NotIsMatrixInvFact(_)
+            | AtomicFact::MatrixInversibleFact(_)
+            | AtomicFact::NotMatrixInversibleFact(_)) => {
+                let args = atomic_fact_args_ref(f)
+                    .iter()
+                    .map(|a| {
+                        self.compile_object_reference(a, position)
+                            .map(|v| format!("(Litex.denote {v})"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                super::compile_matrix_inverse_predicates::raw_matrix_inverse_predicate(f, &args)
+            }
+            AtomicFact::CommRingFact(_) | AtomicFact::NotCommRingFact(_) => {
+                Err(LeanCompileError::unsupported("Atomic/CommRing"))
             }
             AtomicFact::FunctionContinuousFact(_)
             | AtomicFact::NotFunctionContinuousFact(_)
@@ -1184,6 +1174,11 @@ impl LitexToLeanCompiler {
                     return Ok(term);
                 }
                 if let Some(term) = self.compile_dvd_inferred_subject(object, store, producer)? {
+                    return Ok(term);
+                }
+                if let Some(term) =
+                    self.compile_matrix_inverse_inferred_subject(object, store, producer)?
+                {
                     return Ok(term);
                 }
                 // The named rule creates this primitive; its Lean constructor proves WD.

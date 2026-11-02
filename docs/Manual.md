@@ -633,8 +633,10 @@ It runs after existing analysis selector equalities and before elementary
 arithmetic rules, retaining the relative order of old routes. A miss publishes
 no result. Typed `NativeMatrixLaw` evidence and its individual law, endpoint
 comparisons and premise results appear in Detailed/Reading output; Normal
-output names the individual law. Direct matrix Lean replay is unsupported and
-fails explicitly. Existing explicit BT names and arities remain available.
+output names the individual law. The existing Lean compiler consumes these
+selected native-matrix certificates, including their endpoint comparisons and
+original premises; this does not imply support for every matrix expression or
+proof route. Existing explicit BT names and arities remain available.
 
 ### Unicode mathematical input aliases (preview)
 

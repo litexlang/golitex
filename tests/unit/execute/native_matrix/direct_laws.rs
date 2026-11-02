@@ -19,6 +19,13 @@ fn check(rt: &mut Runtime, source: &str, expected: bool) {
         crate::json_output::project_run_detailed(&run, rt, "test", None).stringify()
     );
     assert!(run.session_error.is_none(), "{source}");
+    if !expected {
+        let output = crate::json_output::project_run_detailed(&run, rt, "test", None).stringify();
+        assert!(
+            !output.contains("\"phase\":\"nonempty_check\""),
+            "Negative failed during setup: {source}\n{output}"
+        );
+    }
 }
 // name, generic direct theorem, original explicit application.
 const CASES: &[(&str, &str, &str)] = &[
@@ -226,9 +233,9 @@ const CASES: &[(&str, &str, &str)] = &[
     ? forall n N,A matrix(C,n,n):
         det(A,n)!=0
         =>:
-            matrix_mul(matrix_inverse(A,n),A,n,n,n)=identity_matrix(n)
+            matrix_mul(matrix_inv(A,n),A,n,n,n)=identity_matrix(n)
 "#,
-        r#"    by thm matrix_inverse_laws(A,n) => matrix_mul(matrix_inverse(A,n),A,n,n,n)=identity_matrix(n)
+        r#"    by thm matrix_inverse_laws(A,n) => matrix_mul(matrix_inv(A,n),A,n,n,n)=identity_matrix(n)
 "#,
     ),
     (
@@ -246,9 +253,9 @@ const CASES: &[(&str, &str, &str)] = &[
     ? forall n N,A matrix(C,n,n):
         det(A,n)!=0
         =>:
-            matrix_mul(A,matrix_inverse(A,n),n,n,n)=identity_matrix(n)
+            matrix_mul(A,matrix_inv(A,n),n,n,n)=identity_matrix(n)
 "#,
-        r#"    by thm matrix_inverse_laws(A,n) => matrix_mul(A,matrix_inverse(A,n),n,n,n)=identity_matrix(n)
+        r#"    by thm matrix_inverse_laws(A,n) => matrix_mul(A,matrix_inv(A,n),n,n,n)=identity_matrix(n)
 "#,
     ),
     (
@@ -366,16 +373,16 @@ fn native_matrix_laws_false_values_missing_premises_and_domains() {
         "forall n N,A matrix(C,n,n):\n    det(conjugate_transpose(A,n,n),n)=det(A,n)",
         "forall n,p N,A matrix(C,n,n):\n    matrix_power(A,n,p+2)=matrix_mul(matrix_power(A,n,p),A,n,n,n)",
         "forall n N,A matrix(C,n,n):\n    matrix_rank(A,n,n)=n",
-        "forall n N,A matrix(C,n,n):\n    matrix_mul(A,matrix_inverse(A,n),n,n,n)=identity_matrix(n)",
-        "forall n N,A,B matrix(C,n,n):\n    det(A,n)!=0\n    =>:\n        matrix_mul(A,matrix_inverse(B,n),n,n,n)=identity_matrix(n)",
+        "forall n N,A matrix(C,n,n):\n    matrix_mul(A,matrix_inv(A,n),n,n,n)=identity_matrix(n)",
+        "forall n N,A,B matrix(C,n,n):\n    det(A,n)!=0\n    =>:\n        matrix_mul(A,matrix_inv(B,n),n,n,n)=identity_matrix(n)",
         "forall n N,A,B matrix(C,n,n):\n    matrix_mul(A,matrix_adjugate(B,n),n,n,n)=matrix_scale(det(A,n),identity_matrix(n),n,n)",
         "forall n N,u,v cart_n(C,n):\n    inner_product(u,v,n)=inner_product(v,u,n)",
         "forall n N,v cart_n(C,n):\n    euclidean_norm(v,n)^2=inner_product(v,v,n)+1",
         "forall m,n N,z C,A matrix(C,m,n):\n    frobenius_norm(matrix_scale(z,A,m,n),m,n)=z*frobenius_norm(A,m,n)",
         "forall n N,A,B matrix(C,n,n):\n    conjugate_transpose(matrix_mul(A,B,n,n,n),n,n)=matrix_mul(conjugate_transpose(A,n,n),conjugate_transpose(B,n,n),n,n,n)",
-        "have A matrix(C,2,3)\nmatrix_mul(identity_matrix(3),A,3,3,3)=A",
-        "have A matrix(C,2,3)\nmatrix_rank(A,2,3)=3",
-        "matrix_mul(zero_matrix(2,2),matrix_inverse(zero_matrix(2,2),2),2,2,2)=zero_matrix(2,2)",
+        "forall A matrix(C,2,3):\n    matrix_mul(identity_matrix(3),A,3,3,3)=A",
+        "forall A matrix(C,2,3):\n    matrix_rank(A,2,3)=3",
+        "matrix_mul(zero_matrix(2,2),matrix_inv(zero_matrix(2,2),2),2,2,2)=zero_matrix(2,2)",
         "matrix_power(identity_matrix(2),2,-1)=identity_matrix(2)",
         "det(identity_matrix(-1),-1)=1",
     ] { check(&mut runtime(),source,false); }
@@ -383,7 +390,11 @@ fn native_matrix_laws_false_values_missing_premises_and_domains() {
 #[test]
 fn native_matrix_laws_ceiling_scope_and_failed_publication() {
     let mut rt = runtime();
-    check(&mut rt, "have m,n N\nhave A matrix(C,m,n)", true);
+    check(
+        &mut rt,
+        "have m,n N\nhave A matrix(C,m,n)=zero_matrix(m,n)",
+        true,
+    );
     let source = "matrix_mul(identity_matrix(m),A,m,m,n)=A";
     let tokens = crate::tokenize::Tokenizer::new()
         .tokenize(source, rt.current_file.clone())
@@ -410,13 +421,13 @@ fn native_matrix_laws_ceiling_scope_and_failed_publication() {
     assert_eq!(count, rt.top_exec_env().facts.facts_by_id.len());
     check(&mut rt, bad, false);
     check(&mut rt, source, true);
-    check(&mut rt, "have B matrix(C,2,2)", true);
+    check(&mut rt, "have B matrix(C,2,2)=zero_matrix(2,2)", true);
     check(&mut rt, "matrix_rank(B,2,2)=2", false);
     check(&mut rt, "0=1", false);
 }
 #[test]
 fn native_matrix_laws_keep_inverse_conditions_and_empty_domains() {
-    check(&mut runtime(),"forall A matrix(C,0,0):\n    det(A,0)!=0\n    =>:\n        matrix_mul(A,matrix_inverse(A,0),0,0,0)=identity_matrix(0)",true);
+    check(&mut runtime(),"forall A matrix(C,0,0):\n    det(A,0)!=0\n    =>:\n        matrix_mul(A,matrix_inv(A,0),0,0,0)=identity_matrix(0)",true);
     check(
         &mut runtime(),
         "forall A matrix(C,0,3):\n    matrix_mul(identity_matrix(0),A,0,0,3)=A",
@@ -425,24 +436,18 @@ fn native_matrix_laws_keep_inverse_conditions_and_empty_domains() {
     check(&mut runtime(),"forall z C,A matrix(C,0,0):\n    frobenius_norm(matrix_scale(z,A,0,0),0,0)=C_abs(z)*frobenius_norm(A,0,0)",true);
 }
 #[test]
-fn native_matrix_laws_output_and_lean_rejection() {
+fn native_matrix_laws_output_and_existing_lean_consumer() {
     let mut rt = runtime();
-    let run = rt
-        .run_litex_code("have A matrix(C,2,2)\nmatrix_mul(identity_matrix(2),A,2,2,2)=A")
-        .unwrap();
+    let run = rt.run_litex_code(CASES[3].1).unwrap();
     assert!(run.success);
     let json = crate::json_output::project_run_detailed(&run, &rt, "test", None).stringify();
     assert!(json.contains("NativeMatrixMulIdentityLeft"));
-    let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+    let output = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "native_matrix_laws")
-        .unwrap_err();
-    // Matrix objects have no Lean object replay yet; no arbitrary axiom fallback.
-    assert!(
-        error.route.contains("Object") || error.route == "Equality/BuiltinRule",
-        "{}: {}",
-        error.route,
-        error.message
-    );
+        .expect(
+            "The existing native matrix compiler must consume the original checked certificate",
+        );
+    assert!(!output.is_empty());
 }
 #[test]
 fn run_examples_native_matrix_laws() {

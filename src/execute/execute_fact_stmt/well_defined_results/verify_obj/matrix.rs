@@ -245,7 +245,7 @@ impl Runtime {
             requirements.push(self.verify_required_atomic_fact(
                 fact,
                 state,
-                "matrix inverse requires a proved nonzero determinant".into(),
+                "matrix_inv requires a proved nonzero determinant; matrix_inversible supplies that evidence".into(),
             )?);
         }
         Ok(self.with_requirements(children, requirements))

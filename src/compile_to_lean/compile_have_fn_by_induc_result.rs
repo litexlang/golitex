@@ -18,28 +18,16 @@ impl LitexToLeanCompiler {
         _index: usize,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if local {
-            let mut cursor = Some(position);
-            while let Some(scope) = cursor {
-                if matches!(scope.owner, SourceOwner::Template(_)) {
-                    break;
-                }
-                cursor = scope.parent;
-            }
-            if cursor.is_none() {
-                return Err(LeanCompileError::unsupported(
-                    "RecursiveFunction/LocalDeclaration",
-                ));
-            }
-        }
         let ExecHaveFnByInducStmtResult::Success(proof) = result else {
             return Err(LeanCompileError::new(
                 "RecursiveFunction/Failed",
                 "Failed formation is not compiler evidence.",
             ));
         };
+        if !self.recursive_uses_nat_representation(proof, position)? {
+            return self.compile_general_recursive_statement(proof, position, local);
+        }
         let signature = recursive_signature(proof);
-        self.validate_recursive_nat_shape(proof, &signature, position)?;
         let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone()));
         self.compile_wd(
             success_object_wd(&proof.fn_set_well_defined, &fn_set)?,
@@ -184,12 +172,44 @@ impl LitexToLeanCompiler {
         Ok((guard, base, step))
     }
 
+    pub(super) fn recursive_uses_nat_representation(
+        &self,
+        proof: &ExecHaveFnByInducStmtSuccessResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<bool, LeanCompileError> {
+        if proof
+            .statement
+            .cases
+            .iter()
+            .any(|c| matches!(c.body, HaveFnByInducCaseBody::NestedCases(_)))
+        {
+            return Ok(false);
+        }
+        match self.validate_recursive_nat_shape(proof, &recursive_signature(proof), position) {
+            Ok(_) => Ok(true),
+            Err(error)
+                if matches!(
+                    error.route.as_str(),
+                    "RecursiveFunction/UnaryNaturalCases"
+                        | "RecursiveFunction/ZeroSuccessorShape"
+                        | "Function/NumericCarrierProducer"
+                ) =>
+            {
+                Ok(false)
+            }
+            Err(error) => Err(error),
+        }
+    }
+
     pub(super) fn compile_recursive_raw_value(
         &self,
         proof: &ExecHaveFnByInducStmtSuccessResult,
         position: &SourcePosition<'_>,
         bindings: &HashMap<IdentifierId, String>,
     ) -> Result<String, LeanCompileError> {
+        if !self.recursive_uses_nat_representation(proof, position)? {
+            return self.compile_general_recursive_raw_value(proof, position, bindings);
+        }
         let scope = SourcePosition::new(Some(position), SourceOwner::RecursiveFunction(proof), 7);
         let (guard, base, step) = self.compile_recursive_value_parts(proof, &scope, bindings)?;
         // The current checked recursive carrier is a standard numeric set.
@@ -284,7 +304,7 @@ impl LitexToLeanCompiler {
         Ok(parameter)
     }
 
-    fn recursive_restricted_signature(
+    pub(super) fn recursive_restricted_signature(
         &self,
         proof: &ExecHaveFnByInducStmtSuccessResult,
         position: &SourcePosition<'_>,
@@ -302,28 +322,94 @@ impl LitexToLeanCompiler {
                 "RecursiveFunction/SelfSignature",
             ));
         };
+        let original = &proof.statement.fn_set_clause;
         let groups = &signature.set_bound_parameters.groups;
         if member.element.ir()
             != Obj::Identifier(IdentifierObj::from_bound_name(&proof.statement.name)).ir()
-            || groups.len() != 1
-            || groups[0].params.len() != 1
-            || *groups[0].param_type != Obj::StandardSet(StandardSet::N)
-            || signature.ret_set.as_ref() != &proof.statement.fn_set_clause.ret_set
-            || signature.dom_facts.len() != 2
+            || groups.len() != original.set_bound_parameters.groups.len()
         {
             return Err(LeanCompileError::new(
                 "RecursiveFunction/SelfSignature",
-                "The original self membership has another declaration, domain, or target.",
+                "The self membership differs from the original declaration and parameter groups.",
             ));
         }
-        let parameter = Obj::Identifier(IdentifierObj::from_bound_name(&groups[0].params[0]));
-        if !matches!(&signature.dom_facts[0], QuantifierFreeFact::AtomicFact(AtomicFact::LessFact(f)) if f.left == parameter && f.right == proof.statement.measure)
-            || !matches!(&signature.dom_facts[1], QuantifierFreeFact::AtomicFact(AtomicFact::GreaterEqualFact(f)) if f.left == parameter && f.right == proof.statement.lower_bound)
-        {
-            return Err(LeanCompileError::new(
-                "RecursiveFunction/SelfGuard",
-                "The self signature must retain the exact smaller-measure and lower-bound guards.",
+        let mut substitution = HashMap::new();
+        let mut fresh = std::collections::HashSet::new();
+        let original_ids = original
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|g| g.params.iter().map(|p| p.id))
+            .collect::<std::collections::HashSet<_>>();
+        for (source, actual) in original.set_bound_parameters.groups.iter().zip(groups) {
+            if source.params.len() != actual.params.len() || actual.params.is_empty() {
+                return Err(LeanCompileError::unsupported(
+                    "RecursiveFunction/SelfParameters",
+                ));
+            }
+            for (source, actual) in source.params.iter().zip(&actual.params) {
+                if original_ids.contains(&actual.id)
+                    || !fresh.insert(actual.id)
+                    || substitution
+                        .insert(
+                            source.id,
+                            Obj::Identifier(IdentifierObj::from_bound_name(actual)),
+                        )
+                        .is_some()
+                {
+                    return Err(LeanCompileError::new(
+                        "RecursiveFunction/SelfParameters",
+                        "The recursive signature must use distinct fresh parameter identities.",
+                    ));
+                }
+            }
+        }
+        for (source, actual) in original.set_bound_parameters.groups.iter().zip(groups) {
+            if !instantiated_object_matches(&source.param_type, &actual.param_type, &substitution) {
+                return Err(LeanCompileError::unsupported(
+                    "RecursiveFunction/SelfParameterCarrier",
+                ));
+            }
+        }
+        if !instantiated_object_matches(&original.ret_set, &signature.ret_set, &substitution) {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveFunction/SelfTarget",
             ));
+        }
+        let lower_changes = original_ids
+            .iter()
+            .any(|id| contains_identifier(&proof.statement.lower_bound, *id));
+        let guards = &signature.dom_facts;
+        let source_guards = original.dom_facts.len();
+        if guards.len() != source_guards + 2 + usize::from(lower_changes) {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveFunction/SelfGuardArity",
+            ));
+        }
+        for (source, actual) in original.dom_facts.iter().zip(guards) {
+            if !instantiated_fact_matches(
+                &function_guard_fact(source)?,
+                &function_guard_fact(actual)?,
+                &substitution,
+            ) {
+                return Err(LeanCompileError::unsupported(
+                    "RecursiveFunction/SelfDomain",
+                ));
+            }
+        }
+        let measure = &proof.statement.measure;
+        let lower = &proof.statement.lower_bound;
+        if !matches!(&guards[source_guards], QuantifierFreeFact::AtomicFact(AtomicFact::LessFact(f))
+            if instantiated_object_matches(measure, &f.left, &substitution) && &f.right == measure)
+            || !matches!(&guards[source_guards + 1], QuantifierFreeFact::AtomicFact(AtomicFact::GreaterEqualFact(f))
+                if instantiated_object_matches(measure, &f.left, &substitution) && &f.right == lower)
+            || (lower_changes
+                && !matches!(&guards[source_guards + 2],
+                QuantifierFreeFact::AtomicFact(AtomicFact::GreaterEqualFact(f))
+                if instantiated_object_matches(lower, &f.left, &substitution) && &f.right == lower))
+        {
+            return Err(LeanCompileError::new("RecursiveFunction/SelfGuard",
+                "The self signature must retain smaller measure, caller lower bound and nondecreasing substituted lower bound."));
         }
         Ok(signature)
     }
@@ -901,11 +987,93 @@ impl LitexToLeanCompiler {
         } else {
             self.context_header(outer)?
         };
-        Ok(format!("{keyword} h_{}{context} : ∀ {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{member_id} : Litex.In _value_i{id} Litex.N) (h_{guard_id} : {guard}), {proposition} := by\n  intro _Host_i{id} _rep_i{id} _value_i{id} h_{member_id} h_{guard_id}\n  {body}", forall.fact_id.value()))
+        // Local constants cannot be universe-polymorphic. Keep the same
+        // denotation-level equation and lift its object at each citation.
+        let (binder, introductions) = if local {
+            (
+                format!("(_value_i{id} : Litex.Obj (M := M) M.Value)"),
+                format!("_value_i{id}"),
+            )
+        } else {
+            (format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})"),
+             format!("_Host_i{id} _rep_i{id} _value_i{id}"))
+        };
+        Ok(format!("{keyword} h_{}{context} : ∀ {binder} (h_{member_id} : Litex.In _value_i{id} Litex.N) (h_{guard_id} : {guard}), {proposition} := by\n  intro {introductions} h_{member_id} h_{guard_id}\n  {body}", forall.fact_id.value()))
+    }
+
+    pub(super) fn compile_local_recursive_equation_citation(
+        &self,
+        fact: &Fact,
+        reference: String,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let Fact::ForallFact(forall) = fact else {
+            return Ok(reference);
+        };
+        if forall.then_facts.len() != 1 {
+            return Ok(reference);
+        }
+        let conclusion: Fact = forall.then_facts[0].clone().into();
+        let Fact::AtomicFact(AtomicFact::EqualFact(equality)) = conclusion else {
+            return Ok(reference);
+        };
+        let Obj::FnObj(call) = &equality.left else {
+            return Ok(reference);
+        };
+        let FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) = call.head.as_ref() else {
+            return Ok(reference);
+        };
+        let Ok((proof, producer, _)) = position.visible_recursive_function(id) else {
+            return Ok(reference);
+        };
+        if !producer.is_local()
+            || !proof
+                .store_and_infer_result
+                .case_defining_fact_ids
+                .contains(&forall.fact_id)
+        {
+            return Ok(reference);
+        }
+        if !self.recursive_uses_nat_representation(proof, &producer)? {
+            let signature = recursive_signature(proof);
+            let mut binders = Vec::new();
+            let mut arguments = Vec::new();
+            for ((parameter, carrier), store) in signature
+                .set_bound_parameters
+                .groups
+                .iter()
+                .flat_map(|g| g.params.iter().map(|p| (p, g.param_type.as_ref())))
+                .zip(
+                    &proof
+                        .binder_introduction
+                        .defined_params
+                        .store_and_infer_results,
+                )
+            {
+                let id = parameter.id.value();
+                let h = format!("h_{}", store.primary_fact_id().value());
+                let carrier = self.compile_function_raw_expression_bound(
+                    carrier,
+                    &producer,
+                    &HashMap::new(),
+                )?;
+                binders.push(format!("{{_Host_i{id} : Type _}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) ({h} : M.mem (Litex.denote _value_i{id}) {carrier})"));
+                arguments.extend([format!("(Litex.semanticObject (Litex.denote _value_i{id}) (Litex.isSet _value_i{id}))"), h]);
+            }
+            return Ok(format!(
+                "(fun {} => {reference} {})",
+                binders.join(" "),
+                arguments.join(" ")
+            ));
+        }
+        let parameter =
+            self.validate_recursive_nat_shape(proof, &recursive_signature(proof), &producer)?;
+        let id = parameter.id.value();
+        Ok(format!("(fun {{_Host_i{id} : Type _}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) => {reference} (Litex.semanticObject (Litex.denote _value_i{id}) (Litex.isSet _value_i{id})))"))
     }
 }
 
-fn recursive_signature(proof: &ExecHaveFnByInducStmtSuccessResult) -> FnSet {
+pub(super) fn recursive_signature(proof: &ExecHaveFnByInducStmtSuccessResult) -> FnSet {
     FnSet {
         set_bound_parameters: proof.statement.fn_set_clause.set_bound_parameters.clone(),
         dom_facts: proof.statement.fn_set_clause.dom_facts.clone(),
@@ -934,37 +1102,7 @@ fn is_one(object: &Obj) -> bool {
 }
 
 fn contains_identifier(object: &Obj, target: IdentifierId) -> bool {
-    match object {
-        Obj::Identifier(IdentifierObj::Plain { id, .. }) => *id == target,
-        Obj::FnObj(f) => {
-            matches!(f.head.as_ref(), FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) if *id == target)
-                || f.body
-                    .iter()
-                    .flatten()
-                    .any(|o| contains_identifier(o, target))
-        }
-        Obj::ArithmeticOperator(operator) => match operator {
-            ArithmeticOperator::Add(v) => {
-                contains_identifier(&v.left, target) || contains_identifier(&v.right, target)
-            }
-            ArithmeticOperator::Sub(v) => {
-                contains_identifier(&v.left, target) || contains_identifier(&v.right, target)
-            }
-            ArithmeticOperator::Mul(v) => {
-                contains_identifier(&v.left, target) || contains_identifier(&v.right, target)
-            }
-            ArithmeticOperator::Div(v) => {
-                contains_identifier(&v.left, target) || contains_identifier(&v.right, target)
-            }
-            ArithmeticOperator::Pow(v) => {
-                contains_identifier(&v.base, target) || contains_identifier(&v.exponent, target)
-            }
-            ArithmeticOperator::Neg(v) => contains_identifier(&v.arg, target),
-            ArithmeticOperator::Abs(v) => contains_identifier(&v.arg, target),
-            _ => false,
-        },
-        _ => false,
-    }
+    super::compile_real_set_bounds::contains_parameter(object, target)
 }
 
 fn recursive_successor_assumption(proof: &ExecHaveFnByInducStmtSuccessResult) -> &'static str {

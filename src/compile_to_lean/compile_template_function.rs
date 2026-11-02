@@ -132,7 +132,27 @@ impl LitexToLeanCompiler {
         let member_id = template_output_member_id(declaration, &binding.name)?;
         let theorem = match declaration.statement.template_def_stmt {
             TemplateDefEnum::HaveFnEqualStmt(_) => Some("Litex.formulaFnInFnSet"),
-            TemplateDefEnum::HaveFnByInducStmt(_) => Some("Litex.recursiveNatFnInFnSet"),
+            TemplateDefEnum::HaveFnByInducStmt(_) => {
+                let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+                    crate::execute::ExecHaveFnByInducStmtResult::Success(body),
+                )) = declaration.body.as_ref()
+                else {
+                    return Err(LeanCompileError::unsupported("Template/RecursiveBody"));
+                };
+                let head = declaration
+                    .statement
+                    .template_arg_def
+                    .ordered_param_ids()
+                    .len()
+                    + declaration.statement.template_arg_dom.len();
+                let ready =
+                    SourcePosition::new(Some(&producer), SourceOwner::Template(declaration), head);
+                Some(if self.recursive_uses_nat_representation(body, &ready)? {
+                    "Litex.recursiveNatFnInFnSet"
+                } else {
+                    "Litex.recursiveFnInFnSet"
+                })
+            }
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(_) => Some("Litex.piecewiseFnInFnSet"),
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(_) => Some("Litex.selectedFnInFnSet"),
             _ => None,

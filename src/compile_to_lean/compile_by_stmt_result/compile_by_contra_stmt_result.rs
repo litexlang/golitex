@@ -258,6 +258,8 @@ pub(in crate::compile_to_lean) fn validate_atomic_negation(
         return Err(LeanCompileError::unsupported("By/AtomicNegation"));
     };
     let negative = match left {
+        AtomicFact::IsMatrixInvFact(_) | AtomicFact::MatrixInversibleFact(_) => false,
+        AtomicFact::NotIsMatrixInvFact(_) | AtomicFact::NotMatrixInversibleFact(_) => true,
         AtomicFact::NormalAtomicFact(_)
         | AtomicFact::InFact(_)
         | AtomicFact::SubsetFact(_)

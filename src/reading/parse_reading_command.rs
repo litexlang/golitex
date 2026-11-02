@@ -1,7 +1,7 @@
 use crate::prelude::*;
 use std::path::PathBuf;
 
-use super::{ReadingAction, ReadingCommand, ReadingInput};
+use super::{ReadingAction, ReadingCommand, ReadingInput, ReadingLayout};
 
 /// Reading has its own service lifecycle; it is dispatched before kernel commands.
 pub fn parse_reading_command(args: &[String]) -> RuntimeResult<Option<ReadingCommand>> {
@@ -33,6 +33,7 @@ pub fn parse_reading_command(args: &[String]) -> RuntimeResult<Option<ReadingCom
     let mut port = 0;
     let mut preview_options = false;
     let mut reading_count = 0;
+    let mut latex = false;
     let mut cursor = 0;
     while cursor < args.len() {
         let arg = args[cursor].as_str();
@@ -73,6 +74,12 @@ pub fn parse_reading_command(args: &[String]) -> RuntimeResult<Option<ReadingCom
                 )?)));
             }
             "-strict" | "--strict" => strict = true,
+            "-latex" | "--latex" => {
+                if latex {
+                    return Err(arguments("-latex may appear only once"));
+                }
+                latex = true;
+            }
             "-lang" | "--lang" => {
                 language = OutputLanguage::parse_token(&operand(args, &mut cursor, arg)?)?
             }
@@ -103,7 +110,11 @@ pub fn parse_reading_command(args: &[String]) -> RuntimeResult<Option<ReadingCom
             "reading JSON/export requires -e <code>, -f <file> or -r <project>",
         ));
     }
-    Ok(Some(ReadingCommand::new(input, action, strict, language)))
+    let mut command = ReadingCommand::new(input, action, strict, language);
+    if latex {
+        command.layout = ReadingLayout::Latex;
+    }
+    Ok(Some(command))
 }
 
 fn operand(args: &[String], cursor: &mut usize, flag: &str) -> RuntimeResult<String> {

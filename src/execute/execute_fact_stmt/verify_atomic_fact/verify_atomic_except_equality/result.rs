@@ -213,6 +213,9 @@ pub struct BuiltinFunctionLipschitzDefinitionProof {
 }
 
 pub enum BuiltinPropDefinitionProof {
+    IsMatrixInv(crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinIsMatrixInvDefinitionProof),
+    MatrixInversible(crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinMatrixInversibleDefinitionProof),
+    CommRing(super::super::verify_equality::ring::definition::BuiltinCommRingDefinitionProof),
     MultivariableAnalysis(
         crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof,
     ),

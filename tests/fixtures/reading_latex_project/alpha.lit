@@ -1,0 +1,1 @@
+have fn twice(x R) R = x + x

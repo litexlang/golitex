@@ -1,0 +1,329 @@
+# Total degree selectors from the proved unique degree-value specification.
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        exist! value degree_value::PolynomialDegree st {$degree_value::is_complex_polynomial_degree_value(p,value)}
+    release thm degree_value::complex_polynomial_degree_value_exists_unique(p)
+
+have fn complex_polynomial_degree by exist!:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        exist! value degree_value::PolynomialDegree st {$degree_value::is_complex_polynomial_degree_value(p,value)}
+
+thm complex_polynomial_degree_specification:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        $degree_value::is_complex_polynomial_degree_value(p,complex_polynomial_degree(p))
+
+thm complex_polynomial_degree_zero:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        p=fn(x C) C {0}
+        =>:
+            complex_polynomial_degree(p)=Extended::main::real_negative_infinity
+    release thm complex_polynomial_degree_specification(p)
+    release thm degree_value::complex_zero_polynomial_degree_value(p,complex_polynomial_degree(p))
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        exist! value degree_value::PolynomialDegree st {$degree_value::is_real_polynomial_degree_value(p,value)}
+    release thm degree_value::real_polynomial_degree_value_exists_unique(p)
+
+have fn real_polynomial_degree by exist!:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        exist! value degree_value::PolynomialDegree st {$degree_value::is_real_polynomial_degree_value(p,value)}
+
+thm real_polynomial_degree_specification:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        $degree_value::is_real_polynomial_degree_value(p,real_polynomial_degree(p))
+
+thm real_polynomial_degree_zero:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        p=fn(x R) R {0}
+        =>:
+            real_polynomial_degree(p)=Extended::main::real_negative_infinity
+    release thm real_polynomial_degree_specification(p)
+    release thm degree_value::real_zero_polynomial_degree_value(p,real_polynomial_degree(p))
+
+thm complex_polynomial_degree_domain:
+    ? forall p fn(x C) C:
+        $poly::is_complex_polynomial(p)
+        =>:
+            p $in {q fn(x C) C:$poly::is_complex_polynomial(q)}
+    release thm set_builder_member(p,{q fn(x C) C:$poly::is_complex_polynomial(q)})
+
+claim:
+    ? forall p fn(x C) C:
+        $poly::is_complex_polynomial(p)
+        =>:
+            p $in {q fn(x C) C:$poly::is_complex_polynomial(q)}
+    release thm complex_polynomial_degree_domain(p)
+
+thm complex_polynomial_degree_nonzero_carrier:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        p!=fn(x C) C {0}
+        =>:
+            complex_polynomial_degree(p) $in N
+    release thm complex_polynomial_degree_specification(p)
+    release thm degree_value::nonzero_complex_polynomial_degree_value_is_finite(p,complex_polynomial_degree(p))
+    obtain degree from $degree_value::has_complex_polynomial_finite_degree_value(p,complex_polynomial_degree(p))
+    complex_polynomial_degree(p)=degree
+    degree $in N
+    complex_polynomial_degree(p) $in N
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        p!=fn(x C) C {0}
+        =>:
+            complex_polynomial_degree(p) $in N
+    release thm complex_polynomial_degree_nonzero_carrier(p)
+
+thm complex_polynomial_degree_nonzero_specification:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        p!=fn(x C) C {0}
+        =>:
+            $finite_degree::has_complex_polynomial_degree(p,complex_polynomial_degree(p))
+    release thm complex_polynomial_degree_specification(p)
+    release thm degree_value::nonzero_complex_polynomial_degree_value_is_finite(p,complex_polynomial_degree(p))
+    obtain degree from $degree_value::has_complex_polynomial_finite_degree_value(p,complex_polynomial_degree(p))
+    complex_polynomial_degree(p)=degree
+    $finite_degree::has_complex_polynomial_degree(p,degree)
+    $finite_degree::has_complex_polynomial_degree(p,complex_polynomial_degree(p))
+
+thm complex_polynomial_degree_agrees_with_finite_degree:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)},degree N:
+        $finite_degree::has_complex_polynomial_degree(p,degree)
+        =>:
+            complex_polynomial_degree(p)=degree
+    release thm finite_degree::complex_polynomial_degree_properties(p,degree)
+    release thm complex_polynomial_degree_nonzero_carrier(p)
+    release thm complex_polynomial_degree_nonzero_specification(p)
+    release thm finite_degree::complex_polynomial_degree_unique(p,complex_polynomial_degree(p),degree)
+
+thm real_polynomial_degree_domain:
+    ? forall p fn(x R) R:
+        $poly::is_real_polynomial(p)
+        =>:
+            p $in {q fn(x R) R:$poly::is_real_polynomial(q)}
+    release thm set_builder_member(p,{q fn(x R) R:$poly::is_real_polynomial(q)})
+
+claim:
+    ? forall p fn(x R) R:
+        $poly::is_real_polynomial(p)
+        =>:
+            p $in {q fn(x R) R:$poly::is_real_polynomial(q)}
+    release thm real_polynomial_degree_domain(p)
+
+thm real_polynomial_degree_nonzero_carrier:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        p!=fn(x R) R {0}
+        =>:
+            real_polynomial_degree(p) $in N
+    release thm real_polynomial_degree_specification(p)
+    release thm degree_value::nonzero_real_polynomial_degree_value_is_finite(p,real_polynomial_degree(p))
+    obtain degree from $degree_value::has_real_polynomial_finite_degree_value(p,real_polynomial_degree(p))
+    real_polynomial_degree(p)=degree
+    degree $in N
+    real_polynomial_degree(p) $in N
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        p!=fn(x R) R {0}
+        =>:
+            real_polynomial_degree(p) $in N
+    release thm real_polynomial_degree_nonzero_carrier(p)
+
+thm real_polynomial_degree_nonzero_specification:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        p!=fn(x R) R {0}
+        =>:
+            $finite_degree::has_real_polynomial_degree(p,real_polynomial_degree(p))
+    release thm real_polynomial_degree_specification(p)
+    release thm degree_value::nonzero_real_polynomial_degree_value_is_finite(p,real_polynomial_degree(p))
+    obtain degree from $degree_value::has_real_polynomial_finite_degree_value(p,real_polynomial_degree(p))
+    real_polynomial_degree(p)=degree
+    $finite_degree::has_real_polynomial_degree(p,degree)
+    $finite_degree::has_real_polynomial_degree(p,real_polynomial_degree(p))
+
+thm real_polynomial_degree_agrees_with_finite_degree:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)},degree N:
+        $finite_degree::has_real_polynomial_degree(p,degree)
+        =>:
+            real_polynomial_degree(p)=degree
+    release thm finite_degree::real_polynomial_degree_properties(p,degree)
+    release thm real_polynomial_degree_nonzero_carrier(p)
+    release thm real_polynomial_degree_nonzero_specification(p)
+    release thm finite_degree::real_polynomial_degree_unique(p,real_polynomial_degree(p),degree)
+
+thm complex_polynomial_degree_value_is_extended_real:
+    ? forall p fn(x C) C,value degree_value::PolynomialDegree:
+        $degree_value::is_complex_polynomial_degree_value(p,value)
+        =>:
+            value $in Extended::main::ExtendedReal
+    by cases:
+        ? value $in Extended::main::ExtendedReal
+        case p=fn(x C) C {0}:
+            release thm degree_value::complex_zero_polynomial_degree_value(p,value)
+            release thm Extended::main::negative_infinity_is_extended_real
+            value=Extended::main::real_negative_infinity
+            value $in Extended::main::ExtendedReal
+        case p!=fn(x C) C {0}:
+            release thm degree_value::nonzero_complex_polynomial_degree_value_is_finite(p,value)
+            obtain degree from $degree_value::has_complex_polynomial_finite_degree_value(p,value)
+            degree $in R
+            release thm Extended::main::real_number_is_extended_real(degree)
+            value=degree
+            value $in Extended::main::ExtendedReal
+
+thm complex_polynomial_degree_is_extended_real:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        complex_polynomial_degree(p) $in Extended::main::ExtendedReal
+    release thm complex_polynomial_degree_specification(p)
+    release thm complex_polynomial_degree_value_is_extended_real(p,complex_polynomial_degree(p))
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        complex_polynomial_degree(p) $in Extended::main::ExtendedReal
+    release thm complex_polynomial_degree_is_extended_real(p)
+
+thm real_polynomial_degree_value_is_extended_real:
+    ? forall p fn(x R) R,value degree_value::PolynomialDegree:
+        $degree_value::is_real_polynomial_degree_value(p,value)
+        =>:
+            value $in Extended::main::ExtendedReal
+    by cases:
+        ? value $in Extended::main::ExtendedReal
+        case p=fn(x R) R {0}:
+            release thm degree_value::real_zero_polynomial_degree_value(p,value)
+            release thm Extended::main::negative_infinity_is_extended_real
+            value=Extended::main::real_negative_infinity
+            value $in Extended::main::ExtendedReal
+        case p!=fn(x R) R {0}:
+            release thm degree_value::nonzero_real_polynomial_degree_value_is_finite(p,value)
+            obtain degree from $degree_value::has_real_polynomial_finite_degree_value(p,value)
+            degree $in R
+            release thm Extended::main::real_number_is_extended_real(degree)
+            value=degree
+            value $in Extended::main::ExtendedReal
+
+thm real_polynomial_degree_is_extended_real:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        real_polynomial_degree(p) $in Extended::main::ExtendedReal
+    release thm real_polynomial_degree_specification(p)
+    release thm real_polynomial_degree_value_is_extended_real(p,real_polynomial_degree(p))
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        real_polynomial_degree(p) $in Extended::main::ExtendedReal
+    release thm real_polynomial_degree_is_extended_real(p)
+
+claim:
+    ? forall n N:
+        n $in Extended::main::ExtendedReal
+    n $in R
+    release thm Extended::main::real_number_is_extended_real(n)
+
+prop complex_polynomial_degree_at_most(p {q fn(x C) C:$poly::is_complex_polynomial(q)},bound N):
+    $Extended::main::extended_real_le(complex_polynomial_degree(p),bound)
+
+prop real_polynomial_degree_at_most(p {q fn(x R) R:$poly::is_real_polynomial(q)},bound N):
+    $Extended::main::extended_real_le(real_polynomial_degree(p),bound)
+
+thm complex_polynomial_degree_at_most_of_bounded:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)},bound N:
+        p $in \poly::complex_polynomials_up_to<bound>
+        =>:
+            $complex_polynomial_degree_at_most(p,bound)
+    by cases:
+        ? $complex_polynomial_degree_at_most(p,bound)
+        case p=fn(x C) C {0}:
+            release thm complex_polynomial_degree_zero(p)
+            release thm Extended::main::negative_infinity_le_extended_real(bound)
+            by def $Extended::main::extended_real_le(complex_polynomial_degree(p),bound)
+            by def $complex_polynomial_degree_at_most(p,bound)
+        case p!=fn(x C) C {0}:
+            release thm bounded_degree::nonzero_complex_polynomials_up_to_have_degree(bound,p)
+            obtain degree from exist n N st {$finite_degree::has_complex_polynomial_degree(p,n),n<=bound}
+            release thm complex_polynomial_degree_agrees_with_finite_degree(p,degree)
+            release thm complex_polynomial_degree_nonzero_carrier(p)
+            complex_polynomial_degree(p) $in R
+            bound $in R
+            complex_polynomial_degree(p)=degree
+            degree<=bound
+            complex_polynomial_degree(p)<=bound
+            release thm Extended::main::real_order_is_extended_real_order(complex_polynomial_degree(p),bound)
+            by def $complex_polynomial_degree_at_most(p,bound)
+
+thm complex_polynomial_bounded_of_degree_at_most:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)},bound N:
+        $complex_polynomial_degree_at_most(p,bound)
+        =>:
+            p $in \poly::complex_polynomials_up_to<bound>
+    by cases:
+        ? p $in \poly::complex_polynomials_up_to<bound>
+        case p=fn(x C) C {0}:
+            have zeros finite_seq(C,bound+1)=fn(j closed_range(1,bound+1)) C {0}
+            claim:
+                ? forall j closed_range(1,bound+1):
+                    zeros(j)=0
+                zeros(j)=0
+            release thm truncation::complex_polynomial_zero_from_zero_coefficients(bound,zeros)
+            p=fn(x C) C {0}=\poly::complex_polynomial_from_coefficients<bound>(zeros)
+            witness exist values finite_seq(C,bound+1) st {p=\poly::complex_polynomial_from_coefficients<bound>(values)} from zeros
+            release thm poly::complex_polynomials_up_to_contains_representation(bound,p)
+        case p!=fn(x C) C {0}:
+            release thm complex_polynomial_degree_nonzero_carrier(p)
+            release thm complex_polynomial_degree_nonzero_specification(p)
+            complex_polynomial_degree(p) $in R
+            bound $in R
+            $Extended::main::extended_real_le(complex_polynomial_degree(p),bound)
+            release thm Extended::main::extended_real_order_on_reals(complex_polynomial_degree(p),bound)
+            release thm bounded_degree::complex_polynomials_up_to_contains_degree(p,complex_polynomial_degree(p),bound)
+
+thm real_polynomial_degree_at_most_of_bounded:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)},bound N:
+        p $in \poly::real_polynomials_up_to<bound>
+        =>:
+            $real_polynomial_degree_at_most(p,bound)
+    by cases:
+        ? $real_polynomial_degree_at_most(p,bound)
+        case p=fn(x R) R {0}:
+            release thm real_polynomial_degree_zero(p)
+            release thm Extended::main::negative_infinity_le_extended_real(bound)
+            by def $Extended::main::extended_real_le(real_polynomial_degree(p),bound)
+            by def $real_polynomial_degree_at_most(p,bound)
+        case p!=fn(x R) R {0}:
+            release thm bounded_degree::nonzero_real_polynomials_up_to_have_degree(bound,p)
+            obtain degree from exist n N st {$finite_degree::has_real_polynomial_degree(p,n),n<=bound}
+            release thm real_polynomial_degree_agrees_with_finite_degree(p,degree)
+            release thm real_polynomial_degree_nonzero_carrier(p)
+            real_polynomial_degree(p) $in R
+            bound $in R
+            real_polynomial_degree(p)=degree
+            degree<=bound
+            real_polynomial_degree(p)<=bound
+            release thm Extended::main::real_order_is_extended_real_order(real_polynomial_degree(p),bound)
+            by def $real_polynomial_degree_at_most(p,bound)
+
+thm real_polynomial_bounded_of_degree_at_most:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)},bound N:
+        $real_polynomial_degree_at_most(p,bound)
+        =>:
+            p $in \poly::real_polynomials_up_to<bound>
+    by cases:
+        ? p $in \poly::real_polynomials_up_to<bound>
+        case p=fn(x R) R {0}:
+            have zeros finite_seq(R,bound+1)=fn(j closed_range(1,bound+1)) R {0}
+            claim:
+                ? forall j closed_range(1,bound+1):
+                    zeros(j)=0
+                zeros(j)=0
+            release thm truncation::real_polynomial_zero_from_zero_coefficients(bound,zeros)
+            p=fn(x R) R {0}=\poly::real_polynomial_from_coefficients<bound>(zeros)
+            witness exist values finite_seq(R,bound+1) st {p=\poly::real_polynomial_from_coefficients<bound>(values)} from zeros
+            release thm poly::real_polynomials_up_to_contains_representation(bound,p)
+        case p!=fn(x R) R {0}:
+            release thm real_polynomial_degree_nonzero_carrier(p)
+            release thm real_polynomial_degree_nonzero_specification(p)
+            real_polynomial_degree(p) $in R
+            bound $in R
+            $Extended::main::extended_real_le(real_polynomial_degree(p),bound)
+            release thm Extended::main::extended_real_order_on_reals(real_polynomial_degree(p),bound)
+            release thm bounded_degree::real_polynomials_up_to_contains_degree(p,real_polynomial_degree(p),bound)

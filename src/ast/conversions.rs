@@ -1,6 +1,9 @@
-//! Enum wrapping conversions for facts.
 //! Prefer `leaf.into()` / `atomic.into()` over `AtomicFact::Variant(leaf)`.
-
+//! Enum wrapping conversions for facts.
+use crate::ast::fact::{CommRingFact, NotCommRingFact};
+use crate::ast::fact::{
+    IsMatrixInvFact, MatrixInversibleFact, NotIsMatrixInvFact, NotMatrixInversibleFact,
+};
 impl From<crate::ast::fact::RealSetBoundFact> for AtomicFact {
     fn from(f: crate::ast::fact::RealSetBoundFact) -> Self {
         Self::RealSetBoundFact(f)
@@ -1131,5 +1134,68 @@ impl From<crate::ast::fact::NotMultivariableAnalysisFact> for AtomicFact {
 impl From<crate::ast::fact::NotMultivariableAnalysisFact> for Fact {
     fn from(x: crate::ast::fact::NotMultivariableAnalysisFact) -> Self {
         AtomicFact::from(x).into()
+    }
+}
+
+impl From<CommRingFact> for AtomicFact {
+    fn from(f: CommRingFact) -> Self {
+        AtomicFact::CommRingFact(f)
+    }
+}
+impl From<CommRingFact> for Fact {
+    fn from(f: CommRingFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<NotCommRingFact> for AtomicFact {
+    fn from(f: NotCommRingFact) -> Self {
+        AtomicFact::NotCommRingFact(f)
+    }
+}
+impl From<NotCommRingFact> for Fact {
+    fn from(f: NotCommRingFact) -> Self {
+        Fact::AtomicFact(f.into())
+    }
+}
+
+impl From<IsMatrixInvFact> for AtomicFact {
+    fn from(f: IsMatrixInvFact) -> Self {
+        Self::IsMatrixInvFact(f)
+    }
+}
+impl From<IsMatrixInvFact> for Fact {
+    fn from(f: IsMatrixInvFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+impl From<NotIsMatrixInvFact> for AtomicFact {
+    fn from(f: NotIsMatrixInvFact) -> Self {
+        Self::NotIsMatrixInvFact(f)
+    }
+}
+impl From<NotIsMatrixInvFact> for Fact {
+    fn from(f: NotIsMatrixInvFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+impl From<MatrixInversibleFact> for AtomicFact {
+    fn from(f: MatrixInversibleFact) -> Self {
+        Self::MatrixInversibleFact(f)
+    }
+}
+impl From<MatrixInversibleFact> for Fact {
+    fn from(f: MatrixInversibleFact) -> Self {
+        Self::AtomicFact(f.into())
+    }
+}
+impl From<NotMatrixInversibleFact> for AtomicFact {
+    fn from(f: NotMatrixInversibleFact) -> Self {
+        Self::NotMatrixInversibleFact(f)
+    }
+}
+impl From<NotMatrixInversibleFact> for Fact {
+    fn from(f: NotMatrixInversibleFact) -> Self {
+        Self::AtomicFact(f.into())
     }
 }

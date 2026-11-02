@@ -558,11 +558,11 @@ impl LitexToLeanCompiler {
             )?;
             let (view, equal) =
                 self.compile_multivariable_limit_view(&r.function, domain, position)?;
-            let ty = self.compile_function_raw_predicate(&facts[0], position, &HashMap::new())?;
-            let term=format!("(by\n{view}\n  obtain ⟨r,hr,ha,he⟩ := {}\n  intro radius h_radius\n  obtain ⟨input,hi,hpos,hclose⟩ := ha radius h_radius\n  rw [← {equal}] at hi\n  exact ⟨input,hi,hpos,hclose⟩\n)",compiled.1);
+            let ty = self.compile_multivariable_clause_value_proposition(&facts[0], position)?;
+            let term=format!("(by\n{view}\n  obtain ⟨r,hr,ha,he⟩ := {}\n  intro radius h_radius\n  obtain ⟨input,hi,hpos,hclose⟩ := ha (Litex.denote radius) h_radius\n  rw [← {equal}] at hi\n  exact ⟨input,hi,hpos,hclose⟩\n)",compiled.1);
             lines.push(self.emit_internal_fact(&facts[0], &(ty, term), position)?);
-            let ty = self.compile_function_raw_predicate(&facts[1], position, &HashMap::new())?;
-            let term=format!("(by\n{view}\n  obtain ⟨r,hr,ha,he⟩ := {}\n  intro epsilon h_epsilon\n  obtain ⟨delta,hd,hcontrol⟩ := he epsilon h_epsilon\n  refine ⟨delta,hd,?_⟩\n  intro input h_input\n  obtain ⟨hi,_,hpos,hclose⟩ := (Litex.SetSemantics.sep_members _ _ _).mp h_input\n  apply (Litex.SetSemantics.sep_members _ _ _).mpr\n  exact ⟨hi,hi,hcontrol input ({equal} ▸ hi) hpos hclose⟩\n)",compiled.1);
+            let ty = self.compile_multivariable_clause_value_proposition(&facts[1], position)?;
+            let term=format!("(by\n{view}\n  obtain ⟨r,hr,ha,he⟩ := {}\n  intro epsilon h_epsilon\n  obtain ⟨delta,hd,hcontrol⟩ := he (Litex.denote epsilon) h_epsilon\n  refine ⟨delta,hd,?_⟩\n  intro input h_input\n  obtain ⟨hi,_,hpos,hclose⟩ := (Litex.SetSemantics.sep_members _ _ _).mp h_input\n  apply (Litex.SetSemantics.sep_members _ _ _).mpr\n  exact ⟨hi,hi,hcontrol input ({equal} ▸ hi) hpos hclose⟩\n)",compiled.1);
             lines.push(self.emit_internal_fact(&facts[1], &(ty, term), position)?);
         }
         let target = facts.last().unwrap();

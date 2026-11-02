@@ -61,7 +61,7 @@ impl ReadingSite {
             let id = field(source, "id");
             let url = format!("{directory}/part{index}.json");
             let source_url = format!("{directory}/source{index}.json");
-            let mut metadata = without(source, &["content", "tokens"]);
+            let mut metadata = without(source, &["content", "tokens", "latex_blocks"]);
             insert(&mut metadata, "chunk_url", text(&url));
             insert(&mut metadata, "source_url", text(&source_url));
             source_index.push(metadata);
@@ -70,7 +70,7 @@ impl ReadingSite {
                 object(vec![
                     ("kind", text("reading_source")),
                     ("manifest_id", text(&manifest_id)),
-                    ("source", without(source, &["tokens"])),
+                    ("source", without(source, &["tokens", "latex_blocks"])),
                 ])
                 .stringify(),
             );

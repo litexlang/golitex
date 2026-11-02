@@ -9,6 +9,8 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'p>,
     ) -> Result<(&'p Fact, String), LeanCompileError> {
         let (fact, reference) = position.visible_fact(id, &self.runtime)?;
+        let reference =
+            self.compile_local_recursive_equation_citation(fact, reference, position)?;
         Ok((
             fact,
             self.compile_local_forall_citation(id, reference, position)?,

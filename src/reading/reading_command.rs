@@ -16,12 +16,20 @@ pub enum ReadingAction {
     Export(PathBuf),
 }
 
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum ReadingLayout {
+    #[default]
+    Source,
+    Latex,
+}
+
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct ReadingCommand {
     pub input: ReadingInput,
     pub action: ReadingAction,
     pub strict: bool,
     pub language: OutputLanguage,
+    pub layout: ReadingLayout,
 }
 
 impl ReadingCommand {
@@ -36,6 +44,7 @@ impl ReadingCommand {
             action,
             strict,
             language,
+            layout: ReadingLayout::Source,
         }
     }
 }

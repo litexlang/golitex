@@ -173,6 +173,20 @@ impl LitexToLeanCompiler {
                 returned_index,
                 facts.len(),
             );
+            let conclusion = match (fact, wd) {
+                (Fact::ForallFact(fact), FactWellDefinedProof::ForallFact(wd)) => self
+                    .compile_canonical_forall_projection(
+                        fact,
+                        wd,
+                        conjunction_projection_explicit(
+                            shared_application.as_ref().unwrap_or(&application),
+                            returned_index,
+                            facts.len(),
+                        ),
+                        &formed,
+                    )?,
+                _ => conclusion,
+            };
             let evidence = if shared_application.is_some() {
                 conclusion
             } else {

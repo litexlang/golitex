@@ -95,6 +95,43 @@ impl LitexToLeanCompiler {
         ))
     }
 
+    pub(super) fn compile_subtract_positive_closed_less(
+        &self,
+        goal: &AtomicFact,
+        minuend: &Obj,
+        subtrahend: &Obj,
+        normalized: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let invalid = || LeanCompileError::unsupported("SubtractPositiveClosedLess/Certificate");
+        let (low, high, strict) = source_order_oriented(goal)?;
+        let Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) = low else {
+            return Err(invalid());
+        };
+        if !strict
+            || sub.left.ir() != high.ir()
+            || minuend.ir() != high.ir()
+            || sub.right.ir() != subtrahend.ir()
+        {
+            return Err(invalid());
+        }
+        let zero = EvalRational::new(0, 1).unwrap().to_obj();
+        let Some((crate::rational_expression::NumberCompareResult::Greater, actual, _)) =
+            crate::rational_expression::compare_closed_numeric_objs(subtrahend, &zero)
+        else {
+            return Err(invalid());
+        };
+        if actual != normalized {
+            return Err(invalid());
+        }
+        let value = EvalRational::from_obj(subtrahend).ok_or_else(invalid)?;
+        let value = exact_rational_literal(&value, "ℝ")?;
+        let difference = self.compile_object_reference(low, position)?;
+        let real = self.compile_real_membership_certificate(high, position)?;
+        let observation = self.compile_numeric_observation(subtrahend, position)?.1;
+        Ok(format!("(by\n  let _difference := {difference}\n  obtain ⟨_real, _real_eq⟩ := (M.real_members (Litex.denote _difference.val.left)).mp {real}\n  have _offset : Litex.denote _difference.val.right = M.number (({value} : ℝ) : ℂ) := ({observation}).trans (congrArg M.number (by norm_num))\n  refine Litex.NativeBridge.ltOfDenoteReal _difference _difference.val.left (_real - {value}) _real ?_ _real_eq (sub_lt_self _real (by norm_num))\n  change M.subValue (Litex.denote _difference.val.left) (Litex.denote _difference.val.right) = _\n  rw [_real_eq, _offset, M.sub_numbers, Complex.ofReal_sub])"))
+    }
+
     pub(in crate::compile_to_lean) fn compile_integer_successor_lower_bound(
         &self,
         goal: &AtomicFact,
@@ -103,6 +140,59 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let (low, high, strict) = source_order_oriented(goal)?;
+        if !strict
+            && matches!(low, Obj::Literal(Literal::Number(_)))
+            && closed_integer(low) != Some(1)
+        {
+            let Some(target_bound) = closed_integer(low) else {
+                return Err(LeanCompileError::unsupported(
+                    "IntegerSuccessorLowerBound/ClosedInteger",
+                ));
+            };
+            let complete = position.atomic_search_prior(1)?;
+            let source = self.resolve_fact(cited, &complete)?;
+            let Fact::AtomicFact(source) = source else {
+                return Err(LeanCompileError::unsupported(
+                    "IntegerSuccessorLowerBound/CitedFamily",
+                ));
+            };
+            let (bound, value, strict) = source_order_oriented(&source)?;
+            let Some(previous) = closed_integer(bound) else {
+                return Err(LeanCompileError::unsupported(
+                    "IntegerSuccessorLowerBound/ClosedPredecessor",
+                ));
+            };
+            if !strict
+                || !matches!(bound, Obj::Literal(Literal::Number(_)))
+                || previous.checked_add(1) != Some(target_bound)
+                || value.ir() != high.ir()
+                || membership_subject(&source_subject(integer)?, high)? != StandardSet::Z
+            {
+                return Err(LeanCompileError::unsupported(
+                    "IntegerSuccessorLowerBound/ExactPredecessor",
+                ));
+            }
+            let hpos = self.cited_fact_reference(cited, &complete)?.1;
+            let hz = self
+                .compile_verify(integer, &position.atomic_search_prior(0)?)?
+                .1;
+            let mut terms = Vec::new();
+            let mut values = Vec::new();
+            let mut equalities = Vec::new();
+            for object in [bound, high, low, high] {
+                terms.push(self.compile_object_reference(object, &complete)?);
+                let observed = self.compile_numeric_observation(object, &complete)?;
+                values.push(observed.0);
+                equalities.push(observed.1);
+            }
+            let hbound=format!("(show Litex.In {} Litex.Z from (M.integer_members _).mpr ⟨({previous} : ℤ),({}).trans (congrArg M.number (by norm_num))⟩)",terms[0],equalities[0]);
+            return Ok(format!(
+                "(Litex.integerGapLe {} {hbound} {hz} {hpos} {} {} (Or.inl ⟨by norm_num, by rfl⟩))",
+                terms.join(" "),
+                values.join(" "),
+                equalities.join(" ")
+            ));
+        }
         if strict
             || !matches!(low, Obj::Literal(Literal::Number(_)))
             || closed_integer(low) != Some(1)

@@ -65,7 +65,7 @@ match completely; restricting a wider function constructs a new function.
 | Matrix acting on a vector | `matrix_apply(A,v,m,n)` |
 | Natural power | `matrix_power(A,n,p)` |
 | Determinant and trace | `det(A,n)`, `trace(A,n)` |
-| Inverse and exact rank | `matrix_inverse(A,n)`, `matrix_rank(A,m,n)` |
+| Inverse and exact rank | `matrix_inv(A,n)`, `matrix_rank(A,m,n)` |
 | Delete a row and column | `matrix_minor(A,n,i,j)` |
 | Cofactor and adjugate | `matrix_cofactor(A,n,i,j)`, `matrix_adjugate(A,n)` |
 | Transpose and adjoint | `transpose(A,m,n)`, `conjugate_transpose(A,m,n)` |
@@ -85,15 +85,31 @@ matrix_mul(A,B,2,2,2)(1,1)=3
 matrix_mul(B,A,2,2,2)(1,1)=-3
 det(A,2)=-1
 det(A,2)!=0
-matrix_inverse(A,2)(1,1)=-4
+matrix_inv(A,2)(1,1)=-4
 release thm matrix_rank_invertible(A,2)
 matrix_rank(A,2,2)=2
 ```
 
-Inverse formation requires a proved nonzero determinant. Given a candidate B,
-prove both AB=I and BA=I, then use
-`matrix_invertible_from_candidate(A,B,n)` and
-`matrix_inverse_from_candidate(A,B,n)` in that order.
+The native predicates `$is_matrix_inv(A,B,n)` and `$matrix_inversible(A,n)`
+need no import. The former means AB=BA=I with complete complex square domains;
+the latter means that a two-sided inverse exists. Both accept real matrices.
+The determinant criterion connects `$matrix_inversible(A,n)` and `det(A,n)!=0`
+in both directions. Inverse formation consumes the nonzero-determinant evidence
+through shared verification, so a proved invertibility predicate also suffices.
+Given `$is_matrix_inv(A,B,n)`, the product identities, invertibility and a
+nonzero determinant are published. The existing explicit theorem
+`matrix_inverse_from_candidate(A,B,n)` then identifies `matrix_inv(A,n)=B`.
+The former operation spelling `matrix_inverse(A,n)` is rejected with a migration
+diagnostic. The former source predicates `is_matrix_inverse(n,A,B)` and
+`is_invertible_matrix(n,A)` have moved to the native matrix-first interfaces.
+
+```litex
+forall n N,A matrix(C,n,n):
+    $matrix_inversible(A,n)
+    =>:
+        det(A,n)!=0
+        matrix_mul(A,matrix_inv(A,n),n,n,n)=identity_matrix(n)
+```
 Rank formation requires a valid matrix; a concrete value requires proof.
 `matrix_rank_from_factorization(A,U,V,L,R,m,r,n)` checks A=UV, LU=I_r,
 VR=I_r, every factor's shape, and r≤m,n.
@@ -120,8 +136,7 @@ Imported names remain qualified, for example
 caller needs to unfold an imported ordinary function identifier. For the
 guarded solver template, `solve_matrix_definition` exposes its equation.
 
-The 22 ordinary predicates in [main.lit](main.lit) cover inverse candidates
-and existence, rank factorization and rank candidates, symmetry, Hermitian,
+The 20 ordinary predicates in [main.lit](main.lit) cover rank factorization and rank candidates, symmetry, Hermitian,
 orthogonal, unitary, normal, diagonal and triangular matrices, idempotence,
 orthogonal projections, nilpotence, positive semidefiniteness and definiteness,
 linear-system solutions, eigenpairs and eigenvalues, image membership, and
@@ -156,5 +171,6 @@ Exact determinant expansion has a finite computation budget; symbolic and
 larger orders remain valid objects and can use Laplace, triangular and
 multiplicative theorems. This module has no floating-point rank heuristic,
 automatic elimination, SVD, Jordan form, pseudoinverse or matrix exponential.
-Native matrix paths currently have explicit unsupported Lean output; this
-library does not claim a complete Lean translation of matrix algebra.
+The compiler replays the native inverse predicates, their defining clauses and
+determinant evidence through proved Lean bridges. This does not claim a complete
+Lean translation of every theorem in this module.

@@ -378,8 +378,9 @@ Fixed matrix equalities can also be written directly: with `A matrix(C,m,n)`,
 cover the supported products, traces, powers, determinants, ranks and norms.
 Dimensions remain exact; inverse products and full rank require `det(A,n)!=0`.
 Use `C_abs(z)` for complex scaling. These rules preserve the explicit BT
-interfaces and retain their evidence in Detailed/Reading; matrix Lean replay
-remains unsupported.
+interfaces and retain their evidence in Detailed/Reading. The existing Lean
+compiler also consumes these selected matrix-law certificates; other proof
+routes need their own supported compiler path.
 
 Function parameter carriers and the return carrier use the enclosing scope;
 they cannot refer to that signature's own parameters. Guards and the body can.

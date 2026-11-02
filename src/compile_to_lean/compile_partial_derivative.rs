@@ -317,7 +317,7 @@ fn path(object: &Obj, point: &Obj, n: &Obj, axis: &Obj, h: &Obj) -> Result<(), L
     Ok(())
 }
 /// Validate the two actual source clauses before using their proved semantic bridge.
-fn clauses<'a>(
+pub(super) fn clauses<'a>(
     r: &PartialDerivativeAtRelation,
     domain: &Obj,
     facts: &'a [Fact],
@@ -444,7 +444,7 @@ impl LitexToLeanCompiler {
     // Predicate WD already certifies the point as a vector, including points
     // declared in a subset. Preserve its source value while rendering the
     // generated coordinate path; do not require its declared set to be a FnSet.
-    fn partial_raw_bindings(
+    pub(super) fn partial_raw_bindings(
         &self,
         r: &PartialDerivativeAtRelation,
         position: &SourcePosition<'_>,
@@ -478,7 +478,7 @@ impl LitexToLeanCompiler {
             .collect::<Result<Vec<_>, _>>()
             .map(|v| v.join(" "))
     }
-    fn partial_quotient_match(
+    pub(super) fn partial_quotient_match(
         &self,
         r: &PartialDerivativeAtRelation,
         quotient: &Obj,
@@ -494,7 +494,21 @@ impl LitexToLeanCompiler {
             &self.partial_raw_bindings(r, position)?,
         )?;
         let args = self.partial_raw_arguments(r, position)?;
-        Ok(format!("  have _partial_quotient_match : {q} = Litex.partialQuotientValue {args} := by\n    unfold Litex.partialQuotientValue\n    rw [← {equal}]\n    rfl"))
+        let function = self.compile_object_reference(&r.function, position)?;
+        let bindings = self.partial_raw_bindings(r, position)?;
+        let tail = [&r.point, &r.dimension, &r.coordinate]
+            .into_iter()
+            .map(|o| self.compile_function_raw_expression_bound(o, position, &bindings))
+            .collect::<Result<Vec<_>, _>>()?
+            .join(" ");
+        // Only constructed function values need to expose the certified object
+        // alias; identifiers already have exactly the native RHS syntax.
+        let expose = if matches!(&r.function, Obj::Identifier(_)) {
+            String::new()
+        } else {
+            format!("    change _ = Litex.partialQuotientValue (Litex.denote {function}) {tail}\n")
+        };
+        Ok(format!("  have _partial_quotient_match : {q} = Litex.partialQuotientValue {args} := by\n{expose}    unfold Litex.partialQuotientValue\n    rw [← {equal}]\n    rfl"))
     }
     pub(super) fn compile_partial_derivative_inferences(
         &self,
@@ -541,7 +555,8 @@ impl LitexToLeanCompiler {
                 position,
                 &self.partial_raw_bindings(r, position)?,
             )?;
-            let term=format!("(by\n{view}\n  obtain ⟨radius,hr,hcontrol⟩ := ({}).1\n  refine ⟨radius,hr,?_⟩\n  intro h h_near\n  obtain ⟨hR,_,hsmall⟩ := (Litex.SetSemantics.sep_members _ _ _).mp h_near\n  apply (Litex.SetSemantics.sep_members _ _ _).mpr\n  have h_member := hcontrol h hR hsmall\n  rw [← {equal}] at h_member\n  exact ⟨hR,hR,h_member⟩\n)",compiled.1);
+            let function = self.compile_object_reference(&r.function, position)?;
+            let term=format!("(by\n{view}\n  obtain ⟨radius,hr,hcontrol⟩ := ({}).1\n  refine ⟨radius,hr,?_⟩\n  intro h h_near\n  obtain ⟨hR,_,hsmall⟩ := (Litex.SetSemantics.sep_members _ _ _).mp h_near\n  apply (Litex.SetSemantics.sep_members _ _ _).mpr\n  have h_member := hcontrol h hR hsmall\n  have h_member : M.mem _ (Litex.FunctionSemantics.domainValue (Litex.denote {function})) := h_member\n  rw [← {equal}] at h_member\n  exact ⟨hR,hR,h_member⟩\n)",compiled.1);
             lines.push(self.emit_internal_fact(&facts[0], &(ty, term), position)?);
             let Obj::FunctionSpace(FunctionSpace::AnonymousFn(q)) = quotient else {
                 return Err(invalid("QuotientFunction"));

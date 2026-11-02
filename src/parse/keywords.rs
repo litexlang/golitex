@@ -56,7 +56,9 @@ pub const MATRIX_SCALE: &str = "matrix_scale";
 pub const MATRIX_MUL: &str = "matrix_mul";
 pub const MATRIX_APPLY: &str = "matrix_apply";
 pub const MATRIX_POWER: &str = "matrix_power";
-pub const MATRIX_INVERSE: &str = "matrix_inverse";
+pub const MATRIX_INVERSE: &str = "matrix_inv";
+pub const IS_MATRIX_INV: &str = "is_matrix_inv";
+pub const MATRIX_INVERSIBLE: &str = "matrix_inversible";
 pub const MATRIX_RANK: &str = "matrix_rank";
 pub const MATRIX_MINOR: &str = "matrix_minor";
 pub const MATRIX_COFACTOR: &str = "matrix_cofactor";
@@ -208,6 +210,7 @@ pub const IS_CHOICE_FUNCTION_FOR: &str = "is_choice_function_for";
 
 pub const INJECTIVE: &str = "injective";
 pub const SURJECTIVE: &str = "surjective";
+pub const COMM_RING: &str = "comm_ring";
 pub const BIJECTIVE: &str = "bijective";
 pub const PRIME: &str = "prime";
 pub const COPRIME: &str = "coprime";
@@ -353,6 +356,7 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | MATRIX_APPLY
             | MATRIX_POWER
             | MATRIX_INVERSE
+            | "matrix_inverse"
             | MATRIX_RANK
             | MATRIX_MINOR
             | MATRIX_COFACTOR

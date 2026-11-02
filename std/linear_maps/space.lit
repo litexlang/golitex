@@ -1,0 +1,525 @@
+# Vector-valued function spaces and the actual space of linear maps.
+# All constructions and VectorSpace laws are source proofs.
+
+template<K nonempty_set,F &Algebra::field::Field<K>,X set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>>:
+    have fn pointwise_map_add(S,T fn(v X) W) fn(v X) W=fn(v X) W {target.add(S(v),T(v))}
+
+template<K nonempty_set,F &Algebra::field::Field<K>,X set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>>:
+    have fn pointwise_map_smul(a K,T fn(v X) W) fn(v X) W=fn(v X) W {target.smul(a,T(v))}
+
+thm pointwise_add_of_linear_maps_is_linear:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,S)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\pointwise_map_add<K,F,V,W,target>(S,T))
+    claim:
+        ? forall a,b,c,d W:
+            target.add(target.add(a,b),target.add(c,d))=target.add(target.add(a,c),target.add(b,d))
+        target.add(target.add(a,b),target.add(c,d))=target.add(a,target.add(b,target.add(c,d)))
+        target.add(b,c)=target.add(c,b)
+        target.add(b,target.add(c,d))=target.add(target.add(b,c),d)=target.add(target.add(c,b),d)=target.add(c,target.add(b,d))
+        target.add(target.add(a,b),target.add(c,d))=target.add(a,target.add(c,target.add(b,d)))=target.add(target.add(a,c),target.add(b,d))
+    claim:
+        ? forall u,v V:
+            \pointwise_map_add<K,F,V,W,target>(S,T)(source.add(u,v))=target.add(\pointwise_map_add<K,F,V,W,target>(S,T)(u),\pointwise_map_add<K,F,V,W,target>(S,T)(v))
+        S(source.add(u,v))=target.add(S(u),S(v))
+        T(source.add(u,v))=target.add(T(u),T(v))
+        \pointwise_map_add<K,F,V,W,target>(S,T)(u)=target.add(S(u),T(u))
+        \pointwise_map_add<K,F,V,W,target>(S,T)(v)=target.add(S(v),T(v))
+        \pointwise_map_add<K,F,V,W,target>(S,T)(source.add(u,v))=target.add(S(source.add(u,v)),T(source.add(u,v)))=target.add(target.add(S(u),S(v)),target.add(T(u),T(v)))=target.add(target.add(S(u),T(u)),target.add(S(v),T(v)))=target.add(\pointwise_map_add<K,F,V,W,target>(S,T)(u),\pointwise_map_add<K,F,V,W,target>(S,T)(v))
+    claim:
+        ? forall a K,v V:
+            \pointwise_map_add<K,F,V,W,target>(S,T)(source.smul(a,v))=target.smul(a,\pointwise_map_add<K,F,V,W,target>(S,T)(v))
+        S(source.smul(a,v))=target.smul(a,S(v))
+        T(source.smul(a,v))=target.smul(a,T(v))
+        \pointwise_map_add<K,F,V,W,target>(S,T)(v)=target.add(S(v),T(v))
+        \pointwise_map_add<K,F,V,W,target>(S,T)(source.smul(a,v))=target.add(S(source.smul(a,v)),T(source.smul(a,v)))=target.add(target.smul(a,S(v)),target.smul(a,T(v)))=target.smul(a,target.add(S(v),T(v)))=target.smul(a,\pointwise_map_add<K,F,V,W,target>(S,T)(v))
+    by def $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\pointwise_map_add<K,F,V,W,target>(S,T))
+
+thm pointwise_smul_of_linear_map_is_linear:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\pointwise_map_smul<K,F,V,W,target>(a,T))
+    claim:
+        ? forall u,v V:
+            \pointwise_map_smul<K,F,V,W,target>(a,T)(source.add(u,v))=target.add(\pointwise_map_smul<K,F,V,W,target>(a,T)(u),\pointwise_map_smul<K,F,V,W,target>(a,T)(v))
+        T(source.add(u,v))=target.add(T(u),T(v))
+        \pointwise_map_smul<K,F,V,W,target>(a,T)(u)=target.smul(a,T(u))
+        \pointwise_map_smul<K,F,V,W,target>(a,T)(v)=target.smul(a,T(v))
+        \pointwise_map_smul<K,F,V,W,target>(a,T)(source.add(u,v))=target.smul(a,T(source.add(u,v)))=target.smul(a,target.add(T(u),T(v)))=target.add(target.smul(a,T(u)),target.smul(a,T(v)))=target.add(\pointwise_map_smul<K,F,V,W,target>(a,T)(u),\pointwise_map_smul<K,F,V,W,target>(a,T)(v))
+    claim:
+        ? forall b K,v V:
+            \pointwise_map_smul<K,F,V,W,target>(a,T)(source.smul(b,v))=target.smul(b,\pointwise_map_smul<K,F,V,W,target>(a,T)(v))
+        T(source.smul(b,v))=target.smul(b,T(v))
+        F.mul(a,b)=F.mul(b,a)
+        \pointwise_map_smul<K,F,V,W,target>(a,T)(v)=target.smul(a,T(v))
+        \pointwise_map_smul<K,F,V,W,target>(a,T)(source.smul(b,v))=target.smul(a,T(source.smul(b,v)))=target.smul(a,target.smul(b,T(v)))=target.smul(F.mul(a,b),T(v))=target.smul(F.mul(b,a),T(v))=target.smul(b,target.smul(a,T(v)))=target.smul(b,\pointwise_map_smul<K,F,V,W,target>(a,T)(v))
+    by def $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\pointwise_map_smul<K,F,V,W,target>(a,T))
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        {T fn(v V) W:$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)} $in power_set(fn(v V) W)
+    by def {T fn(v V) W:$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)} $subset fn(v V) W
+    {T fn(v V) W:$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)} $in power_set(fn(v V) W)
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>>:
+    have linear_map_carrier power_set(fn(v V) W)={T fn(v V) W:$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)}
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T \linear_map_carrier<K,F,V,source,W,target>:
+        T $in fn(v V) W
+    \linear_map_carrier<K,F,V,source,W,target> $in power_set(fn(v V) W)
+    \linear_map_carrier<K,F,V,source,W,target> $subset fn(v V) W
+    T $in fn(v V) W
+
+thm linear_map_carrier_specification:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T \linear_map_carrier<K,F,V,source,W,target>:
+        T $in fn(v V) W
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+    T $in fn(v V) W
+    claim:
+        ? forall A,B set,x A:
+            A=B
+            =>:
+                x $in B
+        x $in A
+        x $in B
+    \linear_map_carrier<K,F,V,source,W,target> ={U fn(v V) W:$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,U)}
+    T $in {U fn(v V) W:$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,U)}
+    $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+
+thm linear_map_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T \linear_map_carrier<K,F,V,source,W,target>:
+        T $in fn(v V) W
+    \linear_map_carrier<K,F,V,source,W,target> $subset fn(v V) W
+    T $in fn(v V) W
+
+thm linear_map_belongs_to_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            T $in \linear_map_carrier<K,F,V,source,W,target>
+    T $in {U fn(v V) W:$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,U)}
+    claim:
+        ? forall A,B set,x A:
+            A=B
+            =>:
+                x $in B
+        x $in A
+        x $in B
+    {U fn(v V) W:$Algebra::vector_space::is_linear_map(K,F,V,source,W,target,U)}=\linear_map_carrier<K,F,V,source,W,target>
+    T $in \linear_map_carrier<K,F,V,source,W,target>
+
+thm linear_map_carrier_is_nonempty:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $is_nonempty_set(\linear_map_carrier<K,F,V,source,W,target>)
+    release thm Algebra::vector_space::zero_map_linear(K,F,V,source,W,target)
+    release thm linear_map_belongs_to_carrier(K,F,V,source,W,target,\Algebra::vector_space::zero_map<V,W,target.zero>)
+    witness $is_nonempty_set(\linear_map_carrier<K,F,V,source,W,target>) from \Algebra::vector_space::zero_map<V,W,target.zero>
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T \linear_map_carrier<K,F,V,source,W,target>:
+        \pointwise_map_add<K,F,V,W,target>(S,T) $in \linear_map_carrier<K,F,V,source,W,target>
+    release thm linear_map_carrier_specification(K,F,V,source,W,target,S)
+    release thm linear_map_carrier_specification(K,F,V,source,W,target,T)
+    release thm pointwise_add_of_linear_maps_is_linear(K,F,V,source,W,target,S,T)
+    release thm linear_map_belongs_to_carrier(K,F,V,source,W,target,\pointwise_map_add<K,F,V,W,target>(S,T))
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T \linear_map_carrier<K,F,V,source,W,target>:
+        \pointwise_map_smul<K,F,V,W,target>(a,T) $in \linear_map_carrier<K,F,V,source,W,target>
+    release thm linear_map_carrier_specification(K,F,V,source,W,target,T)
+    release thm pointwise_smul_of_linear_map_is_linear(K,F,V,source,W,target,a,T)
+    release thm linear_map_belongs_to_carrier(K,F,V,source,W,target,\pointwise_map_smul<K,F,V,W,target>(a,T))
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>>:
+    have fn linear_map_add(S,T \linear_map_carrier<K,F,V,source,W,target>) \linear_map_carrier<K,F,V,source,W,target> =\pointwise_map_add<K,F,V,W,target>(S,T)
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>>:
+    have fn linear_map_smul(a K,T \linear_map_carrier<K,F,V,source,W,target>) \linear_map_carrier<K,F,V,source,W,target> =\pointwise_map_smul<K,F,V,W,target>(a,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $is_nonempty_set(\linear_map_carrier<K,F,V,source,W,target>)
+    release thm linear_map_carrier_is_nonempty(K,F,V,source,W,target)
+
+thm linear_map_add_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T \linear_map_carrier<K,F,V,source,W,target>:
+        \linear_map_add<K,F,V,source,W,target>(S,T) $in fn(v V) W
+    release thm linear_map_function_carrier(K,F,V,source,W,target,\linear_map_add<K,F,V,source,W,target>(S,T))
+
+thm linear_map_smul_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T \linear_map_carrier<K,F,V,source,W,target>:
+        \linear_map_smul<K,F,V,source,W,target>(a,T) $in fn(v V) W
+    release thm linear_map_function_carrier(K,F,V,source,W,target,\linear_map_smul<K,F,V,source,W,target>(a,T))
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T \linear_map_carrier<K,F,V,source,W,target>:
+        \linear_map_add<K,F,V,source,W,target>(S,T) $in fn(v V) W
+    release thm linear_map_add_function_carrier(K,F,V,source,W,target,S,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T \linear_map_carrier<K,F,V,source,W,target>:
+        \linear_map_smul<K,F,V,source,W,target>(a,T) $in fn(v V) W
+    release thm linear_map_smul_function_carrier(K,F,V,source,W,target,a,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T \linear_map_carrier<K,F,V,source,W,target>,x V:
+        T(x) $in W
+    T $in fn(t V) W
+    T(x) $in W
+
+thm linear_map_add_pointwise:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T,result fn(v V) W,v V:
+        S $in \linear_map_carrier<K,F,V,source,W,target>
+        T $in \linear_map_carrier<K,F,V,source,W,target>
+        result=\linear_map_add<K,F,V,source,W,target>(S,T)
+        =>:
+            result(v)=target.add(S(v),T(v))
+    \linear_map_add<K,F,V,source,W,target>(S,T)=\pointwise_map_add<K,F,V,W,target>(S,T)
+    result=\pointwise_map_add<K,F,V,W,target>(S,T)
+    result(v)=\pointwise_map_add<K,F,V,W,target>(S,T)(v)=target.add(S(v),T(v))
+
+template<K nonempty_set,F &Algebra::field::Field<K>,X set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>>:
+    have fn pointwise_map_zero(x X) W=target.zero
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,X set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        (\pointwise_map_zero<K,F,X,W,target>,\pointwise_map_add<K,F,X,W,target>,\pointwise_map_smul<K,F,X,W,target>) $in &Algebra::vector_space::VectorSpace<K,F,fn(x X) W>
+    claim:
+        ? forall f,g,h fn(x X) W:
+            \pointwise_map_add<K,F,X,W,target>(\pointwise_map_add<K,F,X,W,target>(f,g),h)=\pointwise_map_add<K,F,X,W,target>(f,\pointwise_map_add<K,F,X,W,target>(g,h))
+        claim:
+            ? forall p X:
+                \pointwise_map_add<K,F,X,W,target>(\pointwise_map_add<K,F,X,W,target>(f,g),h)(p)=\pointwise_map_add<K,F,X,W,target>(f,\pointwise_map_add<K,F,X,W,target>(g,h))(p)
+            \pointwise_map_add<K,F,X,W,target>(f,g)(p)=target.add(f(p),g(p))
+            \pointwise_map_add<K,F,X,W,target>(g,h)(p)=target.add(g(p),h(p))
+            \pointwise_map_add<K,F,X,W,target>(\pointwise_map_add<K,F,X,W,target>(f,g),h)(p)=target.add(target.add(f(p),g(p)),h(p))=target.add(f(p),target.add(g(p),h(p)))=\pointwise_map_add<K,F,X,W,target>(f,\pointwise_map_add<K,F,X,W,target>(g,h))(p)
+        by fn_extension \pointwise_map_add<K,F,X,W,target>(\pointwise_map_add<K,F,X,W,target>(f,g),h)=\pointwise_map_add<K,F,X,W,target>(f,\pointwise_map_add<K,F,X,W,target>(g,h))
+    claim:
+        ? forall f,g fn(x X) W:
+            \pointwise_map_add<K,F,X,W,target>(f,g)=\pointwise_map_add<K,F,X,W,target>(g,f)
+        claim:
+            ? forall p X:
+                \pointwise_map_add<K,F,X,W,target>(f,g)(p)=\pointwise_map_add<K,F,X,W,target>(g,f)(p)
+            \pointwise_map_add<K,F,X,W,target>(f,g)(p)=target.add(f(p),g(p))=target.add(g(p),f(p))=\pointwise_map_add<K,F,X,W,target>(g,f)(p)
+        by fn_extension \pointwise_map_add<K,F,X,W,target>(f,g)=\pointwise_map_add<K,F,X,W,target>(g,f)
+    claim:
+        ? forall f fn(x X) W:
+            \pointwise_map_add<K,F,X,W,target>(\pointwise_map_zero<K,F,X,W,target>,f)=f
+            exist g fn(x X) W st {\pointwise_map_add<K,F,X,W,target>(f,g)=\pointwise_map_zero<K,F,X,W,target>}
+        claim:
+            ? forall p X:
+                \pointwise_map_add<K,F,X,W,target>(\pointwise_map_zero<K,F,X,W,target>,f)(p)=f(p)
+            \pointwise_map_zero<K,F,X,W,target>(p)=target.zero
+            \pointwise_map_add<K,F,X,W,target>(\pointwise_map_zero<K,F,X,W,target>,f)(p)=target.add(target.zero,f(p))=f(p)
+        by fn_extension \pointwise_map_add<K,F,X,W,target>(\pointwise_map_zero<K,F,X,W,target>,f)=f
+        have inverse fn(x X) W=\pointwise_map_smul<K,F,X,W,target>(F.neg(F.one),f)
+        claim:
+            ? forall p X:
+                \pointwise_map_add<K,F,X,W,target>(f,inverse)(p)=\pointwise_map_zero<K,F,X,W,target>(p)
+            inverse(p)=\pointwise_map_smul<K,F,X,W,target>(F.neg(F.one),f)(p)=target.smul(F.neg(F.one),f(p))
+            target.smul(F.one,f(p))=f(p)
+            F.add(F.one,F.neg(F.one))=F.zero
+            release thm Algebra::vector_space::zero_scalar_times_vector(K,F,W,target,f(p))
+            target.add(f(p),inverse(p))=target.add(target.smul(F.one,f(p)),target.smul(F.neg(F.one),f(p)))=target.smul(F.add(F.one,F.neg(F.one)),f(p))=target.smul(F.zero,f(p))=target.zero
+            \pointwise_map_add<K,F,X,W,target>(f,inverse)(p)=target.add(f(p),inverse(p))=target.zero=\pointwise_map_zero<K,F,X,W,target>(p)
+        by fn_extension \pointwise_map_add<K,F,X,W,target>(f,inverse)=\pointwise_map_zero<K,F,X,W,target>
+        witness exist g fn(x X) W st {\pointwise_map_add<K,F,X,W,target>(f,g)=\pointwise_map_zero<K,F,X,W,target>} from inverse
+    claim:
+        ? forall a,b K,f fn(x X) W:
+            \pointwise_map_smul<K,F,X,W,target>(F.mul(a,b),f)=\pointwise_map_smul<K,F,X,W,target>(a,\pointwise_map_smul<K,F,X,W,target>(b,f))
+            \pointwise_map_smul<K,F,X,W,target>(F.add(a,b),f)=\pointwise_map_add<K,F,X,W,target>(\pointwise_map_smul<K,F,X,W,target>(a,f),\pointwise_map_smul<K,F,X,W,target>(b,f))
+        claim:
+            ? forall p X:
+                \pointwise_map_smul<K,F,X,W,target>(F.mul(a,b),f)(p)=\pointwise_map_smul<K,F,X,W,target>(a,\pointwise_map_smul<K,F,X,W,target>(b,f))(p)
+            \pointwise_map_smul<K,F,X,W,target>(b,f)(p)=target.smul(b,f(p))
+            \pointwise_map_smul<K,F,X,W,target>(F.mul(a,b),f)(p)=target.smul(F.mul(a,b),f(p))=target.smul(a,target.smul(b,f(p)))=\pointwise_map_smul<K,F,X,W,target>(a,\pointwise_map_smul<K,F,X,W,target>(b,f))(p)
+        by fn_extension \pointwise_map_smul<K,F,X,W,target>(F.mul(a,b),f)=\pointwise_map_smul<K,F,X,W,target>(a,\pointwise_map_smul<K,F,X,W,target>(b,f))
+        claim:
+            ? forall p X:
+                \pointwise_map_smul<K,F,X,W,target>(F.add(a,b),f)(p)=\pointwise_map_add<K,F,X,W,target>(\pointwise_map_smul<K,F,X,W,target>(a,f),\pointwise_map_smul<K,F,X,W,target>(b,f))(p)
+            \pointwise_map_smul<K,F,X,W,target>(a,f)(p)=target.smul(a,f(p))
+            \pointwise_map_smul<K,F,X,W,target>(b,f)(p)=target.smul(b,f(p))
+            \pointwise_map_smul<K,F,X,W,target>(F.add(a,b),f)(p)=target.smul(F.add(a,b),f(p))=target.add(target.smul(a,f(p)),target.smul(b,f(p)))=\pointwise_map_add<K,F,X,W,target>(\pointwise_map_smul<K,F,X,W,target>(a,f),\pointwise_map_smul<K,F,X,W,target>(b,f))(p)
+        by fn_extension \pointwise_map_smul<K,F,X,W,target>(F.add(a,b),f)=\pointwise_map_add<K,F,X,W,target>(\pointwise_map_smul<K,F,X,W,target>(a,f),\pointwise_map_smul<K,F,X,W,target>(b,f))
+    claim:
+        ? forall a K,f,g fn(x X) W:
+            \pointwise_map_smul<K,F,X,W,target>(a,\pointwise_map_add<K,F,X,W,target>(f,g))=\pointwise_map_add<K,F,X,W,target>(\pointwise_map_smul<K,F,X,W,target>(a,f),\pointwise_map_smul<K,F,X,W,target>(a,g))
+        claim:
+            ? forall p X:
+                \pointwise_map_smul<K,F,X,W,target>(a,\pointwise_map_add<K,F,X,W,target>(f,g))(p)=\pointwise_map_add<K,F,X,W,target>(\pointwise_map_smul<K,F,X,W,target>(a,f),\pointwise_map_smul<K,F,X,W,target>(a,g))(p)
+            \pointwise_map_add<K,F,X,W,target>(f,g)(p)=target.add(f(p),g(p))
+            \pointwise_map_smul<K,F,X,W,target>(a,f)(p)=target.smul(a,f(p))
+            \pointwise_map_smul<K,F,X,W,target>(a,g)(p)=target.smul(a,g(p))
+            \pointwise_map_smul<K,F,X,W,target>(a,\pointwise_map_add<K,F,X,W,target>(f,g))(p)=target.smul(a,target.add(f(p),g(p)))=target.add(target.smul(a,f(p)),target.smul(a,g(p)))=\pointwise_map_add<K,F,X,W,target>(\pointwise_map_smul<K,F,X,W,target>(a,f),\pointwise_map_smul<K,F,X,W,target>(a,g))(p)
+        by fn_extension \pointwise_map_smul<K,F,X,W,target>(a,\pointwise_map_add<K,F,X,W,target>(f,g))=\pointwise_map_add<K,F,X,W,target>(\pointwise_map_smul<K,F,X,W,target>(a,f),\pointwise_map_smul<K,F,X,W,target>(a,g))
+    claim:
+        ? forall f fn(x X) W:
+            \pointwise_map_smul<K,F,X,W,target>(F.one,f)=f
+        claim:
+            ? forall p X:
+                \pointwise_map_smul<K,F,X,W,target>(F.one,f)(p)=f(p)
+            \pointwise_map_smul<K,F,X,W,target>(F.one,f)(p)=target.smul(F.one,f(p))=f(p)
+        by fn_extension \pointwise_map_smul<K,F,X,W,target>(F.one,f)=f
+    release thm struct_member((\pointwise_map_zero<K,F,X,W,target>,\pointwise_map_add<K,F,X,W,target>,\pointwise_map_smul<K,F,X,W,target>),&Algebra::vector_space::VectorSpace<K,F,fn(x X) W>)
+
+template<K nonempty_set,F &Algebra::field::Field<K>,X set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>>:
+    have vector_function_space &Algebra::vector_space::VectorSpace<K,F,fn(x X) W> =(\pointwise_map_zero<K,F,X,W,target>,\pointwise_map_add<K,F,X,W,target>,\pointwise_map_smul<K,F,X,W,target>)
+
+thm vector_function_space_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,X set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \vector_function_space<K,F,X,W,target> $in &Algebra::vector_space::VectorSpace<K,F,fn(x X) W>
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,X set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \vector_function_space<K,F,X,W,target> $in &Algebra::vector_space::VectorSpace<K,F,fn(x X) W>
+    release thm vector_function_space_carrier(K,F,X,W,target)
+
+thm linear_maps_form_subspace:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $Algebra::vector_space::is_subspace(K,F,fn(v V) W,\vector_function_space<K,F,V,W,target>,\linear_map_carrier<K,F,V,source,W,target>)
+    \vector_function_space<K,F,V,W,target> =(\pointwise_map_zero<K,F,V,W,target>,\pointwise_map_add<K,F,V,W,target>,\pointwise_map_smul<K,F,V,W,target>)
+    release struct def \vector_function_space<K,F,V,W,target>
+    \vector_function_space<K,F,V,W,target>.zero=\pointwise_map_zero<K,F,V,W,target>
+    \vector_function_space<K,F,V,W,target>.add=\pointwise_map_add<K,F,V,W,target>
+    \vector_function_space<K,F,V,W,target>.smul=\pointwise_map_smul<K,F,V,W,target>
+    claim:
+        ? forall v V:
+            \pointwise_map_zero<K,F,V,W,target>(v)=\Algebra::vector_space::zero_map<V,W,target.zero>(v)
+        \pointwise_map_zero<K,F,V,W,target>(v)=target.zero=\Algebra::vector_space::zero_map<V,W,target.zero>(v)
+    by fn_extension \pointwise_map_zero<K,F,V,W,target> =\Algebra::vector_space::zero_map<V,W,target.zero>
+    release thm Algebra::vector_space::zero_map_linear(K,F,V,source,W,target)
+    $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\pointwise_map_zero<K,F,V,W,target>)
+    release thm linear_map_belongs_to_carrier(K,F,V,source,W,target,\pointwise_map_zero<K,F,V,W,target>)
+    \vector_function_space<K,F,V,W,target>.zero $in \linear_map_carrier<K,F,V,source,W,target>
+    claim:
+        ? forall S,T fn(v V) W:
+            S $in \linear_map_carrier<K,F,V,source,W,target>
+            T $in \linear_map_carrier<K,F,V,source,W,target>
+            =>:
+                \vector_function_space<K,F,V,W,target>.add(S,T) $in \linear_map_carrier<K,F,V,source,W,target>
+        release thm linear_map_carrier_specification(K,F,V,source,W,target,S)
+        release thm linear_map_carrier_specification(K,F,V,source,W,target,T)
+        release thm pointwise_add_of_linear_maps_is_linear(K,F,V,source,W,target,S,T)
+        release thm linear_map_belongs_to_carrier(K,F,V,source,W,target,\pointwise_map_add<K,F,V,W,target>(S,T))
+        \vector_function_space<K,F,V,W,target>.add(S,T)=\pointwise_map_add<K,F,V,W,target>(S,T)
+        \vector_function_space<K,F,V,W,target>.add(S,T) $in \linear_map_carrier<K,F,V,source,W,target>
+    claim:
+        ? forall a K,T fn(v V) W:
+            T $in \linear_map_carrier<K,F,V,source,W,target>
+            =>:
+                \vector_function_space<K,F,V,W,target>.smul(a,T) $in \linear_map_carrier<K,F,V,source,W,target>
+        release thm linear_map_carrier_specification(K,F,V,source,W,target,T)
+        release thm pointwise_smul_of_linear_map_is_linear(K,F,V,source,W,target,a,T)
+        release thm linear_map_belongs_to_carrier(K,F,V,source,W,target,\pointwise_map_smul<K,F,V,W,target>(a,T))
+        \vector_function_space<K,F,V,W,target>.smul(a,T)=\pointwise_map_smul<K,F,V,W,target>(a,T)
+        \vector_function_space<K,F,V,W,target>.smul(a,T) $in \linear_map_carrier<K,F,V,source,W,target>
+    by def $Algebra::vector_space::is_subspace(K,F,fn(v V) W,\vector_function_space<K,F,V,W,target>,\linear_map_carrier<K,F,V,source,W,target>)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $Algebra::vector_space::is_subspace(K,F,fn(v V) W,\vector_function_space<K,F,V,W,target>,\linear_map_carrier<K,F,V,source,W,target>)
+    release thm linear_maps_form_subspace(K,F,V,source,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \Algebra::subspace::restricted_space<K,F,fn(v V) W,\vector_function_space<K,F,V,W,target>,\linear_map_carrier<K,F,V,source,W,target>> $in &Algebra::vector_space::VectorSpace<K,F,\linear_map_carrier<K,F,V,source,W,target>>
+    release thm Algebra::subspace::restricted_space_is_vector_space(K,F,fn(v V) W,\vector_function_space<K,F,V,W,target>,\linear_map_carrier<K,F,V,source,W,target>)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T \linear_map_carrier<K,F,V,source,W,target>:
+        \linear_map_add<K,F,V,source,W,target>(S,T)=\vector_function_space<K,F,V,W,target>.add(S,T)
+    \vector_function_space<K,F,V,W,target> =(\pointwise_map_zero<K,F,V,W,target>,\pointwise_map_add<K,F,V,W,target>,\pointwise_map_smul<K,F,V,W,target>)
+    release struct def \vector_function_space<K,F,V,W,target>
+    \vector_function_space<K,F,V,W,target>.add=\pointwise_map_add<K,F,V,W,target>
+    \linear_map_add<K,F,V,source,W,target>(S,T)=\pointwise_map_add<K,F,V,W,target>(S,T)=\vector_function_space<K,F,V,W,target>.add(S,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T \linear_map_carrier<K,F,V,source,W,target>:
+        \linear_map_smul<K,F,V,source,W,target>(a,T)=\vector_function_space<K,F,V,W,target>.smul(a,T)
+    \vector_function_space<K,F,V,W,target> =(\pointwise_map_zero<K,F,V,W,target>,\pointwise_map_add<K,F,V,W,target>,\pointwise_map_smul<K,F,V,W,target>)
+    release struct def \vector_function_space<K,F,V,W,target>
+    \vector_function_space<K,F,V,W,target>.smul=\pointwise_map_smul<K,F,V,W,target>
+    \linear_map_smul<K,F,V,source,W,target>(a,T)=\pointwise_map_smul<K,F,V,W,target>(a,T)=\vector_function_space<K,F,V,W,target>.smul(a,T)
+
+thm zero_map_equals_vector_function_space_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \Algebra::vector_space::zero_map<V,W,target.zero> =\vector_function_space<K,F,V,W,target>.zero
+    \vector_function_space<K,F,V,W,target> =(\pointwise_map_zero<K,F,V,W,target>,\pointwise_map_add<K,F,V,W,target>,\pointwise_map_smul<K,F,V,W,target>)
+    release struct def \vector_function_space<K,F,V,W,target>
+    \vector_function_space<K,F,V,W,target>.zero=\pointwise_map_zero<K,F,V,W,target>
+    claim:
+        ? forall x V:
+            \Algebra::vector_space::zero_map<V,W,target.zero>(x)=\pointwise_map_zero<K,F,V,W,target>(x)
+        \Algebra::vector_space::zero_map<V,W,target.zero>(x)=target.zero=\pointwise_map_zero<K,F,V,W,target>(x)
+    by fn_extension \Algebra::vector_space::zero_map<V,W,target.zero> =\pointwise_map_zero<K,F,V,W,target>
+    \Algebra::vector_space::zero_map<V,W,target.zero> =\vector_function_space<K,F,V,W,target>.zero
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        (\Algebra::vector_space::zero_map<V,W,target.zero>,\linear_map_add<K,F,V,source,W,target>,\linear_map_smul<K,F,V,source,W,target>) $in &Algebra::vector_space::VectorSpace<K,F,\linear_map_carrier<K,F,V,source,W,target>>
+    release thm linear_map_carrier_is_nonempty(K,F,V,source,W,target)
+    release thm vector_function_space_carrier(K,F,V,W,target)
+    release struct def \vector_function_space<K,F,V,W,target>
+    release thm Algebra::vector_space::zero_map_linear(K,F,V,source,W,target)
+    release thm linear_map_belongs_to_carrier(K,F,V,source,W,target,\Algebra::vector_space::zero_map<V,W,target.zero>)
+    release thm zero_map_equals_vector_function_space_zero(K,F,V,W,target)
+    \Algebra::vector_space::zero_map<V,W,target.zero> =\vector_function_space<K,F,V,W,target>.zero
+    claim:
+        ? forall f,g,h \linear_map_carrier<K,F,V,source,W,target>:
+            \linear_map_add<K,F,V,source,W,target>(\linear_map_add<K,F,V,source,W,target>(f,g),h)=\linear_map_add<K,F,V,source,W,target>(f,\linear_map_add<K,F,V,source,W,target>(g,h))
+        release thm linear_map_add_function_carrier(K,F,V,source,W,target,f,g)
+        release thm linear_map_add_function_carrier(K,F,V,source,W,target,g,h)
+        \linear_map_add<K,F,V,source,W,target>(f,g)=\vector_function_space<K,F,V,W,target>.add(f,g)
+        \linear_map_add<K,F,V,source,W,target>(g,h)=\vector_function_space<K,F,V,W,target>.add(g,h)
+        \linear_map_add<K,F,V,source,W,target>(\linear_map_add<K,F,V,source,W,target>(f,g),h)=\vector_function_space<K,F,V,W,target>.add(\linear_map_add<K,F,V,source,W,target>(f,g),h)=\vector_function_space<K,F,V,W,target>.add(\vector_function_space<K,F,V,W,target>.add(f,g),h)=\vector_function_space<K,F,V,W,target>.add(f,\vector_function_space<K,F,V,W,target>.add(g,h))=\vector_function_space<K,F,V,W,target>.add(f,\linear_map_add<K,F,V,source,W,target>(g,h))=\linear_map_add<K,F,V,source,W,target>(f,\linear_map_add<K,F,V,source,W,target>(g,h))
+    claim:
+        ? forall f,g \linear_map_carrier<K,F,V,source,W,target>:
+            \linear_map_add<K,F,V,source,W,target>(f,g)=\linear_map_add<K,F,V,source,W,target>(g,f)
+        \linear_map_add<K,F,V,source,W,target>(f,g)=\vector_function_space<K,F,V,W,target>.add(f,g)
+        \linear_map_add<K,F,V,source,W,target>(g,f)=\vector_function_space<K,F,V,W,target>.add(g,f)
+        \linear_map_add<K,F,V,source,W,target>(f,g)=\vector_function_space<K,F,V,W,target>.add(f,g)=\vector_function_space<K,F,V,W,target>.add(g,f)=\linear_map_add<K,F,V,source,W,target>(g,f)
+    claim:
+        ? forall f \linear_map_carrier<K,F,V,source,W,target>:
+            \linear_map_add<K,F,V,source,W,target>(\Algebra::vector_space::zero_map<V,W,target.zero>,f)=f
+            exist g \linear_map_carrier<K,F,V,source,W,target> st {\linear_map_add<K,F,V,source,W,target>(f,g)=\Algebra::vector_space::zero_map<V,W,target.zero>}
+        \linear_map_add<K,F,V,source,W,target>(\Algebra::vector_space::zero_map<V,W,target.zero>,f)=\vector_function_space<K,F,V,W,target>.add(\Algebra::vector_space::zero_map<V,W,target.zero>,f)=\vector_function_space<K,F,V,W,target>.add(\vector_function_space<K,F,V,W,target>.zero,f)=f
+        have inverse \linear_map_carrier<K,F,V,source,W,target> =\linear_map_smul<K,F,V,source,W,target>(F.neg(F.one),f)
+        release thm linear_map_function_carrier(K,F,V,source,W,target,inverse)
+        \linear_map_smul<K,F,V,source,W,target>(F.neg(F.one),f)=\vector_function_space<K,F,V,W,target>.smul(F.neg(F.one),f)
+        inverse=\linear_map_smul<K,F,V,source,W,target>(F.neg(F.one),f)=\vector_function_space<K,F,V,W,target>.smul(F.neg(F.one),f)
+        \vector_function_space<K,F,V,W,target>.smul(F.one,f)=f
+        F.add(F.one,F.neg(F.one))=F.zero
+        release thm Algebra::vector_space::zero_scalar_times_vector(K,F,fn(v V) W,\vector_function_space<K,F,V,W,target>,f)
+        \vector_function_space<K,F,V,W,target>.add(f,inverse)=\vector_function_space<K,F,V,W,target>.add(\vector_function_space<K,F,V,W,target>.smul(F.one,f),\vector_function_space<K,F,V,W,target>.smul(F.neg(F.one),f))=\vector_function_space<K,F,V,W,target>.smul(F.add(F.one,F.neg(F.one)),f)=\vector_function_space<K,F,V,W,target>.smul(F.zero,f)=\vector_function_space<K,F,V,W,target>.zero=\Algebra::vector_space::zero_map<V,W,target.zero>
+        \linear_map_add<K,F,V,source,W,target>(f,inverse)=\vector_function_space<K,F,V,W,target>.add(f,inverse)=\Algebra::vector_space::zero_map<V,W,target.zero>
+        witness exist g \linear_map_carrier<K,F,V,source,W,target> st {\linear_map_add<K,F,V,source,W,target>(f,g)=\Algebra::vector_space::zero_map<V,W,target.zero>} from inverse
+    claim:
+        ? forall a,b K,f \linear_map_carrier<K,F,V,source,W,target>:
+            \linear_map_smul<K,F,V,source,W,target>(F.mul(a,b),f)=\linear_map_smul<K,F,V,source,W,target>(a,\linear_map_smul<K,F,V,source,W,target>(b,f))
+            \linear_map_smul<K,F,V,source,W,target>(F.add(a,b),f)=\linear_map_add<K,F,V,source,W,target>(\linear_map_smul<K,F,V,source,W,target>(a,f),\linear_map_smul<K,F,V,source,W,target>(b,f))
+        release thm linear_map_smul_function_carrier(K,F,V,source,W,target,a,f)
+        release thm linear_map_smul_function_carrier(K,F,V,source,W,target,b,f)
+        \linear_map_smul<K,F,V,source,W,target>(a,f)=\vector_function_space<K,F,V,W,target>.smul(a,f)
+        \linear_map_smul<K,F,V,source,W,target>(b,f)=\vector_function_space<K,F,V,W,target>.smul(b,f)
+        \linear_map_smul<K,F,V,source,W,target>(F.mul(a,b),f)=\vector_function_space<K,F,V,W,target>.smul(F.mul(a,b),f)=\vector_function_space<K,F,V,W,target>.smul(a,\vector_function_space<K,F,V,W,target>.smul(b,f))=\vector_function_space<K,F,V,W,target>.smul(a,\linear_map_smul<K,F,V,source,W,target>(b,f))=\linear_map_smul<K,F,V,source,W,target>(a,\linear_map_smul<K,F,V,source,W,target>(b,f))
+        \linear_map_smul<K,F,V,source,W,target>(F.add(a,b),f)=\vector_function_space<K,F,V,W,target>.smul(F.add(a,b),f)=\vector_function_space<K,F,V,W,target>.add(\vector_function_space<K,F,V,W,target>.smul(a,f),\vector_function_space<K,F,V,W,target>.smul(b,f))=\vector_function_space<K,F,V,W,target>.add(\linear_map_smul<K,F,V,source,W,target>(a,f),\linear_map_smul<K,F,V,source,W,target>(b,f))=\linear_map_add<K,F,V,source,W,target>(\linear_map_smul<K,F,V,source,W,target>(a,f),\linear_map_smul<K,F,V,source,W,target>(b,f))
+    claim:
+        ? forall a K,f,g \linear_map_carrier<K,F,V,source,W,target>:
+            \linear_map_smul<K,F,V,source,W,target>(a,\linear_map_add<K,F,V,source,W,target>(f,g))=\linear_map_add<K,F,V,source,W,target>(\linear_map_smul<K,F,V,source,W,target>(a,f),\linear_map_smul<K,F,V,source,W,target>(a,g))
+        release thm linear_map_add_function_carrier(K,F,V,source,W,target,f,g)
+        release thm linear_map_smul_function_carrier(K,F,V,source,W,target,a,f)
+        release thm linear_map_smul_function_carrier(K,F,V,source,W,target,a,g)
+        \linear_map_add<K,F,V,source,W,target>(f,g)=\vector_function_space<K,F,V,W,target>.add(f,g)
+        \linear_map_smul<K,F,V,source,W,target>(a,f)=\vector_function_space<K,F,V,W,target>.smul(a,f)
+        \linear_map_smul<K,F,V,source,W,target>(a,g)=\vector_function_space<K,F,V,W,target>.smul(a,g)
+        \linear_map_smul<K,F,V,source,W,target>(a,\linear_map_add<K,F,V,source,W,target>(f,g))=\vector_function_space<K,F,V,W,target>.smul(a,\linear_map_add<K,F,V,source,W,target>(f,g))=\vector_function_space<K,F,V,W,target>.smul(a,\vector_function_space<K,F,V,W,target>.add(f,g))=\vector_function_space<K,F,V,W,target>.add(\vector_function_space<K,F,V,W,target>.smul(a,f),\vector_function_space<K,F,V,W,target>.smul(a,g))=\vector_function_space<K,F,V,W,target>.add(\linear_map_smul<K,F,V,source,W,target>(a,f),\linear_map_smul<K,F,V,source,W,target>(a,g))=\linear_map_add<K,F,V,source,W,target>(\linear_map_smul<K,F,V,source,W,target>(a,f),\linear_map_smul<K,F,V,source,W,target>(a,g))
+    claim:
+        ? forall f \linear_map_carrier<K,F,V,source,W,target>:
+            \linear_map_smul<K,F,V,source,W,target>(F.one,f)=f
+        \linear_map_smul<K,F,V,source,W,target>(F.one,f)=\vector_function_space<K,F,V,W,target>.smul(F.one,f)=f
+    release thm struct_member((\Algebra::vector_space::zero_map<V,W,target.zero>,\linear_map_add<K,F,V,source,W,target>,\linear_map_smul<K,F,V,source,W,target>),&Algebra::vector_space::VectorSpace<K,F,\linear_map_carrier<K,F,V,source,W,target>>)
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>>:
+    have linear_map_space &Algebra::vector_space::VectorSpace<K,F,\linear_map_carrier<K,F,V,source,W,target>> =(\Algebra::vector_space::zero_map<V,W,target.zero>,\linear_map_add<K,F,V,source,W,target>,\linear_map_smul<K,F,V,source,W,target>)
+
+thm linear_map_space_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \linear_map_space<K,F,V,source,W,target> $in &Algebra::vector_space::VectorSpace<K,F,\linear_map_carrier<K,F,V,source,W,target>>
+
+thm linear_map_space_add:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T fn(v V) W:
+        S $in \linear_map_carrier<K,F,V,source,W,target>
+        T $in \linear_map_carrier<K,F,V,source,W,target>
+        =>:
+            \linear_map_space<K,F,V,source,W,target>.add(S,T)=\linear_map_add<K,F,V,source,W,target>(S,T)
+    \linear_map_space<K,F,V,source,W,target> =(\Algebra::vector_space::zero_map<V,W,target.zero>,\linear_map_add<K,F,V,source,W,target>,\linear_map_smul<K,F,V,source,W,target>)
+    release struct def \linear_map_space<K,F,V,source,W,target>
+    \linear_map_space<K,F,V,source,W,target>.add=\linear_map_add<K,F,V,source,W,target>
+    \linear_map_space<K,F,V,source,W,target>.add(S,T)=\linear_map_add<K,F,V,source,W,target>(S,T)
+
+thm linear_map_space_smul:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T fn(v V) W:
+        T $in \linear_map_carrier<K,F,V,source,W,target>
+        =>:
+            \linear_map_space<K,F,V,source,W,target>.smul(a,T)=\linear_map_smul<K,F,V,source,W,target>(a,T)
+    \linear_map_space<K,F,V,source,W,target> =(\Algebra::vector_space::zero_map<V,W,target.zero>,\linear_map_add<K,F,V,source,W,target>,\linear_map_smul<K,F,V,source,W,target>)
+    release struct def \linear_map_space<K,F,V,source,W,target>
+    \linear_map_space<K,F,V,source,W,target>.smul=\linear_map_smul<K,F,V,source,W,target>
+    \linear_map_space<K,F,V,source,W,target>.smul(a,T)=\linear_map_smul<K,F,V,source,W,target>(a,T)
+
+thm linear_map_space_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \linear_map_space<K,F,V,source,W,target>.zero=\Algebra::vector_space::zero_map<V,W,target.zero>
+    \linear_map_space<K,F,V,source,W,target> =(\Algebra::vector_space::zero_map<V,W,target.zero>,\linear_map_add<K,F,V,source,W,target>,\linear_map_smul<K,F,V,source,W,target>)
+    release struct def \linear_map_space<K,F,V,source,W,target>
+    \linear_map_space<K,F,V,source,W,target>.zero=\Algebra::vector_space::zero_map<V,W,target.zero>
+
+thm linear_map_smul_pointwise:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T,result fn(v V) W,x V:
+        T $in \linear_map_carrier<K,F,V,source,W,target>
+        result=\linear_map_smul<K,F,V,source,W,target>(a,T)
+        =>:
+            result(x)=target.smul(a,T(x))
+    \linear_map_smul<K,F,V,source,W,target>(a,T)=\pointwise_map_smul<K,F,V,W,target>(a,T)
+    result=\pointwise_map_smul<K,F,V,W,target>(a,T)
+    result(x)=\pointwise_map_smul<K,F,V,W,target>(a,T)(x)=target.smul(a,T(x))
+
+thm linear_map_space_add_pointwise:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T,result fn(v V) W,x V:
+        S $in \linear_map_carrier<K,F,V,source,W,target>
+        T $in \linear_map_carrier<K,F,V,source,W,target>
+        result=\linear_map_space<K,F,V,source,W,target>.add(S,T)
+        =>:
+            result(x)=target.add(S(x),T(x))
+    release thm linear_map_space_add(K,F,V,source,W,target,S,T)
+    result=\linear_map_add<K,F,V,source,W,target>(S,T)
+    release thm linear_map_add_pointwise(K,F,V,source,W,target,S,T,result,x)
+
+thm linear_map_space_smul_pointwise:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T,result fn(v V) W,x V:
+        T $in \linear_map_carrier<K,F,V,source,W,target>
+        result=\linear_map_space<K,F,V,source,W,target>.smul(a,T)
+        =>:
+            result(x)=target.smul(a,T(x))
+    release thm linear_map_space_smul(K,F,V,source,W,target,a,T)
+    result=\linear_map_smul<K,F,V,source,W,target>(a,T)
+    release thm linear_map_smul_pointwise(K,F,V,source,W,target,a,T,result,x)
+
+thm linear_map_space_zero_pointwise:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,result fn(v V) W,x V:
+        result=\linear_map_space<K,F,V,source,W,target>.zero
+        =>:
+            result(x)=target.zero
+    release thm linear_map_space_zero(K,F,V,source,W,target)
+    result=\Algebra::vector_space::zero_map<V,W,target.zero>
+    result(x)=\Algebra::vector_space::zero_map<V,W,target.zero>(x)=target.zero
+
+thm linear_map_space_add_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T fn(v V) W:
+        S $in \linear_map_carrier<K,F,V,source,W,target>
+        T $in \linear_map_carrier<K,F,V,source,W,target>
+        =>:
+            \linear_map_space<K,F,V,source,W,target>.add(S,T) $in fn(v V) W
+    release thm linear_map_space_add(K,F,V,source,W,target,S,T)
+    release thm linear_map_add_function_carrier(K,F,V,source,W,target,S,T)
+    \linear_map_space<K,F,V,source,W,target>.add(S,T) $in fn(v V) W
+
+thm linear_map_space_smul_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T fn(v V) W:
+        T $in \linear_map_carrier<K,F,V,source,W,target>
+        =>:
+            \linear_map_space<K,F,V,source,W,target>.smul(a,T) $in fn(v V) W
+    release thm linear_map_space_smul(K,F,V,source,W,target,a,T)
+    release thm linear_map_smul_function_carrier(K,F,V,source,W,target,a,T)
+    \linear_map_space<K,F,V,source,W,target>.smul(a,T) $in fn(v V) W
+
+thm linear_map_space_zero_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \linear_map_space<K,F,V,source,W,target>.zero $in fn(v V) W
+    release thm linear_map_space_zero(K,F,V,source,W,target)
+    \linear_map_space<K,F,V,source,W,target>.zero $in fn(v V) W
+

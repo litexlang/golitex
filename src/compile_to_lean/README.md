@@ -2184,8 +2184,8 @@ and [selection of a larger real](../../lean/examples/template_larger_real/).
 When a call uses an existing function-set membership fact, the compiler replays
 that exact citation and its argument WD, including for a template call head.
 
-Recursive template functions use the existing `Litex.RecursiveNatFn` representation.
-The supported shape has one natural argument, a zero case and a successor case
+Numeric recursive template functions retain the `Litex.RecursiveNatFn` representation
+when they have one natural argument, a zero case and a successor case
 guarded by `n > 0` or `n >= 1`. The compiler retains the original smaller-argument
 conditions, return proofs and published case equations. Formula bodies denote
 the same recursive graph; selected unfolding checks the recorded branch and
@@ -2195,10 +2195,80 @@ Examples cover a [real seed](../../lean/examples/template_recursive_constant/),
 [a reciprocal seed](../../lean/examples/template_recursive_reciprocal/),
 [a returned sequence](../../lean/examples/template_recursive_returned_sequence/),
 and [natural zero with a successor bound](../../lean/examples/template_recursive_natural_zero/).
-General recursive measures, nested cases and proof-local recursive declarations
-remain outside this template-body coverage.
-Object reconstruction for argument matching against a published recursive case
-equation also remains unsupported; direct selected unfolding has its own checked route.
+Unary natural recursive declarations also work inside proofs; see the [local constant sequence](../../lean/examples/local_recursive_sequence/)
+and [local accumulation](../../lean/examples/local_recursive_accumulation/).
+
+Standalone recursive declarations additionally support integer measures,
+multiple parameters and parameter-dependent lower bounds. The compiler consumes
+the original formation, case coverage, disjointness, return and recursive-call
+WD results. `Litex.RecursiveFn` constructs a function graph by well-founded
+recursion on `(measure - lower).toNat`; its equations are proved in Core without
+adding a recursion axiom. Examples cover a
+[parameter-dependent lower bound](../../lean/examples/bounded_integer_recursion/)
+and [two recursive calls per step](../../lean/examples/fibonacci_integer_recursion/).
+Nested cases retain the original tree: each sibling list consumes its own
+coverage and disjointness proofs inside its parent branch. The depth-first
+leaf order identifies the stored equations; unfolding validates every recorded
+guard before citing the selected equation. Examples cover an
+[increasing lower bound](../../lean/examples/increasing_lower_bound_recursion/),
+[three levels of cases](../../lean/examples/three_level_recursive_count/),
+and [nested natural recursion](../../lean/examples/nested_natural_recursion/).
+These source/generated pairs pass strict Litex verification and Lean checking.
+The general route still requires input/output carriers independent of the recursive input parameters.
+Templates also use this general graph representation. Their captured values,
+returned function object, raw graph inside a formula, and published equations
+share the same proof-independent evaluator, `RecursiveFn.valueOf`. Construction
+still requires the original domain, return and congruence certificates. The
+compiler chooses the same recursive representation for the object, its function
+membership proof and local equation citations.
+
+Examples cover a [seeded Fibonacci recurrence](../../lean/examples/template_fibonacci_seed/)
+with two recursive calls, formula reuse and a symbolic equation;
+[nested template cases](../../lean/examples/template_nested_recursive_count/);
+[a captured seed with a variable lower bound](../../lean/examples/template_recursive_lower_bound/);
+and [a captured arbitrary output set](../../lean/examples/template_recursive_set_seed/),
+including concrete and universally quantified uses of its published equations.
+Every guard on the selected nested path is checked before citing the corresponding
+published leaf equation.
+
+When known-forall matching needs a constructor from a recursive equation, the
+compiler replays the original template and function headers, then enters the
+selected leaf's original ancestor scopes. Recursive calls retain their recorded
+argument WD, domain premises and smaller-input checks. The reconstructed call
+uses the completed graph's membership and original domain; it does not claim
+that the completed graph belongs to the restricted recursive function space.
+The same call-evidence validator serves graph congruence and this reconstruction.
+
+Checked examples include arbitrary-set values with
+[a variable lower bound](../../lean/examples/template_recursive_set_lower_bound/),
+[nested cases](../../lean/examples/template_recursive_set_nested/),
+[natural zero/successor recursion](../../lean/examples/template_recursive_set_natural/),
+and [an integer-indexed reciprocal sequence](../../lean/examples/template_recursive_integer_reciprocal/)
+with a nonzero template condition. Zero/successor declarations with an arbitrary
+output set select `RecursiveFn`; supported numeric declarations keep their previous
+representation. The [integer counter](../../lean/examples/template_integer_count/)
+uses `n = b` and `n > b` cases: its recursive call consumes the original proof
+of `n - 1 >= b`, including the `OrderDual → IntegerSuccessorGap` route.
+The strict-order citation precedes both integer-membership checks, as it does
+in the verifier result.
+
+The integer-gap consumer also checks the original arithmetic endpoint alignment.
+For example, `1 + a < b` can justify `a + 2 <= b`; see
+[integer separation](../../lean/examples/integer_successor_gap/).
+Core proves the discrete step, and fixed normalization checks the recorded
+endpoint match. For [rational cancellation](../../lean/examples/integer_gap_guarded/),
+the compiler takes nonzero proofs from the original division and integer-power
+WD, at their original verification stages. It then supplies those proofs to
+the rational normalizer. Missing, changed or future guard citations reject
+compilation.
+
+This also covers [cached quotient WD](../../lean/examples/integer_gap_cached_guard/)
+and [nonzero function values](../../lean/examples/integer_gap_function_guard/).
+A [nonzero natural power](../../lean/examples/integer_gap_guarded_power/) can be
+cancelled using its own nonzero premise; the compiler does not add a nonzero
+premise for its base. These changes do not alter Runtime, the result schema or
+the underlying object representations. Self-dependent guards continue to
+reject compilation.
 
 
 Function images and both inverse-image constructors now retain their original

@@ -40,6 +40,10 @@ mod number_theory_theorem_tests;
 mod prime_inference_tests;
 #[path = "../../tests/unit/compile_to_lean/rational_integer_witness_tests.rs"]
 mod rational_integer_witness_tests;
+#[path = "../../tests/unit/compile_to_lean/recursive_constructor_tests.rs"]
+mod recursive_constructor_tests;
+#[path = "../../tests/unit/compile_to_lean/recursive_signature_tests.rs"]
+mod recursive_signature_tests;
 #[path = "../../tests/unit/compile_to_lean/reduced_fraction_theorem_tests.rs"]
 mod reduced_fraction_theorem_tests;
 #[path = "../../tests/unit/compile_to_lean/rounding_bounds_tests.rs"]
@@ -4057,6 +4061,9 @@ mod matrix_remainder_context_tests;
 #[path = "../../tests/unit/compile_to_lean/recursive_template_body_tests.rs"]
 mod recursive_template_body_tests;
 
+#[path = "../../tests/unit/compile_to_lean/local_recursive_function_tests.rs"]
+mod local_recursive_function_tests;
+
 #[path = "../../tests/unit/compile_to_lean/recursive_template_citation_tests.rs"]
 mod recursive_template_citation_tests;
 
@@ -4080,3 +4087,46 @@ mod exist_multigroup_context_tests;
 
 #[path = "../../tests/unit/compile_to_lean/or_multigroup_context_tests.rs"]
 mod or_multigroup_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/inner_linear_theorem_tests.rs"]
+mod inner_linear_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/norm_scale_theorem_tests.rs"]
+mod norm_scale_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_constant_theorem_tests.rs"]
+mod sequence_constant_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_map_theorem_tests.rs"]
+mod sequence_map_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_binary_map_tests.rs"]
+mod sequence_binary_map_tests;
+
+#[path = "../../tests/unit/compile_to_lean/multivariable_definition_theorem_tests.rs"]
+mod multivariable_definition_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/multivariable_elimination_theorem_tests.rs"]
+mod multivariable_elimination_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/vector_limit_theorem_tests.rs"]
+mod vector_limit_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/derivative_schema_tests.rs"]
+mod derivative_schema_tests;
+#[path = "../../tests/unit/compile_to_lean/integer_gap_guarded_tests.rs"]
+mod integer_gap_guarded_tests;
+#[path = "../../tests/unit/compile_to_lean/integer_gap_tests.rs"]
+mod integer_gap_tests;
+
+#[path = "../../tests/unit/compile_to_lean/forall_projection_universe_tests.rs"]
+mod forall_projection_universe_tests;
+
+#[path = "../../tests/unit/compile_to_lean/notforall_context_tests.rs"]
+mod notforall_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/notforall_setkind_context_tests.rs"]
+mod notforall_setkind_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_inverse_predicate_tests.rs"]
+mod matrix_inverse_predicate_tests;

@@ -1,0 +1,84 @@
+# Bounded polynomial spaces characterized by finite degree and the zero case.
+
+thm complex_polynomials_up_to_contains_degree:
+    ? forall p fn(x C) C,degree,bound N:
+        $finite_degree::has_complex_polynomial_degree(p,degree)
+        degree<=bound
+        =>:
+            p $in \poly::complex_polynomials_up_to<bound>
+    obtain coefficients from $finite_degree::has_complex_polynomial_degree(p,degree)
+    witness exist values finite_seq(C,degree+1) st {p=\poly::complex_polynomial_from_coefficients<degree>(values)} from coefficients
+    release thm poly::complex_polynomials_up_to_contains_representation(degree,p)
+    release thm poly::complex_polynomials_up_to_inclusion(degree,bound)
+    p $in \poly::complex_polynomials_up_to<degree>
+    \poly::complex_polynomials_up_to<degree> $subset \poly::complex_polynomials_up_to<bound>
+    p $in \poly::complex_polynomials_up_to<bound>
+
+thm nonzero_complex_polynomials_up_to_have_degree:
+    ? forall bound N,p fn(x C) C:
+        p $in \poly::complex_polynomials_up_to<bound>
+        p!=fn(x C) C {0}
+        =>:
+            exist degree N st {$finite_degree::has_complex_polynomial_degree(p,degree),degree<=bound}
+    release thm poly::complex_polynomials_up_to_representation(bound,p)
+    obtain coefficients from exist values finite_seq(C,bound+1) st {p=\poly::complex_polynomial_from_coefficients<bound>(values)}
+    witness exist n N,values finite_seq(C,n+1) st {p=\poly::complex_polynomial_from_coefficients<n>(values)} from bound,coefficients
+    by def $poly::is_complex_polynomial(p)
+    release thm finite_degree::nonzero_complex_polynomial_has_degree(p)
+    obtain degree from exist n N st {$finite_degree::has_complex_polynomial_degree(p,n)}
+    release thm finite_degree::complex_polynomial_degree_le_representation_bound(p,degree,bound,coefficients)
+    witness exist n N st {$finite_degree::has_complex_polynomial_degree(p,n),n<=bound} from degree
+
+thm zero_complex_polynomial_is_in_every_degree_bound:
+    ? forall bound N:
+        fn(x C) C {0} $in \poly::complex_polynomials_up_to<bound>
+    have zeros finite_seq(C,bound+1)=fn(j closed_range(1,bound+1)) C {0}
+    claim:
+        ? forall j closed_range(1,bound+1):
+            zeros(j)=0
+        zeros(j)=0
+    release thm truncation::complex_polynomial_zero_from_zero_coefficients(bound,zeros)
+    witness exist values finite_seq(C,bound+1) st {fn(x C) C {0}=\poly::complex_polynomial_from_coefficients<bound>(values)} from zeros
+    release thm poly::complex_polynomials_up_to_contains_representation(bound,fn(x C) C {0})
+
+thm real_polynomials_up_to_contains_degree:
+    ? forall p fn(x R) R,degree,bound N:
+        $finite_degree::has_real_polynomial_degree(p,degree)
+        degree<=bound
+        =>:
+            p $in \poly::real_polynomials_up_to<bound>
+    obtain coefficients from $finite_degree::has_real_polynomial_degree(p,degree)
+    witness exist values finite_seq(R,degree+1) st {p=\poly::real_polynomial_from_coefficients<degree>(values)} from coefficients
+    release thm poly::real_polynomials_up_to_contains_representation(degree,p)
+    release thm poly::real_polynomials_up_to_inclusion(degree,bound)
+    p $in \poly::real_polynomials_up_to<degree>
+    \poly::real_polynomials_up_to<degree> $subset \poly::real_polynomials_up_to<bound>
+    p $in \poly::real_polynomials_up_to<bound>
+
+thm nonzero_real_polynomials_up_to_have_degree:
+    ? forall bound N,p fn(x R) R:
+        p $in \poly::real_polynomials_up_to<bound>
+        p!=fn(x R) R {0}
+        =>:
+            exist degree N st {$finite_degree::has_real_polynomial_degree(p,degree),degree<=bound}
+    release thm poly::real_polynomials_up_to_representation(bound,p)
+    obtain coefficients from exist values finite_seq(R,bound+1) st {p=\poly::real_polynomial_from_coefficients<bound>(values)}
+    witness exist n N,values finite_seq(R,n+1) st {p=\poly::real_polynomial_from_coefficients<n>(values)} from bound,coefficients
+    by def $poly::is_real_polynomial(p)
+    release thm finite_degree::nonzero_real_polynomial_has_degree(p)
+    obtain degree from exist n N st {$finite_degree::has_real_polynomial_degree(p,n)}
+    release thm finite_degree::real_polynomial_degree_le_representation_bound(p,degree,bound,coefficients)
+    witness exist n N st {$finite_degree::has_real_polynomial_degree(p,n),n<=bound} from degree
+
+thm zero_real_polynomial_is_in_every_degree_bound:
+    ? forall bound N:
+        fn(x R) R {0} $in \poly::real_polynomials_up_to<bound>
+    have zeros finite_seq(R,bound+1)=fn(j closed_range(1,bound+1)) R {0}
+    claim:
+        ? forall j closed_range(1,bound+1):
+            zeros(j)=0
+        zeros(j)=0
+    release thm truncation::real_polynomial_zero_from_zero_coefficients(bound,zeros)
+    witness exist values finite_seq(R,bound+1) st {fn(x R) R {0}=\poly::real_polynomial_from_coefficients<bound>(values)} from zeros
+    release thm poly::real_polynomials_up_to_contains_representation(bound,fn(x R) R {0})
+

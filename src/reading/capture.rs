@@ -61,6 +61,7 @@ pub(super) struct Capture {
     language: OutputLanguage,
     pub proof_branch: Option<usize>,
     pub proof_part: String,
+    pub layout: super::ReadingLayout,
 }
 
 impl Capture {
@@ -113,6 +114,7 @@ impl Capture {
             source_statements: source_statements::SourceStatements::default(),
             proof_branch: None,
             proof_part: String::new(),
+            layout: super::ReadingLayout::Source,
         }
     }
 
@@ -220,6 +222,11 @@ impl Capture {
             ("scopes", JsonValue::Array(self.scopes)),
             ("diagnostics", JsonValue::Array(diagnostics)),
         ]);
+        if self.layout == super::ReadingLayout::Latex {
+            if let JsonValue::Object(fields) = &mut output {
+                fields.insert("reading_layout".into(), text("latex"));
+            }
+        }
         let bundle_id = digest(&output.stringify());
         if let JsonValue::Object(fields) = &mut output {
             fields.insert("bundle_id".into(), text(&bundle_id));
@@ -743,6 +750,9 @@ impl SourceObserver for Capture {
         self.capturing_ast = true;
         let _ast = capture_ast__stmt__Stmt(statement, self, runtime);
         self.capturing_ast = false;
+        if self.layout == super::ReadingLayout::Latex {
+            self.capture_latex_block(first, statement, block, runtime);
+        }
         for environment in &runtime.execution_environments_stack {
             self.index_environment(environment, runtime);
         }

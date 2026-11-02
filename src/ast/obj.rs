@@ -1227,7 +1227,7 @@ impl MatrixOperator {
             Self::Multiply(_) => "matrix_mul",
             Self::Apply(_) => "matrix_apply",
             Self::Power(_) => "matrix_power",
-            Self::Inverse(_) => "matrix_inverse",
+            Self::Inverse(_) => "matrix_inv",
             Self::Rank(_) => "matrix_rank",
             Self::Minor(_) => "matrix_minor",
             Self::Cofactor(_) => "matrix_cofactor",

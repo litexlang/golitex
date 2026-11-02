@@ -1565,6 +1565,34 @@ capture.intern_evidence(output)
 pub(super) fn capture_ast__fact__atomic__AtomicFact(value: &crate::ast::fact::AtomicFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
+crate::ast::fact::AtomicFact::IsMatrixInvFact(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__IsMatrixInvFact(f0, capture, runtime))];
+let mut output = node("AtomicFact", "IsMatrixInvFact", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+capture.subject(&value.clone().into(), runtime);
+output
+},
+crate::ast::fact::AtomicFact::NotIsMatrixInvFact(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__NotIsMatrixInvFact(f0, capture, runtime))];
+let mut output = node("AtomicFact", "NotIsMatrixInvFact", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+capture.subject(&value.clone().into(), runtime);
+output
+},
+crate::ast::fact::AtomicFact::MatrixInversibleFact(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__MatrixInversibleFact(f0, capture, runtime))];
+let mut output = node("AtomicFact", "MatrixInversibleFact", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+capture.subject(&value.clone().into(), runtime);
+output
+},
+crate::ast::fact::AtomicFact::NotMatrixInversibleFact(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__NotMatrixInversibleFact(f0, capture, runtime))];
+let mut output = node("AtomicFact", "NotMatrixInversibleFact", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+capture.subject(&value.clone().into(), runtime);
+output
+},
 crate::ast::fact::AtomicFact::MultivariableAnalysisFact(f0) => {
 let fields = vec![("0", capture_ast__fact__atomic__MultivariableAnalysisFact(f0, capture, runtime))];
 let mut output = node("AtomicFact", "MultivariableAnalysisFact", fields);
@@ -1918,6 +1946,20 @@ output
 crate::ast::fact::AtomicFact::SurjectiveFact(f0) => {
 let fields = vec![("0", capture_ast__fact__atomic__SurjectiveFact(f0, capture, runtime))];
 let mut output = node("AtomicFact", "SurjectiveFact", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+capture.subject(&value.clone().into(), runtime);
+output
+},
+crate::ast::fact::AtomicFact::CommRingFact(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__CommRingFact(f0, capture, runtime))];
+let mut output = node("AtomicFact", "CommRingFact", fields);
+if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
+capture.subject(&value.clone().into(), runtime);
+output
+},
+crate::ast::fact::AtomicFact::NotCommRingFact(f0) => {
+let fields = vec![("0", capture_ast__fact__atomic__NotCommRingFact(f0, capture, runtime))];
+let mut output = node("AtomicFact", "NotCommRingFact", fields);
 if let JsonValue::Object(fields) = &mut output { fields.insert("text".into(), JsonValue::String(value.readable_string())); }
 capture.subject(&value.clone().into(), runtime);
 output
@@ -5245,6 +5287,66 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_ast__fact__atomic__IsMatrixInvFact(value: &crate::ast::fact::IsMatrixInvFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::IsMatrixInvFact { fact_id: f0, matrix: f1, inverse: f2, order: f3, line_file: f4 } => {
+let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
+let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("inverse", capture_ast__obj__Obj(f2, capture, runtime)), ("order", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
+let mut output = node("IsMatrixInvFact", "", fields);
+if let Some(location) = saved_location { capture.leave_location(location); }
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__NotIsMatrixInvFact(value: &crate::ast::fact::NotIsMatrixInvFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::NotIsMatrixInvFact { fact_id: f0, matrix: f1, inverse: f2, order: f3, line_file: f4 } => {
+let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
+let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("inverse", capture_ast__obj__Obj(f2, capture, runtime)), ("order", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
+let mut output = node("NotIsMatrixInvFact", "", fields);
+if let Some(location) = saved_location { capture.leave_location(location); }
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__MatrixInversibleFact(value: &crate::ast::fact::MatrixInversibleFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::MatrixInversibleFact { fact_id: f0, matrix: f1, order: f2, line_file: f3 } => {
+let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
+let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("order", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
+let mut output = node("MatrixInversibleFact", "", fields);
+if let Some(location) = saved_location { capture.leave_location(location); }
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__NotMatrixInversibleFact(value: &crate::ast::fact::NotMatrixInversibleFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::NotMatrixInversibleFact { fact_id: f0, matrix: f1, order: f2, line_file: f3 } => {
+let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
+let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("order", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
+let mut output = node("NotMatrixInversibleFact", "", fields);
+if let Some(location) = saved_location { capture.leave_location(location); }
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_ast__fact__atomic__MultivariableAnalysisFact(value: &crate::ast::fact::MultivariableAnalysisFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 capture.subject_depth += 1;
 let output = match value {
@@ -6002,6 +6104,36 @@ crate::ast::fact::SurjectiveFact { fact_id: f0, domain: f1, codomain: f2, functi
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("codomain", capture_ast__obj__Obj(f2, capture, runtime)), ("function", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("SurjectiveFact", "", fields);
+if let Some(location) = saved_location { capture.leave_location(location); }
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__CommRingFact(value: &crate::ast::fact::CommRingFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::CommRingFact { fact_id: f0, carrier: f1, add: f2, mul: f3, neg: f4, zero: f5, one: f6, line_file: f7 } => {
+let saved_location = f7.as_ref().map(|line| capture.enter_location(line));
+let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("carrier", capture_ast__obj__Obj(f1, capture, runtime)), ("add", capture_ast__obj__Obj(f2, capture, runtime)), ("mul", capture_ast__obj__Obj(f3, capture, runtime)), ("neg", capture_ast__obj__Obj(f4, capture, runtime)), ("zero", capture_ast__obj__Obj(f5, capture, runtime)), ("one", capture_ast__obj__Obj(f6, capture, runtime)), ("line_file", match (f7).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
+let mut output = node("CommRingFact", "", fields);
+if let Some(location) = saved_location { capture.leave_location(location); }
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__fact__atomic__NotCommRingFact(value: &crate::ast::fact::NotCommRingFact, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::fact::NotCommRingFact { fact_id: f0, carrier: f1, add: f2, mul: f3, neg: f4, zero: f5, one: f6, line_file: f7 } => {
+let saved_location = f7.as_ref().map(|line| capture.enter_location(line));
+let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("carrier", capture_ast__obj__Obj(f1, capture, runtime)), ("add", capture_ast__obj__Obj(f2, capture, runtime)), ("mul", capture_ast__obj__Obj(f3, capture, runtime)), ("neg", capture_ast__obj__Obj(f4, capture, runtime)), ("zero", capture_ast__obj__Obj(f5, capture, runtime)), ("one", capture_ast__obj__Obj(f6, capture, runtime)), ("line_file", match (f7).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
+let mut output = node("NotCommRingFact", "", fields);
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -13951,6 +14083,48 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferAtomicFactResult(value: &crate::store_fact_and_infer::InferAtomicFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::store_fact_and_infer::InferAtomicFactResult::IsMatrixInvFact(f0) => {
+let rule_id = None;
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferIsMatrixInvFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferAtomicFactResult", "IsMatrixInvFact", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "IsMatrixInvFact", ""); }
+output
+},
+crate::store_fact_and_infer::InferAtomicFactResult::NotIsMatrixInvFact(f0) => {
+let rule_id = None;
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferNotIsMatrixInvFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferAtomicFactResult", "NotIsMatrixInvFact", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "NotIsMatrixInvFact", ""); }
+output
+},
+crate::store_fact_and_infer::InferAtomicFactResult::MatrixInversibleFact(f0) => {
+let rule_id = None;
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMatrixInversibleFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferAtomicFactResult", "MatrixInversibleFact", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "MatrixInversibleFact", ""); }
+output
+},
+crate::store_fact_and_infer::InferAtomicFactResult::NotMatrixInversibleFact(f0) => {
+let rule_id = None;
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferNotMatrixInversibleFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferAtomicFactResult", "NotMatrixInversibleFact", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "NotMatrixInversibleFact", ""); }
+output
+},
+crate::store_fact_and_infer::InferAtomicFactResult::CommRingFact(f0) => {
+let rule_id = None;
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferCommRingFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferAtomicFactResult", "CommRingFact", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "CommRingFact", ""); }
+output
+},
+crate::store_fact_and_infer::InferAtomicFactResult::NotCommRingFact(f0) => {
+let rule_id = None;
+let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferNotCommRingFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferAtomicFactResult", "NotCommRingFact", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "NotCommRingFact", ""); }
+output
+},
 crate::store_fact_and_infer::InferAtomicFactResult::MultivariableAnalysisFact(f0) => {
 let rule_id = None;
 let fields = vec![("0", JsonValue::Array((f0).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMultivariableAnalysisFactResult(item, capture, runtime)).collect()))];
@@ -17996,6 +18170,51 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferIsMatrixInvFactResult(value: &crate::store_fact_and_infer::InferIsMatrixInvFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferIsMatrixInvFactResult::DefinitionAndDeterminant(f0) => {
+let rule_id = Some("infer.InferIsMatrixInvFactResult::DefinitionAndDeterminant");
+let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferIsMatrixInvDefinitionAndDeterminantResult(f0, capture, runtime))];
+let mut output = node("InferIsMatrixInvFactResult", "DefinitionAndDeterminant", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DefinitionAndDeterminant", ""); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferNotIsMatrixInvFactResult(value: &crate::store_fact_and_infer::InferNotIsMatrixInvFactResult, _capture: &mut Capture, _runtime: &Runtime) -> JsonValue { match *value {} }
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMatrixInversibleFactResult(value: &crate::store_fact_and_infer::InferMatrixInversibleFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferMatrixInversibleFactResult::DefinitionAndDeterminant(f0) => {
+let rule_id = Some("infer.InferMatrixInversibleFactResult::DefinitionAndDeterminant");
+let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMatrixInversibleDefinitionAndDeterminantResult(f0, capture, runtime))];
+let mut output = node("InferMatrixInversibleFactResult", "DefinitionAndDeterminant", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "DefinitionAndDeterminant", ""); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferNotMatrixInversibleFactResult(value: &crate::store_fact_and_infer::InferNotMatrixInversibleFactResult, _capture: &mut Capture, _runtime: &Runtime) -> JsonValue { match *value {} }
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferCommRingFactResult(value: &crate::store_fact_and_infer::InferCommRingFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferCommRingFactResult::Definition(f0) => {
+let rule_id = Some("infer.InferCommRingFactResult::Definition");
+let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferCommRingDefinitionResult(f0, capture, runtime))];
+let mut output = node("InferCommRingFactResult", "Definition", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "Definition", ""); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferNotCommRingFactResult(value: &crate::store_fact_and_infer::InferNotCommRingFactResult, _capture: &mut Capture, _runtime: &Runtime) -> JsonValue { match *value {} }
+
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMultivariableAnalysisFactResult(value: &crate::store_fact_and_infer::InferMultivariableAnalysisFactResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::store_fact_and_infer::InferMultivariableAnalysisFactResult::Definition(f0) => {
@@ -20843,6 +21062,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_builtin_rewrite_result__EqualitySearchProofByBuiltinRewrite(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRewrite, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRewrite::Ring(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingBuiltinRewriteProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinRewrite", "Ring", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_builtin_rewrite_result__ClosedNumericEqualSubstitutionBuiltinRewriteProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinRewrite", "ClosedNumericEqualSubstitution", fields);
@@ -20986,6 +21210,30 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__AtomicExceptEqualityFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact(f0) => {
+let rule_id = Some("builtin.AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact");
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_inverse_predicates__IsMatrixInvSelectedProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "IsMatrixInvFact", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
+crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact(f0) => {
+let rule_id = Some("builtin.AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact");
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_inverse_predicates__MatrixInversibleFromDeterminantProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "MatrixInversibleFact", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
+crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact(f0) => {
+let rule_id = Some("builtin.AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact");
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_inverse_predicates__NotMatrixInversibleFromDeterminantProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinRule", "NotMatrixInversibleFact", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::AtomicExceptEqualityFactSearchProofByBuiltinRule::NormalAtomicFact(f0) => {
 let rule_id = None;
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NormalAtomicFactSearchProofByBuiltinRule(f0, capture, runtime))];
@@ -24065,6 +24313,39 @@ output
 },
 };
 capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferIsMatrixInvDefinitionAndDeterminantResult(value: &crate::store_fact_and_infer::InferIsMatrixInvDefinitionAndDeterminantResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferIsMatrixInvDefinitionAndDeterminantResult { source_fact_id: f0, derived: f1 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("derived", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferIsMatrixInvDefinitionAndDeterminantResult", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferMatrixInversibleDefinitionAndDeterminantResult(value: &crate::store_fact_and_infer::InferMatrixInversibleDefinitionAndDeterminantResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferMatrixInversibleDefinitionAndDeterminantResult { source_fact_id: f0, derived: f1 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("derived", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferMatrixInversibleDefinitionAndDeterminantResult", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_atomic_fact_result__InferCommRingDefinitionResult(value: &crate::store_fact_and_infer::InferCommRingDefinitionResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferCommRingDefinitionResult { source_fact_id: f0, derived: f1 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("derived", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferCommRingDefinitionResult", "", fields);
+output
+},
+};
 capture.intern_evidence(output)
 }
 
@@ -28834,6 +29115,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingBuiltinRewriteProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingBuiltinRewriteProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingBuiltinRewriteProof { source_fact: f0, source: f1, atoms: f2, equalities: f3, atom_alignments: f4, derivation: f5 } => {
+let fields = vec![("source_fact", capture_ast__fact__atomic__CommRingFact(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime)), ("atoms", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingAtomProof(item, capture, runtime)).collect())), ("equalities", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingEqualityRequirement(item, capture, runtime)).collect())), ("atom_alignments", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingEqualityDerivation(item, capture, runtime)).collect())), ("derivation", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingEqualityDerivation(f5, capture, runtime))];
+let mut output = node("RingBuiltinRewriteProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_builtin_rewrite_result__ClosedNumericEqualSubstitutionBuiltinRewriteProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_rewrite_result::ClosedNumericEqualSubstitutionBuiltinRewriteProof { rewritten_left: f0, rewritten_right: f1, cited_equal_fact_ids: f2, residual_equal: f3 } => {
@@ -29203,6 +29495,39 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::InFactSearchProofByKnownSpecialProperty::LiteralTupleNumericCoordinate(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_literal_tuple_numeric_coordinate__LiteralTupleNumericCoordinateKnownProof(f0, capture, runtime))];
 let mut output = node("InFactSearchProofByKnownSpecialProperty", "LiteralTupleNumericCoordinate", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_inverse_predicates__IsMatrixInvSelectedProof(value: &crate::execute::execute_fact_stmt::matrix_inverse_predicates::IsMatrixInvSelectedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_inverse_predicates::IsMatrixInvSelectedProof { determinant_nonzero: f0 } => {
+let fields = vec![("determinant_nonzero", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("IsMatrixInvSelectedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_inverse_predicates__MatrixInversibleFromDeterminantProof(value: &crate::execute::execute_fact_stmt::matrix_inverse_predicates::MatrixInversibleFromDeterminantProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_inverse_predicates::MatrixInversibleFromDeterminantProof { determinant_nonzero: f0 } => {
+let fields = vec![("determinant_nonzero", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MatrixInversibleFromDeterminantProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_inverse_predicates__NotMatrixInversibleFromDeterminantProof(value: &crate::execute::execute_fact_stmt::matrix_inverse_predicates::NotMatrixInversibleFromDeterminantProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_inverse_predicates::NotMatrixInversibleFromDeterminantProof { determinant_zero: f0 } => {
+let fields = vec![("determinant_zero", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("NotMatrixInversibleFromDeterminantProof", "", fields);
 output
 },
 };
@@ -34283,6 +34608,21 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__BuiltinPropDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::IsMatrixInv(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_inverse_predicates__BuiltinIsMatrixInvDefinitionProof(f0, capture, runtime))];
+let mut output = node("BuiltinPropDefinitionProof", "IsMatrixInv", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::MatrixInversible(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_inverse_predicates__BuiltinMatrixInversibleDefinitionProof(f0, capture, runtime))];
+let mut output = node("BuiltinPropDefinitionProof", "MatrixInversible", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::CommRing(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__definition__BuiltinCommRingDefinitionProof(f0, capture, runtime))];
+let mut output = node("BuiltinPropDefinitionProof", "CommRing", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::MultivariableAnalysis(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__definition__MultivariableDefinitionProof(f0, capture, runtime))];
 let mut output = node("BuiltinPropDefinitionProof", "MultivariableAnalysis", fields);
@@ -40116,6 +40456,49 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingAtomProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingAtomProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingAtomProof { object: f0, membership_fact: f1, membership: f2 } => {
+let fields = vec![("object", capture_ast__obj__Obj(f0, capture, runtime)), ("membership_fact", capture_ast__fact__atomic__InFact(f1, capture, runtime)), ("membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("RingAtomProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingEqualityRequirement(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingEqualityRequirement, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingEqualityRequirement { fact: f0, proof: f1 } => {
+let fields = vec![("fact", capture_ast__fact__atomic__EqualFact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("RingEqualityRequirement", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingEqualityDerivation(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingEqualityDerivation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingEqualityDerivation::Known(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingEqualityRequirement(f0, capture, runtime))];
+let mut output = node("RingEqualityDerivation", "Known", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingEqualityDerivation::Polynomial(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingPolynomialEqualityProof(f0, capture, runtime))];
+let mut output = node("RingEqualityDerivation", "Polynomial", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingEqualityDerivation::Congruence(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingCongruenceProof(f0, capture, runtime))];
+let mut output = node("RingEqualityDerivation", "Congruence", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__AnonymousFunctionBodyExpansionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::AnonymousFunctionBodyExpansionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::AnonymousFunctionBodyExpansionProof { application: f0, application_well_defined: f1, function_body: f2, body_application_well_defined: f3, expanded_body: f4, continued_body: f5 } => {
@@ -45612,6 +45995,39 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__matrix_inverse_predicates__BuiltinIsMatrixInvDefinitionProof(value: &crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinIsMatrixInvDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinIsMatrixInvDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("BuiltinIsMatrixInvDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__matrix_inverse_predicates__BuiltinMatrixInversibleDefinitionProof(value: &crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinMatrixInversibleDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinMatrixInversibleDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("BuiltinMatrixInversibleDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__definition__BuiltinCommRingDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::definition::BuiltinCommRingDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::definition::BuiltinCommRingDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("BuiltinCommRingDefinitionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__definition__MultivariableDefinitionProof(value: &crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarLimit(f0) => {
@@ -48069,6 +48485,28 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingPolynomialEqualityProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingPolynomialEqualityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingPolynomialEqualityProof { left: f0, right: f1, left_expression: f2, right_expression: f3, left_certificate: f4, right_certificate: f5 } => {
+let fields = vec![("left", capture_ast__obj__Obj(f0, capture, runtime)), ("right", capture_ast__obj__Obj(f1, capture, runtime)), ("left_expression", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingExpression(f2, capture, runtime)), ("right_expression", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingExpression(f3, capture, runtime)), ("left_certificate", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingNormalizationCertificate(f4, capture, runtime)), ("right_certificate", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingNormalizationCertificate(f5, capture, runtime))];
+let mut output = node("RingPolynomialEqualityProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingCongruenceProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingCongruenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingCongruenceProof { left: f0, right: f1, children: f2 } => {
+let fields = vec![("left", capture_ast__obj__Obj(f0, capture, runtime)), ("right", capture_ast__obj__Obj(f1, capture, runtime)), ("children", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingEqualityDerivation(item, capture, runtime)).collect()))];
+let mut output = node("RingCongruenceProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__normalize_function_body__FunctionBodySourceProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::normalize_function_body::FunctionBodySourceProof::KnownEquality(f0) => {
@@ -49542,6 +49980,53 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingExpression(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingExpression, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingExpression::Zero => {
+let fields = vec![];
+let mut output = node("RingExpression", "Zero", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingExpression::One => {
+let fields = vec![];
+let mut output = node("RingExpression", "One", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingExpression::Atom(f0) => {
+let fields = vec![("0", JsonValue::String((f0).to_string()))];
+let mut output = node("RingExpression", "Atom", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingExpression::Add(f0, f1) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingExpression(f0, capture, runtime)), ("1", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingExpression(f1, capture, runtime))];
+let mut output = node("RingExpression", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingExpression::Neg(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingExpression(f0, capture, runtime))];
+let mut output = node("RingExpression", "Neg", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingExpression::Mul(f0, f1) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingExpression(f0, capture, runtime)), ("1", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingExpression(f1, capture, runtime))];
+let mut output = node("RingExpression", "Mul", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingNormalizationCertificate(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationCertificate, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationCertificate { nodes: f0, root: f1 } => {
+let fields = vec![("nodes", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingNormalizationNode(item, capture, runtime)).collect())), ("root", JsonValue::String((f1).to_string()))];
+let mut output = node("RingNormalizationCertificate", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealOperandProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandProof { requirement: f0, source: f1 } => {
@@ -49884,6 +50369,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingNormalizationNode(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationNode, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationNode { operation: f0, polynomial: f1 } => {
+let fields = vec![("operation", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingNormalizationOperation(f0, capture, runtime)), ("polynomial", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingPolynomial(f1, capture, runtime))];
+let mut output = node("RingNormalizationNode", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__known_real_array_return__DeclaredRealOperandSource(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource::Known(f0) => {
@@ -49974,6 +50470,53 @@ let output = match value {
 crate::execute::execute_fact_stmt::native_matrix::MatrixResidualBetaExpansion { application_well_defined: f0, source: f1, body: f2 } => {
 let fields = vec![("application_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_fn_application__by_parent_checked_beta__ParentCheckedBetaFunctionBody(f1, capture, runtime)), ("body", capture_ast__obj__Obj(f2, capture, runtime))];
 let mut output = node("MatrixResidualBetaExpansion", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingNormalizationOperation(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationOperation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationOperation::Zero => {
+let fields = vec![];
+let mut output = node("RingNormalizationOperation", "Zero", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationOperation::One => {
+let fields = vec![];
+let mut output = node("RingNormalizationOperation", "One", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationOperation::Atom(f0) => {
+let fields = vec![("0", JsonValue::String((f0).to_string()))];
+let mut output = node("RingNormalizationOperation", "Atom", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationOperation::Add(f0, f1) => {
+let fields = vec![("0", JsonValue::String((f0).to_string())), ("1", JsonValue::String((f1).to_string()))];
+let mut output = node("RingNormalizationOperation", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationOperation::Neg(f0) => {
+let fields = vec![("0", JsonValue::String((f0).to_string()))];
+let mut output = node("RingNormalizationOperation", "Neg", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationOperation::Mul(f0, f1) => {
+let fields = vec![("0", JsonValue::String((f0).to_string())), ("1", JsonValue::String((f1).to_string()))];
+let mut output = node("RingNormalizationOperation", "Mul", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__normal_form__RingPolynomial(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingPolynomial, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingPolynomial { terms: f0 } => {
+let fields = vec![("terms", { let mut entries = (f0).iter().map(|(key, item)| JsonValue::Array(vec![JsonValue::Array((key).iter().map(|item| JsonValue::Array(vec![JsonValue::String((&(item).0).to_string()), JsonValue::String((&(item).1).to_string())])).collect()), JsonValue::String((item).to_string())])).collect::<Vec<_>>(); entries.sort_by_key(JsonValue::stringify); JsonValue::Array(entries) })];
+let mut output = node("RingPolynomial", "", fields);
 output
 },
 };

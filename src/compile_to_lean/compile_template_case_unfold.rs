@@ -1,4 +1,5 @@
 use super::helper::*;
+use super::compile_recursive_case_tree::{recursive_leaf_paths, recursive_path_guards, recursive_guard_atoms};
 use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::ast::stmt::TemplateDefEnum;
@@ -15,26 +16,25 @@ impl LitexToLeanCompiler {
         proof: &EqualitySearchProofByTemplateObjectDefinition,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (expanded_body, residual_equal, guard_proof, index) = match proof {
+        let (expanded_body, residual_equal, guard_proofs, path) = match proof {
             EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualCaseByCaseApplication(p) => (
                 &p.expanded_body,
                 &p.residual_equal,
-                &p.guard,
-                p.matched_case_index,
+                vec![&p.guard],
+                vec![p.matched_case_index],
             ),
-            EqualitySearchProofByTemplateObjectDefinition::HaveFnByInducApplication(p) => {
-                let [case] = p.selected_case_path.as_slice() else {
-                    return Err(LeanCompileError::unsupported(
-                        "TemplateCases/RecursiveLeafPath",
-                    ));
-                };
-                (
-                    &p.expanded_body,
-                    &p.residual_equal,
-                    &case.guard,
-                    case.case_index,
-                )
-            }
+            EqualitySearchProofByTemplateObjectDefinition::HaveFnByInducApplication(p) => (
+                &p.expanded_body,
+                &p.residual_equal,
+                p.selected_case_path
+                    .iter()
+                    .map(|case| &case.guard)
+                    .collect(),
+                p.selected_case_path
+                    .iter()
+                    .map(|case| case.case_index)
+                    .collect(),
+            ),
             _ => return Err(LeanCompileError::unsupported("TemplateCases/SelectedRoute")),
         };
         let Fact::AtomicFact(AtomicFact::EqualFact(residual)) = source_subject(residual_equal)?
@@ -59,7 +59,7 @@ impl LitexToLeanCompiler {
         };
         let (declaration, _, _) = position.visible_template(&instance.template_name)?;
         super::compile_template_stmt_result::template_binding(declaration)?;
-        let (parameters, expected_guard, expected_body, source_ids, recursive_name) = match (
+        let (parameters, expected_guards, expected_body, source_ids, recursive_name, index) = match (
             proof,
             &declaration.statement.template_def_stmt,
             declaration.body.as_ref(),
@@ -72,16 +72,17 @@ impl LitexToLeanCompiler {
                 )),
             ) => (
                 &source.fn_set_clause.set_bound_parameters,
-                source
+                vec![source
                     .cases
-                    .get(index)
-                    .ok_or_else(|| LeanCompileError::unsupported("TemplateCases/CaseIndex"))?,
+                    .get(path[0])
+                    .ok_or_else(|| LeanCompileError::unsupported("TemplateCases/CaseIndex"))?],
                 source
                     .equal_tos
-                    .get(index)
+                    .get(path[0])
                     .ok_or_else(|| LeanCompileError::unsupported("TemplateCases/CaseBody"))?,
                 &body.store_and_infer_result.case_defining_fact_ids,
                 None,
+                path[0],
             ),
             (
                 EqualitySearchProofByTemplateObjectDefinition::HaveFnByInducApplication(_),
@@ -90,21 +91,34 @@ impl LitexToLeanCompiler {
                     ExecHaveFnByInducStmtResult::Success(body),
                 )),
             ) => {
-                let case = source
-                    .cases
-                    .get(index)
-                    .ok_or_else(|| LeanCompileError::unsupported("TemplateCases/CaseIndex"))?;
-                let crate::ast::stmt::HaveFnByInducCaseBody::EqualTo(value) = &case.body else {
-                    return Err(LeanCompileError::unsupported(
-                        "TemplateCases/NestedRecursiveCases",
-                    ));
-                };
+                let guards = recursive_path_guards(&source.cases, &path)?;
+                let index = recursive_leaf_paths(&source.cases)
+                    .iter()
+                    .position(|p| *p == path)
+                    .ok_or_else(|| {
+                        LeanCompileError::unsupported("TemplateCases/RecursiveLeafPath")
+                    })?;
+                let mut cases = source.cases.as_slice();
+                let mut value = None;
+                for index in &path {
+                    match &cases[*index].body {
+                        crate::ast::stmt::HaveFnByInducCaseBody::EqualTo(body) => {
+                            value = Some(body)
+                        }
+                        crate::ast::stmt::HaveFnByInducCaseBody::NestedCases(children) => {
+                            cases = children
+                        }
+                    }
+                }
                 (
                     &source.fn_set_clause.set_bound_parameters,
-                    &case.case_fact,
-                    value,
+                    guards,
+                    value.ok_or_else(|| {
+                        LeanCompileError::unsupported("TemplateCases/RecursiveLeafPath")
+                    })?,
                     &body.store_and_infer_result.case_defining_fact_ids,
                     Some(source.name.id),
+                    index,
                 )
             }
             _ => return Err(LeanCompileError::unsupported("TemplateCases/Declaration")),
@@ -145,15 +159,23 @@ impl LitexToLeanCompiler {
                 ));
             }
         }
-        if !instantiated_fact_matches(
-            &and_chain_as_fact(expected_guard),
-            &source_subject(guard_proof)?,
-            &substitution,
-        ) || !instantiated_object_matches(expected_body, expanded_body, &substitution)
+        if expected_guards.len() != guard_proofs.len()
+            || !instantiated_object_matches(expected_body, expanded_body, &substitution)
         {
             return Err(LeanCompileError::unsupported(
                 "TemplateCases/SelectedSubject",
             ));
+        }
+        for (expected, actual) in expected_guards.iter().zip(&guard_proofs) {
+            if !instantiated_fact_matches(
+                &and_chain_as_fact(expected),
+                &source_subject(actual)?,
+                &substitution,
+            ) {
+                return Err(LeanCompileError::unsupported(
+                    "TemplateCases/SelectedSubject",
+                ));
+            }
         }
         let source_id = source_ids
             .get(index)
@@ -165,8 +187,49 @@ impl LitexToLeanCompiler {
             .ok_or_else(|| LeanCompileError::unsupported("TemplateCases/EquationPublication"))?;
         let (_, equation) =
             position.visible_fact(published.store_and_infer.primary_fact_id(), &self.runtime)?;
-        let guard =
-            self.compile_verify(guard_proof, &position.search_verify_prior(guard_proof)?)?;
+        let mut guards = Vec::new();
+        let mut declarations = Vec::new();
+        let mut propositions = Vec::new();
+        let mut terms = Vec::new();
+        for original in &guard_proofs {
+            let prior = position.search_verify_prior(original)?;
+            let guard = self.compile_verify(original, &prior)?;
+            if guard_proofs.len() > 1 {
+                let actual = source_subject(original)?;
+                let name = format!("h_{}", actual.fact_id().value());
+                declarations.push(format!("have {name} : {} := {}", guard.0, guard.1));
+                let atoms = recursive_guard_atoms(&actual)?;
+                let after = SourcePosition {
+                    before: prior.before + 1,
+                    ..prior
+                };
+                for (i, atom) in atoms.iter().enumerate() {
+                    propositions
+                        .push(self.fact_proposition(&Fact::AtomicFact(atom.clone()), &after)?);
+                    terms.push(conjunction_projection(&name, i, atoms.len()));
+                }
+            }
+            guards.push(guard);
+        }
+        let guard = if guards.len() == 1 {
+            guards.remove(0)
+        } else {
+            (
+                propositions
+                    .into_iter()
+                    .rev()
+                    .reduce(|tail, head| format!("({head}) ∧ ({tail})"))
+                    .ok_or_else(|| {
+                        LeanCompileError::unsupported("TemplateCases/RecursiveLeafPath")
+                    })?,
+                super::compile_general_recursive_result::and_intro(terms),
+            )
+        };
+        let declarations = if declarations.is_empty() {
+            String::new()
+        } else {
+            format!("{}\n  ", declarations.join("\n").replace('\n', "\n  "))
+        };
         let residual = self.compile_verify(
             residual_equal,
             &position.search_verify_prior(residual_equal)?,
@@ -205,7 +268,7 @@ impl LitexToLeanCompiler {
             arguments.extend(values.iter().zip(&requirements).flat_map(|(v,h)| [v.clone(),h.clone()]));
             arguments.extend(template_guards);
             arguments.extend_from_slice(&requirements[values.len()..]);
-            let term = format!("(by\n  let _template_checked_call := {checked_call}\n  have _template_case : {} := {}\n  have _template_beta := {equation} {} _template_case\n  exact _template_beta.trans {}\n)", guard.0, guard.1, arguments.join(" "), residual.1);
+            let term = format!("(by\n  {declarations}let _template_checked_call := {checked_call}\n  have _template_case : {} := {}\n  have _template_beta := {equation} {} _template_case\n  exact _template_beta.trans {}\n)", guard.0, guard.1, arguments.join(" "), residual.1);
             Ok(if reversed { format!("({term}).symm") } else { term })
         })?.ok_or_else(|| LeanCompileError::unsupported("TemplateCases/CallWD"))
     }

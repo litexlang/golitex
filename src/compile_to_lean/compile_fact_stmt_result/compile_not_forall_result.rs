@@ -1,5 +1,5 @@
 use crate::compile_to_lean::compile_by_stmt_result::compile_classified_negation::validate_negated_conjunction;
-use crate::compile_to_lean::helper::{conjunction_proposition, source_subject};
+use crate::compile_to_lean::helper::{conjunction_proposition, set_kind_predicate, source_subject};
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_not_forall_fact::{
@@ -94,7 +94,14 @@ impl LitexToLeanCompiler {
                         self.compile_function_raw_expression_bound(carrier, position, &bindings)?
                     ),
                     ParamType::Set(_) => format!("M.isSet {denotation}"),
-                    _ => return Err(LeanCompileError::unsupported("NotForall/ParameterKind")),
+                    kind @ (ParamType::NonemptySet(_) | ParamType::FiniteSet(_)) => {
+                        format!(
+                            "{} {name}",
+                            set_kind_predicate(kind).ok_or_else(|| {
+                                LeanCompileError::unsupported("NotForall/ParameterKind")
+                            })?
+                        )
+                    }
                 };
                 if bindings.insert(parameter.id, denotation).is_some() {
                     return Err(LeanCompileError::unsupported("NotForall/ParameterIdentity"));

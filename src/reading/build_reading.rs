@@ -3,7 +3,7 @@ use crate::run_module::{run_file_with_config_observed, run_project_observed};
 use std::path::Path;
 
 use super::capture::Capture;
-use super::ReadingInput;
+use super::{ReadingInput, ReadingLayout};
 
 pub struct ReadingBuildResult {
     pub document: JsonValue,
@@ -21,6 +21,15 @@ pub fn build_reading(
     strict: bool,
     language: OutputLanguage,
 ) -> ReadingBuildResult {
+    build_reading_with_layout(input, strict, language, ReadingLayout::Source)
+}
+
+pub fn build_reading_with_layout(
+    input: &ReadingInput,
+    strict: bool,
+    language: OutputLanguage,
+    layout: ReadingLayout,
+) -> ReadingBuildResult {
     let base = match input {
         ReadingInput::File(path) => path
             .parent()
@@ -30,6 +39,7 @@ pub fn build_reading(
         ReadingInput::Source(_) | ReadingInput::Empty => Path::new("."),
     };
     let mut capture = Capture::new(base, language);
+    capture.layout = layout;
     if let ReadingInput::File(path) = input {
         capture.set_entry_file(path);
     }

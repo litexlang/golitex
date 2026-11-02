@@ -1,4 +1,71 @@
 use super::*;
+
+#[test]
+fn negative_atomic_relations_keep_the_entire_relation_inside_negation() {
+    let latex =
+        to_latex_from_source("have a,b R\nnot a < b\nnot a <= b", OutputLanguage::English).unwrap();
+    assert!(latex.contains(r"\neg\left(a < b\right)"));
+    assert!(latex.contains(r"\neg\left(a \leq b\right)"));
+    assert!(!latex.contains(r"\neg a"));
+}
+
+#[test]
+fn annotated_statements_keep_exact_latex_and_distinguish_identical_nested_facts() {
+    let source = "claim:\n    ? 1 = 1\n    1 = 1\n1 = 1\n";
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: source.into(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let blocks = Tokenizer::new()
+        .tokenize(source, runtime.current_file.clone())
+        .unwrap();
+    let ast = runtime.parse(&blocks).unwrap();
+    for language in OutputLanguage::ALL {
+        let mut index = 0;
+        let mapped = to_latex_with_statement_ids(
+            &ast,
+            &runtime.global_module_manager,
+            language,
+            &mut |_| {
+                let id = format!("node{index}");
+                index += 1;
+                Some(id)
+            },
+        )
+        .unwrap();
+        let ordinary = to_latex_from_ast(&ast, &runtime.global_module_manager, language).unwrap();
+        assert_eq!(mapped.content, ordinary);
+        assert_eq!(mapped.statements.len(), 3);
+        let root = mapped
+            .statements
+            .iter()
+            .find(|span| span.statement_id == "node0")
+            .unwrap();
+        let inner = mapped
+            .statements
+            .iter()
+            .find(|span| span.statement_id == "node1")
+            .unwrap();
+        let repeated = mapped
+            .statements
+            .iter()
+            .find(|span| span.statement_id == "node2")
+            .unwrap();
+        assert!(root.start_byte < inner.start_byte && inner.end_byte < root.end_byte);
+        assert!(repeated.start_byte > root.end_byte);
+        assert_eq!(&ordinary[inner.start_byte..inner.end_byte], "$1 = 1$;");
+        assert_eq!(
+            &ordinary[repeated.start_byte..repeated.end_byte],
+            "$1 = 1$;"
+        );
+        assert!(
+            inner.start_byte > ordinary.find("$1 = 1$;").unwrap(),
+            "the claim goal is not the body statement"
+        );
+    }
+}
 use crate::knowledge_base::{store_definition_memory, JsonValue};
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;

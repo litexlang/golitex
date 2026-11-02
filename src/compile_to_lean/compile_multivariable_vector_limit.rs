@@ -32,7 +32,13 @@ pub(super) fn parts(fact: &AtomicFact) -> Option<(&VectorMultivariableLimitRelat
         _ => None,
     }
 }
-fn existence(f: &Obj, p: &Obj, n: &Obj, m: &Obj, fact: &Fact) -> Result<(), LeanCompileError> {
+pub(super) fn existence(
+    f: &Obj,
+    p: &Obj,
+    n: &Obj,
+    m: &Obj,
+    fact: &Fact,
+) -> Result<(), LeanCompileError> {
     let Fact::ExistFact(e) = fact else {
         return Err(invalid("Existence"));
     };
@@ -64,18 +70,18 @@ impl LitexToLeanCompiler {
             return Err(invalid("WDArguments"));
         }
         let mut binders = Vec::new();
+        let mut certified_arguments = Vec::new();
         for (i, (arg, child)) in args.iter().zip(&stages.argument_well_defined).enumerate() {
             ensure_object(arg, child)?;
-            binders.push(format!(
-                "let _multivariable_arg_{i} := {}",
-                self.compile_wd(
-                    child,
-                    &SourcePosition {
-                        before: i,
-                        ..*position
-                    }
-                )?
-            ));
+            let compiled = self.compile_wd(
+                child,
+                &SourcePosition {
+                    before: i,
+                    ..*position
+                },
+            )?;
+            binders.push(format!("let _multivariable_arg_{i} := {}", compiled));
+            certified_arguments.push(format!("({compiled})"));
         }
         let mut lines = self.compile_multivariable_limit_domain(
             args[0],
@@ -118,7 +124,7 @@ impl LitexToLeanCompiler {
                     return Err(invalid("ExistenceProof"));
                 }
                 let (ty, term) = self.compile_verify(proof, position)?;
-                format!("(by obtain ⟨v,hv,hc⟩ := (show {ty} from {term}); exact ⟨v,hv,hc⟩)")
+                format!("(by\n  have _original_vector_limit_exists : {ty} := {term}\n  obtain ⟨v,hv,hc⟩ := _original_vector_limit_exists\n  exact ⟨v,hv,hc⟩\n)")
             }
         };
         lines.push(format!(
@@ -128,8 +134,9 @@ impl LitexToLeanCompiler {
             stages.domains[4].requirement.fact_id().value()
         ));
         Ok(format!(
-            "({}; @Litex.Obj.mk M _ (Litex.multivariableVectorLimitRepresentation (M := M)) (Litex.MultivariableVectorLimitObj.mk _multivariable_arg_0 _multivariable_arg_1 _multivariable_arg_2 _multivariable_arg_3) (by\n  {}\n))",
+            "({}; @Litex.Obj.mk M _ (Litex.multivariableVectorLimitRepresentation (M := M)) (Litex.MultivariableVectorLimitObj.mk {}) (by\n  {}\n))",
             binders.join("; "),
+            certified_arguments.join(" "),
             lines.join("\n").replace('\n', "\n  ")
         ))
     }
@@ -253,11 +260,11 @@ impl LitexToLeanCompiler {
             )?;
             let (view, equal) =
                 self.compile_multivariable_limit_view(&r.function, domain, position)?;
-            let ty = self.compile_function_raw_predicate(&facts[0], position, &HashMap::new())?;
-            let term=format!("(by\n{view}\n  obtain ⟨hv,ha,he⟩ := {}\n  intro radius h_radius\n  obtain ⟨input,hi,hpos,hclose⟩ := ha radius h_radius\n  rw [← {equal}] at hi\n  exact ⟨input,hi,hpos,hclose⟩\n)",compiled.1);
+            let ty = self.compile_multivariable_clause_value_proposition(&facts[0], position)?;
+            let term=format!("(by\n{view}\n  obtain ⟨hv,ha,he⟩ := {}\n  intro radius h_radius\n  obtain ⟨input,hi,hpos,hclose⟩ := ha (Litex.denote radius) h_radius\n  rw [← {equal}] at hi\n  exact ⟨input,hi,hpos,hclose⟩\n)",compiled.1);
             lines.push(self.emit_internal_fact(&facts[0], &(ty, term), position)?);
-            let ty = self.compile_function_raw_predicate(&facts[1], position, &HashMap::new())?;
-            let term=format!("(by\n{view}\n  obtain ⟨hv,ha,he⟩ := {}\n  intro epsilon h_epsilon\n  obtain ⟨delta,hd,hcontrol⟩ := he epsilon h_epsilon\n  refine ⟨delta,hd,?_⟩\n  intro input h_input\n  obtain ⟨hi,_,hpos,hclose⟩ := (Litex.SetSemantics.sep_members _ _ _).mp h_input\n  apply (Litex.SetSemantics.sep_members _ _ _).mpr\n  exact ⟨hi,hi,hcontrol input ({equal} ▸ hi) hpos hclose⟩\n)",compiled.1);
+            let ty = self.compile_multivariable_clause_value_proposition(&facts[1], position)?;
+            let term=format!("(by\n{view}\n  obtain ⟨hv,ha,he⟩ := {}\n  intro epsilon h_epsilon\n  obtain ⟨delta,hd,hcontrol⟩ := he (Litex.denote epsilon) h_epsilon\n  refine ⟨delta,hd,?_⟩\n  intro input h_input\n  obtain ⟨hi,_,hpos,hclose⟩ := (Litex.SetSemantics.sep_members _ _ _).mp h_input\n  apply (Litex.SetSemantics.sep_members _ _ _).mpr\n  exact ⟨hi,hi,hcontrol input ({equal} ▸ hi) hpos hclose⟩\n)",compiled.1);
             lines.push(self.emit_internal_fact(&facts[1], &(ty, term), position)?);
         }
         let target = facts.last().unwrap();

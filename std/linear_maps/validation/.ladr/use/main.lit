@@ -1,0 +1,352 @@
+# Independent two-sided inverse and isomorphism consumers.
+
+claim:
+    ? forall V,W set,T fn(v V) W,S fn(w W) V:
+        $inv::is_two_sided_inverse(V,W,T,S)
+        =>:
+            $bijective(V,W,T)
+    release thm inv::two_sided_inverse_implies_bijective(V,W,T,S)
+
+claim:
+    ? forall V,W set,T fn(v V) W,S,other fn(w W) V:
+        $inv::is_two_sided_inverse(V,W,T,S)
+        $inv::is_two_sided_inverse(V,W,T,other)
+        =>:
+            S=other
+    release thm inv::two_sided_inverse_unique(V,W,T,S,other)
+
+claim:
+    ? forall V,W set,T fn(v V) W:
+        $bijective(V,W,T)
+        =>:
+            $inv::is_two_sided_inverse(V,W,T,\Algebra::linear_criteria::inverse_bijection<V,W,T>)
+    release thm inv::bijective_has_selected_two_sided_inverse(V,W,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $inv::is_linear_isomorphism(K,F,V,source,W,target,T)
+        =>:
+            $bijective(V,W,T)
+    release thm inv::linear_isomorphism_is_bijective(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        $bijective(V,W,T)
+        =>:
+            $inv::is_linear_isomorphism(K,F,V,source,W,target,T)
+    release thm inv::linear_bijection_is_isomorphism(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $inv::is_linear_isomorphism(K,F,V,source,W,target,T)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,F,W,target,V,source,\Algebra::linear_criteria::inverse_bijection<V,W,T>)
+    release thm inv::linear_isomorphism_inverse_is_linear(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W,S fn(w W) V:
+        $inv::is_linear_isomorphism(K,F,V,source,W,target,T)
+        $inv::is_two_sided_inverse(V,W,T,S)
+        =>:
+            S=\Algebra::linear_criteria::inverse_bijection<V,W,T>
+    release thm inv::linear_isomorphism_inverse_unique(K,F,V,source,W,target,T,S)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        $injective(V,W,T)
+        =>:
+            $inv::is_linear_isomorphism(K,F,V,source,W,target,T)
+    release thm dim::equal_dimension_injection_is_linear_isomorphism(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        $surjective(V,W,T)
+        =>:
+            $inv::is_linear_isomorphism(K,F,V,source,W,target,T)
+    release thm dim::equal_dimension_surjection_is_linear_isomorphism(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $inv::is_linear_isomorphism(K,F,V,source,W,target,T)
+        =>:
+            \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+    release thm dim::linear_isomorphism_preserves_finite_dimension(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        =>:
+            $inv::are_linearly_isomorphic(K,F,V,source,W,target)
+    release thm dim::equal_finite_dimensions_are_linearly_isomorphic(K,F,V,source,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $inv::are_linearly_isomorphic(K,F,V,source,W,target)
+        =>:
+            \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+    release thm dim::linearly_isomorphic_finite_spaces_have_equal_dimensions(K,F,V,source,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W,S fn(w W) V:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        $Algebra::vector_space::is_linear_map(K,F,W,target,V,source,S)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+        =>:
+            \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+    release thm ident::equal_dimension_left_inverse_is_right_inverse(K,F,V,source,W,target,T,S)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W,S fn(w W) V:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        $Algebra::vector_space::is_linear_map(K,F,W,target,V,source,S)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+        =>:
+            \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+    release thm ident::equal_dimension_right_inverse_is_left_inverse(K,F,V,source,W,target,T,S)
+
+claim:
+    ? forall V,W nonempty_set,T fn(v V) W,S fn(w W) V:
+        $inv::is_two_sided_inverse(V,W,T,S)
+        =>:
+            \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+            \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+    release thm ident::two_sided_inverse_has_identity_compositions(V,W,T,S)
+
+claim:
+    ? forall V,W nonempty_set,T fn(v V) W,S fn(w W) V:
+        \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+        \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+        =>:
+            $inv::is_two_sided_inverse(V,W,T,S)
+    release thm ident::identity_compositions_are_two_sided_inverse(V,W,T,S)
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        \Algebra::vector_space::scalar_space<K,F> $in &Algebra::vector_space::VectorSpace<K,F,K>
+    release thm Algebra::vector_space::scalar_space_carrier(K,F)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        \Algebra::finite_span::coordinate_space<K,F,n> $in &Algebra::vector_space::VectorSpace<K,F,finite_seq(K,n)>
+    release thm Algebra::finite_span::coordinate_space_carrier(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        $Algebra::basis::is_finite_dimensional(K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>)
+    release thm Algebra::coordinate_basis::coordinate_space_is_finite_dimensional(K,F,n)
+
+have real_forward fn(x R) R=fn(x R) R {2*x}
+
+have real_backward fn(x R) R=fn(x R) R {x/2}
+
+claim:
+    ? $inv::is_two_sided_inverse(R,R,real_forward,real_backward)
+    claim:
+        ? forall x R:
+            real_backward(real_forward(x))=x
+        real_forward(x)=2*x
+        real_backward(real_forward(x))=real_forward(x)/2=2*x/2=x
+    claim:
+        ? forall x R:
+            real_forward(real_backward(x))=x
+        real_backward(x)=x/2
+        real_forward(real_backward(x))=2*real_backward(x)=2*(x/2)=x
+    by def $inv::is_two_sided_inverse(R,R,real_forward,real_backward)
+
+release thm inv::two_sided_inverse_implies_bijective(R,R,real_forward,real_backward)
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_mul
+
+claim:
+    ? $Algebra::vector_space::is_linear_map(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_forward)
+    release struct def Algebra::field::real_field
+    \Algebra::vector_space::scalar_space<R,Algebra::field::real_field> =(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+    release struct def \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>
+    \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add=Algebra::field::real_field.add
+    \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul=Algebra::field::real_field.mul
+    claim:
+        ? forall x,y R:
+            real_forward(\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(x,y))=\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(real_forward(x),real_forward(y))
+        \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(x,y)=Algebra::field::real_field.add(x,y)=x+y
+        real_forward(x)=2*x
+        real_forward(y)=2*y
+        \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(real_forward(x),real_forward(y))=Algebra::field::real_field.add(real_forward(x),real_forward(y))=real_forward(x)+real_forward(y)
+        real_forward(\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(x,y))=2*(x+y)=2*x+2*y=real_forward(x)+real_forward(y)
+    claim:
+        ? forall a,x R:
+            real_forward(\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(a,x))=\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(a,real_forward(x))
+        \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(a,x)=Algebra::field::real_field.mul(a,x)=a*x
+        real_forward(x)=2*x
+        \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(a,real_forward(x))=Algebra::field::real_field.mul(a,real_forward(x))=a*real_forward(x)
+        real_forward(\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(a,x))=2*(a*x)=a*(2*x)=a*real_forward(x)
+    by def $Algebra::vector_space::is_linear_map(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_forward)
+
+release thm inv::linear_bijection_is_isomorphism(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_forward)
+
+release thm inv::linear_isomorphism_inverse_unique(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_forward,real_backward)
+
+real_backward=\Algebra::linear_criteria::inverse_bijection<R,R,real_forward>
+
+release thm ident::two_sided_inverse_has_identity_compositions(R,R,real_forward,real_backward)
+
+release obj def Algebra::field::complex_add
+
+release obj def Algebra::field::complex_mul
+
+have complex_forward fn(x C) C=fn(x C) C {i*x}
+
+have complex_backward fn(x C) C=fn(x C) C {x/i}
+
+claim:
+    ? $inv::is_two_sided_inverse(C,C,complex_forward,complex_backward)
+    claim:
+        ? forall x C:
+            complex_backward(complex_forward(x))=x
+        complex_forward(x)=i*x
+        complex_backward(complex_forward(x))=complex_forward(x)/i=i*x/i=x
+    claim:
+        ? forall x C:
+            complex_forward(complex_backward(x))=x
+        complex_backward(x)=x/i
+        complex_forward(complex_backward(x))=i*complex_backward(x)=i*(x/i)=x
+    by def $inv::is_two_sided_inverse(C,C,complex_forward,complex_backward)
+
+release thm inv::two_sided_inverse_implies_bijective(C,C,complex_forward,complex_backward)
+
+claim:
+    ? $Algebra::vector_space::is_linear_map(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_forward)
+    release struct def Algebra::field::complex_field
+    \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field> =(Algebra::field::complex_field.zero,Algebra::field::complex_field.add,Algebra::field::complex_field.mul)
+    release struct def \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>
+    \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add=Algebra::field::complex_field.add
+    \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.smul=Algebra::field::complex_field.mul
+    claim:
+        ? forall x,y C:
+            complex_forward(\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(x,y))=\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(complex_forward(x),complex_forward(y))
+        \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(x,y)=Algebra::field::complex_field.add(x,y)=x+y
+        complex_forward(x)=i*x
+        complex_forward(y)=i*y
+        \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(complex_forward(x),complex_forward(y))=Algebra::field::complex_field.add(complex_forward(x),complex_forward(y))=complex_forward(x)+complex_forward(y)
+        complex_forward(\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(x,y))=i*(x+y)=i*x+i*y=complex_forward(x)+complex_forward(y)
+    claim:
+        ? forall a,x C:
+            complex_forward(\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.smul(a,x))=\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.smul(a,complex_forward(x))
+        \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.smul(a,x)=Algebra::field::complex_field.mul(a,x)=a*x
+        complex_forward(x)=i*x
+        \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.smul(a,complex_forward(x))=Algebra::field::complex_field.mul(a,complex_forward(x))=a*complex_forward(x)
+        complex_forward(\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.smul(a,x))=i*(a*x)=a*(i*x)=a*complex_forward(x)
+    by def $Algebra::vector_space::is_linear_map(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_forward)
+
+release thm inv::linear_bijection_is_isomorphism(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_forward)
+
+release thm inv::linear_isomorphism_inverse_unique(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_forward,complex_backward)
+
+complex_backward=\Algebra::linear_criteria::inverse_bijection<C,C,complex_forward>
+
+release thm ident::two_sided_inverse_has_identity_compositions(C,C,complex_forward,complex_backward)
+
+complex_forward(1)=i
+
+complex_backward(i)=1
+
+\Algebra::linear_criteria::inverse_bijection<C,C,complex_forward>(i)=1
+
+have real_zero_identity fn(v finite_seq(R,0)) finite_seq(R,0)=\Algebra::vector_space::identity<finite_seq(R,0)>
+
+claim:
+    ? $inv::is_two_sided_inverse(finite_seq(R,0),finite_seq(R,0),real_zero_identity,real_zero_identity)
+    claim:
+        ? forall v finite_seq(R,0):
+            real_zero_identity(real_zero_identity(v))=v
+        real_zero_identity(v)=\Algebra::vector_space::identity<finite_seq(R,0)>(v)=v
+        real_zero_identity(real_zero_identity(v))=real_zero_identity(v)=v
+    by def $inv::is_two_sided_inverse(finite_seq(R,0),finite_seq(R,0),real_zero_identity,real_zero_identity)
+
+release thm inv::two_sided_inverse_implies_bijective(finite_seq(R,0),finite_seq(R,0),real_zero_identity,real_zero_identity)
+
+release thm Algebra::vector_space::identity_linear(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)
+
+claim:
+    ? $Algebra::vector_space::is_linear_map(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,real_zero_identity)
+    real_zero_identity=\Algebra::vector_space::identity<finite_seq(R,0)>
+    $Algebra::vector_space::is_linear_map(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,\Algebra::vector_space::identity<finite_seq(R,0)>)
+
+release thm inv::linear_bijection_is_isomorphism(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,real_zero_identity)
+
+release thm Algebra::coordinate_basis::coordinate_space_dimension(R,Algebra::field::real_field,0)
+
+\Algebra::dimension::finite_dimension<R,Algebra::field::real_field,finite_seq(R,0)>(\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)=0
+
+release thm dim::equal_dimension_injection_is_linear_isomorphism(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,real_zero_identity)
+
+release thm dim::linear_isomorphism_preserves_finite_dimension(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,real_zero_identity)
+
+release thm dim::equal_finite_dimensions_are_linearly_isomorphic(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)
+
+release thm ident::two_sided_inverse_has_identity_compositions(finite_seq(R,0),finite_seq(R,0),real_zero_identity,real_zero_identity)
+
+release thm ident::equal_dimension_left_inverse_is_right_inverse(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,real_zero_identity,real_zero_identity)
+
+have complex_zero_identity fn(v finite_seq(C,0)) finite_seq(C,0)=\Algebra::vector_space::identity<finite_seq(C,0)>
+
+claim:
+    ? $inv::is_two_sided_inverse(finite_seq(C,0),finite_seq(C,0),complex_zero_identity,complex_zero_identity)
+    claim:
+        ? forall v finite_seq(C,0):
+            complex_zero_identity(complex_zero_identity(v))=v
+        complex_zero_identity(v)=\Algebra::vector_space::identity<finite_seq(C,0)>(v)=v
+        complex_zero_identity(complex_zero_identity(v))=complex_zero_identity(v)=v
+    by def $inv::is_two_sided_inverse(finite_seq(C,0),finite_seq(C,0),complex_zero_identity,complex_zero_identity)
+
+release thm inv::two_sided_inverse_implies_bijective(finite_seq(C,0),finite_seq(C,0),complex_zero_identity,complex_zero_identity)
+
+release thm Algebra::vector_space::identity_linear(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)
+
+claim:
+    ? $Algebra::vector_space::is_linear_map(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,complex_zero_identity)
+    complex_zero_identity=\Algebra::vector_space::identity<finite_seq(C,0)>
+    $Algebra::vector_space::is_linear_map(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,\Algebra::vector_space::identity<finite_seq(C,0)>)
+
+release thm inv::linear_bijection_is_isomorphism(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,complex_zero_identity)
+
+release thm Algebra::coordinate_basis::coordinate_space_dimension(C,Algebra::field::complex_field,0)
+
+\Algebra::dimension::finite_dimension<C,Algebra::field::complex_field,finite_seq(C,0)>(\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)=0
+
+release thm dim::equal_dimension_injection_is_linear_isomorphism(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,complex_zero_identity)
+
+release thm dim::linear_isomorphism_preserves_finite_dimension(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,complex_zero_identity)
+
+release thm dim::equal_finite_dimensions_are_linearly_isomorphic(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)
+
+release thm ident::two_sided_inverse_has_identity_compositions(finite_seq(C,0),finite_seq(C,0),complex_zero_identity,complex_zero_identity)
+
+release thm ident::equal_dimension_left_inverse_is_right_inverse(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,complex_zero_identity,complex_zero_identity)
+

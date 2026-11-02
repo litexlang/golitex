@@ -67,6 +67,18 @@ impl LitexToLeanCompiler {
         if exact_identity {
             return Ok(registered.1);
         }
+        if matches!(
+            cited,
+            AtomicFact::MultivariableAnalysisFact(_) | AtomicFact::NotMultivariableAnalysisFact(_)
+        ) {
+            return self.compile_multivariable_predicate_transport(
+                cited,
+                goal,
+                &arguments,
+                &registered.1,
+                position,
+            );
+        }
         match (cited, goal) {
             (AtomicFact::InFact(known), AtomicFact::InFact(given)) => Ok(format!(
                 "(Litex.inOfSame {} {} {} {} {} {} {})",

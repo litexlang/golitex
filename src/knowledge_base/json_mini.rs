@@ -66,6 +66,13 @@ impl JsonObject {
             .map(|(_, value)| value)
     }
 
+    pub fn get_mut(&mut self, key: &str) -> Option<&mut JsonValue> {
+        self.entries
+            .iter_mut()
+            .find(|(k, _)| k == key)
+            .map(|(_, value)| value)
+    }
+
     pub fn is_empty(&self) -> bool {
         self.entries.is_empty()
     }

@@ -7,7 +7,7 @@
 # The same target passed with matrix_mul_identity(A,m,n).
 # Now: all 33 bodyless theorems below verify their actual domains and premises.
 # Boundary: no product commutativity, factorization discovery or missing inverse condition.
-# Existing explicit BT interfaces remain available. Direct matrix Lean replay is unsupported.
+# Existing explicit BT interfaces remain available. Selected certificates have an existing Lean compiler consumer.
 # Run: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/native_matrix_laws.lit
 # Implementation: src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/by_native_matrix_laws.rs
 
@@ -103,7 +103,7 @@ thm direct_inverse_left:
     ? forall n N,A matrix(C,n,n):
         det(A,n)!=0
         =>:
-            matrix_mul(matrix_inverse(A,n),A,n,n,n)=identity_matrix(n)
+            matrix_mul(matrix_inv(A,n),A,n,n,n)=identity_matrix(n)
 
 thm direct_adjugate_right:
     ? forall n N,A matrix(C,n,n):
@@ -113,7 +113,7 @@ thm direct_inverse_right:
     ? forall n N,A matrix(C,n,n):
         det(A,n)!=0
         =>:
-            matrix_mul(A,matrix_inverse(A,n),n,n,n)=identity_matrix(n)
+            matrix_mul(A,matrix_inv(A,n),n,n,n)=identity_matrix(n)
 
 thm direct_rank_zero:
     ? forall m,n N:

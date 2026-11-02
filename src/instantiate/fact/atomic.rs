@@ -1,3 +1,7 @@
+use crate::ast::fact::{CommRingFact, NotCommRingFact};
+use crate::ast::fact::{
+    IsMatrixInvFact, MatrixInversibleFact, NotIsMatrixInvFact, NotMatrixInversibleFact,
+};
 use std::collections::HashMap;
 
 use crate::runtime::runtime_ids::IdentifierId;
@@ -561,6 +565,56 @@ impl Runtime {
                     line_file: f.line_file.clone(),
                 }))
             }
+            AtomicFact::IsMatrixInvFact(f) => Ok(IsMatrixInvFact {
+                fact_id,
+                matrix: self.inst_obj_rec(&f.matrix, param_to_arg_map)?,
+                inverse: self.inst_obj_rec(&f.inverse, param_to_arg_map)?,
+                order: self.inst_obj_rec(&f.order, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotIsMatrixInvFact(f) => Ok(NotIsMatrixInvFact {
+                fact_id,
+                matrix: self.inst_obj_rec(&f.matrix, param_to_arg_map)?,
+                inverse: self.inst_obj_rec(&f.inverse, param_to_arg_map)?,
+                order: self.inst_obj_rec(&f.order, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::MatrixInversibleFact(f) => Ok(MatrixInversibleFact {
+                fact_id,
+                matrix: self.inst_obj_rec(&f.matrix, param_to_arg_map)?,
+                order: self.inst_obj_rec(&f.order, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::NotMatrixInversibleFact(f) => Ok(NotMatrixInversibleFact {
+                fact_id,
+                matrix: self.inst_obj_rec(&f.matrix, param_to_arg_map)?,
+                order: self.inst_obj_rec(&f.order, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            }
+            .into()),
+            AtomicFact::CommRingFact(f) => Ok(AtomicFact::CommRingFact(CommRingFact {
+                fact_id,
+                carrier: self.inst_obj_rec(&f.carrier, param_to_arg_map)?,
+                add: self.inst_obj_rec(&f.add, param_to_arg_map)?,
+                mul: self.inst_obj_rec(&f.mul, param_to_arg_map)?,
+                neg: self.inst_obj_rec(&f.neg, param_to_arg_map)?,
+                zero: self.inst_obj_rec(&f.zero, param_to_arg_map)?,
+                one: self.inst_obj_rec(&f.one, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            })),
+            AtomicFact::NotCommRingFact(f) => Ok(AtomicFact::NotCommRingFact(NotCommRingFact {
+                fact_id,
+                carrier: self.inst_obj_rec(&f.carrier, param_to_arg_map)?,
+                add: self.inst_obj_rec(&f.add, param_to_arg_map)?,
+                mul: self.inst_obj_rec(&f.mul, param_to_arg_map)?,
+                neg: self.inst_obj_rec(&f.neg, param_to_arg_map)?,
+                zero: self.inst_obj_rec(&f.zero, param_to_arg_map)?,
+                one: self.inst_obj_rec(&f.one, param_to_arg_map)?,
+                line_file: f.line_file.clone(),
+            })),
             AtomicFact::BijectiveFact(f) => Ok(AtomicFact::BijectiveFact(BijectiveFact {
                 fact_id,
                 domain: self.inst_obj_rec(&f.domain, param_to_arg_map)?,

@@ -861,8 +861,66 @@ the direct path does not invent an unused scalar or second matrix. Explicit
 `NativeMatrixLawProof` mirrors the selected law; its common application stage
 retains arguments, exact requirements, schema conclusion, orientation, both
 endpoint comparisons and ordered premise results. Normal text names the law;
-Detailed and generated Reading capture retain the children. Matrix objects and
-these new equality certificates have no Lean replay support and fail closed.
+Detailed and generated Reading capture retain the children. The existing
+`compile_native_matrix_law` consumer validates the selected schema, original
+premises, endpoint comparisons and orientation before emitting its Lean proof.
+Unimplemented expression or proof routes still require explicit refusal.
 The canonical `native_matrix_laws.lit` and focused Rust tests cover direct and
 reversed statements, unchanged explicit calls, false neighbours, missing
 conditions, empty dimensions, inherited ceilings and failed publication.
+
+
+## Native commutative-ring equality normalization
+
+`$comm_ring(K,add,mul,neg,zero,one)` is a fixed-arity native proposition,
+not a registration statement. Its domain checks use shared membership
+verification: `K` is nonempty, `add` and `mul` belong to `fn(x,y K) K`,
+`neg` belongs to `fn(x K) K`, and `zero,one` belong to `K`.
+
+Definition introduction checks eight quantified equalities: associativity and
+commutativity of addition, `add(zero,x)=x`, `add(x,neg(x))=zero`, associativity
+and commutativity of multiplication, `mul(one,x)=x`, and left distributivity.
+These imply the remaining unital commutative-ring laws, including the zero-ring
+case. A checked positive fact publishes these exact clauses with its source ID;
+negative facts publish no ring laws. `comm_ring` is reserved against source
+`prop` and `abstract_prop` declarations. No new BT name, Obj, registration
+container, or Runtime/Env field is introduced.
+
+After the existing closed-numeric and function-body rewrite branches miss,
+`Ring` can consume a visible positive ring fact. For example:
+
+```litex
+forall K nonempty_set, add,mul fn(x,y K) K, neg fn(x K) K, zero,one,a,b K:
+    $comm_ring(K,add,mul,neg,zero,one)
+    =>:
+        mul(add(a,b),add(a,neg(b)))=add(mul(a,a),neg(mul(b,b)))
+```
+
+Reification uses the complete callable prefix, including its receiver and all
+preceding argument groups. Stored equality paths may align operation aliases.
+Opaque atoms require membership in this ring's carrier; strictly smaller
+original constructor arguments may compose ring equality with congruence.
+The branch retains the source fact, its citation, checked memberships, alias
+and atom-alignment proofs, reified trees, and both normalization certificates.
+Detailed JSON and the generated typed reading capture expose that evidence.
+It never opens a new top-level VerifyState or a second rewrite opportunity.
+
+Only the selected `zero` and `one` become constants. Other native numerals,
+foreign operations and divisions are atoms, subject to carrier verification.
+There is no field cancellation, characteristic-zero premise, or assumption
+that multiplication has no zero divisors. The sparse integer-polynomial engine
+uses checked arithmetic; default limits are 2,048 expression nodes, 64 atoms,
+256 monomials, degree 64, 127 coefficient bits and 25,000 normalization work
+units. Reification additionally bounds depth, candidate rings and local work.
+Exhaustion is an ordinary search miss.
+
+[The strict runnable tracer](../../examples/proof_nodes/equal/by_builtin_rewrite/comm_ring_polynomial.lit)
+and [integration controls](../../tests/native_comm_ring.rs) cover abstract rings,
+function contexts, aliases, shifted constants, the zero ring, scope, WD and
+search permissions. The existing std ring interface can be consumed with
+`by def $comm_ring(K,S.add,S.mul,S.neg,S.zero,S.one)` after its commutativity
+premise. No std file is changed by this feature.
+
+Lean replay for this native proposition and certificate is currently unsupported.
+The compiler explicitly returns an error and produces no partial artifact;
+this is Litex verifier support, not a checked Lean export capability.

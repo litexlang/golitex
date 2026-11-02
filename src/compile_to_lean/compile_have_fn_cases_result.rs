@@ -196,7 +196,7 @@ impl LitexToLeanCompiler {
         Ok(declarations.join("\n\n"))
     }
 
-    fn compile_piecewise_disjoint_component(
+    pub(super) fn compile_piecewise_disjoint_component(
         &self,
         other: &Fact,
         excluded: &Fact,

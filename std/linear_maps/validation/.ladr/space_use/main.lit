@@ -1,0 +1,353 @@
+# Independent actual linear-map space consumers.
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T \space::linear_map_carrier<K,F,V,source,W,target>:
+        T $in fn(v V) W
+    release thm space::linear_map_function_carrier(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $is_nonempty_set(\space::linear_map_carrier<K,F,V,source,W,target>)
+    release thm space::linear_map_carrier_is_nonempty(K,F,V,source,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,X set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \space::vector_function_space<K,F,X,W,target> $in &Algebra::vector_space::VectorSpace<K,F,fn(x X) W>
+    release thm space::vector_function_space_carrier(K,F,X,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,S)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\space::pointwise_map_add<K,F,V,W,target>(S,T))
+    release thm space::pointwise_add_of_linear_maps_is_linear(K,F,V,source,W,target,S,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\space::pointwise_map_smul<K,F,V,W,target>(a,T))
+    release thm space::pointwise_smul_of_linear_map_is_linear(K,F,V,source,W,target,a,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T \space::linear_map_carrier<K,F,V,source,W,target>:
+        T $in fn(v V) W
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+    release thm space::linear_map_carrier_specification(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            T $in \space::linear_map_carrier<K,F,V,source,W,target>
+    release thm space::linear_map_belongs_to_carrier(K,F,V,source,W,target,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T \space::linear_map_carrier<K,F,V,source,W,target>:
+        \space::linear_map_add<K,F,V,source,W,target>(S,T) $in fn(v V) W
+    release thm space::linear_map_add_function_carrier(K,F,V,source,W,target,S,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T \space::linear_map_carrier<K,F,V,source,W,target>:
+        \space::linear_map_smul<K,F,V,source,W,target>(a,T) $in fn(v V) W
+    release thm space::linear_map_smul_function_carrier(K,F,V,source,W,target,a,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T,result fn(v V) W,v V:
+        S $in \space::linear_map_carrier<K,F,V,source,W,target>
+        T $in \space::linear_map_carrier<K,F,V,source,W,target>
+        result=\space::linear_map_add<K,F,V,source,W,target>(S,T)
+        =>:
+            result(v)=target.add(S(v),T(v))
+    release thm space::linear_map_add_pointwise(K,F,V,source,W,target,S,T,result,v)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        $Algebra::vector_space::is_subspace(K,F,fn(v V) W,\space::vector_function_space<K,F,V,W,target>,\space::linear_map_carrier<K,F,V,source,W,target>)
+    release thm space::linear_maps_form_subspace(K,F,V,source,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \Algebra::vector_space::zero_map<V,W,target.zero> =\space::vector_function_space<K,F,V,W,target>.zero
+    release thm space::zero_map_equals_vector_function_space_zero(K,F,V,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \space::linear_map_space<K,F,V,source,W,target> $in &Algebra::vector_space::VectorSpace<K,F,\space::linear_map_carrier<K,F,V,source,W,target>>
+    release thm space::linear_map_space_carrier(K,F,V,source,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T fn(v V) W:
+        S $in \space::linear_map_carrier<K,F,V,source,W,target>
+        T $in \space::linear_map_carrier<K,F,V,source,W,target>
+        =>:
+            \space::linear_map_space<K,F,V,source,W,target>.add(S,T)=\space::linear_map_add<K,F,V,source,W,target>(S,T)
+    release thm space::linear_map_space_add(K,F,V,source,W,target,S,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T fn(v V) W:
+        T $in \space::linear_map_carrier<K,F,V,source,W,target>
+        =>:
+            \space::linear_map_space<K,F,V,source,W,target>.smul(a,T)=\space::linear_map_smul<K,F,V,source,W,target>(a,T)
+    release thm space::linear_map_space_smul(K,F,V,source,W,target,a,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \space::linear_map_space<K,F,V,source,W,target>.zero=\Algebra::vector_space::zero_map<V,W,target.zero>
+    release thm space::linear_map_space_zero(K,F,V,source,W,target)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T,result fn(v V) W,x V:
+        T $in \space::linear_map_carrier<K,F,V,source,W,target>
+        result=\space::linear_map_smul<K,F,V,source,W,target>(a,T)
+        =>:
+            result(x)=target.smul(a,T(x))
+    release thm space::linear_map_smul_pointwise(K,F,V,source,W,target,a,T,result,x)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T,result fn(v V) W,x V:
+        S $in \space::linear_map_carrier<K,F,V,source,W,target>
+        T $in \space::linear_map_carrier<K,F,V,source,W,target>
+        result=\space::linear_map_space<K,F,V,source,W,target>.add(S,T)
+        =>:
+            result(x)=target.add(S(x),T(x))
+    release thm space::linear_map_space_add_pointwise(K,F,V,source,W,target,S,T,result,x)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T,result fn(v V) W,x V:
+        T $in \space::linear_map_carrier<K,F,V,source,W,target>
+        result=\space::linear_map_space<K,F,V,source,W,target>.smul(a,T)
+        =>:
+            result(x)=target.smul(a,T(x))
+    release thm space::linear_map_space_smul_pointwise(K,F,V,source,W,target,a,T,result,x)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,result fn(v V) W,x V:
+        result=\space::linear_map_space<K,F,V,source,W,target>.zero
+        =>:
+            result(x)=target.zero
+    release thm space::linear_map_space_zero_pointwise(K,F,V,source,W,target,result,x)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,S,T fn(v V) W:
+        S $in \space::linear_map_carrier<K,F,V,source,W,target>
+        T $in \space::linear_map_carrier<K,F,V,source,W,target>
+        =>:
+            \space::linear_map_space<K,F,V,source,W,target>.add(S,T) $in fn(v V) W
+    release thm space::linear_map_space_add_function_carrier(K,F,V,source,W,target,S,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,a K,T fn(v V) W:
+        T $in \space::linear_map_carrier<K,F,V,source,W,target>
+        =>:
+            \space::linear_map_space<K,F,V,source,W,target>.smul(a,T) $in fn(v V) W
+    release thm space::linear_map_space_smul_function_carrier(K,F,V,source,W,target,a,T)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>:
+        \space::linear_map_space<K,F,V,source,W,target>.zero $in fn(v V) W
+    release thm space::linear_map_space_zero_function_carrier(K,F,V,source,W,target)
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_mul
+
+release obj def Algebra::field::complex_add
+
+release obj def Algebra::field::complex_mul
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        \Algebra::vector_space::scalar_space<K,F> $in &Algebra::vector_space::VectorSpace<K,F,K>
+    release thm Algebra::vector_space::scalar_space_carrier(K,F)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        \Algebra::finite_span::coordinate_space<K,F,n> $in &Algebra::vector_space::VectorSpace<K,F,finite_seq(K,n)>
+    release thm Algebra::finite_span::coordinate_space_carrier(K,F,n)
+
+release thm Algebra::vector_space::identity_linear(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>)
+
+release thm space::linear_map_belongs_to_carrier(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,\Algebra::vector_space::identity<R>)
+
+have real_linear_identity \space::linear_map_carrier<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>> =\Algebra::vector_space::identity<R>
+
+release thm space::linear_map_function_carrier(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_linear_identity)
+
+real_linear_identity(2)=\Algebra::vector_space::identity<R>(2)=2
+
+release struct def Algebra::field::real_field
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field> =(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+release struct def \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add=Algebra::field::real_field.add
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul=Algebra::field::real_field.mul
+
+release thm space::linear_map_space_smul_function_carrier(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,2,real_linear_identity)
+
+have real_scaled fn(t R) R=\space::linear_map_space<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>.smul(2,real_linear_identity)
+
+release thm space::linear_map_space_smul_pointwise(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,2,real_linear_identity,real_scaled,2)
+
+real_scaled(2)=\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(2,real_linear_identity(2))=Algebra::field::real_field.mul(2,real_linear_identity(2))=2*(2)=4
+
+real_scaled $in \space::linear_map_carrier<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>
+
+release thm space::linear_map_carrier_specification(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_scaled)
+
+release thm space::linear_map_space_add_function_carrier(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_linear_identity,real_scaled)
+
+have real_sum fn(t R) R=\space::linear_map_space<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>.add(real_linear_identity,real_scaled)
+
+release thm space::linear_map_space_add_pointwise(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_linear_identity,real_scaled,real_sum,2)
+
+real_sum(2)=\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(real_linear_identity(2),real_scaled(2))=Algebra::field::real_field.add(real_linear_identity(2),real_scaled(2))=(2)+(4)=6
+
+real_sum $in \space::linear_map_carrier<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>
+
+release thm space::linear_map_space_zero_function_carrier(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>)
+
+have real_zero_function fn(t R) R=\space::linear_map_space<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>.zero
+
+release thm space::linear_map_space_zero_pointwise(R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,real_zero_function,2)
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.zero=Algebra::field::real_field.zero
+
+Algebra::field::real_field.zero=0
+
+real_zero_function(2)=0
+
+real_zero_function $in \space::linear_map_carrier<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,\space::linear_map_carrier<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>,\space::linear_map_space<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>,real_linear_identity)
+
+release thm Algebra::vector_space::additive_inverse_exists_unique(R,Algebra::field::real_field,\space::linear_map_carrier<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>,\space::linear_map_space<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>,real_linear_identity)
+
+release thm Algebra::vector_space::identity_linear(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>)
+
+release thm space::linear_map_belongs_to_carrier(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,\Algebra::vector_space::identity<C>)
+
+have complex_linear_identity \space::linear_map_carrier<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>> =\Algebra::vector_space::identity<C>
+
+release thm space::linear_map_function_carrier(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_linear_identity)
+
+complex_linear_identity(1+i)=\Algebra::vector_space::identity<C>(1+i)=1+i
+
+release struct def Algebra::field::complex_field
+
+\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field> =(Algebra::field::complex_field.zero,Algebra::field::complex_field.add,Algebra::field::complex_field.mul)
+
+release struct def \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>
+
+\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add=Algebra::field::complex_field.add
+
+\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.smul=Algebra::field::complex_field.mul
+
+release thm space::linear_map_space_smul_function_carrier(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,i,complex_linear_identity)
+
+have complex_scaled fn(t C) C=\space::linear_map_space<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>.smul(i,complex_linear_identity)
+
+release thm space::linear_map_space_smul_pointwise(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,i,complex_linear_identity,complex_scaled,1+i)
+
+complex_scaled(1+i)=\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.smul(i,complex_linear_identity(1+i))=Algebra::field::complex_field.mul(i,complex_linear_identity(1+i))=i*(1+i)=-1+i
+
+complex_scaled $in \space::linear_map_carrier<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>
+
+release thm space::linear_map_carrier_specification(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_scaled)
+
+release thm space::linear_map_space_add_function_carrier(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_linear_identity,complex_scaled)
+
+have complex_sum fn(t C) C=\space::linear_map_space<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>.add(complex_linear_identity,complex_scaled)
+
+release thm space::linear_map_space_add_pointwise(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_linear_identity,complex_scaled,complex_sum,1+i)
+
+complex_sum(1+i)=\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.add(complex_linear_identity(1+i),complex_scaled(1+i))=Algebra::field::complex_field.add(complex_linear_identity(1+i),complex_scaled(1+i))=(1+i)+(-1+i)=2*i
+
+complex_sum $in \space::linear_map_carrier<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>
+
+release thm space::linear_map_space_zero_function_carrier(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>)
+
+have complex_zero_function fn(t C) C=\space::linear_map_space<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>.zero
+
+release thm space::linear_map_space_zero_pointwise(C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,complex_zero_function,1+i)
+
+\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>.zero=Algebra::field::complex_field.zero
+
+Algebra::field::complex_field.zero=0
+
+complex_zero_function(1+i)=0
+
+complex_zero_function $in \space::linear_map_carrier<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>
+
+release thm Algebra::vector_space::zero_scalar_times_vector(C,Algebra::field::complex_field,\space::linear_map_carrier<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>,\space::linear_map_space<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>,complex_linear_identity)
+
+release thm Algebra::vector_space::additive_inverse_exists_unique(C,Algebra::field::complex_field,\space::linear_map_carrier<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>,\space::linear_map_space<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>>,complex_linear_identity)
+
+release thm space::linear_map_carrier_is_nonempty(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)
+
+release thm space::linear_map_space_carrier(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)
+
+release thm Algebra::vector_space::identity_linear(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)
+
+release thm space::linear_map_belongs_to_carrier(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,\Algebra::vector_space::identity<finite_seq(R,0)>)
+
+have real_zero_dimension_identity \space::linear_map_carrier<R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>> =\Algebra::vector_space::identity<finite_seq(R,0)>
+
+release thm space::linear_map_function_carrier(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,real_zero_dimension_identity)
+
+have real_empty_vector finite_seq(R,0)=fn(j closed_range(1,0)) R {0}
+
+real_zero_dimension_identity(real_empty_vector)=real_empty_vector
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,\space::linear_map_carrier<R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>>,\space::linear_map_space<R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>>,real_zero_dimension_identity)
+
+release thm space::linear_map_space_zero_function_carrier(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)
+
+have real_zero_dimension_zero fn(v finite_seq(R,0)) finite_seq(R,0)=\space::linear_map_space<R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>>.zero
+
+release thm space::linear_map_space_zero_pointwise(R,Algebra::field::real_field,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,finite_seq(R,0),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>,real_zero_dimension_zero,real_empty_vector)
+
+real_zero_dimension_zero(real_empty_vector)=\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>.zero
+
+release thm space::linear_map_carrier_is_nonempty(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)
+
+release thm space::linear_map_space_carrier(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)
+
+release thm Algebra::vector_space::identity_linear(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)
+
+release thm space::linear_map_belongs_to_carrier(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,\Algebra::vector_space::identity<finite_seq(C,0)>)
+
+have complex_zero_dimension_identity \space::linear_map_carrier<C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>> =\Algebra::vector_space::identity<finite_seq(C,0)>
+
+release thm space::linear_map_function_carrier(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,complex_zero_dimension_identity)
+
+have complex_empty_vector finite_seq(C,0)=fn(j closed_range(1,0)) C {0}
+
+complex_zero_dimension_identity(complex_empty_vector)=complex_empty_vector
+
+release thm Algebra::vector_space::zero_scalar_times_vector(C,Algebra::field::complex_field,\space::linear_map_carrier<C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>>,\space::linear_map_space<C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>>,complex_zero_dimension_identity)
+
+release thm space::linear_map_space_zero_function_carrier(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)
+
+have complex_zero_dimension_zero fn(v finite_seq(C,0)) finite_seq(C,0)=\space::linear_map_space<C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>>.zero
+
+release thm space::linear_map_space_zero_pointwise(C,Algebra::field::complex_field,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,finite_seq(C,0),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>,complex_zero_dimension_zero,complex_empty_vector)
+
+complex_zero_dimension_zero(complex_empty_vector)=\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>.zero
+
+release thm space::vector_function_space_carrier(R,Algebra::field::real_field,{},R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>)
+
+have empty_domain_function fn(t {}) R=fn(t {}) R {0}
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,fn(t {}) R,\space::vector_function_space<R,Algebra::field::real_field,{},R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>>,empty_domain_function)
+
+have nonlinear_real_function fn(t R) R=fn(t R) R {t^2}
+

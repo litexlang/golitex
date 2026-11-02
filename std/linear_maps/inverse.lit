@@ -1,0 +1,103 @@
+# Two-sided inverses and linear isomorphisms, reusing the existing selector.
+
+prop is_two_sided_inverse(V,W set,T fn(v V) W,S fn(w W) V):
+    forall v V:
+        S(T(v))=v
+    forall w W:
+        T(S(w))=w
+
+thm two_sided_inverse_implies_bijective:
+    ? forall V,W set,T fn(v V) W,S fn(w W) V:
+        $is_two_sided_inverse(V,W,T,S)
+        =>:
+            $bijective(V,W,T)
+    claim:
+        ? forall x,y V:
+            T(x)=T(y)
+            =>:
+                x=y
+        S(T(x))=x
+        S(T(y))=y
+        x=S(T(x))=S(T(y))=y
+    by def $injective(V,W,T)
+    claim:
+        ? forall y W:
+            exist x V st {y=T(x)}
+        y=T(S(y))
+        witness exist x V st {y=T(x)} from S(y)
+    by def $surjective(V,W,T)
+    by def $bijective(V,W,T)
+
+thm two_sided_inverse_unique:
+    ? forall V,W set,T fn(v V) W,S,other fn(w W) V:
+        $is_two_sided_inverse(V,W,T,S)
+        $is_two_sided_inverse(V,W,T,other)
+        =>:
+            S=other
+    claim:
+        ? forall y W:
+            S(y)=other(y)
+        T(other(y))=y
+        S(T(other(y)))=other(y)
+        S(y)=S(T(other(y)))=other(y)
+    by fn_extension S=other
+
+thm bijective_has_selected_two_sided_inverse:
+    ? forall V,W set,T fn(v V) W:
+        $bijective(V,W,T)
+        =>:
+            $is_two_sided_inverse(V,W,T,\Algebra::linear_criteria::inverse_bijection<V,W,T>)
+    claim:
+        ? forall v V:
+            \Algebra::linear_criteria::inverse_bijection<V,W,T>(T(v))=v
+        release thm Algebra::linear_criteria::inverse_bijection_left_identity(V,W,T,v)
+    claim:
+        ? forall w W:
+            T(\Algebra::linear_criteria::inverse_bijection<V,W,T>(w))=w
+        release thm Algebra::linear_criteria::inverse_bijection_right_identity(V,W,T,w)
+    by def $is_two_sided_inverse(V,W,T,\Algebra::linear_criteria::inverse_bijection<V,W,T>)
+
+prop is_linear_isomorphism(K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W):
+    $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+    exist S fn(w W) V st {$Algebra::vector_space::is_linear_map(K,F,W,target,V,source,S),$is_two_sided_inverse(V,W,T,S)}
+
+thm linear_isomorphism_is_bijective:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $is_linear_isomorphism(K,F,V,source,W,target,T)
+        =>:
+            $bijective(V,W,T)
+    obtain S from exist inverse fn(w W) V st {$Algebra::vector_space::is_linear_map(K,F,W,target,V,source,inverse),$is_two_sided_inverse(V,W,T,inverse)}
+    release thm two_sided_inverse_implies_bijective(V,W,T,S)
+
+thm linear_bijection_is_isomorphism:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        $bijective(V,W,T)
+        =>:
+            $is_linear_isomorphism(K,F,V,source,W,target,T)
+    release thm bijective_has_selected_two_sided_inverse(V,W,T)
+    release thm Algebra::linear_criteria::inverse_bijection_is_linear(K,F,V,source,W,target,T)
+    witness exist S fn(w W) V st {$Algebra::vector_space::is_linear_map(K,F,W,target,V,source,S),$is_two_sided_inverse(V,W,T,S)} from \Algebra::linear_criteria::inverse_bijection<V,W,T>
+    by def $is_linear_isomorphism(K,F,V,source,W,target,T)
+
+thm linear_isomorphism_inverse_is_linear:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W:
+        $is_linear_isomorphism(K,F,V,source,W,target,T)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,F,W,target,V,source,\Algebra::linear_criteria::inverse_bijection<V,W,T>)
+    release thm linear_isomorphism_is_bijective(K,F,V,source,W,target,T)
+    $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+    release thm Algebra::linear_criteria::inverse_bijection_is_linear(K,F,V,source,W,target,T)
+
+thm linear_isomorphism_inverse_unique:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W,S fn(w W) V:
+        $is_linear_isomorphism(K,F,V,source,W,target,T)
+        $is_two_sided_inverse(V,W,T,S)
+        =>:
+            S=\Algebra::linear_criteria::inverse_bijection<V,W,T>
+    release thm linear_isomorphism_is_bijective(K,F,V,source,W,target,T)
+    release thm bijective_has_selected_two_sided_inverse(V,W,T)
+    release thm two_sided_inverse_unique(V,W,T,S,\Algebra::linear_criteria::inverse_bijection<V,W,T>)
+
+prop are_linearly_isomorphic(K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>):
+    exist T fn(v V) W st {$is_linear_isomorphism(K,F,V,source,W,target,T)}

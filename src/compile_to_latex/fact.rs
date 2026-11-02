@@ -99,6 +99,18 @@ pub(super) fn atomic(
     };
     Ok(if positive {
         body
+    } else if matches!(
+        value,
+        AtomicFact::NotLessFact(_)
+            | AtomicFact::NotGreaterFact(_)
+            | AtomicFact::NotLessEqualFact(_)
+            | AtomicFact::NotGreaterEqualFact(_)
+            | AtomicFact::NotSubsetFact(_)
+            | AtomicFact::NotSupersetFact(_)
+            | AtomicFact::NotProperSubsetFact(_)
+            | AtomicFact::NotProperSupersetFact(_)
+    ) {
+        format!(r"\neg\left({body}\right)")
     } else {
         format!(r"\neg {}", group_if_compound(&body))
     })

@@ -1,0 +1,483 @@
+# Independent exact-degree and bounded-polynomial consumers.
+
+release obj def degree::complex_polynomial_degree
+
+release obj def degree::real_polynomial_degree
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        $Polynomials::degree_value::is_complex_polynomial_degree_value(p,degree::complex_polynomial_degree(p))
+    release thm degree::complex_polynomial_degree_specification(p)
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        p=fn(x C) C {0}
+        =>:
+            degree::complex_polynomial_degree(p)=Extended::main::real_negative_infinity
+    release thm degree::complex_polynomial_degree_zero(p)
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        $Polynomials::degree_value::is_real_polynomial_degree_value(p,degree::real_polynomial_degree(p))
+    release thm degree::real_polynomial_degree_specification(p)
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        p=fn(x R) R {0}
+        =>:
+            degree::real_polynomial_degree(p)=Extended::main::real_negative_infinity
+    release thm degree::real_polynomial_degree_zero(p)
+
+claim:
+    ? forall p fn(x C) C:
+        $poly::is_complex_polynomial(p)
+        =>:
+            p $in {q fn(x C) C:$poly::is_complex_polynomial(q)}
+    release thm degree::complex_polynomial_degree_domain(p)
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        p!=fn(x C) C {0}
+        =>:
+            degree::complex_polynomial_degree(p) $in N
+    release thm degree::complex_polynomial_degree_nonzero_carrier(p)
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        p!=fn(x C) C {0}
+        =>:
+            $finite::has_complex_polynomial_degree(p,degree::complex_polynomial_degree(p))
+    release thm degree::complex_polynomial_degree_nonzero_specification(p)
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)},degree N:
+        $finite::has_complex_polynomial_degree(p,degree)
+        =>:
+            degree::complex_polynomial_degree(p)=degree
+    release thm degree::complex_polynomial_degree_agrees_with_finite_degree(p,degree)
+
+claim:
+    ? forall p fn(x R) R:
+        $poly::is_real_polynomial(p)
+        =>:
+            p $in {q fn(x R) R:$poly::is_real_polynomial(q)}
+    release thm degree::real_polynomial_degree_domain(p)
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        p!=fn(x R) R {0}
+        =>:
+            degree::real_polynomial_degree(p) $in N
+    release thm degree::real_polynomial_degree_nonzero_carrier(p)
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        p!=fn(x R) R {0}
+        =>:
+            $finite::has_real_polynomial_degree(p,degree::real_polynomial_degree(p))
+    release thm degree::real_polynomial_degree_nonzero_specification(p)
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)},degree N:
+        $finite::has_real_polynomial_degree(p,degree)
+        =>:
+            degree::real_polynomial_degree(p)=degree
+    release thm degree::real_polynomial_degree_agrees_with_finite_degree(p,degree)
+
+claim:
+    ? forall p fn(x C) C,value Polynomials::degree_value::PolynomialDegree:
+        $Polynomials::degree_value::is_complex_polynomial_degree_value(p,value)
+        =>:
+            value $in Extended::main::ExtendedReal
+    release thm degree::complex_polynomial_degree_value_is_extended_real(p,value)
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)}:
+        degree::complex_polynomial_degree(p) $in Extended::main::ExtendedReal
+    release thm degree::complex_polynomial_degree_is_extended_real(p)
+
+claim:
+    ? forall p fn(x R) R,value Polynomials::degree_value::PolynomialDegree:
+        $Polynomials::degree_value::is_real_polynomial_degree_value(p,value)
+        =>:
+            value $in Extended::main::ExtendedReal
+    release thm degree::real_polynomial_degree_value_is_extended_real(p,value)
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)}:
+        degree::real_polynomial_degree(p) $in Extended::main::ExtendedReal
+    release thm degree::real_polynomial_degree_is_extended_real(p)
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)},bound N:
+        p $in \poly::complex_polynomials_up_to<bound>
+        =>:
+            $degree::complex_polynomial_degree_at_most(p,bound)
+    release thm degree::complex_polynomial_degree_at_most_of_bounded(p,bound)
+
+claim:
+    ? forall p {q fn(x C) C:$poly::is_complex_polynomial(q)},bound N:
+        $degree::complex_polynomial_degree_at_most(p,bound)
+        =>:
+            p $in \poly::complex_polynomials_up_to<bound>
+    release thm degree::complex_polynomial_bounded_of_degree_at_most(p,bound)
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)},bound N:
+        p $in \poly::real_polynomials_up_to<bound>
+        =>:
+            $degree::real_polynomial_degree_at_most(p,bound)
+    release thm degree::real_polynomial_degree_at_most_of_bounded(p,bound)
+
+claim:
+    ? forall p {q fn(x R) R:$poly::is_real_polynomial(q)},bound N:
+        $degree::real_polynomial_degree_at_most(p,bound)
+        =>:
+            p $in \poly::real_polynomials_up_to<bound>
+    release thm degree::real_polynomial_bounded_of_degree_at_most(p,bound)
+
+have complex_quadratic_coefficients finite_seq(C,2+1)=fn(j closed_range(1,2+1)) C {(j-2)^2*i}
+
+complex_quadratic_coefficients(2+1)=i
+
+complex_quadratic_coefficients(2+1)!=0
+
+have complex_quadratic fn(x C) C=\poly::complex_polynomial_from_coefficients<2>(complex_quadratic_coefficients)
+
+witness exist n N,values finite_seq(C,n+1) st {complex_quadratic=\poly::complex_polynomial_from_coefficients<n>(values)} from 2,complex_quadratic_coefficients
+
+by def $poly::is_complex_polynomial(complex_quadratic)
+
+release thm degree::complex_polynomial_degree_domain(complex_quadratic)
+
+witness exist values finite_seq(C,2+1) st {complex_quadratic=\poly::complex_polynomial_from_coefficients<2>(values),values(2+1)!=0} from complex_quadratic_coefficients
+
+$finite::has_complex_polynomial_degree(complex_quadratic,2)
+
+release thm finite::complex_polynomial_degree_properties(complex_quadratic,2)
+
+release thm degree::complex_polynomial_degree_agrees_with_finite_degree(complex_quadratic,2)
+
+degree::complex_polynomial_degree(complex_quadratic)=2
+
+release thm degree::complex_polynomial_degree_nonzero_carrier(complex_quadratic)
+
+release thm degree::complex_polynomial_degree_nonzero_specification(complex_quadratic)
+
+release thm degree::complex_polynomial_degree_is_extended_real(complex_quadratic)
+
+witness exist values finite_seq(C,2+1) st {complex_quadratic=\poly::complex_polynomial_from_coefficients<2>(values)} from complex_quadratic_coefficients
+
+release thm poly::complex_polynomials_up_to_contains_representation(2,complex_quadratic)
+
+release thm degree::complex_polynomial_degree_at_most_of_bounded(complex_quadratic,2)
+
+$degree::complex_polynomial_degree_at_most(complex_quadratic,2)
+
+release thm degree::complex_polynomial_bounded_of_degree_at_most(complex_quadratic,2)
+
+release thm poly::complex_polynomials_up_to_inclusion(2,5)
+
+complex_quadratic $in \poly::complex_polynomials_up_to<5>
+
+release thm degree::complex_polynomial_degree_at_most_of_bounded(complex_quadratic,5)
+
+release thm poly::complex_polynomial_value_at(2,complex_quadratic_coefficients,0)
+
+release thm poly::complex_polynomial_value_at_zero(2,complex_quadratic_coefficients)
+
+complex_quadratic_coefficients(1)=i
+
+complex_quadratic(0)=\poly::complex_polynomial_from_coefficients<2>(complex_quadratic_coefficients)(0)=\poly::complex_polynomial_value<2>(complex_quadratic_coefficients,0)=complex_quadratic_coefficients(1)=i
+
+have real_quadratic_coefficients finite_seq(R,2+1)=fn(j closed_range(1,2+1)) R {(j-2)^2}
+
+real_quadratic_coefficients(2+1)=1
+
+real_quadratic_coefficients(2+1)!=0
+
+have real_quadratic fn(x R) R=\poly::real_polynomial_from_coefficients<2>(real_quadratic_coefficients)
+
+witness exist n N,values finite_seq(R,n+1) st {real_quadratic=\poly::real_polynomial_from_coefficients<n>(values)} from 2,real_quadratic_coefficients
+
+by def $poly::is_real_polynomial(real_quadratic)
+
+release thm degree::real_polynomial_degree_domain(real_quadratic)
+
+witness exist values finite_seq(R,2+1) st {real_quadratic=\poly::real_polynomial_from_coefficients<2>(values),values(2+1)!=0} from real_quadratic_coefficients
+
+$finite::has_real_polynomial_degree(real_quadratic,2)
+
+release thm finite::real_polynomial_degree_properties(real_quadratic,2)
+
+release thm degree::real_polynomial_degree_agrees_with_finite_degree(real_quadratic,2)
+
+degree::real_polynomial_degree(real_quadratic)=2
+
+release thm degree::real_polynomial_degree_nonzero_carrier(real_quadratic)
+
+release thm degree::real_polynomial_degree_nonzero_specification(real_quadratic)
+
+release thm degree::real_polynomial_degree_is_extended_real(real_quadratic)
+
+witness exist values finite_seq(R,2+1) st {real_quadratic=\poly::real_polynomial_from_coefficients<2>(values)} from real_quadratic_coefficients
+
+release thm poly::real_polynomials_up_to_contains_representation(2,real_quadratic)
+
+release thm degree::real_polynomial_degree_at_most_of_bounded(real_quadratic,2)
+
+$degree::real_polynomial_degree_at_most(real_quadratic,2)
+
+release thm degree::real_polynomial_bounded_of_degree_at_most(real_quadratic,2)
+
+release thm poly::real_polynomials_up_to_inclusion(2,5)
+
+real_quadratic $in \poly::real_polynomials_up_to<5>
+
+release thm degree::real_polynomial_degree_at_most_of_bounded(real_quadratic,5)
+
+release thm poly::real_polynomial_value_at(2,real_quadratic_coefficients,0)
+
+release thm poly::real_polynomial_value_at_zero(2,real_quadratic_coefficients)
+
+real_quadratic_coefficients(1)=1
+
+real_quadratic(0)=\poly::real_polynomial_from_coefficients<2>(real_quadratic_coefficients)(0)=\poly::real_polynomial_value<2>(real_quadratic_coefficients,0)=real_quadratic_coefficients(1)=1
+
+have complex_short_constant_coefficients finite_seq(C,0+1)=fn(j closed_range(1,0+1)) C {i}
+
+have fn complex_trailing_coefficients(j closed_range(1,3+1)) C by cases:
+    case j=1: i
+    case j!=1: 0
+
+complex_trailing_coefficients $in finite_seq(C,3+1)
+
+claim:
+    ? forall j N+:
+        j<=0+1
+        j<=3+1
+        =>:
+            complex_short_constant_coefficients(j)=complex_trailing_coefficients(j)
+    j $in closed_range(1,0+1)
+    j $in closed_range(1,3+1)
+    j>=1
+    j<=0+1=1
+    j=1
+    complex_short_constant_coefficients(j)=i
+    complex_trailing_coefficients(j)=i
+    complex_short_constant_coefficients(j)=complex_trailing_coefficients(j)
+
+claim:
+    ? forall j closed_range(1,3+1):
+        j>0+1
+        =>:
+            complex_trailing_coefficients(j)=0
+    j>0+1=1
+    j>1
+    j!=1
+    complex_trailing_coefficients(j)=0
+
+release thm truncation::complex_polynomial_truncation(3,0,complex_trailing_coefficients,complex_short_constant_coefficients)
+
+complex_short_constant_coefficients(0+1)=i
+
+complex_short_constant_coefficients(0+1)!=0
+
+have complex_trailing_constant fn(x C) C=\poly::complex_polynomial_from_coefficients<3>(complex_trailing_coefficients)
+
+witness exist n N,values finite_seq(C,n+1) st {complex_trailing_constant=\poly::complex_polynomial_from_coefficients<n>(values)} from 3,complex_trailing_coefficients
+
+by def $poly::is_complex_polynomial(complex_trailing_constant)
+
+release thm degree::complex_polynomial_degree_domain(complex_trailing_constant)
+
+complex_trailing_constant=\poly::complex_polynomial_from_coefficients<3>(complex_trailing_coefficients)=\poly::complex_polynomial_from_coefficients<0>(complex_short_constant_coefficients)
+
+witness exist values finite_seq(C,0+1) st {complex_trailing_constant=\poly::complex_polynomial_from_coefficients<0>(values),values(0+1)!=0} from complex_short_constant_coefficients
+
+$finite::has_complex_polynomial_degree(complex_trailing_constant,0)
+
+release thm degree::complex_polynomial_degree_agrees_with_finite_degree(complex_trailing_constant,0)
+
+degree::complex_polynomial_degree(complex_trailing_constant)=0
+
+witness exist values finite_seq(C,0+1) st {complex_trailing_constant=\poly::complex_polynomial_from_coefficients<0>(values)} from complex_short_constant_coefficients
+
+release thm poly::complex_polynomials_up_to_contains_representation(0,complex_trailing_constant)
+
+release thm degree::complex_polynomial_degree_at_most_of_bounded(complex_trailing_constant,0)
+
+$degree::complex_polynomial_degree_at_most(complex_trailing_constant,0)
+
+have real_short_constant_coefficients finite_seq(R,0+1)=fn(j closed_range(1,0+1)) R {-3}
+
+have fn real_trailing_coefficients(j closed_range(1,3+1)) R by cases:
+    case j=1: -3
+    case j!=1: 0
+
+real_trailing_coefficients $in finite_seq(R,3+1)
+
+claim:
+    ? forall j N+:
+        j<=0+1
+        j<=3+1
+        =>:
+            real_short_constant_coefficients(j)=real_trailing_coefficients(j)
+    j $in closed_range(1,0+1)
+    j $in closed_range(1,3+1)
+    j>=1
+    j<=0+1=1
+    j=1
+    real_short_constant_coefficients(j)=-3
+    real_trailing_coefficients(j)=-3
+    real_short_constant_coefficients(j)=real_trailing_coefficients(j)
+
+claim:
+    ? forall j closed_range(1,3+1):
+        j>0+1
+        =>:
+            real_trailing_coefficients(j)=0
+    j>0+1=1
+    j>1
+    j!=1
+    real_trailing_coefficients(j)=0
+
+release thm truncation::real_polynomial_truncation(3,0,real_trailing_coefficients,real_short_constant_coefficients)
+
+real_short_constant_coefficients(0+1)=-3
+
+real_short_constant_coefficients(0+1)!=0
+
+have real_trailing_constant fn(x R) R=\poly::real_polynomial_from_coefficients<3>(real_trailing_coefficients)
+
+witness exist n N,values finite_seq(R,n+1) st {real_trailing_constant=\poly::real_polynomial_from_coefficients<n>(values)} from 3,real_trailing_coefficients
+
+by def $poly::is_real_polynomial(real_trailing_constant)
+
+release thm degree::real_polynomial_degree_domain(real_trailing_constant)
+
+real_trailing_constant=\poly::real_polynomial_from_coefficients<3>(real_trailing_coefficients)=\poly::real_polynomial_from_coefficients<0>(real_short_constant_coefficients)
+
+witness exist values finite_seq(R,0+1) st {real_trailing_constant=\poly::real_polynomial_from_coefficients<0>(values),values(0+1)!=0} from real_short_constant_coefficients
+
+$finite::has_real_polynomial_degree(real_trailing_constant,0)
+
+release thm degree::real_polynomial_degree_agrees_with_finite_degree(real_trailing_constant,0)
+
+degree::real_polynomial_degree(real_trailing_constant)=0
+
+witness exist values finite_seq(R,0+1) st {real_trailing_constant=\poly::real_polynomial_from_coefficients<0>(values)} from real_short_constant_coefficients
+
+release thm poly::real_polynomials_up_to_contains_representation(0,real_trailing_constant)
+
+release thm degree::real_polynomial_degree_at_most_of_bounded(real_trailing_constant,0)
+
+$degree::real_polynomial_degree_at_most(real_trailing_constant,0)
+
+have complex_zero_coefficients finite_seq(C,0+1)=fn(j closed_range(1,0+1)) C {0}
+
+have complex_zero fn(x C) C=fn(x C) C {0}
+
+claim:
+    ? complex_zero=\poly::complex_polynomial_from_coefficients<0>(complex_zero_coefficients)
+    claim:
+        ? forall x C:
+            complex_zero(x)=\poly::complex_polynomial_from_coefficients<0>(complex_zero_coefficients)(x)
+        release thm poly::complex_polynomial_value_at(0,complex_zero_coefficients,x)
+        release thm poly::complex_constant_polynomial_value(complex_zero_coefficients,x)
+        complex_zero_coefficients(1)=0
+        complex_zero(x)=0=complex_zero_coefficients(1)=\poly::complex_polynomial_value<0>(complex_zero_coefficients,x)=\poly::complex_polynomial_from_coefficients<0>(complex_zero_coefficients)(x)
+    by fn_extension complex_zero=\poly::complex_polynomial_from_coefficients<0>(complex_zero_coefficients)
+
+witness exist n N,values finite_seq(C,n+1) st {complex_zero=\poly::complex_polynomial_from_coefficients<n>(values)} from 0,complex_zero_coefficients
+
+by def $poly::is_complex_polynomial(complex_zero)
+
+release thm degree::complex_polynomial_degree_domain(complex_zero)
+
+complex_zero=fn(x C) C {0}
+
+release thm degree::complex_polynomial_degree_zero(complex_zero)
+
+degree::complex_polynomial_degree(complex_zero)=Extended::main::real_negative_infinity
+
+release thm degree::complex_polynomial_degree_is_extended_real(complex_zero)
+
+witness exist values finite_seq(C,0+1) st {complex_zero=\poly::complex_polynomial_from_coefficients<0>(values)} from complex_zero_coefficients
+
+release thm poly::complex_polynomials_up_to_contains_representation(0,complex_zero)
+
+release thm degree::complex_polynomial_degree_at_most_of_bounded(complex_zero,0)
+
+$degree::complex_polynomial_degree_at_most(complex_zero,0)
+
+release thm degree::complex_polynomial_bounded_of_degree_at_most(complex_zero,0)
+
+release thm Extended::main::real_number_is_extended_real(7)
+
+release thm Extended::main::negative_infinity_le_extended_real(7)
+
+by def $Extended::main::extended_real_le(degree::complex_polynomial_degree(complex_zero),7)
+
+by def $degree::complex_polynomial_degree_at_most(complex_zero,7)
+
+release thm degree::complex_polynomial_bounded_of_degree_at_most(complex_zero,7)
+
+complex_zero $in \poly::complex_polynomials_up_to<7>
+
+have fn unproven_complex_function(x C) C=C_abs(x)
+
+have real_zero_coefficients finite_seq(R,0+1)=fn(j closed_range(1,0+1)) R {0}
+
+have real_zero fn(x R) R=fn(x R) R {0}
+
+claim:
+    ? real_zero=\poly::real_polynomial_from_coefficients<0>(real_zero_coefficients)
+    claim:
+        ? forall x R:
+            real_zero(x)=\poly::real_polynomial_from_coefficients<0>(real_zero_coefficients)(x)
+        release thm poly::real_polynomial_value_at(0,real_zero_coefficients,x)
+        release thm poly::real_constant_polynomial_value(real_zero_coefficients,x)
+        real_zero_coefficients(1)=0
+        real_zero(x)=0=real_zero_coefficients(1)=\poly::real_polynomial_value<0>(real_zero_coefficients,x)=\poly::real_polynomial_from_coefficients<0>(real_zero_coefficients)(x)
+    by fn_extension real_zero=\poly::real_polynomial_from_coefficients<0>(real_zero_coefficients)
+
+witness exist n N,values finite_seq(R,n+1) st {real_zero=\poly::real_polynomial_from_coefficients<n>(values)} from 0,real_zero_coefficients
+
+by def $poly::is_real_polynomial(real_zero)
+
+release thm degree::real_polynomial_degree_domain(real_zero)
+
+real_zero=fn(x R) R {0}
+
+release thm degree::real_polynomial_degree_zero(real_zero)
+
+degree::real_polynomial_degree(real_zero)=Extended::main::real_negative_infinity
+
+release thm degree::real_polynomial_degree_is_extended_real(real_zero)
+
+witness exist values finite_seq(R,0+1) st {real_zero=\poly::real_polynomial_from_coefficients<0>(values)} from real_zero_coefficients
+
+release thm poly::real_polynomials_up_to_contains_representation(0,real_zero)
+
+release thm degree::real_polynomial_degree_at_most_of_bounded(real_zero,0)
+
+$degree::real_polynomial_degree_at_most(real_zero,0)
+
+release thm degree::real_polynomial_bounded_of_degree_at_most(real_zero,0)
+
+release thm Extended::main::real_number_is_extended_real(7)
+
+release thm Extended::main::negative_infinity_le_extended_real(7)
+
+by def $Extended::main::extended_real_le(degree::real_polynomial_degree(real_zero),7)
+
+by def $degree::real_polynomial_degree_at_most(real_zero,7)
+
+release thm degree::real_polynomial_bounded_of_degree_at_most(real_zero,7)
+
+real_zero $in \poly::real_polynomials_up_to<7>
+
+have fn unproven_real_function(x R) R=abs(x)
+
+release thm Extended::main::real_number_is_extended_real(1)

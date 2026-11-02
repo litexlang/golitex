@@ -1,19 +1,22 @@
+use super::compile_function_template::function_guard_fact;
+use super::compile_have_fn_by_induc_result::recursive_signature;
+use super::compile_recursive_case_tree::{
+    recursive_guard_atoms, recursive_leaf_paths, recursive_path_guards,
+};
 use super::compile_template_function::validate_template_forall_shape;
 use super::compile_template_stmt_result::{
     template_binding, template_output, template_substitution,
 };
 use super::helper::{
-    instantiated_fact_matches, instantiated_object_matches, source_subject,
-    standard_inclusion_term, success_object_wd,
+    conjunction_projection, instantiated_fact_matches, instantiated_object_matches, source_subject,
+    standard_inclusion_term,
 };
 use super::source_position::{
     visit_complete_wd, visit_forall_constructor, SourceConstructor, SourceOwner, SourcePosition,
 };
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::SearchProofByKnownForallFact;
-use crate::execute::{
-    ExecHaveFnByForallExistUniqueStmtResult, ExecHaveFnByInducStmtResult, InducCaseBodySuccess,
-};
+use crate::execute::{ExecHaveFnByForallExistUniqueStmtResult, ExecHaveFnByInducStmtResult};
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -219,12 +222,60 @@ impl LitexToLeanCompiler {
                 ));
             };
             self.validate_store(&store.store, &Fact::ForallFact(stored.fact.clone()))?;
+            let signature = recursive_signature(body);
+            let parameters = signature
+                .set_bound_parameters
+                .groups
+                .iter()
+                .flat_map(|g| g.params.iter().map(|p| (p, g.param_type.as_ref())))
+                .collect::<Vec<_>>();
+            let source_parameters = stored
+                .fact
+                .typed_parameters
+                .groups
+                .iter()
+                .flat_map(|g| g.params.iter().map(|p| (p, &g.param_type)))
+                .collect::<Vec<_>>();
+            let expected_domains = signature
+                .dom_facts
+                .iter()
+                .map(function_guard_fact)
+                .collect::<Result<Vec<_>, _>>()?;
+            let (merged_guard, original_domains) = stored
+                .fact
+                .dom_facts
+                .split_last()
+                .ok_or_else(|| LeanCompileError::unsupported("WD/TemplateRecursiveHeader"))?;
             if then_index != 0
-                || stored.fact.typed_parameters.ordered_param_ids().len() != 1
-                || stored.fact.dom_facts.len() != 1
                 || stored.fact.then_facts.len() != 1
+                || parameters.len() != source_parameters.len()
+                || parameters
+                    .iter()
+                    .zip(source_parameters)
+                    .any(|((p, c), (q, t))| {
+                        p.id != q.id || !matches!(t, ParamType::Obj(d) if *c == d)
+                    })
+                || original_domains != expected_domains
             {
                 return Err(LeanCompileError::unsupported("WD/TemplateRecursiveHeader"));
+            }
+            let paths = recursive_leaf_paths(&body.statement.cases);
+            let path = paths
+                .get(case_index)
+                .ok_or_else(|| LeanCompileError::unsupported("WD/TemplateRecursivePath"))?;
+            let guards = recursive_path_guards(&body.statement.cases, path)?;
+            let actual_atoms = recursive_guard_atoms(merged_guard)?;
+            let guard_atoms = guards
+                .iter()
+                .map(|g| recursive_guard_atoms(&and_chain_as_fact(g)))
+                .collect::<Result<Vec<_>, _>>()?;
+            if !guard_atoms
+                .iter()
+                .flatten()
+                .map(|a| a.ir())
+                .eq(actual_atoms.iter().map(|a| a.ir()))
+            {
+                return Err(LeanCompileError::unsupported("WD/TemplateRecursiveGuard"));
             }
             let substitution = HashMap::from([(binding.id, instance.clone())]);
             validate_template_forall_shape(template, &stored.fact, published, &substitution)?;
@@ -234,204 +285,137 @@ impl LitexToLeanCompiler {
                 before: 1,
                 ..recursion
             };
-            let parameter = &body.statement.fn_set_clause.set_bound_parameters.groups[0].params[0];
-            let member_store = &body
-                .binder_introduction
-                .defined_params
-                .store_and_infer_results[0];
-            let carrier = &body.statement.fn_set_clause.set_bound_parameters.groups[0].param_type;
-            let (mut body_binders, _) =
-                self.introduce_member_parameter(parameter, carrier, member_store, &introduced)?;
-            let member = self.resolve_fact(member_store.primary_fact_id(), &introduced)?;
-            let mut body_definitions = self.compile_parameter_inferences(
-                member_store,
-                &member,
-                &(
-                    self.fact_proposition(&member, &introduced)?,
-                    format!("h_{}", member.fact_id().value()),
-                ),
-                &introduced,
-            )?;
+            self.validate_parameter_store_capture(&body.binder_introduction.defined_params)?;
+            if parameters.len()
+                != body
+                    .binder_introduction
+                    .defined_params
+                    .store_and_infer_results
+                    .len()
+                || signature.dom_facts.len() != body.binder_introduction.assumed_dom_facts.len()
+            {
+                return Err(LeanCompileError::unsupported("WD/TemplateRecursiveBinders"));
+            }
+            let mut body_binders = Vec::new();
+            let mut body_definitions = Vec::new();
+            for ((parameter, carrier), store) in parameters.iter().zip(
+                &body
+                    .binder_introduction
+                    .defined_params
+                    .store_and_infer_results,
+            ) {
+                body_binders.extend(
+                    self.introduce_member_parameter(parameter, carrier, store, &introduced)?
+                        .0,
+                );
+                let fact = self.resolve_fact(store.primary_fact_id(), &introduced)?;
+                let member = (
+                    self.fact_proposition(&fact, &introduced)?,
+                    format!("h_{}", fact.fact_id().value()),
+                );
+                body_definitions.extend(self.compile_parameter_inferences(
+                    store,
+                    &fact,
+                    &member,
+                    &introduced,
+                )?);
+            }
+            let body_parameter_count = body_binders.len();
+            for (fact, store) in expected_domains
+                .iter()
+                .zip(&body.binder_introduction.assumed_dom_facts)
+            {
+                self.validate_store(&store.store, fact)?;
+                let name = format!("h_{}", store.primary_fact_id().value());
+                let proposition = self.fact_proposition(fact, &introduced)?;
+                body_binders.push(format!("({name} : {proposition})"));
+                body_definitions.extend(self.compile_stored_inferences(
+                    store,
+                    fact,
+                    &(proposition, name),
+                    &introduced,
+                )?);
+            }
             body_definitions.extend(self.compile_recursive_formation_checks(body, &recursion)?);
             let formed = SourcePosition {
                 before: 8,
                 ..recursion
             };
-            let case = &body.case_checks.cases[case_index];
-            let branch = SourcePosition::new(Some(&formed), SourceOwner::RecursiveCase(case), 0);
-            let assumed = SourcePosition {
-                before: 1,
-                ..branch
+            let merged_name = format!("h_{}", merged_guard.fact_id().value());
+            let guard_prop =
+                self.compile_function_raw_predicate(merged_guard, &formed, &HashMap::new())?;
+            body_binders.push(format!("({merged_name} : {guard_prop})"));
+            let guard_proofs = if guards.len() == 1 {
+                vec![merged_name]
+            } else {
+                let mut offset = 0;
+                guard_atoms
+                    .iter()
+                    .map(|atoms| {
+                        let proof = super::compile_general_recursive_result::and_intro(
+                            (offset..offset + atoms.len())
+                                .map(|i| {
+                                    conjunction_projection(&merged_name, i, actual_atoms.len())
+                                })
+                                .collect(),
+                        );
+                        offset += atoms.len();
+                        proof
+                    })
+                    .collect()
             };
-            let guard = self.resolve_fact(case.assumption_stored.primary_fact_id(), &assumed)?;
-            if !instantiated_fact_matches(&stored.fact.dom_facts[0], &guard, &HashMap::new()) {
-                return Err(LeanCompileError::unsupported("WD/TemplateRecursiveGuard"));
-            }
-            let guard_name = format!("h_{}", guard.fact_id().value());
-            body_binders.push(format!(
-                "({guard_name} : {})",
-                self.fact_proposition(&guard, &assumed)?
-            ));
-            body_definitions.extend(self.compile_recursive_case_assumption(
-                body,
-                case_index,
-                &guard_name,
-                &branch,
-            )?);
-            let InducCaseBodySuccess::EqualTo {
-                well_defined,
-                in_ret_set,
-            } = &case.body
-            else {
-                return Err(LeanCompileError::unsupported(
-                    "WD/TemplateRecursiveNestedCases",
-                ));
-            };
-            let crate::ast::stmt::HaveFnByInducCaseBody::EqualTo(original_body) =
-                &body.statement.cases[case_index].body
-            else {
-                return Err(LeanCompileError::unsupported(
-                    "WD/TemplateRecursiveNestedCases",
-                ));
-            };
-            let original_wd = success_object_wd(well_defined, original_body)?;
-            if !matches!(source_subject(in_ret_set)?, Fact::AtomicFact(AtomicFact::InFact(f))
-                if f.element.ir() == original_body.ir() && f.set == body.statement.fn_set_clause.ret_set)
-            {
-                return Err(LeanCompileError::unsupported("WD/TemplateRecursiveReturn"));
-            }
             let template_count = template_binders.len() - domains.len();
-            let body_count = body_binders.len() - 1;
             let mut binders = template_binders[..template_count].to_vec();
-            binders.extend_from_slice(&body_binders[..body_count]);
+            binders.extend_from_slice(&body_binders[..body_parameter_count]);
             binders.extend_from_slice(&template_binders[template_count..]);
-            binders.extend_from_slice(&body_binders[body_count..]);
+            binders.extend_from_slice(&body_binders[body_parameter_count..]);
             definitions.extend(body_definitions);
-            return visit_complete_wd(
-                original_wd,
-                &assumed,
-                &mut |constructor, site| {
-                    let SourceConstructor::Checked(wd) = constructor else {
-                        return Ok(None);
-                    };
-                    if !instantiated_object_matches(wd.obj(), pattern, &substitution) {
-                        return Ok(None);
-                    }
-                    if let Obj::FnObj(call) = wd.obj() {
-                        if matches!(call.head.as_ref(), FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) if *id == binding.id)
-                        {
-                            if call.body.len() != 1 || call.body[0].len() != 1 {
-                                return Err(LeanCompileError::unsupported(
-                                    "WD/TemplateRecursiveCallArity",
-                                ));
-                            }
-                            let requirements = self.compile_recursive_self_requirements(
-                                &call.body[0][0],
-                                body,
-                                wd,
-                                site,
-                            )?;
-                            let DetailedObjWellDefinedProof::ByDef {
-                                proof: ObjWellDefinedProofByDef::FnObj(evidence),
-                                ..
-                            } = wd.detailed_ref()
-                            else {
-                                unreachable!()
-                            };
-                            let argument = self.compile_wd(
-                                &evidence.child_obj_well_defined[0],
-                                &SourcePosition::new(Some(site), SourceOwner::WD(wd), 0),
-                            )?;
-                            let Obj::InstantiatedTemplateObj(instance) = &instance else {
-                                unreachable!()
-                            };
-                            let function =
-                                self.template_self_reference(instance, &ready)?.ok_or_else(
-                                    || LeanCompileError::unsupported("WD/TemplateRecursiveSelf"),
-                                )?;
-                            let signature = FnSet {
-                                set_bound_parameters: body
-                                    .statement
-                                    .fn_set_clause
-                                    .set_bound_parameters
-                                    .clone(),
-                                dom_facts: body.statement.fn_set_clause.dom_facts.clone(),
-                                ret_set: Box::new(body.statement.fn_set_clause.ret_set.clone()),
-                            };
-                            let (args, target) =
-                                self.compile_function_constructor_arguments(&signature, site)?;
-                            let guard = self.compile_function_guard_template(&signature, site)?;
-                            let constructor = if target { "callTarget" } else { "call" };
-                            // The completed graph has domain N. Its constructor
-                            // consumes the original argument membership; the two
-                            // prefix guards above remain checked, not invented as
-                            // membership of the full graph in a restricted FnSet.
-                            let call = format!("(Litex.{constructor} {args} {guard} {function} {argument} (Litex.recursiveNatFnInFnSet {function}) {} trivial)", requirements[0]);
-                            let emitted = if observe_numeric {
-                                let output =
-                                    self.compile_numeric_carrier(&signature.ret_set, site)?;
-                                let member = standard_inclusion_term(
-                                    &output,
-                                    &StandardSet::C,
-                                    "_callee_object",
-                                    "(Litex.callInOutput _callee_object)",
-                                )?;
-                                format!("(let _callee_object := {call};\nshow {{ _z : ℂ // Litex.denote _callee_object = M.number _z ∧ Litex.In _callee_object Litex.C }} from ⟨Litex.NativeBridge.asComplex _callee_object {member}, Litex.NativeBridge.asComplex_spec _callee_object {member}, {member}⟩)")
-                            } else {
-                                call
-                            };
-                            let mut local_definitions = definitions.clone();
-                            let call_scope =
-                                SourcePosition::new(Some(site), SourceOwner::WD(wd), 0);
-                            for (index, verified) in evidence
-                                .requirement_fact_verified
-                                .iter()
-                                .enumerate()
-                                .skip(1)
-                            {
-                                let checked = SourcePosition {
-                                    before: 1 + index,
-                                    ..call_scope
-                                };
-                                let fact = source_subject(verified)?;
-                                local_definitions.push(self.emit_internal_fact(
-                                    &fact,
-                                    &(
-                                        self.fact_proposition(&fact, &checked)?,
-                                        requirements[index].clone(),
-                                    ),
-                                    &checked,
-                                )?);
-                            }
-                            let emitted = self.scope_proposition(emitted, &local_definitions);
-                            return self
-                                .apply_callee_body(
-                                    published,
-                                    application,
-                                    caller,
-                                    binders.clone(),
-                                    emitted,
-                                )
-                                .map(Some);
+            return self.visit_recursive_case_wd(&body.statement.cases, &body.case_checks, path,
+                &guard_proofs, &formed, definitions, &mut |original_wd, in_ret_set, assumed, definitions| {
+                if !matches!(source_subject(in_ret_set)?, Fact::AtomicFact(AtomicFact::InFact(f))
+                    if f.element.ir() == original_wd.obj().ir() && f.set == signature.ret_set.as_ref().clone()) {
+                    return Err(LeanCompileError::unsupported("WD/TemplateRecursiveReturn"));
+                }
+                visit_complete_wd(original_wd, assumed, &mut |constructor, site| {
+                    let SourceConstructor::Checked(wd) = constructor else { return Ok(None); };
+                    if !instantiated_object_matches(wd.obj(), pattern, &substitution) { return Ok(None); }
+                    if matches!(wd.obj(), Obj::FnObj(call)
+                        if matches!(call.head.as_ref(), FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) if *id == binding.id)) {
+                        let (arguments, requirements) = self.compile_recursive_call_arguments(wd.obj(), body, wd, site)?;
+                        let Obj::InstantiatedTemplateObj(instance) = &instance else { unreachable!() };
+                        let function = self.template_self_reference(instance, &ready)?
+                            .ok_or_else(|| LeanCompileError::unsupported("WD/TemplateRecursiveSelf"))?;
+                        let membership = if self.recursive_uses_nat_representation(body, &ready)? {
+                            format!("(Litex.recursiveNatFnInFnSet {function})")
+                        } else {
+                            format!("(Litex.recursiveFnInFnSet {function})")
+                        };
+                        let (call, output_law) = self.compile_recursive_completed_call(
+                            &signature, &function, &membership, &arguments,
+                            &requirements[..arguments.len() + signature.dom_facts.len()], site)?;
+                        let emitted = if observe_numeric {
+                            let output = self.compile_numeric_carrier(&signature.ret_set, site)?;
+                            let member = standard_inclusion_term(&output, &StandardSet::C,
+                                "_callee_object", &format!("(Litex.{output_law} _callee_object)"))?;
+                            format!("(let _callee_object := {call};\nshow {{ _z : ℂ // Litex.denote _callee_object = M.number _z ∧ Litex.In _callee_object Litex.C }} from ⟨Litex.NativeBridge.asComplex _callee_object {member}, Litex.NativeBridge.asComplex_spec _callee_object {member}, {member}⟩)")
+                        } else { call };
+                        let DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FnObj(evidence), .. } = wd.detailed_ref() else { unreachable!() };
+                        let mut local_definitions = definitions.clone();
+                        let scope = SourcePosition::new(Some(site), SourceOwner::WD(wd), 0);
+                        for (index, verified) in evidence.requirement_fact_verified.iter().enumerate().skip(arguments.len()) {
+                            let checked = SourcePosition { before: arguments.len() + index, ..scope };
+                            let fact = source_subject(verified)?;
+                            local_definitions.push(self.emit_internal_fact(&fact,
+                                &(self.fact_proposition(&fact, &checked)?, requirements[index].clone()), &checked)?);
                         }
+                        let emitted = self.scope_proposition(emitted, &local_definitions);
+                        return self.apply_callee_body(published, application, caller, binders.clone(), emitted).map(Some);
                     }
-                    if wd.obj().ir() != pattern.ir() {
-                        return Ok(None);
-                    }
-                    self.apply_callee_constructor(
-                        published,
-                        wd,
-                        site,
-                        application,
-                        caller,
-                        observe_numeric,
-                        binders.clone(),
-                        definitions.clone(),
-                    )
-                    .map(Some)
-                },
-                &mut |_, _| Ok(None),
-            );
+                    if wd.obj().ir() != pattern.ir() { return Ok(None); }
+                    self.apply_callee_constructor(published, wd, site, application, caller,
+                        observe_numeric, binders.clone(), definitions.clone()).map(Some)
+                }, &mut |_, _| Ok(None))
+            });
         }
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
             ExecHaveFnByForallExistUniqueStmtResult::Success(body),
@@ -496,5 +480,50 @@ impl LitexToLeanCompiler {
                 )
             },
         )
+    }
+
+    /// Use the original call's checked input/domain certificates for the
+    /// completed graph. Smaller-input certificates were already replayed above.
+    fn compile_recursive_completed_call(
+        &self,
+        signature: &FnSet,
+        function: &str,
+        membership: &str,
+        arguments: &[String],
+        requirements: &[String],
+        site: &SourcePosition<'_>,
+    ) -> Result<(String, &'static str), LeanCompileError> {
+        let (members, guard_proof) =
+            self.compile_function_domain_certificates(signature, arguments, requirements, site)?;
+        if !Self::function_uses_numeric_interface(signature) {
+            let (_, argument, member, guard) = self.compile_packed_call_arguments(
+                signature,
+                arguments,
+                &members,
+                &guard_proof,
+                site,
+            )?;
+            return Ok((format!("(Litex.callOn ({function}).val.signature {function} {argument} {membership} ((Litex.SetSemantics.sep_members (M := M) _ _ _).mpr ⟨{member}, {guard}⟩))"), "callOnInOutput"));
+        }
+        let (types, target) = self.compile_function_constructor_arguments(signature, site)?;
+        let guard = self.compile_function_guard_template(signature, site)?;
+        let constructor = match (arguments.len() == 1, target) {
+            (true, false) => "call",
+            (false, false) => "call2",
+            (true, true) => "callTarget",
+            (false, true) => "call2Target",
+        };
+        Ok((
+            format!(
+                "(Litex.{constructor} {types} {guard} {function} {} {membership} {} {guard_proof})",
+                arguments.join(" "),
+                members.join(" ")
+            ),
+            if arguments.len() == 1 {
+                "callInOutput"
+            } else {
+                "call2InOutput"
+            },
+        ))
     }
 }

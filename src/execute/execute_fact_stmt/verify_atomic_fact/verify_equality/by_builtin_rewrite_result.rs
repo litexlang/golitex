@@ -17,6 +17,7 @@ use crate::runtime::runtime_ids::FactId;
 //
 // Dispatcher: `search_equal_fact_proof_by_builtin_rewrite`.
 pub enum EqualitySearchProofByBuiltinRewrite {
+    Ring(super::ring::rewrite::RingBuiltinRewriteProof),
     ClosedNumericEqualSubstitution(ClosedNumericEqualSubstitutionBuiltinRewriteProof),
     FnApplicationUnfoldSubstitution(
         super::fn_application_unfold_substitution_builtin_rewrite_proof::FnApplicationUnfoldSubstitutionBuiltinRewriteProof,

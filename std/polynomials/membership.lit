@@ -1,0 +1,50 @@
+# Expand polynomial-set membership through a checked general set transport.
+
+thm transfer_membership_across_equal_sets:
+    ? forall A,B set,x A:
+        A=B
+        =>:
+            x $in B
+    x $in A
+    x $in B
+
+thm complex_polynomial_definition_membership:
+    ? forall p poly::complex_polynomials:
+        p $in {q fn(x C) C:$poly::is_complex_polynomial(q)}
+    release obj def poly::complex_polynomials
+    poly::complex_polynomials={q fn(x C) C:$poly::is_complex_polynomial(q)}
+    release thm transfer_membership_across_equal_sets(poly::complex_polynomials,{q fn(x C) C:$poly::is_complex_polynomial(q)},p)
+
+thm real_polynomial_definition_membership:
+    ? forall p poly::real_polynomials:
+        p $in {q fn(x R) R:$poly::is_real_polynomial(q)}
+    release obj def poly::real_polynomials
+    poly::real_polynomials={q fn(x R) R:$poly::is_real_polynomial(q)}
+    release thm transfer_membership_across_equal_sets(poly::real_polynomials,{q fn(x R) R:$poly::is_real_polynomial(q)},p)
+
+claim:
+    ? forall p poly::complex_polynomials:
+        p $in fn(x C) C
+    release thm poly::complex_polynomial_function_carrier(p)
+
+thm complex_polynomial_membership_specification:
+    ? forall p poly::complex_polynomials:
+        p $in fn(x C) C
+        $poly::is_complex_polynomial(p)
+    release thm poly::complex_polynomial_function_carrier(p)
+    release thm complex_polynomial_definition_membership(p)
+    $poly::is_complex_polynomial(p)
+
+claim:
+    ? forall p poly::real_polynomials:
+        p $in fn(x R) R
+    release thm poly::real_polynomial_function_carrier(p)
+
+thm real_polynomial_membership_specification:
+    ? forall p poly::real_polynomials:
+        p $in fn(x R) R
+        $poly::is_real_polynomial(p)
+    release thm poly::real_polynomial_function_carrier(p)
+    release thm real_polynomial_definition_membership(p)
+    $poly::is_real_polynomial(p)
+

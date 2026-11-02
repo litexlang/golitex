@@ -392,6 +392,12 @@ impl Runtime {
             | AtomicFact::BijectiveFact(_)
             | AtomicFact::NotBijectiveFact(_)
             | AtomicFact::IsChoiceFunctionForFact(_)
+            | AtomicFact::IsMatrixInvFact(_)
+            | AtomicFact::NotIsMatrixInvFact(_)
+            | AtomicFact::MatrixInversibleFact(_)
+            | AtomicFact::NotMatrixInversibleFact(_)
+            | AtomicFact::CommRingFact(_)
+            | AtomicFact::NotCommRingFact(_)
             | AtomicFact::NotIsChoiceFunctionForFact(_) => None,
         }
     }

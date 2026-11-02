@@ -1,0 +1,342 @@
+# Independent supplied-field matrix-space consumers.
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_mul
+
+release obj def Algebra::field::complex_add
+
+release obj def Algebra::field::complex_mul
+
+claim:
+    ? forall K set,m,n N,A matrix(K,m,n):
+        A $in fn(r closed_range(1,m),c closed_range(1,n)) K
+    release thm mat::matrix_function_carrier(K,m,n,A)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,r closed_range(1,m),c closed_range(1,n):
+        \mat::field_zero_matrix<K,F,m,n>(r,c)=F.zero
+    release thm mat::field_zero_matrix_entry(K,F,m,n,r,c)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n),r closed_range(1,m),c closed_range(1,n):
+        \mat::field_matrix_add<K,F,m,n>(A,B)(r,c)=F.add(A(r,c),B(r,c))
+    release thm mat::field_matrix_add_entry(K,F,m,n,A,B,r,c)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n),r closed_range(1,m),c closed_range(1,n):
+        \mat::field_matrix_smul<K,F,m,n>(a,A)(r,c)=F.mul(a,A(r,c))
+    release thm mat::field_matrix_smul_entry(K,F,m,n,a,A,r,c)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \mat::field_zero_matrix<K,F,m,n> $in matrix(K,m,n)
+    release thm mat::field_zero_matrix_carrier(K,F,m,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n):
+        \mat::field_matrix_add<K,F,m,n>(A,B) $in matrix(K,m,n)
+    release thm mat::field_matrix_add_carrier(K,F,m,n,A,B)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n):
+        \mat::field_matrix_smul<K,F,m,n>(a,A) $in matrix(K,m,n)
+    release thm mat::field_matrix_smul_carrier(K,F,m,n,a,A)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \mat::field_matrix_add<K,F,m,n> $in fn(A,B matrix(K,m,n)) matrix(K,m,n)
+    release thm mat::field_matrix_add_signature(K,F,m,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \mat::field_matrix_smul<K,F,m,n> $in fn(a K,A matrix(K,m,n)) matrix(K,m,n)
+    release thm mat::field_matrix_smul_signature(K,F,m,n)
+
+claim:
+    ? forall K nonempty_set,m,n N:
+        $is_nonempty_set(matrix(K,m,n))
+    have entry K
+    have example matrix(K,m,n)=fn(r closed_range(1,m),c closed_range(1,n)) K {entry}
+    witness $is_nonempty_set(matrix(K,m,n)) from example
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \mat::field_matrix_space<K,F,m,n> $in &Algebra::vector_space::VectorSpace<K,F,matrix(K,m,n)>
+    release thm mat::field_matrix_space_carrier(K,F,m,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \mat::field_matrix_space<K,F,m,n>.zero=\mat::field_zero_matrix<K,F,m,n>
+    release thm mat::field_matrix_space_zero(K,F,m,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n):
+        \mat::field_matrix_space<K,F,m,n>.add(A,B)=\mat::field_matrix_add<K,F,m,n>(A,B)
+    release thm mat::field_matrix_space_add(K,F,m,n,A,B)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n):
+        \mat::field_matrix_space<K,F,m,n>.smul(a,A)=\mat::field_matrix_smul<K,F,m,n>(a,A)
+    release thm mat::field_matrix_space_smul(K,F,m,n,a,A)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \mat::field_matrix_space<K,F,m,n>.zero $in fn(row closed_range(1,m),column closed_range(1,n)) K
+    release thm mat::field_matrix_space_zero_function_carrier(K,F,m,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n):
+        \mat::field_matrix_space<K,F,m,n>.add(A,B) $in fn(row closed_range(1,m),column closed_range(1,n)) K
+    release thm mat::field_matrix_space_add_function_carrier(K,F,m,n,A,B)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n):
+        \mat::field_matrix_space<K,F,m,n>.smul(a,A) $in fn(row closed_range(1,m),column closed_range(1,n)) K
+    release thm mat::field_matrix_space_smul_function_carrier(K,F,m,n,a,A)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,result fn(row closed_range(1,m),column closed_range(1,n)) K,r closed_range(1,m),c closed_range(1,n):
+        result=\mat::field_matrix_space<K,F,m,n>.zero
+        =>:
+            result(r,c)=F.zero
+    release thm mat::field_matrix_space_zero_entry(K,F,m,n,result,r,c)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n),result fn(row closed_range(1,m),column closed_range(1,n)) K,r closed_range(1,m),c closed_range(1,n):
+        result=\mat::field_matrix_space<K,F,m,n>.add(A,B)
+        =>:
+            result(r,c)=F.add(A(r,c),B(r,c))
+    release thm mat::field_matrix_space_add_entry(K,F,m,n,A,B,result,r,c)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n),result fn(row closed_range(1,m),column closed_range(1,n)) K,r closed_range(1,m),c closed_range(1,n):
+        result=\mat::field_matrix_space<K,F,m,n>.smul(a,A)
+        =>:
+            result(r,c)=F.mul(a,A(r,c))
+    release thm mat::field_matrix_space_smul_entry(K,F,m,n,a,A,result,r,c)
+
+claim:
+    ? forall m,n N:
+        \mat::field_zero_matrix<R,Algebra::field::real_field,m,n> =zero_matrix(m,n)
+    release thm compat::real_field_matrix_zero_is_native(m,n)
+
+claim:
+    ? forall m,n N,A,B matrix(R,m,n):
+        \mat::field_matrix_add<R,Algebra::field::real_field,m,n>(A,B)=matrix_add(A,B,m,n)
+    release thm compat::real_field_matrix_add_is_native(m,n,A,B)
+
+claim:
+    ? forall m,n N,a R,A matrix(R,m,n):
+        \mat::field_matrix_smul<R,Algebra::field::real_field,m,n>(a,A)=matrix_scale(a,A,m,n)
+    release thm compat::real_field_matrix_smul_is_native(m,n,a,A)
+
+claim:
+    ? forall m,n N:
+        \mat::field_zero_matrix<C,Algebra::field::complex_field,m,n> =zero_matrix(m,n)
+    release thm compat::complex_field_matrix_zero_is_native(m,n)
+
+claim:
+    ? forall m,n N,A,B matrix(C,m,n):
+        \mat::field_matrix_add<C,Algebra::field::complex_field,m,n>(A,B)=matrix_add(A,B,m,n)
+    release thm compat::complex_field_matrix_add_is_native(m,n,A,B)
+
+claim:
+    ? forall m,n N,a C,A matrix(C,m,n):
+        \mat::field_matrix_smul<C,Algebra::field::complex_field,m,n>(a,A)=matrix_scale(a,A,m,n)
+    release thm compat::complex_field_matrix_smul_is_native(m,n,a,A)
+
+claim:
+    ? forall K nonempty_set,m,n N:
+        $is_nonempty_set(matrix(K,m,n))
+    release thm mat::matrix_carrier_is_nonempty(K,m,n)
+
+release struct def Algebra::field::real_field
+
+release struct def Algebra::field::complex_field
+
+Algebra::field::real_field.zero=0
+
+Algebra::field::real_field.add=Algebra::field::real_add
+
+Algebra::field::real_field.mul=Algebra::field::real_mul
+
+Algebra::field::complex_field.zero=0
+
+Algebra::field::complex_field.add=Algebra::field::complex_add
+
+Algebra::field::complex_field.mul=Algebra::field::complex_mul
+
+have fn real_rectangular_first(r closed_range(1,2),c closed_range(1,3)) R =r+2*c
+
+have fn real_rectangular_second(r closed_range(1,2),c closed_range(1,3)) R =2*r-c
+
+have fn complex_rectangular_first(r closed_range(1,2),c closed_range(1,3)) C =r+c*i
+
+have fn complex_rectangular_second(r closed_range(1,2),c closed_range(1,3)) C =r-c+r*i
+
+real_rectangular_first $in matrix(R,2,3)
+
+real_rectangular_second $in matrix(R,2,3)
+
+complex_rectangular_first $in matrix(C,2,3)
+
+complex_rectangular_second $in matrix(C,2,3)
+
+real_rectangular_first(2,3)=8
+
+real_rectangular_second(2,3)=1
+
+complex_rectangular_first(2,3)=2+3*i
+
+complex_rectangular_second(2,3)=-1+2*i
+
+have real_rectangular_sum fn(row closed_range(1,2),column closed_range(1,3)) R =\mat::field_matrix_space<R,Algebra::field::real_field,2,3>.add(real_rectangular_first,real_rectangular_second)
+
+have real_rectangular_scaled fn(row closed_range(1,2),column closed_range(1,3)) R =\mat::field_matrix_space<R,Algebra::field::real_field,2,3>.smul(-2,real_rectangular_first)
+
+have real_rectangular_zero fn(row closed_range(1,2),column closed_range(1,3)) R =\mat::field_matrix_space<R,Algebra::field::real_field,2,3>.zero
+
+release thm mat::field_matrix_space_add_entry(R,Algebra::field::real_field,2,3,real_rectangular_first,real_rectangular_second,real_rectangular_sum,2,3)
+
+release thm mat::field_matrix_space_smul_entry(R,Algebra::field::real_field,2,3,-2,real_rectangular_first,real_rectangular_scaled,2,3)
+
+release thm mat::field_matrix_space_zero_entry(R,Algebra::field::real_field,2,3,real_rectangular_zero,2,3)
+
+Algebra::field::real_field.add(real_rectangular_first(2,3),real_rectangular_second(2,3))=real_rectangular_first(2,3)+real_rectangular_second(2,3)
+
+real_rectangular_first(2,3)+real_rectangular_second(2,3)=8+1
+
+real_rectangular_sum(2,3)=9
+
+Algebra::field::real_field.mul(-2,real_rectangular_first(2,3))=-2*real_rectangular_first(2,3)
+
+-2*real_rectangular_first(2,3)=-2*(8)
+
+real_rectangular_scaled(2,3)=-16
+
+real_rectangular_zero(2,3)=0
+
+release thm mat::field_matrix_space_add(R,Algebra::field::real_field,2,3,real_rectangular_first,real_rectangular_second)
+
+real_rectangular_sum=\mat::field_matrix_add<R,Algebra::field::real_field,2,3>(real_rectangular_first,real_rectangular_second)
+
+release thm compat::real_field_matrix_add_is_native(2,3,real_rectangular_first,real_rectangular_second)
+
+real_rectangular_sum=matrix_add(real_rectangular_first,real_rectangular_second,2,3)
+
+release thm mat::field_matrix_space_smul(R,Algebra::field::real_field,2,3,-2,real_rectangular_first)
+
+release thm compat::real_field_matrix_smul_is_native(2,3,-2,real_rectangular_first)
+
+real_rectangular_scaled=matrix_scale(-2,real_rectangular_first,2,3)
+
+release thm mat::field_matrix_space_zero(R,Algebra::field::real_field,2,3)
+
+release thm compat::real_field_matrix_zero_is_native(2,3)
+
+real_rectangular_zero=zero_matrix(2,3)
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,matrix(R,2,3),\mat::field_matrix_space<R,Algebra::field::real_field,2,3>,real_rectangular_first)
+
+release thm Algebra::vector_space::additive_inverse_exists_unique(R,Algebra::field::real_field,matrix(R,2,3),\mat::field_matrix_space<R,Algebra::field::real_field,2,3>,real_rectangular_first)
+
+have complex_rectangular_sum fn(row closed_range(1,2),column closed_range(1,3)) C =\mat::field_matrix_space<C,Algebra::field::complex_field,2,3>.add(complex_rectangular_first,complex_rectangular_second)
+
+have complex_rectangular_scaled fn(row closed_range(1,2),column closed_range(1,3)) C =\mat::field_matrix_space<C,Algebra::field::complex_field,2,3>.smul(i,complex_rectangular_first)
+
+have complex_rectangular_zero fn(row closed_range(1,2),column closed_range(1,3)) C =\mat::field_matrix_space<C,Algebra::field::complex_field,2,3>.zero
+
+release thm mat::field_matrix_space_add_entry(C,Algebra::field::complex_field,2,3,complex_rectangular_first,complex_rectangular_second,complex_rectangular_sum,2,3)
+
+release thm mat::field_matrix_space_smul_entry(C,Algebra::field::complex_field,2,3,i,complex_rectangular_first,complex_rectangular_scaled,2,3)
+
+release thm mat::field_matrix_space_zero_entry(C,Algebra::field::complex_field,2,3,complex_rectangular_zero,2,3)
+
+Algebra::field::complex_field.add(complex_rectangular_first(2,3),complex_rectangular_second(2,3))=complex_rectangular_first(2,3)+complex_rectangular_second(2,3)
+
+complex_rectangular_first(2,3)+complex_rectangular_second(2,3)=(2+3*i)+(-1+2*i)
+
+complex_rectangular_sum(2,3)=1+5*i
+
+Algebra::field::complex_field.mul(i,complex_rectangular_first(2,3))=i*complex_rectangular_first(2,3)
+
+i*complex_rectangular_first(2,3)=i*(2+3*i)
+
+complex_rectangular_scaled(2,3)=-3+2*i
+
+complex_rectangular_zero(2,3)=0
+
+release thm mat::field_matrix_space_add(C,Algebra::field::complex_field,2,3,complex_rectangular_first,complex_rectangular_second)
+
+release thm compat::complex_field_matrix_add_is_native(2,3,complex_rectangular_first,complex_rectangular_second)
+
+complex_rectangular_sum=matrix_add(complex_rectangular_first,complex_rectangular_second,2,3)
+
+release thm mat::field_matrix_space_smul(C,Algebra::field::complex_field,2,3,i,complex_rectangular_first)
+
+release thm compat::complex_field_matrix_smul_is_native(2,3,i,complex_rectangular_first)
+
+complex_rectangular_scaled=matrix_scale(i,complex_rectangular_first,2,3)
+
+release thm mat::field_matrix_space_zero(C,Algebra::field::complex_field,2,3)
+
+release thm compat::complex_field_matrix_zero_is_native(2,3)
+
+complex_rectangular_zero=zero_matrix(2,3)
+
+release thm Algebra::vector_space::zero_scalar_times_vector(C,Algebra::field::complex_field,matrix(C,2,3),\mat::field_matrix_space<C,Algebra::field::complex_field,2,3>,complex_rectangular_first)
+
+release thm Algebra::vector_space::additive_inverse_exists_unique(C,Algebra::field::complex_field,matrix(C,2,3),\mat::field_matrix_space<C,Algebra::field::complex_field,2,3>,complex_rectangular_first)
+
+release thm mat::field_zero_matrix_carrier(R,Algebra::field::real_field,0,3)
+
+release thm mat::field_matrix_space_carrier(R,Algebra::field::real_field,0,3)
+
+release thm compat::real_field_matrix_zero_is_native(0,3)
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,matrix(R,0,3),\mat::field_matrix_space<R,Algebra::field::real_field,0,3>,\mat::field_zero_matrix<R,Algebra::field::real_field,0,3>)
+
+release thm mat::field_zero_matrix_carrier(R,Algebra::field::real_field,2,0)
+
+release thm mat::field_matrix_space_carrier(R,Algebra::field::real_field,2,0)
+
+release thm compat::real_field_matrix_zero_is_native(2,0)
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,matrix(R,2,0),\mat::field_matrix_space<R,Algebra::field::real_field,2,0>,\mat::field_zero_matrix<R,Algebra::field::real_field,2,0>)
+
+release thm mat::field_zero_matrix_carrier(R,Algebra::field::real_field,0,0)
+
+release thm mat::field_matrix_space_carrier(R,Algebra::field::real_field,0,0)
+
+release thm compat::real_field_matrix_zero_is_native(0,0)
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,matrix(R,0,0),\mat::field_matrix_space<R,Algebra::field::real_field,0,0>,\mat::field_zero_matrix<R,Algebra::field::real_field,0,0>)
+
+release thm mat::field_zero_matrix_carrier(C,Algebra::field::complex_field,0,3)
+
+release thm mat::field_matrix_space_carrier(C,Algebra::field::complex_field,0,3)
+
+release thm compat::complex_field_matrix_zero_is_native(0,3)
+
+release thm Algebra::vector_space::zero_scalar_times_vector(C,Algebra::field::complex_field,matrix(C,0,3),\mat::field_matrix_space<C,Algebra::field::complex_field,0,3>,\mat::field_zero_matrix<C,Algebra::field::complex_field,0,3>)
+
+release thm mat::field_zero_matrix_carrier(C,Algebra::field::complex_field,2,0)
+
+release thm mat::field_matrix_space_carrier(C,Algebra::field::complex_field,2,0)
+
+release thm compat::complex_field_matrix_zero_is_native(2,0)
+
+release thm Algebra::vector_space::zero_scalar_times_vector(C,Algebra::field::complex_field,matrix(C,2,0),\mat::field_matrix_space<C,Algebra::field::complex_field,2,0>,\mat::field_zero_matrix<C,Algebra::field::complex_field,2,0>)
+
+release thm mat::field_zero_matrix_carrier(C,Algebra::field::complex_field,0,0)
+
+release thm mat::field_matrix_space_carrier(C,Algebra::field::complex_field,0,0)
+
+release thm compat::complex_field_matrix_zero_is_native(0,0)
+
+release thm Algebra::vector_space::zero_scalar_times_vector(C,Algebra::field::complex_field,matrix(C,0,0),\mat::field_matrix_space<C,Algebra::field::complex_field,0,0>,\mat::field_zero_matrix<C,Algebra::field::complex_field,0,0>)

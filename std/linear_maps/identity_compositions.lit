@@ -1,0 +1,108 @@
+# Identity compositions and the finite-dimensional one-sided inverse criterion.
+
+thm equal_dimension_left_inverse_is_right_inverse:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W,S fn(w W) V:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        $Algebra::vector_space::is_linear_map(K,F,W,target,V,source,S)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+        =>:
+            \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+    have left fn(v V) V=\Algebra::vector_space::map_compose<V,W,V>(S,T)
+    have unit fn(v V) V=\Algebra::vector_space::identity<V>
+    left=unit
+    claim:
+        ? forall v V:
+            S(T(v))=v
+        left(v)=unit(v)
+        left(v)=\Algebra::vector_space::map_compose<V,W,V>(S,T)(v)
+        \Algebra::vector_space::map_compose<V,W,V>(S,T)(v)=S(T(v))
+        unit(v)=\Algebra::vector_space::identity<V>(v)
+        \Algebra::vector_space::identity<V>(v)=v
+        S(T(v))=left(v)=unit(v)=v
+    claim:
+        ? forall a,b V:
+            T(a)=T(b)
+            =>:
+                a=b
+        a=S(T(a))=S(T(b))=b
+    by def $injective(V,W,T)
+    release thm Algebra::linear_criteria::equal_dimension_injective_is_bijective(K,F,V,source,W,target,T)
+    $bijective(V,W,T)
+    $surjective(V,W,T)
+    claim:
+        ? forall w W:
+            T(S(w))=w
+        obtain v from exist v V st {w=T(v)}
+        S(w)=S(T(v))=v
+        T(S(w))=T(v)=w
+    claim:
+        ? forall w W:
+            \Algebra::vector_space::map_compose<W,V,W>(T,S)(w)=\Algebra::vector_space::identity<W>(w)
+        \Algebra::vector_space::map_compose<W,V,W>(T,S)(w)=T(S(w))=w=\Algebra::vector_space::identity<W>(w)
+    by fn_extension \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+
+thm equal_dimension_right_inverse_is_left_inverse:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(v V) W,S fn(w W) V:
+        $Algebra::basis::is_finite_dimensional(K,F,V,source)
+        $Algebra::basis::is_finite_dimensional(K,F,W,target)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        $Algebra::vector_space::is_linear_map(K,F,W,target,V,source,S)
+        \Algebra::dimension::finite_dimension<K,F,V>(source)=\Algebra::dimension::finite_dimension<K,F,W>(target)
+        \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+        =>:
+            \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+    \Algebra::dimension::finite_dimension<K,F,W>(target)=\Algebra::dimension::finite_dimension<K,F,V>(source)
+    release thm equal_dimension_left_inverse_is_right_inverse(K,F,W,target,V,source,S,T)
+
+thm two_sided_inverse_has_identity_compositions:
+    ? forall V,W nonempty_set,T fn(v V) W,S fn(w W) V:
+        $inverse::is_two_sided_inverse(V,W,T,S)
+        =>:
+            \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+            \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+    claim:
+        ? forall v V:
+            \Algebra::vector_space::map_compose<V,W,V>(S,T)(v)=\Algebra::vector_space::identity<V>(v)
+        \Algebra::vector_space::map_compose<V,W,V>(S,T)(v)=S(T(v))=v=\Algebra::vector_space::identity<V>(v)
+    by fn_extension \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+    claim:
+        ? forall w W:
+            \Algebra::vector_space::map_compose<W,V,W>(T,S)(w)=\Algebra::vector_space::identity<W>(w)
+        \Algebra::vector_space::map_compose<W,V,W>(T,S)(w)=T(S(w))=w=\Algebra::vector_space::identity<W>(w)
+    by fn_extension \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+
+thm identity_compositions_are_two_sided_inverse:
+    ? forall V,W nonempty_set,T fn(v V) W,S fn(w W) V:
+        \Algebra::vector_space::map_compose<V,W,V>(S,T)=\Algebra::vector_space::identity<V>
+        \Algebra::vector_space::map_compose<W,V,W>(T,S)=\Algebra::vector_space::identity<W>
+        =>:
+            $inverse::is_two_sided_inverse(V,W,T,S)
+    have left fn(v V) V=\Algebra::vector_space::map_compose<V,W,V>(S,T)
+    have source_unit fn(v V) V=\Algebra::vector_space::identity<V>
+    have right fn(w W) W=\Algebra::vector_space::map_compose<W,V,W>(T,S)
+    have target_unit fn(w W) W=\Algebra::vector_space::identity<W>
+    left=source_unit
+    right=target_unit
+    claim:
+        ? forall v V:
+            S(T(v))=v
+        left(v)=source_unit(v)
+        left(v)=\Algebra::vector_space::map_compose<V,W,V>(S,T)(v)
+        \Algebra::vector_space::map_compose<V,W,V>(S,T)(v)=S(T(v))
+        source_unit(v)=\Algebra::vector_space::identity<V>(v)
+        \Algebra::vector_space::identity<V>(v)=v
+        S(T(v))=left(v)=source_unit(v)=v
+    claim:
+        ? forall w W:
+            T(S(w))=w
+        right(w)=target_unit(w)
+        right(w)=\Algebra::vector_space::map_compose<W,V,W>(T,S)(w)
+        \Algebra::vector_space::map_compose<W,V,W>(T,S)(w)=T(S(w))
+        target_unit(w)=\Algebra::vector_space::identity<W>(w)
+        \Algebra::vector_space::identity<W>(w)=w
+        T(S(w))=right(w)=target_unit(w)=w
+    by def $inverse::is_two_sided_inverse(V,W,T,S)
+

@@ -2104,21 +2104,6 @@
         "en": "n,p ∈ ℕ and A ∈ matrix(C,n,n). The result lies in matrix(C,n,n); exponent 0 gives identity_matrix(n), and a positive exponent gives the product of p copies of A."
       }
     },
-    "matrix_inverse": {
-      "kind": {
-        "zh": "逆矩阵",
-        "en": "Inverse matrix"
-      },
-      "syntax": "matrix_inverse(A, n)",
-      "summary": {
-        "zh": "可逆方阵 A 的逆。",
-        "en": "The inverse of an invertible square matrix A."
-      },
-      "notes": {
-        "zh": "n ∈ ℕ，A ∈ matrix(C,n,n)，须已证明 det(A,n) ≠ 0。结果属于 matrix(C,n,n)，与 A 左乘、右乘均得 identity_matrix(n)。",
-        "en": "n ∈ ℕ, A ∈ matrix(C,n,n), and det(A,n) ≠ 0 must be established. The result lies in matrix(C,n,n); multiplying it by A on either side gives identity_matrix(n)."
-      }
-    },
     "matrix_rank": {
       "kind": {
         "zh": "矩阵的秩",
@@ -3496,6 +3481,51 @@
       "reference": "closed_range",
       "syntax": "a ... b",
       "role": "operator"
+    },
+    "matrix_inv": {
+      "kind": {
+        "zh": "逆矩阵",
+        "en": "Inverse matrix"
+      },
+      "syntax": "matrix_inv(A, n)",
+      "summary": {
+        "zh": "可逆方阵 A 的逆。",
+        "en": "The inverse of an invertible square matrix A."
+      },
+      "notes": {
+        "zh": "n ∈ ℕ，A ∈ matrix(C,n,n)，须已证明 det(A,n) ≠ 0。结果属于 matrix(C,n,n)，与 A 左乘、右乘均得 identity_matrix(n)。 已证明的 $matrix_inversible(A,n) 也能提供行列式非零证据。旧 matrix_inverse 拼写已停用。",
+        "en": "n ∈ ℕ, A ∈ matrix(C,n,n), and det(A,n) ≠ 0 must be established. The result lies in matrix(C,n,n); multiplying it by A on either side gives identity_matrix(n). A proved $matrix_inversible(A,n) also supplies the nonzero determinant. The old matrix_inverse spelling is rejected."
+      }
+    },
+    "is_matrix_inv": {
+      "kind": {
+        "en": "Inverse candidate",
+        "zh": "逆矩阵候选关系"
+      },
+      "syntax": "$is_matrix_inv(A, B, n)",
+      "summary": {
+        "en": "B is a two-sided inverse of the complex square matrix A.",
+        "zh": "B 是复方阵 A 的双侧逆。"
+      },
+      "notes": {
+        "en": "n is natural, including zero; A and B have complete matrix(C,n,n) domains. The definition is AB=BA=I. A proved candidate supplies existence and det(A,n)!=0.",
+        "zh": "n 是自然数，允许零阶；A 和 B 必须具有完整 matrix(C,n,n) 定义域。定义为 AB=BA=I。已证明的候选关系提供逆存在和行列式非零。"
+      }
+    },
+    "matrix_inversible": {
+      "kind": {
+        "en": "Matrix invertibility",
+        "zh": "矩阵可逆性"
+      },
+      "syntax": "$matrix_inversible(A, n)",
+      "summary": {
+        "en": "The complex square matrix A has a two-sided inverse.",
+        "zh": "复方阵 A 存在双侧逆。"
+      },
+      "notes": {
+        "en": "Equivalent to det(A,n)!=0 over C. This is an existence predicate; matrix_inv(A,n) is the selected value. Real matrices are accepted through their complex membership.",
+        "zh": "在 C 上等价于 det(A,n)!=0。这是存在性谓词，matrix_inv(A,n) 是所选逆矩阵对象。实矩阵通过其复数域成员证据使用。"
+      }
     }
   },
   "statements": {
@@ -4319,7 +4349,7 @@
         "matrix_power"
       ],
       "Obj.MatrixOperator.Inverse": [
-        "matrix_inverse"
+        "matrix_inv"
       ],
       "Obj.MatrixOperator.Rank": [
         "matrix_rank"
@@ -5086,6 +5116,27 @@
       "Fact.NotForall": [
         "not",
         "forall"
+      ],
+      "Fact.AtomicFact.IsMatrixInvFact": [
+        "is_matrix_inv"
+      ],
+      "Fact.AtomicFact.NotIsMatrixInvFact": [
+        "not",
+        "is_matrix_inv"
+      ],
+      "Fact.AtomicFact.MatrixInversibleFact": [
+        "matrix_inversible"
+      ],
+      "Fact.AtomicFact.NotMatrixInversibleFact": [
+        "not",
+        "matrix_inversible"
+      ],
+      "Fact.AtomicFact.CommRingFact": [
+        "comm_ring"
+      ],
+      "Fact.AtomicFact.NotCommRingFact": [
+        "not",
+        "comm_ring"
       ]
     }
   },

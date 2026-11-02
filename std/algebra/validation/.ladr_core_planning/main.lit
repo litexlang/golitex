@@ -1,0 +1,344 @@
+# Isolated interface probes for the selected linear-algebra core plan.
+# No canonical std export is added by this planning workspace.
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m): $Algebra::basis::is_basis(K,F,V,source,n,domain_basis),$Algebra::basis::is_basis(K,F,W,target,m,codomain_basis)>:
+    have fn planning_matrix_of_linear_map(T fn(v V) W: $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)) fn(r closed_range(1,m),c closed_range(1,n)) K=fn(r closed_range(1,m),c closed_range(1,n)) K {\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(T(domain_basis(c)))(r)}
+
+thm planning_matrix_of_map_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),T fn(v V) W:
+        $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)
+        $Algebra::basis::is_basis(K,F,W,target,m,codomain_basis)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            \planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T) $in matrix(K,m,n)
+
+thm planning_matrix_of_map_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),T fn(v V) W,r closed_range(1,m),c closed_range(1,n):
+        $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)
+        $Algebra::basis::is_basis(K,F,W,target,m,codomain_basis)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            \planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T)(r,c)=\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(T(domain_basis(c)))(r)
+
+template<K set,m,n N,A matrix(K,m,n),c closed_range(1,n)>:
+    have fn planning_matrix_column(r closed_range(1,m)) K=A(r,c)
+
+template<K nonempty_set,F &Algebra::field::Field<K>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,codomain_basis finite_seq(W,m)>:
+    have fn planning_matrix_basis_images(A matrix(K,m,n)) fn(c closed_range(1,n)) W=fn(c closed_range(1,n)) W {\Algebra::finite_span::linear_combination<K,F,W,target,m>(\planning_matrix_column<K,m,n,A,c>,codomain_basis)}
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m): $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)>:
+    have fn planning_linear_map_from_matrix(A matrix(K,m,n)) fn(x V) W=\Algebra::coordinate_maps::linear_map_from_basis<K,F,V,source,W,target,n,domain_basis,\planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A)>
+
+release obj def Algebra::field::complex_field
+
+release obj def Algebra::field::real_field
+
+struct PlanningComplexInnerProductSpace<V nonempty_set>:
+    vectors &Algebra::vector_space::VectorSpace<C,Algebra::field::complex_field,V>
+    pair fn(x,y V) C
+    <=>:
+        forall x,y V:
+            pair(x,y)=conj(pair(y,x))
+        forall x,y,z V:
+            pair(x,vectors.add(y,z))=pair(x,y)+pair(x,z)
+        forall a C,x,y V:
+            pair(x,vectors.smul(a,y))=a*pair(x,y)
+        forall x V:
+            pair(x,x) $in R
+            re(pair(x,x))>=0
+        forall x V:
+            pair(x,x)=0
+            =>:
+                x=vectors.zero
+
+claim:
+    ? forall V nonempty_set,ip &PlanningComplexInnerProductSpace<V>,x V:
+        ip.pair(x,x) $in R
+        re(ip.pair(x,x))>=0
+    release struct def ip
+
+template<V nonempty_set,ip &PlanningComplexInnerProductSpace<V>>:
+    have fn planning_complex_inner_norm(x V) R=sqrt(re(ip.pair(x,x)))
+
+thm planning_complex_norm_nonnegative:
+    ? forall V nonempty_set,ip &PlanningComplexInnerProductSpace<V>,x V:
+        \planning_complex_inner_norm<V,ip>(x)>=0
+    re(ip.pair(x,x))>=0
+    \planning_complex_inner_norm<V,ip>(x)=sqrt(re(ip.pair(x,x)))
+    sqrt(re(ip.pair(x,x)))>=0
+
+struct PlanningRealInnerProductSpace<V nonempty_set>:
+    vectors &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,V>
+    pair fn(x,y V) R
+    <=>:
+        forall x,y V:
+            pair(x,y)=pair(y,x)
+        forall x,y,z V:
+            pair(x,vectors.add(y,z))=pair(x,y)+pair(x,z)
+        forall a R,x,y V:
+            pair(x,vectors.smul(a,y))=a*pair(x,y)
+        forall x V:
+            pair(x,x)>=0
+        forall x V:
+            pair(x,x)=0
+            =>:
+                x=vectors.zero
+
+template<V nonempty_set,ip &PlanningRealInnerProductSpace<V>>:
+    have fn planning_real_inner_norm(x V) R=sqrt(ip.pair(x,x))
+
+thm planning_matrix_basis_images_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,codomain_basis finite_seq(W,m),A matrix(K,m,n):
+        \planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A) $in finite_seq(W,n)
+
+thm planning_matrix_basis_images_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,codomain_basis finite_seq(W,m),A matrix(K,m,n),c closed_range(1,n):
+        \planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A)(c)=\Algebra::finite_span::linear_combination<K,F,W,target,m>(\planning_matrix_column<K,m,n,A,c>,codomain_basis)
+
+thm planning_map_from_matrix_is_linear:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),A matrix(K,m,n):
+        $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A))
+    \planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A)=\Algebra::coordinate_maps::linear_map_from_basis<K,F,V,source,W,target,n,domain_basis,\planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A)>
+    release thm planning_matrix_basis_images_carrier(K,F,W,target,n,m,codomain_basis,A)
+    release thm Algebra::coordinate_maps::linear_map_from_basis_is_linear(K,F,V,source,W,target,n,domain_basis,\planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A))
+
+thm planning_map_from_matrix_basis_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),A matrix(K,m,n),c closed_range(1,n):
+        $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)
+        =>:
+            \planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A)(domain_basis(c))=\planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A)(c)
+    \planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A)=\Algebra::coordinate_maps::linear_map_from_basis<K,F,V,source,W,target,n,domain_basis,\planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A)>
+    release thm planning_matrix_basis_images_carrier(K,F,W,target,n,m,codomain_basis,A)
+    release thm Algebra::coordinate_maps::linear_map_from_basis_entry(K,F,V,source,W,target,n,domain_basis,\planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A),c)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),A matrix(K,m,n):
+        $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)
+        =>:
+            $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A))
+    release thm planning_map_from_matrix_is_linear(K,F,V,source,W,target,n,m,domain_basis,codomain_basis,A)
+
+thm planning_matrix_from_map_round_trip:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),A matrix(K,m,n):
+        $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)
+        $Algebra::basis::is_basis(K,F,W,target,m,codomain_basis)
+        =>:
+            \planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A))=A
+    by fn_extension:
+        ? \planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A))=A
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A))(r,c)=A(r,c)
+            have coefficients finite_seq(K,m)=\planning_matrix_column<K,m,n,A,c>
+            release thm planning_map_from_matrix_basis_entry(K,F,V,source,W,target,n,m,domain_basis,codomain_basis,A,c)
+            release thm planning_matrix_basis_images_entry(K,F,W,target,n,m,codomain_basis,A,c)
+            \planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A)(domain_basis(c))=\planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(A)(c)=\Algebra::finite_span::linear_combination<K,F,W,target,m>(coefficients,codomain_basis)
+            release thm Algebra::basis::basis_coordinates_of_combination(K,F,W,target,m,codomain_basis,coefficients)
+            \Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A)(domain_basis(c)))=\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(\Algebra::finite_span::linear_combination<K,F,W,target,m>(coefficients,codomain_basis))=coefficients
+            release thm planning_matrix_of_map_entry(K,F,V,source,W,target,n,m,domain_basis,codomain_basis,\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A),r,c)
+            \planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A))(r,c)=\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(A)(domain_basis(c)))(r)=coefficients(r)=\planning_matrix_column<K,m,n,A,c>(r)=A(r,c)
+
+thm planning_matrix_column_of_map:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),T fn(v V) W,c closed_range(1,n):
+        $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)
+        $Algebra::basis::is_basis(K,F,W,target,m,codomain_basis)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            \planning_matrix_column<K,m,n,\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T),c> =\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(T(domain_basis(c)))
+    by fn_extension:
+        ? \planning_matrix_column<K,m,n,\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T),c> =\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(T(domain_basis(c)))
+        claim:
+            ? forall r closed_range(1,m):
+                \planning_matrix_column<K,m,n,\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T),c>(r)=\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(T(domain_basis(c)))(r)
+            release thm planning_matrix_of_map_entry(K,F,V,source,W,target,n,m,domain_basis,codomain_basis,T,r,c)
+            \planning_matrix_column<K,m,n,\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T),c>(r)=\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T)(r,c)=\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(T(domain_basis(c)))(r)
+
+thm planning_map_from_matrix_round_trip:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,source &Algebra::vector_space::VectorSpace<K,F,V>,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,n,m N,domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),T fn(v V) W:
+        $Algebra::basis::is_basis(K,F,V,source,n,domain_basis)
+        $Algebra::basis::is_basis(K,F,W,target,m,codomain_basis)
+        $Algebra::vector_space::is_linear_map(K,F,V,source,W,target,T)
+        =>:
+            \planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T))=T
+    release thm planning_map_from_matrix_is_linear(K,F,V,source,W,target,n,m,domain_basis,codomain_basis,\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T))
+    claim:
+        ? forall c closed_range(1,n):
+            \planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T))(domain_basis(c))=T(domain_basis(c))
+        release thm planning_map_from_matrix_basis_entry(K,F,V,source,W,target,n,m,domain_basis,codomain_basis,\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T),c)
+        release thm planning_matrix_basis_images_entry(K,F,W,target,n,m,codomain_basis,\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T),c)
+        release thm planning_matrix_column_of_map(K,F,V,source,W,target,n,m,domain_basis,codomain_basis,T,c)
+        release thm Algebra::coordinate_maps::basis_coordinates_reconstruct(K,F,W,target,m,codomain_basis,T(domain_basis(c)))
+        \planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T))(domain_basis(c))=\planning_matrix_basis_images<K,F,W,target,n,m,codomain_basis>(\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T))(c)=\Algebra::finite_span::linear_combination<K,F,W,target,m>(\planning_matrix_column<K,m,n,\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T),c>,codomain_basis)=\Algebra::finite_span::linear_combination<K,F,W,target,m>(\Algebra::basis::basis_coordinates<K,F,W,target,m,codomain_basis>(T(domain_basis(c))),codomain_basis)=T(domain_basis(c))
+    release thm Algebra::coordinate_maps::linear_maps_equal_on_basis(K,F,V,source,W,target,n,domain_basis,T,\planning_linear_map_from_matrix<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(\planning_matrix_of_linear_map<K,F,V,source,W,target,n,m,domain_basis,codomain_basis>(T)))
+
+thm planning_real_norm_nonnegative:
+    ? forall V nonempty_set,ip &PlanningRealInnerProductSpace<V>,x V:
+        \planning_real_inner_norm<V,ip>(x)>=0
+    \planning_real_inner_norm<V,ip>(x)=sqrt(ip.pair(x,x))
+    sqrt(ip.pair(x,x))>=0
+
+prop planning_complex_orthogonal_to_subset(V nonempty_set,ip &PlanningComplexInnerProductSpace<V>,U power_set(V),x V):
+    forall u U:
+        ip.pair(u,x)=0
+
+template<V nonempty_set,ip &PlanningComplexInnerProductSpace<V>,U power_set(V)>:
+    have planning_complex_orthogonal_complement power_set(V)={x V: $planning_complex_orthogonal_to_subset(V,ip,U,x)}
+
+prop planning_complex_is_projection(V nonempty_set,ip &PlanningComplexInnerProductSpace<V>,U power_set(V),x V,u U):
+    $Algebra::vector_space::is_subspace(C,Algebra::field::complex_field,V,ip.vectors,U)
+    $planning_complex_orthogonal_to_subset(V,ip,U,\Algebra::vector_space::vector_difference<C,Algebra::field::complex_field,V,ip.vectors>(x,u))
+
+prop planning_complex_orthonormal_basis(V nonempty_set,ip &PlanningComplexInnerProductSpace<V>,n N,vectors finite_seq(V,n)):
+    $Algebra::basis::is_basis(C,Algebra::field::complex_field,V,ip.vectors,n,vectors)
+    forall j closed_range(1,n):
+        ip.pair(vectors(j),vectors(j))=1
+    forall j,k closed_range(1,n):
+        j!=k
+        =>:
+            ip.pair(vectors(j),vectors(k))=0
+
+prop planning_complex_is_adjoint(V nonempty_set,source &PlanningComplexInnerProductSpace<V>,W nonempty_set,target &PlanningComplexInnerProductSpace<W>,T fn(v V) W,S fn(w W) V):
+    $Algebra::vector_space::is_linear_map(C,Algebra::field::complex_field,V,source.vectors,W,target.vectors,T)
+    $Algebra::vector_space::is_linear_map(C,Algebra::field::complex_field,W,target.vectors,V,source.vectors,S)
+    forall v V,w W:
+        target.pair(T(v),w)=source.pair(v,S(w))
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,T fn(v V) V: $Algebra::vector_space::is_linear_map(K,F,V,space,V,space,T)>:
+    have fn planning_operator_power(k N) fn(v V) V by induc k from 0:
+        case k=0: fn(v V) V {v}
+        case k>=1: fn(v V) V {T(planning_operator_power(k-1)(v))}
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_mul
+
+release struct def Algebra::field::real_field
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field> =(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+release thm Algebra::vector_space::scalar_space_carrier(R,Algebra::field::real_field)
+
+release struct def \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>
+
+have fn planning_real_scalar_pair(x,y R) R=x*y
+
+claim:
+    ? (\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,planning_real_scalar_pair) $in &PlanningRealInnerProductSpace<R>
+    \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.zero=0
+    \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add=Algebra::field::real_add
+    \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul=Algebra::field::real_mul
+    claim:
+        ? forall x,y R:
+            planning_real_scalar_pair(x,y)=planning_real_scalar_pair(y,x)
+        planning_real_scalar_pair(x,y)=x*y=y*x=planning_real_scalar_pair(y,x)
+    claim:
+        ? forall x,y,z R:
+            planning_real_scalar_pair(x,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(y,z))=planning_real_scalar_pair(x,y)+planning_real_scalar_pair(x,z)
+        \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(y,z)=Algebra::field::real_add(y,z)=y+z
+        planning_real_scalar_pair(x,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.add(y,z))=x*(y+z)=x*y+x*z=planning_real_scalar_pair(x,y)+planning_real_scalar_pair(x,z)
+    claim:
+        ? forall a R,x,y R:
+            planning_real_scalar_pair(x,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(a,y))=a*planning_real_scalar_pair(x,y)
+        \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(a,y)=Algebra::field::real_mul(a,y)=a*y
+        planning_real_scalar_pair(x,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.smul(a,y))=x*(a*y)=a*(x*y)=a*planning_real_scalar_pair(x,y)
+    claim:
+        ? forall x R:
+            planning_real_scalar_pair(x,x)>=0
+        planning_real_scalar_pair(x,x)=x*x=x^2
+        planning_real_scalar_pair(x,x)>=0
+    claim:
+        ? forall x R:
+            planning_real_scalar_pair(x,x)=0
+            =>:
+                x=\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.zero
+        by contra:
+            ? x=\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>.zero
+            x!=0
+            x*x=planning_real_scalar_pair(x,x)=0
+            x=(x*x)/x=0/x=0
+            impossible x!=0
+    release thm struct_member((\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,planning_real_scalar_pair),&PlanningRealInnerProductSpace<R>)
+
+have planning_real_scalar_ip &PlanningRealInnerProductSpace<R> =(\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,planning_real_scalar_pair)
+
+release struct def planning_real_scalar_ip
+
+planning_real_scalar_ip.pair=planning_real_scalar_pair
+
+\planning_real_inner_norm<R,planning_real_scalar_ip>(-3)=sqrt(planning_real_scalar_ip.pair(-3,-3))
+
+planning_real_scalar_ip.pair(-3,-3)=planning_real_scalar_pair(-3,-3)=9
+
+\planning_real_inner_norm<R,planning_real_scalar_ip>(-3)=sqrt(9)=3
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,T fn(v V) V,n N: $Algebra::vector_space::is_linear_map(K,F,V,space,V,space,T)>:
+    have fn planning_operator_orbit(x V) fn(j closed_range(1,n+1)) V=fn(j closed_range(1,n+1)) V {\planning_operator_power<K,F,V,space,T>(j-1)(x)}
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,T fn(v V) V,n N: $Algebra::vector_space::is_linear_map(K,F,V,space,V,space,T)>:
+    have fn planning_operator_coefficients(coefficients finite_seq(K,n+1)) fn(x V) V=fn(x V) V {\Algebra::finite_span::linear_combination<K,F,V,space,n+1>(coefficients,\planning_operator_orbit<K,F,V,space,T,n>(x))}
+
+claim:
+    ? forall n,r N,j closed_range(1,r):
+        r<=n
+        =>:
+            j $in closed_range(1,n)
+    1<=j<=r<=n
+    j $in N
+
+prop planning_complex_svd_candidate(V nonempty_set,source &PlanningComplexInnerProductSpace<V>,W nonempty_set,target &PlanningComplexInnerProductSpace<W>,T fn(v V) W,n,m N,r {k N: k<=n and k<=m},domain_basis finite_seq(V,n),codomain_basis finite_seq(W,m),values finite_seq(R,n)):
+    $Algebra::vector_space::is_linear_map(C,Algebra::field::complex_field,V,source.vectors,W,target.vectors,T)
+    $planning_complex_orthonormal_basis(V,source,n,domain_basis)
+    $planning_complex_orthonormal_basis(W,target,m,codomain_basis)
+    forall j closed_range(1,n):
+        values(j)>=0
+    forall j,k closed_range(1,n):
+        j<k
+        =>:
+            values(j)>=values(k)
+    forall j closed_range(1,n):
+        j<=r
+        =>:
+            values(j)>0
+    forall j closed_range(1,n),k closed_range(1,m):
+        j<=r
+        j=k
+        =>:
+            T(domain_basis(j))=target.vectors.smul(values(j),codomain_basis(k))
+    forall j closed_range(1,n):
+        j>r
+        =>:
+            values(j)=0
+            T(domain_basis(j))=target.vectors.zero
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,T fn(v V) V,x V: $Algebra::vector_space::is_linear_map(K,F,V,space,V,space,T)>:
+    have fn planning_operator_point_iterate(k N) V by induc k from 0:
+        case k=0: x
+        case k>=1: T(planning_operator_point_iterate(k-1))
+
+template<K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,T fn(v V) V: $Algebra::vector_space::is_linear_map(K,F,V,space,V,space,T)>:
+    have fn planning_operator_power_pointwise(k N) fn(v V) V=fn(v V) V {\planning_operator_point_iterate<K,F,V,space,T,v>(k)}
+
+thm planning_operator_pointwise_power_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,T fn(v V) V,x V:
+        $Algebra::vector_space::is_linear_map(K,F,V,space,V,space,T)
+        =>:
+            \planning_operator_power_pointwise<K,F,V,space,T>(0)(x)=x
+    \planning_operator_point_iterate<K,F,V,space,T,x>(0)=x
+    \planning_operator_power_pointwise<K,F,V,space,T>(0)(x)=\planning_operator_point_iterate<K,F,V,space,T,x>(0)=x
+
+thm planning_operator_pointwise_power_one:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,T fn(v V) V,x V:
+        $Algebra::vector_space::is_linear_map(K,F,V,space,V,space,T)
+        =>:
+            \planning_operator_power_pointwise<K,F,V,space,T>(1)(x)=T(x)
+    \planning_operator_point_iterate<K,F,V,space,T,x>(0)=x
+    \planning_operator_point_iterate<K,F,V,space,T,x>(1)=T(\planning_operator_point_iterate<K,F,V,space,T,x>(0))=T(x)
+    \planning_operator_power_pointwise<K,F,V,space,T>(1)(x)=\planning_operator_point_iterate<K,F,V,space,T,x>(1)=T(x)
+
+have fn planning_bad_real_pair(x,y R) R=-x*y
+
+planning_bad_real_pair(1,1)=-1
+
+have fn planning_test_matrix(r closed_range(1,2),c closed_range(1,3)) R=r+c

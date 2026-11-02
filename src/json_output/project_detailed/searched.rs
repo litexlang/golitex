@@ -747,6 +747,56 @@ fn project_equality_builtin_rewrite(
             ],
         );
     }
+    if let EqualitySearchProofByBuiltinRewrite::Ring(p) = proof {
+        return object_for(
+            runtime,
+            vec![
+                ("type", string("by_builtin_rewrite")),
+                ("rule", string("Ring")),
+                ("ring", string(p.source_fact.display_string())),
+                ("source", project_known_premise(&p.source, runtime)),
+                (
+                    "atoms",
+                    JsonValue::Array(
+                        p.atoms
+                            .iter()
+                            .map(|a| {
+                                object_for(
+                                    runtime,
+                                    vec![
+                                        ("object", string(a.object.readable_string())),
+                                        ("membership", project_verify_fact(&a.membership, runtime)),
+                                    ],
+                                )
+                            })
+                            .collect(),
+                    ),
+                ),
+                (
+                    "equalities",
+                    JsonValue::Array(
+                        p.equalities
+                            .iter()
+                            .map(|e| project_verify_fact(&e.proof, runtime))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "atom_alignments",
+                    JsonValue::Array(
+                        p.atom_alignments
+                            .iter()
+                            .map(|d| project_ring_derivation(d, runtime))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "derivation",
+                    project_ring_derivation(&p.derivation, runtime),
+                ),
+            ],
+        );
+    }
     let (rule, left, right, ids, residual) = match proof {
         EqualitySearchProofByBuiltinRewrite::ClosedNumericEqualSubstitution(p) => (
             "ClosedNumericEqualSubstitution",
@@ -756,6 +806,7 @@ fn project_equality_builtin_rewrite(
             &p.residual_equal,
         ),
         EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(_) => unreachable!(),
+        EqualitySearchProofByBuiltinRewrite::Ring(_) => unreachable!(),
     };
     let cites = ids
         .iter()
@@ -776,6 +827,134 @@ fn project_equality_builtin_rewrite(
             ("rewritten_right", string(right.readable_string())),
             ("cited_equal_fact_ids", JsonValue::Array(cites)),
             ("residual_equal", project_verify_fact(residual, runtime)),
+        ],
+    )
+}
+
+fn project_ring_derivation(
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingEqualityDerivation,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingEqualityDerivation as D;
+    match proof {
+        D::Known(p) => project_verify_fact(&p.proof, runtime),
+        D::Congruence(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("congruence")),
+                ("left", string(p.left.readable_string())),
+                ("right", string(p.right.readable_string())),
+                (
+                    "children",
+                    JsonValue::Array(
+                        p.children
+                            .iter()
+                            .map(|c| project_ring_derivation(c, runtime))
+                            .collect(),
+                    ),
+                ),
+            ],
+        ),
+        D::Polynomial(p) => object_for(
+            runtime,
+            vec![
+                ("type", string("integer_polynomial_normalization")),
+                ("left", string(p.left.readable_string())),
+                ("right", string(p.right.readable_string())),
+                (
+                    "left_certificate",
+                    project_ring_certificate(&p.left_certificate, runtime),
+                ),
+                (
+                    "right_certificate",
+                    project_ring_certificate(&p.right_certificate, runtime),
+                ),
+            ],
+        ),
+    }
+}
+
+fn project_ring_certificate(
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationCertificate,
+    runtime: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::normal_form::RingNormalizationOperation as O;
+    object_for(
+        runtime,
+        vec![
+            ("root", string(proof.root.to_string())),
+            (
+                "nodes",
+                JsonValue::Array(
+                    proof
+                        .nodes
+                        .iter()
+                        .map(|node| {
+                            let (operation, arguments) = match &node.operation {
+                                O::Zero => ("zero", vec![]),
+                                O::One => ("one", vec![]),
+                                O::Atom(i) => ("atom", vec![*i]),
+                                O::Neg(i) => ("neg", vec![*i]),
+                                O::Add(i, j) => ("add", vec![*i, *j]),
+                                O::Mul(i, j) => ("mul", vec![*i, *j]),
+                            };
+                            object_for(
+                                runtime,
+                                vec![
+                                    ("operation", string(operation)),
+                                    (
+                                        "arguments",
+                                        JsonValue::Array(
+                                            arguments
+                                                .iter()
+                                                .map(|i| string(i.to_string()))
+                                                .collect(),
+                                        ),
+                                    ),
+                                    (
+                                        "polynomial",
+                                        JsonValue::Array(
+                                            node.polynomial
+                                                .terms
+                                                .iter()
+                                                .map(|(powers, coefficient)| {
+                                                    object_for(
+                                                        runtime,
+                                                        vec![
+                                                            (
+                                                                "coefficient",
+                                                                string(coefficient.to_string()),
+                                                            ),
+                                                            (
+                                                                "powers",
+                                                                JsonValue::Array(
+                                                                    powers
+                                                                        .iter()
+                                                                        .map(|(a, e)| {
+                                                                            JsonValue::Array(vec![
+                                                                                string(
+                                                                                    a.to_string(),
+                                                                                ),
+                                                                                string(
+                                                                                    e.to_string(),
+                                                                                ),
+                                                                            ])
+                                                                        })
+                                                                        .collect(),
+                                                                ),
+                                                            ),
+                                                        ],
+                                                    )
+                                                })
+                                                .collect(),
+                                        ),
+                                    ),
+                                ],
+                            )
+                        })
+                        .collect(),
+                ),
+            ),
         ],
     )
 }
@@ -929,6 +1108,21 @@ fn project_user_prop_def(proof: &UserDefinedPropDefinitionProof, runtime: &Runti
 
 fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtime) -> JsonValue {
     let (kind, requirements, proofs) = match proof {
+        BuiltinPropDefinitionProof::IsMatrixInv(p) => (
+            "IsMatrixInv",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::MatrixInversible(p) => (
+            "MatrixInversible",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        BuiltinPropDefinitionProof::CommRing(p) => (
+            "CommRing",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::MultivariableAnalysis(p) => {
             let (facts, proofs) = p.requirements();
             ("MultivariableAnalysis", facts, proofs)

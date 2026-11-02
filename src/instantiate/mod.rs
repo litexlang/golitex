@@ -25,6 +25,7 @@ mod tests;
 
 pub(crate) use capture::collect_free_plain_ids;
 pub use error::InstError;
+pub(crate) use fact::collect_free_plain_ids_in_qf_fact;
 pub use fact::quantifier_free_fact_to_fact;
 
 use std::collections::HashMap;

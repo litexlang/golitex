@@ -1,5 +1,149 @@
 [
   {
+    "id": "builtin.AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact",
+    "category": "builtin",
+    "family": "AtomicExceptEqualityFactSearchProofByBuiltinRule",
+    "variant": "IsMatrixInvFact",
+    "labels": {
+      "en": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "zh": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "zh-hant": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "fr": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "ru": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "es": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "ar": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "ja": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "ko": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      },
+      "vi": {
+        "name": "IsMatrixInvSelected",
+        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+      }
+    }
+  },
+  {
+    "id": "builtin.AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact",
+    "category": "builtin",
+    "family": "AtomicExceptEqualityFactSearchProofByBuiltinRule",
+    "variant": "MatrixInversibleFact",
+    "labels": {
+      "en": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "zh": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "zh-hant": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "fr": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "ru": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "es": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "ar": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "ja": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "ko": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      },
+      "vi": {
+        "name": "MatrixInversibleFromDeterminant",
+        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+      }
+    }
+  },
+  {
+    "id": "builtin.AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact",
+    "category": "builtin",
+    "family": "AtomicExceptEqualityFactSearchProofByBuiltinRule",
+    "variant": "NotMatrixInversibleFact",
+    "labels": {
+      "en": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "zh": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "zh-hant": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "fr": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "ru": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "es": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "ar": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "ja": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "ko": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      },
+      "vi": {
+        "name": "NotMatrixInversibleFromDeterminant",
+        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+      }
+    }
+  },
+  {
     "id": "builtin.CoprimeFactSearchProofByBuiltinRule::CoprimeByComputation",
     "category": "builtin",
     "family": "CoprimeFactSearchProofByBuiltinRule",
@@ -32135,6 +32279,13 @@
     "labels": {}
   },
   {
+    "id": "infer.InferCommRingFactResult::Definition",
+    "category": "infer",
+    "family": "InferCommRingFactResult",
+    "variant": "Definition",
+    "labels": {}
+  },
+  {
     "id": "infer.InferCoprimeFactResult::Definition",
     "category": "infer",
     "family": "InferCoprimeFactResult",
@@ -32478,6 +32629,13 @@
     "labels": {}
   },
   {
+    "id": "infer.InferIsMatrixInvFactResult::DefinitionAndDeterminant",
+    "category": "infer",
+    "family": "InferIsMatrixInvFactResult",
+    "variant": "DefinitionAndDeterminant",
+    "labels": {}
+  },
+  {
     "id": "infer.InferLessEqualFactResult::WeakIntegerLowerBoundInN",
     "category": "infer",
     "family": "InferLessEqualFactResult",
@@ -32489,6 +32647,13 @@
     "category": "infer",
     "family": "InferLessFactResult",
     "variant": "StrictLowerBoundPositive",
+    "labels": {}
+  },
+  {
+    "id": "infer.InferMatrixInversibleFactResult::DefinitionAndDeterminant",
+    "category": "infer",
+    "family": "InferMatrixInversibleFactResult",
+    "variant": "DefinitionAndDeterminant",
     "labels": {}
   },
   {

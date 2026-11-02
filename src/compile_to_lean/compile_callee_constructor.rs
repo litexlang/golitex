@@ -21,13 +21,15 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         observe_numeric: bool,
     ) -> Result<Option<String>, LeanCompileError> {
-        if !matches!(
-            object,
-            Obj::ArithmeticOperator(_)
-                | Obj::FnObj(_)
-                | Obj::InstantiatedTemplateObj(_)
-                | Obj::Literal(Literal::Number(_))
-        ) {
+        if arithmetic_constructor_pairs(object, object).is_none()
+            && !matches!(
+                object,
+                Obj::ArithmeticOperator(_)
+                    | Obj::FnObj(_)
+                    | Obj::InstantiatedTemplateObj(_)
+                    | Obj::Literal(Literal::Number(_))
+            )
+        {
             return Ok(None);
         }
         position.with_visible_callee_instance(&mut |application, caller| {
@@ -303,10 +305,21 @@ fn constructor_pattern<'a>(
             | Obj::FnObj(_)
             | Obj::InstantiatedTemplateObj(_)
             | Obj::SetFormer(SetFormer::ListSet(_))
-    ) || numeric_leaves && matches!(pattern, Obj::Literal(Literal::Number(_))))
+    ) || numeric_leaves
+        && (matches!(pattern, Obj::Literal(Literal::Number(_)))
+            || arithmetic_constructor_pairs(pattern, pattern).is_some()))
         && instantiated_object_matches(pattern, object, substitution)
     {
         return Some(pattern);
+    }
+    // A callee's constructor tree follows the same child order as equality
+    // replay. Traversal only locates original WD; it never supplies new WD.
+    if numeric_leaves {
+        if let Some((_, children)) = arithmetic_constructor_pairs(pattern, pattern) {
+            return children.into_iter().find_map(|(child, _)| {
+                constructor_pattern(child, object, substitution, numeric_leaves)
+            });
+        }
     }
     let children: Vec<&Obj> = match pattern {
         Obj::SetFormer(SetFormer::ListSet(set)) => set.list.iter().map(Box::as_ref).collect(),

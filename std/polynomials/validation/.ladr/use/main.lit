@@ -1,1 +1,234 @@
 # Independent consumers of coefficient laws for actual polynomial functions.
+
+claim:
+    ? forall n N,k closed_range(0,n):
+        k+1 $in closed_range(1,n+1)
+    k+1 $in Z
+    1<=k+1<=n+1
+    k+1 $in closed_range(1,n+1)
+
+claim:
+    ? forall n,m N,left finite_seq(C,n+1),right finite_seq(C,m+1),j N+:
+        j<=n+1
+        j<=m+1
+        \poly::complex_polynomial_from_coefficients<n>(left)=\poly::complex_polynomial_from_coefficients<m>(right)
+        =>:
+            left(j)=right(j)
+    release thm Polynomials::coefficients::complex_polynomial_coefficients_unique(n,m,left,right,j)
+
+claim:
+    ? forall n,m N,left finite_seq(R,n+1),right finite_seq(R,m+1),j N+:
+        j<=n+1
+        j<=m+1
+        \poly::real_polynomial_from_coefficients<n>(left)=\poly::real_polynomial_from_coefficients<m>(right)
+        =>:
+            left(j)=right(j)
+    release thm Polynomials::coefficients::real_polynomial_coefficients_unique(n,m,left,right,j)
+
+claim:
+    ? forall n,m N,left finite_seq(C,n+1),right finite_seq(C,m+1),j N+:
+        n<m
+        j>n+1
+        j<=m+1
+        \poly::complex_polynomial_from_coefficients<n>(left)=\poly::complex_polynomial_from_coefficients<m>(right)
+        =>:
+            right(j)=0
+    release thm Polynomials::coefficients::complex_polynomial_excess_coefficients_zero(n,m,left,right,j)
+
+claim:
+    ? forall n,m N,left finite_seq(R,n+1),right finite_seq(R,m+1),j N+:
+        n<m
+        j>n+1
+        j<=m+1
+        \poly::real_polynomial_from_coefficients<n>(left)=\poly::real_polynomial_from_coefficients<m>(right)
+        =>:
+            right(j)=0
+    release thm Polynomials::coefficients::real_polynomial_excess_coefficients_zero(n,m,left,right,j)
+
+claim:
+    ? forall n N,left,right finite_seq(C,n+1):
+        \poly::complex_polynomial_from_coefficients<n>(left)=\poly::complex_polynomial_from_coefficients<n>(right)
+        =>:
+            left=right
+    release thm Polynomials::coefficients::complex_polynomial_coefficient_vector_unique(n,left,right)
+
+claim:
+    ? forall n N,left,right finite_seq(R,n+1):
+        \poly::real_polynomial_from_coefficients<n>(left)=\poly::real_polynomial_from_coefficients<n>(right)
+        =>:
+            left=right
+    release thm Polynomials::coefficients::real_polynomial_coefficient_vector_unique(n,left,right)
+
+claim:
+    ? forall n,m N,left finite_seq(C,n+1),right finite_seq(C,m+1):
+        left(n+1)!=0
+        right(m+1)!=0
+        \poly::complex_polynomial_from_coefficients<n>(left)=\poly::complex_polynomial_from_coefficients<m>(right)
+        =>:
+            n=m
+    release thm Polynomials::coefficients::complex_polynomial_leading_bounds_unique(n,m,left,right)
+
+claim:
+    ? forall n,m N,left finite_seq(R,n+1),right finite_seq(R,m+1):
+        left(n+1)!=0
+        right(m+1)!=0
+        \poly::real_polynomial_from_coefficients<n>(left)=\poly::real_polynomial_from_coefficients<m>(right)
+        =>:
+            n=m
+    release thm Polynomials::coefficients::real_polynomial_leading_bounds_unique(n,m,left,right)
+
+have complex_constant_coefficients finite_seq(C,0+1)=fn(j closed_range(1,0+1)) C {i}
+
+have fn complex_trailing_coefficients(j closed_range(1,3+1)) C by cases:
+    case j=1: i
+    case j!=1: 0
+
+complex_trailing_coefficients $in finite_seq(C,3+1)
+
+have fn complex_constant_terms(k N) C by cases:
+    case k=0: i
+    case k!=0: 0
+
+claim:
+    ? forall k N+:
+        complex_constant_terms(k)=0
+    k!=0
+    complex_constant_terms(k)=0
+
+release thm poly::complex_zero_tail_sum(complex_constant_terms,3)
+
+claim:
+    ? \poly::complex_polynomial_from_coefficients<0>(complex_constant_coefficients) = \poly::complex_polynomial_from_coefficients<3>(complex_trailing_coefficients)
+    have short_function fn(x C) C=\poly::complex_polynomial_from_coefficients<0>(complex_constant_coefficients)
+    have long_function fn(x C) C=\poly::complex_polynomial_from_coefficients<3>(complex_trailing_coefficients)
+    claim:
+        ? forall x C:
+            short_function(x)=long_function(x)
+        release thm poly::complex_polynomial_value_at(0,complex_constant_coefficients,x)
+        release thm poly::complex_constant_polynomial_value(complex_constant_coefficients,x)
+        complex_constant_coefficients(1)=i
+        short_function(x)=\poly::complex_polynomial_from_coefficients<0>(complex_constant_coefficients)(x)=\poly::complex_polynomial_value<0>(complex_constant_coefficients,x)=complex_constant_coefficients(1)=i
+        claim:
+            ? forall k closed_range(0,3):
+                complex_trailing_coefficients(k+1)*x^k=complex_constant_terms(k)
+            k $in N
+            k $in R
+            0<=k<=3
+            k+1 $in closed_range(1,3+1)
+            x^k $in C
+            by cases:
+                ? complex_trailing_coefficients(k+1)*x^k=complex_constant_terms(k)
+                case k=0:
+                    k+1=1
+                    complex_trailing_coefficients(1)=i
+                    complex_trailing_coefficients(k+1)=complex_trailing_coefficients(1)=i
+                    x^k=x^0=1
+                    complex_constant_terms(k)=i
+                    complex_trailing_coefficients(k+1)*x^k=i*1=i=complex_constant_terms(k)
+                case k!=0:
+                    k>0
+                    k+1>1
+                    k+1!=1
+                    complex_trailing_coefficients(k+1)=0
+                    complex_constant_terms(k)=0
+                    complex_trailing_coefficients(k+1)*x^k=0*x^k=0=complex_constant_terms(k)
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) C {complex_trailing_coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,3),complex_constant_terms))
+        release thm poly::complex_polynomial_value_at(3,complex_trailing_coefficients,x)
+        release thm poly::complex_polynomial_value_spec(3,complex_trailing_coefficients,x)
+        complex_constant_terms(0)=i
+        long_function(x)=\poly::complex_polynomial_from_coefficients<3>(complex_trailing_coefficients)(x)=\poly::complex_polynomial_value<3>(complex_trailing_coefficients,x)=finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) C {complex_trailing_coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,3),complex_constant_terms)=sum(0,3,complex_constant_terms)=complex_constant_terms(0)=i=short_function(x)
+        short_function(x)=long_function(x)
+    by fn_extension short_function=long_function
+    \poly::complex_polynomial_from_coefficients<0>(complex_constant_coefficients)=short_function=long_function=\poly::complex_polynomial_from_coefficients<3>(complex_trailing_coefficients)
+
+release thm Polynomials::coefficients::complex_polynomial_coefficients_unique(0,3,complex_constant_coefficients,complex_trailing_coefficients,1)
+
+release thm Polynomials::coefficients::complex_polynomial_excess_coefficients_zero(0,3,complex_constant_coefficients,complex_trailing_coefficients,2)
+
+release thm Polynomials::coefficients::complex_polynomial_excess_coefficients_zero(0,3,complex_constant_coefficients,complex_trailing_coefficients,4)
+
+complex_constant_coefficients(0+1)=i
+
+complex_constant_coefficients(0+1)!=0
+
+release thm Polynomials::coefficients::complex_polynomial_leading_bounds_unique(0,0,complex_constant_coefficients,complex_constant_coefficients)
+
+have real_constant_coefficients finite_seq(R,0+1)=fn(j closed_range(1,0+1)) R {-3}
+
+have fn real_trailing_coefficients(j closed_range(1,3+1)) R by cases:
+    case j=1: -3
+    case j!=1: 0
+
+real_trailing_coefficients $in finite_seq(R,3+1)
+
+have fn real_constant_terms(k N) R by cases:
+    case k=0: -3
+    case k!=0: 0
+
+claim:
+    ? forall k N+:
+        real_constant_terms(k)=0
+    k!=0
+    real_constant_terms(k)=0
+
+release thm poly::real_zero_tail_sum(real_constant_terms,3)
+
+claim:
+    ? \poly::real_polynomial_from_coefficients<0>(real_constant_coefficients) = \poly::real_polynomial_from_coefficients<3>(real_trailing_coefficients)
+    have short_function fn(x R) R=\poly::real_polynomial_from_coefficients<0>(real_constant_coefficients)
+    have long_function fn(x R) R=\poly::real_polynomial_from_coefficients<3>(real_trailing_coefficients)
+    claim:
+        ? forall x R:
+            short_function(x)=long_function(x)
+        release thm poly::real_polynomial_value_at(0,real_constant_coefficients,x)
+        release thm poly::real_constant_polynomial_value(real_constant_coefficients,x)
+        real_constant_coefficients(1)=-3
+        short_function(x)=\poly::real_polynomial_from_coefficients<0>(real_constant_coefficients)(x)=\poly::real_polynomial_value<0>(real_constant_coefficients,x)=real_constant_coefficients(1)=-3
+        claim:
+            ? forall k closed_range(0,3):
+                real_trailing_coefficients(k+1)*x^k=real_constant_terms(k)
+            k $in N
+            k $in R
+            0<=k<=3
+            k+1 $in closed_range(1,3+1)
+            x^k $in R
+            by cases:
+                ? real_trailing_coefficients(k+1)*x^k=real_constant_terms(k)
+                case k=0:
+                    k+1=1
+                    real_trailing_coefficients(1)=-3
+                    real_trailing_coefficients(k+1)=real_trailing_coefficients(1)=-3
+                    x^k=x^0=1
+                    real_constant_terms(k)=-3
+                    real_trailing_coefficients(k+1)*x^k=-3*1=-3=real_constant_terms(k)
+                case k!=0:
+                    k>0
+                    k+1>1
+                    k+1!=1
+                    real_trailing_coefficients(k+1)=0
+                    real_constant_terms(k)=0
+                    real_trailing_coefficients(k+1)*x^k=0*x^k=0=real_constant_terms(k)
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) R {real_trailing_coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,3),real_constant_terms))
+        release thm poly::real_polynomial_value_at(3,real_trailing_coefficients,x)
+        release thm poly::real_polynomial_value_spec(3,real_trailing_coefficients,x)
+        real_constant_terms(0)=-3
+        long_function(x)=\poly::real_polynomial_from_coefficients<3>(real_trailing_coefficients)(x)=\poly::real_polynomial_value<3>(real_trailing_coefficients,x)=finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) R {real_trailing_coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,3),real_constant_terms)=sum(0,3,real_constant_terms)=real_constant_terms(0)=-3=short_function(x)
+        short_function(x)=long_function(x)
+    by fn_extension short_function=long_function
+    \poly::real_polynomial_from_coefficients<0>(real_constant_coefficients)=short_function=long_function=\poly::real_polynomial_from_coefficients<3>(real_trailing_coefficients)
+
+release thm Polynomials::coefficients::real_polynomial_coefficients_unique(0,3,real_constant_coefficients,real_trailing_coefficients,1)
+
+release thm Polynomials::coefficients::real_polynomial_excess_coefficients_zero(0,3,real_constant_coefficients,real_trailing_coefficients,2)
+
+release thm Polynomials::coefficients::real_polynomial_excess_coefficients_zero(0,3,real_constant_coefficients,real_trailing_coefficients,4)
+
+real_constant_coefficients(0+1)=-3
+
+real_constant_coefficients(0+1)!=0
+
+release thm Polynomials::coefficients::real_polynomial_leading_bounds_unique(0,0,real_constant_coefficients,real_constant_coefficients)
+
+have complex_zero_constant_coefficients finite_seq(C,0+1)=fn(j closed_range(1,0+1)) C {0}
+
+have real_zero_constant_coefficients finite_seq(R,0+1)=fn(j closed_range(1,0+1)) R {0}

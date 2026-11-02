@@ -1,0 +1,68 @@
+{
+  "kind": "reading_latex_acceptance",
+  "date": "2026-11-02",
+  "feature": "litex -reading -latex",
+  "native_checks": [
+    {
+      "command": "cargo test --release --lib compile_to_latex -- --nocapture",
+      "passed": 23
+    },
+    {
+      "command": "cargo test --release --test reading_latex --test reading --test reading_http --test compile_to_latex_cli -- --nocapture",
+      "passed": 42,
+      "suites": {
+        "compile_to_latex_cli": 7,
+        "reading": 23,
+        "reading_http": 6,
+        "reading_latex": 6
+      },
+      "environment": "Localhost listening enabled for HTTP tests"
+    }
+  ],
+  "shared_viewer": {
+    "native_statement_fixtures": 52,
+    "checked_formulas": 866,
+    "all_ten_locales_match_compiler_bytes": true,
+    "native_evidence_unchanged": true,
+    "bilingual_original_source_and_proof_hover": true,
+    "pin_and_actual_fact_navigation": true,
+    "source_edit_invalidates_stale_math": true,
+    "invalid_or_missing_mapping_retains_source": true,
+    "actual_host_upload_and_recheck_retain_layout": true
+  },
+  "browser": {
+    "input": "examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit",
+    "mode": "-reading -latex -strict -lang zh",
+    "checked": [
+      "native lazy preview",
+      "pointer hover on n <= 1",
+      "pinned original source and native proof references",
+      "local hypothesis citation and return",
+      "source/mathematics switch",
+      "narrow viewport without document horizontal overflow"
+    ],
+    "screenshots": [
+      "tmp/2026-11-02/reading-latex/reading-latex-manuscript.png",
+      "tmp/2026-11-02/reading-latex/reading-latex-proof.png",
+      "tmp/2026-11-02/reading-latex/reading-latex-narrow.png"
+    ]
+  },
+  "boundaries": [
+    "Presentation coverage does not certify every proof explanation.",
+    "Standalone -latex remains parse-only; ordinary -reading remains the default source reader.",
+    "Existing namespaced alpha::twice(2) = 4 rejection is preserved against normal reading.",
+    "Ordinary rejected statements may be followed by later checks; parse termination retains unparsed source.",
+    "No AST, Env or Runtime shape changes; no mathematical verifier rule added."
+  ],
+  "sha256": {
+    "src/compile_to_latex/source_map.rs": "cd6df726b6d90c436092a38bf2fe440ea7435b77dcb3b9d4c4f1d1598d2d22b9",
+    "src/compile_to_latex/stmt.rs": "5a948fcaed9bb135f863cf4989b592e86a3d0ee03c67c5aa0f48ad9b46765695",
+    "src/compile_to_latex/fact.rs": "2e29c29e96d736ebf095396d92f3e9f142abc2ed24d8f358aa3638f1263913e6",
+    "src/reading/build_reading.rs": "7250d81f6f394995a96b16de732afadb9835eae529a56e74d02f0c6d59b4fb2a",
+    "src/reading/source_statements.rs": "cfc8f7fc799e3f7d3b72b181760e59397260a5558845d462bc67c5577da2cdc7",
+    "src/reading/web/reader.js": "cce2e686c0780c9ca02526c74edaabde1ab2519d096b4690a6ecfa952422f03f",
+    "src/reading/web/reader.css": "70aec7a309d09f8d654e2fa1039e9fd0a5f0d5cdf2652b9d17cda7c17f4aac17",
+    "src/reading/web/app.js": "f3106035c78baf5711f57f490d69d60e4cd7ceb619e84cc2930ab41dcf24f3a8",
+    "target/release/litex": "8b447f487df2410043e3324aaca112102e82261332f392cc4ffb2961445fdb7c"
+  }
+}

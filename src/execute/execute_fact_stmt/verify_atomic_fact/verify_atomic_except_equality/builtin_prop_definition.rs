@@ -38,6 +38,36 @@ impl Runtime {
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         match fact {
+            AtomicFact::IsMatrixInvFact(f) => {
+                let requirements = self.matrix_inverse_candidate_clauses(f);
+                match self.verify_definition_requirements(requirements, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => Ok(Ok(BuiltinPropDefinitionProof::IsMatrixInv(
+                        crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinIsMatrixInvDefinitionProof {requirement_facts, proof_of_requirement_facts}
+                    ))),
+                    Err(failed) => Ok(Err(failed)),
+                }
+            }
+            AtomicFact::MatrixInversibleFact(f) => {
+                let requirements = vec![self.matrix_inverse_existence(&f.matrix, &f.order)];
+                match self.verify_definition_requirements(requirements, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => Ok(Ok(BuiltinPropDefinitionProof::MatrixInversible(
+                        crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinMatrixInversibleDefinitionProof {requirement_facts, proof_of_requirement_facts}
+                    ))),
+                    Err(failed) => Ok(Err(failed)),
+                }
+            }
+            AtomicFact::CommRingFact(ring) => {
+                let requirements = self.comm_ring_definition_requirements(ring);
+                match self.verify_definition_requirements(requirements, verify_state)? {
+                    Ok((requirement_facts, proof_of_requirement_facts)) => Ok(Ok(
+                        BuiltinPropDefinitionProof::CommRing(super::super::verify_equality::ring::definition::BuiltinCommRingDefinitionProof {
+                            requirement_facts, proof_of_requirement_facts,
+                        })
+                    )),
+                    Err(failed) => Ok(Err(failed)),
+                }
+            }
+
             AtomicFact::MultivariableAnalysisFact(f) => {
                 let Some((domain, clauses)) =
                     self.captured_multivariable_defining_clauses(&f.relation, verify_state)?
@@ -709,6 +739,11 @@ impl Runtime {
                 .unwrap_or_default(),
             AtomicFact::ProperSubsetFact(f) => self.proper_subset_definition_requirements(f),
             AtomicFact::ProperSupersetFact(f) => self.proper_superset_definition_requirements(f),
+            AtomicFact::IsMatrixInvFact(f) => self.matrix_inverse_candidate_clauses(f),
+            AtomicFact::MatrixInversibleFact(f) => {
+                vec![self.matrix_inverse_existence(&f.matrix, &f.order)]
+            }
+            AtomicFact::CommRingFact(f) => self.comm_ring_definition_requirements(f),
             AtomicFact::BijectiveFact(f) => self.bijective_definition_requirements(f),
             AtomicFact::PrimeFact(f) => self.prime_definition_requirements(f),
             AtomicFact::CoprimeFact(f) => self.coprime_definition_requirements(f),

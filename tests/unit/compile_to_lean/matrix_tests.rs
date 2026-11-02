@@ -231,7 +231,7 @@ fn matrix_inverses_replay_guarded_carriers_coordinates_and_definition() {
 fn matrix_inverses_reject_missing_reordered_or_changed_determinant_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef as W;
     for changed in 0..5 {
-        let (mut run, compiler) = super::execute("forall n N, A matrix(C,n,n):\n    det(A,n) != 0\n    =>:\n        $is_set(matrix_inverse(A,n))");
+        let (mut run, compiler) = super::execute("forall n N, A matrix(C,n,n):\n    det(A,n) != 0\n    =>:\n        $is_set(matrix_inv(A,n))");
         compiler.compile_run(&run, "valid_inverse_wd").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
@@ -279,7 +279,7 @@ fn matrix_inverses_reject_wrong_quotient_and_real_carrier_evidence() {
     use crate::execute::execute_fact_stmt::native_matrix::{MatrixMembershipProof,MatrixFunctionScalarCarrierProof};
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
     for changed in 0..5 {
-        let (mut run, compiler) = super::execute("forall n N, A matrix(R,n,n):\n    det(A,n) != 0\n    =>:\n        matrix_inverse(A,n) $in matrix(R,n,n)");
+        let (mut run, compiler) = super::execute("forall n N, A matrix(R,n,n):\n    det(A,n) != 0\n    =>:\n        matrix_inv(A,n) $in matrix(R,n,n)");
         compiler.compile_run(&run, "valid_inverse_formula").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
@@ -328,10 +328,10 @@ fn matrix_inverses_reject_wrong_quotient_and_real_carrier_evidence() {
 #[test]
 fn matrix_inverses_reject_missing_guard_zero_determinant_and_wrong_shapes() {
     for source in [
-        "forall n N, A matrix(C,n,n):\n    $is_set(matrix_inverse(A,n))",
-        "$is_set(matrix_inverse(zero_matrix(2,2),2))",
-        "$is_set(matrix_inverse(zero_matrix(2,3),2))",
-        "$is_set(matrix_inverse(identity_matrix(2),-1))",
+        "forall n N, A matrix(C,n,n):\n    $is_set(matrix_inv(A,n))",
+        "$is_set(matrix_inv(zero_matrix(2,2),2))",
+        "$is_set(matrix_inv(zero_matrix(2,3),2))",
+        "$is_set(matrix_inv(identity_matrix(2),-1))",
     ] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();

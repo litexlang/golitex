@@ -13,6 +13,10 @@ struct LocalReader {
 
 impl LocalReader {
     fn start(strict: bool) -> Self {
+        Self::start_with_layout(strict, false)
+    }
+
+    fn start_with_layout(strict: bool, latex: bool) -> Self {
         let mut command = Command::new(env!("CARGO_BIN_EXE_litex"));
         command.args([
             "-reading",
@@ -24,6 +28,9 @@ impl LocalReader {
         ]);
         if strict {
             command.arg("-strict");
+        }
+        if latex {
+            command.arg("-latex");
         }
         let mut child = command
             .stdin(Stdio::null())
@@ -512,4 +519,49 @@ fn uploaded_titles_follow_their_source_and_invalidate_the_cache() {
         None,
     ));
     assert_eq!(refused.0, 400, "{}", refused.1);
+}
+
+#[test]
+fn mathematical_preview_and_uploads_keep_the_requested_layout_and_native_verdict() {
+    let server = LocalReader::start_with_layout(true, true);
+    let (status, json) = server.request("GET", "/reading.json", "", "");
+    assert_eq!(status, 200);
+    let reading = JsonValue::parse(&json).unwrap();
+    assert_eq!(reading.field("reading_layout").as_str().unwrap(), "latex");
+    assert!(!reading.field("sources").as_array().unwrap()[0]
+        .field("latex_blocks")
+        .as_array()
+        .unwrap()
+        .is_empty());
+    let request = r#"{"files":[{"path":"sample.lit","content":"1=1\n1=2\n3=3\n"}],"language":"zh","latex":true}"#;
+    let (status, json) = server.request(
+        "POST",
+        "/api/reading/build",
+        &format!(
+            "Content-Type: application/json\r\nContent-Length: {}\r\n",
+            request.len()
+        ),
+        request,
+    );
+    assert_eq!(status, 200, "{json}");
+    let reading = JsonValue::parse(&json).unwrap();
+    assert_eq!(reading.field("reading_layout").as_str().unwrap(), "latex");
+    assert_eq!(reading.field("run_result").as_str().unwrap(), "failure");
+    assert!(reading
+        .field("statements")
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|s| s.field("status").as_str().unwrap() == "rejected"));
+    let bad = r#"{"files":[{"path":"sample.lit","content":"1=1"}],"latex":"true"}"#;
+    let (status, _) = server.request(
+        "POST",
+        "/api/reading/build",
+        &format!(
+            "Content-Type: application/json\r\nContent-Length: {}\r\n",
+            bad.len()
+        ),
+        bad,
+    );
+    assert_eq!(status, 400);
 }

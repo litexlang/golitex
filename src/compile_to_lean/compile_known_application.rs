@@ -603,6 +603,27 @@ impl LitexToLeanCompiler {
                         "CompoundKnown/NonParameterSubject",
                     ));
                 }
+                // These producer branches bind free forall parameters inside
+                // the complete binder, then retain one strict equality rather
+                // than child BoundParam records. The validated substitution
+                // capture therefore establishes those bindings for later uses.
+                if matches!(
+                    (pattern, goal),
+                    (
+                        Obj::SetFormer(SetFormer::SetBuilder(_)),
+                        Obj::SetFormer(SetFormer::SetBuilder(_))
+                    ) | (
+                        Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)),
+                        Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
+                    ) | (
+                        Obj::FunctionSpace(FunctionSpace::FnSet(_)),
+                        Obj::FunctionSpace(FunctionSpace::FnSet(_))
+                    )
+                ) {
+                    let mut free = HashSet::new();
+                    crate::instantiate::collect_free_plain_ids(pattern, &HashSet::new(), &mut free);
+                    bound.extend(free.into_iter().filter(|id| substitution.contains_key(id)));
+                }
                 Ok((
                     pattern_after_subst.clone(),
                     self.render_strict_match_equal(pattern_after_subst, goal, equal, position)?,
@@ -1426,6 +1447,12 @@ impl LitexToLeanCompiler {
                 }
                 let (operation, pairs) =
                     arithmetic_constructor_pairs(pattern, goal).ok_or_else(|| {
+                        #[cfg(test)]
+                        eprintln!(
+                            "Structure diagnostic: {} -> {}",
+                            pattern.readable_string(),
+                            goal.readable_string()
+                        );
                         LeanCompileError::unsupported("CompoundKnown/StructureConstructor")
                     })?;
                 if pairs.len() != child_matches.len() {
@@ -1689,6 +1716,58 @@ impl LitexToLeanCompiler {
         }
     }
 
+    pub(in crate::compile_to_lean) fn compile_multivariable_predicate_transport(
+        &self,
+        old: &AtomicFact,
+        new: &AtomicFact,
+        equalities: &[String],
+        proof: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if !same_atomic_family(old, new) || atomic_fact_args_ref(old).len() != equalities.len() {
+            return Err(LeanCompileError::unsupported(
+                "MultivariablePredicate/TransportArity",
+            ));
+        }
+        let (relation, negative) = match old {
+            AtomicFact::MultivariableAnalysisFact(f) => (&f.relation, false),
+            AtomicFact::NotMultivariableAnalysisFact(f) => (&f.relation, true),
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "MultivariablePredicate/Family",
+                ))
+            }
+        };
+        let predicate = multivariable_value_predicate_name(relation)?;
+        let mut current = atomic_fact_args_ref(old)
+            .into_iter()
+            .map(|arg| self.compile_function_raw_expression_bound(arg, position, &HashMap::new()))
+            .collect::<Result<Vec<_>, _>>()?;
+        let targets = atomic_fact_args_ref(new)
+            .into_iter()
+            .map(|arg| self.compile_function_raw_expression_bound(arg, position, &HashMap::new()))
+            .collect::<Result<Vec<_>, _>>()?;
+        let mut equality: Option<String> = None;
+        for (index, checked) in equalities.iter().enumerate() {
+            let original = current[index].clone();
+            let target = &targets[index];
+            current[index] = "_transport_value".to_string();
+            let raw = format!("Litex.{predicate} M {}", current.join(" "));
+            let proposition = if negative { format!("¬ ({raw})") } else { raw };
+            let step = format!("(congrArg (fun (_transport_value : M.Value) => {proposition}) (show @Eq M.Value {original} {target} from {checked}))");
+            equality = Some(match equality {
+                None => step,
+                Some(previous) => format!("(Eq.trans {previous} {step})"),
+            });
+            current[index] = target.clone();
+        }
+        Ok(format!(
+            "(Eq.mp {} {proof})",
+            equality
+                .ok_or_else(|| LeanCompileError::unsupported("CompoundKnown/TransportArity"))?
+        ))
+    }
+
     fn compile_compound_atomic_transport(
         &self,
         old: &AtomicFact,
@@ -1713,6 +1792,13 @@ impl LitexToLeanCompiler {
         }
         // These predicates depend only on the denotations. The cited theorem
         // forms its substituted source;only the actual goal has a new WD record.
+        if matches!(
+            old,
+            AtomicFact::MultivariableAnalysisFact(_) | AtomicFact::NotMultivariableAnalysisFact(_)
+        ) {
+            return self
+                .compile_multivariable_predicate_transport(old, new, equalities, proof, position);
+        }
         let transport = match (old, new) {
             (AtomicFact::NotEqualFact(_), AtomicFact::NotEqualFact(_)) => Some(format!(
                 "(congrArg₂ (fun (x y : M.Value) => x ≠ y) {} {})",
@@ -1918,6 +2004,22 @@ fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), L
         AtomicFact::HasFunctionLimitFact(f) => function_limit!(f),
         AtomicFact::NotHasFunctionLimitFact(f) => function_limit!(f),
         AtomicFact::NormalAtomicFact(f) => f.body.clone_from_slice(args),
+        AtomicFact::MultivariableAnalysisFact(f) => {
+            if f.relation.argument_refs().len() != args.len() {
+                return Err(LeanCompileError::unsupported(
+                    "CompoundKnown/InstantiatedArity",
+                ));
+            }
+            f.relation = f.relation.with_arguments(args);
+        }
+        AtomicFact::NotMultivariableAnalysisFact(f) => {
+            if f.relation.argument_refs().len() != args.len() {
+                return Err(LeanCompileError::unsupported(
+                    "CompoundKnown/InstantiatedArity",
+                ));
+            }
+            f.relation = f.relation.with_arguments(args);
+        }
         _ => {
             return Err(LeanCompileError::unsupported(
                 "CompoundKnown/InstantiatedPredicate",

@@ -1910,6 +1910,19 @@ impl<'a> SourcePosition<'a> {
         &self,
         id: &IdentifierId,
     ) -> Result<(&'a ExecHaveFnByInducStmtSuccessResult, Self, usize), LeanCompileError> {
+        if let Ok((
+            ExecDefinitionStmtResult::HaveFnByInduc(ExecHaveFnByInducStmtResult::Success(proof)),
+            producer,
+            _,
+        )) = self.visible_object_definition(|definition| {
+            matches!(
+                definition,
+                ExecDefinitionStmtResult::HaveFnByInduc(ExecHaveFnByInducStmtResult::Success(proof))
+                    if &proof.statement.name.id == id
+            )
+        }) {
+            return Ok((proof, producer, producer.before));
+        }
         let mut current = Some(self);
         while let Some(position) = current {
             match position.owner {
@@ -1931,33 +1944,6 @@ impl<'a> SourcePosition<'a> {
                                         ..*position
                                     },
                                     head,
-                                ));
-                            }
-                        }
-                    }
-                }
-                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
-                    for (index, statement) in run
-                        .statement_results
-                        .iter()
-                        .take(position.before)
-                        .enumerate()
-                        .rev()
-                    {
-                        if let ExecStmtResult::Definition(
-                            ExecDefinitionStmtResult::HaveFnByInduc(
-                                ExecHaveFnByInducStmtResult::Success(proof),
-                            ),
-                        ) = statement
-                        {
-                            if &proof.statement.name.id == id {
-                                return Ok((
-                                    proof,
-                                    Self {
-                                        before: index,
-                                        ..*position
-                                    },
-                                    index,
                                 ));
                             }
                         }
@@ -5248,6 +5234,18 @@ fn membership_inference_groups<'a>(
 
 fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredFactResult> {
     match infer {
+        InferAtomicFactResult::IsMatrixInvFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
+        InferAtomicFactResult::NotIsMatrixInvFact(_) => Vec::new(),
+        InferAtomicFactResult::MatrixInversibleFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
+        InferAtomicFactResult::NotMatrixInversibleFact(_) => Vec::new(),
+        InferAtomicFactResult::CommRingFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
+        InferAtomicFactResult::NotCommRingFact(_) => Vec::new(),
         InferAtomicFactResult::PrimeFact(rules) => rules
             .iter()
             .flat_map(|rule| rule.stored_conclusions())
@@ -8796,6 +8794,19 @@ fn visit_owner<T>(
                         if let Some(value) = visit_complete_wd(checked, &prior, wd, verify)? {
                             return Ok(Some(value));
                         }
+                    }
+                }
+            }
+            if let InducCaseBodySuccess::NestedCases(checks) = &proof.body {
+                if position.before > 1 {
+                    let prior = SourcePosition {
+                        before: 1,
+                        ..*position
+                    };
+                    if let Some(value) =
+                        visit_complete_verify(&checks.coverage, &prior, wd, verify)?
+                    {
+                        return Ok(Some(value));
                     }
                 }
             }
@@ -12388,6 +12399,10 @@ fn atomic_searched_stages(
     };
     let mut stages = Vec::new();
     match proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact(p)) => stages.push(AtomicSearchStage::Verify(&p.determinant_nonzero)),
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact(p)) => stages.push(AtomicSearchStage::Verify(&p.determinant_nonzero)),
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact(p)) => stages.push(AtomicSearchStage::Verify(&p.determinant_zero)),
+
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(
             crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(p),
         )) => {
@@ -12422,6 +12437,11 @@ fn atomic_searched_stages(
                     stages.push(AtomicSearchStage::Verify(not_equal_proof));
                 }
             }
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRewrite(
+            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinRewrite::OrderDual(proof),
+        ) => {
+            stages.push(AtomicSearchStage::Verify(&proof.proof_of_alternate_fact));
         }
         AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(proof) => {
             stages.push(AtomicSearchStage::Searched(&proof.residual));
@@ -12479,6 +12499,8 @@ fn atomic_searched_stages(
         AtomicExceptEqualityFactSearchedProof::ByDefinition(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(p)) => {
             use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof;
             let children = match p {
+                BuiltinPropDefinitionProof::IsMatrixInv(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MatrixInversible(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Subset(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::Superset(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::ProperSubset(p) => &p.proof_of_requirement_facts,
@@ -12650,6 +12672,29 @@ fn atomic_searched_stages(
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
             AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(rule),
         ) => match rule {
+            LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorGap(p) => {
+                stages.push(AtomicSearchStage::Searched(&p.strict_order.searched_proof));
+                stages.push(AtomicSearchStage::Verify(&p.left_integer));
+                stages.push(AtomicSearchStage::Verify(&p.right_integer));
+            }
+            LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorLe(p) => {
+                stages.push(AtomicSearchStage::Verify(&p.left_in_z_proof));
+                stages.push(AtomicSearchStage::Verify(&p.right_in_z_proof));
+                stages.push(AtomicSearchStage::Verify(&p.strict_proof));
+            }
+            LessEqualFactSearchProofByBuiltinRule::IntegerAdjacencyLe(p) => {
+                stages.push(AtomicSearchStage::Verify(&p.left_in_z_proof));
+                stages.push(AtomicSearchStage::Verify(&p.right_in_z_proof));
+                stages.push(AtomicSearchStage::Verify(&p.strict_proof));
+            }
+            LessEqualFactSearchProofByBuiltinRule::IntegerPredecessorLe(p) => {
+                stages.push(AtomicSearchStage::Verify(&p.left_in_z_proof));
+                stages.push(AtomicSearchStage::Verify(&p.right_in_z_proof));
+                stages.push(AtomicSearchStage::Verify(&p.strict_proof));
+            }
+            LessEqualFactSearchProofByBuiltinRule::NumericLowerBoundFromStrictPredecessorLe(p) => {
+                stages.push(AtomicSearchStage::Verify(&p.in_z_proof));
+            }
             LessEqualFactSearchProofByBuiltinRule::ProductNonnegativeNegativeWeak(p) => {
                 stages.push(AtomicSearchStage::Verify(&p.nonnegative_factor));
                 stages.push(AtomicSearchStage::Verify(&p.negative_factor));

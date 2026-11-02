@@ -127,10 +127,18 @@ impl LitexToLeanCompiler {
                 SourceOwner::FactWD(&proof.conclusions_wd[index]),
                 usize::MAX,
             );
-            let compiled = (
-                self.fact_proposition(fact, &captured_formation)?,
-                conjunction_projection(&application, index, conclusions_count),
-            );
+            let projected = conjunction_projection(&application, index, conclusions_count);
+            let projected = match (fact, &proof.conclusions_wd[index]) {
+                (Fact::ForallFact(fact), FactWellDefinedProof::ForallFact(wd)) => self
+                    .compile_canonical_forall_projection(
+                        fact,
+                        wd,
+                        conjunction_projection_explicit(&application, index, conclusions_count),
+                        &prior,
+                    )?,
+                _ => projected,
+            };
+            let compiled = (self.fact_proposition(fact, &captured_formation)?, projected);
             definitions.push(self.emit_internal_fact(fact, &compiled, &prior)?);
             let published = SourcePosition {
                 before: return_head + index + 1,

@@ -326,8 +326,9 @@ It extracts parameters from the displayed operator, compares both complete
 endpoints and checks the existing mathematical premises. It neither enumerates
 theorem names nor searches for a matrix factorization. Missing invertibility,
 wrong dimensions and wrong conjugations remain failures. Detailed/Reading
-output retains the selected law and child evidence; this route has no Lean
-replay implementation yet.
+output retains the selected law and child evidence. The existing Lean
+compiler consumes this selected certificate and its original premises; that
+support is specific to the implemented route.
 
 **Check types through a uniform structure.** This expression contains several layers of addition, but the author need not supply a separate type fact for each layer:
 

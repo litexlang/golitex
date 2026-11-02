@@ -45,6 +45,18 @@ use self::cite::cite_from_atomic_builtin_rule;
 impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_en(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_en(),
             Self::DvdFact(df) => df.rule_name_and_message_en(),
@@ -91,6 +103,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_zh(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_zh(),
             Self::DvdFact(df) => df.rule_name_and_message_zh(),
@@ -137,6 +161,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_zh_hant(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_zh_hant(),
             Self::DvdFact(df) => df.rule_name_and_message_zh_hant(),
@@ -183,6 +219,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_fr(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_fr(),
             Self::DvdFact(df) => df.rule_name_and_message_fr(),
@@ -229,6 +277,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_ru(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_ru(),
             Self::DvdFact(df) => df.rule_name_and_message_ru(),
@@ -275,6 +335,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_es(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_es(),
             Self::DvdFact(df) => df.rule_name_and_message_es(),
@@ -321,6 +393,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_ar(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_ar(),
             Self::DvdFact(df) => df.rule_name_and_message_ar(),
@@ -367,6 +451,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_ja(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_ja(),
             Self::DvdFact(df) => df.rule_name_and_message_ja(),
@@ -413,6 +509,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_ko(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_ko(),
             Self::DvdFact(df) => df.rule_name_and_message_ko(),
@@ -459,6 +567,18 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
+                "IsMatrixInvSelected",
+                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+            ),
+            Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "MatrixInversibleFromDeterminant",
+                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+            ),
+            Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
+                "NotMatrixInversibleFromDeterminant",
+                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+            ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_vi(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_vi(),
             Self::DvdFact(df) => df.rule_name_and_message_vi(),

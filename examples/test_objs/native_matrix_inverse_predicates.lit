@@ -1,0 +1,44 @@
+# Tracer: native complex square-matrix inverse predicates.
+# Before: candidate and existence predicates required std/matrix imports:
+# $is_matrix_inverse(n,A,B)
+# $is_invertible_matrix(n,A)
+# matrix_inverse(A,n)
+# The old matrix_inverse operation spelling is now rejected with a migration diagnostic.
+# Now: these three interfaces are native, with the determinant criterion in both directions.
+# Boundary: matrix_inv still requires proved nonsingularity; matrix(C,n,n) domains must match.
+# Evidence: target/release/litex -lang en -strict -f examples/test_objs/native_matrix_inverse_predicates.lit
+# Negative and retained-context controls: tests/unit/execute/native_matrix/inverse_predicates.rs
+
+forall n N,A matrix(C,n,n):
+    det(A,n)!=0
+    =>:
+        $matrix_inversible(A,n)
+        $is_matrix_inv(A,matrix_inv(A,n),n)
+
+forall n N,A matrix(C,n,n):
+    $matrix_inversible(A,n)
+    =>:
+        det(A,n)!=0
+        matrix_mul(A,matrix_inv(A,n),n,n,n)=identity_matrix(n)
+        matrix_mul(matrix_inv(A,n),A,n,n,n)=identity_matrix(n)
+
+have fn A(r closed_range(1,2),c closed_range(1,2)) R=r+c
+
+det(A,2)=-1
+
+det(A,2)!=0
+
+$matrix_inversible(A,2)
+
+forall k N,U,V matrix(C,k,k):
+    $is_matrix_inv(U,V,k)
+    =>:
+        $matrix_inversible(U,k)
+        det(U,k)!=0
+        matrix_mul(U,V,k,k,k)=identity_matrix(k)
+        matrix_mul(V,U,k,k,k)=identity_matrix(k)
+
+
+matrix_inv(A,2) $in matrix(R,2,2)
+matrix_inv(A,2)(1,1)=-4
+$is_matrix_inv(A,matrix_inv(A,2),2)

@@ -131,6 +131,49 @@ impl LitexToLeanCompiler {
         Ok((binders, introductions, definitions))
     }
 
+    /// Publish a polymorphic returned universal with the canonical local
+    /// semantic-object binders expected by later source citations.
+    pub(in crate::compile_to_lean) fn compile_canonical_forall_projection(
+        &self,
+        fact: &ForallFact,
+        wd: &ForallFactWellDefinedProof,
+        reference: String,
+        parent: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let term = SourcePosition::new(Some(parent), SourceOwner::Term, 0);
+        let scope = SourcePosition::new(Some(&term), SourceOwner::ForallWD(fact, wd), 0);
+        let (binders, _, mut definitions) = self.compile_canonical_forall_head(fact, wd, &scope)?;
+        let mut arguments = Vec::new();
+        for (id, store) in fact.typed_parameters.ordered_param_ids().iter().zip(
+            &wd.detailed_ref()
+                .introduced_params
+                .defined_params
+                .store_and_infer_results,
+        ) {
+            arguments.extend([
+                "M.Value".to_string(),
+                "(inferInstance)".to_string(),
+                format!("_value_i{}", id.value()),
+                format!("h_{}", store.primary_fact_id().value()),
+            ]);
+        }
+        arguments.extend(
+            fact.dom_facts
+                .iter()
+                .map(|f| format!("h_{}", f.fact_id().value())),
+        );
+        let proposition = self.compile_forall_formation(fact, wd, &term)?;
+        definitions.push(format!(
+            "have _returned_forall : {proposition} := {reference}"
+        ));
+        definitions.push(format!("exact (@_returned_forall {})", arguments.join(" ")));
+        Ok(format!(
+            "(fun {} => by\n  {})",
+            binders.join(" "),
+            definitions.join("\n").replace('\n', "\n  ")
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_local_forall_citation(
         &self,
         id: FactId,

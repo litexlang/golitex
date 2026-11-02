@@ -787,8 +787,62 @@ litex -reading -json -f chapter.lit > chapter.reading.json
 litex -reading -export book-site -r book/
 ```
 
+### Mathematical manuscript view
+
+Add `-latex` to reading mode to start with mathematical text instead of source:
+
+```sh
+litex -reading -latex -strict -lang zh -f chapter.lit
+litex -reading -latex -r book/
+litex -reading -latex -json -f chapter.lit > chapter.reading.json
+litex -reading -latex -export book-site -r book/
+```
+
+This is a reading presentation option. It uses the same native verification,
+project loading, proof records and shared viewer as ordinary `-reading`.
+Standalone `litex -latex` remains the separate parse-only compilation command.
+`-document` belongs to that standalone command, not reading mode.
+
+The manuscript uses the official compiler's paragraphs, proof methods, case
+lists, scoped derivations and mathematical notation. Hover or focus a fragment
+to see its exact original Litex source and the existing statement explanation.
+Click to keep the popup open; follow the same native fact references or open
+statement details. Escape and the close button dismiss the explanation. The
+source button returns to the usual source reader/editor. Editing invalidates
+old proof data and disables mathematical presentation until checking completes.
+Uploads and rechecks retain the selected document layout. Compiled prose keeps
+the compilation language; changing the interface language does not rewrite TeX.
+
+Mathematical bundles add `reading_layout: "latex"`. Each source can contain
+`latex_blocks` with compiler `content`, the exact `source_text` snapshot and its
+original byte range, plus `statements` containing original `statement_id` and
+UTF-8 `start_byte` / `end_byte` spans into that compiler content. Boundaries are
+recorded while the compiler composes the original typed AST; identical formulas
+are never joined by a text search. Rendering does not execute statements or
+change evidence, FactIds or scopes. Source chunks carry the optional layout;
+the lazy manifest and source-only parts do not duplicate it. Older bundles
+continue to use source presentation. `getReadingLayout()` exposes the document's
+layout metadata to the upload host, independently of a temporary source view.
+
+Missing, changed, foreign or malformed source mappings, an unavailable math
+engine, or unsupported document typography retain the original source. Rejected
+and unexecuted statements keep their native statuses. Ordinary rejected steps
+do not necessarily stop later checks; a parse termination can leave an unparsed
+suffix, which remains available as source. The view does not confer proof on
+displayed mathematics or add explanations missing from ordinary reading data.
+The existing cross-file function-evaluation boundary is preserved, including
+the namespaced `alpha::twice(2) = 4` rejection in the focused fixture; presentation
+must not turn that native rejection into a success.
+
+Focused acceptance uses `tests/reading_latex.rs`, the reading/HTTP/LaTeX CLI
+contracts, and `web/tests/latex-mode.py` / `latex-mode.cjs`. The producer and shared
+viewer exercise all 52 current statement fixtures; this is layout and source-map
+coverage, not a claim of complete mathematical explanation coverage.
+The focused acceptance receipt is
+[`tests/fixtures/reading_latex_acceptance.json`](../../tests/fixtures/reading_latex_acceptance.json).
+
 For a complete mathematical demo, use
-`litex -reading -strict -lang zh -r examples/reading/homepage`.
+`litex -reading -latex -strict -lang zh -r examples/reading/homepage`.
 The [homepage collection](../../examples/reading/homepage/README.md) includes
 least squares, sets, Newton iteration, irrationality of √2 and Cantor's theorem.
 
@@ -1715,3 +1769,76 @@ the public-event checks are in `web/tests/forall-equality-symmetry.cjs`.
 This is equality symmetry after a universal application, distinct from a
 registered predicate's symmetry property. Registration examples whose actual
 proof uses definition unfolding remain displayed by that route.
+
+## Coordinate consequences of a tuple equality
+
+For `have p cart(R, R) = (1, 2)`, the existing native inference publishes
+`p(1) = 1` and `p(2) = 2`. The viewer explains each actual stored result
+separately: the original equality, the `TupleCoordinates` rule, tuple length
+and selected one-based coordinate. The gray source annotation stays closed
+until requested. Later arithmetic can cite these actual coordinate FactIds;
+following a citation and returning preserves the exact source address.
+
+The observer checks the retained source identity, orientation, ordered stores,
+subject/index/value pairing, scope and source positions. Reversed and conjunct
+seeds retain their own origins. Nested tuples open one direct layer per seed;
+an alias or empty tuple does not invent coordinate consequences. Local results
+inside a rejected proof remain local. Incomplete or conflicting histories
+receive an incomplete explanation rather than another coordinate's evidence.
+
+A qualified `release obj def points::point` retains the original declaration's
+source position while publishing its new stores at the release command. The
+reader checks this correspondence against the actual defining declaration,
+loads its source on selection when needed, and preserves both navigation
+addresses. Retained private parameter names in ordinary typed-object
+declarations are paired with exported names only through that same source
+declaration, parameter positions, domains and recorded values. Other unresolved
+or partial declaration forms remain incomplete.
+
+See `examples/infer/equal/tuple_coordinates.lit` and
+`web/tests/tuple-coordinate-inferences.cjs`. These source-event tests include
+actual native exports, a lazy two-source book and missing/foreign-record
+controls. They do not certify every generated inference branch or browser
+geometry.
+
+## Numeric equality substitution and its remaining proof
+
+For `have p cart(R, R) = (1, 2)` followed by `p(1) + p(2) = 3`,
+the retained `ClosedNumericEqualSubstitution` result identifies the cited
+coordinate equalities, the rewritten equality `(1 + 2) = 3`, and its checked
+residual proof. The source bubble shows these three stages using those actual
+records. A premise already present in the local context is marked as used
+rather than repeated. Each chain equality keeps its own certificate, citations
+and return address; the residual is inspectable without becoming a stored fact.
+
+The observer checks the exact target, retained operands, residual proof,
+source positions, scopes and cited stores. It does not run a second rewriter
+or invent a subterm-by-subterm substitution path that the producer does not
+export. Closed numeric representatives may themselves be expressions such as
+`min(1, 2)`; the display preserves them instead of replacing them with an
+unrecorded numeral. Ordinary calculation, congruence, definition and theorem
+routes keep their own explanations. Missing or conflicting records remain
+incomplete. Both the outer fact and an expanded residual keep their own WD
+checks last and initially closed. See `web/tests/numeric-rewrites.cjs` for
+source, symbol, keyboard, operator, citation, edit and lazy-export checks.
+
+## Unexecuted enumeration bodies
+
+A successful enumeration can establish `forall x {}: 0 = x = 1` without
+executing its proof body. Source-only body rows now explain why they were not
+executed and link to the actual enumeration goal, execution history and final
+closed WD. They do not acquire proof, WD, hypothesis, inference or stored-fact
+records of their own. Empty parameter combinations and nonempty enumerations
+whose every assignment has a premise proved false have distinct explanations.
+
+The observer requires the retained successful parent result, goal/store/WD,
+exact source ancestry and token ranges, and genuinely unavailable child
+execution. Nested source clauses and repeated empty executions retain their
+actual source addresses and separate parent links. A checked local enumeration
+inside a rejected theorem remains local. An executed source instance,
+incomplete history, failed parent or mismatched scope/source cannot supply the
+nonexecution explanation. No extra inline or toolbar button is added; source
+hover, line-number focus and selection use the existing contextual bubble.
+See `web/tests/unexecuted-loops.cjs`, including the four original Mechanics
+rows under empty enumerations. This does not classify every reason that an
+arbitrary statement lacks execution evidence.

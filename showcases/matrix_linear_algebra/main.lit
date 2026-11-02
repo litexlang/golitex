@@ -7,7 +7,7 @@ det(system,2)=-1
 
 det(system,2)!=0
 
-have displacement cart_n(C,2)=matrix_apply(matrix_inverse(system,2),(1,0),2,2)
+have displacement cart_n(C,2)=matrix_apply(matrix_inv(system,2),(1,0),2,2)
 
 displacement(1)=-4
 
@@ -17,11 +17,11 @@ euclidean_norm(displacement,2)=5
 
 release thm matrix_inverse_laws(system,2)
 
-release thm matrix_apply_compose(system,matrix_inverse(system,2),(1,0),2,2,2)
+release thm matrix_apply_compose(system,matrix_inv(system,2),(1,0),2,2,2)
 
 release thm matrix_apply_identity((1,0),2)
 
-matrix_apply(system,displacement,2,2)=matrix_apply(system,matrix_apply(matrix_inverse(system,2),(1,0),2,2),2,2)=matrix_apply(matrix_mul(system,matrix_inverse(system,2),2,2,2),(1,0),2,2)=matrix_apply(identity_matrix(2),(1,0),2,2)=(1,0)
+matrix_apply(system,displacement,2,2)=matrix_apply(system,matrix_apply(matrix_inv(system,2),(1,0),2,2),2,2)=matrix_apply(matrix_mul(system,matrix_inv(system,2),2,2,2),(1,0),2,2)=matrix_apply(identity_matrix(2),(1,0),2,2)=(1,0)
 
 $Matrix::main::solves_matrix_system(2,2,system,displacement,(1,0))
 

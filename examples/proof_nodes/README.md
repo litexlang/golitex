@@ -1192,3 +1192,19 @@ left relation is cited and the residual `below(b,c)` is checked by definition.
 The reader pairs those steps without inventing a particular registration-source
 citation. Executable deletion controls for registration and the residual premise
 live in `src/reading/web/tests/fixtures.py` under transitivity applications.
+
+
+## Native commutative-ring rewrite
+
+[The polynomial identity tracer](equal/by_builtin_rewrite/comm_ring_polynomial.lit)
+checks a bare square-difference equality from the native proposition
+`$comm_ring(K,add,mul,neg,zero,one)`. It also checks opaque function contexts,
+operation aliases, returned callable prefixes, a checked shifted ring and the
+zero ring. Defining the proposition checks total operation signatures and its
+eight ring laws; it is not an unchecked automation flag. Its final rewrite
+branch retains integer-polynomial certificates and source proof citations.
+Native numerals other than the selected zero and one remain ordinary atoms.
+[Executable controls](../../tests/native_comm_ring.rs) reject wrong laws,
+missing witnesses, wrong owners, invalid guards and field-style cancellation.
+The new native proposition and certificate do not yet have a Lean replay adapter;
+the compiler rejects them explicitly.

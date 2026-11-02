@@ -1,8 +1,12 @@
 //! Fact and AtomicFact IR + display_string.
-
 use super::types::FactIR;
 use crate::ast::fact::*;
+use crate::ast::fact::{CommRingFact, NotCommRingFact};
+use crate::ast::fact::{
+    IsMatrixInvFact, MatrixInversibleFact, NotIsMatrixInvFact, NotMatrixInversibleFact,
+};
 use crate::ast::names::AtomicName;
+use crate::parse::keywords::COMM_RING;
 use crate::parse::keywords::*;
 
 macro_rules! impl_display_pair {
@@ -90,6 +94,13 @@ impl AtomicFact {
             AtomicFact::DvdFact(x) => x.ir(),
             AtomicFact::InjectiveFact(x) => x.ir(),
             AtomicFact::SurjectiveFact(x) => x.ir(),
+            AtomicFact::CommRingFact(x) => x.ir(),
+            AtomicFact::IsMatrixInvFact(x) => x.ir(),
+            AtomicFact::NotIsMatrixInvFact(x) => x.ir(),
+            AtomicFact::MatrixInversibleFact(x) => x.ir(),
+            AtomicFact::NotMatrixInversibleFact(x) => x.ir(),
+
+            AtomicFact::NotCommRingFact(x) => x.ir(),
             AtomicFact::BijectiveFact(x) => x.ir(),
             AtomicFact::IsChoiceFunctionForFact(x) => x.ir(),
             AtomicFact::NotNormalAtomicFact(x) => x.ir(),
@@ -169,6 +180,13 @@ impl AtomicFact {
             AtomicFact::DvdFact(x) => x.display_string(),
             AtomicFact::InjectiveFact(x) => x.display_string(),
             AtomicFact::SurjectiveFact(x) => x.display_string(),
+            AtomicFact::CommRingFact(x) => x.display_string(),
+            AtomicFact::IsMatrixInvFact(x) => x.display_string(),
+            AtomicFact::NotIsMatrixInvFact(x) => x.display_string(),
+            AtomicFact::MatrixInversibleFact(x) => x.display_string(),
+            AtomicFact::NotMatrixInversibleFact(x) => x.display_string(),
+
+            AtomicFact::NotCommRingFact(x) => x.display_string(),
             AtomicFact::BijectiveFact(x) => x.display_string(),
             AtomicFact::IsChoiceFunctionForFact(x) => x.display_string(),
             AtomicFact::NotNormalAtomicFact(x) => x.display_string(),
@@ -1422,3 +1440,42 @@ impl NotMultivariableAnalysisFact {
     }
     impl_display_pair!();
 }
+
+impl_dollar_prefix_args!(CommRingFact, COMM_RING, carrier, add, mul, neg, zero, one);
+impl_not_dollar_prefix_args!(
+    NotCommRingFact,
+    COMM_RING,
+    carrier,
+    add,
+    mul,
+    neg,
+    zero,
+    one
+);
+
+impl_dollar_prefix_args!(
+    IsMatrixInvFact,
+    crate::parse::keywords::IS_MATRIX_INV,
+    matrix,
+    inverse,
+    order
+);
+impl_not_dollar_prefix_args!(
+    NotIsMatrixInvFact,
+    crate::parse::keywords::IS_MATRIX_INV,
+    matrix,
+    inverse,
+    order
+);
+impl_dollar_prefix_args!(
+    MatrixInversibleFact,
+    crate::parse::keywords::MATRIX_INVERSIBLE,
+    matrix,
+    order
+);
+impl_not_dollar_prefix_args!(
+    NotMatrixInversibleFact,
+    crate::parse::keywords::MATRIX_INVERSIBLE,
+    matrix,
+    order
+);

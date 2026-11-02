@@ -280,7 +280,7 @@ fn recursive_graph_rejects_escaped_branch_assumption() {
 }
 
 #[test]
-fn recursive_graph_rejects_authored_domain_extension() {
+fn recursive_graph_preserves_authored_domain_conditions() {
     let source = SOURCE.replace(
         "have fn repeated_one(n N) R",
         "have fn repeated_one(n N: n >= 0) R",
@@ -298,8 +298,8 @@ fn recursive_graph_rejects_authored_domain_extension() {
         .run_litex_code(&source)
         .expect("checked guarded source");
     assert!(result.success && result.session_error.is_none());
-    let error = LitexToLeanCompiler::new(runtime)
+    let lean = LitexToLeanCompiler::new(runtime)
         .compile_run(&result, "authored_recursive_domain")
-        .unwrap_err();
-    assert_eq!(error.route, "RecursiveFunction/UnaryNaturalCases");
+        .expect("the original explicit domain is retained");
+    assert!(lean.contains("Litex.recursiveFn _data"));
 }

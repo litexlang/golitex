@@ -416,10 +416,14 @@ impl LitexToLeanCompiler {
             let wd = success_object_wd(result, value)?;
             self.compile_wd(wd, producer)?;
             self.compile_numeric_carrier_alias(value, producer)
-        })?.ok_or_else(|| LeanCompileError::new(
-            "Function/NumericCarrierProducer",
-            "A numeric carrier needs its preceding original RHS/let alias producer, not an equality discovered from the final environment.",
-        ))
+        })?.ok_or_else(|| {
+            #[cfg(test)]
+            eprintln!("Numeric carrier diagnostic: {}\n{}", carrier.readable_string(), std::backtrace::Backtrace::force_capture());
+            LeanCompileError::new(
+                "Function/NumericCarrierProducer",
+                "A numeric carrier needs its preceding original RHS/let alias producer, not an equality discovered from the final environment.",
+            )
+        })
     }
 
     pub(in crate::compile_to_lean) fn compile_function_guard_template(
@@ -1467,6 +1471,11 @@ impl LitexToLeanCompiler {
         arguments: &[String],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if super::compile_matrix_inverse_predicates::is_matrix_inverse_predicate(fact) {
+            return super::compile_matrix_inverse_predicates::raw_matrix_inverse_predicate(
+                fact, arguments,
+            );
+        }
         if matches!(
             fact,
             AtomicFact::NotNormalAtomicFact(_)

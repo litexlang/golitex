@@ -702,6 +702,14 @@ impl LitexToLeanCompiler {
                     (left, right),
                     (Obj::ArithmeticOperator(_), Obj::ArithmeticOperator(_))
                         | (
+                            Obj::MatrixOperator(MatrixOperator::InnerProduct(_)),
+                            Obj::MatrixOperator(MatrixOperator::InnerProduct(_))
+                        )
+                        | (
+                            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(_)),
+                            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(_))
+                        )
+                        | (
                             Obj::FunctionSpace(FunctionSpace::FnRange(_)),
                             Obj::FunctionSpace(FunctionSpace::FnRange(_))
                         )

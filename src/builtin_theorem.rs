@@ -2171,6 +2171,12 @@ impl BuiltinTheoremId {
 }
 
 pub fn is_reserved_builtin_name(name: &str) -> bool {
+    if matches!(
+        name,
+        crate::parse::keywords::IS_MATRIX_INV | crate::parse::keywords::MATRIX_INVERSIBLE
+    ) {
+        return true;
+    }
     crate::parse::real_analysis_fact_arity(name).is_some()
         || name == "has_seq_limsup"
         || name == "has_seq_liminf"

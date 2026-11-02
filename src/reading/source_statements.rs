@@ -98,6 +98,110 @@ impl Capture {
         Some(saved)
     }
 
+    /// Render the exact original source AST, before execution-instance records
+    /// are joined. The compiler supplies boundaries; no rendered text is searched.
+    pub fn capture_latex_block(
+        &mut self,
+        first: usize,
+        statement: &Stmt,
+        block: &TokenBlock,
+        runtime: &Runtime,
+    ) {
+        let mut resolve = |value: &Stmt| {
+            let mut matches = self
+                .source_statements
+                .nodes
+                .range(first..)
+                .filter(|(_, original)| *original == value);
+            let (index, _) = matches.next()?;
+            if matches.next().is_some() {
+                return None;
+            }
+            Some(field_text(&self.statements[*index], "id"))
+        };
+        let result = crate::compile_to_latex::to_latex_with_statement_ids(
+            std::slice::from_ref(statement),
+            &runtime.global_module_manager,
+            self.language,
+            &mut resolve,
+        );
+        let rendered = match result {
+            Ok(rendered) => rendered,
+            Err(error) => {
+                self.diagnostics.push(object(vec![
+                    ("kind", text("latex_presentation")),
+                    ("source_id", text(&self.current_source)),
+                    ("line", JsonValue::Number(block.line as f64)),
+                    ("message", text(&error.to_string())),
+                ]));
+                return;
+            }
+        };
+        let mapped = rendered
+            .statements
+            .iter()
+            .map(|span| span.statement_id.as_str())
+            .collect::<BTreeSet<_>>();
+        let expected = self.statements[first..]
+            .iter()
+            .map(|record| field_text(record, "id"))
+            .collect::<BTreeSet<_>>();
+        if mapped.len() != expected.len() || !expected.iter().all(|id| mapped.contains(id.as_str()))
+        {
+            self.diagnostics.push(object(vec![
+                ("kind", text("latex_presentation")), ("source_id", text(&self.current_source)),
+                ("line", JsonValue::Number(block.line as f64)),
+                ("message", text("Exact LaTeX/source statement correspondence is unavailable for this block.")),
+            ]));
+            return;
+        }
+        let statements = rendered
+            .statements
+            .into_iter()
+            .map(|span| {
+                object(vec![
+                    ("statement_id", text(&span.statement_id)),
+                    ("start_byte", JsonValue::Number(span.start_byte as f64)),
+                    ("end_byte", JsonValue::Number(span.end_byte as f64)),
+                ])
+            })
+            .collect();
+        let (start, end) = self
+            .source_statements
+            .spans
+            .get(&block.line)
+            .copied()
+            .unwrap_or_default();
+        let snapshot = self
+            .sources
+            .iter()
+            .find(|source| field_text(source, "id") == self.current_source)
+            .map(|source| field_text(source, "content"))
+            .unwrap_or_default();
+        let value = object(vec![
+            ("content", text(&rendered.content)),
+            (
+                "source_text",
+                text(snapshot.get(start..end).unwrap_or_default()),
+            ),
+            ("statements", JsonValue::Array(statements)),
+            ("start_byte", JsonValue::Number(start as f64)),
+            ("end_byte", JsonValue::Number(end as f64)),
+        ]);
+        if let Some(JsonValue::Object(fields)) = self
+            .sources
+            .iter_mut()
+            .find(|source| field_text(source, "id") == self.current_source)
+        {
+            if fields.get("latex_blocks").is_none() {
+                fields.insert("latex_blocks".into(), JsonValue::Array(Vec::new()));
+            }
+            if let Some(JsonValue::Array(values)) = fields.get_mut("latex_blocks") {
+                values.push(value);
+            }
+        }
+    }
+
     pub fn end_ast_statement(&mut self, saved: Option<(String, usize)>, syntax: &JsonValue) {
         if let Some((statement, line)) = saved {
             // Reuse the typed AST projection, stopping before facts, objects

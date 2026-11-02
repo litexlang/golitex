@@ -5,6 +5,9 @@ pub(super) fn cite_from_atomic_builtin_rule(
     rule: &AtomicExceptEqualityFactSearchProofByBuiltinRule,
 ) -> Option<FactId> {
     match rule {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact(_) => None,
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact(_)
+        | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact(_) => None,
         AtomicExceptEqualityFactSearchProofByBuiltinRule::BijectiveFact(bf) => bf.cite_fact_id(),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::CoprimeFact(cf) => cf.cite_fact_id(),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::DvdFact(df) => df.cite_fact_id(),

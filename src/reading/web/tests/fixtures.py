@@ -4408,6 +4408,282 @@ TRANSITIVITY_APPLICATION_BOOK = {'litex.config': '[export]\ndefinitions = "./01-
                         '    =>:\n'
                         '        $definitions::below(a, c)\n'}
 
+TUPLE_COORDINATE_CASES = {
+    'direct': ('have p cart(R, R) = (1, 2)\np(1) + p(2) = 3\n', True),
+    'symbolic': ('forall a, b R, q cart(R, R):\n    q = (a, b)\n    =>:\n        q(1) = a\n        q(2) = b\n', True),
+    'reversed': ('forall a, b R, q cart(R, R):\n    (a, b) = q\n    =>:\n        q(1) = a\n        q(2) = b\n', True),
+    'conjunction': ('forall q cart(R, R):\n    q = (1, 2) and 1 = 1\n    =>:\n        q(1) = 1\n        q(2) = 2\n', True),
+    'nested-boundary': ('let pair = ((1, 2), 3)\n', True),
+    'nested-step': ('let pair = ((1, 2), 3)\npair(1) = (1, 2)\n', True),
+    'alias-boundary': ('have p cart(R, R) = (1, 2)\nlet alias = p\n', True),
+    'singleton': ('let singleton = (7,)\n', True),
+    'empty': ('let empty = tuple()\n', True),
+    'wrong-coordinate': ('have p cart(R, R) = (1, 2)\np(1) = 2\n', False),
+    'index-zero': ('have p cart(R, R) = (1, 2)\np(0) = 0\n', False),
+    'index-outside': ('have p cart(R, R) = (1, 2)\np(3) = 0\n', False),
+    'failed-scope': ('claim:\n    ? 1 = 2\n    have doomed cart(R, R) = (1, 2)\n', False),
+}
+TUPLE_COORDINATE_BOOK = {
+    '01-points.lit': 'have point cart(R, R) = (1, 2)\n',
+    '02-coordinates.lit': 'release obj def points::point\npoints::point(1) + points::point(2) = 3\n',
+    'litex.config': '[export]\npoints = "./01-points.lit"\ncoordinates = "./02-coordinates.lit"\n',
+}
+
+NUMERIC_REWRITE_CASES = {'numbers': {'source': '# Node: equal.ByBuiltinRewrite.ClosedNumericEqualSubstitution\n'
+                       '# Run: litex -f '
+                       'examples/proof_nodes/equal/by_builtin_rewrite/closed_numeric_equal_substitution.lit\n'
+                       '\n'
+                       'have a R = 10\n'
+                       'have b R = 20\n'
+                       'a + b = 30\n',
+             'success': True},
+ 'tuple': {'source': 'have p cart(R, R) = (1, 2)\np(1) + p(2) = 3\n', 'success': True},
+ 'both-sides': {'source': 'have numeric_left R = 10\n'
+                          '\n'
+                          'have numeric_right R = 20\n'
+                          '\n'
+                          'numeric_left + 1 = numeric_right - 9\n'
+                          '\n',
+                'success': True},
+ 'reversed-source': {'source': 'forall numeric_t R:\n'
+                               '    2 = numeric_t\n'
+                               '    =>:\n'
+                               '        numeric_t + 1 = 3\n'
+                               '\n',
+                     'success': True},
+ 'chain': {'source': 'have numeric_left R = 10\n\nnumeric_left + 1 = 11 = numeric_left + 1\n\n',
+           'success': True},
+ 'failed-local': {'source': 'thm stopped_numeric:\n'
+                            '    ? 1 = 2\n'
+                            '    have numeric_hidden R = 10\n'
+                            '    numeric_hidden + 1 = 11\n'
+                            '\n',
+                  'success': False},
+ 'missing-value': {'source': 'have numeric_free R\n\nnumeric_free + 1 = 11\n\n', 'success': False},
+ 'wrong-result': {'source': 'have numeric_left R = 10\n\nnumeric_left + 1 = 12\n\n', 'success': False},
+ 'undefined-division': {'source': 'have numeric_left R = 10\n\n1 / (numeric_left - 10) = 0\n\n',
+                        'success': False},
+ 'local': {'source': 'claim:\n'
+                     '    ? forall numeric_u R:\n'
+                     '        numeric_u = 10\n'
+                     '        =>:\n'
+                     '            numeric_u + 1 = 11\n'
+                     '    numeric_u + 1 = 11\n'
+                     '\n',
+           'success': True},
+ 'congruence-control': {'source': 'forall numeric_u, numeric_x R:\n'
+                                  '    numeric_u = 1\n'
+                                  '    =>:\n'
+                                  '        numeric_u + numeric_x = 1 + numeric_x\n'
+                                  '\n',
+                        'success': True},
+ 'whole-subterm': {'source': 'have numeric_angle R = 0\n'
+                             '\n'
+                             'cos(numeric_angle) = cos(0) = 1\n'
+                             '\n'
+                             'cos(numeric_angle) + 2 = 3\n'
+                             '\n',
+                   'success': True},
+ 'calculation-control': {'source': '1 + 2 = 3\n\n', 'success': True},
+ 'arithmetic-ops': {'source': '# Node: equal.ByBuiltinRewrite.ClosedNumericEqualSubstitution '
+                              '(arithmetic ops)\n'
+                              '# Store / rewrite when the closed representative uses abs / min / max / '
+                              'floor / sign.\n'
+                              '# Run: litex -f '
+                              'examples/proof_nodes/equal/by_builtin_rewrite/closed_numeric_equal_substitution_arithmetic_ops.lit\n'
+                              '\n'
+                              'have a R = |-3|\n'
+                              'a = 3\n'
+                              '\n'
+                              'have b R = min(1, 2)\n'
+                              'b + 1 = 2\n'
+                              '\n'
+                              'have c R = max(floor(2.5), sign(-1))\n'
+                              'c = 2\n',
+                    'success': True},
+ 'object-definition-control': {'source': 'have fn reciprocal(x R: x != 0) R = 1 / x\n'
+                                         'reciprocal(2) = 1 / 2\n',
+                               'success': True},
+ 'theorem-control': {'source': '# Stmt: By.ByThmStmt → exec_by_thm_stmt\n'
+                               '# Run: litex -f examples/stmt_nodes/by/by_thm.lit\n'
+                               '\n'
+                               'thm zero_sides:\n'
+                               '    ? forall x R:\n'
+                               '        x + 0 = x\n'
+                               '        0 + x = x\n'
+                               '    x + 0 = x\n'
+                               '    0 + x = x\n'
+                               '\n'
+                               'by thm zero_sides(2) => 2 + 0 = 2\n',
+                     'success': True}}
+
+UNEXECUTED_LOOP_CASES = {'enum-empty': {'source': 'by enumerate finite_set:\n'
+                          '    ? forall x {}:\n'
+                          '        0 = x = 1\n'
+                          '    0 = x = 1\n',
+                'success': True},
+ 'range-empty': {'source': 'by for:\n'
+                           '    ? forall n range(2, 2):\n'
+                           '        2 % n != 0\n'
+                           '    2 % n != 0\n',
+                 'success': True},
+ 'nested-body': {'source': 'by enumerate finite_set:\n'
+                           '    ? forall unused {}:\n'
+                           '        unused = unused\n'
+                           '    have never_object R = 1 / 0\n'
+                           '    prop never_predicate(y R):\n'
+                           '        y >= 0\n'
+                           '    have fn never_function(y R) R = y + 1\n'
+                           '    claim:\n'
+                           '        ? 1 = 2\n'
+                           '        1 = 2\n'
+                           '    by for:\n'
+                           '        ? forall k range(0, 1):\n'
+                           '            k = k\n'
+                           '        1 = 2\n',
+                 'success': True},
+ 'all-skipped': {'source': 'by enumerate finite_set:\n'
+                           '    ? forall skipped_n {0, 1}:\n'
+                           '        skipped_n < 0\n'
+                           '        =>:\n'
+                           '            skipped_n = 2\n'
+                           '    1 = 2\n',
+                 'success': True},
+ 'range-all-skipped': {'source': 'by for:\n'
+                                 '    ? forall skipped_k range(0, 2):\n'
+                                 '        skipped_k < 0\n'
+                                 '        =>:\n'
+                                 '            skipped_k = 9\n'
+                                 '    1 = 2\n',
+                       'success': True},
+ 'dependent-range-domain-boundary': {'source': 'by enumerate finite_set:\n'
+                                               '    ? forall outer_n {1, 2}:\n'
+                                               '        outer_n = outer_n\n'
+                                               '    by for:\n'
+                                               '        ? forall inner_k range(outer_n, outer_n):\n'
+                                               '            1 = 2\n'
+                                               '        1 = 2\n',
+                                     'success': False},
+ 'repeated-empty': {'source': 'by enumerate finite_set:\n'
+                              '    ? forall outer_n {1, 2}:\n'
+                              '        outer_n = outer_n\n'
+                              '    by for:\n'
+                              '        ? forall inner_k range(2, 2):\n'
+                              '            1 = 2\n'
+                              '        1 = 2\n',
+                    'success': True},
+ 'failed-outer': {'source': 'thm stopped_empty_loop:\n'
+                            '    ? 1 = 2\n'
+                            '    by enumerate finite_set:\n'
+                            '        ? forall local_empty {}:\n'
+                            '            1 = 2\n'
+                            '        1 = 2\n',
+                  'success': False},
+ 'later-empty-domain': {'source': 'by enumerate finite_set:\n'
+                                  '    ? forall seed {1, 2}, missing {}:\n'
+                                  '        seed = seed\n'
+                                  '    1 / 0 = 0\n',
+                        'success': True},
+ 'nonempty-failure': {'source': 'by enumerate finite_set:\n'
+                                '    ? forall checked_n {0}:\n'
+                                '        checked_n = checked_n\n'
+                                '    1 = 2\n',
+                      'success': False},
+ 'no-false-publication': {'source': '1 = 2\n', 'success': False},
+ 'ordinary-enumeration': {'source': '# Stmt: ByEnumerateFiniteSetStmt\n'
+                                    '# AST: Stmt::By::ByEnumerateFiniteSetStmt\n'
+                                    '# Run all scenarios and boundaries: python3 '
+                                    'examples/test_statements/run.py --leaf '
+                                    'ByEnumerateFiniteSetStmt\n'
+                                    '\n'
+                                    '# case: two-elements\n'
+                                    'by enumerate finite_set:\n'
+                                    '    ? forall x {1, 2}:\n'
+                                    '        x > 0\n'
+                                    '    x > 0\n'
+                                    '\n'
+                                    '# case: two-independent-domains\n'
+                                    'by enumerate finite_set:\n'
+                                    '    ? forall x {1, 2}, y {3, 4}:\n'
+                                    '        x < y\n'
+                                    '    x < y\n'
+                                    '\n'
+                                    '# case: singleton-and-empty\n'
+                                    'by enumerate finite_set:\n'
+                                    '    ? forall x {0}:\n'
+                                    '        x = 0\n'
+                                    '    x = 0\n'
+                                    'by enumerate finite_set:\n'
+                                    '    ? forall x {}:\n'
+                                    '        x = x\n'
+                                    '    x = x\n'
+                                    '\n'
+                                    '# case: constant-proof-body\n'
+                                    'by enumerate finite_set:\n'
+                                    '    ? forall n {0, 1}:\n'
+                                    '        n = n\n'
+                                    '    1 = 1\n'
+                                    '\n'
+                                    '# case: conditional-nested-binder-body\n'
+                                    'prop enum_positive(x R):\n'
+                                    '    x > 0\n'
+                                    'by enumerate finite_set:\n'
+                                    '    ? forall n {0, 1, 2}:\n'
+                                    '        n > 0\n'
+                                    '        =>:\n'
+                                    '            n != 0\n'
+                                    '    by def $enum_positive(n)\n',
+                          'success': True},
+ 'ordinary-for': {'source': '# Stmt: By.ByForStmt → exec_by_for_stmt\n'
+                            '# Run: litex -f examples/stmt_nodes/by/by_for.lit\n'
+                            '\n'
+                            'by for:\n'
+                            '    ? forall n range(0, 3) => n < 3\n'
+                            '    n < 3\n',
+                  'success': True},
+ 'goal-wd-failure': {'source': 'by enumerate finite_set:\n'
+                               '    ? forall w {}:\n'
+                               '        1 / 0 = 0\n'
+                               '    1 = 2\n',
+                     'success': False},
+ 'failed-body-suffix': {'source': 'by enumerate finite_set:\n'
+                                  '    ? forall n {0}:\n'
+                                  '        n = n\n'
+                                  '    1 = 2\n'
+                                  '    1 = 1\n',
+                        'success': False},
+ 'false-after-empty': {'source': 'by enumerate finite_set:\n'
+                                 '    ? forall x {}:\n'
+                                 '        0 = x = 1\n'
+                                 '    0 = x = 1\n'
+                                 '1 = 2\n',
+                       'success': False},
+ 'unicode-source': {'source': '# 空集中的对象；this source checks byte positions.\n'
+                              'by enumerate finite_set:\n'
+                              '    ? forall x {}:\n'
+                              '        0 = x = 1\n'
+                              '    0 = x = 1\n',
+                    'success': True}}
+
+UNEXECUTED_LOOP_BOOK = {'01-real.lit': '# Stmt: By.ByForStmt → exec_by_for_stmt\n'
+                '# Run: litex -f examples/stmt_nodes/by/by_for.lit\n'
+                '\n'
+                'by for:\n'
+                '    ? forall n range(0, 3) => n < 3\n'
+                '    n < 3\n',
+ '02-empty.lit': 'by enumerate finite_set:\n'
+                 '    ? forall x {}:\n'
+                 '        0 = x = 1\n'
+                 '    0 = x = 1\n'
+                 '\n'
+                 'by for:\n'
+                 '    ? forall skipped_k range(0, 2):\n'
+                 '        skipped_k < 0\n'
+                 '        =>:\n'
+                 '            skipped_k = 9\n'
+                 '    1 = 2\n',
+ 'litex.config': '[export]\nreal = "./01-real.lit"\nempty = "./02-empty.lit"\n'}
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('output', type=Path)
@@ -4442,6 +4718,9 @@ def main():
     parser.add_argument('--failed-universal-context', action='store_true', help='Also export actual failed universal contexts, checked prefixes and boundaries.')
     parser.add_argument('--failed-claim-context', action='store_true', help='Also export retained failed claim scopes, assumptions and completed-stage prefixes.')
     parser.add_argument('--inferred-rules', action='store_true', help='Also export actual inference rule sources, conclusions and checked side conditions.')
+    parser.add_argument('--tuple-coordinates', action='store_true', help='Export actual one-layer tuple coordinate inference, local/reversed/empty/alias boundaries and a qualified two-source book.')
+    parser.add_argument('--numeric-rewrites', action='store_true', help='Export actual closed-numeric equality rewrites, residual proofs, local/chain/route controls and a qualified two-source book.')
+    parser.add_argument('--unexecuted-loops', action='store_true', help='Export actual empty/all-skipped enumeration bodies, nested/repeated/local histories and rejection controls.')
     parser.add_argument('--case-consequences', action='store_true', help='Also export successful case-target inference batches and outer-publication boundaries.')
     parser.add_argument('--completed-case-prefix', action='store_true', help='Also export actual completed case prefixes, coverage and closing-target prefixes before later failures.')
     parser.add_argument('--failed-case-context', action='store_true', help='Also export actual failed case assumptions, completed body prefixes, nested scopes and non-leakage boundaries.')
@@ -5565,6 +5844,70 @@ def main():
         if bundle.get('run_result') != 'success' or [item['content'] for item in bundle['sources']] != [value for name, value in FORALL_EQUALITY_SYMMETRY_BOOK.items() if name.endswith('.lit')]:
             raise RuntimeError('forall symmetry book: unexpected result or source mismatch')
         report['forall-symmetry-book'] = {'exit': 0, 'run_result': 'success', 'sources': 2, 'strict': True}
+    if args.unexecuted_loops:
+        for name, case in UNEXECUTED_LOOP_CASES.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', case['source']], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if case['success'] else 'failure'
+            if run.returncode != (0 if case['success'] else 1) or bundle.get('run_result') != expected or bundle['sources'][0]['content'] != case['source']:
+                raise RuntimeError(f'{name}: unexpected unexecuted-loop result\n{run.stderr}')
+            (args.output / f'unexecuted-loop-{name}.json').write_text(run.stdout)
+            report[f'unexecuted-loop-{name}'] = {'exit': run.returncode, 'run_result': expected, 'strict': True}
+        project = args.output / 'unexecuted-loop-book-source'
+        project.mkdir(exist_ok=True)
+        for name, content in UNEXECUTED_LOOP_BOOK.items():
+            (project / name).write_text(content)
+        exported = args.output / 'unexecuted-loop-book'
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-strict', '-lang', 'en', '-r', str(project), '-export', str(exported)], capture_output=True, text=True)
+        if run.returncode != 0:
+            raise RuntimeError(f'numeric rewrite book: export failed\n{run.stderr}')
+        bundle = json.loads((exported / 'reading.json').read_text())
+        if bundle.get('run_result') != 'success' or [item['content'] for item in bundle['sources']] != [content for name, content in UNEXECUTED_LOOP_BOOK.items() if name.endswith('.lit')]:
+            raise RuntimeError('numeric rewrite book: unexpected result or source mismatch')
+        report['unexecuted-loop-book'] = {'exit': 0, 'run_result': 'success', 'sources': 2, 'strict': True}
+    if args.numeric_rewrites:
+        for name, case in NUMERIC_REWRITE_CASES.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', case['source']], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if case['success'] else 'failure'
+            if run.returncode != (0 if case['success'] else 1) or bundle.get('run_result') != expected or bundle['sources'][0]['content'] != case['source']:
+                raise RuntimeError(f'{name}: unexpected numeric-rewrite result\n{run.stderr}')
+            (args.output / f'numeric-rewrite-{name}.json').write_text(run.stdout)
+            report[f'numeric-rewrite-{name}'] = {'exit': run.returncode, 'run_result': expected, 'strict': True}
+        project = args.output / 'numeric-rewrite-book-source'
+        project.mkdir(exist_ok=True)
+        for name, content in TUPLE_COORDINATE_BOOK.items():
+            (project / name).write_text(content)
+        exported = args.output / 'numeric-rewrite-book'
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-strict', '-lang', 'en', '-r', str(project), '-export', str(exported)], capture_output=True, text=True)
+        if run.returncode != 0:
+            raise RuntimeError(f'numeric rewrite book: export failed\n{run.stderr}')
+        bundle = json.loads((exported / 'reading.json').read_text())
+        if bundle.get('run_result') != 'success' or [item['content'] for item in bundle['sources']] != [content for name, content in TUPLE_COORDINATE_BOOK.items() if name.endswith('.lit')]:
+            raise RuntimeError('numeric rewrite book: unexpected result or source mismatch')
+        report['numeric-rewrite-book'] = {'exit': 0, 'run_result': 'success', 'sources': 2, 'strict': True}
+    if args.tuple_coordinates:
+        cases = {'public': ((ROOT / 'examples/infer/equal/tuple_coordinates.lit').read_text(), True), **TUPLE_COORDINATE_CASES}
+        for name, (content, succeeds) in cases.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected or bundle['sources'][0]['content'] != content:
+                raise RuntimeError(f'{name}: unexpected tuple-coordinate result\n{run.stderr}')
+            (args.output / f'tuple-coordinate-{name}.json').write_text(run.stdout)
+            report[f'tuple-coordinate-{name}'] = {'exit': run.returncode, 'run_result': expected, 'strict': True}
+        project = args.output / 'tuple-coordinate-book-source'
+        project.mkdir(exist_ok=True)
+        for name, content in TUPLE_COORDINATE_BOOK.items():
+            (project / name).write_text(content)
+        exported = args.output / 'tuple-coordinate-book'
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-strict', '-lang', 'en', '-r', str(project), '-export', str(exported)], capture_output=True, text=True)
+        if run.returncode != 0:
+            raise RuntimeError(f'tuple-coordinate book: export failed\n{run.stderr}')
+        bundle = json.loads((exported / 'reading.json').read_text())
+        if bundle.get('run_result') != 'success' or [item['content'] for item in bundle['sources']] != [content for name, content in TUPLE_COORDINATE_BOOK.items() if name.endswith('.lit')]:
+            raise RuntimeError('tuple-coordinate book: unexpected result or source mismatch')
+        report['tuple-coordinate-book'] = {'exit': 0, 'run_result': 'success', 'sources': 2, 'strict': True}
     if args.theorems:
         for name, relative in THEOREM_CASES.items():
             content = (ROOT / relative).read_text()

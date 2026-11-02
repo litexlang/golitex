@@ -64,6 +64,7 @@ mod compile_function_limit_sides;
 mod compile_function_limit_squeeze;
 mod compile_function_limit_unary;
 mod compile_function_template;
+mod compile_general_recursive_result;
 mod compile_have_fn_by_exist_result;
 mod compile_have_fn_by_induc_result;
 mod compile_have_fn_equal_stmt_result;
@@ -95,6 +96,7 @@ mod compile_prime_inferences;
 mod compile_prop_clause_instance;
 mod compile_real_accumulation;
 mod compile_real_limit_accumulation;
+mod compile_recursive_case_tree;
 mod compile_recursive_unfold_result;
 mod compile_register_stmt_result;
 mod compile_release_and_expand_result;
@@ -274,10 +276,12 @@ mod compile_real_set_bounds;
 mod compile_scalar_differential;
 mod compile_second_partial;
 mod compile_sequence_analysis;
+mod compile_sequence_binary_map;
 mod compile_sequence_epsilon;
 mod compile_sequence_extremum;
 mod compile_sequence_extremum_definition;
 mod compile_sequence_limit;
+mod compile_sequence_map;
 mod compile_total_differential;
 
 mod compile_call_prefix;
@@ -294,6 +298,27 @@ mod compile_builtin_finite_index_theorem;
 mod compile_builtin_finite_sum_theorem;
 mod compile_builtin_finite_summand_theorem;
 mod compile_builtin_indexed_choice_theorem;
+mod compile_builtin_inner_linear_theorem;
 mod compile_builtin_inner_positive_theorem;
 mod compile_builtin_intersection_facts_theorem;
+mod compile_builtin_norm_scale_theorem;
 mod compile_builtin_range_sum_theorem;
+
+mod compile_builtin_multivariable_definition;
+
+mod compile_builtin_multivariable_elimination;
+
+mod compile_multivariable_limit_context;
+
+mod compile_builtin_vector_limit_theorem;
+
+mod compile_builtin_derivative_schema;
+
+mod compile_builtin_coordinate_definition;
+
+mod compile_builtin_remainder_definition;
+
+mod compile_builtin_derivative_formula;
+mod compile_builtin_unary_derivative;
+
+mod compile_matrix_inverse_predicates;

@@ -39,6 +39,139 @@ fn validate_closed_rational_pair(
 }
 
 impl LitexToLeanCompiler {
+    /// Normalize a selected arithmetic alignment using only the guards of its
+    /// original constructors. A cached object still resolves to that constructor;
+    /// this does not search for a new nonzero proof in the final environment.
+    pub(in crate::compile_to_lean) fn compile_formation_normalization(
+        &self,
+        objects: &[&Obj],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        fn collect<'a>(object: &'a Obj, guards: &mut Vec<(&'a Obj, &'a Obj)>) {
+            if EvalRational::from_obj(object).is_some() {
+                // The numeric observer checks the original closed certificate.
+                // Its native value has no symbolic denominator to discharge.
+                return;
+            }
+            let guard = match object {
+                Obj::ArithmeticOperator(ArithmeticOperator::Add(p)) => {
+                    collect(&p.left, guards);
+                    collect(&p.right, guards);
+                    None
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Sub(p)) => {
+                    collect(&p.left, guards);
+                    collect(&p.right, guards);
+                    None
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Mul(p)) => {
+                    collect(&p.left, guards);
+                    collect(&p.right, guards);
+                    None
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Div(p)) => {
+                    collect(&p.left, guards);
+                    collect(&p.right, guards);
+                    Some(p.right.as_ref())
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)) => {
+                    collect(&p.arg, guards);
+                    None
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Pow(p)) => {
+                    collect(&p.base, guards);
+                    closed_integer(&p.exponent)
+                        .filter(|n| *n < 0)
+                        .map(|_| p.base.as_ref())
+                }
+                _ => None,
+            };
+            if let Some(subject) = guard {
+                if !guards
+                    .iter()
+                    .any(|(_, previous)| previous.ir() == subject.ir())
+                {
+                    guards.push((object, subject));
+                }
+            }
+        }
+        let mut guards = Vec::new();
+        for object in objects {
+            collect(object, &mut guards);
+        }
+        if guards.is_empty() {
+            return Ok("by ring!".into());
+        }
+        let mut declarations = Vec::new();
+        let mut names = Vec::new();
+        for (index, (owner, subject)) in guards.into_iter().enumerate() {
+            let proof = position
+                .with_visible_wd(owner, &mut |wd, producer| {
+                    ensure_object(owner, wd)?;
+                    // Validate every child and domain stage before projecting the
+                    // exact requirement. Merely finding a similarly shaped WD is
+                    // not enough to justify its nonzero conclusion.
+                    self.compile_wd(wd, producer)?;
+                    let (requirements, slot) = match wd.detailed_ref() {
+                        DetailedObjWellDefinedProof::ByDef {
+                            proof:
+                                ObjWellDefinedProofByDef::ArithmeticOperator(
+                                    ArithmeticOperatorObjWellDefinedProofByDef::Div(p),
+                                ),
+                            ..
+                        } => (&p.requirement_fact_verified, 0),
+                        DetailedObjWellDefinedProof::ByDef {
+                            proof:
+                                ObjWellDefinedProofByDef::ArithmeticOperator(
+                                    ArithmeticOperatorObjWellDefinedProofByDef::Pow(p),
+                                ),
+                            ..
+                        } => (&p.requirement_fact_verified, 2),
+                        _ => {
+                            return Err(LeanCompileError::unsupported(
+                                "Normalization/GuardConstructor",
+                            ))
+                        }
+                    };
+                    let guard = requirements.get(slot).ok_or_else(|| {
+                        LeanCompileError::unsupported("Normalization/OriginalGuard")
+                    })?;
+                    ensure_nonzero_subject(&source_subject(guard)?, subject)?;
+                    let scope = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 2 + slot);
+                    self.compile_wd_requirement(guard, &scope)
+                })?
+                .ok_or_else(|| LeanCompileError::unsupported("Normalization/GuardWD"))?;
+            let term = self.compile_object_reference(subject, position)?;
+            let native = self.compile_numeric_observation(subject, position)?;
+            let name = format!("_litex_nz_{index}");
+            declarations.push(format!("have {name} : ({} : ℂ) ≠ 0 := Litex.NativeBridge.nativeNonzeroOfDenote {term} {} {} {proof}", native.0, native.0, native.1));
+            let mut factors = vec![(subject, name)];
+            while let Some((factor, name)) = factors.pop() {
+                names.push(name.clone());
+                let (left, right, law) = match factor {
+                    Obj::ArithmeticOperator(ArithmeticOperator::Mul(p)) => {
+                        (&p.left, &p.right, "mul_ne_zero_iff")
+                    }
+                    Obj::ArithmeticOperator(ArithmeticOperator::Div(p)) => {
+                        (&p.left, &p.right, "div_ne_zero_iff")
+                    }
+                    _ => continue,
+                };
+                for (part, field, child) in [(left, "1", "left"), (right, "2", "right")] {
+                    let child_name = format!("{name}_{child}");
+                    declarations.push(format!("have {child_name} := ({law}.mp {name}).{field}"));
+                    factors.push((part, child_name));
+                }
+            }
+        }
+        let exact = names
+            .iter()
+            .map(|name| format!("exact {name}"))
+            .collect::<Vec<_>>()
+            .join(" | ");
+        Ok(format!("(by\n  {}\n  litex_normalize_rational (disch := repeat' first | {exact} | apply mul_ne_zero | apply div_ne_zero | apply pow_ne_zero | apply zpow_ne_zero)\n)", declarations.join("\n  ")))
+    }
+
     /// A checked beta endpoint has a raw semantic value but is not a new WD
     /// producer. Replay its closed arithmetic certificate at that value.
     pub(super) fn compile_parent_closed_equality(

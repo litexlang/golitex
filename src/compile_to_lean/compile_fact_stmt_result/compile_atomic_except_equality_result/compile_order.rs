@@ -242,6 +242,74 @@ impl LitexToLeanCompiler {
         ))
     }
 
+    pub(super) fn compile_integer_gap(
+        &self,
+        goal: &AtomicFact,
+        left_integer: &VerifyFactResult,
+        right_integer: &VerifyFactResult,
+        order: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        use crate::rational_expression::objs_equal_by_rational_expression_evaluation as same;
+        let (left, right, strict) = source_order_oriented(goal)?;
+        let (a, b, source_strict) = source_order_oriented(&order.fact)?;
+        if strict
+            || !source_strict
+            || membership_subject(&source_subject(left_integer)?, a)? != StandardSet::Z
+            || membership_subject(&source_subject(right_integer)?, b)? != StandardSet::Z
+        {
+            return Err(LeanCompileError::unsupported("IntegerGap/IntegerSubjects"));
+        }
+        // These views validate the selected certificate's fixed endpoint
+        // alignment. They are not new source objects or verification results.
+        let one = Obj::Literal(Literal::Number(Number::new("1".into())));
+        let previous = Obj::ArithmeticOperator(ArithmeticOperator::Sub(Sub {
+            left: Box::new(left.clone()),
+            right: Box::new(one.clone()),
+        }));
+        let next = Obj::ArithmeticOperator(ArithmeticOperator::Add(Add {
+            left: Box::new(right.clone()),
+            right: Box::new(one),
+        }));
+        let alignment = if same(a, &previous) && same(b, right) {
+            "Or.inl"
+        } else if same(a, left) && same(b, &next) {
+            "Or.inr"
+        } else {
+            return Err(LeanCompileError::unsupported(
+                "IntegerGap/EndpointAlignment",
+            ));
+        };
+        for object in [a, b, left, right] {
+            validate_arithmetic_expression(object)?;
+        }
+        // Runtime cites the strict order before checking either integer domain.
+        let order = self
+            .compile_order_known_premise(order, &position.atomic_search_prior(0)?)?
+            .1;
+        let ha = self
+            .compile_verify(left_integer, &position.atomic_search_prior(1)?)?
+            .1;
+        let hb = self
+            .compile_verify(right_integer, &position.atomic_search_prior(2)?)?
+            .1;
+        let complete = position.atomic_search_prior(3)?;
+        let normalize = self.compile_formation_normalization(&[a, b, left, right], &complete)?;
+        let mut terms = Vec::new();
+        let mut values = Vec::new();
+        let mut denotations = Vec::new();
+        for object in [a, b, left, right] {
+            terms.push(self.compile_object_reference(object, &complete)?);
+            let observed = self.compile_numeric_observation(object, &complete)?;
+            values.push(observed.0);
+            denotations.push(observed.1);
+        }
+        Ok(format!(
+            "(Litex.integerGapLe {} {ha} {hb} {order} {} {} ({alignment} ⟨{normalize}, {normalize}⟩))",
+            terms.join(" "), values.join(" "), denotations.join(" "),
+        ))
+    }
+
     fn compile_integer_predecessor(
         &self,
         goal: &AtomicFact,
@@ -636,6 +704,30 @@ impl LitexToLeanCompiler {
                 LessEqualFactSearchProofByBuiltinRule::UnitCircleUpperBound(_) => {
                     self.compile_unit_circle_bound(goal, false, position)
                 }
+                LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorGap(p) => self
+                    .compile_integer_gap(
+                        goal,
+                        &p.left_integer,
+                        &p.right_integer,
+                        &p.strict_order,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::IntegerSuccessorLe(p) => self
+                    .compile_integer_successor_le(
+                        goal,
+                        &p.left_in_z_proof,
+                        &p.right_in_z_proof,
+                        &p.strict_proof,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::IntegerAdjacencyLe(p) => self
+                    .compile_integer_adjacency_le(
+                        goal,
+                        &p.left_in_z_proof,
+                        &p.right_in_z_proof,
+                        &p.strict_proof,
+                        position,
+                    ),
                 LessEqualFactSearchProofByBuiltinRule::OrderSignFromNegativeLiteralBound(p) => {
                     self.compile_signed_literal_bound(goal, p.cite_fact_id, position)
                 }
@@ -953,6 +1045,18 @@ impl LitexToLeanCompiler {
                     LessFactSearchProofByBuiltinRule::SubtractOneLess(p),
                 ),
             ) => self.compile_subtract_one_less(goal, &p.minuend, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::SubtractPositiveClosedLess(p),
+                ),
+            ) => self.compile_subtract_positive_closed_less(
+                goal,
+                &p.minuend,
+                &p.subtrahend,
+                &p.normalized_subtrahend,
+                position,
+            ),
             (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
@@ -1664,7 +1768,10 @@ impl LitexToLeanCompiler {
                 "The recorded alternate changes the exact transposed family or source endpoints.",
             ));
         }
-        let child = self.compile_verify(&proof.proof_of_alternate_fact, position)?;
+        let child = self.compile_verify(
+            &proof.proof_of_alternate_fact,
+            &position.atomic_search_prior(0)?,
+        )?;
         if source_subject(&proof.proof_of_alternate_fact)? != proof.alternate_fact {
             return Err(LeanCompileError::new(
                 "Order/DualChild",

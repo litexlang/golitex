@@ -1,0 +1,238 @@
+# Field-valued matrices and their actual VectorSpace.
+# Literal callable signatures are definitionally matrix(K,m,n).
+
+thm matrix_function_carrier:
+    ? forall K set,m,n N,A matrix(K,m,n):
+        A $in fn(r closed_range(1,m),c closed_range(1,n)) K
+    matrix(K,m,n)=fn(r closed_range(1,m),c closed_range(1,n)) K
+    A $in fn(r closed_range(1,m),c closed_range(1,n)) K
+
+template<K nonempty_set,F &Algebra::field::Field<K>,m,n N>:
+    have fn field_zero_matrix(r closed_range(1,m),c closed_range(1,n)) K=F.zero
+
+template<K nonempty_set,F &Algebra::field::Field<K>,m,n N>:
+    have fn field_matrix_add(A,B matrix(K,m,n)) fn(r closed_range(1,m),c closed_range(1,n)) K=fn(r closed_range(1,m),c closed_range(1,n)) K {F.add(A(r,c),B(r,c))}
+
+template<K nonempty_set,F &Algebra::field::Field<K>,m,n N>:
+    have fn field_matrix_smul(a K,A matrix(K,m,n)) fn(r closed_range(1,m),c closed_range(1,n)) K=fn(r closed_range(1,m),c closed_range(1,n)) K {F.mul(a,A(r,c))}
+
+thm field_zero_matrix_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,r closed_range(1,m),c closed_range(1,n):
+        \field_zero_matrix<K,F,m,n>(r,c)=F.zero
+
+thm field_matrix_add_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n),r closed_range(1,m),c closed_range(1,n):
+        \field_matrix_add<K,F,m,n>(A,B)(r,c)=F.add(A(r,c),B(r,c))
+
+thm field_matrix_smul_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n),r closed_range(1,m),c closed_range(1,n):
+        \field_matrix_smul<K,F,m,n>(a,A)(r,c)=F.mul(a,A(r,c))
+
+thm field_zero_matrix_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \field_zero_matrix<K,F,m,n> $in matrix(K,m,n)
+    matrix(K,m,n)=fn(r closed_range(1,m),c closed_range(1,n)) K
+    \field_zero_matrix<K,F,m,n> $in fn(r closed_range(1,m),c closed_range(1,n)) K
+    \field_zero_matrix<K,F,m,n> $in matrix(K,m,n)
+
+thm field_matrix_add_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n):
+        \field_matrix_add<K,F,m,n>(A,B) $in matrix(K,m,n)
+    matrix(K,m,n)=fn(r closed_range(1,m),c closed_range(1,n)) K
+    \field_matrix_add<K,F,m,n>(A,B) $in fn(r closed_range(1,m),c closed_range(1,n)) K
+    \field_matrix_add<K,F,m,n>(A,B) $in matrix(K,m,n)
+
+thm field_matrix_smul_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n):
+        \field_matrix_smul<K,F,m,n>(a,A) $in matrix(K,m,n)
+    matrix(K,m,n)=fn(r closed_range(1,m),c closed_range(1,n)) K
+    \field_matrix_smul<K,F,m,n>(a,A) $in fn(r closed_range(1,m),c closed_range(1,n)) K
+    \field_matrix_smul<K,F,m,n>(a,A) $in matrix(K,m,n)
+
+thm field_matrix_add_signature:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \field_matrix_add<K,F,m,n> $in fn(A,B matrix(K,m,n)) matrix(K,m,n)
+    release thm fn_set_member(\field_matrix_add<K,F,m,n>,fn(A,B matrix(K,m,n)) matrix(K,m,n))
+
+thm field_matrix_smul_signature:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \field_matrix_smul<K,F,m,n> $in fn(a K,A matrix(K,m,n)) matrix(K,m,n)
+    release thm fn_set_member(\field_matrix_smul<K,F,m,n>,fn(a K,A matrix(K,m,n)) matrix(K,m,n))
+
+claim:
+    ? forall K nonempty_set,m,n N:
+        $is_nonempty_set(matrix(K,m,n))
+    have entry K
+    have example matrix(K,m,n)=fn(r closed_range(1,m),c closed_range(1,n)) K {entry}
+    witness $is_nonempty_set(matrix(K,m,n)) from example
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        (\field_zero_matrix<K,F,m,n>,\field_matrix_add<K,F,m,n>,\field_matrix_smul<K,F,m,n>) $in &Algebra::vector_space::VectorSpace<K,F,matrix(K,m,n)>
+    release thm field_zero_matrix_carrier(K,F,m,n)
+    release thm field_matrix_add_signature(K,F,m,n)
+    release thm field_matrix_smul_signature(K,F,m,n)
+    claim:
+        ? forall A,B matrix(K,m,n):
+            \field_matrix_add<K,F,m,n>(A,B) $in matrix(K,m,n)
+        release thm field_matrix_add_carrier(K,F,m,n,A,B)
+    claim:
+        ? forall a K,A matrix(K,m,n):
+            \field_matrix_smul<K,F,m,n>(a,A) $in matrix(K,m,n)
+        release thm field_matrix_smul_carrier(K,F,m,n,a,A)
+    claim:
+        ? forall A,B,D matrix(K,m,n):
+            \field_matrix_add<K,F,m,n>(\field_matrix_add<K,F,m,n>(A,B),D)=\field_matrix_add<K,F,m,n>(A,\field_matrix_add<K,F,m,n>(B,D))
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \field_matrix_add<K,F,m,n>(\field_matrix_add<K,F,m,n>(A,B),D)(r,c)=\field_matrix_add<K,F,m,n>(A,\field_matrix_add<K,F,m,n>(B,D))(r,c)
+            \field_matrix_add<K,F,m,n>(A,B)(r,c)=F.add(A(r,c),B(r,c))
+            \field_matrix_add<K,F,m,n>(B,D)(r,c)=F.add(B(r,c),D(r,c))
+            \field_matrix_add<K,F,m,n>(\field_matrix_add<K,F,m,n>(A,B),D)(r,c)=F.add(F.add(A(r,c),B(r,c)),D(r,c))=F.add(A(r,c),F.add(B(r,c),D(r,c)))=\field_matrix_add<K,F,m,n>(A,\field_matrix_add<K,F,m,n>(B,D))(r,c)
+        by fn_extension \field_matrix_add<K,F,m,n>(\field_matrix_add<K,F,m,n>(A,B),D)=\field_matrix_add<K,F,m,n>(A,\field_matrix_add<K,F,m,n>(B,D))
+    claim:
+        ? forall A,B matrix(K,m,n):
+            \field_matrix_add<K,F,m,n>(A,B)=\field_matrix_add<K,F,m,n>(B,A)
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \field_matrix_add<K,F,m,n>(A,B)(r,c)=\field_matrix_add<K,F,m,n>(B,A)(r,c)
+            \field_matrix_add<K,F,m,n>(A,B)(r,c)=F.add(A(r,c),B(r,c))=F.add(B(r,c),A(r,c))=\field_matrix_add<K,F,m,n>(B,A)(r,c)
+        by fn_extension \field_matrix_add<K,F,m,n>(A,B)=\field_matrix_add<K,F,m,n>(B,A)
+    claim:
+        ? forall A matrix(K,m,n):
+            \field_matrix_add<K,F,m,n>(\field_zero_matrix<K,F,m,n>,A)=A
+            exist B matrix(K,m,n) st {\field_matrix_add<K,F,m,n>(A,B)=\field_zero_matrix<K,F,m,n>}
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \field_matrix_add<K,F,m,n>(\field_zero_matrix<K,F,m,n>,A)(r,c)=A(r,c)
+            \field_zero_matrix<K,F,m,n>(r,c)=F.zero
+            \field_matrix_add<K,F,m,n>(\field_zero_matrix<K,F,m,n>,A)(r,c)=F.add(F.zero,A(r,c))=A(r,c)
+        by fn_extension \field_matrix_add<K,F,m,n>(\field_zero_matrix<K,F,m,n>,A)=A
+        have fn inverse(r closed_range(1,m),c closed_range(1,n)) K=F.neg(A(r,c))
+        inverse $in matrix(K,m,n)
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \field_matrix_add<K,F,m,n>(A,inverse)(r,c)=\field_zero_matrix<K,F,m,n>(r,c)
+            inverse(r,c)=F.neg(A(r,c))
+            \field_matrix_add<K,F,m,n>(A,inverse)(r,c)=F.add(A(r,c),F.neg(A(r,c)))=F.zero=\field_zero_matrix<K,F,m,n>(r,c)
+        by fn_extension \field_matrix_add<K,F,m,n>(A,inverse) =\field_zero_matrix<K,F,m,n>
+        witness exist B matrix(K,m,n) st {\field_matrix_add<K,F,m,n>(A,B)=\field_zero_matrix<K,F,m,n>} from inverse
+    claim:
+        ? forall a,b K,A matrix(K,m,n):
+            \field_matrix_smul<K,F,m,n>(F.mul(a,b),A)=\field_matrix_smul<K,F,m,n>(a,\field_matrix_smul<K,F,m,n>(b,A))
+            \field_matrix_smul<K,F,m,n>(F.add(a,b),A)=\field_matrix_add<K,F,m,n>(\field_matrix_smul<K,F,m,n>(a,A),\field_matrix_smul<K,F,m,n>(b,A))
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \field_matrix_smul<K,F,m,n>(F.mul(a,b),A)(r,c)=\field_matrix_smul<K,F,m,n>(a,\field_matrix_smul<K,F,m,n>(b,A))(r,c)
+            \field_matrix_smul<K,F,m,n>(b,A)(r,c)=F.mul(b,A(r,c))
+            \field_matrix_smul<K,F,m,n>(F.mul(a,b),A)(r,c)=F.mul(F.mul(a,b),A(r,c))=F.mul(a,F.mul(b,A(r,c)))=\field_matrix_smul<K,F,m,n>(a,\field_matrix_smul<K,F,m,n>(b,A))(r,c)
+        by fn_extension \field_matrix_smul<K,F,m,n>(F.mul(a,b),A)=\field_matrix_smul<K,F,m,n>(a,\field_matrix_smul<K,F,m,n>(b,A))
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \field_matrix_smul<K,F,m,n>(F.add(a,b),A)(r,c)=\field_matrix_add<K,F,m,n>(\field_matrix_smul<K,F,m,n>(a,A),\field_matrix_smul<K,F,m,n>(b,A))(r,c)
+            release thm Algebra::field::add_mul(K,F,a,b,A(r,c))
+            \field_matrix_smul<K,F,m,n>(a,A)(r,c)=F.mul(a,A(r,c))
+            \field_matrix_smul<K,F,m,n>(b,A)(r,c)=F.mul(b,A(r,c))
+            \field_matrix_smul<K,F,m,n>(F.add(a,b),A)(r,c)=F.mul(F.add(a,b),A(r,c))=F.add(F.mul(a,A(r,c)),F.mul(b,A(r,c)))=\field_matrix_add<K,F,m,n>(\field_matrix_smul<K,F,m,n>(a,A),\field_matrix_smul<K,F,m,n>(b,A))(r,c)
+        by fn_extension \field_matrix_smul<K,F,m,n>(F.add(a,b),A)=\field_matrix_add<K,F,m,n>(\field_matrix_smul<K,F,m,n>(a,A),\field_matrix_smul<K,F,m,n>(b,A))
+    claim:
+        ? forall a K,A,B matrix(K,m,n):
+            \field_matrix_smul<K,F,m,n>(a,\field_matrix_add<K,F,m,n>(A,B))=\field_matrix_add<K,F,m,n>(\field_matrix_smul<K,F,m,n>(a,A),\field_matrix_smul<K,F,m,n>(a,B))
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \field_matrix_smul<K,F,m,n>(a,\field_matrix_add<K,F,m,n>(A,B))(r,c)=\field_matrix_add<K,F,m,n>(\field_matrix_smul<K,F,m,n>(a,A),\field_matrix_smul<K,F,m,n>(a,B))(r,c)
+            \field_matrix_add<K,F,m,n>(A,B)(r,c)=F.add(A(r,c),B(r,c))
+            \field_matrix_smul<K,F,m,n>(a,A)(r,c)=F.mul(a,A(r,c))
+            \field_matrix_smul<K,F,m,n>(a,B)(r,c)=F.mul(a,B(r,c))
+            \field_matrix_smul<K,F,m,n>(a,\field_matrix_add<K,F,m,n>(A,B))(r,c)=F.mul(a,F.add(A(r,c),B(r,c)))=F.add(F.mul(a,A(r,c)),F.mul(a,B(r,c)))=\field_matrix_add<K,F,m,n>(\field_matrix_smul<K,F,m,n>(a,A),\field_matrix_smul<K,F,m,n>(a,B))(r,c)
+        by fn_extension \field_matrix_smul<K,F,m,n>(a,\field_matrix_add<K,F,m,n>(A,B))=\field_matrix_add<K,F,m,n>(\field_matrix_smul<K,F,m,n>(a,A),\field_matrix_smul<K,F,m,n>(a,B))
+    claim:
+        ? forall A matrix(K,m,n):
+            \field_matrix_smul<K,F,m,n>(F.one,A)=A
+        claim:
+            ? forall r closed_range(1,m),c closed_range(1,n):
+                \field_matrix_smul<K,F,m,n>(F.one,A)(r,c)=A(r,c)
+            \field_matrix_smul<K,F,m,n>(F.one,A)(r,c)=F.mul(F.one,A(r,c))=A(r,c)
+        by fn_extension \field_matrix_smul<K,F,m,n>(F.one,A)=A
+    release thm struct_member((\field_zero_matrix<K,F,m,n>,\field_matrix_add<K,F,m,n>,\field_matrix_smul<K,F,m,n>),&Algebra::vector_space::VectorSpace<K,F,matrix(K,m,n)>)
+
+template<K nonempty_set,F &Algebra::field::Field<K>,m,n N>:
+    have field_matrix_space &Algebra::vector_space::VectorSpace<K,F,matrix(K,m,n)> =(\field_zero_matrix<K,F,m,n>,\field_matrix_add<K,F,m,n>,\field_matrix_smul<K,F,m,n>)
+
+thm field_matrix_space_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \field_matrix_space<K,F,m,n> $in &Algebra::vector_space::VectorSpace<K,F,matrix(K,m,n)>
+
+thm field_matrix_space_zero:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \field_matrix_space<K,F,m,n>.zero=\field_zero_matrix<K,F,m,n>
+    \field_matrix_space<K,F,m,n> =(\field_zero_matrix<K,F,m,n>,\field_matrix_add<K,F,m,n>,\field_matrix_smul<K,F,m,n>)
+    release struct def \field_matrix_space<K,F,m,n>
+    \field_matrix_space<K,F,m,n>.zero=\field_zero_matrix<K,F,m,n>
+
+thm field_matrix_space_add:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n):
+        \field_matrix_space<K,F,m,n>.add(A,B)=\field_matrix_add<K,F,m,n>(A,B)
+    \field_matrix_space<K,F,m,n> =(\field_zero_matrix<K,F,m,n>,\field_matrix_add<K,F,m,n>,\field_matrix_smul<K,F,m,n>)
+    release struct def \field_matrix_space<K,F,m,n>
+    \field_matrix_space<K,F,m,n>.add=\field_matrix_add<K,F,m,n>
+    \field_matrix_space<K,F,m,n>.add(A,B)=\field_matrix_add<K,F,m,n>(A,B)
+
+thm field_matrix_space_smul:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n):
+        \field_matrix_space<K,F,m,n>.smul(a,A)=\field_matrix_smul<K,F,m,n>(a,A)
+    \field_matrix_space<K,F,m,n> =(\field_zero_matrix<K,F,m,n>,\field_matrix_add<K,F,m,n>,\field_matrix_smul<K,F,m,n>)
+    release struct def \field_matrix_space<K,F,m,n>
+    \field_matrix_space<K,F,m,n>.smul=\field_matrix_smul<K,F,m,n>
+    \field_matrix_space<K,F,m,n>.smul(a,A)=\field_matrix_smul<K,F,m,n>(a,A)
+
+thm field_matrix_space_zero_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N:
+        \field_matrix_space<K,F,m,n>.zero $in fn(row closed_range(1,m),column closed_range(1,n)) K
+    release thm matrix_function_carrier(K,m,n,\field_matrix_space<K,F,m,n>.zero)
+
+thm field_matrix_space_add_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n):
+        \field_matrix_space<K,F,m,n>.add(A,B) $in fn(row closed_range(1,m),column closed_range(1,n)) K
+    release thm matrix_function_carrier(K,m,n,\field_matrix_space<K,F,m,n>.add(A,B))
+
+thm field_matrix_space_smul_function_carrier:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n):
+        \field_matrix_space<K,F,m,n>.smul(a,A) $in fn(row closed_range(1,m),column closed_range(1,n)) K
+    release thm matrix_function_carrier(K,m,n,\field_matrix_space<K,F,m,n>.smul(a,A))
+
+thm field_matrix_space_zero_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,result fn(row closed_range(1,m),column closed_range(1,n)) K,r closed_range(1,m),c closed_range(1,n):
+        result=\field_matrix_space<K,F,m,n>.zero
+        =>:
+            result(r,c)=F.zero
+    release thm field_matrix_space_zero(K,F,m,n)
+    result=\field_zero_matrix<K,F,m,n>
+    result(r,c)=\field_zero_matrix<K,F,m,n>(r,c)
+    release thm field_zero_matrix_entry(K,F,m,n,r,c)
+
+thm field_matrix_space_add_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,A,B matrix(K,m,n),result fn(row closed_range(1,m),column closed_range(1,n)) K,r closed_range(1,m),c closed_range(1,n):
+        result=\field_matrix_space<K,F,m,n>.add(A,B)
+        =>:
+            result(r,c)=F.add(A(r,c),B(r,c))
+    release thm field_matrix_space_add(K,F,m,n,A,B)
+    result=\field_matrix_add<K,F,m,n>(A,B)
+    result(r,c)=\field_matrix_add<K,F,m,n>(A,B)(r,c)
+    release thm field_matrix_add_entry(K,F,m,n,A,B,r,c)
+
+thm field_matrix_space_smul_entry:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,m,n N,a K,A matrix(K,m,n),result fn(row closed_range(1,m),column closed_range(1,n)) K,r closed_range(1,m),c closed_range(1,n):
+        result=\field_matrix_space<K,F,m,n>.smul(a,A)
+        =>:
+            result(r,c)=F.mul(a,A(r,c))
+    release thm field_matrix_space_smul(K,F,m,n,a,A)
+    result=\field_matrix_smul<K,F,m,n>(a,A)
+    result(r,c)=\field_matrix_smul<K,F,m,n>(a,A)(r,c)
+    release thm field_matrix_smul_entry(K,F,m,n,a,A,r,c)
+
+thm matrix_carrier_is_nonempty:
+    ? forall K nonempty_set,m,n N:
+        $is_nonempty_set(matrix(K,m,n))
+    $is_nonempty_set(matrix(K,m,n))
+

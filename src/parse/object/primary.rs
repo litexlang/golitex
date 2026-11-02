@@ -447,6 +447,10 @@ fn try_parse_keyword_primary(
         return Ok(Obj::from_multivariable_selector(token, &args));
     }
     match token {
+        "matrix_inverse" => {
+            return Err(tb.parse_error("`matrix_inverse` was renamed to `matrix_inv(A,n)`"))
+        }
+
         ABS => Ok(Some(parse_unary_keyword(rt, tb, ABS, |arg| {
             Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs { arg: Box::new(arg) }))
         })?)),
@@ -803,7 +807,7 @@ fn try_parse_keyword_primary(
         | "matrix_mul"
         | "matrix_apply"
         | "matrix_power"
-        | "matrix_inverse"
+        | "matrix_inv"
         | "matrix_rank"
         | "matrix_minor"
         | "matrix_cofactor"
@@ -823,7 +827,7 @@ fn try_parse_keyword_primary(
                 "matrix_mul" => 5,
                 "matrix_apply" => 4,
                 "matrix_power" => 3,
-                "matrix_inverse" => 2,
+                "matrix_inv" => 2,
                 "matrix_rank" => 3,
                 "matrix_minor" => 4,
                 "matrix_cofactor" => 4,
@@ -910,7 +914,7 @@ fn try_parse_keyword_primary(
                     order: args.next().unwrap(),
                     exponent: args.next().unwrap(),
                 }),
-                "matrix_inverse" => MatrixOperator::Inverse(MatrixInverse {
+                "matrix_inv" => MatrixOperator::Inverse(MatrixInverse {
                     matrix: first,
                     order: args.next().unwrap(),
                 }),

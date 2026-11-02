@@ -402,6 +402,11 @@ fn build_upload(body: &str, strict: bool, cache: &UploadCache) -> Result<UploadB
         None => false,
         Some(_) => return Err("strict must be a boolean".into()),
     };
+    let latex = match fields.get("latex") {
+        Some(JsonValue::Bool(value)) => *value,
+        None => false,
+        Some(_) => return Err("latex must be a boolean".into()),
+    };
     let stdout_path = workspace.path.join("output.json");
     let stderr_path = workspace.path.join("error.txt");
     let executable = std::env::current_exe().map_err(|error| error.to_string())?;
@@ -421,6 +426,9 @@ fn build_upload(body: &str, strict: bool, cache: &UploadCache) -> Result<UploadB
         .args(["-lang", language]);
     if strict || requested_strict {
         command.arg("-strict");
+    }
+    if latex {
+        command.arg("-latex");
     }
     let output = File::create(&stdout_path).map_err(|error| error.to_string())?;
     let mut child = command

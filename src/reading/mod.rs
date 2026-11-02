@@ -15,8 +15,8 @@ mod reading_command;
 mod serve_reading;
 mod upload_cache;
 
-pub use build_reading::{build_reading, ReadingBuildResult};
+pub use build_reading::{build_reading, build_reading_with_layout, ReadingBuildResult};
 pub use export_reading::{export_reading, reading_html, APP_JS, READER_CSS, READER_JS};
 pub use parse_reading_command::parse_reading_command;
-pub use reading_command::{ReadingAction, ReadingCommand, ReadingInput};
+pub use reading_command::{ReadingAction, ReadingCommand, ReadingInput, ReadingLayout};
 pub use serve_reading::serve_reading;

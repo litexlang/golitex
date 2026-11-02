@@ -26,6 +26,9 @@ impl Runtime {
                 EqualitySearchProofByBuiltinRewrite::FnApplicationUnfoldSubstitution(proof),
             ));
         }
+        if let Some(proof) = self.search_equal_fact_by_ring(fact, verify_state)? {
+            return Ok(Some(EqualitySearchProofByBuiltinRewrite::Ring(proof)));
+        }
         Ok(None)
     }
 }

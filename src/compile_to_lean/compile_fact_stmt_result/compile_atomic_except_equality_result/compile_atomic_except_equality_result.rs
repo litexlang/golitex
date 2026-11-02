@@ -133,6 +133,10 @@ impl LitexToLeanCompiler {
                     self.compile_known_atomic(proof, goal, position)?
                 }
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(rule) => match rule {
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact(p) => self.compile_selected_matrix_inverse_rule(goal, definition_wd.ok_or_else(||LeanCompileError::unsupported("MatrixInversePredicate/MissingWD"))?,p,position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact(p) => self.compile_matrix_inversible_rule(goal, definition_wd.ok_or_else(||LeanCompileError::unsupported("MatrixInversePredicate/MissingWD"))?,p,position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact(p) => self.compile_matrix_not_inversible_rule(goal,p,position)?,
+
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(rule) => {
                         use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule;
                         let AtomicFact::IsFiniteSetFact(fact) = goal else { return Err(LeanCompileError::unsupported("FiniteSet/FactSubject")); };

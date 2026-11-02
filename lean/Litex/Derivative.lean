@@ -73,6 +73,22 @@ theorem derivativeCandidatesUnique {M : Semantics.{u}} [FunctionSemantics M]
   have h2 := (derivativeEpsilon_iff_hasDerivAt f p s' hj).mp he
   exact hrr.trans ((h1.unique h2).trans hss.symm)
 
+theorem functionContinuousAtOfDerivative {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f point value : M.Value) (hf : RealFunctionValue M f)
+    (hp : M.mem point (F.domainValue f)) (h : HasDerivativeAtValue M f point value) :
+    FunctionContinuousAtValue M .both f point := by
+  obtain ⟨p,r,hpoint,_,hi,he⟩ := h
+  rw [hpoint] at hp ⊢
+  apply (functionContinuity_iff_native .both f hf p hp).mpr
+  exact ((derivativeEpsilon_iff_hasDerivAt f p r hi).mp he).continuousAt.continuousWithinAt
+
+theorem functionContinuousAtOfDifferentiable {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f point : M.Value) (hf : RealFunctionValue M f)
+    (hp : M.mem point (F.domainValue f)) (h : DerivativeExistsValue M f point) :
+    FunctionContinuousAtValue M .both f point := by
+  obtain ⟨value,_,hd⟩ := h
+  exact functionContinuousAtOfDerivative f point (denote value) hf hp hd
+
 -- Only WD-certified objects expose this denotation; object construction below
 -- requires an existing derivative witness and never returns an invalid object.
 noncomputable def derivativeValue {M : Semantics.{u}} [FunctionSemantics M]
@@ -472,6 +488,25 @@ theorem derivativeInteriorOfOpenDomain {M : Semantics.{u}} [F : FunctionSemantic
   apply hd
   simpa only [Metric.mem_ball,Real.dist_eq] using hx
 
+theorem realInteriorOfOpenDomain {M : Semantics.{u}} [S : SetSemantics M]
+    (domain point : M.Value) (p : ℝ) (hp : point=M.number (p : ℂ))
+    (hpoint : M.mem point domain)
+    (hopen : IsOpen {x : ℝ | M.mem (M.number (x : ℂ)) domain}) :
+    ∃ radius : Obj (M := M) M.Value, ∃ _ : In radius RPos,
+      ∀ input, M.mem input (continuityNeighborhoodValue .both (M.standard .real) point (denote radius)) →
+        M.mem input domain := by
+  rw [hp] at hpoint ⊢
+  obtain ⟨radius,hradius,hd⟩ := Metric.isOpen_iff.mp hopen p hpoint
+  let r : Obj (M := M) M.Value := semanticObject (M.number (radius : ℂ))
+    (M.member_isSet (numberInRPos radius hradius))
+  refine ⟨r,numberInRPos radius hradius,?_⟩
+  intro input hx
+  obtain ⟨x,hxval⟩ := (M.real_members _).mp (((S.sep_members _ _ _).mp hx).1)
+  rw [hxval] at hx ⊢
+  apply hd
+  have hnear := (continuityNeighborhood_numbers_iff .both (M.standard .real) p radius x).mp hx
+  simpa only [Metric.mem_ball,Real.dist_eq,finiteLimitDistance] using hnear.2.2
+
 theorem realDomainOpen {M : Semantics.{u}} :
     IsOpen {x : ℝ | M.mem (M.number (x : ℂ)) (M.standard .real)} := by
   have heq : {x : ℝ | M.mem (M.number (x : ℂ)) (M.standard .real)}=Set.univ := by
@@ -480,7 +515,7 @@ theorem realDomainOpen {M : Semantics.{u}} :
   rw [heq]
   exact isOpen_univ
 
-theorem positiveRealDomainOpen {M : Semantics.{u}} [F : FunctionSemantics M] :
+theorem positiveRealDomainOpen {M : Semantics.{u}} [S : SetSemantics M] :
     IsOpen {x : ℝ | M.mem (M.number (x : ℂ)) (denote (RPos (M := M)))} := by
   have heq : {x : ℝ | M.mem (M.number (x : ℂ)) (denote (RPos (M := M)))}=Set.Ioi 0 := by
     ext x
@@ -494,26 +529,26 @@ theorem positiveRealDomainOpen {M : Semantics.{u}} [F : FunctionSemantics M] :
   rw [heq]
   exact isOpen_Ioi
 
-theorem negativeRealDomainOpen {M : Semantics.{u}} [F : FunctionSemantics M] :
+theorem negativeRealDomainOpen {M : Semantics.{u}} [S : SetSemantics M] :
     IsOpen {x : ℝ | M.mem (M.number (x : ℂ)) (denote (RNeg (M := M)))} := by
   have heq : {x : ℝ | M.mem (M.number (x : ℂ)) (denote (RNeg (M := M)))}=Set.Iio 0 := by
     ext x
     constructor
     · intro hx
-      obtain ⟨_,r,hr,hnegative⟩ := (F.sep_members _ _ _).mp hx
+      obtain ⟨_,r,hr,hnegative⟩ := (S.sep_members _ _ _).mp hx
       have hxr := Complex.ofReal_injective (M.number_injective hr)
       exact hxr.symm ▸ hnegative
     · intro hx
-      exact (F.sep_members _ _ _).mpr ⟨(M.real_members _).mpr ⟨x,rfl⟩,x,rfl,hx⟩
+      exact (S.sep_members _ _ _).mpr ⟨(M.real_members _).mpr ⟨x,rfl⟩,x,rfl,hx⟩
   rw [heq]
   exact isOpen_Iio
 
-theorem nonzeroRealDomainOpen {M : Semantics.{u}} [F : FunctionSemantics M] :
+theorem nonzeroRealDomainOpen {M : Semantics.{u}} [S : SetSemantics M] :
     IsOpen {x : ℝ | M.mem (M.number (x : ℂ)) (denote (RStar (M := M)))} := by
   have heq : {x : ℝ | M.mem (M.number (x : ℂ)) (denote (RStar (M := M)))}=({0} : Set ℝ)ᶜ := by
     ext x
-    change M.mem (M.number (x : ℂ)) (F.sepValue (M.standard .real) (fun y => y≠M.number 0)) ↔ x≠0
-    rw [F.sep_members]
+    change M.mem (M.number (x : ℂ)) (S.sepValue (M.standard .real) (fun y => y≠M.number 0)) ↔ x≠0
+    rw [S.sep_members]
     constructor
     · rintro ⟨_,hne⟩ hx
       exact hne (by rw [hx,Complex.ofReal_zero])

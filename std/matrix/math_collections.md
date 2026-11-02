@@ -19,8 +19,9 @@ retain their existing independent parameter/return-carrier scopes.
 
 ## Independent relations
 
-`is_matrix_inverse(n,A,B)` means AB=I and BA=I with complete square domains.
-`is_invertible_matrix` existentially quantifies the candidate. A selected inverse
+`$is_matrix_inv(A,B,n)` is a native relation meaning AB=I and BA=I with complete
+complex square domains. Native `$matrix_inversible(A,n)` existentially quantifies
+the candidate. The determinant criterion is a builtin equivalence over C. A selected inverse
 can be used after det(A,n)≠0 is established; the source theorems connect the
 candidate, existence and selected-value interfaces.
 
@@ -82,4 +83,5 @@ handlers have been removed; the other matrix schemas remain dependencies.
 The module relies on native mathematical schemas for determinant, inverse and
 rank theorems. It supplies no user axioms or unchecked proofs. Spectral
 algorithms, general-field structures and numerical solvers are outside its
-current claims. The native matrix Lean translation remains unsupported.
+current claims. The native inverse predicates and determinant criterion have typed compiler
+replay into proved Lean bridges. Full source-module Lean coverage is not claimed.

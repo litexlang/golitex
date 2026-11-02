@@ -218,6 +218,22 @@ impl LitexToLeanCompiler {
             ));
         };
         let family_matches = match infer {
+            InferAtomicFactResult::IsMatrixInvFact(_) => {
+                matches!(atomic, AtomicFact::IsMatrixInvFact(_))
+            }
+            InferAtomicFactResult::NotIsMatrixInvFact(_) => {
+                matches!(atomic, AtomicFact::NotIsMatrixInvFact(_))
+            }
+            InferAtomicFactResult::MatrixInversibleFact(_) => {
+                matches!(atomic, AtomicFact::MatrixInversibleFact(_))
+            }
+            InferAtomicFactResult::NotMatrixInversibleFact(_) => {
+                matches!(atomic, AtomicFact::NotMatrixInversibleFact(_))
+            }
+            InferAtomicFactResult::CommRingFact(_) => matches!(atomic, AtomicFact::CommRingFact(_)),
+            InferAtomicFactResult::NotCommRingFact(_) => {
+                matches!(atomic, AtomicFact::NotCommRingFact(_))
+            }
             InferAtomicFactResult::MultivariableAnalysisFact(_) => {
                 matches!(atomic, AtomicFact::MultivariableAnalysisFact(_))
             }
@@ -415,6 +431,15 @@ impl LitexToLeanCompiler {
             ));
         }
         match infer {
+            InferAtomicFactResult::IsMatrixInvFact(_)
+            | InferAtomicFactResult::MatrixInversibleFact(_) => {
+                self.compile_matrix_inverse_inferences(infer, seed, compiled, position)
+            }
+            InferAtomicFactResult::NotIsMatrixInvFact(_)
+            | InferAtomicFactResult::NotMatrixInversibleFact(_) => Ok(Vec::new()),
+            InferAtomicFactResult::CommRingFact(_) | InferAtomicFactResult::NotCommRingFact(_) => {
+                Err(LeanCompileError::unsupported("Infer/CommRing"))
+            }
             InferAtomicFactResult::MultivariableAnalysisFact(_) => {
                 if matches!(seed,Fact::AtomicFact(a) if super::compile_total_differential::parts(a).is_some())
                 {

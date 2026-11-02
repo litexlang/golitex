@@ -1,0 +1,59 @@
+# Composition laws for existing maps and pointwise sums.
+# Source proofs; independent acceptance is recorded under validation/.ladr.
+
+thm map_composition_associative:
+    ? forall U,V,W,X nonempty_set,first fn(u U) V,middle fn(v V) W,last fn(w W) X:
+        \Algebra::vector_space::map_compose<U,W,X>(last,\Algebra::vector_space::map_compose<U,V,W>(middle,first))=\Algebra::vector_space::map_compose<U,V,X>(\Algebra::vector_space::map_compose<V,W,X>(last,middle),first)
+    claim:
+        ? forall u U:
+            \Algebra::vector_space::map_compose<U,W,X>(last,\Algebra::vector_space::map_compose<U,V,W>(middle,first))(u)=\Algebra::vector_space::map_compose<U,V,X>(\Algebra::vector_space::map_compose<V,W,X>(last,middle),first)(u)
+        \Algebra::vector_space::map_compose<U,V,W>(middle,first)(u)=middle(first(u))
+        \Algebra::vector_space::map_compose<V,W,X>(last,middle)(first(u))=last(middle(first(u)))
+        \Algebra::vector_space::map_compose<U,W,X>(last,\Algebra::vector_space::map_compose<U,V,W>(middle,first))(u)=last(\Algebra::vector_space::map_compose<U,V,W>(middle,first)(u))=last(middle(first(u)))=\Algebra::vector_space::map_compose<V,W,X>(last,middle)(first(u))=\Algebra::vector_space::map_compose<U,V,X>(\Algebra::vector_space::map_compose<V,W,X>(last,middle),first)(u)
+    by fn_extension \Algebra::vector_space::map_compose<U,W,X>(last,\Algebra::vector_space::map_compose<U,V,W>(middle,first))=\Algebra::vector_space::map_compose<U,V,X>(\Algebra::vector_space::map_compose<V,W,X>(last,middle),first)
+
+thm map_composition_identities:
+    ? forall U,V nonempty_set,T fn(u U) V:
+        \Algebra::vector_space::map_compose<U,U,V>(T,\Algebra::vector_space::identity<U>)=T
+        \Algebra::vector_space::map_compose<U,V,V>(\Algebra::vector_space::identity<V>,T)=T
+    claim:
+        ? forall u U:
+            \Algebra::vector_space::map_compose<U,U,V>(T,\Algebra::vector_space::identity<U>)(u)=T(u)
+        \Algebra::vector_space::identity<U>(u)=u
+        \Algebra::vector_space::map_compose<U,U,V>(T,\Algebra::vector_space::identity<U>)(u)=T(\Algebra::vector_space::identity<U>(u))=T(u)
+    by fn_extension \Algebra::vector_space::map_compose<U,U,V>(T,\Algebra::vector_space::identity<U>)=T
+    claim:
+        ? forall u U:
+            \Algebra::vector_space::map_compose<U,V,V>(\Algebra::vector_space::identity<V>,T)(u)=T(u)
+        \Algebra::vector_space::map_compose<U,V,V>(\Algebra::vector_space::identity<V>,T)(u)=\Algebra::vector_space::identity<V>(T(u))=T(u)
+    by fn_extension \Algebra::vector_space::map_compose<U,V,V>(\Algebra::vector_space::identity<V>,T)=T
+
+thm composition_distributes_over_outer_sum:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,U,V,W nonempty_set,target &Algebra::vector_space::VectorSpace<K,F,W>,T fn(u U) V,first,second fn(v V) W:
+        \Algebra::vector_space::map_compose<U,V,W>(\space::pointwise_map_add<K,F,V,W,target>(first,second),T)=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(first,T),\Algebra::vector_space::map_compose<U,V,W>(second,T))
+    claim:
+        ? forall u U:
+            \Algebra::vector_space::map_compose<U,V,W>(\space::pointwise_map_add<K,F,V,W,target>(first,second),T)(u)=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(first,T),\Algebra::vector_space::map_compose<U,V,W>(second,T))(u)
+        \Algebra::vector_space::map_compose<U,V,W>(first,T)(u)=first(T(u))
+        \Algebra::vector_space::map_compose<U,V,W>(second,T)(u)=second(T(u))
+        \space::pointwise_map_add<K,F,V,W,target>(first,second)(T(u))=target.add(first(T(u)),second(T(u)))
+        \space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(first,T),\Algebra::vector_space::map_compose<U,V,W>(second,T))(u)=target.add(\Algebra::vector_space::map_compose<U,V,W>(first,T)(u),\Algebra::vector_space::map_compose<U,V,W>(second,T)(u))=target.add(first(T(u)),second(T(u)))
+        \Algebra::vector_space::map_compose<U,V,W>(\space::pointwise_map_add<K,F,V,W,target>(first,second),T)(u)=\space::pointwise_map_add<K,F,V,W,target>(first,second)(T(u))=target.add(first(T(u)),second(T(u)))=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(first,T),\Algebra::vector_space::map_compose<U,V,W>(second,T))(u)
+    by fn_extension \Algebra::vector_space::map_compose<U,V,W>(\space::pointwise_map_add<K,F,V,W,target>(first,second),T)=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(first,T),\Algebra::vector_space::map_compose<U,V,W>(second,T))
+
+thm composition_distributes_over_inner_sum:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,U,V,W nonempty_set,middle &Algebra::vector_space::VectorSpace<K,F,V>,target &Algebra::vector_space::VectorSpace<K,F,W>,S fn(v V) W,first,second fn(u U) V:
+        $Algebra::vector_space::is_linear_map(K,F,V,middle,W,target,S)
+        =>:
+            \Algebra::vector_space::map_compose<U,V,W>(S,\space::pointwise_map_add<K,F,U,V,middle>(first,second))=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(S,first),\Algebra::vector_space::map_compose<U,V,W>(S,second))
+    claim:
+        ? forall u U:
+            \Algebra::vector_space::map_compose<U,V,W>(S,\space::pointwise_map_add<K,F,U,V,middle>(first,second))(u)=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(S,first),\Algebra::vector_space::map_compose<U,V,W>(S,second))(u)
+        \space::pointwise_map_add<K,F,U,V,middle>(first,second)(u)=middle.add(first(u),second(u))
+        S(middle.add(first(u),second(u)))=target.add(S(first(u)),S(second(u)))
+        \Algebra::vector_space::map_compose<U,V,W>(S,first)(u)=S(first(u))
+        \Algebra::vector_space::map_compose<U,V,W>(S,second)(u)=S(second(u))
+        \space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(S,first),\Algebra::vector_space::map_compose<U,V,W>(S,second))(u)=target.add(\Algebra::vector_space::map_compose<U,V,W>(S,first)(u),\Algebra::vector_space::map_compose<U,V,W>(S,second)(u))=target.add(S(first(u)),S(second(u)))
+        \Algebra::vector_space::map_compose<U,V,W>(S,\space::pointwise_map_add<K,F,U,V,middle>(first,second))(u)=S(\space::pointwise_map_add<K,F,U,V,middle>(first,second)(u))=S(middle.add(first(u),second(u)))=target.add(S(first(u)),S(second(u)))=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(S,first),\Algebra::vector_space::map_compose<U,V,W>(S,second))(u)
+    by fn_extension \Algebra::vector_space::map_compose<U,V,W>(S,\space::pointwise_map_add<K,F,U,V,middle>(first,second))=\space::pointwise_map_add<K,F,U,W,target>(\Algebra::vector_space::map_compose<U,V,W>(S,first),\Algebra::vector_space::map_compose<U,V,W>(S,second))
+

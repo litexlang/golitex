@@ -1,0 +1,93 @@
+# Independent use from the original named polynomial-set carrier.
+
+release obj def degree::complex_polynomial_degree
+
+release obj def degree::real_polynomial_degree
+
+release obj def poly::complex_constant_polynomial
+
+release obj def poly::real_constant_polynomial
+
+claim:
+    ? forall p poly::complex_polynomials:
+        p $in fn(x C) C
+    release thm poly::complex_polynomial_function_carrier(p)
+
+claim:
+    ? forall p poly::complex_polynomials:
+        p $in {q fn(x C) C:$poly::is_complex_polynomial(q)}
+    release thm membership::complex_polynomial_definition_membership(p)
+
+claim:
+    ? forall p poly::complex_polynomials:
+        p $in fn(x C) C
+        $poly::is_complex_polynomial(p)
+    release thm membership::complex_polynomial_membership_specification(p)
+
+claim:
+    ? forall p poly::complex_polynomials:
+        $Polynomials::degree_value::is_complex_polynomial_degree_value(p,degree::complex_polynomial_degree(p))
+    release thm degree::complex_polynomial_degree_specification(p)
+
+claim:
+    ? forall p poly::complex_polynomials:
+        p=fn(x C) C {0}
+        =>:
+            degree::complex_polynomial_degree(p)=Extended::main::real_negative_infinity
+    release thm degree::complex_polynomial_degree_zero(p)
+
+have member_complex poly::complex_polynomials=poly::complex_constant_polynomial(i)
+
+release thm membership::complex_polynomial_definition_membership(member_complex)
+
+let member_complex_degree=degree::complex_polynomial_degree(member_complex)
+
+release thm membership::complex_polynomial_membership_specification(member_complex)
+
+$poly::is_complex_polynomial(member_complex)
+
+claim:
+    ? forall p poly::real_polynomials:
+        p $in fn(x R) R
+    release thm poly::real_polynomial_function_carrier(p)
+
+claim:
+    ? forall p poly::real_polynomials:
+        p $in {q fn(x R) R:$poly::is_real_polynomial(q)}
+    release thm membership::real_polynomial_definition_membership(p)
+
+claim:
+    ? forall p poly::real_polynomials:
+        p $in fn(x R) R
+        $poly::is_real_polynomial(p)
+    release thm membership::real_polynomial_membership_specification(p)
+
+claim:
+    ? forall p poly::real_polynomials:
+        $Polynomials::degree_value::is_real_polynomial_degree_value(p,degree::real_polynomial_degree(p))
+    release thm degree::real_polynomial_degree_specification(p)
+
+claim:
+    ? forall p poly::real_polynomials:
+        p=fn(x R) R {0}
+        =>:
+            degree::real_polynomial_degree(p)=Extended::main::real_negative_infinity
+    release thm degree::real_polynomial_degree_zero(p)
+
+have member_real poly::real_polynomials=poly::real_constant_polynomial(-3)
+
+release thm membership::real_polynomial_definition_membership(member_real)
+
+let member_real_degree=degree::real_polynomial_degree(member_real)
+
+release thm membership::real_polynomial_membership_specification(member_real)
+
+$poly::is_real_polynomial(member_real)
+
+member_complex_degree $in Polynomials::degree_value::PolynomialDegree
+
+have fn unproven_complex_function(x C) C=C_abs(x)
+
+member_real_degree $in Polynomials::degree_value::PolynomialDegree
+
+have fn unproven_real_function(x R) R=abs(x)

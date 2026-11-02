@@ -325,7 +325,7 @@
     },
     {
       "kind": "MatrixOperator.Inverse",
-      "source": "let specimen = matrix_inverse(A,n)",
+      "source": "let specimen = matrix_inv(A,n)",
       "format": "(A^{-1})_{[n]}"
     },
     {

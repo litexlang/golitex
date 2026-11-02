@@ -2,6 +2,52 @@ use super::*;
 use crate::runtime::FactId;
 use crate::store_fact_and_infer::StoreInferredFactResult;
 
+pub enum InferIsMatrixInvFactResult {
+    DefinitionAndDeterminant(InferIsMatrixInvDefinitionAndDeterminantResult),
+}
+pub struct InferIsMatrixInvDefinitionAndDeterminantResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferIsMatrixInvFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::DefinitionAndDeterminant(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotIsMatrixInvFactResult {}
+pub enum InferMatrixInversibleFactResult {
+    DefinitionAndDeterminant(InferMatrixInversibleDefinitionAndDeterminantResult),
+}
+pub struct InferMatrixInversibleDefinitionAndDeterminantResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferMatrixInversibleFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::DefinitionAndDeterminant(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotMatrixInversibleFactResult {}
+
+pub enum InferCommRingFactResult {
+    Definition(InferCommRingDefinitionResult),
+}
+pub struct InferCommRingDefinitionResult {
+    pub source_fact_id: FactId,
+    pub derived: Vec<StoreInferredFactResult>,
+}
+impl InferCommRingFactResult {
+    pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
+        match self {
+            Self::Definition(p) => p.derived.iter().collect(),
+        }
+    }
+}
+pub enum InferNotCommRingFactResult {}
 pub enum InferRealSetBoundFactResult {
     Definition(InferRealSetBoundDefinitionResult),
 }
@@ -111,6 +157,13 @@ impl InferFunctionLipschitzFactResult {
 pub enum InferNotFunctionLipschitzFactResult {}
 
 pub enum InferAtomicFactResult {
+    IsMatrixInvFact(Vec<InferIsMatrixInvFactResult>),
+    NotIsMatrixInvFact(Vec<InferNotIsMatrixInvFactResult>),
+    MatrixInversibleFact(Vec<InferMatrixInversibleFactResult>),
+    NotMatrixInversibleFact(Vec<InferNotMatrixInversibleFactResult>),
+
+    CommRingFact(Vec<InferCommRingFactResult>),
+    NotCommRingFact(Vec<InferNotCommRingFactResult>),
     MultivariableAnalysisFact(Vec<InferMultivariableAnalysisFactResult>),
     NotMultivariableAnalysisFact(Vec<InferNotMultivariableAnalysisFactResult>),
     HasRiemannIntegralFact(Vec<InferHasRiemannIntegralFactResult>),
@@ -190,6 +243,18 @@ pub enum InferAtomicFactResult {
 impl InferAtomicFactResult {
     pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
         match self {
+            Self::IsMatrixInvFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotIsMatrixInvFact(_) => Vec::new(),
+            Self::MatrixInversibleFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotMatrixInversibleFact(_) => Vec::new(),
+            Self::CommRingFact(rules) => {
+                rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+            }
+            Self::NotCommRingFact(_) => Vec::new(),
             Self::MultivariableAnalysisFact(rules) => {
                 rules.iter().flat_map(|r| r.stored_conclusions()).collect()
             }

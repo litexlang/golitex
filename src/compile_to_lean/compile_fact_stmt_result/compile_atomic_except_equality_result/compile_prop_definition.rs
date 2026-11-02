@@ -20,6 +20,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (goal, proof) {
+            (AtomicFact::IsMatrixInvFact(_),AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(BuiltinPropDefinitionProof::IsMatrixInv(p))) => self.compile_matrix_inverse_definition(goal,wd,&p.requirement_facts,&p.proof_of_requirement_facts,position),
+            (AtomicFact::MatrixInversibleFact(_),AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(BuiltinPropDefinitionProof::MatrixInversible(p))) => self.compile_matrix_inverse_definition(goal,wd,&p.requirement_facts,&p.proof_of_requirement_facts,position),
+
             (
                 AtomicFact::NormalAtomicFact(normal),
                 AtomicExceptEqualityFactSearchProofByDefinition::UserDefinedProp(proof),

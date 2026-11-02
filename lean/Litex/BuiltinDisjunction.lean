@@ -45,6 +45,51 @@ theorem absoluteSignSplitValue {M : Semantics.{u}} (subtract : Bool) (a : M.Valu
       rw [hr,absValue_number,M.neg_numbers,abs_of_nonpos h,Complex.ofReal_neg]
     · simp only [if_true]
       rw [hr,absValue_number,M.sub_numbers,zero_sub,abs_of_nonpos h,Complex.ofReal_neg]
+theorem integerSuccessorGapValue {M : Semantics.{u}} (a b : M.Value)
+    (ha : M.mem a (M.standard .integer)) (hb : M.mem b (M.standard .integer))
+    (h : realBound false a b) :
+    realBound true (M.addValue a (M.number 1)) b ∧
+      realBound true a (M.subValue b (M.number 1)) := by
+  obtain ⟨k,hk⟩ := (M.integer_members a).mp ha
+  obtain ⟨n,hn⟩ := (M.integer_members b).mp hb
+  obtain ⟨r,s,hr,hs,hlt⟩ := h
+  have hrk : r=(k : ℝ) := Complex.ofReal_injective
+    (by simpa only [Complex.ofReal_intCast] using M.number_injective (hr.symm.trans hk))
+  have hsn : s=(n : ℝ) := Complex.ofReal_injective
+    (by simpa only [Complex.ofReal_intCast] using M.number_injective (hs.symm.trans hn))
+  have hkn : k<n := by exact_mod_cast (show (k : ℝ)<(n : ℝ) by simpa only [hrk,hsn] using hlt)
+  constructor
+  · refine ⟨((k+1 : ℤ) : ℝ),(n : ℝ),?_,?_,?_⟩
+    · rw [hk,M.add_numbers]
+      push_cast
+      rfl
+    · simpa only [Complex.ofReal_intCast] using hn
+    · exact_mod_cast (show k+1≤n by omega)
+  · refine ⟨(k : ℝ),((n-1 : ℤ) : ℝ),?_,?_,?_⟩
+    · simpa only [Complex.ofReal_intCast] using hk
+    · rw [hn,M.sub_numbers]
+      push_cast
+      rfl
+    · exact_mod_cast (show k≤n-1 by omega)
+
+theorem integerAdjacencyLeValue {M : Semantics.{u}} (a b : M.Value)
+    (ha : M.mem a (M.standard .integer)) (hb : M.mem b (M.standard .integer))
+    (h : realBound false a (M.addValue b (M.number 1))) : realBound true a b := by
+  have hb1 : M.mem (M.addValue b (M.number 1)) (M.standard .integer) := by
+    obtain ⟨n,hn⟩ := (M.integer_members b).mp hb
+    apply (M.integer_members _).mpr
+    refine ⟨n+1,?_⟩
+    rw [hn,M.add_numbers]
+    push_cast
+    rfl
+  have bound := (integerSuccessorGapValue a (M.addValue b (M.number 1)) ha hb1 h).2
+  have cancel : M.subValue (M.addValue b (M.number 1)) (M.number 1)=b := by
+    obtain ⟨n,hn⟩ := (M.integer_members b).mp hb
+    rw [hn,M.add_numbers,M.sub_numbers]
+    congr 1
+    ring
+  exact cancel ▸ bound
+
 theorem integerDiscreteSuccessorValue {M : Semantics.{u}} (a b : M.Value)
     (ha : M.mem a (M.standard .integer)) (hb : M.mem b (M.standard .integer)) :
     realBound true a b ∨ realBound true (M.addValue b (M.number 1)) a := by

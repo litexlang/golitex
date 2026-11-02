@@ -31,18 +31,18 @@ impl LitexToLeanCompiler {
             return Err(invalid("WDArguments"));
         }
         let mut binders = Vec::new();
+        let mut certified_arguments = Vec::new();
         for (i, (arg, child)) in args.iter().zip(&stages.argument_well_defined).enumerate() {
             ensure_object(arg, child)?;
-            binders.push(format!(
-                "let _multivariable_arg_{i} := {}",
-                self.compile_wd(
-                    child,
-                    &SourcePosition {
-                        before: i,
-                        ..*position
-                    }
-                )?
-            ));
+            let compiled = self.compile_wd(
+                child,
+                &SourcePosition {
+                    before: i,
+                    ..*position
+                },
+            )?;
+            binders.push(format!("let _multivariable_arg_{i} := {}", compiled));
+            certified_arguments.push(format!("({compiled})"));
         }
         let mut lines = self.compile_jacobian_domain(
             args[0],
@@ -84,7 +84,7 @@ impl LitexToLeanCompiler {
                     return Err(invalid("ExistenceProof"));
                 }
                 let (ty, term) = self.compile_verify(proof, position)?;
-                format!("(by obtain ⟨v,hv,hc⟩ := (show {ty} from {term}); exact ⟨v,hv,hc⟩)")
+                format!("(by\n  have _original_jacobian_exists : {ty} := {term}\n  obtain ⟨v,hv,hc⟩ := _original_jacobian_exists\n  exact ⟨v,hv,hc⟩\n)")
             }
         };
         lines.push(format!(
@@ -94,8 +94,9 @@ impl LitexToLeanCompiler {
             stages.domains[4].requirement.fact_id().value()
         ));
         Ok(format!(
-            "({}; @Litex.Obj.mk M _ (Litex.jacobianRepresentation (M := M)) (Litex.JacobianObj.mk _multivariable_arg_0 _multivariable_arg_1 _multivariable_arg_2 _multivariable_arg_3) (by\n  {}\n))",
+            "({}; @Litex.Obj.mk M _ (Litex.jacobianRepresentation (M := M)) (Litex.JacobianObj.mk {}) (by\n  {}\n))",
             binders.join("; "),
+            certified_arguments.join(" "),
             lines.join("\n").replace('\n', "\n  ")
         ))
     }
@@ -271,11 +272,11 @@ impl LitexToLeanCompiler {
             validate_clauses(r, &domain, &facts[..1])?;
             let (view, equal) =
                 self.compile_multivariable_limit_view(&r.function, source, position)?;
-            let ty = self.compile_function_raw_predicate(&facts[0], position, &HashMap::new())?;
+            let ty = self.compile_coordinate_clause_value_proposition(&facts[0], position)?;
             let [f, point, n, _, value] = values.as_slice() else {
                 unreachable!()
             };
-            let term=format!("(by\n{view}\n  intro row h_row col h_col\n  have h_partial := ({}).2 row h_row col h_col\n  exact (congrArg (fun D => Litex.HasPartialDerivativeAtValue M (Litex.componentFunctionValue {f} D row) {point} {n} col (Litex.FunctionSemantics.callValue {value} (Litex.FiniteFunction.pack2 row col))) {equal}.symm).mp h_partial\n)",compiled.1);
+            let term=format!("(by\n{view}\n  intro row h_row col h_col\n  have h_partial := ({}).2 (Litex.denote row) h_row (Litex.denote col) h_col\n  exact (congrArg (fun D => Litex.HasPartialDerivativeAtValue M (Litex.componentFunctionValue {f} D (Litex.denote row)) {point} {n} (Litex.denote col) (Litex.FunctionSemantics.callValue {value} (Litex.FiniteFunction.pack2 (Litex.denote row) (Litex.denote col)))) {equal}.symm).mp h_partial\n)",compiled.1);
             lines.push(self.emit_internal_fact(&facts[0], &(ty, term), position)?);
         }
         let target = facts.last().unwrap();
@@ -346,7 +347,7 @@ pub(super) fn matrix_set(rows: &Obj, cols: &Obj) -> Obj {
     }))
 }
 
-fn validate_clauses(
+pub(super) fn validate_clauses(
     r: &JacobianAtRelation,
     domain: &Obj,
     facts: &[Fact],

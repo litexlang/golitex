@@ -1,5 +1,4 @@
 //! Map `$prop(...)` / infix `$prop` names onto AtomicFact variants.
-
 use crate::ast::fact::{
     AtomicFact, BijectiveFact, CoprimeFact, DvdFact, EqualFact, GreaterEqualFact, GreaterFact,
     InFact, InjectiveFact, IsChoiceFunctionForFact, IsFiniteSetFact, IsNonemptySetFact, IsSetFact,
@@ -10,10 +9,15 @@ use crate::ast::fact::{
     NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact, PrimeFact,
     ProperSubsetFact, ProperSupersetFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
+use crate::ast::fact::{CommRingFact, NotCommRingFact};
 use crate::ast::fact::{HasSequenceLimitFact, NotHasSequenceLimitFact};
+use crate::ast::fact::{
+    IsMatrixInvFact, MatrixInversibleFact, NotIsMatrixInvFact, NotMatrixInversibleFact,
+};
 use crate::ast::line_file::SourceLine;
 use crate::ast::names::AtomicName;
 use crate::ast::obj::Obj;
+use crate::parse::keywords::COMM_RING;
 use crate::parse::keywords::{
     BIJECTIVE, COPRIME, DVD, EQUAL, GREATER, GREATER_EQUAL, IN, INJECTIVE, IS_CHOICE_FUNCTION_FOR,
     LESS, LESS_EQUAL, NOT_EQUAL, PRIME, SURJECTIVE,
@@ -390,6 +394,43 @@ impl Runtime {
                         domain: args[0].clone(),
                         codomain: args[1].clone(),
                         function: args[2].clone(),
+                        line_file: Some(line_file),
+                    }))
+                }
+            }
+            crate::parse::keywords::IS_MATRIX_INV => {
+                n_args(name, &args, 3, &line_file)?;
+                let fact_id=self.global_ids.allocate_fact_id();
+                if positive { Ok(IsMatrixInvFact { fact_id, matrix: args[0].clone(), inverse: args[1].clone(), order: args[2].clone(), line_file: Some(line_file) }.into()) } else { Ok(NotIsMatrixInvFact { fact_id, matrix: args[0].clone(), inverse: args[1].clone(), order: args[2].clone(), line_file: Some(line_file) }.into()) }
+            }
+            crate::parse::keywords::MATRIX_INVERSIBLE => {
+                n_args(name, &args, 2, &line_file)?;
+                let fact_id=self.global_ids.allocate_fact_id();
+                if positive { Ok(MatrixInversibleFact { fact_id, matrix: args[0].clone(), order: args[1].clone(), line_file: Some(line_file) }.into()) } else { Ok(NotMatrixInversibleFact { fact_id, matrix: args[0].clone(), order: args[1].clone(), line_file: Some(line_file) }.into()) }
+            }
+            COMM_RING => {
+                n_args(name, &args, 6, &line_file)?;
+                let fact_id = self.global_ids.allocate_fact_id();
+                if positive {
+                    Ok(AtomicFact::CommRingFact(CommRingFact {
+                        fact_id,
+                        carrier: args[0].clone(),
+                        add: args[1].clone(),
+                        mul: args[2].clone(),
+                        neg: args[3].clone(),
+                        zero: args[4].clone(),
+                        one: args[5].clone(),
+                        line_file: Some(line_file),
+                    }))
+                } else {
+                    Ok(AtomicFact::NotCommRingFact(NotCommRingFact {
+                        fact_id,
+                        carrier: args[0].clone(),
+                        add: args[1].clone(),
+                        mul: args[2].clone(),
+                        neg: args[3].clone(),
+                        zero: args[4].clone(),
+                        one: args[5].clone(),
                         line_file: Some(line_file),
                     }))
                 }

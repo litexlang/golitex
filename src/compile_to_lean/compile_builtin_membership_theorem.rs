@@ -164,6 +164,190 @@ impl LitexToLeanCompiler {
         }
         if matches!(
             builtin.theorem,
+            BuiltinTheoremId::GradientAtFromDefinition
+                | BuiltinTheoremId::GradientAtToDefinition
+                | BuiltinTheoremId::HessianAtFromDefinition
+                | BuiltinTheoremId::HessianAtToDefinition
+                | BuiltinTheoremId::JacobianAtFromDefinition
+                | BuiltinTheoremId::JacobianAtToDefinition
+                | BuiltinTheoremId::DivergenceAtFromDefinition
+                | BuiltinTheoremId::DivergenceAtToDefinition
+                | BuiltinTheoremId::LaplacianAtFromDefinition
+                | BuiltinTheoremId::LaplacianAtToDefinition
+                | BuiltinTheoremId::CurlAtFromDefinition
+                | BuiltinTheoremId::CurlAtToDefinition
+        ) {
+            return self.compile_builtin_coordinate_definition(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::PartialAtFromDefinition
+                | BuiltinTheoremId::PartialAtToDefinition
+                | BuiltinTheoremId::ScalarDifferentialAtFromDefinition
+                | BuiltinTheoremId::ScalarDifferentialAtToDefinition
+                | BuiltinTheoremId::TotalDerivativeAtFromDefinition
+                | BuiltinTheoremId::TotalDerivativeAtToDefinition
+        ) {
+            return self.compile_builtin_remainder_definition(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnDerivativeAtConstant
+                | BuiltinTheoremId::FnDerivativeAtIdentity
+                | BuiltinTheoremId::FnDerivativeAtExp
+                | BuiltinTheoremId::FnDerivativeAtSin
+                | BuiltinTheoremId::FnDerivativeAtCos
+                | BuiltinTheoremId::FnDerivativeAtLn
+                | BuiltinTheoremId::FnDerivativeAtSqrt
+        ) {
+            return self.compile_builtin_derivative_formula(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnDerivativeAtRealInterior
+                | BuiltinTheoremId::FnDerivativeAtNonzeroInterior
+                | BuiltinTheoremId::FnDerivativeAtPositiveInterior
+                | BuiltinTheoremId::FnDerivativeAtNegativeInterior
+        ) {
+            return self.compile_builtin_real_interior(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnDerivativeAtUnique
+                | BuiltinTheoremId::FnDerivativeAtExists
+                | BuiltinTheoremId::FnDerivativeAtSelected
+                | BuiltinTheoremId::FnDifferentiableAtFromDerivative
+                | BuiltinTheoremId::FnDerivativeAtContinuous
+                | BuiltinTheoremId::FnDifferentiableAtContinuous
+        ) {
+            return self.compile_builtin_unary_derivative(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if super::compile_builtin_derivative_schema::supports(builtin.theorem) {
+            return self.compile_builtin_derivative_schema(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::VectorLimitAtFromDefinition
+                | BuiltinTheoremId::VectorLimitAtToDefinition
+                | BuiltinTheoremId::VectorLimitAtExists
+                | BuiltinTheoremId::VectorLimitAtUnique
+                | BuiltinTheoremId::VectorLimitAtSelected
+        ) {
+            return self.compile_builtin_vector_limit_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MultiLimitAtToDefinition
+                | BuiltinTheoremId::MultiLimitAtExists
+                | BuiltinTheoremId::MultiLimitAtUnique
+                | BuiltinTheoremId::MultiLimitAtSelected
+        ) {
+            return self.compile_builtin_multivariable_elimination(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::MultiLimitAtFromDefinition {
+            return self.compile_builtin_multivariable_definition(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
             BuiltinTheoremId::SequenceLimitUnique
                 | BuiltinTheoremId::SequenceLimitExists
                 | BuiltinTheoremId::SequenceLimitSelected
@@ -178,6 +362,15 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::SequenceBoundedFromBounds
                 | BuiltinTheoremId::SequenceLimitCauchy
                 | BuiltinTheoremId::SequenceConstantProperties
+                | BuiltinTheoremId::SequenceLimitConstant
+                | BuiltinTheoremId::SequenceLimitNeg
+                | BuiltinTheoremId::SequenceLimitAbs
+                | BuiltinTheoremId::SequenceLimitScale
+                | BuiltinTheoremId::SequenceLimitPower
+                | BuiltinTheoremId::SequenceLimitAdd
+                | BuiltinTheoremId::SequenceLimitSubtract
+                | BuiltinTheoremId::SequenceLimitMultiply
+                | BuiltinTheoremId::SequenceLimitDivide
         ) {
             return self.compile_builtin_sequence_limit_theorem(
                 call,
@@ -877,6 +1070,34 @@ impl LitexToLeanCompiler {
         }
         if builtin.theorem == BuiltinTheoremId::SumOverBijectiveFiniteSetEnumerations {
             return self.compile_builtin_enumeration_sum_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::EuclideanNormScale {
+            return self.compile_builtin_norm_scale_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::InnerProductLinearRight {
+            return self.compile_builtin_inner_linear_theorem(
                 call,
                 builtin,
                 derivation,

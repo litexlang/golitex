@@ -1,0 +1,236 @@
+# Degree values include natural finite degrees and negative infinity at zero.
+
+have PolynomialDegree set=union(N,{Extended::main::real_negative_infinity})
+
+claim:
+    ? forall n N:
+        n $in PolynomialDegree
+    PolynomialDegree=union(N,{Extended::main::real_negative_infinity})
+    n $in union(N,{Extended::main::real_negative_infinity})
+    n $in PolynomialDegree
+
+claim:
+    ? Extended::main::real_negative_infinity $in PolynomialDegree
+    PolynomialDegree=union(N,{Extended::main::real_negative_infinity})
+    Extended::main::real_negative_infinity $in {Extended::main::real_negative_infinity}
+    Extended::main::real_negative_infinity $in union(N,{Extended::main::real_negative_infinity})
+    Extended::main::real_negative_infinity $in PolynomialDegree
+
+prop has_complex_polynomial_finite_degree_value(p fn(x C) C,value PolynomialDegree):
+    exist degree N st {value=degree,$finite_degree::has_complex_polynomial_degree(p,degree)}
+
+prop is_complex_polynomial_degree_value(p fn(x C) C,value PolynomialDegree):
+    p=fn(x C) C {0} and value=Extended::main::real_negative_infinity or $has_complex_polynomial_finite_degree_value(p,value)
+
+thm complex_polynomial_finite_degree_value_is_nonzero:
+    ? forall p fn(x C) C,value PolynomialDegree:
+        $has_complex_polynomial_finite_degree_value(p,value)
+        =>:
+            p!=fn(x C) C {0}
+    obtain degree from $has_complex_polynomial_finite_degree_value(p,value)
+    release thm finite_degree::complex_polynomial_degree_properties(p,degree)
+
+thm complex_polynomial_finite_degree_values_unique:
+    ? forall p fn(x C) C,left,right PolynomialDegree:
+        $has_complex_polynomial_finite_degree_value(p,left)
+        $has_complex_polynomial_finite_degree_value(p,right)
+        =>:
+            left=right
+    obtain n from $has_complex_polynomial_finite_degree_value(p,left)
+    obtain m from $has_complex_polynomial_finite_degree_value(p,right)
+    release thm finite_degree::complex_polynomial_degree_unique(p,n,m)
+    left=n=m=right
+
+thm complex_zero_polynomial_degree_value:
+    ? forall p fn(x C) C,value PolynomialDegree:
+        p=fn(x C) C {0}
+        $is_complex_polynomial_degree_value(p,value)
+        =>:
+            value=Extended::main::real_negative_infinity
+    by cases:
+        ? value=Extended::main::real_negative_infinity
+        case p=fn(x C) C {0} and value=Extended::main::real_negative_infinity:
+            value=Extended::main::real_negative_infinity
+        case $has_complex_polynomial_finite_degree_value(p,value):
+            release thm complex_polynomial_finite_degree_value_is_nonzero(p,value)
+            by contra:
+                ? value=Extended::main::real_negative_infinity
+                impossible p=fn(x C) C {0}
+
+prop has_real_polynomial_finite_degree_value(p fn(x R) R,value PolynomialDegree):
+    exist degree N st {value=degree,$finite_degree::has_real_polynomial_degree(p,degree)}
+
+prop is_real_polynomial_degree_value(p fn(x R) R,value PolynomialDegree):
+    p=fn(x R) R {0} and value=Extended::main::real_negative_infinity or $has_real_polynomial_finite_degree_value(p,value)
+
+thm real_polynomial_finite_degree_value_is_nonzero:
+    ? forall p fn(x R) R,value PolynomialDegree:
+        $has_real_polynomial_finite_degree_value(p,value)
+        =>:
+            p!=fn(x R) R {0}
+    obtain degree from $has_real_polynomial_finite_degree_value(p,value)
+    release thm finite_degree::real_polynomial_degree_properties(p,degree)
+
+thm real_polynomial_finite_degree_values_unique:
+    ? forall p fn(x R) R,left,right PolynomialDegree:
+        $has_real_polynomial_finite_degree_value(p,left)
+        $has_real_polynomial_finite_degree_value(p,right)
+        =>:
+            left=right
+    obtain n from $has_real_polynomial_finite_degree_value(p,left)
+    obtain m from $has_real_polynomial_finite_degree_value(p,right)
+    release thm finite_degree::real_polynomial_degree_unique(p,n,m)
+    left=n=m=right
+
+thm real_zero_polynomial_degree_value:
+    ? forall p fn(x R) R,value PolynomialDegree:
+        p=fn(x R) R {0}
+        $is_real_polynomial_degree_value(p,value)
+        =>:
+            value=Extended::main::real_negative_infinity
+    by cases:
+        ? value=Extended::main::real_negative_infinity
+        case p=fn(x R) R {0} and value=Extended::main::real_negative_infinity:
+            value=Extended::main::real_negative_infinity
+        case $has_real_polynomial_finite_degree_value(p,value):
+            release thm real_polynomial_finite_degree_value_is_nonzero(p,value)
+            by contra:
+                ? value=Extended::main::real_negative_infinity
+                impossible p=fn(x R) R {0}
+
+thm nonzero_complex_polynomial_degree_value_is_finite:
+    ? forall p fn(x C) C,value PolynomialDegree:
+        p!=fn(x C) C {0}
+        $is_complex_polynomial_degree_value(p,value)
+        =>:
+            $has_complex_polynomial_finite_degree_value(p,value)
+    by cases:
+        ? $has_complex_polynomial_finite_degree_value(p,value)
+        case p=fn(x C) C {0} and value=Extended::main::real_negative_infinity:
+            by contra:
+                ? $has_complex_polynomial_finite_degree_value(p,value)
+                impossible p=fn(x C) C {0}
+        case $has_complex_polynomial_finite_degree_value(p,value):
+            $has_complex_polynomial_finite_degree_value(p,value)
+
+thm complex_polynomial_degree_values_unique:
+    ? forall p fn(x C) C,left,right PolynomialDegree:
+        $is_complex_polynomial_degree_value(p,left)
+        $is_complex_polynomial_degree_value(p,right)
+        =>:
+            left=right
+    by cases:
+        ? left=right
+        case p=fn(x C) C {0}:
+            release thm complex_zero_polynomial_degree_value(p,left)
+            release thm complex_zero_polynomial_degree_value(p,right)
+            left=Extended::main::real_negative_infinity=right
+        case p!=fn(x C) C {0}:
+            release thm nonzero_complex_polynomial_degree_value_is_finite(p,left)
+            release thm nonzero_complex_polynomial_degree_value_is_finite(p,right)
+            release thm complex_polynomial_finite_degree_values_unique(p,left,right)
+
+thm complex_polynomial_degree_value_exists:
+    ? forall p fn(x C) C:
+        $poly::is_complex_polynomial(p)
+        =>:
+            exist value PolynomialDegree st {$is_complex_polynomial_degree_value(p,value)}
+    by cases:
+        ? exist value PolynomialDegree st {$is_complex_polynomial_degree_value(p,value)}
+        case p=fn(x C) C {0}:
+            p=fn(x C) C {0} and Extended::main::real_negative_infinity=Extended::main::real_negative_infinity
+            by def $is_complex_polynomial_degree_value(p,Extended::main::real_negative_infinity)
+            witness exist value PolynomialDegree st {$is_complex_polynomial_degree_value(p,value)} from Extended::main::real_negative_infinity
+        case p!=fn(x C) C {0}:
+            release thm finite_degree::nonzero_complex_polynomial_has_degree(p)
+            obtain degree from exist n N st {$finite_degree::has_complex_polynomial_degree(p,n)}
+            degree $in PolynomialDegree
+            witness exist n N st {degree=n,$finite_degree::has_complex_polynomial_degree(p,n)} from degree
+            by def $has_complex_polynomial_finite_degree_value(p,degree)
+            by def $is_complex_polynomial_degree_value(p,degree)
+            witness exist value PolynomialDegree st {$is_complex_polynomial_degree_value(p,value)} from degree
+
+thm complex_polynomial_degree_value_exists_unique:
+    ? forall p fn(x C) C:
+        $poly::is_complex_polynomial(p)
+        =>:
+            exist! value PolynomialDegree st {$is_complex_polynomial_degree_value(p,value)}
+    release thm complex_polynomial_degree_value_exists(p)
+    claim:
+        ? forall left,right PolynomialDegree:
+            $is_complex_polynomial_degree_value(p,left)
+            $is_complex_polynomial_degree_value(p,right)
+            =>:
+                left=right
+        release thm complex_polynomial_degree_values_unique(p,left,right)
+    obtain value from exist d PolynomialDegree st {$is_complex_polynomial_degree_value(p,d)}
+    witness exist! d PolynomialDegree st {$is_complex_polynomial_degree_value(p,d)} from value
+
+thm nonzero_real_polynomial_degree_value_is_finite:
+    ? forall p fn(x R) R,value PolynomialDegree:
+        p!=fn(x R) R {0}
+        $is_real_polynomial_degree_value(p,value)
+        =>:
+            $has_real_polynomial_finite_degree_value(p,value)
+    by cases:
+        ? $has_real_polynomial_finite_degree_value(p,value)
+        case p=fn(x R) R {0} and value=Extended::main::real_negative_infinity:
+            by contra:
+                ? $has_real_polynomial_finite_degree_value(p,value)
+                impossible p=fn(x R) R {0}
+        case $has_real_polynomial_finite_degree_value(p,value):
+            $has_real_polynomial_finite_degree_value(p,value)
+
+thm real_polynomial_degree_values_unique:
+    ? forall p fn(x R) R,left,right PolynomialDegree:
+        $is_real_polynomial_degree_value(p,left)
+        $is_real_polynomial_degree_value(p,right)
+        =>:
+            left=right
+    by cases:
+        ? left=right
+        case p=fn(x R) R {0}:
+            release thm real_zero_polynomial_degree_value(p,left)
+            release thm real_zero_polynomial_degree_value(p,right)
+            left=Extended::main::real_negative_infinity=right
+        case p!=fn(x R) R {0}:
+            release thm nonzero_real_polynomial_degree_value_is_finite(p,left)
+            release thm nonzero_real_polynomial_degree_value_is_finite(p,right)
+            release thm real_polynomial_finite_degree_values_unique(p,left,right)
+
+thm real_polynomial_degree_value_exists:
+    ? forall p fn(x R) R:
+        $poly::is_real_polynomial(p)
+        =>:
+            exist value PolynomialDegree st {$is_real_polynomial_degree_value(p,value)}
+    by cases:
+        ? exist value PolynomialDegree st {$is_real_polynomial_degree_value(p,value)}
+        case p=fn(x R) R {0}:
+            p=fn(x R) R {0} and Extended::main::real_negative_infinity=Extended::main::real_negative_infinity
+            by def $is_real_polynomial_degree_value(p,Extended::main::real_negative_infinity)
+            witness exist value PolynomialDegree st {$is_real_polynomial_degree_value(p,value)} from Extended::main::real_negative_infinity
+        case p!=fn(x R) R {0}:
+            release thm finite_degree::nonzero_real_polynomial_has_degree(p)
+            obtain degree from exist n N st {$finite_degree::has_real_polynomial_degree(p,n)}
+            degree $in PolynomialDegree
+            witness exist n N st {degree=n,$finite_degree::has_real_polynomial_degree(p,n)} from degree
+            by def $has_real_polynomial_finite_degree_value(p,degree)
+            by def $is_real_polynomial_degree_value(p,degree)
+            witness exist value PolynomialDegree st {$is_real_polynomial_degree_value(p,value)} from degree
+
+thm real_polynomial_degree_value_exists_unique:
+    ? forall p fn(x R) R:
+        $poly::is_real_polynomial(p)
+        =>:
+            exist! value PolynomialDegree st {$is_real_polynomial_degree_value(p,value)}
+    release thm real_polynomial_degree_value_exists(p)
+    claim:
+        ? forall left,right PolynomialDegree:
+            $is_real_polynomial_degree_value(p,left)
+            $is_real_polynomial_degree_value(p,right)
+            =>:
+                left=right
+        release thm real_polynomial_degree_values_unique(p,left,right)
+    obtain value from exist d PolynomialDegree st {$is_real_polynomial_degree_value(p,d)}
+    witness exist! d PolynomialDegree st {$is_real_polynomial_degree_value(p,d)} from value
+

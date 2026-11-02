@@ -69,7 +69,8 @@ thm product_lt_nonnegative:
     b - a > 0
     d - c > 0
     0 <= a
-    0 < b
+    b = (b - a) + a
+    (b - a) + a > 0
     b > 0
     b * (d - c) > 0
     b - a >= 0

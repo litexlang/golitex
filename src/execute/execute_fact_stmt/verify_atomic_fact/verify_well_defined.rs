@@ -790,6 +790,9 @@ impl Runtime {
         use crate::ast::obj::StandardSet;
         use crate::ast::obj::{FamilyUnion, SetOperator};
         use StandardSet::{ZStar, N, R, Z};
+        if let Some(requirements) = self.matrix_inverse_predicate_domain(fact) {
+            return requirements;
+        }
         let analysis = match fact {
             AtomicFact::RealSetBoundFact(f) => Some(vec![
                 crate::ast::fact::Fact::from(crate::ast::fact::SubsetFact {
@@ -893,6 +896,13 @@ impl Runtime {
             ];
         }
 
+        if matches!(
+            fact,
+            AtomicFact::CommRingFact(_) | AtomicFact::NotCommRingFact(_)
+        ) {
+            let args = crate::prelude::atomic_fact_args_ref(fact);
+            return self.comm_ring_domain_requirements(&args);
+        }
         let function_property = function_property_signature_args(fact);
         if let Some((domain, codomain, function)) = function_property {
             let signature = self.predicate_unary_fn_set(domain, codomain);
@@ -1071,6 +1081,12 @@ fn atomic_except_equality_fact_arg_objs(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotInjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::SurjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::NotSurjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
+        AtomicFact::IsMatrixInvFact(f) => vec![&f.matrix, &f.inverse, &f.order],
+        AtomicFact::NotIsMatrixInvFact(f) => vec![&f.matrix, &f.inverse, &f.order],
+        AtomicFact::MatrixInversibleFact(f) => vec![&f.matrix, &f.order],
+        AtomicFact::NotMatrixInversibleFact(f) => vec![&f.matrix, &f.order],
+        AtomicFact::CommRingFact(f) => vec![&f.carrier, &f.add, &f.mul, &f.neg, &f.zero, &f.one],
+        AtomicFact::NotCommRingFact(f) => vec![&f.carrier, &f.add, &f.mul, &f.neg, &f.zero, &f.one],
         AtomicFact::BijectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::NotBijectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::IsChoiceFunctionForFact(f) => vec![&f.index, &f.set, &f.family, &f.choice],

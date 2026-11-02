@@ -1,0 +1,96 @@
+# Standard real/complex field matrix operations equal the existing native ones.
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_mul
+
+release obj def Algebra::field::complex_add
+
+release obj def Algebra::field::complex_mul
+
+thm real_field_matrix_zero_is_native:
+    ? forall m,n N:
+        \space::field_zero_matrix<R,Algebra::field::real_field,m,n> =zero_matrix(m,n)
+    release struct def Algebra::field::real_field
+    Algebra::field::real_field.zero=0
+    claim:
+        ? forall r closed_range(1,m),c closed_range(1,n):
+            \space::field_zero_matrix<R,Algebra::field::real_field,m,n>(r,c)=zero_matrix(m,n)(r,c)
+        release thm space::field_zero_matrix_entry(R,Algebra::field::real_field,m,n,r,c)
+        zero_matrix(m,n)(r,c)=0
+        \space::field_zero_matrix<R,Algebra::field::real_field,m,n>(r,c)=Algebra::field::real_field.zero=0=zero_matrix(m,n)(r,c)
+    by fn_extension \space::field_zero_matrix<R,Algebra::field::real_field,m,n> =zero_matrix(m,n)
+
+thm real_field_matrix_add_is_native:
+    ? forall m,n N,A,B matrix(R,m,n):
+        \space::field_matrix_add<R,Algebra::field::real_field,m,n>(A,B)=matrix_add(A,B,m,n)
+    release struct def Algebra::field::real_field
+    Algebra::field::real_field.add=Algebra::field::real_add
+    claim:
+        ? forall r closed_range(1,m),c closed_range(1,n):
+            \space::field_matrix_add<R,Algebra::field::real_field,m,n>(A,B)(r,c)=matrix_add(A,B,m,n)(r,c)
+        release thm space::field_matrix_add_entry(R,Algebra::field::real_field,m,n,A,B,r,c)
+        Algebra::field::real_field.add(A(r,c),B(r,c))=Algebra::field::real_add(A(r,c),B(r,c))=A(r,c)+B(r,c)
+        matrix_add(A,B,m,n)(r,c)=A(r,c)+B(r,c)
+        \space::field_matrix_add<R,Algebra::field::real_field,m,n>(A,B)(r,c)=Algebra::field::real_field.add(A(r,c),B(r,c))=A(r,c)+B(r,c)=matrix_add(A,B,m,n)(r,c)
+    by fn_extension \space::field_matrix_add<R,Algebra::field::real_field,m,n>(A,B)=matrix_add(A,B,m,n)
+
+thm real_field_matrix_smul_is_native:
+    ? forall m,n N,a R,A matrix(R,m,n):
+        \space::field_matrix_smul<R,Algebra::field::real_field,m,n>(a,A)=matrix_scale(a,A,m,n)
+    release struct def Algebra::field::real_field
+    Algebra::field::real_field.mul=Algebra::field::real_mul
+    claim:
+        ? forall r closed_range(1,m),c closed_range(1,n):
+            \space::field_matrix_smul<R,Algebra::field::real_field,m,n>(a,A)(r,c)=matrix_scale(a,A,m,n)(r,c)
+        release thm space::field_matrix_smul_entry(R,Algebra::field::real_field,m,n,a,A,r,c)
+        Algebra::field::real_field.mul(a,A(r,c))=Algebra::field::real_mul(a,A(r,c))=a*A(r,c)
+        matrix_scale(a,A,m,n)(r,c)=a*A(r,c)
+        \space::field_matrix_smul<R,Algebra::field::real_field,m,n>(a,A)(r,c)=Algebra::field::real_field.mul(a,A(r,c))=a*A(r,c)=matrix_scale(a,A,m,n)(r,c)
+    by fn_extension \space::field_matrix_smul<R,Algebra::field::real_field,m,n>(a,A)=matrix_scale(a,A,m,n)
+
+thm complex_field_matrix_zero_is_native:
+    ? forall m,n N:
+        \space::field_zero_matrix<C,Algebra::field::complex_field,m,n> =zero_matrix(m,n)
+    release struct def Algebra::field::complex_field
+    Algebra::field::complex_field.zero=0
+    claim:
+        ? forall r closed_range(1,m),c closed_range(1,n):
+            \space::field_zero_matrix<C,Algebra::field::complex_field,m,n>(r,c)=zero_matrix(m,n)(r,c)
+        release thm space::field_zero_matrix_entry(C,Algebra::field::complex_field,m,n,r,c)
+        zero_matrix(m,n)(r,c)=0
+        \space::field_zero_matrix<C,Algebra::field::complex_field,m,n>(r,c)=Algebra::field::complex_field.zero=0=zero_matrix(m,n)(r,c)
+    by fn_extension \space::field_zero_matrix<C,Algebra::field::complex_field,m,n> =zero_matrix(m,n)
+
+thm complex_field_matrix_add_is_native:
+    ? forall m,n N,A,B matrix(C,m,n):
+        \space::field_matrix_add<C,Algebra::field::complex_field,m,n>(A,B)=matrix_add(A,B,m,n)
+    release struct def Algebra::field::complex_field
+    Algebra::field::complex_field.add=Algebra::field::complex_add
+    claim:
+        ? forall r closed_range(1,m),c closed_range(1,n):
+            \space::field_matrix_add<C,Algebra::field::complex_field,m,n>(A,B)(r,c)=matrix_add(A,B,m,n)(r,c)
+        release thm space::field_matrix_add_entry(C,Algebra::field::complex_field,m,n,A,B,r,c)
+        Algebra::field::complex_field.add(A(r,c),B(r,c))=Algebra::field::complex_add(A(r,c),B(r,c))=A(r,c)+B(r,c)
+        matrix_add(A,B,m,n)(r,c)=A(r,c)+B(r,c)
+        \space::field_matrix_add<C,Algebra::field::complex_field,m,n>(A,B)(r,c)=Algebra::field::complex_field.add(A(r,c),B(r,c))=A(r,c)+B(r,c)=matrix_add(A,B,m,n)(r,c)
+    by fn_extension \space::field_matrix_add<C,Algebra::field::complex_field,m,n>(A,B)=matrix_add(A,B,m,n)
+
+thm complex_field_matrix_smul_is_native:
+    ? forall m,n N,a C,A matrix(C,m,n):
+        \space::field_matrix_smul<C,Algebra::field::complex_field,m,n>(a,A)=matrix_scale(a,A,m,n)
+    release struct def Algebra::field::complex_field
+    Algebra::field::complex_field.mul=Algebra::field::complex_mul
+    claim:
+        ? forall r closed_range(1,m),c closed_range(1,n):
+            \space::field_matrix_smul<C,Algebra::field::complex_field,m,n>(a,A)(r,c)=matrix_scale(a,A,m,n)(r,c)
+        release thm space::field_matrix_smul_entry(C,Algebra::field::complex_field,m,n,a,A,r,c)
+        Algebra::field::complex_field.mul(a,A(r,c))=Algebra::field::complex_mul(a,A(r,c))=a*A(r,c)
+        matrix_scale(a,A,m,n)(r,c)=a*A(r,c)
+        \space::field_matrix_smul<C,Algebra::field::complex_field,m,n>(a,A)(r,c)=Algebra::field::complex_field.mul(a,A(r,c))=a*A(r,c)=matrix_scale(a,A,m,n)(r,c)
+    by fn_extension \space::field_matrix_smul<C,Algebra::field::complex_field,m,n>(a,A)=matrix_scale(a,A,m,n)
+

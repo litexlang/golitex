@@ -9,6 +9,10 @@ use crate::ast::fact::{
     NotProperSupersetFact, NotSubsetFact, NotSupersetFact, NotSurjectiveFact, PrimeFact,
     ProperSubsetFact, ProperSupersetFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
+use crate::ast::fact::{CommRingFact, NotCommRingFact};
+use crate::ast::fact::{
+    IsMatrixInvFact, MatrixInversibleFact, NotIsMatrixInvFact, NotMatrixInversibleFact,
+};
 use crate::ast::obj::Obj;
 use crate::runtime::runtime_ids::FactId;
 
@@ -680,6 +684,74 @@ pub(super) fn atomic_fact_with_args(
                 domain,
                 codomain,
                 function,
+                line_file: f.line_file.clone(),
+            })
+        }
+        AtomicFact::IsMatrixInvFact(f) => {
+            let mut it = args.into_iter();
+            IsMatrixInvFact {
+                fact_id,
+                matrix: it.next().unwrap(),
+                inverse: it.next().unwrap(),
+                order: it.next().unwrap(),
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotIsMatrixInvFact(f) => {
+            let mut it = args.into_iter();
+            NotIsMatrixInvFact {
+                fact_id,
+                matrix: it.next().unwrap(),
+                inverse: it.next().unwrap(),
+                order: it.next().unwrap(),
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::MatrixInversibleFact(f) => {
+            let mut it = args.into_iter();
+            MatrixInversibleFact {
+                fact_id,
+                matrix: it.next().unwrap(),
+                order: it.next().unwrap(),
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::NotMatrixInversibleFact(f) => {
+            let mut it = args.into_iter();
+            NotMatrixInversibleFact {
+                fact_id,
+                matrix: it.next().unwrap(),
+                order: it.next().unwrap(),
+                line_file: f.line_file.clone(),
+            }
+            .into()
+        }
+        AtomicFact::CommRingFact(f) => {
+            let mut it = args.into_iter();
+            AtomicFact::CommRingFact(CommRingFact {
+                fact_id,
+                carrier: it.next().unwrap(),
+                add: it.next().unwrap(),
+                mul: it.next().unwrap(),
+                neg: it.next().unwrap(),
+                zero: it.next().unwrap(),
+                one: it.next().unwrap(),
+                line_file: f.line_file.clone(),
+            })
+        }
+        AtomicFact::NotCommRingFact(f) => {
+            let mut it = args.into_iter();
+            AtomicFact::NotCommRingFact(NotCommRingFact {
+                fact_id,
+                carrier: it.next().unwrap(),
+                add: it.next().unwrap(),
+                mul: it.next().unwrap(),
+                neg: it.next().unwrap(),
+                zero: it.next().unwrap(),
+                one: it.next().unwrap(),
                 line_file: f.line_file.clone(),
             })
         }

@@ -11,6 +11,10 @@ use super::{
     NotSupersetFact, NotSurjectiveFact, OrFact, PlainExistFact, PrimeFact, ProperSubsetFact,
     ProperSupersetFact, QuantifierFreeFact, SubsetFact, SupersetFact, SurjectiveFact,
 };
+use crate::ast::fact::{CommRingFact, NotCommRingFact};
+use crate::ast::fact::{
+    IsMatrixInvFact, MatrixInversibleFact, NotIsMatrixInvFact, NotMatrixInversibleFact,
+};
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::FactId;
 use std::collections::HashSet;
@@ -53,6 +57,9 @@ pub fn atomic_fact_has_positive_polarity(fact: &AtomicFact) -> bool {
             | AtomicFact::NotDvdFact(_)
             | AtomicFact::NotInjectiveFact(_)
             | AtomicFact::NotSurjectiveFact(_)
+            | AtomicFact::NotIsMatrixInvFact(_)
+            | AtomicFact::NotMatrixInversibleFact(_)
+            | AtomicFact::NotCommRingFact(_)
             | AtomicFact::NotBijectiveFact(_)
             | AtomicFact::NotIsChoiceFunctionForFact(_)
     )
@@ -130,6 +137,12 @@ pub fn atomic_fact_args_ref(fact: &AtomicFact) -> Vec<&Obj> {
         AtomicFact::NotInjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::SurjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::NotSurjectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
+        AtomicFact::IsMatrixInvFact(f) => vec![&f.matrix, &f.inverse, &f.order],
+        AtomicFact::NotIsMatrixInvFact(f) => vec![&f.matrix, &f.inverse, &f.order],
+        AtomicFact::MatrixInversibleFact(f) => vec![&f.matrix, &f.order],
+        AtomicFact::NotMatrixInversibleFact(f) => vec![&f.matrix, &f.order],
+        AtomicFact::CommRingFact(f) => vec![&f.carrier, &f.add, &f.mul, &f.neg, &f.zero, &f.one],
+        AtomicFact::NotCommRingFact(f) => vec![&f.carrier, &f.add, &f.mul, &f.neg, &f.zero, &f.one],
         AtomicFact::BijectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::NotBijectiveFact(f) => vec![&f.domain, &f.codomain, &f.function],
         AtomicFact::IsChoiceFunctionForFact(f) => {
@@ -755,6 +768,58 @@ pub fn negate_atomic_fact(fact: &AtomicFact, new_fact_id: FactId) -> Option<Atom
             domain: f.domain.clone(),
             codomain: f.codomain.clone(),
             function: f.function.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::IsMatrixInvFact(f) => NotIsMatrixInvFact {
+            fact_id: new_fact_id,
+            matrix: f.matrix.clone(),
+            inverse: f.inverse.clone(),
+            order: f.order.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotIsMatrixInvFact(f) => IsMatrixInvFact {
+            fact_id: new_fact_id,
+            matrix: f.matrix.clone(),
+            inverse: f.inverse.clone(),
+            order: f.order.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::MatrixInversibleFact(f) => NotMatrixInversibleFact {
+            fact_id: new_fact_id,
+            matrix: f.matrix.clone(),
+            order: f.order.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotMatrixInversibleFact(f) => MatrixInversibleFact {
+            fact_id: new_fact_id,
+            matrix: f.matrix.clone(),
+            order: f.order.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::CommRingFact(f) => NotCommRingFact {
+            fact_id: new_fact_id,
+            carrier: f.carrier.clone(),
+            add: f.add.clone(),
+            mul: f.mul.clone(),
+            neg: f.neg.clone(),
+            zero: f.zero.clone(),
+            one: f.one.clone(),
+            line_file: f.line_file.clone(),
+        }
+        .into(),
+        AtomicFact::NotCommRingFact(f) => CommRingFact {
+            fact_id: new_fact_id,
+            carrier: f.carrier.clone(),
+            add: f.add.clone(),
+            mul: f.mul.clone(),
+            neg: f.neg.clone(),
+            zero: f.zero.clone(),
+            one: f.one.clone(),
             line_file: f.line_file.clone(),
         }
         .into(),

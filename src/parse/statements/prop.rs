@@ -16,6 +16,14 @@ impl Runtime {
         let name = tb
             .advance()
             .map_err(|_| tb.parse_error("`prop` expects a name"))?;
+        if matches!(
+            name.as_str(),
+            crate::parse::keywords::COMM_RING
+                | crate::parse::keywords::IS_MATRIX_INV
+                | crate::parse::keywords::MATRIX_INVERSIBLE
+        ) {
+            return Err(tb.parse_error(format!("`{name}` is a reserved builtin predicate")));
+        }
         if !is_simple_name(&name) {
             return Err(tb.parse_error(format!("invalid prop name `{name}`")));
         }
@@ -62,6 +70,14 @@ impl Runtime {
         let name = tb
             .advance()
             .map_err(|_| tb.parse_error("`abstract_prop` expects a name"))?;
+        if matches!(
+            name.as_str(),
+            crate::parse::keywords::COMM_RING
+                | crate::parse::keywords::IS_MATRIX_INV
+                | crate::parse::keywords::MATRIX_INVERSIBLE
+        ) {
+            return Err(tb.parse_error(format!("`{name}` is a reserved builtin predicate")));
+        }
         if !is_simple_name(&name) {
             return Err(tb.parse_error(format!("invalid abstract_prop name `{name}`")));
         }

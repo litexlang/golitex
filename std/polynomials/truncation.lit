@@ -1,0 +1,229 @@
+# Full-domain truncation of polynomial functions and their zero case.
+
+claim:
+    ? forall n N,k closed_range(0,n):
+        k+1 $in closed_range(1,n+1)
+    k+1 $in Z
+    1<=k+1<=n+1
+    k+1 $in closed_range(1,n+1)
+
+thm complex_polynomial_truncation:
+    ? forall n,m N,coefficients finite_seq(C,n+1),prefix finite_seq(C,m+1):
+        m<=n
+        forall j N+:
+            j<=m+1
+            j<=n+1
+            =>:
+                prefix(j)=coefficients(j)
+        forall j closed_range(1,n+1):
+            j>m+1
+            =>:
+                coefficients(j)=0
+        =>:
+            \poly::complex_polynomial_from_coefficients<n>(coefficients)=\poly::complex_polynomial_from_coefficients<m>(prefix)
+    have original fn(x C) C=\poly::complex_polynomial_from_coefficients<n>(coefficients)
+    have shortened fn(x C) C=\poly::complex_polynomial_from_coefficients<m>(prefix)
+    claim:
+        ? forall x C:
+            original(x)=shortened(x)
+        release thm poly::complex_polynomial_value_at(n,coefficients,x)
+        release thm poly::complex_polynomial_value_spec(n,coefficients,x)
+        release thm poly::complex_polynomial_value_at(m,prefix,x)
+        release thm poly::complex_polynomial_value_spec(m,prefix,x)
+        claim:
+            ? forall k N:
+                k<=n
+                =>:
+                    k+1 $in closed_range(1,n+1)
+            k+1 $in Z
+            1<=k+1<=n+1
+            k+1 $in closed_range(1,n+1)
+        have fn terms(k N) C by cases:
+            case k<=n: coefficients(k+1)*x^k
+            case k>n: 0
+        claim:
+            ? forall k N:
+                k>m
+                =>:
+                    terms(k)=0
+            by cases:
+                ? terms(k)=0
+                case k<=n:
+                    k+1 $in closed_range(1,n+1)
+                    k+1>m+1
+                    coefficients(k+1)=0
+                    x^k $in C
+                    terms(k)=coefficients(k+1)*x^k=0*x^k=0
+                case k>n:
+                    terms(k)=0
+        release thm ComplexSums::main::complex_natural_sum_zero_tail(terms,m,n)
+        claim:
+            ? forall k closed_range(0,n):
+                terms(k)=coefficients(k+1)*x^k
+            k $in N
+            k<=n
+            terms(k)=coefficients(k+1)*x^k
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),terms))
+        original(x)=\poly::complex_polynomial_from_coefficients<n>(coefficients)(x)=\poly::complex_polynomial_value<n>(coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),terms)=sum(0,n,terms)=sum(0,m,terms)=finite_set_sum(closed_range(0,m),terms)
+        claim:
+            ? forall k closed_range(0,m):
+                terms(k)=prefix(k+1)*x^k
+            k $in N
+            k<=m<=n
+            k<=n
+            k+1 $in closed_range(1,m+1)
+            k+1 $in closed_range(1,n+1)
+            prefix(k+1)=coefficients(k+1)
+            terms(k)=coefficients(k+1)*x^k=prefix(k+1)*x^k
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,m),terms),finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {prefix(k+1)*x^k}))
+        shortened(x)=\poly::complex_polynomial_from_coefficients<m>(prefix)(x)=\poly::complex_polynomial_value<m>(prefix,x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {prefix(k+1)*x^k})
+        original(x)=finite_set_sum(closed_range(0,m),terms)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {prefix(k+1)*x^k})=shortened(x)
+    by fn_extension original=shortened
+    \poly::complex_polynomial_from_coefficients<n>(coefficients)=original=shortened=\poly::complex_polynomial_from_coefficients<m>(prefix)
+
+thm real_polynomial_truncation:
+    ? forall n,m N,coefficients finite_seq(R,n+1),prefix finite_seq(R,m+1):
+        m<=n
+        forall j N+:
+            j<=m+1
+            j<=n+1
+            =>:
+                prefix(j)=coefficients(j)
+        forall j closed_range(1,n+1):
+            j>m+1
+            =>:
+                coefficients(j)=0
+        =>:
+            \poly::real_polynomial_from_coefficients<n>(coefficients)=\poly::real_polynomial_from_coefficients<m>(prefix)
+    have original fn(x R) R=\poly::real_polynomial_from_coefficients<n>(coefficients)
+    have shortened fn(x R) R=\poly::real_polynomial_from_coefficients<m>(prefix)
+    claim:
+        ? forall x R:
+            original(x)=shortened(x)
+        release thm poly::real_polynomial_value_at(n,coefficients,x)
+        release thm poly::real_polynomial_value_spec(n,coefficients,x)
+        release thm poly::real_polynomial_value_at(m,prefix,x)
+        release thm poly::real_polynomial_value_spec(m,prefix,x)
+        claim:
+            ? forall k N:
+                k<=n
+                =>:
+                    k+1 $in closed_range(1,n+1)
+            k+1 $in Z
+            1<=k+1<=n+1
+            k+1 $in closed_range(1,n+1)
+        have fn terms(k N) C by cases:
+            case k<=n: coefficients(k+1)*x^k
+            case k>n: 0
+        claim:
+            ? forall k N:
+                k>m
+                =>:
+                    terms(k)=0
+            by cases:
+                ? terms(k)=0
+                case k<=n:
+                    k+1 $in closed_range(1,n+1)
+                    k+1>m+1
+                    coefficients(k+1)=0
+                    x^k $in C
+                    terms(k)=coefficients(k+1)*x^k=0*x^k=0
+                case k>n:
+                    terms(k)=0
+        release thm ComplexSums::main::complex_natural_sum_zero_tail(terms,m,n)
+        claim:
+            ? forall k closed_range(0,n):
+                terms(k)=coefficients(k+1)*x^k
+            k $in N
+            k<=n
+            terms(k)=coefficients(k+1)*x^k
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),terms))
+        original(x)=\poly::real_polynomial_from_coefficients<n>(coefficients)(x)=\poly::real_polynomial_value<n>(coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),terms)=sum(0,n,terms)=sum(0,m,terms)=finite_set_sum(closed_range(0,m),terms)
+        claim:
+            ? forall k closed_range(0,m):
+                terms(k)=prefix(k+1)*x^k
+            k $in N
+            k<=m<=n
+            k<=n
+            k+1 $in closed_range(1,m+1)
+            k+1 $in closed_range(1,n+1)
+            prefix(k+1)=coefficients(k+1)
+            terms(k)=coefficients(k+1)*x^k=prefix(k+1)*x^k
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,m),terms),finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) R {prefix(k+1)*x^k}))
+        shortened(x)=\poly::real_polynomial_from_coefficients<m>(prefix)(x)=\poly::real_polynomial_value<m>(prefix,x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) R {prefix(k+1)*x^k})
+        original(x)=finite_set_sum(closed_range(0,m),terms)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) R {prefix(k+1)*x^k})=shortened(x)
+    by fn_extension original=shortened
+    \poly::real_polynomial_from_coefficients<n>(coefficients)=original=shortened=\poly::real_polynomial_from_coefficients<m>(prefix)
+
+thm complex_polynomial_zero_from_zero_coefficients:
+    ? forall n N,coefficients finite_seq(C,n+1):
+        forall j closed_range(1,n+1):
+            coefficients(j)=0
+        =>:
+            \poly::complex_polynomial_from_coefficients<n>(coefficients)=fn(x C) C {0}
+    have prefix finite_seq(C,0+1)=fn(j closed_range(1,0+1)) C {0}
+    claim:
+        ? forall j N+:
+            j<=0+1
+            j<=n+1
+            =>:
+                prefix(j)=coefficients(j)
+        j $in closed_range(1,0+1)
+        j $in closed_range(1,n+1)
+        prefix(j)=0
+        coefficients(j)=0
+        prefix(j)=coefficients(j)
+    claim:
+        ? forall j closed_range(1,n+1):
+            j>0+1
+            =>:
+                coefficients(j)=0
+        coefficients(j)=0
+    release thm complex_polynomial_truncation(n,0,coefficients,prefix)
+    have constant fn(x C) C=\poly::complex_polynomial_from_coefficients<0>(prefix)
+    claim:
+        ? forall x C:
+            constant(x)=fn(t C) C {0}(x)
+        release thm poly::complex_polynomial_value_at(0,prefix,x)
+        release thm poly::complex_constant_polynomial_value(prefix,x)
+        prefix(1)=0
+        constant(x)=\poly::complex_polynomial_from_coefficients<0>(prefix)(x)=\poly::complex_polynomial_value<0>(prefix,x)=prefix(1)=0=fn(t C) C {0}(x)
+    by fn_extension constant=fn(x C) C {0}
+    \poly::complex_polynomial_from_coefficients<n>(coefficients)=\poly::complex_polynomial_from_coefficients<0>(prefix)=constant=fn(x C) C {0}
+
+thm real_polynomial_zero_from_zero_coefficients:
+    ? forall n N,coefficients finite_seq(R,n+1):
+        forall j closed_range(1,n+1):
+            coefficients(j)=0
+        =>:
+            \poly::real_polynomial_from_coefficients<n>(coefficients)=fn(x R) R {0}
+    have prefix finite_seq(R,0+1)=fn(j closed_range(1,0+1)) R {0}
+    claim:
+        ? forall j N+:
+            j<=0+1
+            j<=n+1
+            =>:
+                prefix(j)=coefficients(j)
+        j $in closed_range(1,0+1)
+        j $in closed_range(1,n+1)
+        prefix(j)=0
+        coefficients(j)=0
+        prefix(j)=coefficients(j)
+    claim:
+        ? forall j closed_range(1,n+1):
+            j>0+1
+            =>:
+                coefficients(j)=0
+        coefficients(j)=0
+    release thm real_polynomial_truncation(n,0,coefficients,prefix)
+    have constant fn(x R) R=\poly::real_polynomial_from_coefficients<0>(prefix)
+    claim:
+        ? forall x R:
+            constant(x)=fn(t R) R {0}(x)
+        release thm poly::real_polynomial_value_at(0,prefix,x)
+        release thm poly::real_constant_polynomial_value(prefix,x)
+        prefix(1)=0
+        constant(x)=\poly::real_polynomial_from_coefficients<0>(prefix)(x)=\poly::real_polynomial_value<0>(prefix,x)=prefix(1)=0=fn(t R) R {0}(x)
+    by fn_extension constant=fn(x R) R {0}
+    \poly::real_polynomial_from_coefficients<n>(coefficients)=\poly::real_polynomial_from_coefficients<0>(prefix)=constant=fn(x R) R {0}
+

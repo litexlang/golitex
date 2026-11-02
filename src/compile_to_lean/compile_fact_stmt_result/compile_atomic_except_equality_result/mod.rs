@@ -65,4 +65,5 @@ mod compile_inverse_principal_bounds;
 
 mod compile_abs_order;
 
+mod compile_integer_gap;
 mod compile_log_product_sign;
