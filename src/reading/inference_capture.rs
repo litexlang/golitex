@@ -181,6 +181,37 @@ impl Capture {
         }
     }
 
+    pub(super) fn annotate_inference_scopes(&mut self) {
+        // One seed AST FactId can be assumed both during goal formation and
+        // in the actual proof. Its preferred fact-table scope cannot identify
+        // both inference occurrences. After all snapshots are indexed, the
+        // stored consequences determine a batch's publication scope.
+        for inference in &mut self.inferences {
+            let scopes: Option<BTreeSet<String>> = inference
+                .as_object()
+                .ok()
+                .and_then(|fields| fields.get("fact_ids"))
+                .and_then(|ids| ids.as_array().ok())
+                .map(|ids| {
+                    ids.iter()
+                        .map(|id| {
+                            let fact = self.facts.get(id.as_str().ok()?)?;
+                            let scope = field_text(fact, "scope_id");
+                            (!scope.is_empty()
+                                && self.scopes.iter().any(|row| field_text(row, "id") == scope))
+                            .then_some(scope)
+                        })
+                        .collect()
+                })
+                .flatten();
+            if let Some(scopes) = scopes.filter(|scopes| scopes.len() == 1) {
+                if let JsonValue::Object(fields) = inference {
+                    fields.insert("scope_id".into(), text(scopes.first().unwrap()));
+                }
+            }
+        }
+    }
+
     pub fn annotate_inferred_facts(&mut self) {
         let mut by_statement = BTreeMap::<String, BTreeSet<String>>::new();
         for inference in &self.inferences {

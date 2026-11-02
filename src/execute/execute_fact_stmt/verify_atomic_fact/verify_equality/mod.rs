@@ -9,6 +9,7 @@ pub mod helper;
 pub mod result;
 pub mod search_equal_fact_by_closed_numeric_equal_substitution;
 mod search_equal_fact_by_complex_with_nonzero_premises;
+pub mod search_equal_fact_by_composed_structure;
 pub mod search_equal_fact_by_cos_zero_integer_offset;
 pub mod search_equal_fact_by_extremum_equality;
 pub mod search_equal_fact_by_finite_set_product_pointwise;

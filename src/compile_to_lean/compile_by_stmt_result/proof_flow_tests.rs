@@ -296,7 +296,8 @@ fn geo_contra_transports_original_negative_order_equality() {
         .compile_run(&result, "geo_contra_positive_factor")
         .expect("original contra compiles");
     assert!(lean.contains("fun _rewrite_positive =>"));
-    assert!(lean.contains("Litex.ltOfSame"));
+    assert!(lean.contains("congrArg₂ (fun (a b : M.Value)"));
+    assert!(lean.contains("∧ r < s)"));
 }
 
 #[test]

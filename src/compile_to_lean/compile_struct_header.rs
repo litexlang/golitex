@@ -155,7 +155,14 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             result.push(values[index].clone());
-            result.push(self.compile_wd_requirement(evidence, &prior)?);
+            // A field constructor can be closed over its declaration's binders
+            // before application. Give proof-valued arguments their original
+            // proposition so a tactic body is checked in that source context.
+            let formed =
+                SourcePosition::new(Some(&prior), SourceOwner::Verify(evidence), usize::MAX);
+            let proposition = self.fact_proposition(&fact, &formed)?;
+            let proof = self.compile_wd_requirement(evidence, &prior)?;
+            result.push(format!("(show {proposition} from {proof})"));
         }
         Ok(result)
     }
@@ -173,9 +180,24 @@ impl LitexToLeanCompiler {
         if declaration.statement.param_def_with_dom.is_none() {
             return Ok(name);
         }
+        let arguments = self.compile_struct_reference_arguments(object, position)?;
+        Ok(format!("({name} {})", arguments.join(" ")))
+    }
+
+    pub(super) fn compile_struct_reference_arguments(
+        &self,
+        object: &StructObj,
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let (declaration, _, _) = position.visible_struct(&object.name)?;
+        validate_struct(declaration)?;
+        header_substitution(&declaration.statement, object)?;
+        if object.params.is_empty() {
+            return Ok(Vec::new());
+        }
         let source =
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(object.clone()));
-        let arguments = position
+        position
             .with_visible_wd(&source, &mut |wd, producer| {
                 let DetailedObjWellDefinedProof::ByDef {
                     proof:
@@ -190,8 +212,15 @@ impl LitexToLeanCompiler {
                 let cursor = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
                 self.compile_struct_arguments(object, p, &cursor)
             })?
-            .ok_or_else(|| LeanCompileError::unsupported("Struct/ArgumentProducer"))?;
-        Ok(format!("({name} {})", arguments.join(" ")))
+            .ok_or_else(|| {
+                LeanCompileError::new(
+                    "Struct/ArgumentProducer",
+                    &format!(
+                        "No original argument evidence is visible for {}.",
+                        source.ir()
+                    ),
+                )
+            })
     }
 
     pub(super) fn struct_header_raw_bindings(

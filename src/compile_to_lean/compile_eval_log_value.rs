@@ -16,6 +16,8 @@ impl LitexToLeanCompiler {
         remaining: &mut usize,
         aggregates: &[AggregateEvaluationResult],
         remaining_aggregates: &mut usize,
+        matrices: &[crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult],
+        remaining_matrices: &mut usize,
         position: &SourcePosition<'_>,
     ) -> Result<(EvalRational, String, Vec<FactId>), LeanCompileError> {
         let Obj::ExpLogOperator(ExpLogOperator::Log(log)) = object else {
@@ -28,6 +30,8 @@ impl LitexToLeanCompiler {
             remaining,
             aggregates,
             remaining_aggregates,
+            matrices,
+            remaining_matrices,
             position,
         )?;
         let (base, base_proof, mut cites) = self.compile_eval_value(
@@ -36,6 +40,8 @@ impl LitexToLeanCompiler {
             remaining,
             aggregates,
             remaining_aggregates,
+            matrices,
+            remaining_matrices,
             position,
         )?;
         cites.extend(argument_cites);

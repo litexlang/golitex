@@ -85,6 +85,23 @@ one, and inversion has the exact domain `x K: x != zero`. A total inverse
 with an arbitrary zero value would change the interface's mathematical meaning.
 This export does not introduce a ring-to-field coercion hierarchy.
 
+The standard scalar instances are ordinary source values `field::real_field`
+and `field::complex_field`, with carriers `Field<R>` and `Field<C>`.
+Their six fields are respectively 0, 1, addition, negation, multiplication and
+the reciprocal function on nonzero inputs. Named `real_add`, `real_neg`,
+`real_mul`, `real_inv` and their `complex_` counterparts are the first-class
+function values used by those records. They retain the standard arithmetic
+meanings; reciprocal at zero is excluded in each function's own domain.
+
+This supplies the book's real/complex scalar models without redefining R or C,
+changing Field, totalizing inversion or choosing a new scalar hierarchy.
+Dependencies run from native arithmetic to checked operation laws, explicit
+struct membership and the two reusable values. An independent consumer should
+compute `real_field.add(2,3)=5` and `complex_field.mul(i,i)=-1`, then apply
+existing generic field theorems. The nearest rejected alternative is an inverse
+at zero. These interfaces are being verified by the source-owned
+`validation/.standard_fields/` checkpoint; current acceptance is recorded there.
+
 `vector_space::VectorSpace<K,field,V>` packages vector zero, addition and
 scalar multiplication over that supplied field. Its addition laws include
 existence of additive inverses; uniqueness is derived. It permits the
@@ -117,6 +134,38 @@ ordinary source proofs. No quotient construction, Lagrange theorem, ring
 hierarchy, general dimension selector or new native mathematical schema is
 part of these slices.
 
+
+## Scalar-valued function spaces
+
+For a supplied `K nonempty_set`, `F &field::Field<K>` and arbitrary `X set`,
+the existing function carrier `fn(x X) K` has pointwise vector operations.
+The templates `function_zero<K,F,X>`, `function_add<K,F,X>(f,g)` and
+`function_smul<K,F,X>(a,f)` define the zero function, addition and scaling.
+They have exactly three template parameters. Addition has two function
+arguments; scaling has a scalar and a function argument. Applying the resulting
+function at a point retains the exact domain X.
+
+`function_space<K,F,X>` is an actual
+`VectorSpace<K,F,fn(x X) K>` value with those three fields. It is not a predicate
+about a proposed space, and it introduces no new struct or duplicated law
+certificate. The constructor proves its laws locally by pointwise Field laws
+and function extensionality. Its additive-inverse witness is proof-local.
+The proved `function_space_carrier(K,F,X)` publishes the exact membership for
+imported consumers before they introduce a typed local space. It adds no
+mathematical hypothesis. Definition equations and a local tuple view expose
+the selected operation fields when a calculation needs them.
+
+This is the source construction for LADR 1.24 and its coordinate/sequence
+specializations: X may be N or a finite index range. X may also be empty;
+there is no finiteness or nonemptiness assumption on X. Scalar-valued functions
+are the scope of this family; arbitrary vector-valued functions are a separate
+construction. The verification checkpoint is
+`validation/.function_spaces/`. Its strict imported consumer checks arbitrary
+supplied fields through an existing VectorSpace theorem, concrete real/complex
+sequences and empty-domain instances. Three controls reject an empty-domain
+point, implicit larger-domain restriction and a wrong sum, retaining context.
+Directly retyping this record with a `finite_seq(K,n)` carrier is not certified
+by those gates; native coordinate records remain a separate construction.
 
 ## Finite combinations and span
 
@@ -675,6 +724,78 @@ generic inverse, distributivity and equation laws. The independently replayed
 model and cross-file caller pass; all 15 focused checks include eight
 final-statement refusals and both installed layouts.
 
+## Finite vector-list sums and subspace families
+
+vector_list_sum<K,F,V,space,n> is an ordinary function from finite_seq(V,n)
+to V. Its value is the existing linear_combination with one_coefficients,
+not a second folding implementation. All domains include n=0. Equal weighted
+contributions reuse one combination trace and its existing uniqueness theorem.
+Adding and scaling traces prove the termwise sum laws; from_trace exposes the
+ordinary zero-start accumulation interface. two_vector_list_sum instantiates
+the same trace at 0, 1 and 2.
+
+A family is a finite_seq(power_set(V),n). is_subspace_family requires each
+entry to satisfy the existing ambient is_subspace relation. The
+is_family_decomposition relation includes family validity and component
+membership. is_finite_subspace_sum_vector existentially quantifies an actual
+finite_seq(V,n), with value given by vector_list_sum. The guarded
+finite_subspace_sum<K,F,V,space,n,members> is an actual power_set(V) value.
+No constructor or value is replaced by only a certificate proposition.
+
+Componentwise addition and scaling, followed by the sum laws, prove closure.
+The existing span_reduction::linear_combination_in_subspace proves containment
+in any common ambient subspace. Existing unit coefficients and equality of
+weighted contributions prove summand inclusion. The empty family is valid and
+its sum is exactly {space.zero}. The ambient space need not be finite dimensional.
+
+is_direct_subspace_family means injectivity of summation on valid component
+lists. Since the sum is defined as their image, its elements have unique
+decompositions. The all-zero list proves the forward zero-decomposition rule.
+For the reverse, componentwise differences have sum zero by add/scale
+compatibility and the selected minus-one inverse law; inverse uniqueness then
+identifies the original lists. The component index is an outer theorem binder,
+preserving the all-components statement without a nested forall conclusion.
+
+Names and evidence stay in finite_span and subspace_sums. These are source
+declarations only: no new BT, reserved native name, strategy, struct field,
+trust or axiom. The source-owned .ladr_ab records distinguish the checked sum,
+family and directness checkpoints from the unfinished wider A–B/FTA program.
+
+## Selected vector negation and subtraction
+
+The unique additive-inverse result already establishes a canonical value, so
+LADR 1.28 uses a template-indexed have fn by exist! rather than a new inverse
+relation or a new VectorSpace field. Parameters K, F, V and space determine
+the declaration; the selected function maps x in V to its inverse in V.
+vector_neg_spec publishes its defining equation and vector_neg_characterization
+reuses selection uniqueness. vector_difference is ordinary addition of the
+first vector and the selected negative of the second.
+
+Scalar distributivity, F.one+F.neg(F.one)=F.zero and the existing zero-scalar
+theorem show that multiplying x by negative one is an inverse candidate.
+Selection uniqueness yields LADR 1.32. A proof-local V-valued name exposes the
+candidate before using congruence; no verifier change is needed.
+Evidence: validation/.ladr_ab/acceptance.json (31 source, 43 imported statements,
+three refusal controls, actual R/C coordinates and zero dimension).
+
+## Native finite coordinate spaces
+
+Reuse the finite_span coefficient operations rather than wrapping or retyping
+the raw scalar function-space record. For K nonempty, F a Field<K> and n in N,
+`coordinate_space<K,F,n>` has the exact native carrier `finite_seq(K,n)` and
+the existing VectorSpace laws. Its three fields are zero_coefficients,
+add_coefficients and smul_coefficients; neg_coefficients supplies inverses.
+All law proofs are local pointwise applications of the Field laws followed
+by function extensionality. The explicit native/function membership views
+make the fixed operations available to struct_member.
+
+Dependency order: Field and VectorSpace -> existing coefficient operations
+-> pointwise laws -> struct_member -> coordinate_space value -> imported
+coordinate_space_carrier -> existing generic vector-space theorems and native
+matrix use. No new struct, predicate, axiom or native rule is involved.
+Zero dimension is included without an n>0 hypothesis; there is no index in
+closed_range(1,0). Evidence is in validation/.coordinate_spaces.
+
 ## Vector space over the two-element field
 
 The checked two-element Field supplies zero, addition and multiplication for
@@ -744,3 +865,302 @@ The README records 27 source theorems, the 33-declaration strict gate, 58 full
 std-imported consumer statements and five focused source refusals. The
 noncommutative concrete model is still deferred proof debt, not checked
 coverage; quotient and polynomial constructions remain future work.
+
+## Scalar spaces and inherited-space correspondence
+
+scalar_space<K,F> is the actual VectorSpace<K,F,K> value
+(F.zero,F.add,F.mul). The six vector-space law groups follow from the supplied
+Field laws and field::add_mul; scalar_space_carrier publishes its membership.
+No scalar arithmetic, Field or VectorSpace field is replaced. The standard R/C
+instances compute with their native arithmetic; a generic imported caller uses
+identity/inverse uniqueness and both zero-action theorems. Receipt:
+validation/.ladr_ab/scalar_acceptance.json (34 source, 32 imported statements,
+three expected refusals).
+
+inherited_space_is_subspace is the converse to the existing restricted_space
+construction. Its subset carrier is nonempty; the supplied VectorSpace on it
+must share the ambient zero, addition and scalar multiplication. These premises
+yield the existing ambient is_subspace relation. No unrelated structure on the
+same set is accepted as inherited structure.
+
+direct_pair_family_intersection and trivial_pair_intersection_implies_direct
+specialize the finite-family criterion to length two. The intersection equals
+{space.zero}; neither direction requires the sum to equal V. Existing
+is_internal_direct_sum still includes that additional ambient exhaustion
+condition. The pair consumer constructs the sum of two zero subspaces in a
+nonzero real plane, proves it is proper, and constructs its inherited space.
+Receipts: validation/.ladr_ab/pair_acceptance.json and its referenced gates.
+
+## Real and complex polynomial functions
+
+The polynomial export fixes the standard R/C arithmetic. It does not expose
+an arbitrary-field evaluation-injectivity claim. Coefficients are finite_seq(R,n+1)
+or finite_seq(C,n+1); entry k+1 multiplies x^k for k in closed_range(0,n).
+real_polynomial_value<n>(coefficients,x) and complex_polynomial_value<n>
+use native finite_set_sum and nonnegative powers, including 0^0=1.
+real_polynomial_from_coefficients<n> and complex_polynomial_from_coefficients<n>
+return actual functions on the entire respective scalar domain.
+
+is_real_polynomial(p) and is_complex_polynomial(p) existentially quantify a
+finite coefficient representation of the function p. real_polynomials and
+complex_polynomials are actual subsets of fn(x R) R and fn(x C) C.
+The _from_coefficients_is_polynomial, _of_pointwise_representation,
+_representation and _contains theorems publish construction and membership use.
+The _function_carrier theorems expose callable membership after a value is
+bound in a polynomial set. The _value_at and _value_spec theorems give the two
+separate defining equations (constructor application and finite sum).
+
+_constant_polynomial_value proves the n=0 evaluation. The typed
+real_constant_polynomial(c) and complex_constant_polynomial(c) return values
+in their polynomial sets; _constant_function_is_polynomial proves the required
+membership before construction. _polynomials_nonempty uses the zero constant.
+_linear_polynomial_value proves the n=1 formula from the native explicit-list
+sum expansion; the real proof first publishes equality with the C-valued sum.
+No coefficient normalization, coefficient uniqueness, exact-degree selector,
+polynomial-space closure or FTA is claimed by this initial interface checkpoint.
+In particular, a trailing zero is permitted in a representation and does not
+establish exact degree. The source-owned .ladr_ab polynomial records retain the
+failed generic-carrier WD probe and the corrected complex-coefficient binders.
+
+The next same-bound evaluation increment adds real_polynomial_value_add,
+complex_polynomial_value_add, real_polynomial_value_smul and
+complex_polynomial_value_smul. Each requires the actual termwise coefficient
+relation on closed_range(1,n+1), with n in N and no nonzero scalar condition.
+The conclusion is equality of the evaluated native sums. The proofs reuse
+native finite-sum linearity through checked local theorems on abstract C-valued
+functions; the real versions publish substitution to C-valued sums explicitly.
+The imported law consumer reuses existing finite_span add_coefficients and
+smul_coefficients over the standard fields. New coefficient operations, a
+second sum implementation and polynomial normalization are not introduced.
+The source checkpoint passes 40 statements, 26 independent imported statements
+and three refusal controls. Receipt: validation/.ladr_ab/polynomial_laws_acceptance.json.
+
+## First-class unary function evaluation
+
+function_evaluation<X,Y,point> is the ordinary map (X→Y)→Y taking f to
+f(point), with X,Y sets and point in X. Its value contract is independent of
+Field structure; arbitrary codomain sets do not select a different operation.
+The required point excludes empty-domain instantiation. The _carrier and _spec
+theorems publish its complete callable membership and defining equation.
+
+function_evaluation_is_linear specializes this same map to the existing
+function_space<K,F,X> and scalar_space<K,F>, for K nonempty and F a Field<K>.
+It uses their actual pointwise/Field operations. Typed local sum/scaled
+functions expose returned-call membership; the evaluation specifications are
+published before congruence in target addition/multiplication. No linearity
+premise, extra vector-space record, native rule or protected shape is added.
+This supplies the evaluation transport needed before the polynomial-to-span
+correspondence. Four declarations are appended to vector_space. The checkpoint passes 38
+source and 9 imported statements plus three fresh domain/value refusals.
+Receipt: validation/.ladr_ab/evaluation_acceptance.json.
+
+## Monomial lists and polynomial linear combinations
+
+complex_monomial_values<n>(x) and real_monomial_values<n>(x) are actual
+finite_seq values of length n+1, with entry j equal to x^(j-1). The
+complex_monomials<n> and real_monomials<n> templates are complete unary functions
+on closed_range(1,n+1) returning the corresponding monomial functions. Named
+entry and carrier theorems expose both levels of application.
+
+The scalar _polynomial_value_as_combination theorem identifies native polynomial
+evaluation with the existing linear_combination on the standard scalar_space.
+Its zero-start partial-sum trace uses native sums and the existing partial-sum
+uniqueness theorem; the proof does not introduce a second sum selector. The
+_monomials_evaluation theorem identifies map_vectors of first-class evaluation
+with the monomial-value list. Evaluation linearity and the existing
+linear_map_preserves_combination then prove _polynomial_function_as_combination:
+the entire polynomial function equals a linear combination of monomial functions
+in function_space. The real and complex interfaces have separate fixed carriers.
+
+These 18 declarations and two explicit openings of the standard Field values
+extend polynomial.lit from 40 to 60 statements. Four existing space-carrier
+publications complete a 64-statement source checkpoint, which passes cleanly;
+the independent caller passes 22 statements with three monomial refusal
+controls. Receipt: validation/.ladr_ab/polynomial_bridge_acceptance.json. Exact degree, coefficient
+uniqueness, whole polynomial-space closure and FTA remain outside this checkpoint.
+
+## Polynomial subspaces and vector-space values
+
+complex_polynomials_up_to<n> and real_polynomials_up_to<n> are the actual spans
+of their length-(n+1) monomial-function lists. Their carrier/subspace theorems,
+coefficient-representation introduction/elimination and monotone inclusion laws
+are proved from existing span and linear-combination interfaces. The current
+contract is a finite coefficient bound; an exact-degree selector is not assumed.
+
+complex_polynomials_is_subspace and real_polynomials_is_subspace prove closure
+of the full function-defined polynomial sets. Two finite representations lie in
+a common bound n+m; bounded-span subspace laws give addition and scalar closure.
+complex_polynomial_space and real_polynomial_space are actual inherited
+VectorSpace values on the full polynomial sets, using restricted_space.
+complex_bounded_polynomial_space<n> and real_bounded_polynomial_space<n> are
+actual inherited values on the bounded sets. Their nonempty carriers are proved
+before the corresponding struct-membership declarations.
+
+The expanded polynomial source passes 96 statements; the independent caller
+passes 30. Three retained-context controls reject a complex scalar in the real
+space, an application without its coefficient-witness premise, and a false
+equality between zero and a nonconstant polynomial. See
+validation/.ladr_ab/polynomial_full_acceptance.json. LADR 2.10 is accepted.
+Exact degree, coefficient uniqueness, a dimension formula and full FTA remain
+unfinished. Refusing a missing witness is not a proof of nonpolynomiality.
+
+## Constant coefficients and linear roots
+
+The zero-evaluation checkpoint extends polynomial.lit to 105 accepted
+statements. Its independent caller passes 22 statements; three controls
+reject a missing nonzero-leading-coefficient premise, a false value at zero,
+and an unproved whole-function equality from equal constant coefficients.
+The valid context survives each refusal. Receipt:
+validation/.ladr_ab/polynomial_zero_acceptance.json.
+
+complex_zero_tail_sum and real_zero_tail_sum prove the ordinary sum identity
+when every positive-index term is zero. They support the real/complex
+polynomial_value_at_zero theorems. The real/complex
+polynomial_first_coefficient_unique theorems allow different bounds n and m
+and require equality of the entire represented functions.
+
+real_linear_polynomial_has_root and complex_linear_polynomial_has_root require
+a length-(1+1) coefficient list and a nonzero second entry, and produce a root
+in the corresponding scalar carrier. No degree selector, general coefficient
+uniqueness, polynomial division or complete FTA is supplied by this increment.
+No trust, axiom, native interface or protected data shape changed.
+
+## Ordered basis extraction
+
+ordered_basis.lit has six accepted declarations: is_ordered_sublist_selection,
+is_ordered_sublist, list_is_own_ordered_sublist, ordered_sublist_transitive,
+removed_list_is_ordered_sublist, and
+spanning_list_has_ordered_basis_of_bounded_length. The selection predicate has
+parameters (V set,n N,m N,original finite_seq(V,n),selected finite_seq(V,m),
+indices finite_seq(N+,m)). It requires m<=n, all used indices<=n, matching
+selected entries, and strict increase. The sublist predicate existentially
+hides that complete index witness. Empty lists are included.
+
+The extraction theorem takes a supplied arbitrary Field/VectorSpace and finite
+spanning list. Induction reuses dependence and span-preserving removal;
+composition of increasing maps retains original order. The independent caller
+passes 37 statements. The three negative controls specifically fail increasing
+order, the upper index bound and the spanning premise, with context retained.
+Receipt: validation/.ladr_ab/ordered_basis_acceptance.json; LADR 2.30 accepted.
+No existing extraction contract was changed and no native interface was added.
+
+## Basis characterization converse checkpoint
+
+basis_characterization.lit passes two source declarations:
+unique_representations_imply_basis and
+nontrivial_dependence_coefficients_imply_dependent. The former assumes a unique
+coefficient representation of every vector; it proves spanning by existence
+and independence by comparing zero representations. The latter supplies the
+converse to the existing dependent_has_nontrivial_coefficients theorem.
+Both work over an arbitrary supplied Field/VectorSpace and include length zero.
+The independent caller passes 37 statements. It proves that (0,1,2,3) spans
+the actual real scalar space but has a nontrivial zero relation. Three controls
+reject the unique-representation converse without uniqueness, a nontrivial
+relation for the independent empty list, and false independence for the
+dependent real list. Context is retained. Receipt:
+validation/.ladr_ab/basis_characterization_acceptance.json; LADR 2.17 and 2.28
+are accepted. These converse proofs add no new assumptions or native rules.
+
+## Standard coordinate basis checkpoint
+
+New source Obj contracts:
+
+- coordinate_basis::coordinate_basis<K,F,n>: finite_seq(finite_seq(K,n),n),
+  K nonempty, F supplied Field<K>, n in N including 0. It lists existing unit
+  coefficient vectors. Its name has one fixed three-template-parameter contract.
+- coordinate_basis::coordinate_projection<K,n,j>: fn(vector finite_seq(K,n)) K,
+  K a set, n in N, j in closed_range(1,n). No Field parameter is present.
+
+Proved source interfaces: coordinate_basis_carrier/3,
+coordinate_projection_carrier/3, coordinate_basis_entry/4,
+coordinate_projection_spec/4, coordinate_projection_is_linear/4,
+unit_coefficients_symmetric/5, scalar_linear_combination_commutes/5,
+coordinate_projection_maps_basis/4, coordinate_basis_linear_combination/4,
+coordinate_basis_spans/3, coordinate_basis_is_independent/3,
+coordinate_basis_is_basis/3, coordinate_space_is_finite_dimensional/3 and
+coordinate_space_dimension/3. The last theorem supplies finite-dimensionality
+and the existing finite_dimension selector value n together.
+
+Reused dependencies are the actual native finite_seq coordinate space, supplied
+Field and scalar space, existing unit coefficients, map_vectors, combinations,
+partial-sum traces, independence, spanning and finite dimension. Independence
+uses a trace from the supplied zero-value relation to identify its selected
+combination before applying reconstruction. No kernel, BT, strategy, trust or
+axiom changed; no new BT name/arity is reserved.
+
+Receipt: validation/.ladr_ab/coordinate_basis_acceptance.json, 20 strict source
+statements, 33 independent imported statements and three retained-context
+refusals. Actual R/C examples and dimensions 0/2 pass. Projection index 0,
+false nonreal coordinates and false dimension 3 for the plane are refused.
+The source-owned isolated validation manifest avoids replaying all historical
+consumer batches. Broader A–B and FTA remain unfinished.
+
+Native complex scalar reuse: validation/.ladr_ab/complex_scalar/acceptance.json
+accepts source items 1.1/1.3/1.5 via nine independent strict claims and three
+refusals. Native C has a proved unique coordinate-pair correspondence to R × R;
+literal equality of those carrier sets is not asserted. No new Obj/prop was
+introduced by this reuse audit.
+
+## Finite-space tools checkpoint
+
+New source predicate: infinite_dimension::is_infinite_dimensional(K,F,V,space)/4
+is not basis::is_finite_dimensional(K,F,V,space), over the same exact supplied
+Field/VectorSpace carrier and domains.
+
+New source Obj families:
+
+- zero_extended_coordinates<K,F,n,vector>: fn(j N+) K, with vector in
+  finite_seq(K,n); entry j is vector(j) when j<=n and F.zero otherwise.
+- coordinate_zero_extension<K,F,n>: fn(vector finite_seq(K,n)) fn(t N+) K,
+  mapping vector to the preceding zero-extended value. These are two distinct
+  fixed contracts, not overloads. K is nonempty, F a supplied Field<K>, n in N.
+
+Source coordinate_arithmetic has a checked coordinate-space carrier publication
+and coordinate_space_add_entry/6, coordinate_space_smul_entry/6,
+coordinate_space_zero_entry/4 and coordinate_vector_neg_entry/5. These expose
+the actual coordinate-space record operations; they do not retarget a raw
+function-space record. The inverse entry theorem reuses minus_one_times_vector
+and the Field negation/multiplication law.
+
+Source dependent_removal adds dependent_list_has_redundant_predecessor/6.
+A dependent natural-length list yields k>0, predecessor length m=k-1 and
+reduced length r with r+1=n, a true prefix, membership of vectors(k) in its
+span, deletion of that same index and preservation of the full span. No
+positive-length hypothesis is added to the input.
+
+Source complement proves independent_concatenation_has_trivial_span_intersection/8
+and finite_dimensional_subspace_has_complement/5. Only the latter's original
+subspace and ambient finite-dimensional premises are supplied by callers.
+The proof derives a subspace basis, extends it and uses the added tail span.
+The result is an existential internal direct sum, including zero and whole
+subspaces. No canonical complement selector or choice axiom is introduced.
+
+Source infinite_dimension has 13 declarations: the predicate and carrier
+publications, the two Obj templates, coordinate_zero_extension_carrier/3,
+coordinate_zero_extension_entry/5, coordinate_zero_extension_tail/5,
+coordinate_zero_extension_is_injective/3, coordinate_zero_extension_is_linear/3
+and positive_index_function_space_is_infinite_dimensional/2. The final proof
+uses the actual scalar function-space record on N+ and the existing injective
+dimension bound with a source of dimension d+1. It works over every supplied
+Field; it does not require scalar characteristic zero or assume a root.
+
+Reused interfaces include restricted subspace spaces, finite-dimensional
+subspace and dimension theorems, dependence, basis extension, concatenation,
+combination uniqueness, coordinate bases and actual scalar function spaces.
+The independent subspace caller proves the source hypotheses of 2.25/2.37/
+2.39/2.43 without adding finite-dimensional intersection/sum premises. It
+publishes the derived carrier and finite-dimensional facts before selector WD.
+
+Verification: validation/.ladr_ab/finite_tools/acceptance.json records a strict
+13-statement final source target, its registered predecessors, 15 subspace
+reuse claims, 66 independent use statements and four retained-context refusals.
+The receipt includes executable, manifest and consumed module hashes; cache
+reuse is restricted to the actual unchanged dependencies of each target.
+The initial fixture failure was corrected by exposing the scalar-space tuple
+before projecting its zero. The source proofs were unchanged.
+
+Source items accepted by this increment: 1.11/1.13/1.14/1.15/1.17/1.18,
+2.13/2.19/2.25/2.33/2.37/2.39/2.43. All n=0 contracts are retained.
+No reserved BT name/arity, native rule, strategy, AST, Env/Runtime, kernel,
+compiler, trust or axiom changed. Full coefficient uniqueness, exact degree,
+complete FTA and the broader chapter 3 program remain unfinished.

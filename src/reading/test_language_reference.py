@@ -5,8 +5,8 @@ import json
 from pathlib import Path
 import unittest
 import re
-from generate_language_reference import validate, resolved_entries
-from audit_language_reference import ast_shapes, audit, native_unicode_aliases, builtin_theorem_inventory
+from generate_language_reference import validate, resolved_entries, resolved_builtin_theorems
+from audit_language_reference import ast_shapes, audit, native_unicode_aliases, builtin_theorem_inventory, builtin_theorem_contracts
 from generate_highlighting import catalogue, delegated_spellings
 
 class LanguageReferenceTests(unittest.TestCase):
@@ -79,7 +79,11 @@ class LanguageReferenceTests(unittest.TestCase):
             self.assertEqual(report['mathematical_help'][root]['counts']['brief_or_missing'],0)
     def test_native_source_hint_keys_resolve_to_authored_cards(self):
         source=(Path(__file__).parent/'source_hints.rs').read_text()
-        keys=set(re.findall(r'Some\("([^"\n]+)"\)',source))
+        # Only the hint-key producer emits catalogue references. Token and
+        # source-anchor checks elsewhere also use Some("...") for punctuation.
+        producer=re.search(r'(?ms)^fn reference_key\b.*?^\}',source)
+        self.assertIsNotNone(producer)
+        keys=set(re.findall(r'Some\("([^"\n]+)"\)',producer.group()))
         self.assertTrue(keys)
         for key in keys:
             self.assertIn(key,self.data['entries'])
@@ -141,5 +145,34 @@ class LanguageReferenceTests(unittest.TestCase):
         self.assertEqual(report['counts']['dedicated_reference'],0)
         self.assertEqual(report['counts']['generic_or_missing'],report['total'])
         self.assertEqual(len(report['branches']),report['total'])
+    def test_builtin_reference_identity_signature_and_language_guards(self):
+        contracts=builtin_theorem_contracts()
+        for identity,card in self.data['builtin_theorems'].items():
+            self.assertTrue(card['syntax'].startswith(contracts[identity]['name']+'('))
+            self.assertTrue(card['example'])
+        for mode in ['identity','arity','name','language']:
+            data=copy.deepcopy(self.data)
+            if mode=='identity':data['builtin_theorems']['FutureTheorem']=data['builtin_theorems']['PrimeDivisor']
+            if mode=='arity':data['builtin_theorems']['PrimeDivisor']['syntax']='prime_divisor(m, p)'
+            if mode=='name':data['builtin_theorems']['PrimeDivisor']['syntax']='prime_divides_product(m)'
+            if mode=='language':del data['builtin_theorems']['PrimeDivisor']['notes']['zh']
+            with self.assertRaises(AssertionError):validate(data)
+    def test_unwired_theorem_cards_do_not_inflate_coverage(self):
+        cards=self.data['builtin_theorems']
+        generic='function theoremReference(id){return null;}'
+        self.assertEqual(builtin_theorem_inventory(generic,cards)['counts']['dedicated_reference'],0)
+        source=(Path(__file__).parent/'web/reader.js').read_text()
+        self.assertEqual(builtin_theorem_inventory(source,cards)['counts']['dedicated_reference'],len(cards))
+        legacy=copy.deepcopy(self.data);del legacy['builtin_theorems'];validate(legacy)
+    def test_theorem_declaration_keys_come_from_native_contracts(self):
+        data=copy.deepcopy(self.data)
+        data['builtin_theorems']['PrimeDivisor']['native_name']='forged_name'
+        data['builtin_theorems']['PrimeDivisor']['native_arity']=19
+        resolved=resolved_builtin_theorems(data)
+        contracts=builtin_theorem_contracts()
+        for key,card in resolved.items():
+            self.assertEqual(card['native_name'],contracts[key]['name'])
+            self.assertEqual(card['native_arity'],contracts[key]['arity'])
+        self.assertEqual(resolved_builtin_theorems({}),{})
 
 if __name__=='__main__':unittest.main()

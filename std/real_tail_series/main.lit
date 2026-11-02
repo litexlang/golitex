@@ -1,0 +1,821 @@
+claim:
+    ? forall start Z,n {j Z:j>=start}:
+        closed_range(start,n) $subset {j Z:j>=start}
+    claim:
+        ? forall k closed_range(start,n):
+            k $in {j Z:j>=start}
+        k $in Z
+        k>=start
+        k $in {j Z:j>=start}
+    by def closed_range(start,n) $subset {j Z:j>=start}
+
+template<start Z,a fn(n {j Z:j>=start}) R>:
+    have fn real_tail_partial_sums(n {j Z:j>=start}) R=sum(start,n,a)
+
+prop has_real_tail_series_sum(start Z,a fn(n {j Z:j>=start}) R,L R):
+    $rs::has_real_tail_limit(start,\real_tail_partial_sums<start,a>,L)
+
+prop is_convergent_real_tail_series(start Z,a fn(n {j Z:j>=start}) R):
+    exist L R st {$has_real_tail_series_sum(start,a,L)}
+
+thm real_tail_series_sum_unique:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_series_sum(start,a,L)
+        $has_real_tail_series_sum(start,a,M)
+        =>:
+            L=M
+    $rs::has_real_tail_limit(start,\real_tail_partial_sums<start,a>,L)
+    $rs::has_real_tail_limit(start,\real_tail_partial_sums<start,a>,M)
+    release thm rs::real_tail_limit_unique(start,\real_tail_partial_sums<start,a>,L,M)
+
+thm real_tail_series_sum_implies_convergent:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $has_real_tail_series_sum(start,a,L)
+        =>:
+            $is_convergent_real_tail_series(start,a)
+    witness $is_convergent_real_tail_series(start,a) from L
+
+thm convergent_real_tail_series_has_convergent_partial_sums:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_convergent_real_tail_series(start,a)
+        =>:
+            $rs::is_convergent_real_tail(start,\real_tail_partial_sums<start,a>)
+    obtain L from $is_convergent_real_tail_series(start,a)
+    $rs::has_real_tail_limit(start,\real_tail_partial_sums<start,a>,L)
+    release thm rs::real_tail_limit_implies_convergent(start,\real_tail_partial_sums<start,a>,L)
+
+template<start Z>:
+    have fn real_tail_series_sum(a fn(n {j Z:j>=start}) R: $is_convergent_real_tail_series(start,a)) R=\rs::real_tail_limit<start>(\real_tail_partial_sums<start,a>)
+
+thm real_tail_series_sum_value:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $has_real_tail_series_sum(start,a,L)
+        =>:
+            $is_convergent_real_tail_series(start,a)
+            \real_tail_series_sum<start>(a)=L
+    release thm real_tail_series_sum_implies_convergent(start,a,L)
+    $rs::has_real_tail_limit(start,\real_tail_partial_sums<start,a>,L)
+    release thm rs::real_tail_limit_value(start,\real_tail_partial_sums<start,a>,L)
+    \real_tail_series_sum<start>(a)=\rs::real_tail_limit<start>(\real_tail_partial_sums<start,a>)=L
+
+thm real_tail_series_sum_selected:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_convergent_real_tail_series(start,a)
+        =>:
+            $has_real_tail_series_sum(start,a,\real_tail_series_sum<start>(a))
+    release thm convergent_real_tail_series_has_convergent_partial_sums(start,a)
+    release thm rs::real_tail_limit_selected(start,\real_tail_partial_sums<start,a>)
+    \real_tail_series_sum<start>(a)=\rs::real_tail_limit<start>(\real_tail_partial_sums<start,a>)
+    by def $has_real_tail_series_sum(start,a,\real_tail_series_sum<start>(a))
+
+claim:
+    ? forall start Z,k N+:
+        start+k-1 $in {j Z:j>=start}
+    release thm rs::real_tail_positive_index(start,k)
+
+claim:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        \rs::real_tail_reindex<start,a> $in seq(R)
+    \rs::real_tail_reindex<start,a> $in fn(k N+) R
+    release thm fn_set_member(\rs::real_tail_reindex<start,a>,seq(R))
+
+release obj def series::partial_sum
+
+claim:
+    ? forall start,first,last Z:
+        first>=start
+        =>:
+            closed_range(first,last) $subset {j Z:j>=start}
+    claim:
+        ? forall k closed_range(first,last):
+            k $in {j Z:j>=start}
+        k $in Z
+        k>=first>=start
+        k $in {j Z:j>=start}
+    by def closed_range(first,last) $subset {j Z:j>=start}
+
+thm real_tail_partial_sums_reindex:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,k N+:
+        \real_tail_partial_sums<start,a>(start+k-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)
+    by induc k from 1:
+        ? \real_tail_partial_sums<start,a>(start+k-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)
+        ? from k=1:
+            start+1-1=start
+            start $in {j Z:j>=start}
+            sum(start,start,a)=a(start)
+            \real_tail_partial_sums<start,a>(start+1-1)=sum(start,start,a)=a(start)
+            release thm rs::real_tail_reindex_at(start,a,1)
+            \rs::real_tail_reindex<start,a>(1)=a(start+1-1)=a(start)
+            release thm series::partial_sum_first(\rs::real_tail_reindex<start,a>)
+            series::partial_sum(\rs::real_tail_reindex<start,a>,1)=\rs::real_tail_reindex<start,a>(1)=a(start)
+            \real_tail_partial_sums<start,a>(start+1-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,1)
+        ? induc:
+            release thm rs::real_tail_positive_index(start,k)
+            release thm rs::real_tail_positive_index(start,k+1)
+            start+k-1>=start
+            start+(k+1)-1=(start+k-1)+1
+            (start+k-1)+1 $in {j Z:j>=start}
+            sum(start,(start+k-1)+1,a)=sum(start,start+k-1,a)+sum((start+k-1)+1,(start+k-1)+1,a)
+            sum((start+k-1)+1,(start+k-1)+1,a)=a((start+k-1)+1)
+            \real_tail_partial_sums<start,a>(start+k-1)=sum(start,start+k-1,a)
+            \real_tail_partial_sums<start,a>(start+(k+1)-1)=sum(start,start+(k+1)-1,a)=sum(start,(start+k-1)+1,a)
+            sum(start,(start+k-1)+1,a)=\real_tail_partial_sums<start,a>(start+k-1)+a((start+k-1)+1)
+            a((start+k-1)+1)=a(start+(k+1)-1)
+            release thm rs::real_tail_reindex_at(start,a,k+1)
+            a(start+(k+1)-1)=\rs::real_tail_reindex<start,a>(k+1)
+            release thm series::partial_sum_successor(\rs::real_tail_reindex<start,a>,k)
+            \real_tail_partial_sums<start,a>(start+(k+1)-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)+\rs::real_tail_reindex<start,a>(k+1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k+1)
+
+release obj def series::partial_sums
+
+thm real_tail_series_sum_is_native_series_sum:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $has_real_tail_series_sum(start,a,L)
+        =>:
+            $series::has_series_sum(\rs::real_tail_reindex<start,a>,L)
+    $rs::has_real_tail_limit(start,\real_tail_partial_sums<start,a>,L)
+    release thm rs::real_tail_limit_is_native_limit(start,\real_tail_partial_sums<start,a>,L)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,\real_tail_partial_sums<start,a>>(k)=series::partial_sums(\rs::real_tail_reindex<start,a>)(k)
+        release thm real_tail_partial_sums_reindex(start,a,k)
+        release thm rs::real_tail_reindex_at(start,\real_tail_partial_sums<start,a>,k)
+        release thm series::partial_sums_at(\rs::real_tail_reindex<start,a>,k)
+        \rs::real_tail_reindex<start,\real_tail_partial_sums<start,a>>(k)=\real_tail_partial_sums<start,a>(start+k-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)=series::partial_sums(\rs::real_tail_reindex<start,a>)(k)
+    release thm seq_limit_eventually_equal(\rs::real_tail_reindex<start,\real_tail_partial_sums<start,a>>,series::partial_sums(\rs::real_tail_reindex<start,a>),L,1)
+    by def $series::has_series_sum(\rs::real_tail_reindex<start,a>,L)
+
+thm native_series_sum_is_real_tail_series_sum:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $series::has_series_sum(\rs::real_tail_reindex<start,a>,L)
+        =>:
+            $has_real_tail_series_sum(start,a,L)
+    $has_seq_limit(series::partial_sums(\rs::real_tail_reindex<start,a>),L)
+    claim:
+        ? forall k N+:
+            \real_tail_partial_sums<start,a>(start+k-1)=series::partial_sums(\rs::real_tail_reindex<start,a>)(k)
+        release thm real_tail_partial_sums_reindex(start,a,k)
+        release thm series::partial_sums_at(\rs::real_tail_reindex<start,a>,k)
+        \real_tail_partial_sums<start,a>(start+k-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)=series::partial_sums(\rs::real_tail_reindex<start,a>)(k)
+    release thm rs::real_tail_limit_from_reindexed_values(start,\real_tail_partial_sums<start,a>,series::partial_sums(\rs::real_tail_reindex<start,a>),L)
+    by def $has_real_tail_series_sum(start,a,L)
+
+thm convergent_real_tail_series_is_native_convergent:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_convergent_real_tail_series(start,a)
+        =>:
+            $series::is_convergent_series(\rs::real_tail_reindex<start,a>)
+    obtain L from $is_convergent_real_tail_series(start,a)
+    release thm real_tail_series_sum_is_native_series_sum(start,a,L)
+    release thm series::series_sum_convergent(\rs::real_tail_reindex<start,a>,L)
+
+thm native_convergent_series_is_real_tail_convergent:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $series::is_convergent_series(\rs::real_tail_reindex<start,a>)
+        =>:
+            $is_convergent_real_tail_series(start,a)
+    obtain L from $series::is_convergent_series(\rs::real_tail_reindex<start,a>)
+    release thm native_series_sum_is_real_tail_series_sum(start,a,L)
+    release thm real_tail_series_sum_implies_convergent(start,a,L)
+
+claim:
+    ? forall start,p Z:
+        p>start
+        =>:
+            p-1 $in {j Z:j>=start}
+    p-start $in Z
+    p-start>0
+    p-start $in N+
+    p-start>=1
+    p-1>=start
+    p-1 $in Z
+    p-1 $in {j Z:j>=start}
+
+claim:
+    ? forall start,n Z:
+        n>=start
+        =>:
+            n $in {j Z:j>=start}
+    n $in {j Z:j>=start}
+
+thm real_tail_series_block_from_partial_sums:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,p Z,q {j Z:j>=start}:
+        p>start
+        p<=q
+        =>:
+            finite_set_sum(closed_range(p,q),a)=\real_tail_partial_sums<start,a>(q)-\real_tail_partial_sums<start,a>(p-1)
+    p-1 $in {j Z:j>=start}
+    p-1>=start
+    p>=start
+    q>=p>=start
+    q $in {j Z:j>=start}
+    p=(p-1)+1
+    sum(start,q,a)=sum(start,p-1,a)+sum((p-1)+1,q,a)
+    sum((p-1)+1,q,a)=sum(p,q,a)
+    finite_set_sum(closed_range(p,q),a)=sum(p,q,a)
+    \real_tail_partial_sums<start,a>(q)=sum(start,q,a)
+    \real_tail_partial_sums<start,a>(p-1)=sum(start,p-1,a)
+    sum(p,q,a)=sum(start,q,a)-sum(start,p-1,a)
+    finite_set_sum(closed_range(p,q),a)=\real_tail_partial_sums<start,a>(q)-\real_tail_partial_sums<start,a>(p-1)
+
+prop real_tail_series_tails_small_after(start Z,a fn(n {j Z:j>=start}) R,epsilon R+,cutoff {c Z:c>=start}):
+    forall p,q {j Z:j>=start}:
+        p>=cutoff
+        q>=cutoff
+        =>:
+            abs(finite_set_sum(closed_range(p,q),a))<=epsilon
+
+prop has_cauchy_real_tail_series_tails(start Z,a fn(n {j Z:j>=start}) R):
+    forall epsilon R+:
+        exist cutoff {c Z:c>=start} st {$real_tail_series_tails_small_after(start,a,epsilon,cutoff)}
+
+thm convergent_real_tail_series_has_cauchy_tails:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_convergent_real_tail_series(start,a)
+        =>:
+            $has_cauchy_real_tail_series_tails(start,a)
+    obtain L from $is_convergent_real_tail_series(start,a)
+    $rs::has_real_tail_limit(start,\real_tail_partial_sums<start,a>,L)
+    release thm rs::real_tail_limit_is_cauchy(start,\real_tail_partial_sums<start,a>,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff {c Z:c>=start} st {$real_tail_series_tails_small_after(start,a,epsilon,cutoff)}
+        $rs::is_eventually_real_tail_steady(start,\real_tail_partial_sums<start,a>,epsilon)
+        obtain old from exist c Z st {$rs::is_real_tail_steady_after(start,\real_tail_partial_sums<start,a>,epsilon,c)}
+        old>=start
+        old+1>=start
+        old+1 $in {c Z:c>=start}
+        claim:
+            ? forall p,q {j Z:j>=start}:
+                p>=old+1
+                q>=old+1
+                =>:
+                    abs(finite_set_sum(closed_range(p,q),a))<=epsilon
+            p>=old+1>old>=start
+            q>=old+1>old>=start
+            by cases:
+                ? abs(finite_set_sum(closed_range(p,q),a))<=epsilon
+                case p>q:
+                    release thm fs::integer_closed_interval_empty(p,q)
+                    finite_set_sum({},a)=0
+                    finite_set_sum(closed_range(p,q),a)=finite_set_sum({},a)=0
+                    abs(finite_set_sum(closed_range(p,q),a))=abs(0)=0<=epsilon
+                case p<=q:
+                    p-1>=old
+                    p-1>=start
+                    p-1 $in {j Z:j>=start}
+                    q $in {j Z:j>=start}
+                    $approx::is_epsilon_close(\real_tail_partial_sums<start,a>(q),\real_tail_partial_sums<start,a>(p-1),epsilon)
+                    abs(\real_tail_partial_sums<start,a>(q)-\real_tail_partial_sums<start,a>(p-1))<=epsilon
+                    release thm real_tail_series_block_from_partial_sums(start,a,p,q)
+                    abs(finite_set_sum(closed_range(p,q),a))=abs(\real_tail_partial_sums<start,a>(q)-\real_tail_partial_sums<start,a>(p-1))<=epsilon
+        by def $real_tail_series_tails_small_after(start,a,epsilon,old+1)
+        witness exist cutoff {c Z:c>=start} st {$real_tail_series_tails_small_after(start,a,epsilon,cutoff)} from old+1
+    by def $has_cauchy_real_tail_series_tails(start,a)
+
+thm real_tail_series_partial_sums_close_from_small_tails:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,epsilon R+,cutoff,j,k {n Z:n>=start}:
+        $real_tail_series_tails_small_after(start,a,epsilon,cutoff)
+        j>=cutoff
+        k>=cutoff
+        =>:
+            $approx::is_epsilon_close(\real_tail_partial_sums<start,a>(j),\real_tail_partial_sums<start,a>(k),epsilon)
+    j $in Z
+    k $in Z
+    by cases:
+        ? $approx::is_epsilon_close(\real_tail_partial_sums<start,a>(j),\real_tail_partial_sums<start,a>(k),epsilon)
+        case j<k:
+            k-j $in Z
+            k-j>0
+            k-j $in N+
+            k-j>=1
+            j+1<=k
+            j+1>start
+            j+1 $in {n Z:n>=start}
+            j+1>=cutoff
+            abs(finite_set_sum(closed_range(j+1,k),a))<=epsilon
+            release thm real_tail_series_block_from_partial_sums(start,a,j+1,k)
+            (j+1)-1=j
+            \real_tail_partial_sums<start,a>((j+1)-1)=\real_tail_partial_sums<start,a>(j)
+            finite_set_sum(closed_range(j+1,k),a)=\real_tail_partial_sums<start,a>(k)-\real_tail_partial_sums<start,a>(j)
+            abs(\real_tail_partial_sums<start,a>(j)-\real_tail_partial_sums<start,a>(k))=abs(-(\real_tail_partial_sums<start,a>(k)-\real_tail_partial_sums<start,a>(j)))=abs(\real_tail_partial_sums<start,a>(k)-\real_tail_partial_sums<start,a>(j))=abs(finite_set_sum(closed_range(j+1,k),a))<=epsilon
+            by def $approx::is_epsilon_close(\real_tail_partial_sums<start,a>(j),\real_tail_partial_sums<start,a>(k),epsilon)
+        case j>=k:
+            by cases:
+                ? $approx::is_epsilon_close(\real_tail_partial_sums<start,a>(j),\real_tail_partial_sums<start,a>(k),epsilon)
+                case k<j:
+                    j-k $in Z
+                    j-k>0
+                    j-k $in N+
+                    j-k>=1
+                    k+1<=j
+                    k+1>start
+                    k+1 $in {n Z:n>=start}
+                    k+1>=cutoff
+                    abs(finite_set_sum(closed_range(k+1,j),a))<=epsilon
+                    release thm real_tail_series_block_from_partial_sums(start,a,k+1,j)
+                    (k+1)-1=k
+                    \real_tail_partial_sums<start,a>((k+1)-1)=\real_tail_partial_sums<start,a>(k)
+                    finite_set_sum(closed_range(k+1,j),a)=\real_tail_partial_sums<start,a>(j)-\real_tail_partial_sums<start,a>(k)
+                    abs(\real_tail_partial_sums<start,a>(j)-\real_tail_partial_sums<start,a>(k))=abs(finite_set_sum(closed_range(k+1,j),a))<=epsilon
+                    by def $approx::is_epsilon_close(\real_tail_partial_sums<start,a>(j),\real_tail_partial_sums<start,a>(k),epsilon)
+                case k>=j:
+                    j=k
+                    \real_tail_partial_sums<start,a>(j)=\real_tail_partial_sums<start,a>(k)
+                    abs(\real_tail_partial_sums<start,a>(j)-\real_tail_partial_sums<start,a>(k))=abs(0)=0<=epsilon
+                    by def $approx::is_epsilon_close(\real_tail_partial_sums<start,a>(j),\real_tail_partial_sums<start,a>(k),epsilon)
+
+thm real_tail_series_cauchy_tails_imply_convergent:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $has_cauchy_real_tail_series_tails(start,a)
+        =>:
+            $is_convergent_real_tail_series(start,a)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_steady(start,\real_tail_partial_sums<start,a>,epsilon)
+        obtain cutoff from exist c {j Z:j>=start} st {$real_tail_series_tails_small_after(start,a,epsilon,c)}
+        cutoff>=start
+        claim:
+            ? forall j,k Z:
+                j>=start
+                k>=start
+                j>=cutoff
+                k>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\real_tail_partial_sums<start,a>(j),\real_tail_partial_sums<start,a>(k),epsilon)
+            j $in {n Z:n>=start}
+            k $in {n Z:n>=start}
+            release thm real_tail_series_partial_sums_close_from_small_tails(start,a,epsilon,cutoff,j,k)
+        by def $rs::is_real_tail_steady_after(start,\real_tail_partial_sums<start,a>,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_steady(start,\real_tail_partial_sums<start,a>,epsilon) from cutoff
+    by def $rs::is_real_tail_cauchy(start,\real_tail_partial_sums<start,a>)
+    release thm rs::real_tail_cauchy_is_native_cauchy(start,\real_tail_partial_sums<start,a>)
+    release thm sequence_cauchy_convergent(\rs::real_tail_reindex<start,\real_tail_partial_sums<start,a>>)
+    release thm sequence_limit_from_convergent(\rs::real_tail_reindex<start,\real_tail_partial_sums<start,a>>)
+    obtain L from exist value R st {$has_seq_limit(\rs::real_tail_reindex<start,\real_tail_partial_sums<start,a>>,value)}
+    release thm rs::native_limit_is_real_tail_limit(start,\real_tail_partial_sums<start,a>,L)
+    by def $has_real_tail_series_sum(start,a,L)
+    release thm real_tail_series_sum_implies_convergent(start,a,L)
+
+thm convergent_real_tail_series_terms_tend_to_zero:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_convergent_real_tail_series(start,a)
+        =>:
+            $rs::has_real_tail_limit(start,a,0)
+    release thm convergent_real_tail_series_is_native_convergent(start,a)
+    release thm series::convergent_series_terms_zero(\rs::real_tail_reindex<start,a>)
+    release thm rs::native_limit_is_real_tail_limit(start,a,0)
+
+prop is_absolutely_convergent_real_tail_series(start Z,a fn(n {j Z:j>=start}) R):
+    $is_convergent_real_tail_series(start,\limits::real_tail_absolute_values<start,a>)
+
+release obj def series::absolute_terms
+
+thm real_tail_series_absolute_reindex:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        \rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>> =series::absolute_terms(\rs::real_tail_reindex<start,a>)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>(k)=series::absolute_terms(\rs::real_tail_reindex<start,a>)(k)
+        start+k-1 $in {j Z:j>=start}
+        release thm rs::real_tail_reindex_at(start,\limits::real_tail_absolute_values<start,a>,k)
+        release thm rs::real_tail_reindex_at(start,a,k)
+        release thm series::absolute_terms_at(\rs::real_tail_reindex<start,a>,k)
+        \rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>(k)=\limits::real_tail_absolute_values<start,a>(start+k-1)=abs(a(start+k-1))=abs(\rs::real_tail_reindex<start,a>(k))=series::absolute_terms(\rs::real_tail_reindex<start,a>)(k)
+    by fn_extension \rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>> =series::absolute_terms(\rs::real_tail_reindex<start,a>)
+
+thm absolutely_convergent_real_tail_series_converges:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_absolutely_convergent_real_tail_series(start,a)
+        =>:
+            $is_convergent_real_tail_series(start,a)
+    $is_convergent_real_tail_series(start,\limits::real_tail_absolute_values<start,a>)
+    release thm convergent_real_tail_series_is_native_convergent(start,\limits::real_tail_absolute_values<start,a>)
+    release thm real_tail_series_absolute_reindex(start,a)
+    $series::is_convergent_series(series::absolute_terms(\rs::real_tail_reindex<start,a>))
+    by def $series::is_absolutely_convergent_series(\rs::real_tail_reindex<start,a>)
+    release thm series::absolute_series_converges(\rs::real_tail_reindex<start,a>)
+    release thm native_convergent_series_is_real_tail_convergent(start,a)
+
+thm real_tail_series_absolute_sum_bound:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_series_sum(start,a,L)
+        $has_real_tail_series_sum(start,\limits::real_tail_absolute_values<start,a>,M)
+        =>:
+            abs(L)<=M
+    release thm real_tail_series_sum_is_native_series_sum(start,a,L)
+    release thm real_tail_series_sum_is_native_series_sum(start,\limits::real_tail_absolute_values<start,a>,M)
+    release thm real_tail_series_absolute_reindex(start,a)
+    $has_seq_limit(series::partial_sums(\rs::real_tail_reindex<start,a>),L)
+    $has_seq_limit(series::partial_sums(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>),M)
+    series::partial_sums(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>)=series::partial_sums(series::absolute_terms(\rs::real_tail_reindex<start,a>))
+    $has_seq_limit(series::partial_sums(series::absolute_terms(\rs::real_tail_reindex<start,a>)),M)
+    release thm series::absolute_terms_limit(series::partial_sums(\rs::real_tail_reindex<start,a>),L)
+    claim:
+        ? forall k N+:
+            k>=1
+            =>:
+                series::absolute_terms(series::partial_sums(\rs::real_tail_reindex<start,a>))(k)<=series::partial_sums(series::absolute_terms(\rs::real_tail_reindex<start,a>))(k)
+        release thm series::partial_sums_at(\rs::real_tail_reindex<start,a>,k)
+        release thm series::partial_sums_at(series::absolute_terms(\rs::real_tail_reindex<start,a>),k)
+        release thm series::absolute_terms_at(series::partial_sums(\rs::real_tail_reindex<start,a>),k)
+        release thm fn_set_member(\rs::real_tail_reindex<start,a>,fn(j N+) R)
+        release thm fn_set_member(series::absolute_terms(\rs::real_tail_reindex<start,a>),fn(j N+) R)
+        closed_range(1,k) $subset N+
+        series::partial_sum(\rs::real_tail_reindex<start,a>,k)=sum(1,k,\rs::real_tail_reindex<start,a>)
+        series::partial_sum(series::absolute_terms(\rs::real_tail_reindex<start,a>),k)=sum(1,k,series::absolute_terms(\rs::real_tail_reindex<start,a>))
+        claim:
+            ? forall j N+:
+                series::absolute_terms(\rs::real_tail_reindex<start,a>)(j)=(fn(idx N+) R {abs(\rs::real_tail_reindex<start,a>(idx))})(j)
+            release thm series::absolute_terms_at(\rs::real_tail_reindex<start,a>,j)
+            (fn(idx N+) R {abs(\rs::real_tail_reindex<start,a>(idx))})(j)=abs(\rs::real_tail_reindex<start,a>(j))=series::absolute_terms(\rs::real_tail_reindex<start,a>)(j)
+        release thm series::partial_sum_extensional(series::absolute_terms(\rs::real_tail_reindex<start,a>),fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))},k)
+        series::partial_sum(fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))},k)=sum(1,k,fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))})
+        sum(1,k,series::absolute_terms(\rs::real_tail_reindex<start,a>))=series::partial_sum(series::absolute_terms(\rs::real_tail_reindex<start,a>),k)=series::partial_sum(fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))},k)=sum(1,k,fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))})
+        finite_set_sum(closed_range(1,k),\rs::real_tail_reindex<start,a>)=sum(1,k,\rs::real_tail_reindex<start,a>)
+        abs(finite_set_sum(closed_range(1,k),\rs::real_tail_reindex<start,a>))<=finite_set_sum(closed_range(1,k),fn(j closed_range(1,k)) R {abs(\rs::real_tail_reindex<start,a>(j))})
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(1,k),fn(j closed_range(1,k)) R {abs(\rs::real_tail_reindex<start,a>(j))}),finite_set_sum(closed_range(1,k),fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))}))
+        finite_set_sum(closed_range(1,k),fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))})=sum(1,k,fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))})
+        abs(sum(1,k,\rs::real_tail_reindex<start,a>))=abs(finite_set_sum(closed_range(1,k),\rs::real_tail_reindex<start,a>))<=finite_set_sum(closed_range(1,k),fn(j closed_range(1,k)) R {abs(\rs::real_tail_reindex<start,a>(j))})=finite_set_sum(closed_range(1,k),fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))})=sum(1,k,fn(j N+) R {abs(\rs::real_tail_reindex<start,a>(j))})=sum(1,k,series::absolute_terms(\rs::real_tail_reindex<start,a>))
+        series::absolute_terms(series::partial_sums(\rs::real_tail_reindex<start,a>))(k)=abs(series::partial_sums(\rs::real_tail_reindex<start,a>)(k))=abs(series::partial_sum(\rs::real_tail_reindex<start,a>,k))=abs(sum(1,k,\rs::real_tail_reindex<start,a>))
+        series::partial_sums(series::absolute_terms(\rs::real_tail_reindex<start,a>))(k)=series::partial_sum(series::absolute_terms(\rs::real_tail_reindex<start,a>),k)=sum(1,k,series::absolute_terms(\rs::real_tail_reindex<start,a>))
+        series::absolute_terms(series::partial_sums(\rs::real_tail_reindex<start,a>))(k)<=series::partial_sums(series::absolute_terms(\rs::real_tail_reindex<start,a>))(k)
+    release thm seq_limit_compare(series::absolute_terms(series::partial_sums(\rs::real_tail_reindex<start,a>)),series::partial_sums(series::absolute_terms(\rs::real_tail_reindex<start,a>)),abs(L),M,1)
+
+claim:
+    ? forall start Z,n {j Z:j>=start}:
+        n+1 $in {j Z:j>=start}
+    n $in Z
+    n>=start
+    n+1 $in Z
+    n+1>=n>=start
+    n+1 $in {j Z:j>=start}
+
+template<start Z,a fn(n {j Z:j>=start}) R>:
+    have fn real_tail_alternating_terms(n {j Z:j>=start}) R=(-1)^n*a(n)
+
+thm adjacent_decreasing_real_tail_has_nonincreasing_reindex:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n+1)<=a(n)
+        =>:
+            $is_seq_nonincreasing(\rs::real_tail_reindex<start,a>)
+    claim:
+        ? forall p,q N+:
+            p<=q
+            =>:
+                \rs::real_tail_reindex<start,a>(q)<=\rs::real_tail_reindex<start,a>(p)
+        by induc q from p:
+            ? \rs::real_tail_reindex<start,a>(q)<=\rs::real_tail_reindex<start,a>(p)
+            ? from q=p:
+                \rs::real_tail_reindex<start,a>(p)<=\rs::real_tail_reindex<start,a>(p)
+            ? induc:
+                start+q-1 $in {j Z:j>=start}
+                (start+q-1)+1 $in {j Z:j>=start}
+                a((start+q-1)+1)<=a(start+q-1)
+                start+(q+1)-1=(start+q-1)+1
+                release thm rs::real_tail_reindex_at(start,a,q+1)
+                release thm rs::real_tail_reindex_at(start,a,q)
+                \rs::real_tail_reindex<start,a>(q+1)=a(start+(q+1)-1)=a((start+q-1)+1)<=a(start+q-1)=\rs::real_tail_reindex<start,a>(q)<=\rs::real_tail_reindex<start,a>(p)
+    by def $is_seq_nonincreasing(\rs::real_tail_reindex<start,a>)
+
+thm real_tail_alternating_series_converges_from_zero_terms:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)>=0
+            a(n+1)<=a(n)
+        $rs::has_real_tail_limit(start,a,0)
+        =>:
+            $is_convergent_real_tail_series(start,\real_tail_alternating_terms<start,a>)
+    claim:
+        ? forall n {j Z:j>=start}:
+            a(n+1)<=a(n)
+        a(n+1)<=a(n)
+    release thm adjacent_decreasing_real_tail_has_nonincreasing_reindex(start,a)
+    release thm rs::real_tail_limit_is_native_limit(start,a,0)
+    have fn alternating(k N+) R=(-1)^(k+1)*\rs::real_tail_reindex<start,a>(k)
+    claim:
+        ? forall k N:
+            alternating(2*k+1)=\rs::real_tail_reindex<start,a>(2*k+1)
+        2*k+1 $in N+
+        k+1 $in N+
+        2*k+1+1=2*(k+1)
+        (-1)^(2*k+1+1)=(-1)^(2*(k+1))=((-1)^2)^(k+1)
+        (-1)^2=1
+        ((-1)^2)^(k+1)=1^(k+1)=1
+        (-1)^(2*k+1+1)=1
+        alternating(2*k+1)=(-1)^(2*k+1+1)*\rs::real_tail_reindex<start,a>(2*k+1)=1*\rs::real_tail_reindex<start,a>(2*k+1)=\rs::real_tail_reindex<start,a>(2*k+1)
+    claim:
+        ? forall k N+:
+            alternating(2*k)=-\rs::real_tail_reindex<start,a>(2*k)
+        2*k $in N+
+        (-1)^(2*k)=((-1)^2)^k
+        (-1)^2=1
+        ((-1)^2)^k=1^k=1
+        (-1)^(2*k)=1
+        (-1)^(2*k+1)=(-1)^(2*k)*(-1)^1=1*(-1)=-1
+        alternating(2*k)=(-1)^(2*k+1)*\rs::real_tail_reindex<start,a>(2*k)=(-1)*\rs::real_tail_reindex<start,a>(2*k)=-\rs::real_tail_reindex<start,a>(2*k)
+    release thm series::alternating_series_test(alternating,\rs::real_tail_reindex<start,a>)
+    obtain L from $series::is_convergent_series(alternating)
+    start-2 $in Z
+    (-1)^(start-2) $in R
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,\real_tail_alternating_terms<start,a>>(k)=(-1)^(start-2)*alternating(k)
+        start+k-1 $in {j Z:j>=start}
+        start+k-1 $in Z
+        k+1 $in Z
+        start+k-1=(start-2)+(k+1)
+        (-1)^(start+k-1)=(-1)^((start-2)+(k+1))=(-1)^(start-2)*(-1)^(k+1)
+        release thm rs::real_tail_reindex_at(start,\real_tail_alternating_terms<start,a>,k)
+        release thm rs::real_tail_reindex_at(start,a,k)
+        \rs::real_tail_reindex<start,\real_tail_alternating_terms<start,a>>(k)=\real_tail_alternating_terms<start,a>(start+k-1)=(-1)^(start+k-1)*a(start+k-1)
+        (-1)^(start+k-1)*a(start+k-1)=((-1)^(start-2)*(-1)^(k+1))*a(start+k-1)=(-1)^(start-2)*((-1)^(k+1)*a(start+k-1))
+        alternating(k)=(-1)^(k+1)*\rs::real_tail_reindex<start,a>(k)=(-1)^(k+1)*a(start+k-1)
+        (-1)^(start-2)*((-1)^(k+1)*a(start+k-1))=(-1)^(start-2)*alternating(k)
+        \rs::real_tail_reindex<start,\real_tail_alternating_terms<start,a>>(k)=(-1)^(start-2)*alternating(k)
+    release thm series::series_sum_scale(alternating,\rs::real_tail_reindex<start,\real_tail_alternating_terms<start,a>>,L,(-1)^(start-2))
+    release thm native_series_sum_is_real_tail_series_sum(start,\real_tail_alternating_terms<start,a>,(-1)^(start-2)*L)
+    release thm real_tail_series_sum_implies_convergent(start,\real_tail_alternating_terms<start,a>,(-1)^(start-2)*L)
+
+thm convergent_real_tail_alternating_series_forces_zero_terms:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)>=0
+        $is_convergent_real_tail_series(start,\real_tail_alternating_terms<start,a>)
+        =>:
+            $rs::has_real_tail_limit(start,a,0)
+    release thm convergent_real_tail_series_terms_tend_to_zero(start,\real_tail_alternating_terms<start,a>)
+    release thm limits::real_tail_zero_limit_implies_absolute_zero_limit(start,\real_tail_alternating_terms<start,a>)
+    release thm fn_set_member(\limits::real_tail_absolute_values<start,\real_tail_alternating_terms<start,a>>,fn(n {j Z:j>=start}) R)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \limits::real_tail_absolute_values<start,\real_tail_alternating_terms<start,a>>(n)=a(n)
+        n $in Z
+        a(n) $in R
+        a(n)>=0
+        abs(a(n))=a(n)
+        release thm approx::absolute_value_integer_power(-1,n)
+        abs(-1)=1
+        abs(-1)^n=1^n=1
+        abs((-1)^n)=abs(-1)^n=1
+        (-1)^n $in R
+        \real_tail_alternating_terms<start,a>(n)=(-1)^n*a(n)
+        abs(\real_tail_alternating_terms<start,a>(n))=abs((-1)^n*a(n))=abs((-1)^n)*abs(a(n))=1*a(n)=a(n)
+        \limits::real_tail_absolute_values<start,\real_tail_alternating_terms<start,a>>(n)=abs(\real_tail_alternating_terms<start,a>(n))=a(n)
+    by fn_extension \limits::real_tail_absolute_values<start,\real_tail_alternating_terms<start,a>> = a
+    $rs::has_real_tail_limit(start,\limits::real_tail_absolute_values<start,\real_tail_alternating_terms<start,a>>,0)
+    $rs::has_real_tail_limit(start,a,0)
+
+thm real_tail_series_sum_add:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_series_sum(start,a,L)
+        $has_real_tail_series_sum(start,b,M)
+        =>:
+            $has_real_tail_series_sum(start,\rs::real_tail_sum<start,a,b>,L+M)
+    release thm real_tail_series_sum_is_native_series_sum(start,a,L)
+    release thm real_tail_series_sum_is_native_series_sum(start,b,M)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,\rs::real_tail_sum<start,a,b>>(k)=\rs::real_tail_reindex<start,a>(k)+\rs::real_tail_reindex<start,b>(k)
+        start+k-1 $in {j Z:j>=start}
+        release thm rs::real_tail_reindex_at(start,\rs::real_tail_sum<start,a,b>,k)
+        release thm rs::real_tail_reindex_at(start,a,k)
+        release thm rs::real_tail_reindex_at(start,b,k)
+        \rs::real_tail_reindex<start,\rs::real_tail_sum<start,a,b>>(k)=\rs::real_tail_sum<start,a,b>(start+k-1)=a(start+k-1)+b(start+k-1)=\rs::real_tail_reindex<start,a>(k)+\rs::real_tail_reindex<start,b>(k)
+    release thm series::series_sum_add(\rs::real_tail_reindex<start,a>,\rs::real_tail_reindex<start,b>,\rs::real_tail_reindex<start,\rs::real_tail_sum<start,a,b>>,L,M)
+    release thm native_series_sum_is_real_tail_series_sum(start,\rs::real_tail_sum<start,a,b>,L+M)
+
+thm real_tail_series_sum_scale:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L,c R:
+        $has_real_tail_series_sum(start,a,L)
+        =>:
+            $has_real_tail_series_sum(start,\rs::real_tail_scaled<start,a,c>,c*L)
+    release thm real_tail_series_sum_is_native_series_sum(start,a,L)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,\rs::real_tail_scaled<start,a,c>>(k)=c*\rs::real_tail_reindex<start,a>(k)
+        start+k-1 $in {j Z:j>=start}
+        release thm rs::real_tail_reindex_at(start,\rs::real_tail_scaled<start,a,c>,k)
+        release thm rs::real_tail_reindex_at(start,a,k)
+        \rs::real_tail_reindex<start,\rs::real_tail_scaled<start,a,c>>(k)=\rs::real_tail_scaled<start,a,c>(start+k-1)=c*a(start+k-1)=c*\rs::real_tail_reindex<start,a>(k)
+    release thm series::series_sum_scale(\rs::real_tail_reindex<start,a>,\rs::real_tail_reindex<start,\rs::real_tail_scaled<start,a,c>>,L,c)
+    release thm native_series_sum_is_real_tail_series_sum(start,\rs::real_tail_scaled<start,a,c>,c*L)
+
+claim:
+    ? forall start Z,k N:
+        start+k $in {j Z:j>=start}
+    start+k $in Z
+    k>=0
+    start+k>=start+0=start
+    start+k $in {j Z:j>=start}
+
+release obj def series::series_tail
+
+thm real_tail_series_restriction_reindex_is_native_tail:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,k N+:
+        \rs::real_tail_reindex<start+k,\limits::real_tail_restriction<start,a,start+k>> = series::series_tail(\rs::real_tail_reindex<start,a>,k)
+    release thm fn_set_member(\rs::real_tail_reindex<start+k,\limits::real_tail_restriction<start,a,start+k>>,fn(n N+) R)
+    release thm fn_set_member(series::series_tail(\rs::real_tail_reindex<start,a>,k),fn(n N+) R)
+    claim:
+        ? forall n N+:
+            \rs::real_tail_reindex<start+k,\limits::real_tail_restriction<start,a,start+k>>(n)=series::series_tail(\rs::real_tail_reindex<start,a>,k)(n)
+        release thm rs::real_tail_positive_index(start+k,n)
+        release thm rs::real_tail_positive_index(start,n+k)
+        n+k $in N+
+        (start+k)+n-1=start+(n+k)-1
+        (start+k)+n-1 $in {j Z:j>=start+k}
+        start+(n+k)-1 $in {j Z:j>=start}
+        release thm rs::real_tail_reindex_at(start+k,\limits::real_tail_restriction<start,a,start+k>,n)
+        release thm rs::real_tail_reindex_at(start,a,n+k)
+        release thm series::series_tail_at(\rs::real_tail_reindex<start,a>,k,n)
+        \rs::real_tail_reindex<start+k,\limits::real_tail_restriction<start,a,start+k>>(n)=\limits::real_tail_restriction<start,a,start+k>((start+k)+n-1)=a((start+k)+n-1)=a(start+(n+k)-1)=\rs::real_tail_reindex<start,a>(n+k)=series::series_tail(\rs::real_tail_reindex<start,a>,k)(n)
+    by fn_extension \rs::real_tail_reindex<start+k,\limits::real_tail_restriction<start,a,start+k>> = series::series_tail(\rs::real_tail_reindex<start,a>,k)
+
+thm real_tail_series_nonempty_prefix_is_native_partial_sum:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,k N+:
+        finite_set_sum(closed_range(start,start+k-1),a)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)
+    start+k-1 $in {j Z:j>=start}
+    start+k-1>=start
+    finite_set_sum(closed_range(start,start+k-1),a)=sum(start,start+k-1,a)
+    \main::real_tail_partial_sums<start,a>(start+k-1)=sum(start,start+k-1,a)
+    release thm main::real_tail_partial_sums_reindex(start,a,k)
+    \main::real_tail_partial_sums<start,a>(start+k-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)
+    finite_set_sum(closed_range(start,start+k-1),a)=sum(start,start+k-1,a)=\main::real_tail_partial_sums<start,a>(start+k-1)=series::partial_sum(\rs::real_tail_reindex<start,a>,k)
+
+thm real_tail_series_sum_remove_finite_prefix:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,k N:
+        $main::has_real_tail_series_sum(start,a,L)
+        =>:
+            $main::has_real_tail_series_sum(start+k,\limits::real_tail_restriction<start,a,start+k>,L-finite_set_sum(closed_range(start,start+k-1),a))
+    k>=0
+    by cases:
+        ? $main::has_real_tail_series_sum(start+k,\limits::real_tail_restriction<start,a,start+k>,L-finite_set_sum(closed_range(start,start+k-1),a))
+        case k=0:
+            start+k=start
+            start+k-1=start-1
+            release thm fs::integer_closed_interval_empty(start,start-1)
+            closed_range(start,start+k-1)=closed_range(start,start-1)={}
+            finite_set_sum({},a)=0
+            finite_set_sum(closed_range(start,start+k-1),a)=finite_set_sum({},a)=0
+            L-finite_set_sum(closed_range(start,start+k-1),a)=L-0=L
+            release thm limits::real_tail_restriction_at_start(start,a)
+            claim:
+                ? forall n {j Z:j>=start+k}:
+                    n $in {j Z:j>=start}
+                n $in Z
+                n>=start+k=start
+                n $in {j Z:j>=start}
+            claim:
+                ? forall n {j Z:j>=start}:
+                    n $in {j Z:j>=start+k}
+                n $in Z
+                n>=start=start+k
+                n $in {j Z:j>=start+k}
+            claim:
+                ? forall n {j Z:j>=start+k}:
+                    \limits::real_tail_restriction<start,a,start+k>(n)=\limits::real_tail_restriction<start,a,start>(n)
+                n $in {j Z:j>=start}
+                \limits::real_tail_restriction<start,a,start+k>(n)=a(n)=\limits::real_tail_restriction<start,a,start>(n)
+            by fn_extension \limits::real_tail_restriction<start,a,start+k> = \limits::real_tail_restriction<start,a,start>
+            \limits::real_tail_restriction<start,a,start+k> = \limits::real_tail_restriction<start,a,start> = a
+            $main::has_real_tail_series_sum(start+k,\limits::real_tail_restriction<start,a,start+k>,L-finite_set_sum(closed_range(start,start+k-1),a))
+        case k>0:
+            k $in N+
+            release thm main::real_tail_series_sum_is_native_series_sum(start,a,L)
+            release thm series::series_sum_tail(\rs::real_tail_reindex<start,a>,L,k)
+            release thm real_tail_series_restriction_reindex_is_native_tail(start,a,k)
+            release thm real_tail_series_nonempty_prefix_is_native_partial_sum(start,a,k)
+            L-finite_set_sum(closed_range(start,start+k-1),a)=L-series::partial_sum(\rs::real_tail_reindex<start,a>,k)
+            $series::has_series_sum(\rs::real_tail_reindex<start+k,\limits::real_tail_restriction<start,a,start+k>>,L-finite_set_sum(closed_range(start,start+k-1),a))
+            release thm main::native_series_sum_is_real_tail_series_sum(start+k,\limits::real_tail_restriction<start,a,start+k>,L-finite_set_sum(closed_range(start,start+k-1),a))
+
+thm real_tail_series_sum_restore_finite_prefix:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,T R,k N:
+        $main::has_real_tail_series_sum(start+k,\limits::real_tail_restriction<start,a,start+k>,T)
+        =>:
+            $main::has_real_tail_series_sum(start,a,T+finite_set_sum(closed_range(start,start+k-1),a))
+    k>=0
+    by cases:
+        ? $main::has_real_tail_series_sum(start,a,T+finite_set_sum(closed_range(start,start+k-1),a))
+        case k=0:
+            start+k=start
+            start+k-1=start-1
+            release thm fs::integer_closed_interval_empty(start,start-1)
+            closed_range(start,start+k-1)=closed_range(start,start-1)={}
+            finite_set_sum({},a)=0
+            finite_set_sum(closed_range(start,start+k-1),a)=finite_set_sum({},a)=0
+            T+finite_set_sum(closed_range(start,start+k-1),a)=T+0=T
+            release thm limits::real_tail_restriction_at_start(start,a)
+            claim:
+                ? forall n {j Z:j>=start+k}:
+                    n $in {j Z:j>=start}
+                n $in Z
+                n>=start+k=start
+                n $in {j Z:j>=start}
+            claim:
+                ? forall n {j Z:j>=start}:
+                    n $in {j Z:j>=start+k}
+                n $in Z
+                n>=start=start+k
+                n $in {j Z:j>=start+k}
+            claim:
+                ? forall n {j Z:j>=start+k}:
+                    \limits::real_tail_restriction<start,a,start+k>(n)=\limits::real_tail_restriction<start,a,start>(n)
+                n $in {j Z:j>=start}
+                \limits::real_tail_restriction<start,a,start+k>(n)=a(n)=\limits::real_tail_restriction<start,a,start>(n)
+            by fn_extension \limits::real_tail_restriction<start,a,start+k> = \limits::real_tail_restriction<start,a,start>
+            \limits::real_tail_restriction<start,a,start+k> = \limits::real_tail_restriction<start,a,start> = a
+            $main::has_real_tail_series_sum(start,a,T)
+            $main::has_real_tail_series_sum(start,a,T+finite_set_sum(closed_range(start,start+k-1),a))
+        case k>0:
+            k $in N+
+            release thm main::real_tail_series_sum_is_native_series_sum(start+k,\limits::real_tail_restriction<start,a,start+k>,T)
+            release thm real_tail_series_restriction_reindex_is_native_tail(start,a,k)
+            $series::has_series_sum(series::series_tail(\rs::real_tail_reindex<start,a>,k),T)
+            release thm series::series_sum_from_tail(\rs::real_tail_reindex<start,a>,T,k)
+            release thm real_tail_series_nonempty_prefix_is_native_partial_sum(start,a,k)
+            T+finite_set_sum(closed_range(start,start+k-1),a)=T+series::partial_sum(\rs::real_tail_reindex<start,a>,k)
+            $series::has_series_sum(\rs::real_tail_reindex<start,a>,T+finite_set_sum(closed_range(start,start+k-1),a))
+            release thm main::native_series_sum_is_real_tail_series_sum(start,a,T+finite_set_sum(closed_range(start,start+k-1),a))
+
+thm convergent_real_tail_series_remains_convergent_after_finite_prefix:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,k N:
+        $main::is_convergent_real_tail_series(start,a)
+        =>:
+            $main::is_convergent_real_tail_series(start+k,\limits::real_tail_restriction<start,a,start+k>)
+    obtain L from $main::is_convergent_real_tail_series(start,a)
+    release thm real_tail_series_sum_remove_finite_prefix(start,a,L,k)
+    release thm main::real_tail_series_sum_implies_convergent(start+k,\limits::real_tail_restriction<start,a,start+k>,L-finite_set_sum(closed_range(start,start+k-1),a))
+
+thm convergent_real_tail_restriction_gives_convergent_series:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,k N:
+        $main::is_convergent_real_tail_series(start+k,\limits::real_tail_restriction<start,a,start+k>)
+        =>:
+            $main::is_convergent_real_tail_series(start,a)
+    obtain T from $main::is_convergent_real_tail_series(start+k,\limits::real_tail_restriction<start,a,start+k>)
+    release thm real_tail_series_sum_restore_finite_prefix(start,a,T,k)
+    release thm main::real_tail_series_sum_implies_convergent(start,a,T+finite_set_sum(closed_range(start,start+k-1),a))
+
+claim:
+    ? forall start,shift Z,n {j Z:j>=start+shift}:
+        n-shift $in {j Z:j>=start}
+    n $in Z
+    n>=start+shift
+    n-shift>=(start+shift)-shift=start
+    n-shift $in Z
+    n-shift $in {j Z:j>=start}
+
+template<start Z,a fn(n {j Z:j>=start}) R,shift Z>:
+    have fn real_tail_series_translate(n {j Z:j>=start+shift}) R=a(n-shift)
+
+thm real_tail_series_sum_translate:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,shift Z:
+        $main::has_real_tail_series_sum(start,a,L)
+        =>:
+            $main::has_real_tail_series_sum(start+shift,\real_tail_series_translate<start,a,shift>,L)
+    release thm main::real_tail_series_sum_is_native_series_sum(start,a,L)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,a>(k)=\rs::real_tail_reindex<start+shift,\real_tail_series_translate<start,a,shift>>(k)
+        release thm rs::real_tail_positive_index(start,k)
+        release thm rs::real_tail_positive_index(start+shift,k)
+        (start+shift)+k-1 $in {j Z:j>=start+shift}
+        ((start+shift)+k-1)-shift=start+k-1
+        release thm rs::real_tail_reindex_at(start,a,k)
+        release thm rs::real_tail_reindex_at(start+shift,\real_tail_series_translate<start,a,shift>,k)
+        \rs::real_tail_reindex<start+shift,\real_tail_series_translate<start,a,shift>>(k)=\real_tail_series_translate<start,a,shift>((start+shift)+k-1)=a(((start+shift)+k-1)-shift)=a(start+k-1)=\rs::real_tail_reindex<start,a>(k)
+    release thm series::series_sum_extensional(\rs::real_tail_reindex<start,a>,\rs::real_tail_reindex<start+shift,\real_tail_series_translate<start,a,shift>>,L)
+    release thm main::native_series_sum_is_real_tail_series_sum(start+shift,\real_tail_series_translate<start,a,shift>,L)
+
+template<start Z,a fn(n {j Z:j>=start}) R>:
+    have fn real_tail_forward_difference(n {j Z:j>=start}) R=a(n)-a(n+1)
+
+thm real_tail_telescoping_series_sum:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $rs::has_real_tail_limit(start,a,L)
+        =>:
+            $main::has_real_tail_series_sum(start,\real_tail_forward_difference<start,a>,a(start)-L)
+    start $in {j Z:j>=start}
+    release thm rs::real_tail_limit_is_native_limit(start,a,L)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,\real_tail_forward_difference<start,a>>(k)=\rs::real_tail_reindex<start,a>(k)-\rs::real_tail_reindex<start,a>(k+1)
+        start+k-1 $in {j Z:j>=start}
+        (start+k-1)+1 $in {j Z:j>=start}
+        start+(k+1)-1=(start+k-1)+1
+        release thm rs::real_tail_reindex_at(start,\real_tail_forward_difference<start,a>,k)
+        release thm rs::real_tail_reindex_at(start,a,k)
+        release thm rs::real_tail_reindex_at(start,a,k+1)
+        \rs::real_tail_reindex<start,\real_tail_forward_difference<start,a>>(k)=\real_tail_forward_difference<start,a>(start+k-1)=a(start+k-1)-a((start+k-1)+1)
+        a((start+k-1)+1)=a(start+(k+1)-1)=\rs::real_tail_reindex<start,a>(k+1)
+        a(start+k-1)=\rs::real_tail_reindex<start,a>(k)
+        a(start+k-1)-a((start+k-1)+1)=\rs::real_tail_reindex<start,a>(k)-\rs::real_tail_reindex<start,a>(k+1)
+        \rs::real_tail_reindex<start,\real_tail_forward_difference<start,a>>(k)=\rs::real_tail_reindex<start,a>(k)-\rs::real_tail_reindex<start,a>(k+1)
+    release thm series::series_sum_telescoping(\rs::real_tail_reindex<start,\real_tail_forward_difference<start,a>>,\rs::real_tail_reindex<start,a>,L)
+    release thm rs::real_tail_reindex_at(start,a,1)
+    start+1-1=start
+    \rs::real_tail_reindex<start,a>(1)=a(start+1-1)=a(start)
+    \rs::real_tail_reindex<start,a>(1)-L=a(start)-L
+    $series::has_series_sum(\rs::real_tail_reindex<start,\real_tail_forward_difference<start,a>>,a(start)-L)
+    release thm main::native_series_sum_is_real_tail_series_sum(start,\real_tail_forward_difference<start,a>,a(start)-L)

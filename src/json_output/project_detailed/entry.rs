@@ -296,6 +296,32 @@ pub(in crate::json_output) fn project_have_in_failed(
     runtime: &Runtime,
 ) -> JsonValue {
     match failed {
+        ExecHaveObjInNonemptySetStmtFailed::Local(context) => match &context.failure {
+            crate::execute::HaveObjInNonemptySetLocalFailed::ParamType(wd) => {
+                super::helper::failure_stage(
+                    runtime,
+                    "param_type",
+                    crate::json_output::failure_kind::FailureKind::WellDefined,
+                    "well_defined",
+                    project_verify_obj_wd(wd, runtime),
+                )
+            }
+            crate::execute::HaveObjInNonemptySetLocalFailed::Nonempty { failed, .. } => {
+                super::helper::failure_stage(
+                    runtime,
+                    "nonempty_check",
+                    crate::json_output::failure_kind::FailureKind::for_obligation(
+                        failed,
+                        crate::json_output::failure_kind::FailureKind::Nonempty,
+                    ),
+                    "verify",
+                    project_verify_fact(failed, runtime),
+                )
+            }
+            crate::execute::HaveObjInNonemptySetLocalFailed::AutoOpen { failed, .. } => {
+                super::definition_failure::project_struct_layer_failure(failed, runtime)
+            }
+        },
         ExecHaveObjInNonemptySetStmtFailed::ParamType(wd) => super::helper::failure_stage(
             runtime,
             "param_type",

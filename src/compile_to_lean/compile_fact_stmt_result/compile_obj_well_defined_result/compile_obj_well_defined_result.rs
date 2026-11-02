@@ -1,5 +1,5 @@
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::{arithmetic_stages, SourceOwner, SourcePosition};
+use crate::compile_to_lean::source_position::{wd_local_children, SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ComplexOperatorObjWellDefinedProofByDef;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef;
@@ -16,7 +16,7 @@ impl LitexToLeanCompiler {
         if let Some(term) = position.bound_wd_child(proof) {
             return Ok(term);
         }
-        if let Some((children, _)) = arithmetic_stages(proof) {
+        if let Some(children) = wd_local_children(proof) {
             if children.iter().any(|child| {
                 !matches!(
                     child.obj(),
@@ -159,6 +159,18 @@ impl LitexToLeanCompiler {
                     (Obj::LimitOperator(LimitOperator::Sequence(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::Sequence(evidence))) => self.compile_sequence_limit_wd(object, evidence, position)?,
                     (Obj::LimitOperator(LimitOperator::SequenceLimsup(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::SequenceLimsup(p))) => self.compile_sequence_extremum_wd(true, &object.sequence, &p.sequence_wd, &p.sequence_domain, &p.convergence, position)?,
                     (Obj::LimitOperator(LimitOperator::SequenceLiminf(object)), ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::SequenceLiminf(p))) => self.compile_sequence_extremum_wd(false, &object.sequence, &p.sequence_wd, &p.sequence_domain, &p.convergence, position)?,
+                    (Obj::LimitOperator(LimitOperator::MultivariableVector(object)),ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::MultivariableVector(p)))=>self.compile_multivariable_vector_wd(object,p,position)?,
+                    (Obj::LimitOperator(LimitOperator::MultivariableScalar(object)),ObjWellDefinedProofByDef::LimitOperator(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef::MultivariableScalar(p)))=>self.compile_multivariable_scalar_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::Jacobian(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Jacobian(p)))=>self.compile_jacobian_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::TotalDifferential(p)))=>self.compile_total_differential_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::Curl(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Curl(p)))=>self.compile_curl_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::Divergence(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Divergence(p)))=>self.compile_divergence_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::Hessian(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Hessian(p)))=>self.compile_hessian_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::ScalarDifferential(p)))=>self.compile_scalar_differential_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::Laplacian(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Laplacian(p)))=>self.compile_laplacian_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::Gradient(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Gradient(p)))=>self.compile_gradient_wd(object,p,position)?,
+                    (Obj::DerivativeOperator(DerivativeOperator::Partial(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Partial(p)))=>self.compile_partial_derivative_wd(object,p,position)?,
+                    (Obj::IntegralOperator(IntegralOperator::Riemann(object)),ObjWellDefinedProofByDef::IntegralOperator(crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(p))) => self.compile_riemann_wd(object,p,position)?,
                     (Obj::DerivativeOperator(DerivativeOperator::AtPoint(object)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p))) => self.compile_derivative_wd(object,p,position)?,
                     (Obj::BoundOperator(object), ObjWellDefinedProofByDef::BoundOperator(evidence)) => self.compile_real_extremum_wd(object, evidence, position)?,
                     (Obj::IteratedOperator(object @ (IteratedOperator::SumOfFiniteSet(_) | IteratedOperator::ProductOfFiniteSet(_))), ObjWellDefinedProofByDef::IteratedOperator(evidence)) => self.compile_finite_aggregate_wd(object, evidence, position)?,
@@ -170,7 +182,7 @@ impl LitexToLeanCompiler {
                     (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(object)), ObjWellDefinedProofByDef::Structish(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::FieldAccess(evidence))) => self.compile_struct_field_wd(object, evidence, position)?,
                     (Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(object)), ObjWellDefinedProofByDef::Structish(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef::StructObj(evidence))) => self.compile_struct_wd(object, evidence, position)?,
                     (
-                        Obj::Identifier(IdentifierObj::Plain { .. }),
+                        Obj::Identifier(_),
                         ObjWellDefinedProofByDef::Identifier(_),
                     ) => self.compile_object_reference(obj, position)?,
                     (
@@ -526,8 +538,10 @@ impl LitexToLeanCompiler {
                     _ => None,
                 };
                 let supported_certificate = certificate.is_some_and(|name| {
-                    crate::compile_to_lean::compile_real_extrema::certificate_name(name).is_some()
-                        && args.len() == 2
+                    (crate::compile_to_lean::compile_real_extrema::certificate_name(name).is_some()
+                        && args.len() == 2)
+                        || (crate::compile_to_lean::compile_riemann_integral::is_enclosure(name)
+                            && args.len() == 7)
                 });
                 if !supported_certificate
                     && certificate.is_some_and(|name| {
@@ -557,10 +571,152 @@ impl LitexToLeanCompiler {
             }
         }
         match &wd.detailed_ref().predicate_domain {
-            PredicateDomainProof::MultivariableAnalysis(_) => {
-                return Err(LeanCompileError::unsupported(
-                    "WD/MultivariableAnalysisPredicate",
-                ))
+            PredicateDomainProof::MultivariableAnalysis(p) => {
+                if let Some((r, _)) =
+                    crate::compile_to_lean::compile_multivariable_scalar_limit::parts(fact)
+                {
+                    bindings.extend(self.compile_multivariable_limit_domain(
+                        &r.function,
+                        &r.point,
+                        &r.dimension,
+                        None,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        4,
+                        position,
+                    )?);
+                } else if let Some((r, _)) =
+                    crate::compile_to_lean::compile_multivariable_vector_limit::parts(fact)
+                {
+                    bindings.extend(self.compile_multivariable_limit_domain(
+                        &r.function,
+                        &r.point,
+                        &r.input_dimension,
+                        Some(&r.output_dimension),
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        5,
+                        position,
+                    )?);
+                } else if let Some((r, _)) =
+                    crate::compile_to_lean::compile_partial_derivative::parts(fact)
+                {
+                    bindings.extend(self.compile_partial_derivative_domain(
+                        &r.function,
+                        &r.point,
+                        &r.dimension,
+                        &r.coordinate,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) = crate::compile_to_lean::compile_jacobian::parts(fact) {
+                    bindings.extend(self.compile_jacobian_domain(
+                        &r.function,
+                        &r.point,
+                        &r.input_dimension,
+                        &r.output_dimension,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) =
+                    crate::compile_to_lean::compile_total_differential::parts(fact)
+                {
+                    bindings.extend(self.compile_jacobian_domain(
+                        &r.function,
+                        &r.point,
+                        &r.input_dimension,
+                        &r.output_dimension,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) = crate::compile_to_lean::compile_hessian::parts(fact) {
+                    bindings.extend(self.compile_hessian_domain(
+                        &r.function,
+                        &r.point,
+                        &r.dimension,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) =
+                    crate::compile_to_lean::compile_scalar_differential::parts(fact)
+                {
+                    bindings.extend(self.compile_scalar_differential_domain(
+                        &r.function,
+                        &r.point,
+                        &r.dimension,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) = crate::compile_to_lean::compile_laplacian::parts(fact)
+                {
+                    bindings.extend(self.compile_laplacian_domain(
+                        &r.function,
+                        &r.point,
+                        &r.dimension,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) =
+                    crate::compile_to_lean::compile_second_partial::parts(fact)
+                {
+                    bindings.extend(self.compile_second_partial_domain(
+                        &r.function,
+                        &r.point,
+                        &r.dimension,
+                        &r.first_coordinate,
+                        &r.second_coordinate,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) = crate::compile_to_lean::compile_curl::parts(fact) {
+                    bindings.extend(self.compile_curl_domain(
+                        &r.function,
+                        &r.point,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) = crate::compile_to_lean::compile_divergence::parts(fact)
+                {
+                    bindings.extend(self.compile_divergence_domain(
+                        &r.function,
+                        &r.point,
+                        &r.dimension,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else if let Some((r, _)) = crate::compile_to_lean::compile_gradient::parts(fact) {
+                    bindings.extend(self.compile_gradient_domain(
+                        &r.function,
+                        &r.point,
+                        &r.dimension,
+                        Some(&r.value),
+                        &p.function_domain,
+                        &p.requirements,
+                        position,
+                    )?);
+                } else {
+                    return Err(LeanCompileError::unsupported("WD/MultivariableFamily"));
+                }
             }
             PredicateDomainProof::SequenceAnalysis(p) => {
                 bindings.push(self.compile_sequence_analysis_domain(
@@ -583,6 +739,15 @@ impl LitexToLeanCompiler {
                     .is_some() =>
             {
                 bindings.extend(self.compile_derivative_domain(fact, p, position)?);
+            }
+            PredicateDomainProof::FunctionAnalysis(p)
+                if crate::compile_to_lean::compile_riemann_integral::parts(fact).is_some()
+                    || crate::compile_to_lean::compile_riemann_integral::enclosure_arguments(
+                        fact,
+                    )
+                    .is_some() =>
+            {
+                bindings.extend(self.compile_riemann_domain(fact, p, position)?);
             }
             PredicateDomainProof::FunctionAnalysis(_) => {
                 return Err(LeanCompileError::unsupported("WD/RealAnalysisPredicate"))
@@ -627,7 +792,15 @@ impl LitexToLeanCompiler {
                         fact,
                     )
                 {
-                    if requirements.len() != carriers.len() || requirements.iter().zip(args.iter().zip(carriers)).any(|(r,(arg,carrier))| !matches!(&r.requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == arg.ir() && f.set == Obj::StandardSet(carrier))) {
+                    // The shared verifier records either the compact divisor
+                    // carrier ZStar, or its original three expanded requirements.
+                    let expanded_dvd = matches!(fact, AtomicFact::DvdFact(_) | AtomicFact::NotDvdFact(_))
+                        && requirements.len() == 3
+                        && requirements[..2].iter().zip(&args).all(|(r,arg)| matches!(&r.requirement,
+                            Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==arg.ir() && f.set==Obj::StandardSet(StandardSet::Z)))
+                        && matches!(&requirements[2].requirement, Fact::AtomicFact(AtomicFact::NotEqualFact(f))
+                            if f.left.ir()==args[1].ir() && crate::compile_to_lean::helper::is_exact_zero(&f.right));
+                    if !expanded_dvd && (requirements.len() != carriers.len() || requirements.iter().zip(args.iter().zip(carriers)).any(|(r,(arg,carrier))| !matches!(&r.requirement, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == arg.ir() && f.set == Obj::StandardSet(carrier)))) {
                         return Err(LeanCompileError::unsupported("WD/NumberPredicateDomain"));
                     }
                 }
@@ -716,6 +889,13 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match (wd, fact) {
+            (FactWellDefinedProof::ExistFact(proof), Fact::ExistFact(fact)) => {
+                self.compile_exist_formation(fact, proof, position)
+            }
+            (FactWellDefinedProof::ExistFact(proof), Fact::NotExistFact(fact)) => Ok(format!(
+                "¬ ({})",
+                self.compile_exist_formation(fact, proof, position)?
+            )),
             (FactWellDefinedProof::ForallFact(proof), Fact::ForallFact(fact)) => {
                 self.compile_forall_formation(fact, proof, position)
             }
@@ -745,10 +925,8 @@ impl LitexToLeanCompiler {
                     ),
                     usize::MAX,
                 );
-                Ok(Self::scope_equal_wd(
-                    self.atomic_proposition(atomic, &formed)?,
-                    &bindings,
-                ))
+                let proposition = self.atomic_proposition(atomic, &formed)?;
+                Ok(Self::scope_equal_wd(proposition, &bindings))
             }
             _ => {
                 self.compile_fact_wd(wd, fact, position)?;

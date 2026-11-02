@@ -20,3 +20,14 @@ prop prop_pair(x, y R):
     x = 1
     y = 2
 by def $prop_pair(1, 2)
+
+# case: quantified-condition-formation
+prop quotients_are_real(a R):
+    a != 0
+    forall x R:
+        x / a $in R
+by def $quotients_are_real(2)
+
+# case: compound-condition-order
+prop bounded_reciprocal(t R):
+    exist x R st {x != 0, 1 / x > 0}

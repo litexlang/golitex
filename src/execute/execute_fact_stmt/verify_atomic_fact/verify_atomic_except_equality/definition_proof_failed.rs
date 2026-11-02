@@ -10,6 +10,8 @@ pub enum DefinitionProofFailed {
     },
     Instantiate(String),
     Requirement {
+        requirement_facts: Vec<Fact>,
+        proof_of_requirement_facts: Vec<VerifyFactResult>,
         index: usize,
         fact: Fact,
         result: Box<VerifyFactResult>,

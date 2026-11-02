@@ -3,6 +3,7 @@
 //! Entry matches every Obj variant; families live in sibling modules.
 //! ByDef success proofs mirror Obj. Scalar (P0) fills requirement facts.
 
+mod applied_fn_set_return_signature;
 mod binder;
 mod closed_numeric_eval_wd;
 mod core;
@@ -26,6 +27,7 @@ mod structs;
 mod unordered_fold_laws;
 mod wrap_obj_well_defined_by_def;
 
+pub use applied_fn_set_return_signature::AppliedFnSetReturnSignature;
 pub use entry::{ObjWellDefinedProof, VerifyObjWellDefinedResult};
 pub use fail_to_verify_obj_well_defined::{
     fail_to_verify_obj_well_defined_others, FailToVerifyBoundOperatorObjWellDefinedResult,

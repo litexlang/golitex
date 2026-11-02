@@ -177,6 +177,35 @@ impl LitexToLeanCompiler {
         proof: &MatrixScalarDefinitionProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let MatrixDefinitionResidualProof::ExactEvaluation(evaluation) = proof.equality.as_ref()
+        {
+            for (native, other, reversed) in [
+                (&fact.left, &fact.right, false),
+                (&fact.right, &fact.left, true),
+            ] {
+                if !matches!(
+                    native,
+                    Obj::MatrixOperator(
+                        MatrixOperator::FrobeniusNorm(_) | MatrixOperator::EuclideanNorm(_)
+                    )
+                ) {
+                    continue;
+                }
+                let root = self.compile_object_reference(native, position)?;
+                let (_, checked) = self.compile_matrix_exact_scalar(
+                    &proof.expression,
+                    other,
+                    evaluation,
+                    Some(native),
+                    position,
+                )?;
+                let orientation = if reversed { ".symm" } else { "" };
+                return Ok(format!(
+                    "(by\n  let _norm := {root}\n  exact ({checked}){orientation})"
+                ));
+            }
+            return Err(LeanCompileError::unsupported("Matrix/NormExactSubject"));
+        }
         let MatrixDefinitionResidualProof::Verified(residual) = proof.equality.as_ref() else {
             return Err(LeanCompileError::unsupported("Matrix/NormResidual"));
         };

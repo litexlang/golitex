@@ -28,131 +28,82 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match proof {
-            EqualitySearchProofByObjectDefinition::ByFnApplication(proof) => {
-                match proof {
-                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(proof) => {
-                        let residual = source_subject(&proof.residual_equal)?;
-                        let Fact::AtomicFact(AtomicFact::EqualFact(residual)) = &residual else {
-                            return Err(LeanCompileError::new(
-                                "FunctionDefinition/ResidualFamily",
-                                "Function-body replay has a non-equality residual.",
-                            ));
-                        };
-                        if residual.left.ir() != proof.normalization.expanded_body.ir() {
-                            return Err(LeanCompileError::new("FunctionDefinition/ResidualBody", "The actual residual does not begin at the recorded normalized body."));
-                        }
-                        let (original, reversed) = if residual.right.ir() == fact.right.ir() {
-                            (&fact.left, false)
-                        } else if residual.right.ir() == fact.left.ir() {
-                            (&fact.right, true)
-                        } else {
-                            return Err(LeanCompileError::new("FunctionDefinition/ResidualEndpoint", "The residual does not end at the source's other equality endpoint."));
-                        };
-                        let normalization = self.compile_function_normalization(
-                            original,
-                            &proof.normalization,
-                            position,
-                        )?;
-                        let completed = SourcePosition {
-                            parent: Some(position),
-                            owner: SourceOwner::FunctionNormalization(&proof.normalization),
-                            before: usize::MAX,
-                        };
-                        let equality_type = format!(
-                            "{} = {}",
-                            self.compile_normalization_value(original, position)?,
-                            self.compile_normalization_value(&residual.right, &completed)?,
-                        );
-                        let compiled_residual =
-                            self.compile_verify(&proof.residual_equal, &completed)?;
-                        let residual_type = format!(
-                            "{} = {}",
-                            self.compile_normalization_value(&residual.left, &completed)?,
-                            self.compile_normalization_value(&residual.right, &completed)?,
-                        );
-                        let equality = format!(
-                            "(show {equality_type} from by\n  have _litex_residual : {} := {}\n  exact ({normalization}).trans _litex_residual)",
-                            residual_type.replace('\n', "\n  "), compiled_residual.1.replace('\n', "\n  "),
-                        );
-                        Ok(if reversed {
-                            format!("({equality}).symm")
-                        } else {
-                            equality
-                        })
-                    }
-                    EqualitySearchProofByFnApplicationObjectDefinition::BothFunctionBodies(
-                        proof,
-                    ) => {
-                        let left = self.compile_function_normalization(
-                            &fact.left,
-                            &proof.left_normalization,
-                            position,
-                        )?;
-                        let after_left = SourcePosition {
-                            parent: Some(position),
-                            owner: SourceOwner::FunctionNormalization(&proof.left_normalization),
-                            before: usize::MAX,
-                        };
-                        let right = self.compile_function_normalization(
-                            &fact.right,
-                            &proof.right_normalization,
-                            &after_left,
-                        )?;
-                        let completed = SourcePosition {
-                            parent: Some(&after_left),
-                            owner: SourceOwner::FunctionNormalization(&proof.right_normalization),
-                            before: usize::MAX,
-                        };
-                        let residual_subject = source_subject(&proof.residual_equal)?;
-                        let residual = match &residual_subject {
+            EqualitySearchProofByObjectDefinition::ByFnApplication(proof) => match proof {
+                EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqual(proof) => self
+                    .compile_normalized_function_equality(
+                        fact,
+                        &proof.normalization,
+                        &proof.residual_equal,
+                        position,
+                    ),
+                EqualitySearchProofByFnApplicationObjectDefinition::BothFunctionBodies(proof) => {
+                    let left = self.compile_function_normalization(
+                        &fact.left,
+                        &proof.left_normalization,
+                        position,
+                    )?;
+                    let after_left = SourcePosition {
+                        parent: Some(position),
+                        owner: SourceOwner::FunctionNormalization(&proof.left_normalization),
+                        before: usize::MAX,
+                    };
+                    let right = self.compile_function_normalization(
+                        &fact.right,
+                        &proof.right_normalization,
+                        &after_left,
+                    )?;
+                    let completed = SourcePosition {
+                        parent: Some(&after_left),
+                        owner: SourceOwner::FunctionNormalization(&proof.right_normalization),
+                        before: usize::MAX,
+                    };
+                    let residual_subject = source_subject(&proof.residual_equal)?;
+                    let residual = match &residual_subject {
                         Fact::AtomicFact(AtomicFact::EqualFact(residual))
                             if residual.left.ir() == proof.left_normalization.expanded_body.ir()
                                 && residual.right.ir() == proof.right_normalization.expanded_body.ir() => residual,
                         _ => return Err(LeanCompileError::new("FunctionDefinition/ResidualEndpoints", "The two-body residual differs from the exact ordered normalized bodies.")),
                     };
-                        let compiled_residual =
-                            self.compile_verify(&proof.residual_equal, &completed)?;
-                        let equality_type = format!(
-                            "{} = {}",
-                            self.compile_normalization_value(&fact.left, position)?,
-                            self.compile_normalization_value(&fact.right, &after_left)?,
-                        );
-                        let residual_type = format!(
-                            "{} = {}",
-                            self.compile_normalization_value(&residual.left, &completed)?,
-                            self.compile_normalization_value(&residual.right, &completed)?,
-                        );
-                        Ok(format!(
+                    let compiled_residual =
+                        self.compile_verify(&proof.residual_equal, &completed)?;
+                    let equality_type = format!(
+                        "{} = {}",
+                        self.compile_normalization_value(&fact.left, position)?,
+                        self.compile_normalization_value(&fact.right, &after_left)?,
+                    );
+                    let residual_type = format!(
+                        "{} = {}",
+                        self.compile_normalization_value(&residual.left, &completed)?,
+                        self.compile_normalization_value(&residual.right, &completed)?,
+                    );
+                    Ok(format!(
                             "(show {equality_type} from by\n  have _litex_residual : {} := {}\n  exact ({left}).trans (_litex_residual.trans ({right}).symm))",
                             residual_type.replace('\n', "\n  "), compiled_residual.1.replace('\n', "\n  "),
                         ))
-                    }
-                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(
-                        proof,
-                    ) => self.compile_piecewise_unfold_result(fact, proof, parent_wd, position),
-                    EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(proof) => {
-                        self.compile_recursive_unfold_result(fact, proof, parent_wd, position)
-                    }
-                    EqualitySearchProofByFnApplicationObjectDefinition::ParentCheckedBeta(
-                        proof,
-                    ) => {
-                        let parent_wd = parent_wd.ok_or_else(|| LeanCompileError::new(
+                }
+                EqualitySearchProofByFnApplicationObjectDefinition::HaveFnEqualCaseByCase(
+                    proof,
+                ) => self.compile_piecewise_unfold_result(fact, proof, parent_wd, position),
+                EqualitySearchProofByFnApplicationObjectDefinition::HaveFnByInduc(proof) => {
+                    self.compile_recursive_unfold_result(fact, proof, parent_wd, position)
+                }
+                EqualitySearchProofByFnApplicationObjectDefinition::ParentCheckedBeta(proof) => {
+                    let parent_wd = parent_wd.ok_or_else(|| LeanCompileError::new(
                             "FunctionDefinition/ParentFormation",
                             "Parent-checked beta requires this equality's original formation result.",
                         ))?;
-                        self.compile_parent_checked_beta(fact, proof, parent_wd, position)
-                    }
+                    self.compile_parent_checked_beta(fact, proof, parent_wd, position)
                 }
-            }
+            },
             EqualitySearchProofByObjectDefinition::NativeMatrix(proof) => {
                 self.compile_matrix_equality(fact, proof, position)
             }
             EqualitySearchProofByObjectDefinition::CartesianDefinition(proof) => {
                 self.compile_cartesian_definition(fact, proof, position)
             }
-            EqualitySearchProofByObjectDefinition::ByIdentifier(_) => Err(
-                LeanCompileError::unsupported("FunctionDefinition/Identifier"),
-            ),
+            EqualitySearchProofByObjectDefinition::ByIdentifier(proof) => {
+                self.compile_identifier_definition(fact, proof, position)
+            }
             EqualitySearchProofByObjectDefinition::ByTemplate(proof) => {
                 self.compile_template_equality(fact, proof, position)
             }
@@ -247,13 +198,22 @@ impl LitexToLeanCompiler {
     }
 
     // These endpoints are the recorded expansions of already checked parent
-    // calls. Identity needs their semantic values, not another WD constructor.
+    // calls. Identity and arithmetic congruence relate their semantic values;
+    // the substituted parent is not a second source WD producer.
     fn compile_parent_beta_residual(
         &self,
         fact: &EqualFact,
         proof: &EqualFactSearchedProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let EqualFactSearchedProof::ByClosedCalculation(proof) = proof {
+            if matches!(
+                proof.values,
+                ClosedValuePair::Decimal { .. } | ClosedValuePair::Rational { .. }
+            ) {
+                return self.compile_parent_closed_equality(fact, proof, position);
+            }
+        }
         if matches!(
             proof,
             EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
@@ -261,6 +221,15 @@ impl LitexToLeanCompiler {
         {
             let value = self.compile_normalization_value(&fact.left, position)?;
             return Ok(format!("(Eq.refl {value})"));
+        }
+        if let EqualFactSearchedProof::ByMatchingOneArgByOne(proof) = proof {
+            if arithmetic_constructor_pairs(&fact.left, &fact.right).is_some() {
+                return self.compile_arithmetic_congruence(
+                    fact,
+                    &proof.corresponding_arg_equal_proofs,
+                    position,
+                );
+            }
         }
         self.compile_equality_search(fact, proof, position)
     }
@@ -273,6 +242,15 @@ impl LitexToLeanCompiler {
         expanded: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let ParentCheckedBetaFunctionBody::StructField(proof) = source {
+            return self.compile_struct_field_value(
+                application,
+                parent_wd,
+                proof,
+                expanded,
+                position,
+            );
+        }
         let Obj::FnObj(call) = application else {
             return Err(LeanCompileError::new(
                 "FunctionDefinition/ParentApplication",
@@ -294,6 +272,40 @@ impl LitexToLeanCompiler {
                 "FunctionDefinition/ParentCallWD",
                 "The selected parent constructor certifies another application.",
             ));
+        }
+        if let ParentCheckedBetaFunctionBody::ReturnedAnonymousFunctionApplication {
+            receiver_well_defined,
+            receiver_function_body,
+            returned_function,
+        } = source
+        {
+            return self.compile_returned_anonymous_beta(
+                application,
+                parent_wd,
+                receiver_well_defined,
+                receiver_function_body,
+                returned_function,
+                expanded,
+                position,
+            );
+        }
+        if let ParentCheckedBetaFunctionBody::ReturnedKnownFunctionApplication {
+            receiver_well_defined,
+            receiver_function_body,
+            application_well_defined,
+            application_function_body,
+        } = source
+        {
+            return self.compile_returned_known_beta(
+                application,
+                parent_wd,
+                receiver_well_defined,
+                receiver_function_body,
+                application_well_defined,
+                application_function_body,
+                expanded,
+                position,
+            );
         }
         if let ParentCheckedBetaFunctionBody::Composition {
             composition,
@@ -325,7 +337,8 @@ impl LitexToLeanCompiler {
         }
         let actual_domain = match call_wd.domain_fn_set.as_ref() {
             Some(FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. })
-            | Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }) => fn_set,
+            | Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set })
+            | Some(FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, .. }) => fn_set,
             _ => {
                 return Err(LeanCompileError::unsupported(
                     "FunctionDefinition/ParentCallDomain",
@@ -373,10 +386,31 @@ impl LitexToLeanCompiler {
                 };
                 (function.as_ref(), None)
             }
-            ParentCheckedBetaFunctionBody::TemplateAnonymousFunction { .. } => {
-                return Err(LeanCompileError::unsupported(
-                    "FunctionDefinition/ParentTemplate",
-                ))
+            ParentCheckedBetaFunctionBody::TemplateAnonymousFunction {
+                template_instance,
+                function,
+                domain,
+            } => {
+                use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::TemplateApplicationDomainProof;
+                let TemplateApplicationDomainProof::Parent { checked_domain } = domain else {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionDefinition/RecheckedTemplateDomain",
+                    ));
+                };
+                let FnObjHead::InstantiatedTemplateObj(instance) = call.head.as_ref() else {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionDefinition/TemplateHead",
+                    ));
+                };
+                if template_instance != &Obj::InstantiatedTemplateObj(instance.clone())
+                    || checked_domain != actual_domain
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionDefinition/TemplateDomain",
+                    ));
+                }
+                self.validate_template_function(instance, actual_domain, Some(function), position)?;
+                (function, None)
             }
             ParentCheckedBetaFunctionBody::KnownFiniteFunctionCoordinate { .. }
             | ParentCheckedBetaFunctionBody::ReturnedFiniteFunctionCoordinate { .. } => {
@@ -433,7 +467,8 @@ impl LitexToLeanCompiler {
         }
         let actual_domain = match call_wd.domain_fn_set.as_ref() {
             Some(FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. })
-            | Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }) => fn_set,
+            | Some(FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set })
+            | Some(FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, .. }) => fn_set,
             _ => {
                 return Err(LeanCompileError::unsupported(
                     "FunctionDefinition/ParentCallDomain",
@@ -442,7 +477,7 @@ impl LitexToLeanCompiler {
         };
         if !function_domains_alpha_equal(&function.body, actual_domain)
             || call.body.len() != 1
-            || !(1..=3).contains(&call.body[0].len())
+            || call.body[0].is_empty()
         {
             return Err(LeanCompileError::new("FunctionDefinition/ParentDomain", "The selected literal does not match the parent's complete ordered argument domain."));
         }
@@ -504,7 +539,13 @@ impl LitexToLeanCompiler {
         let body = self.compile_function_body_template(function, position)?;
         let endpoint = self.compile_normalization_value(expanded, position)?;
         let application_value = self.compile_normalization_value(application, position)?;
-        let source_equal = self.compile_normalization_denotation(application, position)?;
+        // The caller already supplied this exact WD. Normalize its head and
+        // arguments without asking for a second producer of a substituted call.
+        let head = function_head_object(call.head.as_ref())?;
+        let head_denotation = self.compile_normalization_denotation(&head, position)?;
+        let input_denotation =
+            self.compile_normalization_packed_argument_denotation(&call.body[0], position)?;
+        let source_equal = format!("(show Litex.denote _litex_original = {application_value} from congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {head_denotation} {input_denotation})");
         let arguments_equal = call.body[0]
             .iter()
             .map(|argument| self.compile_normalization_denotation(argument, position))
@@ -523,6 +564,65 @@ impl LitexToLeanCompiler {
             )
         };
         Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f {argument}) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd {argument} {domain_proof}\n  exact (Eq.symm {source_equal}).trans (_litex_call_eq.trans (_litex_beta.trans {body_equality}))\n)"))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_normalized_function_equality(
+        &self,
+        fact: &EqualFact,
+        normalization_proof: &FunctionBodyNormalizationProof,
+        residual_proof: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let residual = source_subject(residual_proof)?;
+        let Fact::AtomicFact(AtomicFact::EqualFact(residual)) = &residual else {
+            return Err(LeanCompileError::new(
+                "FunctionDefinition/ResidualFamily",
+                "Function-body replay has a non-equality residual.",
+            ));
+        };
+        if residual.left.ir() != normalization_proof.expanded_body.ir() {
+            return Err(LeanCompileError::new(
+                "FunctionDefinition/ResidualBody",
+                "The actual residual does not begin at the recorded normalized body.",
+            ));
+        }
+        let (original, reversed) = if residual.right.ir() == fact.right.ir() {
+            (&fact.left, false)
+        } else if residual.right.ir() == fact.left.ir() {
+            (&fact.right, true)
+        } else {
+            return Err(LeanCompileError::new(
+                "FunctionDefinition/ResidualEndpoint",
+                "The residual does not end at the source's other equality endpoint.",
+            ));
+        };
+        let normalization =
+            self.compile_function_normalization(original, normalization_proof, position)?;
+        let completed = SourcePosition {
+            parent: Some(position),
+            owner: SourceOwner::FunctionNormalization(normalization_proof),
+            before: usize::MAX,
+        };
+        let equality_type = format!(
+            "{} = {}",
+            self.compile_normalization_value(original, position)?,
+            self.compile_normalization_value(&residual.right, &completed)?,
+        );
+        let compiled_residual = self.compile_verify(residual_proof, &completed)?;
+        let residual_type = format!(
+            "{} = {}",
+            self.compile_normalization_value(&residual.left, &completed)?,
+            self.compile_normalization_value(&residual.right, &completed)?,
+        );
+        let equality = format!(
+            "(show {equality_type} from by\n  have _litex_residual : {} := {}\n  exact ({normalization}).trans _litex_residual)",
+            residual_type.replace('\n', "\n  "), compiled_residual.1.replace('\n', "\n  "),
+        );
+        Ok(if reversed {
+            format!("({equality}).symm")
+        } else {
+            equality
+        })
     }
 
     fn compile_function_normalization(
@@ -654,7 +754,7 @@ impl LitexToLeanCompiler {
             .flat_map(|group| &group.params)
             .collect::<Vec<_>>();
         let arguments = &application.body[0];
-        if parameters.len() != arguments.len() || !(1..=3).contains(&arguments.len()) {
+        if parameters.len() != arguments.len() || arguments.is_empty() {
             return Err(LeanCompileError::new(
                 "FunctionDefinition/Arguments",
                 "Beta arguments differ from the selected literal's ordered parameters.",
@@ -689,10 +789,31 @@ impl LitexToLeanCompiler {
             FunctionBodySourceProof::KnownEquality(path) => {
                 self.compile_equality_path(&head, &literal, path, &path_position)?
             }
-            FunctionBodySourceProof::Template { .. } => {
-                return Err(LeanCompileError::unsupported(
-                    "FunctionDefinition/TemplateBody",
-                ))
+            FunctionBodySourceProof::Template {
+                instance,
+                instantiated_function,
+                function_equal,
+            } => {
+                let Obj::InstantiatedTemplateObj(template) = instance else {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionDefinition/TemplateInstance",
+                    ));
+                };
+                if instantiated_function != function.as_ref() {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionDefinition/TemplateSelectedBody",
+                    ));
+                }
+                self.validate_template_function(
+                    template,
+                    &function.body,
+                    Some(function),
+                    &path_position,
+                )?;
+                let path =
+                    self.compile_equality_path(&head, instance, function_equal, &path_position)?;
+                let original = self.compile_object_reference(instance, &path_position)?;
+                format!("(({path}).trans (show Litex.Same {original} _litex_literal.val.function from rfl))")
             }
         };
         let literal_position = SourcePosition { before: 2, ..step };
@@ -774,8 +895,32 @@ impl LitexToLeanCompiler {
             .collect::<Result<Vec<_>, _>>()?;
         let equality = self.compile_function_packed_application_equality(&body, &values)?;
         Ok(format!(
-            "(by change {packed_body} (Litex.denote {packed}) = {expanded}; exact {equality})"
+            "(show {packed_body} (Litex.denote {packed}) = {expanded} from {equality})"
         ))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_normalization_packed_argument_denotation(
+        &self,
+        arguments: &[Box<Obj>],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let proofs = arguments
+            .iter()
+            .map(|arg| self.compile_normalization_denotation(arg, position))
+            .collect::<Result<Vec<_>, _>>()?;
+        match proofs.as_slice() {
+            [] => Err(LeanCompileError::unsupported(
+                "Normalization/RepresentationArity",
+            )),
+            [p] => Ok(p.clone()),
+            [p, q] => Ok(format!(
+                "(congrArg₂ (fun x y => Litex.FiniteFunction.tupleValue (M := M) ![x,y]) {p} {q})"
+            )),
+            _ => Ok(format!(
+                "(congrArg (Litex.FiniteFunction.tupleValue (M := M)) (funext {}))",
+                finite_vector_proof(&proofs)
+            )),
+        }
     }
 
     /// Relate an original WD object's representation to its raw certificate
@@ -814,30 +959,27 @@ impl LitexToLeanCompiler {
             match equalities.as_slice() {
                 [p] => format!("congrArg {op} {p}"),
                 [p, q] => format!("congrArg₂ {op} {p} {q}"),
-                _ => {
+                [] => {
                     return Err(LeanCompileError::unsupported(
                         "Normalization/RepresentationArity",
                     ))
                 }
+                _ => curried_value_congruence(&op, &equalities)?,
             }
         } else if let Obj::FnObj(call) = object {
-            if call.body.len() != 1 || !(1..=2).contains(&call.body[0].len()) {
+            if call.body.is_empty() || call.body.iter().any(Vec::is_empty) {
                 return Err(LeanCompileError::unsupported(
                     "Normalization/RepresentationCall",
                 ));
             }
             let head = function_head_object(call.head.as_ref())?;
-            let head_equal = self.compile_normalization_denotation(&head, position)?;
-            let args = call.body[0]
-                .iter()
-                .map(|arg| self.compile_normalization_denotation(arg, position))
-                .collect::<Result<Vec<_>, _>>()?;
-            let argument_equal = match args.as_slice() {
-                [p] => p.clone(),
-                [p, q] => format!("(congrArg₂ (fun x y => Litex.FiniteFunction.tupleValue (M := M) ![x,y]) {p} {q})"),
-                _ => unreachable!(),
-            };
-            format!("congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {head_equal} {argument_equal}")
+            let mut equality = self.compile_normalization_denotation(&head, position)?;
+            for arguments in &call.body {
+                let argument_equal =
+                    self.compile_normalization_packed_argument_denotation(arguments, position)?;
+                equality = format!("(congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {equality} {argument_equal})");
+            }
+            equality
         } else {
             "rfl".into()
         };
@@ -876,8 +1018,27 @@ impl LitexToLeanCompiler {
                 // not a new source constructor with a second WD registration.
                 self.compile_function_literal_value(function, position, &HashMap::new())
             }
-            Obj::SetFormer(SetFormer::SetBuilder(_))
-            | Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(_)) => {
+            Obj::SetFormer(SetFormer::ClosedRange(_))
+            | Obj::SetFormer(SetFormer::SetBuilder(_))
+            | Obj::SetFormer(SetFormer::IntervalObj(_))
+            | Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(_) | SetFormer::SeqSet(_))
+            | Obj::FunctionSpace(FunctionSpace::Preimage(_))
+            | Obj::DerivativeOperator(_)
+            | Obj::LimitOperator(_)
+            | Obj::IntegralOperator(IntegralOperator::Riemann(_))
+            | Obj::IteratedOperator(
+                IteratedOperator::Sum(_)
+                | IteratedOperator::Product(_)
+                | IteratedOperator::SumOfFiniteSet(_)
+                | IteratedOperator::ProductOfFiniteSet(_),
+            )
+            | Obj::MatrixOperator(
+                MatrixOperator::Trace(_)
+                | MatrixOperator::InnerProduct(_)
+                | MatrixOperator::FrobeniusNorm(_)
+                | MatrixOperator::EuclideanNorm(_),
+            )
+            | Obj::FiniteSetStat(_) => {
                 // Beta compares semantic values. The selected literal and the
                 // equality endpoints retain their separately checked WD; this
                 // internal substitution endpoint needs no second constructor.
@@ -908,12 +1069,44 @@ impl LitexToLeanCompiler {
                 let operation = arithmetic_operation_term(operation);
                 Ok(format!("({operation} {})", values.join(" ")))
             }
+            Obj::MatrixOperator(
+                MatrixOperator::Transpose(_)
+                | MatrixOperator::Add(_)
+                | MatrixOperator::Subtract(_)
+                | MatrixOperator::Scale(_)
+                | MatrixOperator::Multiply(_)
+                | MatrixOperator::ConjugateTranspose(_)
+                | MatrixOperator::OuterProduct(_)
+                | MatrixOperator::Diagonal(_)
+                | MatrixOperator::ZeroMatrix(_)
+                | MatrixOperator::IdentityMatrix(_)
+                | MatrixOperator::Trace(_)
+                | MatrixOperator::Determinant(_)
+                | MatrixOperator::Adjugate(_)
+                | MatrixOperator::Inverse(_)
+                | MatrixOperator::Power(_)
+                | MatrixOperator::Rank(_)
+                | MatrixOperator::FrobeniusNorm(_)
+                | MatrixOperator::Apply(_)
+                | MatrixOperator::Minor(_)
+                | MatrixOperator::Cofactor(_)
+                | MatrixOperator::InnerProduct(_)
+                | MatrixOperator::EuclideanNorm(_),
+            ) => {
+                let (operation, children) = arithmetic_constructor_pairs(object, object)
+                    .ok_or_else(|| {
+                        LeanCompileError::unsupported("Normalization/MatrixConstructor")
+                    })?;
+                let values = children
+                    .into_iter()
+                    .map(|(child, _)| self.compile_normalization_value(child, position))
+                    .collect::<Result<Vec<_>, _>>()?;
+                let operation = arithmetic_operation_term(operation);
+                Ok(format!("({operation} {})", values.join(" ")))
+            }
             Obj::FnObj(application)
                 if !application.body.is_empty()
-                    && application
-                        .body
-                        .iter()
-                        .all(|group| (1..=3).contains(&group.len())) =>
+                    && application.body.iter().all(|group| !group.is_empty()) =>
             {
                 let head = function_head_object(application.head.as_ref())?;
                 let mut function = self.compile_normalization_value(&head, position)?;
@@ -990,7 +1183,7 @@ impl LitexToLeanCompiler {
                 }
                 let mut equality = beta.to_string();
                 for group in &call.body[1..] {
-                    if !(1..=3).contains(&group.len()) {
+                    if group.is_empty() {
                         return Err(LeanCompileError::unsupported(
                             "FunctionDefinition/Arguments",
                         ));
@@ -1067,7 +1260,7 @@ impl LitexToLeanCompiler {
                 }
                 Ok(None)
             }
-            Obj::FnObj(call) if call.body.len() == 1 && (1..=3).contains(&call.body[0].len()) => {
+            Obj::FnObj(call) if call.body.len() == 1 && !call.body[0].is_empty() => {
                 let function = self.compile_normalization_value(
                     &function_head_object(call.head.as_ref())?,
                     position,
@@ -1112,8 +1305,11 @@ pub(super) fn function_head_object(head: &FnObjHead) -> Result<Obj, LeanCompileE
             FunctionSpace::AnonymousFn(function.as_ref().clone()),
         )),
         FnObjHead::Object(object) => Ok(object.as_ref().clone()),
-        FnObjHead::FieldAccess(_) | FnObjHead::InstantiatedTemplateObj(_) => {
-            Err(LeanCompileError::unsupported("FunctionDefinition/Head"))
+        FnObjHead::FieldAccess(field) => Ok(Obj::StructAndFieldAccessObj(
+            StructAndFieldAccessObj::FieldAccess(field.clone()),
+        )),
+        FnObjHead::InstantiatedTemplateObj(instance) => {
+            Ok(Obj::InstantiatedTemplateObj(instance.clone()))
         }
     }
 }

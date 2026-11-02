@@ -1,0 +1,10 @@
+# Tracer: each checked equality keeps its own local proof at the source.
+# Before: the later failed clause hid both equality proof targets.
+# Now: hover either equals sign to inspect that adjacent proof and x>0.
+# Boundary: the whole forall is unfinished; local facts are not published.
+# Evidence: node src/reading/web/tests/local-source-equalities.cjs <fixtures>
+forall x R:
+    x > 0
+    =>:
+        x + 0 = x = 0 + x
+        x < 0

@@ -1,0 +1,621 @@
+claim:
+    ? forall n {j Z:j>=0}:
+        n $in N
+    n $in Z
+    n>=0
+    n $in N
+
+claim:
+    ? forall n N:
+        n $in {j Z:j>=0}
+    n $in Z
+    n>=0
+    n $in {j Z:j>=0}
+
+claim:
+    ? forall p fn(k N) N,n {j Z:j>=0}:
+        p(n) $in {j Z:j>=0}
+    n $in N
+    p(n) $in N
+    p(n) $in Z
+    p(n)>=0
+    p(n) $in {j Z:j>=0}
+
+template<a fn(n {j Z:j>=0}) R,p fn(k N) N>:
+    have fn zero_start_real_index_composition(n {j Z:j>=0}) R=a(p(n))
+
+claim:
+    ? forall M N,n closed_range(0,M):
+        n $in N
+        n $in {j Z:j>=0}
+    n $in Z
+    n>=0
+    n $in N
+    n $in {j Z:j>=0}
+
+template<p fn(k N) N,M N>:
+    have fn natural_zero_prefix_restriction(n closed_range(0,M)) N=p(n)
+
+prop natural_map_prefix_bound(p fn(k N) N,M,B N):
+    forall n closed_range(0,M):
+        p(n)<=B
+
+thm natural_map_has_bounded_finite_prefix:
+    ? forall p fn(k N) N,M N:
+        exist B N st {$natural_map_prefix_bound(p,M,B)}
+    release thm fn_set_member(\natural_zero_prefix_restriction<p,M>,fn(n closed_range(0,M)) N)
+    release thm card::finite_image_size_bound(closed_range(0,M),N,\natural_zero_prefix_restriction<p,M>)
+    have X finite_set=fn_range(\natural_zero_prefix_restriction<p,M>)
+    X $subset N
+    X $subset R
+    0 $in closed_range(0,M)
+    \natural_zero_prefix_restriction<p,M>(0) $in fn_range(\natural_zero_prefix_restriction<p,M>)
+    \natural_zero_prefix_restriction<p,M>(0) $in X
+    witness $is_nonempty_set(X) from \natural_zero_prefix_restriction<p,M>(0)
+    finite_set_max(X) $in X
+    finite_set_max(X) $in N
+    have B N=finite_set_max(X)
+    claim:
+        ? forall n closed_range(0,M):
+            p(n)<=B
+        n $in N
+        \natural_zero_prefix_restriction<p,M>(n)=p(n)
+        \natural_zero_prefix_restriction<p,M>(n) $in X
+        p(n) $in X
+        p(n) $in R
+        p(n)<=finite_set_max(X)=B
+    by def $natural_map_prefix_bound(p,M,B)
+    witness exist bound N st {$natural_map_prefix_bound(p,M,bound)} from B
+
+claim:
+    ? forall p fn(k N) N,M N,n closed_range(0,M):
+        \natural_zero_prefix_restriction<p,M>(n) $in fn_range(\natural_zero_prefix_restriction<p,M>)
+    release thm fn_set_member(\natural_zero_prefix_restriction<p,M>,fn(k closed_range(0,M)) N)
+    \natural_zero_prefix_restriction<p,M>(n) $in fn_range(\natural_zero_prefix_restriction<p,M>)
+
+template<p fn(k N) N,M N>:
+    have fn natural_zero_prefix_image_map(n closed_range(0,M)) fn_range(\natural_zero_prefix_restriction<p,M>)=\natural_zero_prefix_restriction<p,M>(n)
+
+thm injective_natural_map_prefix_is_bijective_to_image:
+    ? forall p fn(k N) N,M N:
+        $injective(N,N,p)
+        =>:
+            $bijective(closed_range(0,M),fn_range(\natural_zero_prefix_restriction<p,M>),\natural_zero_prefix_image_map<p,M>)
+    claim:
+        ? forall x,y closed_range(0,M):
+            \natural_zero_prefix_image_map<p,M>(x)=\natural_zero_prefix_image_map<p,M>(y)
+            =>:
+                x=y
+        x $in N
+        y $in N
+        \natural_zero_prefix_image_map<p,M>(x)=\natural_zero_prefix_restriction<p,M>(x)=p(x)
+        \natural_zero_prefix_image_map<p,M>(y)=\natural_zero_prefix_restriction<p,M>(y)=p(y)
+        p(x)=\natural_zero_prefix_image_map<p,M>(x)=\natural_zero_prefix_image_map<p,M>(y)=p(y)
+        x=y
+    by def $injective(closed_range(0,M),fn_range(\natural_zero_prefix_restriction<p,M>),\natural_zero_prefix_image_map<p,M>)
+    claim:
+        ? forall y fn_range(\natural_zero_prefix_restriction<p,M>):
+            exist x closed_range(0,M) st {y=\natural_zero_prefix_image_map<p,M>(x)}
+        release thm fn_set_member(\natural_zero_prefix_restriction<p,M>,fn(n closed_range(0,M)) N)
+        have by fn_preimage: x from y $in fn_range(\natural_zero_prefix_restriction<p,M>)
+        \natural_zero_prefix_image_map<p,M>(x)=\natural_zero_prefix_restriction<p,M>(x)=y
+        witness exist n closed_range(0,M) st {y=\natural_zero_prefix_image_map<p,M>(n)} from x
+    by def $surjective(closed_range(0,M),fn_range(\natural_zero_prefix_restriction<p,M>),\natural_zero_prefix_image_map<p,M>)
+    by def $bijective(closed_range(0,M),fn_range(\natural_zero_prefix_restriction<p,M>),\natural_zero_prefix_image_map<p,M>)
+
+claim:
+    ? forall p fn(k N) N,M N:
+        $is_finite_set(fn_range(\natural_zero_prefix_restriction<p,M>))
+    release thm fn_set_member(\natural_zero_prefix_restriction<p,M>,fn(n closed_range(0,M)) N)
+    release thm card::finite_image_size_bound(closed_range(0,M),N,\natural_zero_prefix_restriction<p,M>)
+
+claim:
+    ? forall p fn(k N) N,M N:
+        fn_range(\natural_zero_prefix_restriction<p,M>) $subset {j Z:j>=0}
+    release thm fn_set_member(\natural_zero_prefix_restriction<p,M>,fn(n closed_range(0,M)) N)
+    claim:
+        ? forall x fn_range(\natural_zero_prefix_restriction<p,M>):
+            x $in {j Z:j>=0}
+        have by fn_preimage: n from x $in fn_range(\natural_zero_prefix_restriction<p,M>)
+        x=\natural_zero_prefix_restriction<p,M>(n)=p(n)
+        n $in N
+        p(n) $in N
+        x $in N
+        x $in {j Z:j>=0}
+    by def fn_range(\natural_zero_prefix_restriction<p,M>) $subset {j Z:j>=0}
+
+claim:
+    ? forall M N:
+        closed_range(0,M) $subset {j Z:j>=0}
+    claim:
+        ? forall n closed_range(0,M):
+            n $in {j Z:j>=0}
+        n $in Z
+        n>=0
+        n $in {j Z:j>=0}
+    by def closed_range(0,M) $subset {j Z:j>=0}
+
+claim:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N,M N:
+        finite_set_sum(fn_range(\natural_zero_prefix_restriction<p,M>),a) $in R
+    release thm fn_set_member(a,fn(n {j Z:j>=0}) R)
+    $is_finite_set(fn_range(\natural_zero_prefix_restriction<p,M>))
+    fn_range(\natural_zero_prefix_restriction<p,M>) $subset {j Z:j>=0}
+    finite_set_sum(fn_range(\natural_zero_prefix_restriction<p,M>),a) $in R
+
+thm zero_start_rearranged_partial_sum_is_image_sum:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N,M N:
+        $injective(N,N,p)
+        =>:
+            \ts::real_tail_partial_sums<0,\zero_start_real_index_composition<a,p>>(M)=finite_set_sum(fn_range(\natural_zero_prefix_restriction<p,M>),a)
+    release thm fn_set_member(a,fn(n {j Z:j>=0}) R)
+    release thm fn_set_member(\zero_start_real_index_composition<a,p>,fn(n {j Z:j>=0}) R)
+    release thm injective_natural_map_prefix_is_bijective_to_image(p,M)
+    claim:
+        ? forall n closed_range(0,M):
+            \natural_zero_prefix_image_map<p,M>(n) $in {j Z:j>=0}
+        n $in {j Z:j>=0}
+        \natural_zero_prefix_image_map<p,M>(n)=\natural_zero_prefix_restriction<p,M>(n)=p(n)
+        p(n) $in {j Z:j>=0}
+        \natural_zero_prefix_image_map<p,M>(n) $in {j Z:j>=0}
+    release thm fs::finite_real_set_sum_substitution_on_superset({j Z:j>=0},fn_range(\natural_zero_prefix_restriction<p,M>),closed_range(0,M),a,\natural_zero_prefix_image_map<p,M>)
+    claim:
+        ? forall n closed_range(0,M):
+            a(\natural_zero_prefix_image_map<p,M>(n))=\zero_start_real_index_composition<a,p>(n)
+        n $in N
+        n $in {j Z:j>=0}
+        \natural_zero_prefix_image_map<p,M>(n)=\natural_zero_prefix_restriction<p,M>(n)=p(n)
+        p(n) $in {j Z:j>=0}
+        a(\natural_zero_prefix_image_map<p,M>(n))=a(p(n))=\zero_start_real_index_composition<a,p>(n)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,M),fn(k closed_range(0,M)) R {a(\natural_zero_prefix_image_map<p,M>(k))}),finite_set_sum(closed_range(0,M),\zero_start_real_index_composition<a,p>))
+    finite_set_sum(closed_range(0,M),\zero_start_real_index_composition<a,p>)=sum(0,M,\zero_start_real_index_composition<a,p>)=\ts::real_tail_partial_sums<0,\zero_start_real_index_composition<a,p>>(M)
+    \ts::real_tail_partial_sums<0,\zero_start_real_index_composition<a,p>>(M)=finite_set_sum(closed_range(0,M),\zero_start_real_index_composition<a,p>)=finite_set_sum(closed_range(0,M),fn(k closed_range(0,M)) R {a(\natural_zero_prefix_image_map<p,M>(k))})=finite_set_sum(fn_range(\natural_zero_prefix_restriction<p,M>),a)
+
+thm nonnegative_real_finite_sum_increases_with_subset:
+    ? forall X,Y finite_set,f fn(x X) R,g fn(y Y) R:
+        X $subset Y
+        forall x X:
+            f(x)=g(x)
+        forall y Y:
+            g(y)>=0
+        =>:
+            finite_set_sum(X,f)<=finite_set_sum(Y,g)
+    release thm fn_set_member(f,fn(x X) R)
+    release thm fn_set_member(g,fn(y Y) R)
+    set_minus(Y,X) $subset Y
+    $is_finite_set(set_minus(Y,X))
+    union(X,set_minus(Y,X))=union(X,Y)=Y
+    intersect(X,set_minus(Y,X))={}
+    claim:
+        ? forall y set_minus(Y,X):
+            g(y)>=0
+        y $in Y
+        g(y)>=0
+    release thm finite_set_sum_le_from_pointwise(finite_set_sum(set_minus(Y,X),fn(y Y) R {0}),finite_set_sum(set_minus(Y,X),g))
+    finite_set_sum(set_minus(Y,X),fn(y Y) R {0})=finite_set_size(set_minus(Y,X))*0=0
+    finite_set_sum(set_minus(Y,X),g) $in R
+    finite_set_sum(set_minus(Y,X),g)>=0
+    release thm finite_set_sum_substitution(finite_set_sum(X,f),finite_set_sum(X,g))
+    finite_set_sum(Y,g)=finite_set_sum(union(X,set_minus(Y,X)),g)=finite_set_sum(X,g)+finite_set_sum(set_minus(Y,X),g)
+    finite_set_sum(X,g) $in R
+    finite_set_sum(X,f) $in R
+    finite_set_sum(Y,g) $in R
+    finite_set_sum(X,f)=finite_set_sum(X,g)<=finite_set_sum(X,g)+finite_set_sum(set_minus(Y,X),g)=finite_set_sum(Y,g)
+
+thm bounded_natural_prefix_image_is_in_closed_prefix:
+    ? forall p fn(k N) N,M,B N:
+        $natural_map_prefix_bound(p,M,B)
+        =>:
+            fn_range(\natural_zero_prefix_restriction<p,M>) $subset closed_range(0,B)
+    release thm fn_set_member(\natural_zero_prefix_restriction<p,M>,fn(n closed_range(0,M)) N)
+    claim:
+        ? forall x fn_range(\natural_zero_prefix_restriction<p,M>):
+            x $in closed_range(0,B)
+        have by fn_preimage: n from x $in fn_range(\natural_zero_prefix_restriction<p,M>)
+        n $in N
+        x=\natural_zero_prefix_restriction<p,M>(n)=p(n)
+        p(n) $in N
+        p(n)<=B
+        x $in N
+        x $in Z
+        x>=0
+        x<=B
+        x $in closed_range(0,B)
+    by def fn_range(\natural_zero_prefix_restriction<p,M>) $subset closed_range(0,B)
+
+thm nonnegative_injective_zero_tail_partial_sum_domination:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N,M,B N:
+        forall n {j Z:j>=0}:
+            a(n)>=0
+        $injective(N,N,p)
+        $natural_map_prefix_bound(p,M,B)
+        =>:
+            \ts::real_tail_partial_sums<0,\zero_start_real_index_composition<a,p>>(M)<=\ts::real_tail_partial_sums<0,a>(B)
+    release thm fn_set_member(a,fn(n {j Z:j>=0}) R)
+    release thm zero_start_rearranged_partial_sum_is_image_sum(a,p,M)
+    release thm bounded_natural_prefix_image_is_in_closed_prefix(p,M,B)
+    have X finite_set=fn_range(\natural_zero_prefix_restriction<p,M>)
+    X $subset closed_range(0,B)
+    X $subset {j Z:j>=0}
+    closed_range(0,B) $subset {j Z:j>=0}
+    have fn image_terms(n X) R=a(n)
+    have fn prefix_terms(n closed_range(0,B)) R=a(n)
+    claim:
+        ? forall n X:
+            image_terms(n)=prefix_terms(n)
+        n $in {j Z:j>=0}
+        n $in closed_range(0,B)
+        image_terms(n)=a(n)=prefix_terms(n)
+    claim:
+        ? forall n closed_range(0,B):
+            prefix_terms(n)>=0
+        n $in {j Z:j>=0}
+        a(n)>=0
+        prefix_terms(n)=a(n)>=0
+    release thm nonnegative_real_finite_sum_increases_with_subset(X,closed_range(0,B),image_terms,prefix_terms)
+    release thm finite_set_sum_substitution(finite_set_sum(X,image_terms),finite_set_sum(X,a))
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,B),prefix_terms),finite_set_sum(closed_range(0,B),a))
+    B $in Z
+    B>=0
+    finite_set_sum(closed_range(0,B),a)=sum(0,B,a)=\ts::real_tail_partial_sums<0,a>(B)
+    \ts::real_tail_partial_sums<0,\zero_start_real_index_composition<a,p>>(M)=finite_set_sum(fn_range(\natural_zero_prefix_restriction<p,M>),a)=finite_set_sum(X,a)=finite_set_sum(X,image_terms)<=finite_set_sum(closed_range(0,B),prefix_terms)=finite_set_sum(closed_range(0,B),a)=\ts::real_tail_partial_sums<0,a>(B)
+
+thm nonnegative_real_series_partials_are_below_candidate:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,n {j Z:j>=start}:
+        forall k {j Z:j>=start}:
+            a(k)>=0
+        $ts::has_real_tail_series_sum(start,a,L)
+        =>:
+            \ts::real_tail_partial_sums<start,a>(n)<=L
+    release thm ts::real_tail_series_sum_implies_convergent(start,a,L)
+    release thm nn::nonnegative_real_tail_series_has_increasing_partial_sums(start,a)
+    release thm nn::convergent_real_tail_series_has_upper_bounded_partial_sums(start,a)
+    obtain M from exist bound R st {$sext::is_real_tail_upper_bound(start,\ts::real_tail_partial_sums<start,a>,bound)}
+    release thm sext::increasing_upper_bounded_real_tail_limit(start,\ts::real_tail_partial_sums<start,a>,M)
+    obtain upper_endpoint from exist value R st {$rs::has_real_tail_limit(start,\ts::real_tail_partial_sums<start,a>,value) and value=\sext::real_tail_supremum<start>(\ts::real_tail_partial_sums<start,a>) and value<=M}
+    $rs::has_real_tail_limit(start,\ts::real_tail_partial_sums<start,a>,L)
+    release thm rs::real_tail_limit_unique(start,\ts::real_tail_partial_sums<start,a>,upper_endpoint,L)
+    upper_endpoint=L
+    \sext::real_tail_supremum<start>(\ts::real_tail_partial_sums<start,a>)=upper_endpoint=L
+    release thm sext::real_tail_supremum_bounds_members(start,\ts::real_tail_partial_sums<start,a>,n)
+    \ts::real_tail_partial_sums<start,a>(n) $in R
+    $xreal::extended_real_le(\ts::real_tail_partial_sums<start,a>(n),L)
+    release thm xreal::extended_real_order_on_reals(\ts::real_tail_partial_sums<start,a>(n),L)
+
+thm zero_start_index_composition_preserves_nonnegative_terms:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N,n {j Z:j>=0}:
+        forall k {j Z:j>=0}:
+            a(k)>=0
+        =>:
+            \main::zero_start_real_index_composition<a,p>(n)>=0
+    n $in Z
+    n>=0
+    n $in N
+    p(n) $in N
+    p(n) $in Z
+    p(n)>=0
+    p(n) $in {j Z:j>=0}
+    a(p(n))>=0
+    \main::zero_start_real_index_composition<a,p>(n)=a(p(n))>=0
+
+thm nonnegative_injective_zero_tail_series_converges:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N:
+        forall n {j Z:j>=0}:
+            a(n)>=0
+        $injective(N,N,p)
+        $ts::is_convergent_real_tail_series(0,a)
+        =>:
+            $ts::is_convergent_real_tail_series(0,\main::zero_start_real_index_composition<a,p>)
+    release thm nn::convergent_real_tail_series_has_upper_bounded_partial_sums(0,a)
+    obtain H from exist bound R st {$sext::is_real_tail_upper_bound(0,\ts::real_tail_partial_sums<0,a>,bound)}
+    claim:
+        ? forall n {j Z:j>=0}:
+            \main::zero_start_real_index_composition<a,p>(n)>=0
+        release thm zero_start_index_composition_preserves_nonnegative_terms(a,p,n)
+    claim:
+        ? $sext::is_real_tail_upper_bound(0,\ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>,H)
+        claim:
+            ? forall M {j Z:j>=0}:
+                \ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>(M)<=H
+            M $in Z
+            M>=0
+            M $in N
+            release thm main::natural_map_has_bounded_finite_prefix(p,M)
+            obtain B from exist bound N st {$main::natural_map_prefix_bound(p,M,bound)}
+            release thm main::nonnegative_injective_zero_tail_partial_sum_domination(a,p,M,B)
+            B $in Z
+            B>=0
+            B $in {j Z:j>=0}
+            \ts::real_tail_partial_sums<0,a>(B) $in R
+            \ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>(M) $in R
+            \ts::real_tail_partial_sums<0,a>(B)<=H
+            \ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>(M)<=\ts::real_tail_partial_sums<0,a>(B)<=H
+        by def $sext::is_real_tail_upper_bound(0,\ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>,H)
+    release thm nn::upper_bounded_nonnegative_real_tail_series_converges(0,\main::zero_start_real_index_composition<a,p>,H)
+
+thm upper_bounded_real_series_partials_bound_candidate:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L,H R:
+        $ts::has_real_tail_series_sum(start,a,L)
+        $sext::is_real_tail_upper_bound(start,\ts::real_tail_partial_sums<start,a>,H)
+        =>:
+            L<=H
+    $rs::has_real_tail_limit(start,\ts::real_tail_partial_sums<start,a>,L)
+    release thm rs::real_tail_limit_is_native_limit(start,\ts::real_tail_partial_sums<start,a>,L)
+    release thm rs::real_tail_constant_limit(start,H)
+    release thm rs::real_tail_limit_is_native_limit(start,\rs::real_tail_constant<start,H>,H)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,\ts::real_tail_partial_sums<start,a>>(k)<=\rs::real_tail_reindex<start,\rs::real_tail_constant<start,H>>(k)
+        release thm rs::real_tail_positive_index(start,k)
+        release thm rs::real_tail_reindex_at(start,\ts::real_tail_partial_sums<start,a>,k)
+        release thm rs::real_tail_reindex_at(start,\rs::real_tail_constant<start,H>,k)
+        \ts::real_tail_partial_sums<start,a>(start+k-1)<=H
+        \rs::real_tail_constant<start,H>(start+k-1)=H
+        \rs::real_tail_reindex<start,\ts::real_tail_partial_sums<start,a>>(k)=\ts::real_tail_partial_sums<start,a>(start+k-1)<=H=\rs::real_tail_constant<start,H>(start+k-1)=\rs::real_tail_reindex<start,\rs::real_tail_constant<start,H>>(k)
+    release thm seq_limit_compare(\rs::real_tail_reindex<start,\ts::real_tail_partial_sums<start,a>>,\rs::real_tail_reindex<start,\rs::real_tail_constant<start,H>>,L,H,1)
+
+thm nonnegative_injective_zero_tail_series_candidate_bound:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N,L,T R:
+        forall n {j Z:j>=0}:
+            a(n)>=0
+        $injective(N,N,p)
+        $ts::has_real_tail_series_sum(0,a,L)
+        $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<a,p>,T)
+        =>:
+            T<=L
+    claim:
+        ? $sext::is_real_tail_upper_bound(0,\ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>,L)
+        claim:
+            ? forall M {j Z:j>=0}:
+                \ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>(M)<=L
+            M $in Z
+            M>=0
+            M $in N
+            release thm main::natural_map_has_bounded_finite_prefix(p,M)
+            obtain B from exist bound N st {$main::natural_map_prefix_bound(p,M,bound)}
+            release thm main::nonnegative_injective_zero_tail_partial_sum_domination(a,p,M,B)
+            B $in Z
+            B>=0
+            B $in {j Z:j>=0}
+            release thm nonnegative_real_series_partials_are_below_candidate(0,a,L,B)
+            \ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>(M) $in R
+            \ts::real_tail_partial_sums<0,a>(B) $in R
+            \ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>(M)<=\ts::real_tail_partial_sums<0,a>(B)<=L
+        by def $sext::is_real_tail_upper_bound(0,\ts::real_tail_partial_sums<0,\main::zero_start_real_index_composition<a,p>>,L)
+    release thm upper_bounded_real_series_partials_bound_candidate(0,\main::zero_start_real_index_composition<a,p>,T,L)
+
+prop natural_index_inverse_pair(p,q fn(k N) N):
+    forall n N:
+        p(q(n))=n
+        q(p(n))=n
+
+thm natural_bijection_has_inverse_index_map:
+    ? forall p fn(k N) N:
+        $bijective(N,N,p)
+        =>:
+            exist q fn(n N) N st {$natural_index_inverse_pair(p,q) and $bijective(N,N,q)}
+    $injective(N,N,p)
+    $surjective(N,N,p)
+    claim:
+        ? forall n N:
+            exist! m N st {p(m)=n}
+        obtain m from exist x N st {n=p(x)}
+        claim:
+            ? forall left,right N:
+                p(left)=n
+                p(right)=n
+                =>:
+                    left=right
+            p(left)=n=p(right)
+            left=right
+        witness exist! candidate N st {p(candidate)=n} from m
+    have fn backward_index by exist!:
+        ? forall n N:
+            exist! m N st {p(m)=n}
+    claim:
+        ? forall n N:
+            p(backward_index(n))=n
+            backward_index(p(n))=n
+        p(backward_index(n))=n
+        p(n) $in N
+        backward_index(p(n)) $in N
+        p(backward_index(p(n)))=p(n)
+        backward_index(p(n))=n
+    by def $natural_index_inverse_pair(p,backward_index)
+    claim:
+        ? forall x,y N:
+            backward_index(x)=backward_index(y)
+            =>:
+                x=y
+        x=p(backward_index(x))=p(backward_index(y))=y
+    by def $injective(N,N,backward_index)
+    claim:
+        ? forall y N:
+            exist x N st {y=backward_index(x)}
+        p(y) $in N
+        backward_index(p(y))=y
+        witness exist x N st {y=backward_index(x)} from p(y)
+    by def $surjective(N,N,backward_index)
+    by def $bijective(N,N,backward_index)
+    witness exist q fn(n N) N st {$natural_index_inverse_pair(p,q) and $bijective(N,N,q)} from backward_index
+
+thm nonnegative_zero_start_series_rearrangement_candidate:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N,L R:
+        forall n {j Z:j>=0}:
+            a(n)>=0
+        $bijective(N,N,p)
+        $ts::has_real_tail_series_sum(0,a,L)
+        =>:
+            $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<a,p>,L)
+    $injective(N,N,p)
+    release thm ts::real_tail_series_sum_implies_convergent(0,a,L)
+    release thm nonnegative_injective_zero_tail_series_converges(a,p)
+    obtain T from $ts::is_convergent_real_tail_series(0,\main::zero_start_real_index_composition<a,p>)
+    release thm nonnegative_injective_zero_tail_series_candidate_bound(a,p,L,T)
+    release thm natural_bijection_has_inverse_index_map(p)
+    obtain backward_index from exist q fn(n N) N st {$natural_index_inverse_pair(p,q) and $bijective(N,N,q)}
+    $injective(N,N,backward_index)
+    claim:
+        ? forall n {j Z:j>=0}:
+            \main::zero_start_real_index_composition<a,p>(n)>=0
+        release thm zero_start_index_composition_preserves_nonnegative_terms(a,p,n)
+    claim:
+        ? \main::zero_start_real_index_composition<\main::zero_start_real_index_composition<a,p>,backward_index> = a
+        release thm fn_set_member(a,fn(n {j Z:j>=0}) R)
+        release thm fn_set_member(\main::zero_start_real_index_composition<\main::zero_start_real_index_composition<a,p>,backward_index>,fn(n {j Z:j>=0}) R)
+        claim:
+            ? forall n {j Z:j>=0}:
+                \main::zero_start_real_index_composition<\main::zero_start_real_index_composition<a,p>,backward_index>(n)=a(n)
+            n $in Z
+            n>=0
+            n $in N
+            backward_index(n) $in N
+            backward_index(n) $in Z
+            backward_index(n)>=0
+            backward_index(n) $in {j Z:j>=0}
+            p(backward_index(n))=n
+            p(backward_index(n)) $in {j Z:j>=0}
+            \main::zero_start_real_index_composition<a,p>(backward_index(n))=a(p(backward_index(n)))=a(n)
+            \main::zero_start_real_index_composition<\main::zero_start_real_index_composition<a,p>,backward_index>(n)=\main::zero_start_real_index_composition<a,p>(backward_index(n))=a(n)
+        by fn_extension \main::zero_start_real_index_composition<\main::zero_start_real_index_composition<a,p>,backward_index> = a
+    $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<\main::zero_start_real_index_composition<a,p>,backward_index>,L)
+    release thm nonnegative_injective_zero_tail_series_candidate_bound(\main::zero_start_real_index_composition<a,p>,backward_index,T,L)
+    L<=T
+    T<=L
+    T=L
+    $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<a,p>,L)
+
+thm nonnegative_zero_start_series_rearrangement_has_same_sum:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N:
+        forall n {j Z:j>=0}:
+            a(n)>=0
+        $bijective(N,N,p)
+        $ts::is_convergent_real_tail_series(0,a)
+        =>:
+            $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<a,p>,\ts::real_tail_series_sum<0>(a))
+    release thm ts::real_tail_series_sum_selected(0,a)
+    release thm nonnegative_zero_start_series_rearrangement_candidate(a,p,\ts::real_tail_series_sum<0>(a))
+
+thm zero_start_index_composition_commutes_with_absolute_values:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N:
+        \limits::real_tail_absolute_values<0,\main::zero_start_real_index_composition<a,p>> = \main::zero_start_real_index_composition<\limits::real_tail_absolute_values<0,a>,p>
+    release thm fn_set_member(\limits::real_tail_absolute_values<0,\main::zero_start_real_index_composition<a,p>>,fn(n {j Z:j>=0}) R)
+    release thm fn_set_member(\main::zero_start_real_index_composition<\limits::real_tail_absolute_values<0,a>,p>,fn(n {j Z:j>=0}) R)
+    claim:
+        ? forall n {j Z:j>=0}:
+            \limits::real_tail_absolute_values<0,\main::zero_start_real_index_composition<a,p>>(n)=\main::zero_start_real_index_composition<\limits::real_tail_absolute_values<0,a>,p>(n)
+        n $in Z
+        n>=0
+        n $in N
+        p(n) $in N
+        p(n) $in Z
+        p(n)>=0
+        p(n) $in {j Z:j>=0}
+        \main::zero_start_real_index_composition<a,p>(n)=a(p(n))
+        \limits::real_tail_absolute_values<0,a>(p(n))=abs(a(p(n)))
+        \limits::real_tail_absolute_values<0,\main::zero_start_real_index_composition<a,p>>(n)=abs(\main::zero_start_real_index_composition<a,p>(n))=abs(a(p(n)))=\limits::real_tail_absolute_values<0,a>(p(n))=\main::zero_start_real_index_composition<\limits::real_tail_absolute_values<0,a>,p>(n)
+    by fn_extension \limits::real_tail_absolute_values<0,\main::zero_start_real_index_composition<a,p>> = \main::zero_start_real_index_composition<\limits::real_tail_absolute_values<0,a>,p>
+
+thm absolutely_convergent_zero_start_series_rearrangement_converges_absolutely:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N:
+        $ts::is_absolutely_convergent_real_tail_series(0,a)
+        $bijective(N,N,p)
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(0,\main::zero_start_real_index_composition<a,p>)
+            $ts::is_convergent_real_tail_series(0,\main::zero_start_real_index_composition<a,p>)
+    $injective(N,N,p)
+    $ts::is_convergent_real_tail_series(0,\limits::real_tail_absolute_values<0,a>)
+    claim:
+        ? forall n {j Z:j>=0}:
+            \limits::real_tail_absolute_values<0,a>(n)>=0
+        a(n) $in R
+        \limits::real_tail_absolute_values<0,a>(n)=abs(a(n))>=0
+    release thm nonnegative_injective_zero_tail_series_converges(\limits::real_tail_absolute_values<0,a>,p)
+    release thm zero_start_index_composition_commutes_with_absolute_values(a,p)
+    $ts::is_convergent_real_tail_series(0,\limits::real_tail_absolute_values<0,\main::zero_start_real_index_composition<a,p>>)
+    by def $ts::is_absolutely_convergent_real_tail_series(0,\main::zero_start_real_index_composition<a,p>)
+    release thm ts::absolutely_convergent_real_tail_series_converges(0,\main::zero_start_real_index_composition<a,p>)
+
+thm zero_start_index_composition_commutes_with_sum:
+    ? forall a,b fn(n {j Z:j>=0}) R,p fn(k N) N:
+        \main::zero_start_real_index_composition<\rs::real_tail_sum<0,a,b>,p> = \rs::real_tail_sum<0,\main::zero_start_real_index_composition<a,p>,\main::zero_start_real_index_composition<b,p>>
+    release thm fn_set_member(\main::zero_start_real_index_composition<\rs::real_tail_sum<0,a,b>,p>,fn(n {j Z:j>=0}) R)
+    release thm fn_set_member(\rs::real_tail_sum<0,\main::zero_start_real_index_composition<a,p>,\main::zero_start_real_index_composition<b,p>>,fn(n {j Z:j>=0}) R)
+    claim:
+        ? forall n {j Z:j>=0}:
+            \main::zero_start_real_index_composition<\rs::real_tail_sum<0,a,b>,p>(n)=\rs::real_tail_sum<0,\main::zero_start_real_index_composition<a,p>,\main::zero_start_real_index_composition<b,p>>(n)
+        n $in Z
+        n>=0
+        n $in N
+        p(n) $in N
+        p(n) $in Z
+        p(n)>=0
+        p(n) $in {j Z:j>=0}
+        \rs::real_tail_sum<0,a,b>(p(n))=a(p(n))+b(p(n))
+        \main::zero_start_real_index_composition<a,p>(n)=a(p(n))
+        \main::zero_start_real_index_composition<b,p>(n)=b(p(n))
+        \main::zero_start_real_index_composition<\rs::real_tail_sum<0,a,b>,p>(n)=\rs::real_tail_sum<0,a,b>(p(n))=a(p(n))+b(p(n))=\main::zero_start_real_index_composition<a,p>(n)+\main::zero_start_real_index_composition<b,p>(n)=\rs::real_tail_sum<0,\main::zero_start_real_index_composition<a,p>,\main::zero_start_real_index_composition<b,p>>(n)
+    by fn_extension \main::zero_start_real_index_composition<\rs::real_tail_sum<0,a,b>,p> = \rs::real_tail_sum<0,\main::zero_start_real_index_composition<a,p>,\main::zero_start_real_index_composition<b,p>>
+
+thm signed_plus_absolute_zero_tail_is_nonnegative:
+    ? forall a fn(n {j Z:j>=0}) R,n {j Z:j>=0}:
+        \rs::real_tail_sum<0,a,\limits::real_tail_absolute_values<0,a>>(n)>=0
+    a(n) $in R
+    by cases:
+        ? \rs::real_tail_sum<0,a,\limits::real_tail_absolute_values<0,a>>(n)>=0
+        case a(n)>=0:
+            abs(a(n))=a(n)
+            \limits::real_tail_absolute_values<0,a>(n)=abs(a(n))=a(n)
+            \rs::real_tail_sum<0,a,\limits::real_tail_absolute_values<0,a>>(n)=a(n)+\limits::real_tail_absolute_values<0,a>(n)=a(n)+a(n)>=0
+        case a(n)<0:
+            abs(a(n))=-a(n)
+            \limits::real_tail_absolute_values<0,a>(n)=abs(a(n))=-a(n)
+            \rs::real_tail_sum<0,a,\limits::real_tail_absolute_values<0,a>>(n)=a(n)+\limits::real_tail_absolute_values<0,a>(n)=a(n)+(-a(n))=0
+
+thm absolutely_convergent_zero_start_series_rearrangement_candidate:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N,L R:
+        $ts::is_absolutely_convergent_real_tail_series(0,a)
+        $bijective(N,N,p)
+        $ts::has_real_tail_series_sum(0,a,L)
+        =>:
+            $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<a,p>,L)
+    release thm absolutely_convergent_zero_start_series_rearrangement_converges_absolutely(a,p)
+    obtain T from $ts::is_convergent_real_tail_series(0,\main::zero_start_real_index_composition<a,p>)
+    $ts::is_convergent_real_tail_series(0,\limits::real_tail_absolute_values<0,a>)
+    obtain A from $ts::is_convergent_real_tail_series(0,\limits::real_tail_absolute_values<0,a>)
+    claim:
+        ? forall n {j Z:j>=0}:
+            \limits::real_tail_absolute_values<0,a>(n)>=0
+        a(n) $in R
+        \limits::real_tail_absolute_values<0,a>(n)=abs(a(n))>=0
+    claim:
+        ? forall n {j Z:j>=0}:
+            \rs::real_tail_sum<0,a,\limits::real_tail_absolute_values<0,a>>(n)>=0
+        release thm signed_plus_absolute_zero_tail_is_nonnegative(a,n)
+    release thm ts::real_tail_series_sum_add(0,a,\limits::real_tail_absolute_values<0,a>,L,A)
+    release thm nonnegative_zero_start_series_rearrangement_candidate(\rs::real_tail_sum<0,a,\limits::real_tail_absolute_values<0,a>>,p,L+A)
+    release thm nonnegative_zero_start_series_rearrangement_candidate(\limits::real_tail_absolute_values<0,a>,p,A)
+    release thm ts::real_tail_series_sum_add(0,\main::zero_start_real_index_composition<a,p>,\main::zero_start_real_index_composition<\limits::real_tail_absolute_values<0,a>,p>,T,A)
+    release thm zero_start_index_composition_commutes_with_sum(a,\limits::real_tail_absolute_values<0,a>,p)
+    $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<\rs::real_tail_sum<0,a,\limits::real_tail_absolute_values<0,a>>,p>,T+A)
+    release thm ts::real_tail_series_sum_unique(0,\main::zero_start_real_index_composition<\rs::real_tail_sum<0,a,\limits::real_tail_absolute_values<0,a>>,p>,T+A,L+A)
+    T+A=L+A
+    T=L
+    $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<a,p>,L)
+
+claim:
+    ? forall a fn(n {j Z:j>=0}) R:
+        $ts::is_absolutely_convergent_real_tail_series(0,a)
+        =>:
+            $ts::is_convergent_real_tail_series(0,a)
+    release thm ts::absolutely_convergent_real_tail_series_converges(0,a)
+
+thm absolutely_convergent_zero_start_series_rearrangement_has_same_sum:
+    ? forall a fn(n {j Z:j>=0}) R,p fn(k N) N:
+        $ts::is_absolutely_convergent_real_tail_series(0,a)
+        $bijective(N,N,p)
+        =>:
+            $ts::has_real_tail_series_sum(0,\main::zero_start_real_index_composition<a,p>,\ts::real_tail_series_sum<0>(a))
+    release thm ts::absolutely_convergent_real_tail_series_converges(0,a)
+    release thm ts::real_tail_series_sum_selected(0,a)
+    release thm absolutely_convergent_zero_start_series_rearrangement_candidate(a,p,\ts::real_tail_series_sum<0>(a))

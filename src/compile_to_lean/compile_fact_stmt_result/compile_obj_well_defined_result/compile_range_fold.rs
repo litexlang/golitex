@@ -1,4 +1,3 @@
-use crate::compile_to_lean::compile_function_template::function_guard_fact;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -45,16 +44,6 @@ impl LitexToLeanCompiler {
             || op_signature.ret_set.ir() != signature.ret_set.ir()
         {
             return Err(LeanCompileError::unsupported("Reduce/SignatureContract"));
-        }
-        // Positive-real numeric signatures encode their input predicates in
-        // the signature itself; they need a separate domain-equality bridge.
-        if op_signature.ret_set.as_ref() == &Obj::StandardSet(StandardSet::RPos)
-            || (Self::function_uses_numeric_interface(signature)
-                && matches!(input, Obj::StandardSet(StandardSet::RPos)))
-        {
-            return Err(LeanCompileError::unsupported(
-                "Reduce/PositiveNumericSignature",
-            ));
         }
         let children = &proof.child_obj_well_defined;
         let requirements = &proof.requirement_fact_verified;
@@ -121,22 +110,17 @@ impl LitexToLeanCompiler {
                 .iter()
                 .enumerate()
                 .all(|(i, n)| *n == empty_bounds[i % 2]);
-        let natural = matches!(input, Obj::StandardSet(StandardSet::N));
-        let guard_offset = 3 + usize::from(natural);
-        if !empty
-            && !matches!(
+        let coverage_count = if empty {
+            0
+        } else {
+            super::compile_range_input::validate_range_input(
                 input,
-                Obj::StandardSet(
-                    StandardSet::N
-                        | StandardSet::Z
-                        | StandardSet::Q
-                        | StandardSet::R
-                        | StandardSet::C
-                )
-            )
-        {
-            return Err(LeanCompileError::unsupported("Reduce/DomainCoverage"));
-        }
+                &value.start,
+                &value.end,
+                &requirements[3..],
+            )?
+        };
+        let guard_offset = 3 + coverage_count;
         let guarded = !signature.dom_facts.is_empty();
         let mut guard_bounds = None;
         if !empty {
@@ -149,68 +133,20 @@ impl LitexToLeanCompiler {
                     return Err(LeanCompileError::unsupported("Reduce/ExtraRequirements"));
                 }
             } else if guards.len() == 1 {
-                validate_range_fold_guard(signature, value, &source_subject(&guards[0])?)?;
+                super::compile_range_guard::validate_range_guard(
+                    signature,
+                    &value.start,
+                    &value.end,
+                    &source_subject(&guards[0])?,
+                )?;
             } else {
-                if guards.len() < 2 {
-                    return Err(LeanCompileError::unsupported("Reduce/GuardBounds"));
-                }
-                let mut bounds = Vec::new();
-                for (source, endpoint) in guards[..2].iter().zip([&value.start, &value.end]) {
-                    let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = source_subject(source)?
-                    else {
-                        return Err(LeanCompileError::unsupported("Reduce/GuardEndpoint"));
-                    };
-                    if eq.left.ir() != endpoint.ir() {
-                        return Err(LeanCompileError::unsupported("Reduce/GuardEndpointSubject"));
-                    }
-                    bounds.push(
-                        EvalRational::from_obj(&eq.right)
-                            .and_then(|n| n.to_i128_if_integer())
-                            .ok_or_else(|| {
-                                LeanCompileError::unsupported("Reduce/GuardEndpointValue")
-                            })?,
-                    );
-                }
-                let count = bounds[1]
-                    .checked_sub(bounds[0])
-                    .and_then(|n| n.checked_add(1))
-                    .and_then(|n| usize::try_from(n).ok())
-                    .ok_or_else(|| LeanCompileError::unsupported("Reduce/GuardInterval"))?;
-                if count == 0
-                    || count.checked_mul(signature.dom_facts.len()) != Some(guards.len() - 2)
-                {
-                    return Err(LeanCompileError::unsupported("Reduce/GuardCount"));
-                }
-                let original = signature
-                    .set_bound_parameters
-                    .groups
-                    .iter()
-                    .flat_map(|g| &g.params)
-                    .next()
-                    .unwrap();
-                for (index, row) in guards[2..].chunks(signature.dom_facts.len()).enumerate() {
-                    let argument = Obj::Literal(Literal::Number(Number::new(
-                        (bounds[0] + index as i128).to_string(),
-                    )));
-                    let substitution = std::collections::HashMap::from([(original.id, argument)]);
-                    for (condition, proof) in signature.dom_facts.iter().zip(row) {
-                        if !instantiated_fact_matches(
-                            &function_guard_fact(condition)?,
-                            &source_subject(proof)?,
-                            &substitution,
-                        ) {
-                            return Err(LeanCompileError::unsupported("Reduce/GuardSubject"));
-                        }
-                    }
-                }
-                guard_bounds = Some((bounds[0], bounds[1]));
+                guard_bounds = Some(super::compile_range_guard::validate_explicit_range_guards(
+                    signature,
+                    &value.start,
+                    &value.end,
+                    guards,
+                )?);
             }
-        }
-        if !empty
-            && natural
-            && !matches!(source_subject(&requirements[3])?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == value.start.ir() && f.set == Obj::StandardSet(StandardSet::N))
-        {
-            return Err(LeanCompileError::unsupported("Reduce/NaturalStart"));
         }
         let formed = SourcePosition {
             before: children.len(),
@@ -218,6 +154,11 @@ impl LitexToLeanCompiler {
         };
         let hf = self.compile_selected_signature(&value.func, iterand, &formed)?;
         let hop = self.compile_selected_signature(&value.op, operation, &formed)?;
+        let hop = if op_signature.ret_set.as_ref() == &Obj::StandardSet(StandardSet::RPos) {
+            format!("(Litex.positiveFoldOperation {} {hop})", objects[3])
+        } else {
+            hop
+        };
         let signature_term = self.compile_fn_signature(signature, &formed)?;
         let mut bindings = String::new();
         let mut references = Vec::new();
@@ -235,97 +176,68 @@ impl LitexToLeanCompiler {
             references.push(reference);
         }
         let domain = if empty {
-            format!("(fun k hlow hhigh => False.elim (Litex.integerBoundsEmpty {} {} ({} : ℤ) ({} : ℤ) (by simpa only [Int.cast_ofNat, Int.cast_neg, Int.cast_zero, Int.cast_one] using {}) (by simpa only [Int.cast_ofNat, Int.cast_neg, Int.cast_zero, Int.cast_one] using {}) (by decide) k hlow hhigh))",
-                objects[0], objects[1], empty_bounds[0], empty_bounds[1], references[3], references[4])
+            format!(
+                "(fun k hlow hhigh => False.elim (Litex.integerBoundsEmpty {} {} ({} : ℤ) ({} : ℤ) (by simpa only [Int.cast_ofNat, Int.cast_neg, Int.cast_zero, Int.cast_one] using {}) (by simpa only [Int.cast_ofNat, Int.cast_neg, Int.cast_zero, Int.cast_one] using {}) (by decide) k hlow hhigh))",
+                objects[0],
+                objects[1],
+                empty_bounds[0],
+                empty_bounds[1],
+                references[3],
+                references[4]
+            )
         } else {
             let output = self.compile_object_reference(&signature.ret_set, &formed)?;
             let (domain, domain_set) =
                 self.compile_function_semantic_base_domain(signature, &formed)?;
             let guard = self.compile_function_guard_template(signature, &formed)?;
+            let source_guard = self.compile_function_explicit_guard_template(signature, &formed)?;
             let guard_proof = if let Some((first, last)) = guard_bounds {
-                let items = (first..=last)
-                    .map(|n| format!("({n} : ℤ)"))
-                    .collect::<Vec<_>>()
-                    .join(", ");
-                let rows = &references[guard_offset + 2..];
-                let cases = rows.chunks(signature.dom_facts.len()).enumerate().map(|(index, row)| {
-                    let term = row.iter().cloned().rev().reduce(|tail, head| format!("⟨{head}, {tail}⟩")).unwrap();
-                    let integer = first + index as i128;
-                    format!("  · have _recorded : {guard} (M.number ({integer} : ℂ)) := {term}\n    simpa only [Int.cast_ofNat, Int.cast_neg, Int.cast_zero, Int.cast_one] using _recorded")
-                }).collect::<Vec<_>>().join("\n");
-                let branches = std::iter::repeat_n("rfl", rows.len() / signature.dom_facts.len())
-                    .collect::<Vec<_>>()
-                    .join(" | ");
-                bindings.push_str(&format!("let _fold_guards : ∀ k ∈ Litex.integerFoldIndices ({first} : ℤ) ({last} : ℤ), {guard} (M.number (k : ℂ)) := (by\n  intro k hk\n  rw [show Litex.integerFoldIndices ({first} : ℤ) ({last} : ℤ) = [{items}] from by decide] at hk\n  simp only [List.mem_cons, List.not_mem_nil, or_false] at hk\n  rcases hk with {branches}\n{cases}\n);\n"));
-                format!("Litex.integerRangeGuards {} {} ({first} : ℤ) ({last} : ℤ) (by simpa only [Int.cast_ofNat, Int.cast_neg, Int.cast_zero, Int.cast_one] using {}) (by simpa only [Int.cast_ofNat, Int.cast_neg, Int.cast_zero, Int.cast_one] using {}) {guard} _fold_guards k hlow hhigh", objects[0], objects[1], references[guard_offset], references[guard_offset+1])
+                let (guard_bindings, term) = super::compile_range_guard::explicit_range_guard_term(
+                    first,
+                    last,
+                    signature.dom_facts.len(),
+                    &source_guard,
+                    [&objects[0], &objects[1]],
+                    &references[guard_offset..],
+                );
+                bindings.push_str(&guard_bindings);
+                term
             } else if guarded {
-                format!("{} (Litex.number (M := M) (k : ℂ)) (Litex.NativeBridge.numberInZ k) (Litex.integerLowerBound {} {} k hlow) (Litex.integerUpperBound {} {} k hhigh)", references[guard_offset], objects[0], references[0], objects[1], references[1])
+                format!(
+                    "{} (Litex.number (M := M) (k : ℂ)) (Litex.NativeBridge.numberInZ k) (Litex.integerLowerBound {} {} k hlow) (Litex.integerUpperBound {} {} k hhigh)",
+                    references[guard_offset], objects[0], references[0], objects[1], references[1]
+                )
             } else {
                 "True.intro".into()
             };
-            let membership = if natural {
-                format!(
-                    "Litex.integerInNaturalAbove {} {} k hlow",
-                    objects[0], references[3]
-                )
-            } else {
-                let Obj::StandardSet(input) = input else {
-                    unreachable!()
-                };
-                format!(
-                    "Litex.integerInUnboundedCarrier .{} (by decide) k",
-                    standard_value_constructor(input)?
-                )
-            };
-            format!("(fun k hlow hhigh => (Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote {output}) {domain_set} (Litex.isSet {output}) {guard} (M.number (k : ℂ))).mpr ⟨{membership}, {guard_proof}⟩)")
+            let membership = self.compile_range_input_member(
+                input,
+                [&objects[0], &objects[1]],
+                [&references[0], &references[1]],
+                (coverage_count == 1).then(|| &references[3]),
+                &formed,
+            )?;
+            let (membership, guard_proof) = self.compile_unary_function_domain_certificates(
+                signature,
+                "(Litex.number (M := M) (k : ℂ))",
+                membership,
+                &guard_proof,
+                &formed,
+            )?;
+            format!(
+                "(fun k hlow hhigh => (Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote {output}) {domain_set} (Litex.isSet {output}) {guard} (M.number (k : ℂ))).mpr ⟨{membership}, {guard_proof}⟩)"
+            )
         };
-        Ok(format!("({bindings}Litex.rangeFold {} {} {} {} {} {signature_term} {} {} {hf} {hop} {} {domain})",
-            objects[0], objects[1], objects[2], objects[3], objects[4], references[0], references[1], references[2]))
+        Ok(format!(
+            "({bindings}Litex.rangeFold {} {} {} {} {} {signature_term} {} {} {hf} {hop} {} {domain})",
+            objects[0],
+            objects[1],
+            objects[2],
+            objects[3],
+            objects[4],
+            references[0],
+            references[1],
+            references[2]
+        ))
     }
-}
-
-fn validate_range_fold_guard(
-    signature: &FnSet,
-    value: &Reduce,
-    fact: &Fact,
-) -> Result<(), LeanCompileError> {
-    let Fact::ForallFact(all) = fact else {
-        return Err(LeanCompileError::unsupported("Reduce/UniversalGuard"));
-    };
-    let parameters = all
-        .typed_parameters
-        .groups
-        .iter()
-        .flat_map(|g| g.params.iter().map(move |p| (p, &g.param_type)))
-        .collect::<Vec<_>>();
-    let [(parameter, ParamType::Obj(Obj::StandardSet(StandardSet::Z)))] = parameters.as_slice()
-    else {
-        return Err(LeanCompileError::unsupported("Reduce/GuardParameter"));
-    };
-    let argument = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
-    if all.dom_facts.len() != 2
-        || all.then_facts.len() != signature.dom_facts.len()
-        || !matches!(&all.dom_facts[0], Fact::AtomicFact(AtomicFact::LessEqualFact(f)) if f.left.ir()==value.start.ir() && f.right.ir()==argument.ir())
-        || !matches!(&all.dom_facts[1], Fact::AtomicFact(AtomicFact::LessEqualFact(f)) if f.left.ir()==argument.ir() && f.right.ir()==value.end.ir())
-    {
-        return Err(LeanCompileError::unsupported("Reduce/GuardInterval"));
-    }
-    let original = signature
-        .set_bound_parameters
-        .groups
-        .iter()
-        .flat_map(|g| &g.params)
-        .next()
-        .unwrap();
-    let substitution = std::collections::HashMap::from([(original.id, argument)]);
-    for (expected, actual) in signature.dom_facts.iter().zip(&all.then_facts) {
-        if !instantiated_fact_matches(
-            &function_guard_fact(expected)?,
-            &actual.clone().into(),
-            &substitution,
-        ) {
-            return Err(LeanCompileError::unsupported("Reduce/GuardSubject"));
-        }
-    }
-    Ok(())
 }

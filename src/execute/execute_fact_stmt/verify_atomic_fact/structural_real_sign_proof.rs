@@ -18,6 +18,11 @@ pub enum RealSign {
 }
 
 pub enum StructuralRealSignReason {
+    DifferenceFromOrder {
+        left_real: Box<StructuralMembershipProof>,
+        right_real: Box<StructuralMembershipProof>,
+        source: Box<AtomicExceptEqualityFactKnownProof>,
+    },
     Known {
         real: Box<StructuralMembershipProof>,
         source: Box<AtomicExceptEqualityFactKnownProof>,

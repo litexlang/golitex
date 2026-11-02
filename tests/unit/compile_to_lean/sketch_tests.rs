@@ -85,16 +85,10 @@ fn sketch_fact_citations_are_prefix_local_and_do_not_escape() {
 }
 
 #[test]
-fn sketch_rejects_unsupported_children_instead_of_skipping_them() {
+fn sketch_replays_a_local_formula_declaration_and_its_call() {
     let (run, compiler) =
         super::execute("sketch:\n    have fn identity(x R) R = x\n    identity(2) = 2\n");
-    let error = compiler
-        .compile_run(&run, "unsupported_sketch_child")
-        .unwrap_err();
-    assert!(
-        error.to_string().contains("Function/LocalDeclaration"),
-        "{error}"
-    );
+    compiler.compile_run(&run, "local_sketch_function").unwrap();
 }
 
 #[test]

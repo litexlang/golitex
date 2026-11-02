@@ -58,6 +58,12 @@ impl LitexToLeanCompiler {
             ));
         }
         self.validate_parameter_store_capture(&proof.store_and_infer_result)?;
+        let mut scope = Some(position);
+        let mut in_template = false;
+        while let Some(current) = scope {
+            in_template |= matches!(current.owner, SourceOwner::Template(_));
+            scope = current.parent;
+        }
         let mut declarations = Vec::new();
         let mut introduced_count = 0;
         for (group, captured) in proof.statement.param_def.groups.iter().zip(&proof.groups) {
@@ -122,6 +128,74 @@ impl LitexToLeanCompiler {
                         declarations.push(format!("have h_{fact_id} : Litex.IsSet _value_i{id} := Litex.isSet _value_i{id}"));
                     } else {
                         declarations.push(format!("variable {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : Litex.IsSet _value_i{id})"));
+                    }
+                }
+                continue;
+            }
+            if matches!(
+                &group.param_type,
+                ParamType::NonemptySet(_) | ParamType::FiniteSet(_)
+            ) {
+                if !matches!(
+                    (
+                        &group.param_type,
+                        &captured.param_type_well_defined,
+                        &captured.nonempty_check
+                    ),
+                    (
+                        ParamType::NonemptySet(_),
+                        ParamTypeWellDefinedProof::NonemptySet,
+                        ParamTypeFactCheckResult::NonemptySet
+                    ) | (
+                        ParamType::FiniteSet(_),
+                        ParamTypeWellDefinedProof::FiniteSet,
+                        ParamTypeFactCheckResult::FiniteSet
+                    )
+                ) {
+                    return Err(LeanCompileError::unsupported("Have/SetKindStages"));
+                }
+                self.validate_parameter_store_capture(&captured.defined_params)?;
+                if captured.defined_params.store_and_infer_results.len() != group.params.len() {
+                    return Err(LeanCompileError::unsupported("Have/SetKindStores"));
+                }
+                for (parameter, store) in group
+                    .params
+                    .iter()
+                    .zip(&captured.defined_params.store_and_infer_results)
+                {
+                    introduced_count += 1;
+                    let introduced = SourcePosition {
+                        before: introduced_count,
+                        ..source_position
+                    };
+                    let (binders, _) = self.introduce_set_kind_parameter(
+                        parameter,
+                        &group.param_type,
+                        store,
+                        &introduced,
+                    )?;
+                    if local {
+                        let id = parameter.id.value();
+                        let member_id = store.primary_fact_id().value();
+                        let predicate = set_kind_predicate(&group.param_type).unwrap();
+                        let (witness, evidence) = match group.param_type {
+                            ParamType::NonemptySet(_) => (
+                                "Litex.C",
+                                "Litex.standardNonempty Litex.StandardSetValue.complex",
+                            ),
+                            ParamType::FiniteSet(_) => ("Litex.emptySet", "Litex.finiteSetEmpty"),
+                            _ => unreachable!(),
+                        };
+                        // Kind declarations have no source carrier object.
+                        // Prove the kind inhabited, then use the same canonical
+                        // predicate-based selection as other template witnesses.
+                        declarations.push(format!("have _member_exists_i{id} : ∃ (_member : Litex.Obj (M := M) M.Value), {predicate} _member := ⟨Litex.semanticObject (Litex.denote ({witness} (M := M))) (Litex.isSet ({witness} (M := M))), {evidence}⟩"));
+                        declarations.push(format!(
+                            "let _value_i{id} := Litex.obtainedObject _member_exists_i{id}"
+                        ));
+                        declarations.push(format!("have h_{member_id} : {predicate} _value_i{id} := Litex.obtainedObject_spec _member_exists_i{id}"));
+                    } else {
+                        declarations.push(format!("variable {}", binders.join(" ")));
                     }
                 }
                 continue;
@@ -207,16 +281,30 @@ impl LitexToLeanCompiler {
                     self.validate_store(&store.store, &fact)?;
                     let id = parameter.id.value();
                     let member_id = store.primary_fact_id().value();
-                    declarations.push(format!(
-                        "obtain ⟨_witness_i{id}, _member_i{id}⟩ := {check_name}"
-                    ));
-                    declarations.push(format!(
-                        "let _value_i{id} := Litex.semanticObject (M := M) _witness_i{id} (M.member_isSet _member_i{id})"
-                    ));
-                    declarations.push(format!(
-                        "have h_{member_id} : Litex.In _value_i{id} {} := _member_i{id}",
-                        carrier_term,
-                    ));
+                    if in_template {
+                        // A template returns data. Select one canonical Obj
+                        // from the original nonempty proof, then reuse it in
+                        // the value and every published membership theorem.
+                        declarations.push(format!(
+                            "have _member_exists_i{id} : ∃ (_member : Litex.Obj (M := M) M.Value), Litex.In _member {carrier_term} := by\n  rcases {check_name} with ⟨_x, _hx⟩\n  exact ⟨Litex.semanticObject _x (M.member_isSet _hx), _hx⟩"
+                        ));
+                        declarations.push(format!(
+                            "let _value_i{id} := Litex.obtainedObject _member_exists_i{id}"
+                        ));
+                        declarations.push(format!(
+                            "have h_{member_id} : Litex.In _value_i{id} {carrier_term} := Litex.obtainedObject_spec _member_exists_i{id}"
+                        ));
+                    } else {
+                        declarations.push(format!(
+                            "obtain ⟨_witness_i{id}, _member_i{id}⟩ := {check_name}"
+                        ));
+                        declarations.push(format!(
+                            "let _value_i{id} := Litex.semanticObject (M := M) _witness_i{id} (M.member_isSet _member_i{id})"
+                        ));
+                        declarations.push(format!(
+                            "have h_{member_id} : Litex.In _value_i{id} {carrier_term} := _member_i{id}"
+                        ));
+                    }
                 } else {
                     let (binders, arguments) = self.introduce_member_parameter(
                         parameter,

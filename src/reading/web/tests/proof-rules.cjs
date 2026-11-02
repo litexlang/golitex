@@ -20,7 +20,7 @@ async function run(){
   assert.equal(application.querySelector('code').textContent,'ExactIntegerDiv');assert(!application.textContent.includes('ExactIntegerQuotient'),'a different builtin fallback is not claimed');
   assert(application.textContent.includes('b ≠ 0'),'the full mathematical rule includes the nonzero guard');assert(application.textContent.includes('a / b ∈ ℤ'));
   assert(application.querySelector('.lr-proof-rule-result').textContent.includes('p / 2'),'the instantiated conclusion follows the rule');
-  const context=card.querySelectorAll('.lr-proof-grounds .lr-fact-link').map(node=>node.textContent);assert(context.some(text=>text.includes('p ∈ ℤ')||text.includes('p ∈ Z')));assert(context.some(text=>text.includes('dvd(p, 2)')));
+  const context=card.querySelectorAll('.lr-proof-grounds .lr-fact-link').map(node=>node.textContent);assert(context.some(text=>text.includes('p ∈ ℤ')||text.includes('p ∈ Z')));assert(context.some(text=>text.includes('2 ∣ p')),'dvd(p, 2) means that 2 divides p');
   assert(card.querySelector('.lr-proof-grounds').parentNode.childNodes.indexOf(application)>card.querySelector('.lr-proof-grounds').parentNode.childNodes.indexOf(card.querySelector('.lr-proof-grounds')),'context precedes the rule application');
   await card.querySelector('.lr-proof-pin').click();assert.equal(view.root.querySelector('.lr-detail-body .lr-proof-application code').textContent,'ExactIntegerDiv','pinned and hovered explanations share the actual application');
   assert.equal(JSON.stringify(bundle),before);view.reader.destroy();results.push({locale,exactStructuralRule:true,guardsAndContext:true,hoverAndPinAgree:true,unchangedExport:true});

@@ -2,7 +2,7 @@ use super::{
     InferEqualFactAdditiveCancellationResult, InferEqualFactCommonDenominatorCancellationResult,
     InferEqualFactNonzeroFactorCancellationResult,
     InferEqualFactNonzeroNumeratorCancellationResult, InferEqualFactPositiveRealPowerResult,
-    InferEqualFactSubtractiveCancellationResult,
+    InferEqualFactSubtractiveCancellationResult, InferEqualFactTupleCoordinatesResult,
 };
 use crate::runtime::FactId;
 use crate::store_fact_and_infer::StoreInferredFactResult;
@@ -14,6 +14,7 @@ pub enum InferEqualFactResult {
     CommonDenominatorCancellation(InferEqualFactCommonDenominatorCancellationResult),
     NonzeroNumeratorCancellation(InferEqualFactNonzeroNumeratorCancellationResult),
     PositiveRealPower(InferEqualFactPositiveRealPowerResult),
+    TupleCoordinates(InferEqualFactTupleCoordinatesResult),
 }
 
 impl InferEqualFactResult {
@@ -25,6 +26,7 @@ impl InferEqualFactResult {
             Self::CommonDenominatorCancellation(p) => vec![p.derived.as_ref()],
             Self::NonzeroNumeratorCancellation(p) => vec![p.derived.as_ref()],
             Self::PositiveRealPower(p) => p.transports.iter().map(|t| &t.derived).collect(),
+            Self::TupleCoordinates(p) => p.coordinates.iter().collect(),
         }
     }
 

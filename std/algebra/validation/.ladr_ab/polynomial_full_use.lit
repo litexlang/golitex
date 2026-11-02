@@ -1,0 +1,96 @@
+# Imported polynomial subspaces, representations and actual vector-space objects.
+
+release obj def Algebra::field::complex_field
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::polynomial::complex_polynomials
+
+release obj def Algebra::polynomial::real_polynomials
+
+release thm Algebra::vector_space::scalar_space_carrier(C,Algebra::field::complex_field)
+
+release thm Algebra::vector_space::scalar_space_carrier(R,Algebra::field::real_field)
+
+release thm Algebra::vector_space::function_space_carrier(C,Algebra::field::complex_field,C)
+
+release thm Algebra::vector_space::function_space_carrier(R,Algebra::field::real_field,R)
+
+release obj def poly_use::nonreal_polynomial
+
+release obj def poly_use::real_zero
+
+release thm Algebra::polynomial::complex_polynomials_nonempty
+
+release thm Algebra::polynomial::real_polynomials_nonempty
+
+release obj def Algebra::polynomial::complex_polynomial_space
+
+release struct def Algebra::polynomial::complex_polynomial_space
+
+release thm Algebra::vector_space::zero_scalar_times_vector(C,Algebra::field::complex_field,Algebra::polynomial::complex_polynomials,Algebra::polynomial::complex_polynomial_space,poly_use::nonreal_polynomial)
+
+Algebra::polynomial::complex_polynomial_space.smul(Algebra::field::complex_field.zero,poly_use::nonreal_polynomial)=Algebra::polynomial::complex_polynomial_space.zero
+
+release thm Algebra::vector_space::minus_one_times_vector(C,Algebra::field::complex_field,Algebra::polynomial::complex_polynomials,Algebra::polynomial::complex_polynomial_space,poly_use::nonreal_polynomial)
+
+release obj def Algebra::polynomial::real_polynomial_space
+
+release struct def Algebra::polynomial::real_polynomial_space
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,Algebra::polynomial::real_polynomials,Algebra::polynomial::real_polynomial_space,poly_use::real_zero)
+
+Algebra::polynomial::real_polynomial_space.smul(Algebra::field::real_field.zero,poly_use::real_zero)=Algebra::polynomial::real_polynomial_space.zero
+
+release thm Algebra::vector_space::scalar_times_zero(R,Algebra::field::real_field,Algebra::polynomial::real_polynomials,Algebra::polynomial::real_polynomial_space,2)
+
+claim:
+    ? forall n N,p fn(t C) C:
+        exist coefficients finite_seq(C,n+1) st {p=\Algebra::polynomial::complex_polynomial_from_coefficients<n>(coefficients)}
+        =>:
+            p $in \Algebra::polynomial::complex_polynomials_up_to<n>
+    release thm Algebra::polynomial::complex_polynomials_up_to_contains_representation(n,p)
+
+claim:
+    ? forall n N,p fn(t R) R:
+        exist coefficients finite_seq(R,n+1) st {p=\Algebra::polynomial::real_polynomial_from_coefficients<n>(coefficients)}
+        =>:
+            p $in \Algebra::polynomial::real_polynomials_up_to<n>
+    release thm Algebra::polynomial::real_polynomials_up_to_contains_representation(n,p)
+
+claim:
+    ? forall n N,p fn(t C) C:
+        p $in \Algebra::polynomial::complex_polynomials_up_to<n>
+        =>:
+            exist coefficients finite_seq(C,n+1) st {p=\Algebra::polynomial::complex_polynomial_from_coefficients<n>(coefficients)}
+    release thm Algebra::polynomial::complex_polynomials_up_to_representation(n,p)
+
+claim:
+    ? forall n N,p fn(t R) R:
+        p $in \Algebra::polynomial::real_polynomials_up_to<n>
+        =>:
+            exist coefficients finite_seq(R,n+1) st {p=\Algebra::polynomial::real_polynomial_from_coefficients<n>(coefficients)}
+    release thm Algebra::polynomial::real_polynomials_up_to_representation(n,p)
+
+claim:
+    ? forall n,m N:
+        n<=m
+        =>:
+            \Algebra::polynomial::complex_polynomials_up_to<n> $subset \Algebra::polynomial::complex_polynomials_up_to<m>
+    release thm Algebra::polynomial::complex_polynomials_up_to_inclusion(n,m)
+
+claim:
+    ? forall n,m N:
+        n<=m
+        =>:
+            \Algebra::polynomial::real_polynomials_up_to<n> $subset \Algebra::polynomial::real_polynomials_up_to<m>
+    release thm Algebra::polynomial::real_polynomials_up_to_inclusion(n,m)
+
+claim:
+    ? $Algebra::vector_space::is_subspace(C,Algebra::field::complex_field,fn(t C) C,\Algebra::vector_space::function_space<C,Algebra::field::complex_field,C>,Algebra::polynomial::complex_polynomials)
+    release thm Algebra::polynomial::complex_polynomials_is_subspace
+
+claim:
+    ? $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,fn(t R) R,\Algebra::vector_space::function_space<R,Algebra::field::real_field,R>,Algebra::polynomial::real_polynomials)
+    release thm Algebra::polynomial::real_polynomials_is_subspace
+

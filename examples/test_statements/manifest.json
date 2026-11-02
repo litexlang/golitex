@@ -91,6 +91,48 @@
             "statement_success": [],
             "session_error_contains": "undefined name `missing`"
           }
+        },
+        {
+          "name": "partial-equality-chain",
+          "file": "negative/fact/partial-equality-chain.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "search_proof"
+            ]
+          }
+        },
+        {
+          "name": "retained-local-equality-proofs",
+          "file": "negative/fact/retained-local-equality-proofs.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "search_proof"
+            ]
+          }
+        },
+        {
+          "name": "retained-universal-context",
+          "file": "negative/fact/retained-universal-context.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "search_proof"
+            ]
+          }
         }
       ]
     },
@@ -204,6 +246,20 @@
             "success": false,
             "statement_success": [],
             "session_error_contains": "undefined name `missing`"
+          }
+        },
+        {
+          "name": "retained-formation-prefix",
+          "file": "negative/trust_have_stmt/retained-formation-prefix.lit",
+          "strict": false,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "trust_have"
+            ]
           }
         }
       ]
@@ -429,6 +485,20 @@
             ],
             "failed_phase": [
               "have_equal"
+            ]
+          }
+        },
+        {
+          "name": "retained-membership-prefix",
+          "file": "negative/have_obj_equal_stmt/retained-membership-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "membership"
             ]
           }
         }
@@ -1054,6 +1124,20 @@
           "expect": {
             "success": true
           }
+        },
+        {
+          "name": "quantified-condition-formation",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
+        },
+        {
+          "name": "compound-condition-order",
+          "strict": true,
+          "expect": {
+            "success": true
+          }
         }
       ],
       "negative": [
@@ -1094,6 +1178,62 @@
             ],
             "failed_phase": [
               "by_def"
+            ]
+          }
+        },
+        {
+          "name": "retained-condition-prefix",
+          "file": "negative/def_prop_stmt/retained-condition-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "requirement"
+            ]
+          }
+        },
+        {
+          "name": "quantified-denominator-without-guard",
+          "file": "negative/def_prop_stmt/quantified-denominator-without-guard.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "requirement"
+            ]
+          }
+        },
+        {
+          "name": "quantified-peer-formation-prefix",
+          "file": "negative/def_prop_stmt/quantified-peer-formation-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "requirement"
+            ]
+          }
+        },
+        {
+          "name": "compound-formation-order",
+          "file": "negative/def_prop_stmt/compound-formation-order.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "requirement"
             ]
           }
         }
@@ -1260,6 +1400,20 @@
               "well_defined"
             ]
           }
+        },
+        {
+          "name": "retained-domain-prefix",
+          "file": "negative/def_template_stmt/retained-domain-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "requirement"
+            ]
+          }
         }
       ]
     },
@@ -1324,6 +1478,20 @@
             "success": false,
             "statement_success": [],
             "session_error_contains": "struct definition expects at least two fields"
+          }
+        },
+        {
+          "name": "retained-field-prefix",
+          "file": "negative/def_struct_stmt/retained-field-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "field_type"
+            ]
           }
         }
       ]
@@ -1542,6 +1710,49 @@
               "def_thm"
             ]
           }
+        },
+        {
+          "name": "retained-final-prefix",
+          "file": "negative/def_thm_stmt/retained-final-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "conclusion"
+            ]
+          }
+        },
+        {
+          "name": "retained-compound-goal",
+          "file": "negative/def_thm_stmt/retained-compound-goal.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "conclusion"
+            ]
+          }
+        },
+        {
+          "name": "pending-goal-after-body-failure",
+          "file": "negative/def_thm_stmt/pending-goal-after-body-failure.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "proof_body"
+            ]
+          }
         }
       ]
     },
@@ -1668,6 +1879,36 @@
         {
           "name": "false-nested-proof",
           "file": "negative/def_strategy_stmt/false-nested-proof.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "def_strategy"
+            ]
+          }
+        },
+        {
+          "name": "retained-final-prefix",
+          "file": "negative/def_strategy_stmt/retained-final-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "def_strategy"
+            ]
+          }
+        },
+        {
+          "name": "retained-inference-scopes",
+          "file": "negative/def_strategy_stmt/retained-inference-scopes.lit",
           "strict": true,
           "expect": {
             "success": false,
@@ -2190,6 +2431,36 @@
               "by_cases"
             ]
           }
+        },
+        {
+          "name": "completed-branch-before-failure",
+          "file": "negative/by_cases_stmt/completed-branch-before-failure.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              true,
+              false
+            ],
+            "failed_phase": [
+              "proof_body"
+            ]
+          }
+        },
+        {
+          "name": "failed-body-context",
+          "file": "negative/by_cases_stmt/failed-body-context.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "proof_body"
+            ]
+          }
         }
       ]
     },
@@ -2296,6 +2567,21 @@
             ],
             "failed_phase": [
               "by_contra"
+            ]
+          }
+        },
+        {
+          "name": "retained-assumption-body",
+          "file": "negative/by_contra_stmt/retained-assumption-body.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "proof_body"
             ]
           }
         }
@@ -2866,6 +3152,21 @@
               "by_def"
             ]
           }
+        },
+        {
+          "name": "retained-definition-prefix",
+          "file": "negative/by_def_stmt/retained-definition-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "definition_requirement"
+            ]
+          }
         }
       ]
     },
@@ -2959,6 +3260,21 @@
             ],
             "failed_phase": [
               "by_thm"
+            ]
+          }
+        },
+        {
+          "name": "retained-invocation-prefix",
+          "file": "negative/by_thm_stmt/retained-invocation-prefix.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "premise"
             ]
           }
         }
@@ -3255,6 +3571,21 @@
               "register_transitive"
             ]
           }
+        },
+        {
+          "name": "retained-law-context",
+          "file": "negative/register_transitive_prop_stmt/retained-law-context.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              true,
+              false
+            ],
+            "failed_phase": [
+              "forall"
+            ]
+          }
         }
       ]
     },
@@ -3544,6 +3875,20 @@
             ],
             "failed_phase": [
               "claim"
+            ]
+          }
+        },
+        {
+          "name": "retained-quantified-context",
+          "file": "negative/claim_stmt/retained-quantified-context.lit",
+          "strict": true,
+          "expect": {
+            "success": false,
+            "statement_success": [
+              false
+            ],
+            "failed_phase": [
+              "proof_body"
             ]
           }
         }

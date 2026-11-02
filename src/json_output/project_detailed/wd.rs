@@ -359,6 +359,41 @@ pub(super) fn project_verify_fact_wd_result(
     crate::json_output::helper::inherit_failure_field(runtime, projected, "failure")
 }
 
+pub(super) fn project_chain_wd_proof(
+    proof: &crate::execute::execute_fact_stmt::verify_chain_fact::ChainFactWellDefinedProof,
+    runtime: &Runtime,
+) -> JsonValue {
+    if proof.detail() != crate::result_detail::OutputDetail::Detailed {
+        runtime
+            .result_detail()
+            .require(proof.detail(), "chain WD output")
+            .unwrap_or_else(|error| panic!("{error}"));
+        return object_for(
+            runtime,
+            vec![("well_defined_result", well_defined_result_value(true))],
+        );
+    }
+    let adjacent = &proof
+        .as_detailed()
+        .unwrap_or_else(|error| panic!("{error}"))
+        .adjacent;
+    object_for(
+        runtime,
+        vec![
+            ("type", string("chain")),
+            (
+                "adjacent",
+                JsonValue::Array(
+                    adjacent
+                        .iter()
+                        .map(|c| project_atomic_wd_proof(c, runtime))
+                        .collect(),
+                ),
+            ),
+        ],
+    )
+}
+
 pub(super) fn project_fact_wd_proof(proof: &FactWellDefinedProof, runtime: &Runtime) -> JsonValue {
     match proof {
         FactWellDefinedProof::Equality(p) => object_for(
@@ -406,37 +441,7 @@ pub(super) fn project_fact_wd_proof(proof: &FactWellDefinedProof, runtime: &Runt
                 ],
             )
         }
-        FactWellDefinedProof::ChainFact(proof) => {
-            if proof.detail() != crate::result_detail::OutputDetail::Detailed {
-                runtime
-                    .result_detail()
-                    .require(proof.detail(), "chain WD output")
-                    .unwrap_or_else(|error| panic!("{error}"));
-                return object_for(
-                    runtime,
-                    vec![("well_defined_result", well_defined_result_value(true))],
-                );
-            }
-            let adjacent = &proof
-                .as_detailed()
-                .unwrap_or_else(|error| panic!("{error}"))
-                .adjacent;
-            object_for(
-                runtime,
-                vec![
-                    ("type", string("chain")),
-                    (
-                        "adjacent",
-                        JsonValue::Array(
-                            adjacent
-                                .iter()
-                                .map(|c| project_atomic_wd_proof(c, runtime))
-                                .collect(),
-                        ),
-                    ),
-                ],
-            )
-        }
+        FactWellDefinedProof::ChainFact(proof) => project_chain_wd_proof(proof, runtime),
         FactWellDefinedProof::OrFact(p) => project_or_wd_proof(p, runtime),
         FactWellDefinedProof::ExistFact(p) => project_exist_wd_proof(p, runtime),
         FactWellDefinedProof::ForallFact(p) => project_forall_wd(p, runtime),

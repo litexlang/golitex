@@ -34,7 +34,7 @@ impl Runtime {
             self.run_in_local_env_and_take_env(|runtime| runtime.exec_stmt_in_current_env(stmt))?;
 
         if outcome.is_failed() {
-            return Ok(outcome);
+            return Ok(outcome.retain_failed_statement_scope(child_env));
         }
         self.top_exec_env_mut().merge_from(&child_env)?;
         Ok(outcome)

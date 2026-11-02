@@ -1,0 +1,15 @@
+# Direct N-positive composition.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/nonzero_natural_positive.lit
+# Historical explicit proof:
+# claim:
+#     ? forall n N:
+#         n!=0
+#         =>:
+#             n $in N+
+#     n>0
+#     n $in N+
+# Boundary: all original domains and premises are required.
+forall n N:
+    n!=0
+    =>:
+        n $in N+

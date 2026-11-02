@@ -64,13 +64,20 @@ def resolved_entries(data):
             cards[key]=card
     return cards
 
+def resolved_builtin_theorems(data):
+    """Native declaration identities come from Rust, never authored syntax."""
+    contracts=builtin_theorem_contracts()
+    return {key:{**card,'native_name':contracts[key]['name'],
+                 'native_arity':contracts[key]['arity']}
+            for key,card in data.get('builtin_theorems',{}).items()}
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--check', action='store_true')
     args = parser.parse_args()
     data = validate(json.loads((HERE/'language_reference.json').read_text()))
     # Audit associations stay in the source catalogue, outside the browser.
-    embedded = {'entries':resolved_entries(data), 'statements':data['statements'],'builtin_theorems':data.get('builtin_theorems',{})}
+    embedded = {'entries':resolved_entries(data), 'statements':data['statements'],'builtin_theorems':resolved_builtin_theorems(data)}
     generated = BEGIN+'\n  const languageReference='+json.dumps(embedded,ensure_ascii=False,separators=(',', ':'))+';\n'+END
     path=HERE/'web/reader.js';source=path.read_text()
     if BEGIN in source:

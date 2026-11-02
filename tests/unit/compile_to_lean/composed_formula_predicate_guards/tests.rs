@@ -692,10 +692,10 @@ fn closed_order_rewrite(
 fn composed_formula_predicate_guards_replay_actual_order_equality_rewrite_winners() {
     let mut selected = Vec::new();
     for (goal, transport) in [
-        ("x>=0", "Litex.leOfSame"),
-        ("x>0", "Litex.ltOfSame"),
-        ("x<=3", "Litex.leOfSame"),
-        ("x<3", "Litex.ltOfSame"),
+        ("x>=0", "∧ r ≤ s)"),
+        ("x>0", "∧ r < s)"),
+        ("x<=3", "∧ r ≤ s)"),
+        ("x<3", "∧ r < s)"),
     ] {
         let source = format!("have x R=2\n{goal}\n");
         let (mut result, compiler) = super::execute(&source);
@@ -714,6 +714,7 @@ fn composed_formula_predicate_guards_replay_actual_order_equality_rewrite_winner
             )
         ) {
             let output = super::compile_run(&result, &compiler, "actual_order_rewrite").unwrap();
+            assert!(output.contains("congrArg₂ (fun (a b : M.Value)"));
             assert!(output.contains(transport));
             selected.push(goal);
         }

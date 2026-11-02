@@ -10,5 +10,6 @@ pub use result::{
 pub use well_defined_result::{
     CompactNotForallFactWellDefinedProof, DetailedNotForallFactWellDefinedProof,
     FailToVerifyNotForallFactWellDefinedResult, NormalNotForallFactWellDefinedProof,
-    NotForallFactWellDefinedProof, VerifyNotForallFactWellDefinedResult,
+    NotForallFactWellDefinedProof, NotForallWellDefinedLocalFailed,
+    NotForallWellDefinedLocalFailure, VerifyNotForallFactWellDefinedResult,
 };

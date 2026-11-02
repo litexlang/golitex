@@ -1,0 +1,186 @@
+# Native complex coefficient padding and representation comparison.
+# Vector lengths and polynomial exponent bounds have separate parameters.
+
+claim:
+    ? forall n N,k closed_range(0,n):
+        k+1 $in closed_range(1,n+1)
+    k+1 $in Z
+    1<=k+1<=n+1
+    k+1 $in closed_range(1,n+1)
+
+claim:
+    ? forall n,m N,j closed_range(1,m):
+        j<=n
+        =>:
+            j $in closed_range(1,n)
+    j $in Z
+    1<=j<=n
+    j $in closed_range(1,n)
+
+template<n N,m {size N:n<=size},vector finite_seq(C,n)>:
+    have fn complex_finite_sequence_zero_padding(j closed_range(1,m)) C by cases:
+        case j<=n: vector(j)
+        case j>n: 0
+
+thm complex_finite_sequence_zero_padding_carrier:
+    ? forall n,m N,vector finite_seq(C,n):
+        n<=m
+        =>:
+            \complex_finite_sequence_zero_padding<n,m,vector> $in finite_seq(C,m)
+
+thm complex_finite_sequence_zero_padding_head:
+    ? forall n,m N,vector finite_seq(C,n),j N+:
+        n<=m
+        j<=n
+        j<=m
+        =>:
+            \complex_finite_sequence_zero_padding<n,m,vector>(j)=vector(j)
+    j $in closed_range(1,m)
+    j $in closed_range(1,n)
+    \complex_finite_sequence_zero_padding<n,m,vector>(j)=vector(j)
+
+thm complex_finite_sequence_zero_padding_tail:
+    ? forall n,m N,vector finite_seq(C,n),j N+:
+        n<=m
+        j>n
+        j<=m
+        =>:
+            \complex_finite_sequence_zero_padding<n,m,vector>(j)=0
+    j $in closed_range(1,m)
+    \complex_finite_sequence_zero_padding<n,m,vector>(j)=0
+
+thm complex_power_representation_padding:
+    ? forall n,m N,coefficients finite_seq(C,n+1),p fn(x R+) C,x R+:
+        n<=m
+        forall point R+:
+            p(point)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*point^k})
+        =>:
+            p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(k+1)*x^k})
+    n+1<=m+1
+    release thm complex_finite_sequence_zero_padding_carrier(n+1,m+1,coefficients)
+    have extended finite_seq(C,m+1)=\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>
+    claim:
+        ? forall j N+:
+            j<=n+1
+            j<=m+1
+            =>:
+                coefficients(j)=extended(j)
+        release thm complex_finite_sequence_zero_padding_head(n+1,m+1,coefficients,j)
+        extended(j)=\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(j)=coefficients(j)
+        coefficients(j)=extended(j)
+    claim:
+        ? forall j closed_range(1,m+1):
+            j>n+1
+            =>:
+                extended(j)=0
+        j $in N+
+        j<=m+1
+        release thm complex_finite_sequence_zero_padding_tail(n+1,m+1,coefficients,j)
+        extended(j)=\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(j)=0
+    have fn expanded(point R+) C=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {extended(k+1)*point^k})
+    claim:
+        ? forall point R+:
+            expanded(point)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {extended(k+1)*point^k})
+        expanded(point)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {extended(k+1)*point^k})
+    release thm growth::complex_power_representation_truncation(m,n,extended,coefficients,expanded,x)
+    expanded(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})=p(x)
+    claim:
+        ? forall k closed_range(0,m):
+            extended(k+1)*x^k=\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(k+1)*x^k
+        k+1 $in closed_range(1,m+1)
+        extended(k+1)=\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(k+1)
+        extended(k+1)*x^k=\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(k+1)*x^k
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {extended(k+1)*x^k}),finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(k+1)*x^k}))
+    p(x)=expanded(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {extended(k+1)*x^k})=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {\complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(k+1)*x^k})
+
+thm complex_power_representations_common_coefficients:
+    ? forall n,m N,left finite_seq(C,n+1),right finite_seq(C,m+1),p fn(x R+) C,j N+:
+        j<=n+1
+        j<=m+1
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left(k+1)*x^k})
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {right(k+1)*x^k})
+        =>:
+            left(j)=right(j)
+    have bound N=n+m
+    bound=n+m
+    n<=n+m=bound
+    m<=n+m=bound
+    n+1<=bound+1
+    m+1<=bound+1
+    j<=n+1<=bound+1
+    j<=bound+1
+    j $in closed_range(1,n+1)
+    j $in closed_range(1,m+1)
+    j $in closed_range(1,bound+1)
+    release thm complex_finite_sequence_zero_padding_carrier(n+1,bound+1,left)
+    release thm complex_finite_sequence_zero_padding_carrier(m+1,bound+1,right)
+    have left_extended finite_seq(C,bound+1)=\complex_finite_sequence_zero_padding<n+1,bound+1,left>
+    have right_extended finite_seq(C,bound+1)=\complex_finite_sequence_zero_padding<m+1,bound+1,right>
+    claim:
+        ? forall x R+:
+            p(x)=finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {left_extended(k+1)*x^k})
+        release thm complex_power_representation_padding(n,bound,left,p,x)
+        claim:
+            ? forall k closed_range(0,bound):
+                \complex_finite_sequence_zero_padding<n+1,bound+1,left>(k+1)*x^k=left_extended(k+1)*x^k
+            k+1 $in closed_range(1,bound+1)
+            left_extended(k+1)=\complex_finite_sequence_zero_padding<n+1,bound+1,left>(k+1)
+            \complex_finite_sequence_zero_padding<n+1,bound+1,left>(k+1)*x^k=left_extended(k+1)*x^k
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {\complex_finite_sequence_zero_padding<n+1,bound+1,left>(k+1)*x^k}),finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {left_extended(k+1)*x^k}))
+        p(x)=finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {\complex_finite_sequence_zero_padding<n+1,bound+1,left>(k+1)*x^k})=finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {left_extended(k+1)*x^k})
+    claim:
+        ? forall x R+:
+            p(x)=finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {right_extended(k+1)*x^k})
+        release thm complex_power_representation_padding(m,bound,right,p,x)
+        claim:
+            ? forall k closed_range(0,bound):
+                \complex_finite_sequence_zero_padding<m+1,bound+1,right>(k+1)*x^k=right_extended(k+1)*x^k
+            k+1 $in closed_range(1,bound+1)
+            right_extended(k+1)=\complex_finite_sequence_zero_padding<m+1,bound+1,right>(k+1)
+            \complex_finite_sequence_zero_padding<m+1,bound+1,right>(k+1)*x^k=right_extended(k+1)*x^k
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {\complex_finite_sequence_zero_padding<m+1,bound+1,right>(k+1)*x^k}),finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {right_extended(k+1)*x^k}))
+        p(x)=finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {\complex_finite_sequence_zero_padding<m+1,bound+1,right>(k+1)*x^k})=finite_set_sum(closed_range(0,bound),fn(k closed_range(0,bound)) C {right_extended(k+1)*x^k})
+    release thm growth::complex_power_representation_coefficients_unique(bound,left_extended,right_extended,p,j)
+    left_extended(j)=right_extended(j)
+    release thm complex_finite_sequence_zero_padding_head(n+1,bound+1,left,j)
+    release thm complex_finite_sequence_zero_padding_head(m+1,bound+1,right,j)
+    left_extended(j)=\complex_finite_sequence_zero_padding<n+1,bound+1,left>(j)=left(j)
+    right_extended(j)=\complex_finite_sequence_zero_padding<m+1,bound+1,right>(j)=right(j)
+    left(j)=left_extended(j)=right_extended(j)=right(j)
+
+thm complex_power_representation_excess_coefficients_zero:
+    ? forall n,m N,left finite_seq(C,n+1),right finite_seq(C,m+1),p fn(x R+) C,j N+:
+        n<m
+        j>n+1
+        j<=m+1
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left(k+1)*x^k})
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {right(k+1)*x^k})
+        =>:
+            right(j)=0
+    n<=m
+    n+1<=m+1
+    j $in closed_range(1,m+1)
+    release thm complex_finite_sequence_zero_padding_carrier(n+1,m+1,left)
+    have extended finite_seq(C,m+1)=\complex_finite_sequence_zero_padding<n+1,m+1,left>
+    claim:
+        ? forall x R+:
+            p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {extended(k+1)*x^k})
+        release thm complex_power_representation_padding(n,m,left,p,x)
+        claim:
+            ? forall k closed_range(0,m):
+                \complex_finite_sequence_zero_padding<n+1,m+1,left>(k+1)*x^k=extended(k+1)*x^k
+            k+1 $in closed_range(1,m+1)
+            extended(k+1)=\complex_finite_sequence_zero_padding<n+1,m+1,left>(k+1)
+            \complex_finite_sequence_zero_padding<n+1,m+1,left>(k+1)*x^k=extended(k+1)*x^k
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {\complex_finite_sequence_zero_padding<n+1,m+1,left>(k+1)*x^k}),finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {extended(k+1)*x^k}))
+        p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {\complex_finite_sequence_zero_padding<n+1,m+1,left>(k+1)*x^k})=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {extended(k+1)*x^k})
+    release thm growth::complex_power_representation_coefficients_unique(m,extended,right,p,j)
+    extended(j)=right(j)
+    release thm complex_finite_sequence_zero_padding_tail(n+1,m+1,left,j)
+    extended(j)=\complex_finite_sequence_zero_padding<n+1,m+1,left>(j)=0
+    right(j)=extended(j)=0
+

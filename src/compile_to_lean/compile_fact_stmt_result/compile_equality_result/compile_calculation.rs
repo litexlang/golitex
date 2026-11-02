@@ -9,7 +9,50 @@ enum NumericNormalization {
     GuardedComplex,
 }
 
+fn validate_closed_rational_pair(
+    values: &ClosedValuePair,
+    left: &EvalRational,
+    right: &EvalRational,
+) -> Result<(), LeanCompileError> {
+    let matching = match values {
+        ClosedValuePair::Decimal { left: a, right: b } => {
+            scalar_decimal(a)? == *left && scalar_decimal(b)? == *right
+        }
+        ClosedValuePair::Rational { left: a, right: b } => a == left && b == right,
+        ClosedValuePair::Complex {
+            left_real: a,
+            left_imaginary: ai,
+            right_real: b,
+            right_imaginary: bi,
+        } => a == left && b == right && ai.is_zero() && bi.is_zero(),
+        ClosedValuePair::Radical { .. } => {
+            return Err(LeanCompileError::unsupported("ClosedEquality/Radical"))
+        }
+    };
+    if !matching || left != right {
+        return Err(LeanCompileError::new(
+            "ClosedEquality/Values",
+            "Closed equality values differ from their exact source endpoints or from each other.",
+        ));
+    }
+    Ok(())
+}
+
 impl LitexToLeanCompiler {
+    /// A checked beta endpoint has a raw semantic value but is not a new WD
+    /// producer. Replay its closed arithmetic certificate at that value.
+    pub(super) fn compile_parent_closed_equality(
+        &self,
+        fact: &EqualFact,
+        proof: &ClosedEqualityCalculationProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (left, left_proof) = self.compile_eval_closed_value(&fact.left, position)?;
+        let (right, right_proof) = self.compile_eval_closed_value(&fact.right, position)?;
+        validate_closed_rational_pair(&proof.values, &left, &right)?;
+        Ok(format!("(({left_proof}).trans ({right_proof}).symm)"))
+    }
+
     pub(in crate::compile_to_lean) fn compile_builtin_closed_equality(
         &self,
         fact: &EqualFact,
@@ -75,24 +118,7 @@ impl LitexToLeanCompiler {
             .compile_numeric_observation(&fact.right, position)?
             .3
             .ok_or_else(|| LeanCompileError::unsupported("ClosedEquality/Expression"))?;
-        let matching = match &proof.values {
-            ClosedValuePair::Decimal { left: a, right: b } => {
-                scalar_decimal(a)? == left && scalar_decimal(b)? == right
-            }
-            ClosedValuePair::Rational { left: a, right: b } => a == &left && b == &right,
-            ClosedValuePair::Complex {
-                left_real: a,
-                left_imaginary: ai,
-                right_real: b,
-                right_imaginary: bi,
-            } => a == &left && b == &right && ai.is_zero() && bi.is_zero(),
-            ClosedValuePair::Radical { .. } => {
-                return Err(LeanCompileError::unsupported("ClosedEquality/Radical"))
-            }
-        };
-        if !matching || left != right {
-            return Err(LeanCompileError::new("ClosedEquality/Values", "Closed equality values differ from their exact source endpoints or from each other."));
-        }
+        validate_closed_rational_pair(&proof.values, &left, &right)?;
         let x = self.compile_numeric_observation(&fact.left, position)?;
         let y = self.compile_numeric_observation(&fact.right, position)?;
         Ok(format!(

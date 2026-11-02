@@ -11,6 +11,26 @@ pub(super) fn project_atomic_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSumUpperBound(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("FiniteSumUpperBound")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::AbsoluteSumTriangle(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("AbsoluteSumTriangle")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveReciprocalLessEqual(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("PositiveReciprocalLessEqual")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PositiveReciprocalLess(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("PositiveReciprocalLess")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(p) => super::structural_limit::project(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(p)=>super::multivariable::strategy(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p) => super::pointwise_derivative::project(p,runtime),

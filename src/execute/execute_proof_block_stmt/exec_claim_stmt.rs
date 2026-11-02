@@ -5,6 +5,10 @@ use super::result::{
     ExecClaimBodyProof, ExecClaimForallProof, ExecClaimNonForallProof, ExecClaimStmtFailed,
     ExecClaimStmtResult, ExecClaimStmtSuccess, ExecProofBlockStmtResult,
 };
+use super::{
+    ExecClaimBodyFailed, ExecClaimForallEnteredFailed, ExecClaimForallFailed,
+    ExecClaimLocalFailure, ExecClaimNonForallFailed,
+};
 use crate::ast::fact::{Fact, ForallFact};
 use crate::ast::stmt::{ClaimStmt, Stmt};
 use crate::execute::execute_fact_stmt::{AssumeDomFactResult, VerifyFactWellDefinedResult};
@@ -41,31 +45,27 @@ pub fn exec_claim_stmt(
 
     let (local_outcome, local_env) =
         runtime.run_in_local_env_and_take_env(|rt| match &stmt.fact {
-            Fact::ForallFact(forall) => exec_claim_forall_body(rt, forall, &stmt.proof),
-            _ => {
-                let proof_steps = match run_proof_body_stmts(rt, &stmt.proof)? {
-                    Ok(steps) => steps,
-                    Err(failed) => return Ok(Err(ExecClaimStmtFailed::ProofBody(failed))),
-                };
-                let proof = claim_verify_goal_fact(rt, &stmt.fact)?;
-                if proof.is_failed() {
-                    return Ok(Err(ExecClaimStmtFailed::Conclusion {
-                        index: 0,
-                        result: proof,
-                    }));
-                }
-                Ok(Ok(ExecClaimBodyProof::NonForall(ExecClaimNonForallProof {
-                    proof_steps,
-                    conclusion_proof: proof,
-                })))
+            Fact::ForallFact(forall) => {
+                Ok(match exec_claim_forall_body(rt, forall, &stmt.proof)? {
+                    Ok(body) => Ok(ExecClaimBodyProof::Forall(body)),
+                    Err(failed) => Err(ExecClaimBodyFailed::Forall(failed)),
+                })
             }
+            _ => Ok(
+                match exec_claim_non_forall_body(rt, &stmt.fact, &stmt.proof)? {
+                    Ok(body) => Ok(ExecClaimBodyProof::NonForall(body)),
+                    Err(failed) => Err(ExecClaimBodyFailed::NonForall(failed)),
+                },
+            ),
         })?;
 
     let body = match local_outcome {
         Ok(v) => v,
         Err(failed) => {
             return Ok(ExecProofBlockStmtResult::Claim(
-                ExecClaimStmtResult::Failed(failed),
+                ExecClaimStmtResult::Failed(ExecClaimStmtFailed::Local(
+                    ExecClaimLocalFailure::new(stmt.clone(), goal_wd, failed, local_env),
+                )),
             ));
         }
     };
@@ -74,7 +74,13 @@ pub fn exec_claim_stmt(
         Ok(s) => s,
         Err(msg) => {
             return Ok(ExecProofBlockStmtResult::Claim(
-                ExecClaimStmtResult::Failed(ExecClaimStmtFailed::Store(msg)),
+                ExecClaimStmtResult::Failed(ExecClaimStmtFailed::Store {
+                    statement: stmt.clone(),
+                    goal_wd,
+                    body,
+                    local_env,
+                    message: msg,
+                }),
             ));
         }
     };
@@ -94,27 +100,28 @@ fn exec_claim_forall_body(
     runtime: &mut Runtime,
     forall: &ForallFact,
     proof: &[Stmt],
-) -> RuntimeResult<Result<ExecClaimBodyProof, ExecClaimStmtFailed>> {
+) -> RuntimeResult<Result<ExecClaimForallProof, ExecClaimForallFailed>> {
     let introduced_params = match runtime
         .introduce_typed_parameters(&forall.typed_parameters, claim_proof_verify_state())?
     {
         Ok(introduced) => introduced,
-        Err(_) => {
-            return Ok(Err(ExecClaimStmtFailed::Introduce(
-                "claim: failed to introduce forall parameters".to_string(),
-            )))
-        }
+        Err(failed) => return Ok(Err(ExecClaimForallFailed::Introduce(failed))),
     };
 
     let mut assumed_dom_facts = Vec::with_capacity(forall.dom_facts.len());
-    for dom in &forall.dom_facts {
+    for (index, dom) in forall.dom_facts.iter().enumerate() {
         let well_defined =
             match runtime.verify_fact_well_definedness(dom, claim_proof_verify_state())? {
                 VerifyFactWellDefinedResult::Success(proof) => proof,
-                VerifyFactWellDefinedResult::Failed(_) => {
-                    return Ok(Err(ExecClaimStmtFailed::Introduce(
-                        "claim: forall domain fact is not well-defined".to_string(),
-                    )))
+                failed @ VerifyFactWellDefinedResult::Failed(_) => {
+                    return Ok(Err(ExecClaimForallFailed::Entered {
+                        introduced_params,
+                        assumed_dom_facts,
+                        failure: ExecClaimForallEnteredFailed::PremiseWd {
+                            index,
+                            result: failed,
+                        },
+                    }))
                 }
             };
         let store_and_infer = runtime.store_fact_and_infer(
@@ -129,7 +136,13 @@ fn exec_claim_forall_body(
 
     let proof_steps = match run_proof_body_stmts(runtime, proof)? {
         Ok(steps) => steps,
-        Err(failed) => return Ok(Err(ExecClaimStmtFailed::ProofBody(failed))),
+        Err(failed) => {
+            return Ok(Err(ExecClaimForallFailed::Entered {
+                introduced_params,
+                assumed_dom_facts,
+                failure: ExecClaimForallEnteredFailed::ProofBody(failed),
+            }))
+        }
     };
 
     let mut conclusion_proofs = Vec::with_capacity(forall.then_facts.len());
@@ -137,18 +150,46 @@ fn exec_claim_forall_body(
         let then_fact: Fact = then.clone().into();
         let proof = claim_verify_goal_fact(runtime, &then_fact)?;
         if proof.is_failed() {
-            return Ok(Err(ExecClaimStmtFailed::Conclusion {
-                index,
-                result: proof,
+            return Ok(Err(ExecClaimForallFailed::Entered {
+                introduced_params,
+                assumed_dom_facts,
+                failure: ExecClaimForallEnteredFailed::Conclusion {
+                    proof_steps,
+                    conclusion_proofs,
+                    index,
+                    result: proof,
+                },
             }));
         }
         conclusion_proofs.push(proof);
     }
 
-    Ok(Ok(ExecClaimBodyProof::Forall(ExecClaimForallProof {
+    Ok(Ok(ExecClaimForallProof {
         introduced_params,
         assumed_dom_facts,
         proof_steps,
         conclusion_proofs,
-    })))
+    }))
+}
+
+fn exec_claim_non_forall_body(
+    runtime: &mut Runtime,
+    fact: &Fact,
+    proof: &[Stmt],
+) -> RuntimeResult<Result<ExecClaimNonForallProof, ExecClaimNonForallFailed>> {
+    let proof_steps = match run_proof_body_stmts(runtime, proof)? {
+        Ok(steps) => steps,
+        Err(failed) => return Ok(Err(ExecClaimNonForallFailed::ProofBody(failed))),
+    };
+    let result = claim_verify_goal_fact(runtime, fact)?;
+    if result.is_failed() {
+        return Ok(Err(ExecClaimNonForallFailed::Conclusion {
+            proof_steps,
+            result,
+        }));
+    }
+    Ok(Ok(ExecClaimNonForallProof {
+        proof_steps,
+        conclusion_proof: result,
+    }))
 }

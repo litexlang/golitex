@@ -1,0 +1,13 @@
+# Expected rejection: a failed claim keeps its actual local context.
+# Before: the failed body lost the detached parameter/premise scope.
+# Now: x in R, the premise and the checked prefix remain local evidence.
+# Boundary: 2=3 remains rejected, the suffix is unexecuted, no goal is published.
+# Check: litex -strict -f examples/test_statements/negative/claim_stmt/retained-quantified-context.lit (expected exit 1)
+claim:
+    ? forall x R:
+        x > 0
+        =>:
+            x >= 0
+    x > 0
+    2 = 3
+    x >= 0

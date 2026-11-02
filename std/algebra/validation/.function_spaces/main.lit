@@ -1,0 +1,83 @@
+# Tracer: LADR 1.24, scalar-valued functions form a vector space.
+#
+# Before (the public constructor was absent from std):
+# have sequence_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,fn(x N) R> = \Algebra::vector_space::function_space<R,Algebra::field::real_field,N>
+# Former boundary: clients supplied or rebuilt this structure separately.
+#
+# Now: actual imported constructors, pointwise operations and generic use.
+# Boundary: no point outside X, no implicit restriction of a larger domain.
+# Evidence: python3 std/algebra/validation/.function_spaces/check.py
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_mul
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def Algebra::field::complex_add
+
+release obj def Algebra::field::complex_mul
+
+release obj def Algebra::field::complex_field
+
+release struct def Algebra::field::complex_field
+
+have fn sequence(n N) R=n
+
+sequence(3)=3
+
+\Algebra::vector_space::function_add<R,Algebra::field::real_field,N>(sequence,sequence)(3) = Algebra::field::real_field.add(sequence(3),sequence(3)) = Algebra::field::real_field.add(3,3) = Algebra::field::real_add(3,3) = 6
+
+\Algebra::vector_space::function_smul<R,Algebra::field::real_field,N>(2,sequence)(3) = Algebra::field::real_field.mul(2,sequence(3)) = Algebra::field::real_mul(2,3) = 6
+
+\Algebra::vector_space::function_space<R,Algebra::field::real_field,N> = (\Algebra::vector_space::function_zero<R,Algebra::field::real_field,N>,\Algebra::vector_space::function_add<R,Algebra::field::real_field,N>,\Algebra::vector_space::function_smul<R,Algebra::field::real_field,N>)
+
+release thm Algebra::vector_space::function_space_carrier(R,Algebra::field::real_field,N)
+
+have sequence_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,fn(x N) R> = \Algebra::vector_space::function_space<R,Algebra::field::real_field,N>
+
+sequence_space = (\Algebra::vector_space::function_zero<R,Algebra::field::real_field,N>,\Algebra::vector_space::function_add<R,Algebra::field::real_field,N>,\Algebra::vector_space::function_smul<R,Algebra::field::real_field,N>)
+
+sequence_space.add = \Algebra::vector_space::function_add<R,Algebra::field::real_field,N>
+
+sequence_space.add(sequence,sequence)(3) = \Algebra::vector_space::function_add<R,Algebra::field::real_field,N>(sequence,sequence)(3) = 6
+
+have fn complex_sequence(n N) C=n+i
+
+complex_sequence(2)=2+i
+
+\Algebra::vector_space::function_add<C,Algebra::field::complex_field,N>(complex_sequence,complex_sequence)(2) = Algebra::field::complex_field.add(complex_sequence(2),complex_sequence(2)) = Algebra::field::complex_add(2+i,2+i) = 4+2*i
+
+\Algebra::vector_space::function_smul<C,Algebra::field::complex_field,N>(i,complex_sequence)(2) = Algebra::field::complex_field.mul(i,complex_sequence(2)) = Algebra::field::complex_mul(i,2+i) = -1+2*i
+
+have fn empty_function(x {}) R=0
+
+release thm Algebra::vector_space::function_space_carrier(R,Algebra::field::real_field,{})
+
+have empty_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,fn(x {}) R> = \Algebra::vector_space::function_space<R,Algebra::field::real_field,{}>
+
+Algebra::field::real_field.zero=0
+
+by fn_extension \Algebra::vector_space::function_zero<R,Algebra::field::real_field,{}> = empty_function
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,fn(x {}) R,empty_space,empty_function)
+
+\Algebra::vector_space::function_zero<R,Algebra::field::real_field,closed_range(1,2)> $in finite_seq(R,2)
+
+release thm Algebra::vector_space::function_space_carrier(R,Algebra::field::real_field,closed_range(1,0))
+
+\Algebra::vector_space::function_space<R,Algebra::field::real_field,closed_range(1,0)> $in &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,fn(x closed_range(1,0)) R>
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,X set,f fn(x X) K:
+        \Algebra::vector_space::function_smul<K,F,X>(F.zero,f) = \Algebra::vector_space::function_zero<K,F,X>
+    by thm Algebra::vector_space::function_space_carrier(K,F,X) => \Algebra::vector_space::function_space<K,F,X> $in &Algebra::vector_space::VectorSpace<K,F,fn(x X) K>
+    have space &Algebra::vector_space::VectorSpace<K,F,fn(x X) K> = \Algebra::vector_space::function_space<K,F,X>
+    \Algebra::vector_space::function_space<K,F,X> = (\Algebra::vector_space::function_zero<K,F,X>,\Algebra::vector_space::function_add<K,F,X>,\Algebra::vector_space::function_smul<K,F,X>)
+    space = (\Algebra::vector_space::function_zero<K,F,X>,\Algebra::vector_space::function_add<K,F,X>,\Algebra::vector_space::function_smul<K,F,X>)
+    space.smul = \Algebra::vector_space::function_smul<K,F,X>
+    space.zero = \Algebra::vector_space::function_zero<K,F,X>
+    by thm Algebra::vector_space::zero_scalar_times_vector(K,F,fn(x X) K,space,f) => space.smul(F.zero,f)=space.zero
+    \Algebra::vector_space::function_smul<K,F,X>(F.zero,f)=space.smul(F.zero,f)=space.zero=\Algebra::vector_space::function_zero<K,F,X>

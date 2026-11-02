@@ -100,7 +100,7 @@ fn failed_proof_discards_declarations_and_preserves_later_names() {
             crate::execute::ExecStmtResult::ProofBlock(
                 crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(
                     crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Failed(
-                        crate::execute::execute_proof_block_stmt::ExecClaimStmtFailed::Conclusion { .. }
+                        crate::execute::execute_proof_block_stmt::ExecClaimStmtFailed::Local(crate::execute::execute_proof_block_stmt::ExecClaimLocalFailure { body: crate::execute::execute_proof_block_stmt::ExecClaimBodyFailed::NonForall(crate::execute::execute_proof_block_stmt::ExecClaimNonForallFailed::Conclusion { .. }), .. })
                     )
                 )
             )
@@ -346,7 +346,7 @@ fn remaining_failed_claims_discard_declarations_before_root_reuse() {
                 vec![true, false, false, true]
             );
             assert_eq!(rt.execution_environments_stack.len(), 1);
-            assert!(matches!(&result.statement_results[offset], crate::execute::ExecStmtResult::ProofBlock(crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Failed(crate::execute::execute_proof_block_stmt::ExecClaimStmtFailed::Conclusion { .. })))), "local definitions must pass before the false conclusion fails");
+            assert!(matches!(&result.statement_results[offset], crate::execute::ExecStmtResult::ProofBlock(crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Failed(crate::execute::execute_proof_block_stmt::ExecClaimStmtFailed::Local(crate::execute::execute_proof_block_stmt::ExecClaimLocalFailure { body: crate::execute::execute_proof_block_stmt::ExecClaimBodyFailed::NonForall(crate::execute::execute_proof_block_stmt::ExecClaimNonForallFailed::Conclusion { .. }), .. }))))), "local definitions must pass before the false conclusion fails");
         }
     }
 }

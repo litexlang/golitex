@@ -1,0 +1,18 @@
+# Direct tuple-extensionality composition.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/cartesian_coordinate_equality.lit
+# Historical explicit proof:
+# claim:
+#     ? forall p,q cart(R,R):
+#         p(1)=q(1)
+#         p(2)=q(2)
+#         =>:
+#             p=q
+#     p=(p(1),p(2))
+#     q=(q(1),q(2))
+#     p=q
+# Boundary: all original domains and premises are required.
+forall p,q cart(R,R):
+    p(1)=q(1)
+    p(2)=q(2)
+    =>:
+        p=q

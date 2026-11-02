@@ -39,25 +39,28 @@ impl Runtime {
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
         match fact {
             AtomicFact::MultivariableAnalysisFact(f) => {
-                let Some(clauses) =
-                    self.multivariable_defining_clauses(&f.relation, verify_state)?
+                let Some((domain, clauses)) =
+                    self.captured_multivariable_defining_clauses(&f.relation, verify_state)?
                 else {
                     return Ok(Err(DefinitionProofFailed::Unavailable));
                 };
                 match self.verify_definition_requirements(clauses,verify_state)? {
-                    Ok((facts,proofs))=>Ok(Ok(BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::definition_proof(&f.relation,facts,proofs)))),
+                    Ok((facts,proofs))=>Ok(Ok(BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::definition_proof(&f.relation,domain,facts,proofs)))),
                     Err(failure)=>Ok(Err(failure)),
                 }
             }
-            AtomicFact::HasRiemannIntegralFact(_) => {
-                let Some(clauses) = self.riemann_integral_defining_clauses(fact, verify_state)?
+            AtomicFact::HasRiemannIntegralFact(f) => {
+                let Some(function_domain) =
+                    self.checked_real_function_limit_domain(&f.function, verify_state)?
                 else {
                     return Ok(Err(DefinitionProofFailed::Unavailable));
                 };
+                let clauses = self.riemann_integral_clauses_in_domain(f, &function_domain);
                 match self.verify_definition_requirements(clauses, verify_state)? {
                     Ok((requirement_facts, proof_of_requirement_facts)) => {
                         Ok(Ok(BuiltinPropDefinitionProof::HasRiemannIntegral(
                             super::result::BuiltinHasRiemannIntegralDefinitionProof {
+                                function_domain,
                                 requirement_facts,
                                 proof_of_requirement_facts,
                             },
@@ -887,6 +890,8 @@ impl Runtime {
             let proof = self.verify_fact(requirement, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(Err(DefinitionProofFailed::Requirement {
+                    requirement_facts: requirement_facts.clone(),
+                    proof_of_requirement_facts: proofs,
                     index,
                     fact: requirement.clone(),
                     result: Box::new(proof),

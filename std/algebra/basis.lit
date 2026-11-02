@@ -23,24 +23,27 @@ prop is_finite_dimensional(K nonempty_set, field &field::Field<K>, V nonempty_se
 prop has_basis_length(K nonempty_set, field &field::Field<K>, V nonempty_set, space &vector_space::VectorSpace<K, field, V>, n N):
     exist vectors finite_seq(V, n) st {$is_basis(K, field, V, space, n, vectors)}
 
-prop is_prefix_of_length(V nonempty_set, n N, m N, vectors finite_seq(V, n), prefix finite_seq(V, m)):
-    m <= n
+prop is_prefix_of_length(V nonempty_set,n N,m N,vectors finite_seq(V,n),prefix finite_seq(V,m)):
+    m<=n
     forall j N+:
-        j <= m
+        j<=m
+        j<=n
         =>:
-            prefix(j) = vectors(j)
+            prefix(j)=vectors(j)
 
 prop is_list_with_index_removed(V nonempty_set, n N+, vectors finite_seq(V, n), k N+, reduced finite_seq(V, n - 1)):
     k <= n
     forall j N+:
         j < k
         j <= n - 1
+        j <= n
         =>:
             reduced(j) = vectors(j)
     forall j N+:
         k <= j
         j < n
         j <= n - 1
+        j + 1 $in closed_range(1,n)
         =>:
             reduced(j) = vectors(j + 1)
 
@@ -49,10 +52,18 @@ thm prefix_exists:
         m <= n
         =>:
             exist prefix finite_seq(V, m) st {$is_prefix_of_length(V, n, m, vectors, prefix)}
+    claim:
+        ? forall j closed_range(1,m):
+            j $in closed_range(1,n)
+        j $in Z
+        1<=j<=m<=n
+        j<=n
+        j $in closed_range(1,n)
     have fn prefix(j closed_range(1, m)) V = vectors(j)
     claim:
         ? forall j N+:
             j <= m
+            j <= n
             =>:
                 prefix(j) = vectors(j)
         j $in closed_range(1, m)
@@ -96,6 +107,7 @@ thm remove_index_exists:
         ? forall j N+:
             j < k
             j <= n - 1
+            j <= n
             =>:
                 reduced(j) = vectors(j)
         j $in closed_range(1, n - 1)
@@ -107,6 +119,7 @@ thm remove_index_exists:
             k <= j
             j < n
             j <= n - 1
+            j + 1 $in closed_range(1,n)
             =>:
                 reduced(j) = vectors(j + 1)
         j $in closed_range(1, n - 1)

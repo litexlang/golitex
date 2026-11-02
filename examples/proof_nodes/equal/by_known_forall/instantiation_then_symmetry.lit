@@ -1,0 +1,9 @@
+# If f agrees with the identity on R, then a = f(a) for every real a.
+# Instantiate the assumed universal to get f(a) = a, then use equality symmetry.
+# Gate: litex -strict -f examples/proof_nodes/equal/by_known_forall/instantiation_then_symmetry.lit
+
+forall f fn(t R) R, a R:
+    forall x R:
+        f(x) = x
+    =>:
+        a = f(a)

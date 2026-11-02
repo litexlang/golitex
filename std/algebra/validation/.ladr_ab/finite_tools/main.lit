@@ -1,0 +1,184 @@
+# Independent imported finite-space tools and infinite scalar-sequence space.
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+release struct def Algebra::field::complex_field
+
+release obj def Algebra::field::complex_add
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        \Algebra::vector_space::scalar_space<K,F> $in &Algebra::vector_space::VectorSpace<K,F,K>
+    release thm Algebra::vector_space::scalar_space_carrier(K,F)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        \Algebra::finite_span::coordinate_space<K,F,n> $in &Algebra::vector_space::VectorSpace<K,F,finite_seq(K,n)>
+    release thm Algebra::finite_span::coordinate_space_carrier(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        \Algebra::vector_space::function_space<K,F,N+> $in &Algebra::vector_space::VectorSpace<K,F,fn(t N+) K>
+    release thm Algebra::vector_space::function_space_carrier(K,F,N+)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        $Algebra::basis::is_finite_dimensional(K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>)
+    release thm Algebra::coordinate_basis::coordinate_space_is_finite_dimensional(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N,vector finite_seq(K,n),j closed_range(1,n):
+        \Algebra::vector_space::vector_neg<K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>>(vector)(j)=F.neg(vector(j))
+    release thm Algebra::coordinate_arithmetic::coordinate_vector_neg_entry(K,F,n,vector,j)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_linearly_dependent(K,F,V,space,n,vectors)
+        =>:
+            exist k N+,m,r N,prefix finite_seq(V,m),reduced finite_seq(V,r) st {k<=n,m=k-1,r+1=n,$Algebra::basis::is_prefix_of_length(V,n,m,vectors,prefix),vectors(k) $in \Algebra::finite_span::span<K,F,V,space,m,prefix>,$Algebra::basis::is_list_with_index_removed(V,n,vectors,k,reduced),\Algebra::finite_span::span<K,F,V,space,n,vectors> =\Algebra::finite_span::span<K,F,V,space,r,reduced>}
+    release thm Algebra::dependent_removal::dependent_list_has_redundant_predecessor(K,F,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::basis::is_finite_dimensional(K,F,V,space)
+        =>:
+            exist W power_set(V) st {$Algebra::direct_sum::is_internal_direct_sum(K,F,V,space,U,W)}
+    release thm Algebra::complement::finite_dimensional_subspace_has_complement(K,F,V,space,U)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        $Algebra::infinite_dimension::is_infinite_dimensional(K,F,fn(t N+) K,\Algebra::vector_space::function_space<K,F,N+>)
+    release thm Algebra::infinite_dimension::positive_index_function_space_is_infinite_dimensional(K,F)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        $Algebra::vector_space::is_linear_map(K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>,fn(t N+) K,\Algebra::vector_space::function_space<K,F,N+>,\Algebra::infinite_dimension::coordinate_zero_extension<K,F,n>)
+    release thm Algebra::infinite_dimension::coordinate_zero_extension_is_linear(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N,u,v finite_seq(K,n),j closed_range(1,n):
+        \Algebra::finite_span::coordinate_space<K,F,n>.add(u,v)(j)=F.add(u(j),v(j))
+    release thm Algebra::coordinate_arithmetic::coordinate_space_add_entry(K,F,n,u,v,j)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N,a K,v finite_seq(K,n),j closed_range(1,n):
+        \Algebra::finite_span::coordinate_space<K,F,n>.smul(a,v)(j)=F.mul(a,v(j))
+    release thm Algebra::coordinate_arithmetic::coordinate_space_smul_entry(K,F,n,a,v,j)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N,j closed_range(1,n):
+        \Algebra::finite_span::coordinate_space<K,F,n>.zero(j)=F.zero
+    release thm Algebra::coordinate_arithmetic::coordinate_space_zero_entry(K,F,n,j)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N,u,v finite_seq(K,n):
+        \Algebra::finite_span::coordinate_space<K,F,n>.add(u,v)=\Algebra::finite_span::coordinate_space<K,F,n>.add(v,u)
+    release struct def \Algebra::finite_span::coordinate_space<K,F,n>
+
+release thm Algebra::coordinate_basis::coordinate_space_dimension(R,Algebra::field::real_field,2)
+
+release thm Algebra::subspace::ambient_is_subspace(R,Algebra::field::real_field,finite_seq(R,2),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>)
+
+release thm Algebra::complement::finite_dimensional_subspace_has_complement(R,Algebra::field::real_field,finite_seq(R,2),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>,finite_seq(R,2))
+
+obtain complement_check_whole from exist W power_set(finite_seq(R,2)) st {$Algebra::direct_sum::is_internal_direct_sum(R,Algebra::field::real_field,finite_seq(R,2),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>,finite_seq(R,2),W)}
+
+$Algebra::direct_sum::is_internal_direct_sum(R,Algebra::field::real_field,finite_seq(R,2),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>,finite_seq(R,2),complement_check_whole)
+
+release thm Algebra::subspace::zero_is_subspace(R,Algebra::field::real_field,finite_seq(R,2),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>)
+
+have complement_check_zero power_set(finite_seq(R,2))={\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>.zero}
+
+release thm Algebra::complement::finite_dimensional_subspace_has_complement(R,Algebra::field::real_field,finite_seq(R,2),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>,complement_check_zero)
+
+obtain complement_check_zero_complement from exist W power_set(finite_seq(R,2)) st {$Algebra::direct_sum::is_internal_direct_sum(R,Algebra::field::real_field,finite_seq(R,2),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>,complement_check_zero,W)}
+
+$Algebra::direct_sum::is_internal_direct_sum(R,Algebra::field::real_field,finite_seq(R,2),\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>,complement_check_zero,complement_check_zero_complement)
+
+release thm Algebra::infinite_dimension::positive_index_function_space_is_infinite_dimensional(R,Algebra::field::real_field)
+
+$Algebra::infinite_dimension::is_infinite_dimensional(R,Algebra::field::real_field,fn(t N+) R,\Algebra::vector_space::function_space<R,Algebra::field::real_field,N+>)
+
+release thm Algebra::infinite_dimension::positive_index_function_space_is_infinite_dimensional(C,Algebra::field::complex_field)
+
+$Algebra::infinite_dimension::is_infinite_dimensional(C,Algebra::field::complex_field,fn(t N+) C,\Algebra::vector_space::function_space<C,Algebra::field::complex_field,N+>)
+
+have extension_check_nonreal finite_seq(C,2)=fn(j closed_range(1,2)) C {j+i}
+
+release thm Algebra::infinite_dimension::coordinate_zero_extension_entry(C,Algebra::field::complex_field,2,extension_check_nonreal,2)
+
+extension_check_nonreal(2)=2+i
+
+\Algebra::infinite_dimension::coordinate_zero_extension<C,Algebra::field::complex_field,2>(extension_check_nonreal)(2)=extension_check_nonreal(2)=2+i
+
+release thm Algebra::infinite_dimension::coordinate_zero_extension_tail(C,Algebra::field::complex_field,2,extension_check_nonreal,3)
+
+\Algebra::infinite_dimension::coordinate_zero_extension<C,Algebra::field::complex_field,2>(extension_check_nonreal)(3)=0
+
+have extension_check_empty finite_seq(R,0)=tuple()
+
+release thm Algebra::infinite_dimension::coordinate_zero_extension_tail(R,Algebra::field::real_field,0,extension_check_empty,1)
+
+\Algebra::infinite_dimension::coordinate_zero_extension<R,Algebra::field::real_field,0>(extension_check_empty)(1)=0
+
+release thm Algebra::vector_space::scalar_space_carrier(R,Algebra::field::real_field)
+
+have removal_check_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,R> =\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field> =(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+removal_check_space=(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+release struct def removal_check_space
+
+removal_check_space.zero=Algebra::field::real_field.zero=0
+
+have removal_check_vectors finite_seq(R,1)=fn(j closed_range(1,1)) R {0}
+
+release thm Algebra::coordinate_maps::unit_coefficients_carrier(R,Algebra::field::real_field,1,1)
+
+have removal_check_relation finite_seq(R,1)=\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,1,1>
+
+release thm Algebra::coordinate_maps::unit_linear_combination(R,Algebra::field::real_field,R,removal_check_space,1,removal_check_vectors,1)
+
+\Algebra::finite_span::linear_combination<R,Algebra::field::real_field,R,removal_check_space,1>(removal_check_relation,removal_check_vectors)=\Algebra::finite_span::linear_combination<R,Algebra::field::real_field,R,removal_check_space,1>(\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,1,1>,removal_check_vectors)=removal_check_vectors(1)=0=removal_check_space.zero
+
+release thm Algebra::finite_span::linear_combination_has_value(R,Algebra::field::real_field,R,removal_check_space,1,removal_check_relation,removal_check_vectors)
+
+$Algebra::finite_span::has_linear_combination_value(R,Algebra::field::real_field,R,removal_check_space,1,removal_check_relation,removal_check_vectors,removal_check_space.zero)
+
+removal_check_relation(1)=\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,1,1>(1)=Algebra::field::real_field.one=1
+
+claim:
+    ? not $Algebra::basis::has_only_zero_coefficients(R,Algebra::field::real_field,1,removal_check_relation)
+    by contra:
+        ? not $Algebra::basis::has_only_zero_coefficients(R,Algebra::field::real_field,1,removal_check_relation)
+        removal_check_relation(1)=Algebra::field::real_field.zero=0
+        1=removal_check_relation(1)=0
+        impossible 1=0
+
+witness $Algebra::basis::has_nontrivial_dependence_coefficients(R,Algebra::field::real_field,R,removal_check_space,1,removal_check_vectors) from removal_check_relation
+
+release thm Algebra::basis_characterization::nontrivial_dependence_coefficients_imply_dependent(R,Algebra::field::real_field,R,removal_check_space,1,removal_check_vectors)
+
+release thm Algebra::dependent_removal::dependent_list_has_redundant_predecessor(R,Algebra::field::real_field,R,removal_check_space,1,removal_check_vectors)
+
+have removal_check_empty finite_seq(R,0)=tuple()
+
+release thm Algebra::dependence::empty_list_is_independent(R,Algebra::field::real_field,R,removal_check_space,removal_check_empty)
+
+release obj def Algebra::field::complex_neg
+
+release thm Algebra::coordinate_arithmetic::coordinate_vector_neg_entry(C,Algebra::field::complex_field,2,extension_check_nonreal,2)
+
+\Algebra::vector_space::vector_neg<C,Algebra::field::complex_field,finite_seq(C,2),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,2>>(extension_check_nonreal)(2)=Algebra::field::complex_field.neg(extension_check_nonreal(2))=Algebra::field::complex_neg(extension_check_nonreal(2))=-(2+i)
+
+release thm Algebra::coordinate_arithmetic::coordinate_space_add_entry(C,Algebra::field::complex_field,2,extension_check_nonreal,extension_check_nonreal,2)
+
+\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,2>.add(extension_check_nonreal,extension_check_nonreal)(2)=Algebra::field::complex_field.add(extension_check_nonreal(2),extension_check_nonreal(2))=Algebra::field::complex_add(2+i,2+i)=4+2*i
+

@@ -112,6 +112,9 @@ pub(in crate::compile_to_lean) fn validate_determinant_law(
     requirements: &[Fact],
     conclusion: &EqualFact,
 ) -> Result<usize, LeanCompileError> {
+    if theorem == BuiltinTheoremId::MatrixDetMul {
+        return validate_determinant_product_law(arguments, requirements, conclusion);
+    }
     let identity = match theorem {
         BuiltinTheoremId::MatrixDetIdentity => true,
         BuiltinTheoremId::MatrixDetTranspose | BuiltinTheoremId::MatrixDetAdjoint => false,
@@ -186,6 +189,7 @@ pub(in crate::compile_to_lean) fn determinant_law_term(
     statement: &str,
 ) -> Result<String, LeanCompileError> {
     let law = match theorem {
+        BuiltinTheoremId::MatrixDetMul => "Litex.matrixDeterminantMultiply _det.val.matrix.val.left _det.val.matrix.val.right _det.val.order _det.wd.1 _det.val.matrix.wd.2.2.2.1 _det.val.matrix.wd.2.2.2.2",
         BuiltinTheoremId::MatrixDetIdentity => "Litex.matrixDeterminantIdentity _det.val.order _det.wd.1",
         BuiltinTheoremId::MatrixDetTranspose => "Litex.matrixDeterminantTranspose _det.val.matrix.val.matrix _det.val.order _det.wd.1 _det.val.matrix.wd.2.2",
         BuiltinTheoremId::MatrixDetAdjoint => "Litex.matrixDeterminantAdjoint _det.val.matrix.val.matrix _det.val.order _det.wd.1 _det.val.matrix.wd.2.2",
@@ -194,4 +198,49 @@ pub(in crate::compile_to_lean) fn determinant_law_term(
     Ok(format!(
         "(show {statement} from by\n  let _det := {root}\n  exact {law}\n)"
     ))
+}
+
+/// The product law has two independent original matrix triples, even for A*A.
+fn validate_determinant_product_law(
+    arguments: &[Obj],
+    requirements: &[Fact],
+    conclusion: &EqualFact,
+) -> Result<usize, LeanCompileError> {
+    let [a, b, n] = arguments else {
+        return Err(LeanCompileError::unsupported(
+            "Determinant/ProductArguments",
+        ));
+    };
+    if requirements.len() != 6 {
+        return Err(LeanCompileError::unsupported("Determinant/ProductStages"));
+    }
+    for (index, requirement) in requirements.iter().enumerate() {
+        let valid = if index % 3 < 2 {
+            matches!(requirement, Fact::AtomicFact(AtomicFact::InFact(f))
+                if f.element.ir()==n.ir() && f.set==Obj::StandardSet(StandardSet::N))
+        } else {
+            let matrix = if index == 2 { a } else { b };
+            matches!(requirement, Fact::AtomicFact(AtomicFact::InFact(f))
+                if f.element.ir()==matrix.ir() && matches!(&f.set,Obj::SetFormer(SetFormer::MatrixSet(p))
+                    if p.set.as_ref()==&Obj::StandardSet(StandardSet::C)
+                        && p.rows.ir()==n.ir() && p.cols.ir()==n.ir()))
+        };
+        if !valid {
+            return Err(LeanCompileError::unsupported("Determinant/ProductPremise"));
+        }
+    }
+    let determinant = |value: &Obj, matrix: &Obj| {
+        matches!(value,Obj::MatrixOperator(MatrixOperator::Determinant(p))
+            if p.matrix.ir()==matrix.ir() && p.order.ir()==n.ir())
+    };
+    if !matches!(&conclusion.left,Obj::MatrixOperator(MatrixOperator::Determinant(p))
+        if p.order.ir()==n.ir() && matches!(p.matrix.as_ref(),Obj::MatrixOperator(MatrixOperator::Multiply(m))
+            if m.left.ir()==a.ir() && m.right.ir()==b.ir()
+                && m.rows.ir()==n.ir() && m.inner.ir()==n.ir() && m.cols.ir()==n.ir()))
+        || !matches!(&conclusion.right,Obj::ArithmeticOperator(ArithmeticOperator::Mul(p))
+            if determinant(&p.left,a) && determinant(&p.right,b))
+    {
+        return Err(LeanCompileError::unsupported("Determinant/ProductSubjects"));
+    }
+    Ok(6)
 }

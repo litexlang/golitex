@@ -173,7 +173,15 @@ impl LitexToLeanCompiler {
         children: &[String],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let term = self.compile_object_reference(object, position)?;
+        let term = self
+            .compile_object_reference(object, position)?
+            .replace('\n', "\n    ");
+        // Child proofs may be tactic blocks. Keep their closing delimiters
+        // inside the parent's `exact` term, including before a second operand.
+        let children: Vec<_> = children
+            .iter()
+            .map(|proof| proof.replace('\n', "\n    "))
+            .collect();
         Ok(match name {
             "neg" => format!("(by\n  let _litex_real_result := {term}\n  exact Litex.negInR _litex_real_result.val.arg {}\n)", children[0]),
             "pow" => format!("(Litex.powStructuralInR {term} {})", children[0]),

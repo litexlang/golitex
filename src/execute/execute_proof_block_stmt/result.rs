@@ -24,6 +24,7 @@ impl ExecProofBlockStmtResult {
 
 // Soft-fail inside a proof-block body step.
 pub struct ProofBlockBodyFailed {
+    pub prior_steps: Vec<ExecStmtResult>,
     pub step_index: usize,
     pub statement: crate::ast::stmt::Stmt,
     pub result: Box<ExecStmtResult>,
@@ -83,13 +84,14 @@ impl ExecClaimBodyProof {
 pub enum ExecClaimStmtFailed {
     GoalWd(VerifyFactWellDefinedResult),
     GoalUnsupported(String),
-    Introduce(String),
-    ProofBody(ProofBlockBodyFailed),
-    Conclusion {
-        index: usize,
-        result: VerifyFactResult,
+    Local(super::ExecClaimLocalFailure),
+    Store {
+        statement: ClaimStmt,
+        goal_wd: VerifyFactWellDefinedResult,
+        body: ExecClaimBodyProof,
+        local_env: Box<ExecEnv>,
+        message: String,
     },
-    Store(String),
 }
 
 impl ExecClaimStmtResult {

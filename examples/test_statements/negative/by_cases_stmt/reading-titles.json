@@ -1,0 +1,13 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "completed-branch-before-failure.lit": {
+      "zh": "分类证明（未完成）",
+      "en": "An unfinished proof by cases"
+    },
+    "failed-body-context.lit": {
+      "zh": "分支内的证明",
+      "en": "Proof within a case"
+    }
+  }
+}

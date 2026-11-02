@@ -1,0 +1,159 @@
+# Source-shaped finite-subspace and dimension reuse, with proved WD publications.
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        =>:
+            $is_nonempty_set(U)
+    release thm Algebra::subspace::subspace_is_nonempty(K,F,V,space,U)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        =>:
+            \Algebra::subspace::restricted_space<K,F,V,space,U> $in &Algebra::vector_space::VectorSpace<K,F,U>
+    release thm Algebra::subspace::restricted_space_is_vector_space(K,F,V,space,U)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::basis::is_finite_dimensional(K,F,V,space)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,F,U,\Algebra::subspace::restricted_space<K,F,V,space,U>)
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,U)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::basis::is_finite_dimensional(K,F,V,space)
+        =>:
+            \Algebra::dimension::finite_dimension<K,F,U>(\Algebra::subspace::restricted_space<K,F,V,space,U>)<=\Algebra::dimension::finite_dimension<K,F,V>(space)
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,U)
+    release thm Algebra::subspace::subspace_dimension_le_ambient(K,F,V,space,U)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::basis::is_finite_dimensional(K,F,V,space)
+        \Algebra::dimension::finite_dimension<K,F,U>(\Algebra::subspace::restricted_space<K,F,V,space,U>)=\Algebra::dimension::finite_dimension<K,F,V>(space)
+        =>:
+            U=V
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,U)
+    release thm Algebra::linear_criteria::equal_dimension_subspace_is_ambient(K,F,V,space,U)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        =>:
+            \Algebra::direct_sum::subspace_sum<K,F,V,space,U,W> $in power_set(V)
+    \Algebra::direct_sum::subspace_sum<K,F,V,space,U,W> ={v V: $Algebra::direct_sum::is_sum_vector(K,F,V,space,U,W,v)}
+    claim:
+        ? forall x \Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>:
+            x $in V
+        x $in V
+    by def \Algebra::direct_sum::subspace_sum<K,F,V,space,U,W> $subset V
+    \Algebra::direct_sum::subspace_sum<K,F,V,space,U,W> $in power_set(V)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        =>:
+            $Algebra::vector_space::is_subspace(K,F,V,space,intersect(U,W))
+    release thm Algebra::subspace_sums::intersection_is_subspace(K,F,V,space,U,W)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        =>:
+            $Algebra::vector_space::is_subspace(K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>)
+    release thm Algebra::direct_sum::subspace_sum_is_subspace(K,F,V,space,U,W)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        =>:
+            $is_nonempty_set(intersect(U,W))
+    release thm Algebra::subspace_sums::intersection_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::direct_sum::subspace_sum_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::subspace::subspace_is_nonempty(K,F,V,space,intersect(U,W))
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        =>:
+            $is_nonempty_set(\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>)
+    release thm Algebra::subspace_sums::intersection_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::direct_sum::subspace_sum_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::subspace::subspace_is_nonempty(K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        =>:
+            \Algebra::subspace::restricted_space<K,F,V,space,intersect(U,W)> $in &Algebra::vector_space::VectorSpace<K,F,intersect(U,W)>
+    release thm Algebra::subspace_sums::intersection_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::direct_sum::subspace_sum_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::subspace::restricted_space_is_vector_space(K,F,V,space,intersect(U,W))
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        =>:
+            \Algebra::subspace::restricted_space<K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>> $in &Algebra::vector_space::VectorSpace<K,F,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>
+    release thm Algebra::subspace_sums::intersection_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::direct_sum::subspace_sum_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::subspace::restricted_space_is_vector_space(K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        $Algebra::basis::is_finite_dimensional(K,F,V,space)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,F,intersect(U,W),\Algebra::subspace::restricted_space<K,F,V,space,intersect(U,W)>)
+    release thm Algebra::subspace_sums::intersection_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::direct_sum::subspace_sum_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,intersect(U,W))
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        $Algebra::basis::is_finite_dimensional(K,F,V,space)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,F,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>,\Algebra::subspace::restricted_space<K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>)
+    release thm Algebra::subspace_sums::intersection_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::direct_sum::subspace_sum_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U,W power_set(V):
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        $Algebra::vector_space::is_subspace(K,F,V,space,W)
+        $Algebra::basis::is_finite_dimensional(K,F,V,space)
+        =>:
+            \Algebra::dimension::finite_dimension<K,F,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>(\Algebra::subspace::restricted_space<K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>)=\Algebra::dimension::finite_dimension<K,F,U>(\Algebra::subspace::restricted_space<K,F,V,space,U>)+\Algebra::dimension::finite_dimension<K,F,W>(\Algebra::subspace::restricted_space<K,F,V,space,W>)-\Algebra::dimension::finite_dimension<K,F,intersect(U,W)>(\Algebra::subspace::restricted_space<K,F,V,space,intersect(U,W)>)
+    release thm Algebra::subspace_sums::intersection_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::direct_sum::subspace_sum_is_subspace(K,F,V,space,U,W)
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,U)
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,W)
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,intersect(U,W))
+    release thm Algebra::subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>)
+    release thm Algebra::subspace_sums::grassmann_dimension(K,F,V,space,U,W)
+    have a N=\Algebra::dimension::finite_dimension<K,F,U>(\Algebra::subspace::restricted_space<K,F,V,space,U>)
+    have b N=\Algebra::dimension::finite_dimension<K,F,W>(\Algebra::subspace::restricted_space<K,F,V,space,W>)
+    have s N=\Algebra::dimension::finite_dimension<K,F,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>(\Algebra::subspace::restricted_space<K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>)
+    have d N=\Algebra::dimension::finite_dimension<K,F,intersect(U,W)>(\Algebra::subspace::restricted_space<K,F,V,space,intersect(U,W)>)
+    a+b=\Algebra::dimension::finite_dimension<K,F,U>(\Algebra::subspace::restricted_space<K,F,V,space,U>)+\Algebra::dimension::finite_dimension<K,F,W>(\Algebra::subspace::restricted_space<K,F,V,space,W>)
+    \Algebra::dimension::finite_dimension<K,F,U>(\Algebra::subspace::restricted_space<K,F,V,space,U>)+\Algebra::dimension::finite_dimension<K,F,W>(\Algebra::subspace::restricted_space<K,F,V,space,W>)=\Algebra::dimension::finite_dimension<K,F,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>(\Algebra::subspace::restricted_space<K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>)+\Algebra::dimension::finite_dimension<K,F,intersect(U,W)>(\Algebra::subspace::restricted_space<K,F,V,space,intersect(U,W)>)
+    \Algebra::dimension::finite_dimension<K,F,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>(\Algebra::subspace::restricted_space<K,F,V,space,\Algebra::direct_sum::subspace_sum<K,F,V,space,U,W>>)+\Algebra::dimension::finite_dimension<K,F,intersect(U,W)>(\Algebra::subspace::restricted_space<K,F,V,space,intersect(U,W)>)=s+d
+    a+b=s+d
+    s=a+b-d
+

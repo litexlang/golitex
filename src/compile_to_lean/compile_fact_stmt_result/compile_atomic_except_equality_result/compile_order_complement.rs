@@ -95,6 +95,44 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         use AtomicExceptEqualityFactSearchProofByBuiltinRule as Rule;
+        let strict_known = match (goal, rule) {
+            (
+                AtomicFact::NotGreaterFact(g),
+                Rule::NotGreaterFact(NotGreaterFactSearchProofByBuiltinRule::FromKnownLess(p)),
+            ) => Some((&p.premise_proof, &g.left, &g.right, false)),
+            (
+                AtomicFact::NotLessFact(g),
+                Rule::NotLessFact(NotLessFactSearchProofByBuiltinRule::FromKnownGreater(p)),
+            ) => Some((&p.premise_proof, &g.left, &g.right, true)),
+            _ => None,
+        };
+        if let Some((proof, left, right, reverse)) = strict_known {
+            let valid = match (&proof.fact, reverse) {
+                (AtomicFact::LessFact(f), false) => {
+                    f.left.ir() == left.ir() && f.right.ir() == right.ir()
+                }
+                (AtomicFact::GreaterFact(f), true) => {
+                    f.left.ir() == left.ir() && f.right.ir() == right.ir()
+                }
+                _ => false,
+            };
+            if !valid {
+                return Err(LeanCompileError::unsupported(
+                    "Order/StrictExclusionSubject",
+                ));
+            }
+            let premise = self.compile_order_known_premise(proof, position)?.1;
+            let left = self.compile_object_reference(left, position)?;
+            let right = self.compile_object_reference(right, position)?;
+            let (left, right) = if reverse {
+                (right, left)
+            } else {
+                (left, right)
+            };
+            return Ok(format!(
+                "(by\n  let _lower := {left}\n  let _upper := {right}\n  have _strict : Litex.Lt _lower _upper := {premise}\n  intro _opposite\n  exact Litex.ltNotSame _lower _lower (Litex.ltTrans _lower _upper _lower _strict _opposite) rfl)"
+            ));
+        }
         let (proof, left, right, reverse, strict_premise) = match (goal, rule) {
             (
                 AtomicFact::NotGreaterFact(g),

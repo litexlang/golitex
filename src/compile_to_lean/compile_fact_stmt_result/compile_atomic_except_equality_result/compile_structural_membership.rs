@@ -154,66 +154,17 @@ impl LitexToLeanCompiler {
                         "Standard inclusion evidence changes its element.",
                     ));
                 }
-                if numeric_refinement(&child.set).is_some()
-                    || numeric_refinement(&proof.set).is_some()
-                {
-                    return standard_inclusion_term(
-                        &child.set,
-                        &proof.set,
-                        &self.compile_object_reference(&proof.element, position)?,
-                        &self.compile_structural(child, position)?,
-                    );
-                }
-                if child.set == StandardSet::NPos {
-                    let bridge = match proof.set {
-                        StandardSet::N => None,
-                        StandardSet::Z => Some("naturalToInteger"),
-                        StandardSet::Q => Some("naturalToRational"),
-                        StandardSet::R => Some("naturalToReal"),
-                        StandardSet::C => Some("naturalToComplex"),
-                        _ => {
-                            return Err(LeanCompileError::unsupported(
-                                "StructuralMembership/StandardSuperset",
-                            ))
-                        }
-                    };
-                    let member = self.compile_structural(child, position)?;
-                    let object = self.compile_object_reference(&proof.element, position)?;
-                    let natural = format!("(Litex.inNPos_natural {object} {member})");
-                    return Ok(match bridge {
-                        Some(bridge) => format!("(Litex.{bridge} {object} {natural})"),
-                        None => natural,
-                    });
-                }
-                let bridge = match (&child.set, &proof.set) {
-                    (StandardSet::RPos, StandardSet::R) => "inRPos_real",
-                    (StandardSet::RPos, StandardSet::C) => "positiveRealToComplex",
-                    (StandardSet::R, StandardSet::C) => "realToComplex",
-                    (StandardSet::Z, StandardSet::C) => "integerToComplex",
-                    (StandardSet::N, StandardSet::C) => "naturalToComplex",
-                    (StandardSet::N, StandardSet::Z) => "naturalToInteger",
-                    (StandardSet::N, StandardSet::R) => "naturalToReal",
-                    (StandardSet::Z, StandardSet::R) => "integerToReal",
-                    (StandardSet::N, StandardSet::Q) => "naturalToRational",
-                    (StandardSet::Z, StandardSet::Q) => "integerToRational",
-                    (StandardSet::Q, StandardSet::R) => "rationalToReal",
-                    (StandardSet::Q, StandardSet::C) => "rationalToComplex",
-                    _ => {
-                        return Err(LeanCompileError::unsupported(
-                            "StructuralMembership/StandardSuperset",
-                        ))
-                    }
-                };
-                let real_to_complex =
-                    matches!((&child.set, &proof.set), (StandardSet::R, StandardSet::C));
-                let child = self.compile_structural(child, position)?;
-                // Validate the original constructor/WD even when its denotation
-                // can be inferred from the recorded membership proof.
+                // Check the carrier direction before resolving constructors,
+                // retaining the original early rejection for a reverse edge.
+                let _ = standard_inclusion_term(&child.set, &proof.set, "_", "_")?;
+                let member = self.compile_structural(child, position)?;
                 let object = self.compile_object_reference(&proof.element, position)?;
-                if real_to_complex {
-                    Ok(format!("(M.real_subset_complex _ {child})"))
+                if matches!((&child.set, &proof.set), (StandardSet::R, StandardSet::C)) {
+                    Ok(format!("(M.real_subset_complex _ {member})"))
                 } else {
-                    Ok(format!("(Litex.{bridge} {object} {child})"))
+                    // The common inclusion compiler retains all existing
+                    // carrier/sign evidence, including refined positive sets.
+                    standard_inclusion_term(&child.set, &proof.set, &object, &member)
                 }
             }
             StructuralMembershipReason::KnownSubset(known) => {
@@ -824,6 +775,82 @@ impl LitexToLeanCompiler {
                 }
                 Ok(format!(
                     "(Litex.sequenceExtremumInR {upper} {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::PartialDerivative) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::DerivativeOperator(DerivativeOperator::Partial(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "PartialDerivative/IntrinsicSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.partialDerivativeInR {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::MultivariableLaplacian) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::DerivativeOperator(DerivativeOperator::Laplacian(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported("Laplacian/IntrinsicSubject"));
+                }
+                Ok(format!(
+                    "(Litex.laplacianInR {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::MultivariableDivergence) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::DerivativeOperator(DerivativeOperator::Divergence(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported("Divergence/IntrinsicSubject"));
+                }
+                Ok(format!(
+                    "(Litex.divergenceInR {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::MultivariableScalarLimit) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::LimitOperator(LimitOperator::MultivariableScalar(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "MultivariableScalarLimit/IntrinsicSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.multivariableScalarLimitInR {})",
+                    self.compile_object_reference(&proof.element, position)?
+                ))
+            }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::RiemannIntegral) => {
+                if proof.set != StandardSet::R
+                    || !matches!(
+                        &proof.element,
+                        Obj::IntegralOperator(IntegralOperator::Riemann(_))
+                    )
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "RiemannIntegral/IntrinsicSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.riemannIntegralInReal {})",
                     self.compile_object_reference(&proof.element, position)?
                 ))
             }

@@ -1,0 +1,16 @@
+# Direct integer-positive-quotient composition.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/positive_integer_quotient.lit
+# Historical explicit proof:
+# claim:
+#     ? forall m,n N+:
+#         $dvd(m,n)
+#         =>:
+#             m/n $in N+
+#     m/n $in Z
+#     m/n>0
+#     m/n $in N+
+# Boundary: all original domains and premises are required.
+forall m,n N+:
+    $dvd(m,n)
+    =>:
+        m/n $in N+

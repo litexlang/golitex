@@ -1,0 +1,62 @@
+# Actual three-summand and empty subspace families over the real plane.
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def main::plane
+
+release struct def main::plane
+
+have whole_family finite_seq(power_set(finite_seq(R,2)),3)=fn(j closed_range(1,3)) power_set(finite_seq(R,2)) {finite_seq(R,2)}
+
+claim:
+    ? $Algebra::subspace_sums::is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,whole_family)
+    claim:
+        ? forall j closed_range(1,3):
+            $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,whole_family(j))
+        whole_family(j)=finite_seq(R,2)
+        by def $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,finite_seq(R,2))
+    by def $Algebra::subspace_sums::is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,whole_family)
+
+release thm Algebra::subspace_sums::finite_subspace_sum_carrier(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,whole_family)
+
+have full_sum power_set(finite_seq(R,2))=\Algebra::subspace_sums::finite_subspace_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,whole_family>
+
+release thm Algebra::subspace_sums::finite_subspace_sum_contains_summand(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,whole_family,1)
+
+whole_family(1)=finite_seq(R,2)
+
+finite_seq(R,2) $subset full_sum
+
+full_sum $subset finite_seq(R,2)
+
+by extension full_sum=finite_seq(R,2)
+
+release thm Algebra::subspace_sums::finite_subspace_sum_is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,whole_family)
+
+have empty_family finite_seq(power_set(finite_seq(R,2)),0)=fn(j closed_range(1,0)) power_set(finite_seq(R,2)) {finite_seq(R,2)}
+
+release thm Algebra::subspace_sums::empty_is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,empty_family)
+
+release thm Algebra::subspace_sums::finite_subspace_sum_carrier(R,Algebra::field::real_field,finite_seq(R,2),main::plane,0,empty_family)
+
+have empty_sum power_set(finite_seq(R,2))=\Algebra::subspace_sums::finite_subspace_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,0,empty_family>
+
+release thm Algebra::subspace_sums::empty_subspace_family_sum(R,Algebra::field::real_field,finite_seq(R,2),main::plane,empty_family)
+
+empty_sum={main::plane.zero}
+
+main::plane.zero $in empty_sum
+
+have invalid_family finite_seq(power_set(finite_seq(R,2)),1)=fn(j closed_range(1,1)) power_set(finite_seq(R,2)) {{}}
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),U power_set(V):
+        $Algebra::subspace_sums::is_subspace_family(K,F,V,space,n,members)
+        $Algebra::vector_space::is_subspace(K,F,V,space,U)
+        forall j closed_range(1,n):
+            members(j) $subset U
+        =>:
+            \Algebra::subspace_sums::finite_subspace_sum<K,F,V,space,n,members> $subset U
+    release thm Algebra::subspace_sums::finite_subspace_sum_is_least(K,F,V,space,n,members,U)

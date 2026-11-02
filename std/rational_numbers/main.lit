@@ -1,0 +1,59 @@
+# Rational-square gaps, using native numbers and existing foundation theorems.
+
+thm rational_square_not_two:
+    ? forall x Q:
+        x^2 != 2
+    by contra:
+        ? x^2 != 2
+        release thm rational_has_unique_reduced_fraction(x)
+        obtain p,d from exist! p Z,d N+ st {x = p/d,gcd(p,d) = 1}
+        p = (p/d)*d = x*d
+        p^2 = (x*d)^2 = x^2*d^2 = 2*d^2
+        $prime(2)
+        $dvd(p^2,2)
+        release thm prime_divides_power(p,2,2)
+        p/2 $in Z
+        have k Z = p/2
+        p = 2*(p/2) = 2*k
+        d^2 = p^2/2 = (2*k)^2/2 = 2*k^2
+        $dvd(d^2,2)
+        release thm prime_divides_power(d,2,2)
+        $dvd(gcd(p,d),2)
+        gcd(p,d) = 1
+        $dvd(1,2)
+        1%2 = 0
+        1 = 1%2 = 0
+        impossible 1 = 0
+
+thm rational_square_two_straddle:
+    ? forall epsilon R+:
+        exist x Q st {0 <= x,x^2 < 2,2 < (x+epsilon)^2}
+    have root R+ = sqrt(2)
+    root^2 = sqrt(2)^2 = 2
+    by cases:
+        ? exist x Q st {0 <= x,x^2 < 2,2 < (x+epsilon)^2}
+        case epsilon < root:
+            root-epsilon > 0
+            -epsilon < 0
+            root-epsilon = root+(-epsilon) < root+0 = root
+            root-epsilon < root
+            release thm rational_between_reals(root-epsilon,root)
+            obtain q from exist q Q st {root-epsilon < q and q < root}
+            0 < root-epsilon < q
+            q > 0
+            q^2 < root^2 = 2
+            root = (root-epsilon)+epsilon < q+epsilon
+            root < q+epsilon
+            root^2 < (q+epsilon)^2
+            2 = root^2 < (q+epsilon)^2
+            witness exist x Q st {0 <= x,x^2 < 2,2 < (x+epsilon)^2} from q
+        case epsilon >= root:
+            release thm rational_between_reals(0,root)
+            obtain q from exist q Q st {0 < q and q < root}
+            q^2 < root^2 = 2
+            q+epsilon > epsilon
+            root <= epsilon < q+epsilon
+            root < q+epsilon
+            root^2 < (q+epsilon)^2
+            2 = root^2 < (q+epsilon)^2
+            witness exist x Q st {0 <= x,x^2 < 2,2 < (x+epsilon)^2} from q

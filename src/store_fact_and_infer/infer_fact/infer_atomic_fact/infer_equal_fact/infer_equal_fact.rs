@@ -18,6 +18,9 @@ impl Runtime {
         if let Some(pow) = self.infer_equal_fact_positive_real_power(equal_fact, verify_state)? {
             rules.push(InferEqualFactResult::PositiveRealPower(pow));
         }
+        if let Some(tuple) = self.infer_equal_fact_tuple_coordinates(equal_fact)? {
+            rules.push(InferEqualFactResult::TupleCoordinates(tuple));
+        }
         Ok(rules)
     }
 }

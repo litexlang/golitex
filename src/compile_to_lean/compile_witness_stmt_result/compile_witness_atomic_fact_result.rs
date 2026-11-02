@@ -13,7 +13,7 @@ impl LitexToLeanCompiler {
         local: bool,
     ) -> Result<String, LeanCompileError> {
         let normal = &proof.statement.atomic_fact;
-        let (declaration, _, _) = position.visible_prop(&normal.predicate)?;
+        let (declaration, _, _) = position.visible_prop(&normal.predicate, &self.runtime)?;
         let substitution = self.prop_argument_substitution(declaration, normal)?;
         let clauses = &declaration.statement.iff_facts;
         if clauses.len() != 1
@@ -47,16 +47,11 @@ impl LitexToLeanCompiler {
             .enumerate()
         {
             let actual = source_subject(check)?;
-            match (param_type, &actual) {
-                (ParamType::Obj(set), Fact::AtomicFact(AtomicFact::InFact(member)))
-                    if member.element == normal.body[i]
-                        && instantiated_object_matches(set, &member.set, &substitution) => {}
-                _ => {
-                    return Err(LeanCompileError::new(
-                        "Witness/PropArguments",
-                        "A predicate argument check has another subject, carrier or position.",
-                    ))
-                }
+            if !parameter_type_fact_matches(param_type, &normal.body[i], &actual, &substitution) {
+                return Err(LeanCompileError::new(
+                    "Witness/PropArguments",
+                    "A predicate argument check has another subject, carrier or position.",
+                ));
             }
             let prior = SourcePosition {
                 before: i,

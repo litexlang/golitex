@@ -19,6 +19,29 @@ pub(in crate::json_output) fn project_template_failure(
     runtime: &Runtime,
 ) -> JsonValue {
     let (phase, failure) = match failed {
+        ExecDefTemplateStmtFailed::Local(context) => match &context.failure {
+            crate::execute::DefTemplateLocalFailed::Parameters(failed) => match failed {
+                crate::execute::IntroduceTypedParametersFailed::ParamType(wd)
+                | crate::execute::IntroduceTypedParametersFailed::ParamTypeWithPrefix {
+                    failed: wd,
+                    ..
+                } => ("parameter_type", project_verify_obj_wd(wd, runtime)),
+                crate::execute::IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                    failed,
+                    ..
+                } => (
+                    "auto_open_struct_layer",
+                    project_open_failure(failed, runtime),
+                ),
+            },
+            crate::execute::DefTemplateLocalFailed::Domain { failed, .. } => (
+                "domain_fact_well_defined",
+                project_fact_wd_failure(failed, runtime),
+            ),
+            crate::execute::DefTemplateLocalFailed::Body { failed, .. } => {
+                return project_template_failure(failed, runtime)
+            }
+        },
         ExecDefTemplateStmtFailed::NameClash(msg) => ("name_clash", string(msg)),
         ExecDefTemplateStmtFailed::ParamType(wd) => {
             ("parameter_type", project_verify_obj_wd(wd, runtime))
@@ -37,7 +60,10 @@ pub(in crate::json_output) fn project_template_failure(
             ("body_have_equal", project_have_equal_failure(f, runtime))
         }
         ExecDefTemplateStmtFailed::BodyHaveObjByExistFacts(f) => {
-            let ExecHaveObjByExistFactsStmtFailed::Exist(exist) = f;
+            let exist = match f {
+                ExecHaveObjByExistFactsStmtFailed::Exist(exist) => exist,
+                ExecHaveObjByExistFactsStmtFailed::Context(context) => &context.failed,
+            };
             (
                 "body_have_by_exist",
                 project_exist_failed("exist", exist, runtime),
@@ -120,6 +146,18 @@ fn project_open_failure(f: &FailToReleaseOneStructLayer, runtime: &Runtime) -> J
 
 fn project_have_in_failure(f: &ExecHaveObjInNonemptySetStmtFailed, runtime: &Runtime) -> JsonValue {
     let (phase, failure) = match f {
+        ExecHaveObjInNonemptySetStmtFailed::Local(context) => match &context.failure {
+            crate::execute::HaveObjInNonemptySetLocalFailed::ParamType(wd) => {
+                ("parameter_type", project_verify_obj_wd(wd, runtime))
+            }
+            crate::execute::HaveObjInNonemptySetLocalFailed::Nonempty { failed, .. } => {
+                ("nonempty_check", project_verify_fact(failed, runtime))
+            }
+            crate::execute::HaveObjInNonemptySetLocalFailed::AutoOpen { failed, .. } => (
+                "auto_open_struct_layer",
+                project_open_failure(failed, runtime),
+            ),
+        },
         ExecHaveObjInNonemptySetStmtFailed::ParamType(wd) => {
             ("parameter_type", project_verify_obj_wd(wd, runtime))
         }
@@ -135,6 +173,34 @@ fn project_have_in_failure(f: &ExecHaveObjInNonemptySetStmtFailed, runtime: &Run
 
 fn project_have_equal_failure(f: &ExecHaveObjEqualStmtFailed, runtime: &Runtime) -> JsonValue {
     let (phase, failure) = match f {
+        ExecHaveObjEqualStmtFailed::Context(context) => {
+            return project_have_equal_failure(&context.failure, runtime)
+        }
+        ExecHaveObjEqualStmtFailed::Preflight(context) => match &context.failure {
+            crate::execute::IntroduceTypedParametersFailed::ParamType(failed)
+            | crate::execute::IntroduceTypedParametersFailed::ParamTypeWithPrefix {
+                failed, ..
+            } => ("parameter_type", project_verify_obj_wd(failed, runtime)),
+            crate::execute::IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                failed, ..
+            } => (
+                "auto_open_struct_layer",
+                project_open_failure(failed, runtime),
+            ),
+        },
+        ExecHaveObjEqualStmtFailed::AfterPreflight(context) => match &context.failure {
+            crate::execute::HaveObjEqualAfterPreflightFailed::ValueWd { failed, .. } => (
+                "equal_to_well_defined",
+                project_verify_obj_wd(failed, runtime),
+            ),
+            crate::execute::HaveObjEqualAfterPreflightFailed::Membership { failed, .. } => {
+                ("membership", project_verify_fact(failed, runtime))
+            }
+            crate::execute::HaveObjEqualAfterPreflightFailed::AutoOpen { failed, .. } => (
+                "auto_open_struct_layer",
+                project_open_failure(failed, runtime),
+            ),
+        },
         ExecHaveObjEqualStmtFailed::ParamCountMismatch => (
             "parameter_count",
             message_json(runtime, "parameter and value counts differ"),
@@ -181,6 +247,12 @@ fn project_obtain_exist_failure(
     runtime: &Runtime,
 ) -> JsonValue {
     let (phase, failure) = match f {
+        ExecObtainObjFromExistFactStmtFailed::Context(context) => {
+            return project_obtain_exist_failure(&context.failure, runtime)
+        }
+        ExecObtainObjFromExistFactStmtFailed::SourceVerified(context) => {
+            return project_obtain_exist_failure(&context.failure, runtime)
+        }
         ExecObtainObjFromExistFactStmtFailed::ArityMismatch { expected, got } => (
             "arity",
             object_for(
@@ -207,6 +279,18 @@ fn project_obtain_atomic_failure(
     runtime: &Runtime,
 ) -> JsonValue {
     let (phase, failure) = match f {
+        ExecObtainObjFromAtomicFactStmtFailed::Context(context) => {
+            return project_obtain_atomic_failure(&context.failure, runtime)
+        }
+        ExecObtainObjFromAtomicFactStmtFailed::DefinitionResolved(context) => {
+            return project_obtain_atomic_failure(&context.failure, runtime)
+        }
+        ExecObtainObjFromAtomicFactStmtFailed::Projected(context) => {
+            return project_obtain_atomic_failure(&context.failure, runtime)
+        }
+        ExecObtainObjFromAtomicFactStmtFailed::SourceVerified(context) => {
+            return project_obtain_atomic_failure(&context.failure, runtime)
+        }
         ExecObtainObjFromAtomicFactStmtFailed::AbstractProp => (
             "abstract_prop",
             message_json(
@@ -254,6 +338,35 @@ fn project_unique_fn_failure(
 }
 
 fn project_trust_have_failure(f: &ExecTrustHaveStmtFailed, runtime: &Runtime) -> JsonValue {
+    use crate::execute::execute_unsafe_stmt::TrustHaveFormationFailed;
+    if let ExecTrustHaveStmtFailed::Retained(context) = f {
+        return match &context.failure {
+            TrustHaveFormationFailed::Parameters(failed) => match failed {
+                crate::execute::IntroduceTypedParametersFailed::ParamType(wd)
+                | crate::execute::IntroduceTypedParametersFailed::ParamTypeWithPrefix {
+                    failed: wd,
+                    ..
+                } => node(
+                    runtime,
+                    "parameter_type",
+                    project_verify_obj_wd(wd, runtime),
+                ),
+                crate::execute::IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                    failed,
+                    ..
+                } => node(
+                    runtime,
+                    "auto_open_struct_layer",
+                    project_open_failure(failed, runtime),
+                ),
+            },
+            TrustHaveFormationFailed::BodyFact { failed, .. } => node(
+                runtime,
+                "body_fact_well_defined",
+                project_fact_wd_failure(failed, runtime),
+            ),
+        };
+    }
     let (phase, failure) = match f {
         ExecTrustHaveStmtFailed::ParamType(wd) => {
             ("parameter_type", project_verify_obj_wd(wd, runtime))
@@ -265,6 +378,7 @@ fn project_trust_have_failure(f: &ExecTrustHaveStmtFailed, runtime: &Runtime) ->
             "body_fact_well_defined",
             project_fact_wd_failure(wd, runtime),
         ),
+        ExecTrustHaveStmtFailed::Retained(_) => unreachable!(),
     };
     node(runtime, phase, failure)
 }

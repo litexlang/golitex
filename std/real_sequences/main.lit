@@ -1,0 +1,662 @@
+# Real sequences on arbitrary integer tails; native real values and exact domains.
+
+thm real_tail_positive_index:
+    ? forall start Z,k N+:
+        start+k-1 $in {j Z:j>=start}
+    k>=1
+    start+k-1 $in Z
+    start+k-1 = start+(k-1) >= start+0 = start
+    start+k-1 $in {j Z:j>=start}
+
+template<start Z,a fn(n {j Z:j>=start}) R>:
+    have fn real_tail_reindex(k N+) R = a(start+k-1)
+
+thm real_tail_original_index:
+    ? forall start Z,n {j Z:j>=start}:
+        n-start+1 $in N+
+        start+(n-start+1)-1 = n
+    n>=start
+    n-start $in N
+    n-start+1 $in N+
+    start+(n-start+1)-1 = n
+
+thm real_tail_index_from_cutoff:
+    ? forall start,cutoff,k Z:
+        k >= cutoff-start+1
+        =>:
+            start+k-1 >= cutoff
+    k-(cutoff-start+1) $in N
+    have offset N = k-(cutoff-start+1)
+    offset >= 0
+    start+k-1 = cutoff+(k-(cutoff-start+1)) = cutoff+offset >= cutoff+0 = cutoff
+
+prop is_real_tail_steady(start Z,a fn(n {j Z:j>=start}) R,epsilon R+):
+    forall j,k {n Z:n>=start}:
+        $approx::is_epsilon_close(a(j),a(k),epsilon)
+
+prop is_real_tail_steady_after(start Z,a fn(n {j Z:j>=start}) R,epsilon R+,cutoff Z):
+    cutoff >= start
+    forall j,k Z:
+        j>=start
+        k>=start
+        j>=cutoff
+        k>=cutoff
+        =>:
+            $approx::is_epsilon_close(a(j),a(k),epsilon)
+
+prop is_eventually_real_tail_steady(start Z,a fn(n {j Z:j>=start}) R,epsilon R+):
+    exist cutoff Z st {$is_real_tail_steady_after(start,a,epsilon,cutoff)}
+
+prop is_real_tail_cauchy(start Z,a fn(n {j Z:j>=start}) R):
+    forall epsilon R+:
+        $is_eventually_real_tail_steady(start,a,epsilon)
+
+prop is_real_tail_close_to(start Z,a fn(n {j Z:j>=start}) R,L R,epsilon R+):
+    forall n {j Z:j>=start}:
+        $approx::is_epsilon_close(a(n),L,epsilon)
+
+prop is_real_tail_close_after(start Z,a fn(n {j Z:j>=start}) R,L R,epsilon R+,cutoff Z):
+    cutoff>=start
+    forall n Z:
+        n>=start
+        n>=cutoff
+        =>:
+            $approx::is_epsilon_close(a(n),L,epsilon)
+
+prop is_eventually_real_tail_close(start Z,a fn(n {j Z:j>=start}) R,L R,epsilon R+):
+    exist cutoff Z st {$is_real_tail_close_after(start,a,L,epsilon,cutoff)}
+
+prop has_real_tail_limit(start Z,a fn(n {j Z:j>=start}) R,L R):
+    forall epsilon R+:
+        $is_eventually_real_tail_close(start,a,L,epsilon)
+
+prop is_convergent_real_tail(start Z,a fn(n {j Z:j>=start}) R):
+    exist L R st {$has_real_tail_limit(start,a,L)}
+
+thm real_tail_reindex_at:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,k N+:
+        \real_tail_reindex<start,a>(k) = a(start+k-1)
+
+thm real_tail_cauchy_is_native_cauchy:
+    ? forall start Z,a fn(n {idx Z:idx>=start}) R:
+        $is_real_tail_cauchy(start,a)
+        =>:
+            $is_seq_cauchy(\real_tail_reindex<start,a>)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {cart({k N+:k >= cutoff},{k N+:k >= cutoff}) $subset {p cart(N+,N+):abs(\real_tail_reindex<start,a>(p(1))-\real_tail_reindex<start,a>(p(2))) < epsilon}}
+        have radius R+ = epsilon/2
+        radius < epsilon
+        $is_eventually_real_tail_steady(start,a,radius)
+        obtain old from exist c Z st {$is_real_tail_steady_after(start,a,radius,c)}
+        $is_real_tail_steady_after(start,a,radius,old)
+        old >= start
+        old-start $in N
+        have cutoff N+ = old-start+1
+        claim:
+            ? forall p cart({k N+:k >= cutoff},{k N+:k >= cutoff}):
+                p $in {pair cart(N+,N+):abs(\real_tail_reindex<start,a>(pair(1))-\real_tail_reindex<start,a>(pair(2))) < epsilon}
+            p(1) $in {k N+:k >= cutoff}
+            p(2) $in {k N+:k >= cutoff}
+            p(1) $in N+
+            p(2) $in N+
+            p(1) >= cutoff
+            p(2) >= cutoff
+            p(1) >= old-start+1
+            p(2) >= old-start+1
+            release thm real_tail_index_from_cutoff(start,old,p(1))
+            release thm real_tail_index_from_cutoff(start,old,p(2))
+            start+p(1)-1 $in {idx Z:idx>=start}
+            start+p(2)-1 $in {idx Z:idx>=start}
+            $approx::is_epsilon_close(a(start+p(1)-1),a(start+p(2)-1),radius)
+            abs(a(start+p(1)-1)-a(start+p(2)-1)) <= radius
+            release thm real_tail_reindex_at(start,a,p(1))
+            release thm real_tail_reindex_at(start,a,p(2))
+            abs(\real_tail_reindex<start,a>(p(1))-\real_tail_reindex<start,a>(p(2))) = abs(a(start+p(1)-1)-a(start+p(2)-1)) <= radius < epsilon
+            release thm set_builder_member(p,{pair cart(N+,N+):abs(\real_tail_reindex<start,a>(pair(1))-\real_tail_reindex<start,a>(pair(2))) < epsilon})
+        by def cart({k N+:k >= cutoff},{k N+:k >= cutoff}) $subset {p cart(N+,N+):abs(\real_tail_reindex<start,a>(p(1))-\real_tail_reindex<start,a>(p(2))) < epsilon}
+        witness exist c N+ st {cart({k N+:k >= c},{k N+:k >= c}) $subset {p cart(N+,N+):abs(\real_tail_reindex<start,a>(p(1))-\real_tail_reindex<start,a>(p(2))) < epsilon}} from cutoff
+    release thm sequence_cauchy_from_epsilon(\real_tail_reindex<start,a>)
+
+thm native_cauchy_is_real_tail_cauchy:
+    ? forall start Z,a fn(n {idx Z:idx>=start}) R:
+        $is_seq_cauchy(\real_tail_reindex<start,a>)
+        =>:
+            $is_real_tail_cauchy(start,a)
+    \real_tail_reindex<start,a> $in seq(R)
+    claim:
+        ? forall epsilon R+:
+            $is_eventually_real_tail_steady(start,a,epsilon)
+        epsilon $in R+
+        release thm sequence_cauchy_tail(\real_tail_reindex<start,a>,epsilon)
+        obtain N0 from exist N0 N+ st {cart({k N+:k >= N0},{k N+:k >= N0}) $subset {p cart(N+,N+):abs(\real_tail_reindex<start,a>(p(1))-\real_tail_reindex<start,a>(p(2))) < epsilon}}
+        have cutoff Z = start+N0-1
+        cutoff = start+N0-1
+        N0 >= 1
+        N0-1 >= 0
+        cutoff = start+(N0-1) >= start+0 = start
+        claim:
+            ? forall j,k Z:
+                j>=start
+                k>=start
+                j >= cutoff
+                k >= cutoff
+                =>:
+                    $approx::is_epsilon_close(a(j),a(k),epsilon)
+            release thm real_tail_original_index(start,j)
+            release thm real_tail_original_index(start,k)
+            j-cutoff $in N
+            j-cutoff >= 0
+            j-start+1 = j-(start+N0-1)+N0 = (j-cutoff)+N0 >= 0+N0 = N0
+            k-cutoff $in N
+            k-cutoff >= 0
+            k-start+1 = k-(start+N0-1)+N0 = (k-cutoff)+N0 >= 0+N0 = N0
+            j-start+1 $in {idx N+:idx >= N0}
+            k-start+1 $in {idx N+:idx >= N0}
+            (j-start+1,k-start+1) $in cart({idx N+:idx >= N0},{idx N+:idx >= N0})
+            (j-start+1,k-start+1) $in {p cart(N+,N+):abs(\real_tail_reindex<start,a>(p(1))-\real_tail_reindex<start,a>(p(2))) < epsilon}
+            (j-start+1,k-start+1)(1) = j-start+1
+            (j-start+1,k-start+1)(2) = k-start+1
+            abs(\real_tail_reindex<start,a>((j-start+1,k-start+1)(1))-\real_tail_reindex<start,a>((j-start+1,k-start+1)(2))) < epsilon
+            \real_tail_reindex<start,a>((j-start+1,k-start+1)(1)) = \real_tail_reindex<start,a>(j-start+1)
+            \real_tail_reindex<start,a>((j-start+1,k-start+1)(2)) = \real_tail_reindex<start,a>(k-start+1)
+            \real_tail_reindex<start,a>(j-start+1)-\real_tail_reindex<start,a>(k-start+1) = \real_tail_reindex<start,a>((j-start+1,k-start+1)(1))-\real_tail_reindex<start,a>((j-start+1,k-start+1)(2))
+            abs(\real_tail_reindex<start,a>(j-start+1)-\real_tail_reindex<start,a>(k-start+1)) = abs(\real_tail_reindex<start,a>((j-start+1,k-start+1)(1))-\real_tail_reindex<start,a>((j-start+1,k-start+1)(2))) < epsilon
+            release thm real_tail_reindex_at(start,a,j-start+1)
+            release thm real_tail_reindex_at(start,a,k-start+1)
+            \real_tail_reindex<start,a>(j-start+1) = a(start+(j-start+1)-1) = a(j)
+            \real_tail_reindex<start,a>(k-start+1) = a(start+(k-start+1)-1) = a(k)
+            abs(a(j)-a(k)) = abs(\real_tail_reindex<start,a>(j-start+1)-\real_tail_reindex<start,a>(k-start+1)) < epsilon
+            by def $approx::is_epsilon_close(a(j),a(k),epsilon)
+        by def $is_real_tail_steady_after(start,a,epsilon,cutoff)
+        witness $is_eventually_real_tail_steady(start,a,epsilon) from cutoff
+    by def $is_real_tail_cauchy(start,a)
+
+thm real_tail_limit_is_native_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $has_real_tail_limit(start,a,L)
+        =>:
+            $has_seq_limit(\real_tail_reindex<start,a>,L)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k>=cutoff} $subset preimage_set(\real_tail_reindex<start,a>,{v R:abs(v-L)<epsilon})}
+        epsilon/2 $in R+
+        $is_eventually_real_tail_close(start,a,L,epsilon/2)
+        obtain old from exist c Z st {$is_real_tail_close_after(start,a,L,epsilon/2,c)}
+        old>=start
+        have cutoff N+ = old-start+1
+        claim:
+            ? forall k {idx N+:idx>=cutoff}:
+                k $in preimage_set(\real_tail_reindex<start,a>,{v R:abs(v-L)<epsilon})
+            k>=old-start+1
+            release thm real_tail_index_from_cutoff(start,old,k)
+            start+k-1 $in {j Z:j>=start}
+            $approx::is_epsilon_close(a(start+k-1),L,epsilon/2)
+            abs(a(start+k-1)-L)<=epsilon/2<epsilon
+            release thm real_tail_reindex_at(start,a,k)
+            abs(\real_tail_reindex<start,a>(k)-L)=abs(a(start+k-1)-L)<epsilon
+            \real_tail_reindex<start,a>(k) $in {v R:abs(v-L)<epsilon}
+        by def {k N+:k>=cutoff} $subset preimage_set(\real_tail_reindex<start,a>,{v R:abs(v-L)<epsilon})
+        witness exist c N+ st {{k N+:k>=c} $subset preimage_set(\real_tail_reindex<start,a>,{v R:abs(v-L)<epsilon})} from cutoff
+    by def $has_seq_limit(\real_tail_reindex<start,a>,L)
+
+thm native_limit_is_real_tail_limit:
+    ? forall start Z,a fn(n {idx Z:idx>=start}) R,L R:
+        $has_seq_limit(\real_tail_reindex<start,a>,L)
+        =>:
+            $has_real_tail_limit(start,a,L)
+    claim:
+        ? forall epsilon R+:
+            $is_eventually_real_tail_close(start,a,L,epsilon)
+        \real_tail_reindex<start,a> $in seq(R)
+        release thm seq_limit_tail(\real_tail_reindex<start,a>,L,epsilon)
+        obtain N0 from exist N0 N+ st {{k N+:k >= N0} $subset preimage_set(\real_tail_reindex<start,a>,{v R:abs(v-L) < epsilon})}
+        have cutoff Z = start+N0-1
+        cutoff = start+N0-1
+        N0 >= 1
+        N0-1 >= 0
+        cutoff = start+(N0-1) >= start+0 = start
+        claim:
+            ? forall n Z:
+                n>=start
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(a(n),L,epsilon)
+            release thm real_tail_original_index(start,n)
+            n-cutoff $in N
+            n-cutoff >= 0
+            n-start+1 = n-(start+N0-1)+N0 = (n-cutoff)+N0 >= 0+N0 = N0
+            n-start+1 $in {k N+:k >= N0}
+            n-start+1 $in preimage_set(\real_tail_reindex<start,a>,{v R:abs(v-L) < epsilon})
+            \real_tail_reindex<start,a>(n-start+1) $in {v R:abs(v-L) < epsilon}
+            abs(\real_tail_reindex<start,a>(n-start+1)-L) < epsilon
+            release thm real_tail_reindex_at(start,a,n-start+1)
+            \real_tail_reindex<start,a>(n-start+1) = a(start+(n-start+1)-1) = a(n)
+            abs(a(n)-L) = abs(\real_tail_reindex<start,a>(n-start+1)-L) < epsilon
+            by def $approx::is_epsilon_close(a(n),L,epsilon)
+        by def $is_real_tail_close_after(start,a,L,epsilon,cutoff)
+        witness $is_eventually_real_tail_close(start,a,L,epsilon) from cutoff
+    by def $has_real_tail_limit(start,a,L)
+
+thm real_tail_limit_unique:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_limit(start,a,L)
+        $has_real_tail_limit(start,a,M)
+        =>:
+            L=M
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm real_tail_limit_is_native_limit(start,a,M)
+    release thm seq_limit_unique(\real_tail_reindex<start,a>,L,M)
+
+thm convergent_real_tail_has_native_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_convergent_real_tail(start,a)
+        =>:
+            exist L R st {$has_seq_limit(\real_tail_reindex<start,a>,L)}
+    obtain L from $is_convergent_real_tail(start,a)
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    witness exist value R st {$has_seq_limit(\real_tail_reindex<start,a>,value)} from L
+
+template<start Z>:
+    have fn real_tail_limit(a fn(n {j Z:j>=start}) R: $is_convergent_real_tail(start,a)) R = lim(\real_tail_reindex<start,a>)
+
+thm real_tail_limit_implies_convergent:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $has_real_tail_limit(start,a,L)
+        =>:
+            $is_convergent_real_tail(start,a)
+    witness $is_convergent_real_tail(start,a) from L
+
+thm real_tail_limit_value:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $has_real_tail_limit(start,a,L)
+        =>:
+            $is_convergent_real_tail(start,a)
+            \real_tail_limit<start>(a)=L
+    witness $is_convergent_real_tail(start,a) from L
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    \real_tail_limit<start>(a)=lim(\real_tail_reindex<start,a>)=L
+
+thm real_tail_limit_selected:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_convergent_real_tail(start,a)
+        =>:
+            $has_real_tail_limit(start,a,\real_tail_limit<start>(a))
+    release thm convergent_real_tail_has_native_limit(start,a)
+    release thm seq_limit_selected(\real_tail_reindex<start,a>)
+    \real_tail_limit<start>(a)=lim(\real_tail_reindex<start,a>)
+    release thm native_limit_is_real_tail_limit(start,a,\real_tail_limit<start>(a))
+
+thm real_tail_limit_is_cauchy:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $has_real_tail_limit(start,a,L)
+        =>:
+            $is_real_tail_cauchy(start,a)
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm sequence_limit_cauchy(\real_tail_reindex<start,a>,L)
+    release thm native_cauchy_is_real_tail_cauchy(start,a)
+
+prop is_real_tail_bounded_by(start Z,a fn(n {j Z:j>=start}) R,M {t R:t>=0}):
+    forall n {j Z:j>=start}:
+        abs(a(n))<=M
+
+prop is_bounded_real_tail(start Z,a fn(n {j Z:j>=start}) R):
+    exist M R+ st {$is_real_tail_bounded_by(start,a,M)}
+
+thm cauchy_real_tail_is_bounded:
+    ? forall start Z,a fn(n {idx Z:idx>=start}) R:
+        $is_real_tail_cauchy(start,a)
+        =>:
+            $is_bounded_real_tail(start,a)
+    \real_tail_reindex<start,a> $in seq(R)
+    release thm real_tail_cauchy_is_native_cauchy(start,a)
+    release thm sequence_cauchy_bounded(\real_tail_reindex<start,a>)
+    $is_real_bounded(fn_range(\real_tail_reindex<start,a>))
+    obtain lower from exist lower R st {$is_real_lower_bound(fn_range(\real_tail_reindex<start,a>),lower)}
+    obtain upper from exist upper R st {$is_real_upper_bound(fn_range(\real_tail_reindex<start,a>),upper)}
+    release thm real_archimedean_natural_upper_bound(abs(lower)+abs(upper)+1)
+    obtain M from exist M N+ st {abs(lower)+abs(upper)+1 < M}
+    M $in Q
+    M >= 0
+    abs(lower) >= 0
+    abs(upper) >= 0
+    abs(lower) = abs(lower)+0 <= abs(lower)+abs(upper) < abs(lower)+abs(upper)+1 < M
+    abs(upper) = 0+abs(upper) <= abs(lower)+abs(upper) < abs(lower)+abs(upper)+1 < M
+    abs(lower) < M
+    M > abs(lower)
+    -M < -abs(lower)
+    -M <= -abs(lower)
+    abs(upper) < M
+    release thm approx::absolute_value_two_sided_bounds(lower,abs(lower))
+    release thm approx::absolute_value_two_sided_bounds(upper,abs(upper))
+    claim:
+        ? forall n Z:
+            n $in {idx Z:idx>=start}
+            =>:
+                abs(a(n)) <= M
+        release thm real_tail_original_index(start,n)
+        have k N+ = n-start+1
+        start+k-1 = start+(n-start+1)-1 = n
+        release thm real_tail_reindex_at(start,a,k)
+        \real_tail_reindex<start,a>(k) = a(start+k-1) = a(n)
+        \real_tail_reindex<start,a>(k) $in fn_range(\real_tail_reindex<start,a>)
+        lower <= \real_tail_reindex<start,a>(k) <= upper
+        lower <= a(n) <= upper
+        -M <= -abs(lower) <= lower <= a(n)
+        a(n) <= upper <= abs(upper) <= M
+        -M <= a(n) <= M
+        abs(a(n)) <= M
+    by def $is_real_tail_bounded_by(start,a,M)
+    witness $is_bounded_real_tail(start,a) from M
+
+thm convergent_real_tail_is_bounded:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_convergent_real_tail(start,a)
+        =>:
+            $is_bounded_real_tail(start,a)
+    obtain L from $is_convergent_real_tail(start,a)
+    release thm real_tail_limit_is_cauchy(start,a,L)
+    release thm cauchy_real_tail_is_bounded(start,a)
+
+template<start Z,value R>:
+    have fn real_tail_constant(n {j Z:j>=start}) R = value
+
+thm real_tail_constant_limit:
+    ? forall start Z,value R:
+        $has_real_tail_limit(start,\real_tail_constant<start,value>,value)
+    claim:
+        ? forall k N+:
+            \real_tail_reindex<start,\real_tail_constant<start,value>>(k)=value
+        \real_tail_reindex<start,\real_tail_constant<start,value>>(k)=\real_tail_constant<start,value>(start+k-1)=value
+    release thm seq_limit_constant(\real_tail_reindex<start,\real_tail_constant<start,value>>,value)
+    release thm native_limit_is_real_tail_limit(start,\real_tail_constant<start,value>,value)
+
+thm real_tail_limit_from_reindexed_values:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,b seq(R),L R:
+        $has_seq_limit(b,L)
+        forall k N+:
+            a(start+k-1)=b(k)
+        =>:
+            $has_real_tail_limit(start,a,L)
+    claim:
+        ? forall k N+:
+            \real_tail_reindex<start,a>(k)=b(k)
+        \real_tail_reindex<start,a>(k)=a(start+k-1)=b(k)
+    release thm seq_limit_eventually_equal(b,\real_tail_reindex<start,a>,L,1)
+    release thm native_limit_is_real_tail_limit(start,a,L)
+
+have fn positive_real_reciprocal_tail(n {j Z:j>=1}) R = 1/n
+
+thm positive_real_reciprocal_tail_limit:
+    ? $has_real_tail_limit(1,positive_real_reciprocal_tail,0)
+    claim:
+        ? forall epsilon R+:
+            $is_eventually_real_tail_close(1,positive_real_reciprocal_tail,0,epsilon)
+        release thm real_archimedean_natural_upper_bound(1/epsilon)
+        obtain cutoff from exist k N+ st {1/epsilon<k}
+        cutoff>=1
+        1=(1/epsilon)*epsilon<cutoff*epsilon
+        1/cutoff<(cutoff*epsilon)/cutoff=epsilon
+        claim:
+            ? forall n Z:
+                n>=1
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(positive_real_reciprocal_tail(n),0,epsilon)
+            n>0
+            cutoff>0
+            0<cutoff*n
+            1/n=cutoff/(cutoff*n)<=n/(cutoff*n)=1/cutoff<epsilon
+            positive_real_reciprocal_tail(n)=1/n>0
+            positive_real_reciprocal_tail(n)-0=positive_real_reciprocal_tail(n)
+            abs(positive_real_reciprocal_tail(n)-0)=positive_real_reciprocal_tail(n)=1/n<epsilon
+            by def $approx::is_epsilon_close(positive_real_reciprocal_tail(n),0,epsilon)
+        by def $is_real_tail_close_after(1,positive_real_reciprocal_tail,0,epsilon,cutoff)
+        witness $is_eventually_real_tail_close(1,positive_real_reciprocal_tail,0,epsilon) from cutoff
+    by def $has_real_tail_limit(1,positive_real_reciprocal_tail,0)
+
+template<start Z,a,b fn(n {j Z:j>=start}) R>:
+    have fn real_tail_sum(n {j Z:j>=start}) R = a(n)+b(n)
+
+thm real_tail_sum_limit:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_limit(start,a,L)
+        $has_real_tail_limit(start,b,M)
+        =>:
+            $has_real_tail_limit(start,\real_tail_sum<start,a,b>,L+M)
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm real_tail_limit_is_native_limit(start,b,M)
+    release thm seq_limit_add(\real_tail_reindex<start,a>,\real_tail_reindex<start,b>,L,M)
+    $has_seq_limit(fn(k N+) R {\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)},L+M)
+    claim:
+        ? forall k N+:
+            \real_tail_sum<start,a,b>(start+k-1)=(fn(idx N+) R {\real_tail_reindex<start,a>(idx)+\real_tail_reindex<start,b>(idx)})(k)
+        \real_tail_sum<start,a,b>(start+k-1)=a(start+k-1)+b(start+k-1)
+        \real_tail_reindex<start,a>(k)=a(start+k-1)
+        \real_tail_reindex<start,b>(k)=b(start+k-1)
+        a(start+k-1)+b(start+k-1)=\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)
+    release thm real_tail_limit_from_reindexed_values(start,\real_tail_sum<start,a,b>,fn(k N+) R {\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)},L+M)
+
+template<start Z,a,b fn(n {j Z:j>=start}) R>:
+    have fn real_tail_product(n {j Z:j>=start}) R = a(n)*b(n)
+
+thm real_tail_product_limit:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_limit(start,a,L)
+        $has_real_tail_limit(start,b,M)
+        =>:
+            $has_real_tail_limit(start,\real_tail_product<start,a,b>,L*M)
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm real_tail_limit_is_native_limit(start,b,M)
+    release thm seq_limit_multiply(\real_tail_reindex<start,a>,\real_tail_reindex<start,b>,L,M)
+    $has_seq_limit(fn(k N+) R {\real_tail_reindex<start,a>(k)*\real_tail_reindex<start,b>(k)},L*M)
+    claim:
+        ? forall k N+:
+            \real_tail_product<start,a,b>(start+k-1)=(fn(idx N+) R {\real_tail_reindex<start,a>(idx)*\real_tail_reindex<start,b>(idx)})(k)
+        \real_tail_product<start,a,b>(start+k-1)=a(start+k-1)*b(start+k-1)
+        \real_tail_reindex<start,a>(k)=a(start+k-1)
+        \real_tail_reindex<start,b>(k)=b(start+k-1)
+        a(start+k-1)*b(start+k-1)=\real_tail_reindex<start,a>(k)*\real_tail_reindex<start,b>(k)
+    release thm real_tail_limit_from_reindexed_values(start,\real_tail_product<start,a,b>,fn(k N+) R {\real_tail_reindex<start,a>(k)*\real_tail_reindex<start,b>(k)},L*M)
+
+template<start Z,a,b fn(n {j Z:j>=start}) R>:
+    have fn real_tail_difference(n {j Z:j>=start}) R = a(n)-b(n)
+
+thm real_tail_difference_limit:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_limit(start,a,L)
+        $has_real_tail_limit(start,b,M)
+        =>:
+            $has_real_tail_limit(start,\real_tail_difference<start,a,b>,L-M)
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm real_tail_limit_is_native_limit(start,b,M)
+    release thm seq_limit_subtract(\real_tail_reindex<start,a>,\real_tail_reindex<start,b>,L,M)
+    $has_seq_limit(fn(k N+) R {\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)},L-M)
+    claim:
+        ? forall k N+:
+            \real_tail_difference<start,a,b>(start+k-1)=(fn(idx N+) R {\real_tail_reindex<start,a>(idx)-\real_tail_reindex<start,b>(idx)})(k)
+        \real_tail_difference<start,a,b>(start+k-1)=a(start+k-1)-b(start+k-1)
+        \real_tail_reindex<start,a>(k)=a(start+k-1)
+        \real_tail_reindex<start,b>(k)=b(start+k-1)
+        a(start+k-1)-b(start+k-1)=\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)
+    release thm real_tail_limit_from_reindexed_values(start,\real_tail_difference<start,a,b>,fn(k N+) R {\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)},L-M)
+
+template<start Z,a fn(n {j Z:j>=start}) R,c R>:
+    have fn real_tail_scaled(n {j Z:j>=start}) R = c*a(n)
+
+thm real_tail_scaled_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L,c R:
+        $has_real_tail_limit(start,a,L)
+        =>:
+            $has_real_tail_limit(start,\real_tail_scaled<start,a,c>,c*L)
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm seq_limit_scale(\real_tail_reindex<start,a>,L,c)
+    claim:
+        ? forall k N+:
+            \real_tail_scaled<start,a,c>(start+k-1)=(fn(idx N+) R {c*\real_tail_reindex<start,a>(idx)})(k)
+        \real_tail_scaled<start,a,c>(start+k-1)=c*a(start+k-1)
+        \real_tail_reindex<start,a>(k)=a(start+k-1)
+        c*a(start+k-1)=c*\real_tail_reindex<start,a>(k)
+    release thm real_tail_limit_from_reindexed_values(start,\real_tail_scaled<start,a,c>,fn(k N+) R {c*\real_tail_reindex<start,a>(k)},c*L)
+
+template<start Z,b fn(n {j Z:j>=start}) R*>:
+    have fn real_tail_reciprocal(n {j Z:j>=start}) R = 1/b(n)
+
+thm real_tail_reciprocal_limit:
+    ? forall start Z,a fn(n {idx Z:idx>=start}) R*,L R*:
+        $has_real_tail_limit(start,a,L)
+        =>:
+            $has_real_tail_limit(start,\real_tail_reciprocal<start,a>,1/L)
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    have fn ones(k N+) R = 1
+    \real_tail_reindex<start,a> $in seq(R)
+    \real_tail_reindex<start,\real_tail_reciprocal<start,a>> $in seq(R)
+    claim:
+        ? forall k N+:
+            \real_tail_reindex<start,a>(k) != 0
+        start+k-1 $in {idx Z:idx>=start}
+        a(start+k-1) $in R*
+        a(start+k-1) != 0
+        release thm real_tail_reindex_at(start,a,k)
+    claim:
+        ? forall k N+:
+            ones(k) = 1
+        ones(k) = 1
+    release thm seq_limit_constant(ones,1)
+    release thm seq_limit_divide(ones,\real_tail_reindex<start,a>,1,L)
+    claim:
+        ? forall k N+:
+            (fn(j N+) R {ones(j)/\real_tail_reindex<start,a>(j)})(k) = \real_tail_reindex<start,\real_tail_reciprocal<start,a>>(k)
+        start+k-1 $in Z
+        start+k-1 $in {idx Z:idx>=start}
+        release thm real_tail_reindex_at(start,a,k)
+        release thm real_tail_reindex_at(start,\real_tail_reciprocal<start,a>,k)
+        \real_tail_reindex<start,a>(k) != 0
+        \real_tail_reindex<start,a>(k) $in R*
+        a(start+k-1) $in R*
+        a(start+k-1) $in R*
+        ones(k) = 1
+        (fn(j N+) R {ones(j)/\real_tail_reindex<start,a>(j)})(k) = ones(k)/\real_tail_reindex<start,a>(k) = 1/\real_tail_reindex<start,a>(k) = 1/a(start+k-1) = \real_tail_reciprocal<start,a>(start+k-1) = \real_tail_reindex<start,\real_tail_reciprocal<start,a>>(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {ones(j)/\real_tail_reindex<start,a>(j)},\real_tail_reindex<start,\real_tail_reciprocal<start,a>>,1/L,1)
+
+    release thm native_limit_is_real_tail_limit(start,\real_tail_reciprocal<start,a>,1/L)
+
+template<start Z,a fn(n {j Z:j>=start}) R,b fn(n {j Z:j>=start}) R*>:
+    have fn real_tail_quotient(n {j Z:j>=start}) R = a(n)/b(n)
+
+thm real_tail_quotient_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,b fn(n {j Z:j>=start}) R*,L R,M R*:
+        $has_real_tail_limit(start,a,L)
+        $has_real_tail_limit(start,b,M)
+        =>:
+            $has_real_tail_limit(start,\real_tail_quotient<start,a,b>,L/M)
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm real_tail_limit_is_native_limit(start,b,M)
+    claim:
+        ? forall k N+:
+            \real_tail_reindex<start,b>(k)!=0
+        b(start+k-1) $in R*
+        \real_tail_reindex<start,b>(k)=b(start+k-1)!=0
+    release thm seq_limit_divide(\real_tail_reindex<start,a>,\real_tail_reindex<start,b>,L,M)
+    claim:
+        ? forall k N+:
+            (fn(idx N+) R {\real_tail_reindex<start,a>(idx)/\real_tail_reindex<start,b>(idx)})(k)=\real_tail_reindex<start,\real_tail_quotient<start,a,b>>(k)
+        b(start+k-1) $in R*
+        \real_tail_reindex<start,b>(k)!=0
+        \real_tail_reindex<start,a>(k)=a(start+k-1)
+        \real_tail_reindex<start,b>(k)=b(start+k-1)
+        \real_tail_quotient<start,a,b>(start+k-1)=a(start+k-1)/b(start+k-1)
+        \real_tail_reindex<start,\real_tail_quotient<start,a,b>>(k)=\real_tail_quotient<start,a,b>(start+k-1)
+        (fn(idx N+) R {\real_tail_reindex<start,a>(idx)/\real_tail_reindex<start,b>(idx)})(k)=\real_tail_reindex<start,a>(k)/\real_tail_reindex<start,b>(k)=a(start+k-1)/b(start+k-1)=\real_tail_quotient<start,a,b>(start+k-1)=\real_tail_reindex<start,\real_tail_quotient<start,a,b>>(k)
+    release thm seq_limit_eventually_equal(fn(k N+) R {\real_tail_reindex<start,a>(k)/\real_tail_reindex<start,b>(k)},\real_tail_reindex<start,\real_tail_quotient<start,a,b>>,L/M,1)
+    release thm native_limit_is_real_tail_limit(start,\real_tail_quotient<start,a,b>,L/M)
+
+template<start Z,a,b fn(n {j Z:j>=start}) R>:
+    have fn real_tail_maximum(n {j Z:j>=start}) R = max(a(n),b(n))
+
+thm real_tail_maximum_limit:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_limit(start,a,L)
+        $has_real_tail_limit(start,b,M)
+        =>:
+            $has_real_tail_limit(start,\real_tail_maximum<start,a,b>,max(L,M))
+    claim:
+        ? forall x,y R:
+            max(x,y)=(x+y+abs(x-y))/2
+        by cases:
+            ? max(x,y)=(x+y+abs(x-y))/2
+            case x>=y:
+                y<=x
+                x-y>=0
+                abs(x-y)=x-y
+                max(x,y)=x
+                (x+y+abs(x-y))/2=(x+y+(x-y))/2=x
+            case x<y:
+                x<=y
+                x-y<0
+                abs(x-y)=-(x-y)
+                max(x,y)=y
+                (x+y+abs(x-y))/2=(x+y+(-(x-y)))/2=y
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm real_tail_limit_is_native_limit(start,b,M)
+    $has_seq_limit(fn(k N+) R {(\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)+abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)))/2},(L+M+abs(L-M))/2)
+    max(L,M)=(L+M+abs(L-M))/2
+    $has_seq_limit(fn(k N+) R {(\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)+abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)))/2},max(L,M))
+    claim:
+        ? forall k N+:
+            \real_tail_maximum<start,a,b>(start+k-1)=(fn(idx N+) R {(\real_tail_reindex<start,a>(idx)+\real_tail_reindex<start,b>(idx)+abs(\real_tail_reindex<start,a>(idx)-\real_tail_reindex<start,b>(idx)))/2})(k)
+        \real_tail_maximum<start,a,b>(start+k-1)=max(a(start+k-1),b(start+k-1))
+        \real_tail_reindex<start,a>(k)=a(start+k-1)
+        \real_tail_reindex<start,b>(k)=b(start+k-1)
+        max(a(start+k-1),b(start+k-1))=(a(start+k-1)+b(start+k-1)+abs(a(start+k-1)-b(start+k-1)))/2
+        a(start+k-1)+b(start+k-1)=\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)
+        a(start+k-1)-b(start+k-1)=\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)
+        abs(a(start+k-1)-b(start+k-1))=abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k))
+        a(start+k-1)+b(start+k-1)+abs(a(start+k-1)-b(start+k-1))=\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)+abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k))
+        (a(start+k-1)+b(start+k-1)+abs(a(start+k-1)-b(start+k-1)))/2=(\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)+abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)))/2
+    release thm real_tail_limit_from_reindexed_values(start,\real_tail_maximum<start,a,b>,fn(k N+) R {(\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)+abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)))/2},max(L,M))
+
+template<start Z,a,b fn(n {j Z:j>=start}) R>:
+    have fn real_tail_minimum(n {j Z:j>=start}) R = min(a(n),b(n))
+
+thm real_tail_minimum_limit:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,L,M R:
+        $has_real_tail_limit(start,a,L)
+        $has_real_tail_limit(start,b,M)
+        =>:
+            $has_real_tail_limit(start,\real_tail_minimum<start,a,b>,min(L,M))
+    claim:
+        ? forall x,y R:
+            min(x,y)=(x+y-abs(x-y))/2
+        by cases:
+            ? min(x,y)=(x+y-abs(x-y))/2
+            case x>=y:
+                y<=x
+                x-y>=0
+                abs(x-y)=x-y
+                min(x,y)=y
+                (x+y-abs(x-y))/2=(x+y-(x-y))/2=y
+            case x<y:
+                x<=y
+                x-y<0
+                abs(x-y)=-(x-y)
+                min(x,y)=x
+                (x+y-abs(x-y))/2=(x+y-(-(x-y)))/2=x
+    release thm real_tail_limit_is_native_limit(start,a,L)
+    release thm real_tail_limit_is_native_limit(start,b,M)
+    $has_seq_limit(fn(k N+) R {(\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)-abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)))/2},(L+M-abs(L-M))/2)
+    min(L,M)=(L+M-abs(L-M))/2
+    $has_seq_limit(fn(k N+) R {(\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)-abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)))/2},min(L,M))
+    claim:
+        ? forall k N+:
+            \real_tail_minimum<start,a,b>(start+k-1)=(fn(idx N+) R {(\real_tail_reindex<start,a>(idx)+\real_tail_reindex<start,b>(idx)-abs(\real_tail_reindex<start,a>(idx)-\real_tail_reindex<start,b>(idx)))/2})(k)
+        \real_tail_minimum<start,a,b>(start+k-1)=min(a(start+k-1),b(start+k-1))
+        \real_tail_reindex<start,a>(k)=a(start+k-1)
+        \real_tail_reindex<start,b>(k)=b(start+k-1)
+        min(a(start+k-1),b(start+k-1))=(a(start+k-1)+b(start+k-1)-abs(a(start+k-1)-b(start+k-1)))/2
+        a(start+k-1)+b(start+k-1)=\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)
+        a(start+k-1)-b(start+k-1)=\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)
+        abs(a(start+k-1)-b(start+k-1))=abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k))
+        a(start+k-1)+b(start+k-1)-abs(a(start+k-1)-b(start+k-1))=\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)-abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k))
+        (a(start+k-1)+b(start+k-1)-abs(a(start+k-1)-b(start+k-1)))/2=(\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)-abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)))/2
+    release thm real_tail_limit_from_reindexed_values(start,\real_tail_minimum<start,a,b>,fn(k N+) R {(\real_tail_reindex<start,a>(k)+\real_tail_reindex<start,b>(k)-abs(\real_tail_reindex<start,a>(k)-\real_tail_reindex<start,b>(k)))/2},min(L,M))

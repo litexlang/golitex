@@ -11,6 +11,14 @@ use crate::execute::execute_fact_stmt::verify_or_fact::OrFactSearchProofByKnownO
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
+/// Borrowed stages of an actual proved-forall application. This carries no
+/// synthetic citation, verification result or mutable compiler state.
+pub(super) struct ForallApplicationInput<'a> {
+    pub arguments: &'a [Obj],
+    pub matches: &'a [ForallConclusionArgMatchProof],
+    pub requirements: &'a crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof,
+}
+
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_known_or_fact(
         &self,
@@ -130,19 +138,67 @@ impl LitexToLeanCompiler {
                 "CompoundKnown/CitationIdentity",
             ));
         }
-        let ForallConclusionLocation::DirectThenFact(location) =
-            &proof.detailed_ref().cite.location
-        else {
-            return Err(LeanCompileError::unsupported(
-                "CompoundKnown/ConclusionLocation",
-            ));
+        self.compile_proved_forall_application(
+            goal,
+            source,
+            registered.1,
+            &proof.detailed_ref().cite.location,
+            ForallApplicationInput {
+                arguments: &proof.detailed_ref().forall_parameters_match_what_args,
+                matches: &proof.detailed_ref().arg_match_proofs,
+                requirements: &proof.detailed_ref().instantiation_requirements,
+            },
+            SourceOwner::KnownApplication(proof),
+            SourceOwner::CalleeInstance(proof),
+            position,
+        )
+    }
+
+    pub(in crate::compile_to_lean) fn compile_proved_forall_application(
+        &self,
+        goal: &Fact,
+        source: &ForallFact,
+        reference: String,
+        location: &ForallConclusionLocation,
+        input: ForallApplicationInput<'_>,
+        owner: SourceOwner<'_>,
+        formation_owner: SourceOwner<'_>,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let (then_index, component) = match location {
+            ForallConclusionLocation::DirectThenFact(p) => (p.then_fact_index, None),
+            ForallConclusionLocation::AndFactComponent(p) => {
+                (p.then_fact_index, Some(p.component_index))
+            }
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "CompoundKnown/ConclusionLocation",
+                ))
+            }
         };
         let selected: Fact = source
             .then_facts
-            .get(location.then_fact_index)
+            .get(then_index)
             .ok_or_else(|| LeanCompileError::unsupported("CompoundKnown/ConclusionLocation"))?
             .clone()
             .into();
+        let (selected, projection) = if let Some(index) = component {
+            let Fact::AndFact(and) = selected else {
+                return Err(LeanCompileError::unsupported(
+                    "CompoundKnown/ConclusionLocation",
+                ));
+            };
+            let atomic = and
+                .facts
+                .get(index)
+                .ok_or_else(|| LeanCompileError::unsupported("CompoundKnown/ConclusionLocation"))?;
+            (
+                Fact::AtomicFact(atomic.clone()),
+                Some((index, and.facts.len())),
+            )
+        } else {
+            (selected, None)
+        };
         let pattern_args = compound_arguments(&selected)?;
         let goal_args = compound_arguments(goal)?;
         let same_shape = match (&selected, goal) {
@@ -172,15 +228,12 @@ impl LitexToLeanCompiler {
             .iter()
             .flat_map(|group| group.params.iter().map(|param| (param, &group.param_type)))
             .collect();
-        let requirements = proof
-            .detailed_ref()
-            .instantiation_requirements
-            .detailed_ref();
+        let requirements = input.requirements.detailed_ref();
         if !same_shape
             || pattern_args.is_empty()
             || pattern_args.len() != goal_args.len()
-            || proof.detailed_ref().arg_match_proofs.len() != goal_args.len()
-            || proof.detailed_ref().forall_parameters_match_what_args.len() != parameters.len()
+            || input.matches.len() != goal_args.len()
+            || input.arguments.len() != parameters.len()
             || requirements.param_type_requirements.len() != parameters.len()
             || requirements.dom_facts.len() != source.dom_facts.len()
             || requirements.proof_of_dom_facts.len() != source.dom_facts.len()
@@ -189,7 +242,7 @@ impl LitexToLeanCompiler {
         }
         let substitution: HashMap<_, _> = parameters
             .iter()
-            .zip(&proof.detailed_ref().forall_parameters_match_what_args)
+            .zip(input.arguments)
             .map(|((param, _), arg)| (param.id, arg.clone()))
             .collect();
         if substitution.len() != parameters.len() {
@@ -197,7 +250,7 @@ impl LitexToLeanCompiler {
                 "CompoundKnown/ParameterIdentity",
             ));
         }
-        let current = SourcePosition::new(Some(position), SourceOwner::KnownApplication(proof), 0);
+        let current = SourcePosition::new(Some(position), owner, 0);
         let mut requirement_ids = HashSet::new();
         for fact in requirements
             .param_type_requirements
@@ -215,11 +268,7 @@ impl LitexToLeanCompiler {
         }
         let mut instantiated_args = Vec::new();
         let mut bound = HashSet::new();
-        for ((pattern, goal), matched) in pattern_args
-            .iter()
-            .zip(&goal_args)
-            .zip(&proof.detailed_ref().arg_match_proofs)
-        {
+        for ((pattern, goal), matched) in pattern_args.iter().zip(&goal_args).zip(input.matches) {
             let (argument, _) = self.compile_forall_argument_match(
                 pattern,
                 goal,
@@ -230,9 +279,14 @@ impl LitexToLeanCompiler {
             )?;
             instantiated_args.push(argument);
         }
-        let (definitions, arguments) =
-            self.compile_known_application_requirements(source, proof, &current)?;
-        let head = proof.detailed_ref().arg_match_proofs.len();
+        let (definitions, arguments) = self.compile_instantiation_requirements(
+            source,
+            input.arguments,
+            input.matches.len(),
+            input.requirements,
+            &current,
+        )?;
+        let head = input.matches.len();
         // Check the original match record before requirements. Its Lean terms
         // are rendered afterward, with only certified constructor formation
         // added to the original match-before truth-citation scope.
@@ -241,15 +295,14 @@ impl LitexToLeanCompiler {
         for (index, ((pattern, goal), matched)) in pattern_args
             .iter()
             .zip(&goal_args)
-            .zip(&proof.detailed_ref().arg_match_proofs)
+            .zip(input.matches)
             .enumerate()
         {
             let prior = SourcePosition {
                 before: index,
                 ..current
             };
-            let formation =
-                SourcePosition::new(Some(&prior), SourceOwner::CalleeInstance(proof), usize::MAX);
+            let formation = SourcePosition::new(Some(&prior), formation_owner, usize::MAX);
             let (_, equality) = self.compile_forall_argument_match(
                 pattern,
                 goal,
@@ -264,22 +317,18 @@ impl LitexToLeanCompiler {
             before: head + parameters.len() + requirements.dom_facts.len(),
             ..current
         };
-        let complete_formation = SourcePosition::new(
-            Some(&formed),
-            SourceOwner::CalleeInstance(proof),
-            usize::MAX,
-        );
+        let complete_formation = SourcePosition::new(Some(&formed), formation_owner, usize::MAX);
         let formed = &complete_formation;
         let application = if arguments.is_empty() {
-            registered.1
+            reference
         } else {
-            format!("({} {})", registered.1, arguments.join(" "))
+            format!("({} {})", reference, arguments.join(" "))
         };
-        let application = conjunction_projection(
-            &application,
-            location.then_fact_index,
-            source.then_facts.len(),
-        );
+        let application = conjunction_projection(&application, then_index, source.then_facts.len());
+        let application = match projection {
+            Some((index, count)) => conjunction_projection(&application, index, count),
+            None => application,
+        };
         let instantiated = replace_compound_arguments(&selected, &instantiated_args)?;
         let checked = self.compile_known_compound_transport(
             &instantiated,
@@ -369,17 +418,31 @@ impl LitexToLeanCompiler {
         proof: &SearchProofByKnownForallFact,
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+        self.compile_instantiation_requirements(
+            source,
+            &proof.detailed_ref().forall_parameters_match_what_args,
+            proof.detailed_ref().arg_match_proofs.len(),
+            &proof.detailed_ref().instantiation_requirements,
+            position,
+        )
+    }
+
+    fn compile_instantiation_requirements(
+        &self,
+        source: &ForallFact,
+        matched_arguments: &[Obj],
+        match_count: usize,
+        requirements: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
         let parameters: Vec<_> = source
             .typed_parameters
             .groups
             .iter()
             .flat_map(|group| group.params.iter().map(|param| (param, &group.param_type)))
             .collect();
-        let requirements = proof
-            .detailed_ref()
-            .instantiation_requirements
-            .detailed_ref();
-        if parameters.len() != proof.detailed_ref().forall_parameters_match_what_args.len()
+        let requirements = requirements.detailed_ref();
+        if parameters.len() != matched_arguments.len()
             || parameters.len() != requirements.param_type_requirements.len()
             || source.dom_facts.len() != requirements.dom_facts.len()
             || source.dom_facts.len() != requirements.proof_of_dom_facts.len()
@@ -390,7 +453,7 @@ impl LitexToLeanCompiler {
         }
         let substitution: HashMap<_, _> = parameters
             .iter()
-            .zip(&proof.detailed_ref().forall_parameters_match_what_args)
+            .zip(matched_arguments)
             .map(|((param, _), arg)| (param.id, arg.clone()))
             .collect();
         let mut ids = HashSet::new();
@@ -409,10 +472,10 @@ impl LitexToLeanCompiler {
         }
         let mut definitions = Vec::new();
         let mut arguments = Vec::new();
-        let head = proof.detailed_ref().arg_match_proofs.len();
+        let head = match_count;
         for (index, (((parameter, kind), argument), requirement)) in parameters
             .iter()
-            .zip(&proof.detailed_ref().forall_parameters_match_what_args)
+            .zip(matched_arguments)
             .zip(&requirements.param_type_requirements)
             .enumerate()
         {
@@ -422,19 +485,8 @@ impl LitexToLeanCompiler {
             {
                 return Err(LeanCompileError::unsupported("CompoundKnown/TypeIdentity"));
             }
-            let valid = match (kind, &requirement.type_fact) {
-                (ParamType::Obj(set), Fact::AtomicFact(AtomicFact::InFact(member))) => {
-                    member.element.ir() == argument.ir()
-                        && instantiated_object_matches(set, &member.set, &substitution)
-                }
-                (ParamType::FiniteSet(_), Fact::AtomicFact(AtomicFact::IsFiniteSetFact(set))) => {
-                    set.set.ir() == argument.ir()
-                }
-                (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(set))) => {
-                    set.set.ir() == argument.ir()
-                }
-                _ => false,
-            };
+            let valid =
+                parameter_type_fact_matches(kind, argument, &requirement.type_fact, &substitution);
             if !valid {
                 return Err(LeanCompileError::unsupported("CompoundKnown/TypeSubject"));
             }
@@ -448,8 +500,12 @@ impl LitexToLeanCompiler {
             // universal accepts the same representation, and all source facts
             // depend only on its unchanged denotation.
             let value = self.compile_object_reference(argument, &prior)?;
+            // Finish the original object once before using its denotation and
+            // WD together. This is a Lean local value,not another source owner.
+            let name = format!("_known_argument_{index}");
+            definitions.push(format!("let {name} := {value}"));
             arguments.push(format!(
-                "(Litex.semanticObject (Litex.denote {value}) (Litex.isSet {value}))"
+                "(Litex.semanticObject (Litex.denote {name}) (Litex.isSet {name}))"
             ));
             arguments.push(format!("h_{}", requirement.type_fact.fact_id().value()));
         }
@@ -506,7 +562,7 @@ impl LitexToLeanCompiler {
                     position
                         .map(|position| {
                             self.compile_object_reference(goal, position)
-                                .map(|term| format!("(Litex.sameRefl {term})"))
+                                .map(|term| format!("(by\n  let _matched := {term}\n  exact Litex.sameRefl _matched)"))
                         })
                         .transpose()?
                         .unwrap_or_default(),
@@ -562,6 +618,500 @@ impl LitexToLeanCompiler {
                         "CompoundKnown/StructureSubject",
                     ));
                 }
+                let integer_operation = |closed| {
+                    format!("(fun (a b : M.Value) => Litex.SetSemantics.sepValue (M := M) (M.standard .integer) (fun z => ∃ lower upper k : ℤ, a = M.number (lower : ℂ) ∧ b = M.number (upper : ℂ) ∧ z = M.number (k : ℂ) ∧ lower ≤ k ∧ k {} upper))",if closed{"≤"}else{"<"})
+                };
+                let interval_constructor = match (pattern, goal) {
+                    (Obj::SetFormer(SetFormer::Range(p)), Obj::SetFormer(SetFormer::Range(g))) => {
+                        Some((
+                            vec![
+                                (p.start.as_ref(), g.start.as_ref()),
+                                (p.end.as_ref(), g.end.as_ref()),
+                            ],
+                            integer_operation(false),
+                        ))
+                    }
+                    (
+                        Obj::SetFormer(SetFormer::ClosedRange(p)),
+                        Obj::SetFormer(SetFormer::ClosedRange(g)),
+                    ) => Some((
+                        vec![
+                            (p.start.as_ref(), g.start.as_ref()),
+                            (p.end.as_ref(), g.end.as_ref()),
+                        ],
+                        integer_operation(true),
+                    )),
+                    (
+                        Obj::SetFormer(SetFormer::IntervalObj(p)),
+                        Obj::SetFormer(SetFormer::IntervalObj(g)),
+                    ) => {
+                        let (a, b, lc, rc) = real_interval_parts(p);
+                        let (c, d, glc, grc) = real_interval_parts(g);
+                        if (lc, rc) != (glc, grc) {
+                            return Err(LeanCompileError::unsupported(
+                                "CompoundKnown/IntervalKind",
+                            ));
+                        }
+                        Some((vec![(a,c),(b,d)],format!("(fun (a b : M.Value) => Litex.SetSemantics.sepValue (M := M) (M.standard .real) (fun z => Litex.realBound {lc} a z ∧ Litex.realBound {rc} z b))")))
+                    }
+                    (
+                        Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(p)),
+                        Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(g)),
+                    ) => {
+                        let (a, lower, closed) = real_ray_parts(p);
+                        let (b, glower, gclosed) = real_ray_parts(g);
+                        if (lower, closed) != (glower, gclosed) {
+                            return Err(LeanCompileError::unsupported(
+                                "CompoundKnown/IntervalKind",
+                            ));
+                        }
+                        Some((vec![(a,b)],format!("(fun (a : M.Value) => Litex.SetSemantics.sepValue (M := M) (M.standard .real) (fun z => if {lower} then Litex.realBound {closed} a z else Litex.realBound {closed} z a))")))
+                    }
+                    _ => None,
+                };
+                if let Some((pairs, operation)) = interval_constructor {
+                    if child_matches.len() != pairs.len() {
+                        return Err(LeanCompileError::unsupported("CompoundKnown/IntervalArity"));
+                    }
+                    let mut values = Vec::with_capacity(pairs.len());
+                    let mut equalities = Vec::with_capacity(pairs.len());
+                    for ((pattern_child, goal_child), matched) in
+                        pairs.into_iter().zip(child_matches)
+                    {
+                        let (value, equality) = self.compile_forall_argument_match(
+                            pattern_child,
+                            goal_child,
+                            matched,
+                            substitution,
+                            bound,
+                            position,
+                        )?;
+                        values.push(value);
+                        equalities.push(equality);
+                    }
+                    let mut old = goal.clone();
+                    let mut values = values.into_iter();
+                    match &mut old {
+                        Obj::SetFormer(SetFormer::Range(p)) => {
+                            p.start = Box::new(values.next().unwrap());
+                            p.end = Box::new(values.next().unwrap());
+                        }
+                        Obj::SetFormer(SetFormer::ClosedRange(p)) => {
+                            p.start = Box::new(values.next().unwrap());
+                            p.end = Box::new(values.next().unwrap());
+                        }
+                        Obj::SetFormer(SetFormer::IntervalObj(p)) => {
+                            let p = match p {
+                                IntervalObj::LeftOpenRightOpen(p)
+                                | IntervalObj::LeftOpenRightClosed(p)
+                                | IntervalObj::LeftClosedRightOpen(p)
+                                | IntervalObj::LeftClosedRightClosed(p) => p,
+                            };
+                            p.start = Box::new(values.next().unwrap());
+                            p.end = Box::new(values.next().unwrap());
+                        }
+                        Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(p)) => {
+                            let p = match p {
+                                OneSideInfinityIntervalObj::LowerOpen(p)
+                                | OneSideInfinityIntervalObj::LowerClosed(p)
+                                | OneSideInfinityIntervalObj::UpperOpen(p)
+                                | OneSideInfinityIntervalObj::UpperClosed(p) => p,
+                            };
+                            p.start = Box::new(values.next().unwrap());
+                        }
+                        _ => unreachable!(),
+                    }
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    // The cited universal forms its substituted source. Matching
+                    // creates no hypothetical WD; the actual goal retains its
+                    // original complete formation and endpoint membership.
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((
+                        old,
+                        if equalities.len() == 1 {
+                            format!("(congrArg {operation} {})", equalities[0])
+                        } else {
+                            format!(
+                                "(congrArg₂ {operation} {} {})",
+                                equalities[0], equalities[1]
+                            )
+                        },
+                    ));
+                }
+                if let (
+                    Obj::SetFormer(SetFormer::FiniteSeqSet(pattern_sequence)),
+                    Obj::SetFormer(SetFormer::FiniteSeqSet(goal_sequence)),
+                ) = (pattern, goal)
+                {
+                    if child_matches.len() != 2 {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/FiniteSequenceArity",
+                        ));
+                    }
+                    let (carrier, carrier_equal) = self.compile_forall_argument_match(
+                        &pattern_sequence.set,
+                        &goal_sequence.set,
+                        &child_matches[0],
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let (length, length_equal) = self.compile_forall_argument_match(
+                        &pattern_sequence.n,
+                        &goal_sequence.n,
+                        &child_matches[1],
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let mut old = goal.clone();
+                    let Obj::SetFormer(SetFormer::FiniteSeqSet(previous)) = &mut old else {
+                        unreachable!()
+                    };
+                    previous.set = Box::new(carrier);
+                    previous.n = Box::new(length);
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    // Both constructors keep the original scoped formation evidence.
+                    let previous = self.compile_object_reference(&old, position)?;
+                    let target = self.compile_object_reference(goal, position)?;
+                    return Ok((old, format!(
+                        "(Litex.finiteSeqSameOfArgs {previous} {target} {carrier_equal} {length_equal})"
+                    )));
+                }
+                if let (
+                    Obj::SetFormer(SetFormer::SeqSet(pattern_sequence)),
+                    Obj::SetFormer(SetFormer::SeqSet(goal_sequence)),
+                ) = (pattern, goal)
+                {
+                    let [carrier_match] = child_matches.as_slice() else {
+                        return Err(LeanCompileError::unsupported("CompoundKnown/SequenceArity"));
+                    };
+                    let (carrier, carrier_equal) = self.compile_forall_argument_match(
+                        &pattern_sequence.set,
+                        &goal_sequence.set,
+                        carrier_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let mut old = goal.clone();
+                    let Obj::SetFormer(SetFormer::SeqSet(previous)) = &mut old else {
+                        unreachable!()
+                    };
+                    previous.set = Box::new(carrier);
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    let previous = self.compile_object_reference(&old, position)?;
+                    let target = self.compile_object_reference(goal, position)?;
+                    return Ok((
+                        old,
+                        format!("(Litex.seqSetSameOfCarrier {previous} {target} {carrier_equal})"),
+                    ));
+                }
+                if let (
+                    Obj::FunctionSpace(FunctionSpace::FnRange(pattern_range)),
+                    Obj::FunctionSpace(FunctionSpace::FnRange(goal_range)),
+                ) = (pattern, goal)
+                {
+                    let [function_match] = child_matches.as_slice() else {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/FunctionRangeArity",
+                        ));
+                    };
+                    let (function, function_equal) = self.compile_forall_argument_match(
+                        &pattern_range.function,
+                        &goal_range.function,
+                        function_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let mut old = goal.clone();
+                    let Obj::FunctionSpace(FunctionSpace::FnRange(previous)) = &mut old else {
+                        unreachable!()
+                    };
+                    previous.function = Box::new(function);
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    // Formation of the substituted source stays in the cited theorem.
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((
+                        old,
+                        format!("(Litex.functionRangeValueCongr (M := M) {function_equal})"),
+                    ));
+                }
+                if let (
+                    Obj::FunctionSpace(FunctionSpace::Composition(pattern_composition)),
+                    Obj::FunctionSpace(FunctionSpace::Composition(goal_composition)),
+                ) = (pattern, goal)
+                {
+                    let [outer_match, inner_match] = child_matches.as_slice() else {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/CompositionArity",
+                        ));
+                    };
+                    let (outer, outer_equal) = self.compile_forall_argument_match(
+                        &pattern_composition.outer,
+                        &goal_composition.outer,
+                        outer_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let (inner, inner_equal) = self.compile_forall_argument_match(
+                        &pattern_composition.inner,
+                        &goal_composition.inner,
+                        inner_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let mut old = goal.clone();
+                    let Obj::FunctionSpace(FunctionSpace::Composition(previous)) = &mut old else {
+                        unreachable!()
+                    };
+                    previous.outer = Box::new(outer);
+                    previous.inner = Box::new(inner);
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    // Replay the actual target construction,interfaces and compatibility.
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((
+                        old,
+                        format!(
+                            "(Litex.compositionValueCongr (M := M) {outer_equal} {inner_equal})"
+                        ),
+                    ));
+                }
+                let preimage_constructor = match (pattern, goal) {
+                    (
+                        Obj::FunctionSpace(FunctionSpace::Preimage(p)),
+                        Obj::FunctionSpace(FunctionSpace::Preimage(g)),
+                    ) => Some((
+                        &p.function,
+                        &p.value,
+                        &g.function,
+                        &g.value,
+                        "pointPreimageValueCongr",
+                    )),
+                    (
+                        Obj::FunctionSpace(FunctionSpace::PreimageSet(p)),
+                        Obj::FunctionSpace(FunctionSpace::PreimageSet(g)),
+                    ) => Some((
+                        &p.function,
+                        &p.target_set,
+                        &g.function,
+                        &g.target_set,
+                        "setPreimageValueCongr",
+                    )),
+                    _ => None,
+                };
+                if let Some((pattern_function, pattern_target, goal_function, goal_target, lemma)) =
+                    preimage_constructor
+                {
+                    let [function_match, target_match] = child_matches.as_slice() else {
+                        return Err(LeanCompileError::unsupported("CompoundKnown/PreimageArity"));
+                    };
+                    let (function, function_equal) = self.compile_forall_argument_match(
+                        pattern_function,
+                        goal_function,
+                        function_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let (target, target_equal) = self.compile_forall_argument_match(
+                        pattern_target,
+                        goal_target,
+                        target_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let mut old = goal.clone();
+                    match &mut old {
+                        Obj::FunctionSpace(FunctionSpace::Preimage(p)) => {
+                            p.function = Box::new(function);
+                            p.value = Box::new(target);
+                        }
+                        Obj::FunctionSpace(FunctionSpace::PreimageSet(p)) => {
+                            p.function = Box::new(function);
+                            p.target_set = Box::new(target);
+                        }
+                        _ => unreachable!(),
+                    }
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    // Equality-target and membership-target predicates keep distinct laws.
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((
+                        old,
+                        format!("(Litex.{lemma} (M := M) {function_equal} {target_equal})"),
+                    ));
+                }
+                let set_constructor = match (pattern, goal) {
+                    (Obj::SetOperator(SetOperator::Union(p)), Obj::SetOperator(SetOperator::Union(g))) =>
+                        Some((&p.left, &p.right, &g.left, &g.right, "(Litex.SetSemantics.unionValue (M := M))")),
+                    (Obj::SetOperator(SetOperator::Intersect(p)), Obj::SetOperator(SetOperator::Intersect(g))) =>
+                        Some((&p.left, &p.right, &g.left, &g.right, "(fun a b => Litex.SetSemantics.sepValue (M := M) a (fun z => M.mem z b))")),
+                    (Obj::SetOperator(SetOperator::SetMinus(p)), Obj::SetOperator(SetOperator::SetMinus(g))) =>
+                        Some((&p.left, &p.right, &g.left, &g.right, "(fun a b => Litex.SetSemantics.sepValue (M := M) a (fun z => ¬ M.mem z b))")),
+                    (Obj::SetOperator(SetOperator::SymmetricDifference(p)), Obj::SetOperator(SetOperator::SymmetricDifference(g))) =>
+                        Some((&p.left, &p.right, &g.left, &g.right, "(Litex.symmetricDifferenceValue (M := M))")),
+                    _ => None,
+                };
+                if let Some((pattern_left, pattern_right, goal_left, goal_right, lemma)) =
+                    set_constructor
+                {
+                    let [left_match, right_match] = child_matches.as_slice() else {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/BinarySetArity",
+                        ));
+                    };
+                    let (left, left_equal) = self.compile_forall_argument_match(
+                        pattern_left,
+                        goal_left,
+                        left_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let (right, right_equal) = self.compile_forall_argument_match(
+                        pattern_right,
+                        goal_right,
+                        right_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let mut old = goal.clone();
+                    match &mut old {
+                        Obj::SetOperator(SetOperator::Union(p)) => {
+                            p.left = Box::new(left);
+                            p.right = Box::new(right);
+                        }
+                        Obj::SetOperator(SetOperator::Intersect(p)) => {
+                            p.left = Box::new(left);
+                            p.right = Box::new(right);
+                        }
+                        Obj::SetOperator(SetOperator::SetMinus(p)) => {
+                            p.left = Box::new(left);
+                            p.right = Box::new(right);
+                        }
+                        Obj::SetOperator(SetOperator::SymmetricDifference(p)) => {
+                            p.left = Box::new(left);
+                            p.right = Box::new(right);
+                        }
+                        _ => unreachable!(),
+                    }
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((
+                        old,
+                        format!("(congrArg₂ {lemma} {left_equal} {right_equal})"),
+                    ));
+                }
+                let unary_set_constructor = match (pattern, goal) {
+                    (
+                        Obj::SetOperator(SetOperator::PowerSet(p)),
+                        Obj::SetOperator(SetOperator::PowerSet(g)),
+                    ) => Some((&p.set, &g.set, "(Litex.SetSemantics.powerValue (M := M))")),
+                    (
+                        Obj::SetOperator(SetOperator::FamilyUnion(p)),
+                        Obj::SetOperator(SetOperator::FamilyUnion(g)),
+                    ) => Some((
+                        &p.left,
+                        &g.left,
+                        "(fun A => Litex.IndexedUnionSemantics.indexedUnionValue (M := M) A id)",
+                    )),
+                    _ => None,
+                };
+                if let Some((pattern_child, goal_child, lemma)) = unary_set_constructor {
+                    let [child_match] = child_matches.as_slice() else {
+                        return Err(LeanCompileError::unsupported("CompoundKnown/UnarySetArity"));
+                    };
+                    let (child, child_equal) = self.compile_forall_argument_match(
+                        pattern_child,
+                        goal_child,
+                        child_match,
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let mut old = goal.clone();
+                    match &mut old {
+                        Obj::SetOperator(SetOperator::PowerSet(p)) => p.set = Box::new(child),
+                        Obj::SetOperator(SetOperator::FamilyUnion(p)) => p.left = Box::new(child),
+                        _ => unreachable!(),
+                    }
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((old, format!("(congrArg {lemma} {child_equal})")));
+                }
+                if let (
+                    Obj::SetFormer(SetFormer::ListSet(pattern_set)),
+                    Obj::SetFormer(SetFormer::ListSet(goal_set)),
+                ) = (pattern, goal)
+                {
+                    if pattern_set.list.is_empty()
+                        || pattern_set.list.len() != goal_set.list.len()
+                        || child_matches.len() != goal_set.list.len()
+                    {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/LiteralSetArity",
+                        ));
+                    }
+                    let mut elements = Vec::new();
+                    let mut equalities = Vec::new();
+                    for ((pattern_element, goal_element), child_match) in pattern_set
+                        .list
+                        .iter()
+                        .zip(&goal_set.list)
+                        .zip(child_matches)
+                    {
+                        let (element, equality) = self.compile_forall_argument_match(
+                            pattern_element,
+                            goal_element,
+                            child_match,
+                            substitution,
+                            bound,
+                            position,
+                        )?;
+                        elements.push(Box::new(element));
+                        equalities.push(equality);
+                    }
+                    let mut old = goal.clone();
+                    let Obj::SetFormer(SetFormer::ListSet(previous)) = &mut old else {
+                        unreachable!()
+                    };
+                    previous.list = elements;
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    let previous = self.compile_object_reference(&old, position)?;
+                    let target = self.compile_object_reference(goal, position)?;
+                    let mut equality =
+                        "(Eq.refl (Litex.SetSemantics.emptyValue (M := M)))".to_string();
+                    for element_equal in equalities.into_iter().rev() {
+                        equality = format!("(congrArg₂ (Litex.SetSemantics.insertValue (M := M)) {element_equal} {equality})");
+                    }
+                    return Ok((
+                        old,
+                        format!("(show Litex.Same {previous} {target} from {equality})"),
+                    ));
+                }
                 if let (Obj::FnObj(pattern), Obj::FnObj(_)) = (pattern, goal) {
                     return self.compile_known_function_match(
                         pattern,
@@ -571,6 +1121,91 @@ impl LitexToLeanCompiler {
                         bound,
                         position,
                     );
+                }
+                if let (
+                    Obj::IntegerOperator(IntegerOperator::Mod(pattern)),
+                    Obj::IntegerOperator(IntegerOperator::Mod(target)),
+                ) = (pattern, goal)
+                {
+                    if child_matches.len() != 2 {
+                        return Err(LeanCompileError::unsupported("CompoundKnown/ModArity"));
+                    }
+                    let (left, left_equal) = self.compile_forall_argument_match(
+                        &pattern.left,
+                        &target.left,
+                        &child_matches[0],
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let (right, right_equal) = self.compile_forall_argument_match(
+                        &pattern.right,
+                        &target.right,
+                        &child_matches[1],
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let old = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
+                        left: Box::new(left),
+                        right: Box::new(right),
+                    }));
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    // Match evidence composes denotation equalities. Both
+                    // constructors must still have original scoped WD evidence.
+                    self.compile_object_reference(&old, position)?;
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((old, format!(
+                        "(congrArg₂ (Litex.integerDivisionValue (M := M) false) {left_equal} {right_equal})"
+                    )));
+                }
+                if let (
+                    Obj::ProductShape(ProductShape::Cart(pattern_cart)),
+                    Obj::ProductShape(ProductShape::Cart(goal_cart)),
+                ) = (pattern, goal)
+                {
+                    if pattern_cart.args.len() != goal_cart.args.len()
+                        || child_matches.len() != goal_cart.args.len()
+                    {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/CartesianArity",
+                        ));
+                    }
+                    let mut values = Vec::with_capacity(child_matches.len());
+                    let mut equalities = Vec::with_capacity(child_matches.len());
+                    for ((pattern_child, goal_child), child) in pattern_cart
+                        .args
+                        .iter()
+                        .zip(&goal_cart.args)
+                        .zip(child_matches)
+                    {
+                        let (value, equality) = self.compile_forall_argument_match(
+                            pattern_child,
+                            goal_child,
+                            child,
+                            substitution,
+                            bound,
+                            position,
+                        )?;
+                        values.push(Box::new(value));
+                        equalities.push(format!("(show @Eq M.Value _ _ from {equality})"));
+                    }
+                    let old = Obj::ProductShape(ProductShape::Cart(Cart { args: values }));
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    // The cited universal forms its substituted source. Keep
+                    // the actual target WD;no hypothetical parent is invented.
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((
+                        old,
+                        format!(
+                            "(congrArg (Litex.FiniteFunction.cartValue (M := M)) {})",
+                            finite_vector_equality(&equalities),
+                        ),
+                    ));
                 }
                 if let (
                     Obj::ProductShape(ProductShape::Tuple(pattern)),
@@ -616,6 +1251,179 @@ impl LitexToLeanCompiler {
                         ),
                     ));
                 }
+                if let (
+                    Obj::MatrixOperator(MatrixOperator::Determinant(pattern)),
+                    Obj::MatrixOperator(MatrixOperator::Determinant(target)),
+                ) = (pattern, goal)
+                {
+                    if child_matches.len() != 2 {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/DeterminantArity",
+                        ));
+                    }
+                    let (matrix, matrix_eq) = self.compile_forall_argument_match(
+                        &pattern.matrix,
+                        &target.matrix,
+                        &child_matches[0],
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let (order, order_eq) = self.compile_forall_argument_match(
+                        &pattern.order,
+                        &target.order,
+                        &child_matches[1],
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let old = Obj::MatrixOperator(MatrixOperator::Determinant(Determinant {
+                        matrix: Box::new(matrix),
+                        order: Box::new(order),
+                    }));
+                    let Some(position) = position else {
+                        return Ok((old, String::new()));
+                    };
+                    // Structural matching transports existing determinant values;
+                    // it does not establish their matrix or natural-order WD.
+                    self.compile_object_reference(&old, position)?;
+                    self.compile_object_reference(goal, position)?;
+                    return Ok((old, format!(
+                        "(congrArg₂ (fun (a n : M.Value) => M.number (Litex.matrixComplexOn a (Litex.NativeBridge.naturalValue n) (Litex.NativeBridge.naturalValue n)).det) {matrix_eq} {order_eq})"
+                    )));
+                }
+                if let (
+                    Obj::InstantiatedTemplateObj(pattern),
+                    Obj::InstantiatedTemplateObj(target),
+                ) = (pattern, goal)
+                {
+                    if pattern.template_name != target.template_name
+                        || pattern.args.len() != target.args.len()
+                        || child_matches.len() != pattern.args.len()
+                    {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/TemplateConstructor",
+                        ));
+                    }
+                    let mut old = target.clone();
+                    let mut proofs = Vec::new();
+                    for (index, ((a, b), evidence)) in pattern
+                        .args
+                        .iter()
+                        .zip(&target.args)
+                        .zip(child_matches)
+                        .enumerate()
+                    {
+                        let (argument, equal) = self.compile_forall_argument_match(
+                            a,
+                            b,
+                            evidence,
+                            substitution,
+                            bound,
+                            position,
+                        )?;
+                        old.args[index] = argument;
+                        proofs.push(equal);
+                    }
+                    let object = Obj::InstantiatedTemplateObj(old.clone());
+                    let Some(position) = position else {
+                        return Ok((object, String::new()));
+                    };
+                    let target_term = self.compile_object_reference(goal, position)?;
+                    if object.ir() == goal.ir() {
+                        let mut checks = Vec::new();
+                        for (index, (argument, proof)) in old.args.iter().zip(&proofs).enumerate() {
+                            let value = self.compile_normalization_value(argument, position)?;
+                            checks.push(format!(
+                                "have _template_match_{index} : {value} = {value} := {proof}"
+                            ));
+                        }
+                        return Ok((
+                            object,
+                            format!(
+                                "(by\n  {}\n  exact Litex.sameRefl {target_term}\n)",
+                                checks.join("\n  ")
+                            ),
+                        ));
+                    }
+                    let (declaration, _, _) = position.visible_template(&target.template_name)?;
+                    let parameters = declaration
+                        .statement
+                        .template_arg_def
+                        .groups
+                        .iter()
+                        .flat_map(|g| &g.params)
+                        .collect::<Vec<_>>();
+                    if parameters.len() != proofs.len() {
+                        return Err(LeanCompileError::unsupported("CompoundKnown/TemplateArity"));
+                    }
+                    let instance = InstantiatedTemplateObj {
+                        template_name: target.template_name.clone(),
+                        args: parameters
+                            .iter()
+                            .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p)))
+                            .collect(),
+                    };
+                    let bindings = parameters
+                        .iter()
+                        .enumerate()
+                        .map(|(i, p)| (p.id, format!("_template_match_arg_{i}")))
+                        .collect();
+                    let expression =
+                        self.compile_template_raw_value(&instance, position, &bindings)?;
+                    let names = parameters
+                        .iter()
+                        .enumerate()
+                        .map(|(i, _)| format!("(_template_match_arg_{i} : M.Value)"))
+                        .collect::<Vec<_>>();
+                    let operation = format!("(fun {} => {expression})", names.join(" "));
+                    return Ok((object, curried_value_congruence(&operation, &proofs)?));
+                }
+                if let (
+                    Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(a)),
+                    Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(b)),
+                ) = (pattern, goal)
+                {
+                    if a.fields != b.fields || child_matches.len() != 1 {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/FieldConstructor",
+                        ));
+                    }
+                    let (receiver, equal) = self.compile_forall_argument_match(
+                        &a.obj,
+                        &b.obj,
+                        &child_matches[0],
+                        substitution,
+                        bound,
+                        position,
+                    )?;
+                    let old = FieldAccess {
+                        obj: Box::new(receiver),
+                        fields: a.fields.clone(),
+                    };
+                    let object = Obj::StructAndFieldAccessObj(
+                        StructAndFieldAccessObj::FieldAccess(old.clone()),
+                    );
+                    let Some(position) = position else {
+                        return Ok((object, String::new()));
+                    };
+                    self.compile_object_reference(&object, position)?;
+                    self.compile_object_reference(goal, position)?;
+                    let coordinates = self.struct_field_coordinates(&old, position)?;
+                    if coordinates != self.struct_field_coordinates(b, position)? {
+                        return Err(LeanCompileError::unsupported(
+                            "CompoundKnown/FieldCoordinates",
+                        ));
+                    }
+                    let mut value = "_field_receiver".to_string();
+                    for coordinate in coordinates {
+                        value = format!("(Litex.FunctionSemantics.callValue (M := M) {value} (M.number ({coordinate} : ℂ)))");
+                    }
+                    return Ok((
+                        object,
+                        format!("(congrArg (fun (_field_receiver : M.Value) => {value}) {equal})"),
+                    ));
+                }
                 let (operation, pairs) =
                     arithmetic_constructor_pairs(pattern, goal).ok_or_else(|| {
                         LeanCompileError::unsupported("CompoundKnown/StructureConstructor")
@@ -651,8 +1459,10 @@ impl LitexToLeanCompiler {
                 let operation_term = arithmetic_operation_term(operation);
                 let equality = if proofs.len() == 1 {
                     format!("(congrArg {operation_term} {})", proofs[0])
-                } else {
+                } else if proofs.len() == 2 {
                     format!("(congrArg₂ {operation_term} {} {})", proofs[0], proofs[1])
+                } else {
+                    curried_value_congruence(&operation_term, &proofs)?
                 };
                 Ok((old, equality))
             }
@@ -673,66 +1483,123 @@ impl LitexToLeanCompiler {
                 "KnownApplication/FunctionConstructor",
             ));
         };
-        let (FnObjHead::Identifier(pattern_head), FnObjHead::Identifier(goal_head)) =
-            (pattern.head.as_ref(), goal.head.as_ref())
-        else {
-            return Err(LeanCompileError::unsupported(
-                "KnownApplication/FunctionHead",
-            ));
-        };
-        if pattern.body.len() != 1
-            || goal.body.len() != 1
-            || pattern.body[0].len() != goal.body[0].len()
-            || !(1..=2).contains(&goal.body[0].len())
-            || matches.len() != goal.body[0].len() + 1
+        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs;
+        let shared = pattern.body.len().min(goal.body.len());
+        let widths = pattern
+            .body
+            .iter()
+            .rev()
+            .zip(goal.body.iter().rev())
+            .map(|(left, right)| (left.len(), right.len()))
+            .collect::<Vec<_>>();
+        if shared == 0
+            || widths
+                .iter()
+                .any(|(left, right)| left != right || *left == 0)
         {
             return Err(LeanCompileError::unsupported(
                 "KnownApplication/FunctionArity",
             ));
         }
-        let mut children = Vec::new();
-        let mut proofs = Vec::new();
-        // The capture stores arguments first and the function prefix last.
-        for (index, (a, b)) in pattern.body[0].iter().zip(&goal.body[0]).enumerate() {
-            let (child, proof) = self.compile_forall_argument_match(
-                a,
-                b,
-                &matches[index],
-                substitution,
-                bound,
-                position,
-            )?;
-            children.push(Box::new(child));
-            proofs.push(proof);
+        // Reuse the producer's flattened correspondence, including unequal
+        // group counts. The final slot is the complete unmatched prefix.
+        let pairs = corresponding_arg_pairs(&Obj::FnObj(pattern.clone()), goal_object)
+            .ok_or_else(|| LeanCompileError::unsupported("KnownApplication/FunctionArity"))?;
+        if matches.len() != pairs.len() {
+            return Err(LeanCompileError::unsupported(
+                "KnownApplication/FunctionArity",
+            ));
         }
-        let (head, head_equal) = self.compile_forall_argument_match(
-            &Obj::Identifier(pattern_head.clone()),
-            &Obj::Identifier(goal_head.clone()),
+        let prefix = pairs.last().expect("nonempty function correspondence");
+        // Native matching executes the prefix first, then saved outer-to-inner
+        // arguments. Repeated parameters depend on this execution order.
+        let (prefix, mut equality) = self.compile_forall_argument_match(
+            &prefix.0,
+            &prefix.1,
             matches.last().unwrap(),
             substitution,
             bound,
             position,
         )?;
-        let mut old = goal_object.clone();
-        let Obj::FnObj(call) = &mut old else {
-            unreachable!()
+        let mut groups = Vec::with_capacity(shared);
+        let mut offset = 0;
+        for (width, _) in widths {
+            let mut children = Vec::with_capacity(width);
+            let mut proofs = Vec::with_capacity(width);
+            for index in offset..offset + width {
+                let (child, proof) = self.compile_forall_argument_match(
+                    &pairs[index].0,
+                    &pairs[index].1,
+                    &matches[index],
+                    substitution,
+                    bound,
+                    position,
+                )?;
+                children.push(Box::new(child));
+                proofs.push(proof);
+            }
+            groups.push((children, proofs));
+            offset += width;
+        }
+        let goal_prefix_len = goal.body.len() - shared;
+        let mut old_call = if goal_prefix_len > 0 {
+            match prefix {
+                Obj::FnObj(call) => call,
+                prefix => FnObj {
+                    head: Box::new(FnObjHead::from_obj(prefix)),
+                    body: Vec::new(),
+                },
+            }
+        } else {
+            FnObj {
+                head: Box::new(FnObjHead::from_obj(prefix)),
+                body: Vec::new(),
+            }
         };
-        call.head = Box::new(FnObjHead::from_obj(head));
-        call.body[0] = children;
+        let old_prefix_len = old_call.body.len();
+        for (children, _) in groups.iter().rev() {
+            old_call.body.push(children.clone());
+        }
+        let old = Obj::FnObj(old_call);
         let Some(position) = position else {
             return Ok((old, String::new()));
         };
         self.compile_object_reference(&old, position)?;
         self.compile_object_reference(goal_object, position)?;
-        let argument_equal = if proofs.len() == 1 {
-            proofs[0].clone()
-        } else {
-            format!(
-                "(congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) {} {})",
-                proofs[0], proofs[1]
-            )
+        // Evidence was checked in native order. Compose the already checked
+        // group equalities from the innermost call outward.
+        let Obj::FnObj(old_call) = &old else {
+            unreachable!()
         };
-        Ok((old, format!("(congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {head_equal} {argument_equal})")))
+        for (index, (_, proofs)) in groups.iter().rev().enumerate() {
+            let argument_equal = if proofs.len() == 1 {
+                proofs[0].clone()
+            } else if proofs.len() == 2 {
+                format!(
+                    "(congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) {} {})",
+                    proofs[0], proofs[1]
+                )
+            } else {
+                let typed = old_call.body[old_prefix_len + index]
+                    .iter()
+                    .zip(&goal.body[goal_prefix_len + index])
+                    .zip(proofs)
+                    .map(|((left, right), proof)| {
+                        Ok(format!(
+                            "(show @Eq M.Value {} {} from {proof})",
+                            self.compile_normalization_value(left, position)?,
+                            self.compile_normalization_value(right, position)?,
+                        ))
+                    })
+                    .collect::<Result<Vec<_>, LeanCompileError>>()?;
+                format!(
+                    "(congrArg (Litex.FiniteFunction.tupleValue (M := M)) {})",
+                    finite_vector_equality(&typed)
+                )
+            };
+            equality = format!("(congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {equality} {argument_equal})");
+        }
+        Ok((old, equality))
     }
 
     fn render_strict_match_equal(
@@ -748,6 +1615,8 @@ impl LitexToLeanCompiler {
             ));
         }
         match position {
+            // Preserve the caller's expected equality for tactic-generated terms.
+            // An untyped intermediate `have` loses that expected proposition.
             Some(position) => self.compile_strict_match_equal(left, right, proof, position),
             None => Ok(String::new()),
         }
@@ -842,31 +1711,34 @@ impl LitexToLeanCompiler {
                 equalities[0], equalities[1]
             ));
         }
-        let a = atomic_fact_args_ref(old)
-            .iter()
-            .map(|x| self.compile_object_reference(x, position))
-            .collect::<Result<Vec<_>, _>>()?;
-        let b = atomic_fact_args_ref(new)
-            .iter()
-            .map(|x| self.compile_object_reference(x, position))
-            .collect::<Result<Vec<_>, _>>()?;
+        // These predicates depend only on the denotations. The cited theorem
+        // forms its substituted source;only the actual goal has a new WD record.
+        let transport = match (old, new) {
+            (AtomicFact::NotEqualFact(_), AtomicFact::NotEqualFact(_)) => Some(format!(
+                "(congrArg₂ (fun (x y : M.Value) => x ≠ y) {} {})",
+                equalities[0], equalities[1]
+            )),
+            (AtomicFact::InFact(_), AtomicFact::InFact(_)) => Some(format!(
+                "(congrArg₂ M.mem {} {})",
+                equalities[0], equalities[1]
+            )),
+            (AtomicFact::IsSetFact(_), AtomicFact::IsSetFact(_)) => {
+                Some(format!("(congrArg M.isSet {})", equalities[0]))
+            }
+            (AtomicFact::IsNonemptySetFact(_), AtomicFact::IsNonemptySetFact(_)) => Some(format!(
+                "(congrArg (fun (s : M.Value) => ∃ x : M.Value, M.mem x s) {})",
+                equalities[0]
+            )),
+            (AtomicFact::SubsetFact(_), AtomicFact::SubsetFact(_)) => Some(format!(
+                "(congrArg₂ (fun (a b : M.Value) => ∀ x : M.Value, M.mem x a → M.mem x b) {} {})",
+                equalities[0], equalities[1]
+            )),
+            _ => None,
+        };
+        if let Some(equality) = transport {
+            return Ok(format!("(Eq.mp {equality} {proof})"));
+        }
         match (old, new) {
-            (AtomicFact::NotEqualFact(_), AtomicFact::NotEqualFact(_)) => Ok(format!(
-                "(Litex.notSameOfSame {} {} {} {} {} {} {proof})",
-                a[0], b[0], a[1], b[1], equalities[0], equalities[1]
-            )),
-            (AtomicFact::InFact(_), AtomicFact::InFact(_)) => Ok(format!(
-                "(Litex.inOfSame {} {} {} {} {} {} {proof})",
-                a[0], b[0], a[1], b[1], equalities[0], equalities[1]
-            )),
-            (AtomicFact::IsSetFact(_), AtomicFact::IsSetFact(_)) => Ok(format!(
-                "(Litex.isSetOfSame {} {} {} {proof})",
-                a[0], b[0], equalities[0]
-            )),
-            (AtomicFact::SubsetFact(_), AtomicFact::SubsetFact(_)) => Ok(format!(
-                "(Litex.subsetOfSame {} {} {} {} {} {} {proof})",
-                a[0], a[1], b[0], b[1], equalities[0], equalities[1]
-            )),
             (
                 AtomicFact::LessFact(_)
                 | AtomicFact::GreaterFact(_)
@@ -1031,12 +1903,17 @@ fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), L
         AtomicFact::GreaterFact(f) => binary!(f),
         AtomicFact::LessEqualFact(f) => binary!(f),
         AtomicFact::GreaterEqualFact(f) => binary!(f),
+        AtomicFact::NotLessFact(f) => binary!(f),
+        AtomicFact::NotGreaterFact(f) => binary!(f),
+        AtomicFact::NotLessEqualFact(f) => binary!(f),
+        AtomicFact::NotGreaterEqualFact(f) => binary!(f),
         AtomicFact::SubsetFact(f) => binary!(f),
         AtomicFact::InFact(f) => {
             f.element = args[0].clone();
             f.set = args[1].clone();
         }
         AtomicFact::IsSetFact(f) => f.set = args[0].clone(),
+        AtomicFact::IsNonemptySetFact(f) => f.set = args[0].clone(),
         AtomicFact::IsFiniteSetFact(f) => f.set = args[0].clone(),
         AtomicFact::HasFunctionLimitFact(f) => function_limit!(f),
         AtomicFact::NotHasFunctionLimitFact(f) => function_limit!(f),
@@ -1058,6 +1935,140 @@ fn replace_arithmetic_children(object: &mut Obj, args: &[Obj]) -> Result<(), Lea
         }};
     }
     match object {
+        Obj::MatrixOperator(MatrixOperator::Trace(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.order = Box::new(args[1].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Determinant(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.order = Box::new(args[1].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Adjugate(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.order = Box::new(args[1].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Inverse(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.order = Box::new(args[1].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Power(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.order = Box::new(args[1].clone());
+            m.exponent = Box::new(args[2].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Rank(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.rows = Box::new(args[1].clone());
+            m.cols = Box::new(args[2].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::FrobeniusNorm(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.rows = Box::new(args[1].clone());
+            m.cols = Box::new(args[2].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Apply(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.vector = Box::new(args[1].clone());
+            m.rows = Box::new(args[2].clone());
+            m.cols = Box::new(args[3].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Minor(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.order = Box::new(args[1].clone());
+            m.row = Box::new(args[2].clone());
+            m.col = Box::new(args[3].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Cofactor(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.order = Box::new(args[1].clone());
+            m.row = Box::new(args[2].clone());
+            m.col = Box::new(args[3].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::InnerProduct(m)) => {
+            m.left = Box::new(args[0].clone());
+            m.right = Box::new(args[1].clone());
+            m.dimension = Box::new(args[2].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::EuclideanNorm(m)) => {
+            m.vector = Box::new(args[0].clone());
+            m.dimension = Box::new(args[1].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::ZeroMatrix(m)) => {
+            m.rows = Box::new(args[0].clone());
+            m.cols = Box::new(args[1].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::IdentityMatrix(m)) => {
+            m.order = Box::new(args[0].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::ConjugateTranspose(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.rows = Box::new(args[1].clone());
+            m.cols = Box::new(args[2].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::OuterProduct(m)) => {
+            m.left = Box::new(args[0].clone());
+            m.right = Box::new(args[1].clone());
+            m.rows = Box::new(args[2].clone());
+            m.cols = Box::new(args[3].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Diagonal(m)) => {
+            m.vector = Box::new(args[0].clone());
+            m.order = Box::new(args[1].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Multiply(m)) => {
+            m.left = Box::new(args[0].clone());
+            m.right = Box::new(args[1].clone());
+            m.rows = Box::new(args[2].clone());
+            m.inner = Box::new(args[3].clone());
+            m.cols = Box::new(args[4].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Subtract(m)) => {
+            m.left = Box::new(args[0].clone());
+            m.right = Box::new(args[1].clone());
+            m.rows = Box::new(args[2].clone());
+            m.cols = Box::new(args[3].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Scale(m)) => {
+            m.scalar = Box::new(args[0].clone());
+            m.matrix = Box::new(args[1].clone());
+            m.rows = Box::new(args[2].clone());
+            m.cols = Box::new(args[3].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Add(m)) => {
+            m.left = Box::new(args[0].clone());
+            m.right = Box::new(args[1].clone());
+            m.rows = Box::new(args[2].clone());
+            m.cols = Box::new(args[3].clone());
+        }
+        Obj::MatrixOperator(MatrixOperator::Transpose(m)) => {
+            m.matrix = Box::new(args[0].clone());
+            m.rows = Box::new(args[1].clone());
+            m.cols = Box::new(args[2].clone());
+        }
+        Obj::TrigOperator(TrigOperator::Sin(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Cos(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Tan(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Cot(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Sec(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Csc(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Arcsin(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Arccos(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Arctan(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::TrigOperator(TrigOperator::Arccot(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::HyperbolicOperator(HyperbolicOperator::Sinh(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::HyperbolicOperator(HyperbolicOperator::Cosh(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::HyperbolicOperator(HyperbolicOperator::Tanh(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::HyperbolicOperator(HyperbolicOperator::Coth(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::HyperbolicOperator(HyperbolicOperator::Sech(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::HyperbolicOperator(HyperbolicOperator::Csch(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ExpLogOperator(ExpLogOperator::Exp(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ExpLogOperator(ExpLogOperator::Ln(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ComplexOperator(ComplexOperator::Conjugate(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ComplexOperator(ComplexOperator::RealPart(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ComplexOperator(ComplexOperator::ImaginaryPart(f)) => {
+            f.arg = Box::new(args[0].clone())
+        }
+        Obj::ComplexOperator(ComplexOperator::ComplexAbs(f)) => f.arg = Box::new(args[0].clone()),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(f)) => binary!(f),
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(f)) => binary!(f),
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(f)) => binary!(f),
@@ -1067,6 +2078,22 @@ fn replace_arithmetic_children(object: &mut Obj, args: &[Obj]) -> Result<(), Lea
             f.exponent = Box::new(args[1].clone());
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(f)) => f.arg = Box::new(args[0].clone()),
+        // These constructors were selected by arithmetic_constructor_pairs.
+        // The caller already checked their exact ordered original child matches.
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ArithmeticOperator(ArithmeticOperator::Floor(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ArithmeticOperator(ArithmeticOperator::Ceil(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(f)) => binary!(f),
+        Obj::ArithmeticOperator(ArithmeticOperator::Max(f)) => binary!(f),
+        Obj::IntegerOperator(IntegerOperator::Factorial(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::IntegerOperator(IntegerOperator::Gcd(f)) => binary!(f),
+        Obj::IntegerOperator(IntegerOperator::Lcm(f)) => binary!(f),
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(f)) => f.arg = Box::new(args[0].clone()),
+        Obj::ExpLogOperator(ExpLogOperator::Log(f)) => {
+            f.base = Box::new(args[0].clone());
+            f.arg = Box::new(args[1].clone());
+        }
         _ => {
             return Err(LeanCompileError::unsupported(
                 "CompoundKnown/StructureConstructor",

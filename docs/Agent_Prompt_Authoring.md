@@ -210,6 +210,29 @@ On three real IMO geometry tasks the tuned primer cut authoring cost from
 the available runs), with every artifact still passing strict checking. Check time itself is unaffected: the
 primer changes what the agent writes, not how fast the checker runs.
 
+## What Litex does and does not win
+
+Measured on six small inference-only lemmas with the same harness:
+
+| | Litex | Lean |
+| --- | ---: | ---: |
+| wall clock | 0.15-0.3 min | 0.4-3.8 min |
+| tokens | 13k-53k | 12k-34k |
+
+Litex is 2.5-25x faster on every task, because checking a statement is a local
+process with no library import. On tokens it is at parity on the smallest tasks
+and 1-4x worse elsewhere: both systems need about 5-10 turns, and Lean's context
+per turn is smaller than a primer plus a growing explicit proof file.
+
+One apparent 2.3x Litex win on a unique-existence lemma did not survive
+repetition (three samples per side reversed it to 1.25x in Lean's favour), which
+is the practical reason to keep the sample size at three or more and to compare
+like conditions.
+
+So: choose Litex for latency on small, inference-heavy steps; choose Lean when
+the statement needs modelling (objects, definitions, geometry) or when the proof
+is long enough that Lean's tactic layer saves turns.
+
 ## Anti-patterns
 
 * Pasting the manual or a 500-line cheat sheet into the prompt.

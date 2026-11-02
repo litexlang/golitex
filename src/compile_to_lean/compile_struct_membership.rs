@@ -76,10 +76,9 @@ impl LitexToLeanCompiler {
                             "StructMembership/FieldSubject",
                         ));
                     }
-                    members.push(
-                        self.compile_verify(child, &position.atomic_search_prior(index)?)?
-                            .1,
-                    );
+                    let (proposition, member) =
+                        self.compile_verify(child, &position.atomic_search_prior(index)?)?;
+                    members.push(format!("(show {proposition} from {member})"));
                 }
                 if dependent {
                     let accepted = members

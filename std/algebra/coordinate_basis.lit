@@ -1,0 +1,227 @@
+# Standard coordinate basis, projections and dimension, including n = 0.
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>,n N,j closed_range(1,n):
+        \coordinate_maps::unit_coefficients<K,F,n,j> $in finite_seq(K,n)
+    release thm coordinate_maps::unit_coefficients_carrier(K,F,n,j)
+
+template<K nonempty_set,F &field::Field<K>,n N>:
+    have fn coordinate_basis(j closed_range(1,n)) finite_seq(K,n)=\coordinate_maps::unit_coefficients<K,F,n,j>
+
+template<K set,n N,j closed_range(1,n)>:
+    have fn coordinate_projection(vector finite_seq(K,n)) K=vector(j)
+
+thm coordinate_basis_carrier:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        \coordinate_basis<K,F,n> $in finite_seq(finite_seq(K,n),n)
+
+thm coordinate_projection_carrier:
+    ? forall K set,n N,j closed_range(1,n):
+        \coordinate_projection<K,n,j> $in fn(vector finite_seq(K,n)) K
+
+thm coordinate_basis_entry:
+    ? forall K nonempty_set,F &field::Field<K>,n N,j closed_range(1,n):
+        \coordinate_basis<K,F,n>(j)=\coordinate_maps::unit_coefficients<K,F,n,j>
+
+thm coordinate_projection_spec:
+    ? forall K set,n N,j closed_range(1,n),vector finite_seq(K,n):
+        \coordinate_projection<K,n,j>(vector)=vector(j)
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>:
+        \vector_space::scalar_space<K,F> $in &vector_space::VectorSpace<K,F,K>
+    release thm vector_space::scalar_space_carrier(K,F)
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        \finite_span::coordinate_space<K,F,n> $in &vector_space::VectorSpace<K,F,finite_seq(K,n)>
+    release thm finite_span::coordinate_space_carrier(K,F,n)
+
+thm coordinate_projection_is_linear:
+    ? forall K nonempty_set,F &field::Field<K>,n N,j closed_range(1,n):
+        $vector_space::is_linear_map(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,K,\vector_space::scalar_space<K,F>,\coordinate_projection<K,n,j>)
+    release thm finite_span::coordinate_space_carrier(K,F,n)
+    release thm vector_space::scalar_space_carrier(K,F)
+    \finite_span::coordinate_space<K,F,n> =(\finite_span::zero_coefficients<K,F,n>,\finite_span::add_coefficients<K,F,n>,\finite_span::smul_coefficients<K,F,n>)
+    \vector_space::scalar_space<K,F> =(F.zero,F.add,F.mul)
+    release struct def \finite_span::coordinate_space<K,F,n>
+    release struct def \vector_space::scalar_space<K,F>
+    \finite_span::coordinate_space<K,F,n>.add=\finite_span::add_coefficients<K,F,n>
+    \finite_span::coordinate_space<K,F,n>.smul=\finite_span::smul_coefficients<K,F,n>
+    \vector_space::scalar_space<K,F>.add=F.add
+    \vector_space::scalar_space<K,F>.smul=F.mul
+    claim:
+        ? forall u,v finite_seq(K,n):
+            \coordinate_projection<K,n,j>(\finite_span::coordinate_space<K,F,n>.add(u,v))=\vector_space::scalar_space<K,F>.add(\coordinate_projection<K,n,j>(u),\coordinate_projection<K,n,j>(v))
+        \finite_span::coordinate_space<K,F,n>.add(u,v)=\finite_span::add_coefficients<K,F,n>(u,v)
+        release thm finite_span::add_coefficients_entry(K,F,n,u,v,\finite_span::coordinate_space<K,F,n>.add(u,v),j)
+        u(j) $in K
+        v(j) $in K
+        \coordinate_projection<K,n,j>(u)=u(j)
+        \coordinate_projection<K,n,j>(v)=v(j)
+        \coordinate_projection<K,n,j>(u) $in K
+        \coordinate_projection<K,n,j>(v) $in K
+        \vector_space::scalar_space<K,F>.add(\coordinate_projection<K,n,j>(u),\coordinate_projection<K,n,j>(v))=F.add(\coordinate_projection<K,n,j>(u),\coordinate_projection<K,n,j>(v))=F.add(u(j),v(j))
+        \coordinate_projection<K,n,j>(\finite_span::coordinate_space<K,F,n>.add(u,v))=\finite_span::coordinate_space<K,F,n>.add(u,v)(j)=F.add(u(j),v(j))
+    claim:
+        ? forall a K,u finite_seq(K,n):
+            \coordinate_projection<K,n,j>(\finite_span::coordinate_space<K,F,n>.smul(a,u))=\vector_space::scalar_space<K,F>.smul(a,\coordinate_projection<K,n,j>(u))
+        \finite_span::coordinate_space<K,F,n>.smul(a,u)=\finite_span::smul_coefficients<K,F,n>(a,u)
+        release thm finite_span::smul_coefficients_entry(K,F,n,a,u,\finite_span::coordinate_space<K,F,n>.smul(a,u),j)
+        u(j) $in K
+        \coordinate_projection<K,n,j>(u)=u(j)
+        \coordinate_projection<K,n,j>(u) $in K
+        \vector_space::scalar_space<K,F>.smul(a,\coordinate_projection<K,n,j>(u))=F.mul(a,\coordinate_projection<K,n,j>(u))=F.mul(a,u(j))
+        \coordinate_projection<K,n,j>(\finite_span::coordinate_space<K,F,n>.smul(a,u))=\finite_span::coordinate_space<K,F,n>.smul(a,u)(j)=F.mul(a,u(j))
+    by def $vector_space::is_linear_map(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,K,\vector_space::scalar_space<K,F>,\coordinate_projection<K,n,j>)
+
+thm unit_coefficients_symmetric:
+    ? forall K nonempty_set,F &field::Field<K>,n N,idx,j closed_range(1,n):
+        \coordinate_maps::unit_coefficients<K,F,n,idx>(j)=\coordinate_maps::unit_coefficients<K,F,n,j>(idx)
+    by cases:
+        ? \coordinate_maps::unit_coefficients<K,F,n,idx>(j)=\coordinate_maps::unit_coefficients<K,F,n,j>(idx)
+        case idx=j:
+            \coordinate_maps::unit_coefficients<K,F,n,idx>(j)=F.one=\coordinate_maps::unit_coefficients<K,F,n,j>(idx)
+        case idx!=j:
+            j!=idx
+            \coordinate_maps::unit_coefficients<K,F,n,idx>(j)=F.zero=\coordinate_maps::unit_coefficients<K,F,n,j>(idx)
+
+thm scalar_linear_combination_commutes:
+    ? forall K nonempty_set,F &field::Field<K>,n N,left,right finite_seq(K,n):
+        \finite_span::linear_combination<K,F,K,\vector_space::scalar_space<K,F>,n>(left,right)=\finite_span::linear_combination<K,F,K,\vector_space::scalar_space<K,F>,n>(right,left)
+    release thm vector_space::scalar_space_carrier(K,F)
+    \vector_space::scalar_space<K,F> =(F.zero,F.add,F.mul)
+    release struct def \vector_space::scalar_space<K,F>
+    \vector_space::scalar_space<K,F>.smul=F.mul
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                \vector_space::scalar_space<K,F>.smul(left(j),right(j))=\vector_space::scalar_space<K,F>.smul(right(j),left(j))
+        j $in closed_range(1,n)
+        left(j) $in K
+        right(j) $in K
+        \vector_space::scalar_space<K,F>.smul(left(j),right(j))=F.mul(left(j),right(j))=F.mul(right(j),left(j))=\vector_space::scalar_space<K,F>.smul(right(j),left(j))
+    release thm finite_span::equal_contributions_equal_combinations(K,F,K,\vector_space::scalar_space<K,F>,n,left,right,right,left)
+
+thm coordinate_projection_maps_basis:
+    ? forall K nonempty_set,F &field::Field<K>,n N,j closed_range(1,n):
+        \finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)=\coordinate_maps::unit_coefficients<K,F,n,j>
+    release thm coordinate_basis_carrier(K,F,n)
+    release thm coordinate_projection_carrier(K,n,j)
+    claim:
+        ? forall idx closed_range(1,n):
+            \finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)(idx)=\coordinate_maps::unit_coefficients<K,F,n,j>(idx)
+        release thm coordinate_basis_entry(K,F,n,idx)
+        release thm coordinate_projection_spec(K,n,j,\coordinate_basis<K,F,n>(idx))
+        release thm unit_coefficients_symmetric(K,F,n,idx,j)
+        \finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)(idx)=\coordinate_projection<K,n,j>(\coordinate_basis<K,F,n>(idx))=\coordinate_basis<K,F,n>(idx)(j)=\coordinate_maps::unit_coefficients<K,F,n,idx>(j)=\coordinate_maps::unit_coefficients<K,F,n,j>(idx)
+    by fn_extension \finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)=\coordinate_maps::unit_coefficients<K,F,n,j>
+
+thm coordinate_basis_linear_combination:
+    ? forall K nonempty_set,F &field::Field<K>,n N,coefficients finite_seq(K,n):
+        \finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>)=coefficients
+    release thm coordinate_basis_carrier(K,F,n)
+    release thm finite_span::coordinate_space_carrier(K,F,n)
+    release thm vector_space::scalar_space_carrier(K,F)
+    \vector_space::scalar_space<K,F> =(F.zero,F.add,F.mul)
+    release struct def \vector_space::scalar_space<K,F>
+    \vector_space::scalar_space<K,F>.smul=F.mul
+    claim:
+        ? forall j closed_range(1,n):
+            \finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>)(j)=coefficients(j)
+        release thm coordinate_projection_is_linear(K,F,n,j)
+        release thm coordinate_projection_maps_basis(K,F,n,j)
+        release thm finite_span::linear_map_preserves_combination(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,K,\vector_space::scalar_space<K,F>,\coordinate_projection<K,n,j>,n,coefficients,\coordinate_basis<K,F,n>)
+        claim:
+            ? forall idx N+:
+                idx<=n
+                =>:
+                    \vector_space::scalar_space<K,F>.smul(coefficients(idx),\finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)(idx))=\vector_space::scalar_space<K,F>.smul(coefficients(idx),\coordinate_maps::unit_coefficients<K,F,n,j>(idx))
+            idx $in closed_range(1,n)
+            \finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)(idx)=\coordinate_maps::unit_coefficients<K,F,n,j>(idx)
+            coefficients(idx) $in K
+            \finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)(idx) $in K
+            \coordinate_maps::unit_coefficients<K,F,n,j>(idx) $in K
+            \vector_space::scalar_space<K,F>.smul(coefficients(idx),\finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)(idx))=F.mul(coefficients(idx),\finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)(idx))=F.mul(coefficients(idx),\coordinate_maps::unit_coefficients<K,F,n,j>(idx))=\vector_space::scalar_space<K,F>.smul(coefficients(idx),\coordinate_maps::unit_coefficients<K,F,n,j>(idx))
+        release thm finite_span::equal_contributions_equal_combinations(K,F,K,\vector_space::scalar_space<K,F>,n,coefficients,coefficients,\finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>),\coordinate_maps::unit_coefficients<K,F,n,j>)
+        release thm scalar_linear_combination_commutes(K,F,n,coefficients,\coordinate_maps::unit_coefficients<K,F,n,j>)
+        release thm coordinate_maps::unit_linear_combination(K,F,K,\vector_space::scalar_space<K,F>,n,coefficients,j)
+        release thm coordinate_projection_spec(K,n,j,\finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>))
+        coefficients(j) $in K
+        \finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>)(j) $in K
+        \coordinate_projection<K,n,j>(\finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>)) $in K
+        \finite_span::linear_combination<K,F,K,\vector_space::scalar_space<K,F>,n>(coefficients,\finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>)) $in K
+        \finite_span::linear_combination<K,F,K,\vector_space::scalar_space<K,F>,n>(coefficients,\coordinate_maps::unit_coefficients<K,F,n,j>) $in K
+        \finite_span::linear_combination<K,F,K,\vector_space::scalar_space<K,F>,n>(\coordinate_maps::unit_coefficients<K,F,n,j>,coefficients) $in K
+        \finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>)(j)=\coordinate_projection<K,n,j>(\finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>))=\finite_span::linear_combination<K,F,K,\vector_space::scalar_space<K,F>,n>(coefficients,\finite_span::map_vectors<finite_seq(K,n),K,n>(\coordinate_projection<K,n,j>,\coordinate_basis<K,F,n>))=\finite_span::linear_combination<K,F,K,\vector_space::scalar_space<K,F>,n>(coefficients,\coordinate_maps::unit_coefficients<K,F,n,j>)=\finite_span::linear_combination<K,F,K,\vector_space::scalar_space<K,F>,n>(\coordinate_maps::unit_coefficients<K,F,n,j>,coefficients)=coefficients(j)
+    by fn_extension \finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>)=coefficients
+
+thm coordinate_basis_spans:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $finite_span::spans(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>)
+    release thm coordinate_basis_carrier(K,F,n)
+    \finite_span::span<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>> ={value finite_seq(K,n): $finite_span::is_linear_combination(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,value,\coordinate_basis<K,F,n>)}
+    claim:
+        ? forall vector finite_seq(K,n):
+            vector $in \finite_span::span<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>>
+        release thm coordinate_basis_linear_combination(K,F,n,vector)
+        release thm finite_span::linear_combination_has_value(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,vector,\coordinate_basis<K,F,n>)
+        $finite_span::has_linear_combination_value(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,vector,\coordinate_basis<K,F,n>,vector)
+        witness $finite_span::is_linear_combination(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,vector,\coordinate_basis<K,F,n>) from vector
+        vector $in \finite_span::span<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>>
+    by extension \finite_span::span<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>> =finite_seq(K,n)
+    by def $finite_span::spans(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>)
+
+thm coordinate_basis_is_independent:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $basis::is_linearly_independent(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>)
+    release thm coordinate_basis_carrier(K,F,n)
+    \finite_span::coordinate_space<K,F,n> =(\finite_span::zero_coefficients<K,F,n>,\finite_span::add_coefficients<K,F,n>,\finite_span::smul_coefficients<K,F,n>)
+    release struct def \finite_span::coordinate_space<K,F,n>
+    \finite_span::coordinate_space<K,F,n>.zero=\finite_span::zero_coefficients<K,F,n>
+    claim:
+        ? forall coefficients finite_seq(K,n):
+            $finite_span::has_linear_combination_value(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,coefficients,\coordinate_basis<K,F,n>,\finite_span::coordinate_space<K,F,n>.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,F,n,coefficients)
+        obtain sums from $finite_span::has_linear_combination_value(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,coefficients,\coordinate_basis<K,F,n>,\finite_span::coordinate_space<K,F,n>.zero)
+        release thm finite_span::partial_sum_determines_combination(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,coefficients,\coordinate_basis<K,F,n>,sums)
+        \finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>)=sums(n)=\finite_span::coordinate_space<K,F,n>.zero
+        release thm coordinate_basis_linear_combination(K,F,n,coefficients)
+        coefficients=\finite_span::linear_combination<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n>(coefficients,\coordinate_basis<K,F,n>)=\finite_span::coordinate_space<K,F,n>.zero=\finite_span::zero_coefficients<K,F,n>
+        claim:
+            ? forall j N+:
+                j<=n
+                =>:
+                    coefficients(j)=F.zero
+            release thm finite_span::zero_coefficients_entry(K,F,n,coefficients,j)
+        by def $basis::has_only_zero_coefficients(K,F,n,coefficients)
+    by def $basis::is_linearly_independent(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>)
+
+thm coordinate_basis_is_basis:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $basis::is_basis(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>)
+    release thm coordinate_basis_spans(K,F,n)
+    release thm coordinate_basis_is_independent(K,F,n)
+    by def $basis::is_basis(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>)
+
+thm coordinate_space_is_finite_dimensional:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $basis::is_finite_dimensional(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>)
+    release thm coordinate_basis_spans(K,F,n)
+    witness $basis::is_finite_dimensional(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>) from n,\coordinate_basis<K,F,n>
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $basis::is_finite_dimensional(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>)
+    release thm coordinate_space_is_finite_dimensional(K,F,n)
+
+thm coordinate_space_dimension:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $basis::is_finite_dimensional(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>)
+        \dimension::finite_dimension<K,F,finite_seq(K,n)>(\finite_span::coordinate_space<K,F,n>)=n
+    release thm coordinate_space_is_finite_dimensional(K,F,n)
+    release thm coordinate_basis_is_basis(K,F,n)
+    release thm dimension::finite_dimension_of_basis(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,n,\coordinate_basis<K,F,n>)
+

@@ -1,0 +1,14 @@
+{
+  "retained-universal-context.lit": {
+    "zh": "未完成的全称证明",
+    "en": "An unfinished universal proof"
+  },
+  "retained-local-equality-proofs.lit": {
+    "zh": "局部等式的证明",
+    "en": "Proofs of local equalities"
+  },
+  "partial-equality-chain.lit": {
+    "zh": "未完成的等式链",
+    "en": "An unfinished equality chain"
+  }
+}

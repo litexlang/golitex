@@ -107,6 +107,8 @@ impl Runtime {
             let proof = self.verify_fact(requirement, verify_state.clone())?;
             if proof.is_failed() {
                 return Ok(Err(DefinitionProofFailed::Requirement {
+                    requirement_facts: requirement_facts.clone(),
+                    proof_of_requirement_facts,
                     index,
                     fact: requirement.clone(),
                     result: Box::new(proof),

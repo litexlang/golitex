@@ -61,6 +61,66 @@ impl LitexToLeanCompiler {
                 "Only a complete successful source run can be compiled.",
             ));
         }
+        let declarations = self.compile_original_file(result, &position)?;
+        self.render_artifact(&[result], artifact_namespace, &declarations)
+    }
+
+    pub(crate) fn compile_module(
+        &self,
+        closure: &crate::run_module::LeanSourceClosure,
+        artifact_namespace: &str,
+    ) -> Result<String, LeanCompileError> {
+        validate_namespace(artifact_namespace)?;
+        if self.runtime.result_detail() != crate::result_detail::OutputDetail::Detailed {
+            return Err(LeanCompileError::unsupported("Module/ResultDetail"));
+        }
+        if closure.files.is_empty() || closure.target_file + 1 != closure.files.len() {
+            return Err(LeanCompileError::unsupported("Module/TargetPrefix"));
+        }
+        let mut declarations = Vec::new();
+        for (file, original) in closure.files.iter().enumerate() {
+            let position = SourcePosition::module_file(closure, file, 0);
+            if position.module_env(&self.runtime).is_none() {
+                return Err(LeanCompileError::unsupported("Module/OriginalEnvironment"));
+            }
+            let compiled = self
+                .compile_original_file(&original.run, &position)
+                .map_err(|mut error| {
+                    error.message = format!(
+                        "file {}: {}",
+                        original.source.display_path().display(),
+                        error.message
+                    );
+                    error
+                })?;
+            declarations.push(format!(
+                "namespace source_{file}\n\n{}\n\nend source_{file}",
+                compiled.join("\n\n")
+            ));
+        }
+        let runs = closure
+            .files
+            .iter()
+            .map(|file| &file.run)
+            .collect::<Vec<_>>();
+        self.render_artifact(&runs, artifact_namespace, &declarations)
+    }
+
+    fn compile_original_file(
+        &self,
+        result: &RunLitexCodeResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        if !result.success
+            || result.session_error.is_some()
+            || result.input_error.is_some()
+            || result
+                .statement_results
+                .iter()
+                .any(ExecStmtResult::is_failed)
+        {
+            return Err(LeanCompileError::unsupported("Module/FailedFile"));
+        }
         let mut declarations = Vec::new();
         for (index, result) in result.statement_results.iter().enumerate() {
             let compiled = self
@@ -68,7 +128,7 @@ impl LitexToLeanCompiler {
                     result,
                     &SourcePosition {
                         before: index,
-                        ..position
+                        ..*position
                     },
                     index + 1,
                 )
@@ -78,15 +138,44 @@ impl LitexToLeanCompiler {
                 })?;
             declarations.push(compiled);
         }
-        let universes = self.source_universes(result)?;
-        let uses_functions = result
-            .statement_results
+        Ok(declarations)
+    }
+
+    fn render_artifact(
+        &self,
+        runs: &[&RunLitexCodeResult],
+        artifact_namespace: &str,
+        declarations: &[String],
+    ) -> Result<String, LeanCompileError> {
+        let mut universes = Vec::new();
+        for run in runs {
+            for universe in self.source_universes(run)?.split_whitespace() {
+                if !universes.iter().any(|u: &String| u == universe) {
+                    universes.push(universe.to_owned());
+                }
+            }
+        }
+        let universes = universes.join(" ");
+        let statements = runs
             .iter()
-            .any(statement_uses_functions);
+            .flat_map(|run| run.statement_results.iter())
+            .collect::<Vec<_>>();
+        let uses_functions = statements.iter().copied().any(statement_uses_functions);
         // FunctionSemantics already supplies its SetSemantics parent. A
         // second data-carrying instance would give mixed set/function terms
         // conflicting interpretations of the same source set constructors.
-        let sets = if !uses_functions && result.statement_results.iter().any(statement_uses_sets) {
+        let emitted_set_semantics = declarations.iter().any(|declaration| {
+            declaration.contains("Litex.sameOfFiniteSubsetCardinality")
+                || declaration.contains("Litex.finiteCardinalityProperSubsetLt")
+                || declaration.contains("Litex.gcdPositiveScaleValue")
+                // A local finite-set kind is inhabited using the existing
+                // empty-set law, even when the source names no set former.
+                || declaration.contains("Litex.finiteSetEmpty")
+                || declaration.contains("Litex.replacement")
+        });
+        let sets = if !uses_functions
+            && (emitted_set_semantics || statements.iter().copied().any(statement_uses_sets))
+        {
             "\nset_option linter.unusedSectionVars false\nvariable [_setSemantics : Litex.SetSemantics M]"
         } else {
             ""
@@ -104,22 +193,38 @@ impl LitexToLeanCompiler {
                 || declaration.contains("Litex.familyIntersect")
                 || declaration.contains("Litex.IndexedUnionSemantics.")
                 || declaration.contains("Litex.indexCart")
+                || declaration.contains("Litex.replacement")
         });
-        let indexed_unions = if emitted_indexed_union || result.statement_results.iter().any(|statement|
+        let indexed_unions = if emitted_indexed_union || statements.iter().copied().any(|statement|
             statement_uses_choice(statement) || super::compile_replacement_result::replacement_statement(statement).is_some() || matches!(statement, ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
                 crate::execute::ExecDefStructStmtResult::Success(p)))
                 if super::compile_def_struct_stmt_result::has_dependent_fields(&p.statement))) {
             "\nvariable [_indexedUnionSemantics : Litex.IndexedUnionSemantics M]"
         } else { "" };
-        let regularity = if result
-            .statement_results
-            .iter()
-            .any(statement_uses_regularity)
-        {
+        let regularity = if statements.iter().copied().any(statement_uses_regularity) {
             "\nvariable [_regularitySemantics : Litex.RegularitySemantics M]"
         } else {
             ""
         };
+        // Large explicit proof declarations can exceed Lean's default elaboration
+        // budget. Keep a finite budget local to those declarations; importing
+        // the artifact does not change the caller's options or any proof rule.
+        let declarations = declarations
+            .iter()
+            .map(|declaration| {
+                let mut rendered = declaration.to_owned();
+                // Preserve explicit below-recursors during elaboration. Smart
+                // unfolding can otherwise expose equation lemmas on only one side
+                // of a definitional equality. This local option adds no proof rule.
+                if declaration.contains("Nat.brecOn") {
+                    rendered = format!("set_option smartUnfolding false in\n{rendered}");
+                }
+                if declaration.len() > 500_000 {
+                    rendered = format!("set_option maxHeartbeats 1000000 in\n{rendered}");
+                }
+                rendered
+            })
+            .collect::<Vec<_>>();
         let output = format!("import Litex\n\nset_option linter.unusedVariables false\n\nnamespace LitexCompiled.{artifact_namespace}\n\nuniverse {universes}\nvariable {{M : Litex.Semantics.{{u}}}}{sets}{functions}{indexed_unions}{regularity}\n\n{}\nend LitexCompiled.{artifact_namespace}\n", declarations.join("\n\n"));
         Ok(output
             .lines()
@@ -403,6 +508,11 @@ fn statement_uses_functions(statement: &ExecStmtResult) -> bool {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
             ExecDefPropStmtResult::Success(proof),
         )) => proof.statement.iff_facts.iter().any(fact_uses_functions),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+            crate::execute::ExecDefStrategyStmtResult::Success(p))) => {
+            fact_uses_functions(&Fact::ForallFact(p.statement.forall_fact.clone()))
+                || p.body.proof_steps.iter().any(statement_uses_functions)
+        }
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(proof),
         )) => {
@@ -467,7 +577,9 @@ fn object_uses_sets(object: &Obj) -> bool {
         Obj::TrigOperator(TrigOperator::Arccos(p)) => object_uses_sets(&p.arg),
         Obj::TrigOperator(TrigOperator::Arctan(p)) => object_uses_sets(&p.arg),
         Obj::TrigOperator(TrigOperator::Arccot(p)) => object_uses_sets(&p.arg),
-        Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => object_uses_sets(&p.arg),
+        // The intrinsic codomain is R+; WD consumers may retain that exact
+        // refinement even when the enclosing formula mentions only real values.
+        Obj::ExpLogOperator(ExpLogOperator::Exp(_)) => true,
         Obj::ExpLogOperator(ExpLogOperator::Log(p)) => {
             object_uses_sets(&p.base) || object_uses_sets(&p.arg)
         }
@@ -510,6 +622,7 @@ fn object_uses_sets(object: &Obj) -> bool {
             | SetOperator::SetMinus(_)
             | SetOperator::PowerSet(_),
         ) => true,
+        Obj::SetOperator(SetOperator::FamilyUnion(p)) => object_uses_sets(&p.left),
         Obj::ArithmeticOperator(operator) => match operator {
             ArithmeticOperator::Add(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
             ArithmeticOperator::Sub(x) => object_uses_sets(&x.left) || object_uses_sets(&x.right),
@@ -634,12 +747,14 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
                 || store_has_set_inference(&proof.stored)
         }
         ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(proof))) => {
-            proof.builtin.as_ref().is_some_and(|b| b.conclusions.iter().any(fact_uses_sets))
+            // Verified builtin premises may introduce refined carriers even
+            // when all authored arguments and conclusions are plain numbers.
+            proof.builtin.as_ref().is_some_and(|b| b.requirements.iter().chain(&b.conclusions).any(fact_uses_sets))
                 || verified_subject(&proof.selected_proof).as_ref().is_some_and(fact_uses_sets)
         }
         ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
             ExecReleaseThmStmtResult::Success(proof),
-        )) => proof.builtin.as_ref().is_some_and(|b| b.conclusions.iter().any(fact_uses_sets)),
+        )) => proof.builtin.as_ref().is_some_and(|b| b.requirements.iter().chain(&b.conclusions).any(fact_uses_sets)),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjInNonemptySet(
                 ExecHaveObjInNonemptySetStmtResult::Success(proof),
@@ -719,6 +834,11 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(p)),
         )) => p.statement.objs_equal_to.iter().any(object_uses_sets),
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+            crate::execute::ExecDefStrategyStmtResult::Success(p))) => {
+            fact_uses_sets(&Fact::ForallFact(p.statement.forall_fact.clone()))
+                || p.body.proof_steps.iter().any(statement_uses_sets)
+        }
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(p),
         )) => {
@@ -739,6 +859,9 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
 // rule/store tree; no generated text or compiler-owned dependency registry.
 fn store_has_set_inference(store: &StoreFactAndInferResult) -> bool {
     let atomic_has_set_inference = |infer: &InferAtomicFactResult| {
+        if matches!(infer, InferAtomicFactResult::PrimeFact(rules) if !rules.is_empty()) {
+            return true;
+        }
         let InferAtomicFactResult::EqualFact(rules) = infer else {
             return false;
         };
@@ -878,6 +1001,28 @@ fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
                 .any(|store| store_has_set_inference(store))
                 || domains_have_set_inference(&proof.assumed_iff_facts)
         }
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+            crate::execute::ExecDefStrategyStmtResult::Success(proof),
+        )) => {
+            proof
+                .body
+                .introduced_params
+                .defined_params
+                .store_and_infer_results
+                .iter()
+                .any(|store| store_has_set_inference(store))
+                || domains_have_set_inference(&proof.body.assumed_dom_facts)
+                || proof
+                    .body
+                    .conclusion_proofs
+                    .iter()
+                    .any(verify_has_set_inference)
+                || proof
+                    .body
+                    .proof_steps
+                    .iter()
+                    .any(statement_has_set_inference)
+        }
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(proof),
         )) => {
@@ -966,6 +1111,9 @@ fn statement_uses_regularity(statement: &ExecStmtResult) -> bool {
         return true;
     }
     let steps = match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+            crate::execute::ExecDefStrategyStmtResult::Success(p),
+        )) => &p.body.proof_steps,
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(p),
         )) => match &p.body {
@@ -994,6 +1142,9 @@ fn statement_uses_choice(statement: &ExecStmtResult) -> bool {
         return true;
     }
     let steps = match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+            crate::execute::ExecDefStrategyStmtResult::Success(p),
+        )) => &p.body.proof_steps,
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(p),
         )) => match &p.body {

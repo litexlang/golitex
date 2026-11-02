@@ -1,0 +1,58 @@
+# Tracer: square-bracket template declarations and instances.
+#
+# Before (rejected):
+# template[S set]:
+#     have fn identity(x S) S = x
+# Header rejection: expected `<`, got `[`.
+# identity[R](2) = 2
+# Instance rejection: object indexing with [] is removed.
+#
+# Now: square syntax uses the existing template instance and ordinary call AST.
+# Compatibility: angle headers and backslash-prefixed instances remain accepted.
+# Boundary: wrong arguments, missing guards and ordinary-object indexing reject.
+# Negative regressions: tests/template_square_brackets.rs.
+# Evidence: target/release/litex -strict -lang en -f examples/stmt_nodes/definition/template_square_brackets.lit
+
+template[S set]:
+    have fn identity(x S) S = x
+
+identity[R](2) = 2
+
+identity[R](2) < 3
+
+let real_identity = identity[R]
+
+real_identity(3) = 3
+
+template[S set]:
+    have carrier_copy set = S
+
+carrier_copy[R] = R
+
+carrier_copy[carrier_copy[R]] = carrier_copy[R]
+
+carrier_copy[carrier_copy[R]] = R
+
+carrier_copy['[0, 1)] = '[0, 1)
+
+template[S set, z S]:
+    have fn const_on(x S) S = z
+
+const_on[R, 2](0) = 2
+
+template[a R: a != 0]:
+    have inverse R = 1 / a
+
+inverse[2] = 1 / 2
+
+template<T set>:
+    have legacy_carrier set = T
+
+legacy_carrier[R] = R
+
+\identity<R>(2) = 2
+
+\legacy_carrier<Z> = Z
+
+1 < 2 > 1 < 3
+

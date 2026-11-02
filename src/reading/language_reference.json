@@ -3714,14 +3714,14 @@
         "zh": "抽象谓词",
         "en": "Abstract predicate"
       },
-      "syntax": "abstract_prop P(x A)",
+      "syntax": "abstract_prop P(x, y)",
       "summary": {
         "zh": "声明谓词的参数接口，不给出等价定义。",
         "en": "Declare a predicate’s parameter interface without a defining equivalence."
       },
       "notes": {
-        "zh": "后续事实或定理可使用 P；这个声明不使任何 P 的实例自动成立。",
-        "en": "Later facts and theorems may use P, but the declaration establishes no instance of P."
+        "zh": "形参只给出名称和参数个数，不指定参数域，也没有等价定义。后续事实或定理可使用 P；声明本身不建立任何具体实例。",
+        "en": "The formal arguments specify names and arity, without parameter domains or a defining equivalence. Later facts and theorems may use P; the declaration establishes no concrete instance."
       }
     },
     "DefTemplateStmt": {
@@ -5345,6 +5345,1302 @@
         "en": "The premises are m∈ℕ+ and 2≤m. The conclusion gives some p∈ℕ+ with prime(p) and m%p=0, hence p∣m. This is an existence result; obtain can unpack a divisor. It does not specify the least prime divisor or a complete factorization."
       },
       "example": "release thm prime_divisor(12)\n\nobtain factor from exist p N+ st {$prime(p), 12 % p = 0}\n\n$dvd(12, factor)"
+    },
+    "TupleEqualFromCoordinates": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "tuple_equal_from_coordinates(a, b)",
+      "summary": {
+        "zh": "具有相同完整索引域的有限元组，若各对应坐标相等，则两个元组相等。",
+        "en": "Finite tuples with the same complete index domain are equal when every corresponding coordinate is equal."
+      },
+      "notes": {
+        "zh": "两边须具有同一个从 1 开始的完整有限索引域，并对每个索引 i 验证 a(i)=b(i)，结论为 a=b。字面元组逐项检查全部坐标；其他受支持的有限函数表示使用相应全称条件。坐标的值不局限于实数。只比较共同的前几个坐标，不能证明不同长度的元组相等。",
+        "en": "Both sides must have the same complete finite domain starting at 1. Verify a(i)=b(i) at every index to conclude a=b. Literal tuples check every coordinate; other supported finite-function representations use the corresponding universal premise. Coordinate values are not restricted to real numbers. Agreement on an initial segment cannot equate tuples of different lengths."
+      },
+      "example": "release thm tuple_equal_from_coordinates((1, 2), (1, 2))"
+    },
+    "CartesianMemberFromCoordinates": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "cart_member_from_coordinates(t, P)",
+      "summary": {
+        "zh": "通过各坐标所属的集合，证明元组属于有限笛卡尔积。",
+        "en": "Establish membership in a finite Cartesian product by checking its coordinate carriers."
+      },
+      "notes": {
+        "zh": "P 须为 cart(A₁,…,Aₙ)，或具有已验证的相应定义关系。t 的完整索引域须恰为 1,…,n，并逐项证明 t(i)∈Aᵢ；结论为 t∈P。字面元组的长度必须匹配因子个数，不能忽略多出的坐标。各因子为集合，彼此不必相同。",
+        "en": "P must be cart(A₁,…,Aₙ), or have a checked corresponding definition. The complete domain of t must be exactly 1,…,n, and each t(i)∈Aᵢ must be proved; then t∈P. A literal tuple must have exactly as many coordinates as the product has factors. The factors are sets and need not coincide."
+      },
+      "example": "release thm cart_member_from_coordinates((1, 2), cart(R, Z))"
+    },
+    "FunctionSetMember": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "fn_set_member(f, F)",
+      "summary": {
+        "zh": "核验函数的完整定义域及取值条件，证明它属于指定函数空间。",
+        "en": "Establish membership in a function space by checking the complete domain and return conditions."
+      },
+      "notes": {
+        "zh": "F 须为受支持的函数空间、seq(B) 或 finite_seq(B,n)。先核对 f 的完整参数域及附加定义域条件，再对该域内全部参数证明函数值属于目标返回集合。结论为 f∈F。finite_seq(B,n) 的定义域恰为 closed_range(1,n)；定义在全部正整数上的函数不能仅凭前 n 项取值合适，就被视为长度 n 的有限序列。",
+        "en": "F must be a supported function space, seq(B), or finite_seq(B,n). First check the complete parameter domain and additional domain conditions of f, then prove that its values lie in the target return set throughout that domain. The conclusion is f∈F. A finite_seq(B,n) has exactly domain closed_range(1,n): suitable first n values do not turn a function on all positive integers into a length-n finite sequence."
+      },
+      "example": "release thm fn_set_member(fn(x R) R {x}, fn(y R) R)"
+    },
+    "SetBuilderMember": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "set_builder_member(x, S)",
+      "summary": {
+        "zh": "用分离集的载体条件和全部定义条件证明成员关系。",
+        "en": "Prove membership in a set comprehension from its carrier and all defining conditions."
+      },
+      "notes": {
+        "zh": "第二个参数须为 S={t∈A : P₁(t),…,Pₖ(t)} 的分离集表达式。须证明 x∈A，并将 t 代入为 x 后验证每一个 Pⱼ(x)；结论为 x∈S。只满足其中一条定义条件，或只属于载体 A，都不足以证明成员关系。例中同时验证 1∈ℝ 与 1>0。",
+        "en": "The second argument must be a comprehension S={t∈A : P₁(t),…,Pₖ(t)}. Prove x∈A and every Pⱼ(x) after substituting x for t; conclude x∈S. Carrier membership alone, or only one defining condition, is insufficient. The example verifies both 1∈ℝ and 1>0."
+      },
+      "example": "release thm set_builder_member(1, {x R: x > 0})"
+    },
+    "DefinedSetMember": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "defined_set_member(x, S)",
+      "summary": {
+        "zh": "在具名或模板实例化的集合上核验成员关系。",
+        "en": "Check membership in a named or template-instantiated set."
+      },
+      "notes": {
+        "zh": "第二个参数须为具名集合或实例化的集合定义。结论 x∈S 仍须由当前已有事实或已验证的集合定义证明；具名本身不是成员关系的证据。此入口复用通常的成员关系验证，不引入额外假设。例中 positives={t∈ℝ : t>0}，因此 1∈positives 需满足实数域和正性条件。",
+        "en": "The second argument must be a named set or an instantiated set definition. The conclusion x∈S must still follow from known facts or a checked set definition; having a name is not membership evidence. This entry reuses ordinary membership verification without adding assumptions. For positives={t∈ℝ : t>0}, membership of 1 requires its real carrier and positivity conditions."
+      },
+      "example": "let positives = {x R: x > 0}\nrelease thm defined_set_member(1, positives)"
+    },
+    "StructMember": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "struct_member(x, T)",
+      "summary": {
+        "zh": "核验对象是否满足指定结构的字段域和约束。",
+        "en": "Check whether an object satisfies the field domains and constraints of a structure."
+      },
+      "notes": {
+        "zh": "第二个参数须为 &Name 形式的结构对象。此入口使用结构成员关系的实际验证，结论为 x∈T；不会因为 x 是元组就自动把它当作任意结构的实例。例中 Point 按顺序声明两个实数字段，因此 (1,2) 需要同时满足两个字段的类型要求；结构声明若有额外约束，也仍须满足。",
+        "en": "The second argument must be a structure object of the form &Name. The existing structure-membership verifier establishes x∈T; an arbitrary tuple is not automatically an instance of every structure. Point declares two ordered real fields, so (1,2) must satisfy both field domains. Additional declared structure constraints must also hold."
+      },
+      "example": "struct Point:\n    x R\n    y R\nrelease thm struct_member((1, 2), &Point)"
+    },
+    "FamilyIntersectionMember": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "family_intersect_member(x, C)",
+      "summary": {
+        "zh": "由元素属于非空集合族的每个成员，证明它属于集合族的交。",
+        "en": "Establish membership in a nonempty family intersection from membership in every factor."
+      },
+      "notes": {
+        "zh": "C 须为 family_intersect(F)。须证明 F 非空、F 的每个成员都是集合，以及对每个 B∈F 都有 x∈B；结论为 x∈C。不能只验证某一个因子，也不能省略因子确实为集合的条件。此接口不把空集合族的绝对交解释为空集或某个未指定的全集。",
+        "en": "C must be family_intersect(F). Prove F is nonempty, every member of F is a set, and x belongs to each B∈F; conclude x∈C. Checking one factor is insufficient, and the factors must really be sets. This interface does not interpret the absolute intersection of an empty family as the empty set or an unspecified universe."
+      },
+      "example": "thm singleton_member:\n    ? forall S set, x S:\n        x $in family_intersect({S})\n    by enumerate finite_set:\n        ? forall B {S}:\n            $is_set(B)\n        $is_set(B)\n    by enumerate finite_set:\n        ? forall B {S}:\n            $is_set(B)\n            =>:\n                x $in B\n        x $in B\n    release thm family_intersect_member(x, family_intersect({S}))"
+    },
+    "FamilyIntersectionMemberFacts": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "family_intersect_member_facts(x, C)",
+      "summary": {
+        "zh": "从集合族交的成员关系，推出元素属于其中每个集合型成员。",
+        "en": "Project membership in each set-valued factor from membership in a family intersection."
+      },
+      "notes": {
+        "zh": "C 须为 family_intersect(F)，F 须非空，并已知 x∈C。返回全称命题：对每个 B∈F，若 B 是集合，则 x∈B。结论保留“B 是集合”的条件；此定理本身不另行证明 F 的所有成员都是集合。该方向从交的成员关系出发，与先验证全部因子再引入交的成员关系不同。",
+        "en": "C must be family_intersect(F), with F nonempty and x∈C already established. The conclusion is: for each B∈F, if B is a set then x∈B. The set-valued condition is retained; this theorem does not separately prove that every member of F is a set. This projects a known intersection membership rather than introducing it from factor memberships."
+      },
+      "example": "thm singleton_member_facts:\n    ? forall S set, x family_intersect({S}):\n        x $in S\n    release thm family_intersect_member_facts(x, family_intersect({S}))\n    S $in {S}\n    x $in S"
+    },
+    "IndexedIntersectionMember": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "index_intersect_member(x, C)",
+      "summary": {
+        "zh": "由环境集合中的成员关系及每个纤维的成员关系，证明元素属于指标交。",
+        "en": "Establish indexed-intersection membership from ambient membership and membership in every fiber."
+      },
+      "notes": {
+        "zh": "C 须为有定义的 index_intersect(I,X,A)，其中 I 为非空集合，A 的完整定义域为 I，且 A(i)∈power_set(X)。须证明 x∈X 及对每个 i∈I 有 x∈A(i)；结论为 x∈C。当前接口显式保留环境集合条件及全部纤维条件，不能只检查有限个任意选取的指标。",
+        "en": "C must be the well-defined index_intersect(I,X,A): I is nonempty, A has complete domain I, and each A(i)∈power_set(X). Prove x∈X and x∈A(i) for every i∈I; conclude x∈C. The interface explicitly retains ambient membership and all fiber conditions, not merely checks at a few selected indices."
+      },
+      "example": "thm singleton_indexed_member:\n    ? forall X set, A fn(k {1}) power_set(X), x X:\n        x $in A(1)\n        =>:\n            x $in index_intersect({1}, X, A)\n    by enumerate finite_set:\n        ? forall idx {1}:\n            x $in A(idx)\n        idx = 1\n    release thm index_intersect_member(x, index_intersect({1}, X, A))"
+    },
+    "RealLeastUpperBoundFromDefinition": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_least_upper_bound_from_definition(S, L)",
+      "summary": {
+        "zh": "由上界条件与极值性质，证明给定实数是集合的上确界。",
+        "en": "Certify a proposed supremum from its bound and extremal properties."
+      },
+      "notes": {
+        "zh": "须证明 S⊆ℝ、S 非空、L∈ℝ、∀x∈S, x≤L，并且对每个实数 u，若 ∀x∈S, x≤u，则 L≤u；结论为 $is_real_least_upper_bound(S,L)。仅是一个上界不足以成为上确界。例中 {0} 的上确界为 0，而非任意给出的上界。",
+        "en": "Prove S⊆ℝ, nonempty S, L∈ℝ, ∀x∈S, x≤L, and for every real u, (∀x∈S, x≤u) implies L≤u; conclude $is_real_least_upper_bound(S,L). Merely being an upper bound is insufficient. The supremum of {0} is 0, rather than an arbitrary supplied upper bound."
+      },
+      "example": "forall u R:\n    forall x {0}:\n        x<=u\n    =>:\n        0<=u\nrelease thm real_least_upper_bound_from_definition({0},0)\n$is_real_least_upper_bound({0},0)"
+    },
+    "RealLeastUpperBoundUpperBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_least_upper_bound_upper_bound(S, L)",
+      "summary": {
+        "zh": "从上确界证书中取出其作为上界的全称性质。",
+        "en": "Project the quantified upper bound property of a certified supremum."
+      },
+      "notes": {
+        "zh": "前提为 S⊆ℝ、L∈ℝ 以及 $is_real_least_upper_bound(S,L)。结论为 ∀x∈S, x≤L，是一条可继续实例化的全称命题。此入口只取出上界性质，不重新证明上确界的存在性。",
+        "en": "The premises are S⊆ℝ, L∈ℝ and $is_real_least_upper_bound(S,L). The conclusion is ∀x∈S, x≤L, a universal statement available for later instantiation. This projects the bound property rather than proving existence again."
+      },
+      "example": "release thm real_least_upper_bound_exists({0},1)\nobtain L from exist L R st {$is_real_least_upper_bound({0},L)}\nrelease thm real_least_upper_bound_upper_bound({0},L)\nforall x {0}:\n    x<=L"
+    },
+    "RealLeastUpperBoundUnique": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_least_upper_bound_unique(S, L, M)",
+      "summary": {
+        "zh": "同一实数集合的两个上确界相等。",
+        "en": "Two certified suprema of the same real set are equal."
+      },
+      "notes": {
+        "zh": "须有 S⊆ℝ、L,M∈ℝ，且 L、M 都具有 S 的上确界证书；结论为 L=M。第二个候选值需要自己的上确界证书，只有上界性质不足以使用唯一性。",
+        "en": "Prove S⊆ℝ, L,M∈ℝ, and that both L and M are certified suprema of S; conclude L=M. The second candidate needs its own supremum certificate: an upper bound property alone is insufficient."
+      },
+      "example": "forall u R:\n    forall x {0}:\n        x<=u\n    =>:\n        0<=u\nrelease thm real_least_upper_bound_from_definition({0},0)\nrelease thm real_least_upper_bound_exists({0},1)\nobtain L from exist L R st {$is_real_least_upper_bound({0},L)}\nrelease thm real_least_upper_bound_unique({0},L,0)\nL=0"
+    },
+    "RealLeastUpperBoundCrosses": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_least_upper_bound_crosses(S, L, c)",
+      "summary": {
+        "zh": "任何严格低于上确界的实数，都被集合中的某个元素越过。",
+        "en": "Every real strictly below the supremum is crossed by a member of the set."
+      },
+      "notes": {
+        "zh": "前提为 S⊆ℝ、L,c∈ℝ、$is_real_least_upper_bound(S,L) 及 c<L。结论为存在 x∈S，使 c<x。不要求 S 取到其上确界；找到的 x 也不必与 L 不同。比较必须严格，不能把 c<L 改成非严格不等式。",
+        "en": "The premises are S⊆ℝ, L,c∈ℝ, $is_real_least_upper_bound(S,L) and c<L. The conclusion gives an x∈S with c<x. S need not attain its supremum, and x need not differ from L. The comparison must be strict; replacing c<L by a non-strict inequality is insufficient."
+      },
+      "example": "forall u R:\n    forall x {0}:\n        x<=u\n    =>:\n        0<=u\nrelease thm real_least_upper_bound_from_definition({0},0)\nrelease thm real_least_upper_bound_crosses({0},0,-1)\nexist x {0} st {-1<x}"
+    },
+    "RealLeastUpperBoundExists": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_least_upper_bound_exists(S, u)",
+      "summary": {
+        "zh": "非空且有上界的实数集合存在实数上确界。",
+        "en": "A nonempty real set with an upper bound has a real supremum."
+      },
+      "notes": {
+        "zh": "须证明 S⊆ℝ、S 非空、u∈ℝ，且 ∀x∈S, x≤u。结论为存在 L∈ℝ，使 $is_real_least_upper_bound(S,L)。参数 u 是一个已知上界，不要求它就是上确界；本定理也不把它直接作为返回的 L。可用 obtain 从存在命题取出候选值及证书。",
+        "en": "Prove S⊆ℝ, nonempty S, u∈ℝ and ∀x∈S, x≤u. The conclusion is some L∈ℝ with $is_real_least_upper_bound(S,L). The parameter u is a known upper bound, not necessarily the supremum, and is not simply returned as L. Use obtain to unpack a candidate and its certificate."
+      },
+      "example": "release thm real_least_upper_bound_exists({0}, 1)\nexist L R st {$is_real_least_upper_bound({0}, L)}"
+    },
+    "RealMemberLeLeastUpperBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_member_le_least_upper_bound(S, L, x)",
+      "summary": {
+        "zh": "集合中的每个元素都不大于其上确界。",
+        "en": "Each member of a real set is at most its supremum."
+      },
+      "notes": {
+        "zh": "前提为 S⊆ℝ、L∈ℝ、$is_real_least_upper_bound(S,L)，以及 x∈S；结论为 x≤L。x 必须属于同一个 S，仅有 x∈ℝ 不够。",
+        "en": "The premises are S⊆ℝ, L∈ℝ, $is_real_least_upper_bound(S,L) and x∈S; conclude x≤L. The member must belong to that same S: x∈ℝ alone is insufficient."
+      },
+      "example": "release thm real_least_upper_bound_exists({0}, 1)\nobtain L from exist L R st {$is_real_least_upper_bound({0}, L)}\nrelease thm real_member_le_least_upper_bound({0}, L, 0)\n0 <= L"
+    },
+    "RealLeastUpperBoundLeUpperBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_least_upper_bound_le_upper_bound(S, L, u)",
+      "summary": {
+        "zh": "上确界不大于每一个上界。",
+        "en": "The supremum is at most every upper bound."
+      },
+      "notes": {
+        "zh": "须有 S⊆ℝ、L,u∈ℝ、$is_real_least_upper_bound(S,L)，并证明 ∀x∈S, x≤u；结论为 L≤u。与 L 比较的是整个 S 的上界，不是 S 中任意一个元素。",
+        "en": "Prove S⊆ℝ, L,u∈ℝ, $is_real_least_upper_bound(S,L), and ∀x∈S, x≤u; conclude L≤u. The comparison uses an upper bound of all of S, not an arbitrary member of S."
+      },
+      "example": "release thm real_least_upper_bound_exists({0}, 1)\nobtain L from exist L R st {$is_real_least_upper_bound({0}, L)}\nrelease thm real_least_upper_bound_le_upper_bound({0}, L, 1)\nL <= 1"
+    },
+    "RealGreatestLowerBoundFromDefinition": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_greatest_lower_bound_from_definition(S, L)",
+      "summary": {
+        "zh": "由下界条件与极值性质，证明给定实数是集合的下确界。",
+        "en": "Certify a proposed infimum from its bound and extremal properties."
+      },
+      "notes": {
+        "zh": "须证明 S⊆ℝ、S 非空、L∈ℝ、∀x∈S, L≤x，并且对每个实数 u，若 ∀x∈S, u≤x，则 u≤L；结论为 $is_real_greatest_lower_bound(S,L)。仅是一个下界不足以成为下确界。例中 {0} 的下确界为 0，而非任意给出的下界。",
+        "en": "Prove S⊆ℝ, nonempty S, L∈ℝ, ∀x∈S, L≤x, and for every real u, (∀x∈S, u≤x) implies u≤L; conclude $is_real_greatest_lower_bound(S,L). Merely being a lower bound is insufficient. The infimum of {0} is 0, rather than an arbitrary supplied lower bound."
+      },
+      "example": "forall u R:\n    forall x {0}:\n        u<=x\n    =>:\n        u<=0\nrelease thm real_greatest_lower_bound_from_definition({0},0)\n$is_real_greatest_lower_bound({0},0)"
+    },
+    "RealGreatestLowerBoundLowerBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_greatest_lower_bound_lower_bound(S, L)",
+      "summary": {
+        "zh": "从下确界证书中取出其作为下界的全称性质。",
+        "en": "Project the quantified lower bound property of a certified infimum."
+      },
+      "notes": {
+        "zh": "前提为 S⊆ℝ、L∈ℝ 以及 $is_real_greatest_lower_bound(S,L)。结论为 ∀x∈S, L≤x，是一条可继续实例化的全称命题。此入口只取出下界性质，不重新证明下确界的存在性。",
+        "en": "The premises are S⊆ℝ, L∈ℝ and $is_real_greatest_lower_bound(S,L). The conclusion is ∀x∈S, L≤x, a universal statement available for later instantiation. This projects the bound property rather than proving existence again."
+      },
+      "example": "release thm real_greatest_lower_bound_exists({0},-1)\nobtain L from exist L R st {$is_real_greatest_lower_bound({0},L)}\nrelease thm real_greatest_lower_bound_lower_bound({0},L)\nforall x {0}:\n    L<=x"
+    },
+    "RealGreatestLowerBoundUnique": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_greatest_lower_bound_unique(S, L, M)",
+      "summary": {
+        "zh": "同一实数集合的两个下确界相等。",
+        "en": "Two certified infima of the same real set are equal."
+      },
+      "notes": {
+        "zh": "须有 S⊆ℝ、L,M∈ℝ，且 L、M 都具有 S 的下确界证书；结论为 L=M。第二个候选值需要自己的下确界证书，只有下界性质不足以使用唯一性。",
+        "en": "Prove S⊆ℝ, L,M∈ℝ, and that both L and M are certified infima of S; conclude L=M. The second candidate needs its own infimum certificate: a lower bound property alone is insufficient."
+      },
+      "example": "forall u R:\n    forall x {0}:\n        u<=x\n    =>:\n        u<=0\nrelease thm real_greatest_lower_bound_from_definition({0},0)\nrelease thm real_greatest_lower_bound_exists({0},-1)\nobtain L from exist L R st {$is_real_greatest_lower_bound({0},L)}\nrelease thm real_greatest_lower_bound_unique({0},L,0)\nL=0"
+    },
+    "RealGreatestLowerBoundCrosses": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_greatest_lower_bound_crosses(S, L, c)",
+      "summary": {
+        "zh": "任何严格高于下确界的实数，都被集合中的某个元素越过。",
+        "en": "Every real strictly above the infimum is crossed by a member of the set."
+      },
+      "notes": {
+        "zh": "前提为 S⊆ℝ、L,c∈ℝ、$is_real_greatest_lower_bound(S,L) 及 L<c。结论为存在 x∈S，使 x<c。不要求 S 取到其下确界；找到的 x 也不必与 L 不同。比较必须严格，不能把 L<c 改成非严格不等式。",
+        "en": "The premises are S⊆ℝ, L,c∈ℝ, $is_real_greatest_lower_bound(S,L) and L<c. The conclusion gives an x∈S with x<c. S need not attain its infimum, and x need not differ from L. The comparison must be strict; replacing L<c by a non-strict inequality is insufficient."
+      },
+      "example": "forall u R:\n    forall x {0}:\n        u<=x\n    =>:\n        u<=0\nrelease thm real_greatest_lower_bound_from_definition({0},0)\nrelease thm real_greatest_lower_bound_crosses({0},0,1)\nexist x {0} st {x<1}"
+    },
+    "RealGreatestLowerBoundExists": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_greatest_lower_bound_exists(S, l)",
+      "summary": {
+        "zh": "非空且有下界的实数集合存在实数下确界。",
+        "en": "A nonempty real set with a lower bound has a real infimum."
+      },
+      "notes": {
+        "zh": "须证明 S⊆ℝ、S 非空、l∈ℝ，且 ∀x∈S, l≤x。结论为存在 L∈ℝ，使 $is_real_greatest_lower_bound(S,L)。参数 l 是一个已知下界，不要求它就是下确界；本定理也不把它直接作为返回的 L。可用 obtain 从存在命题取出候选值及证书。",
+        "en": "Prove S⊆ℝ, nonempty S, l∈ℝ and ∀x∈S, l≤x. The conclusion is some L∈ℝ with $is_real_greatest_lower_bound(S,L). The parameter l is a known lower bound, not necessarily the infimum, and is not simply returned as L. Use obtain to unpack a candidate and its certificate."
+      },
+      "example": "release thm real_greatest_lower_bound_exists({0}, -1)\nexist L R st {$is_real_greatest_lower_bound({0}, L)}"
+    },
+    "RealGreatestLowerBoundLeMember": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_greatest_lower_bound_le_member(S, L, x)",
+      "summary": {
+        "zh": "集合中的每个元素都不小于其下确界。",
+        "en": "Each member of a real set is at least its infimum."
+      },
+      "notes": {
+        "zh": "前提为 S⊆ℝ、L∈ℝ、$is_real_greatest_lower_bound(S,L)，以及 x∈S；结论为 L≤x。x 必须属于同一个 S，仅有 x∈ℝ 不够。",
+        "en": "The premises are S⊆ℝ, L∈ℝ, $is_real_greatest_lower_bound(S,L) and x∈S; conclude L≤x. The member must belong to that same S: x∈ℝ alone is insufficient."
+      },
+      "example": "release thm real_greatest_lower_bound_exists({0}, -1)\nobtain L from exist L R st {$is_real_greatest_lower_bound({0}, L)}\nrelease thm real_greatest_lower_bound_le_member({0}, L, 0)\nL <= 0"
+    },
+    "RealLowerBoundLeGreatestLowerBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_lower_bound_le_greatest_lower_bound(S, L, l)",
+      "summary": {
+        "zh": "下确界不小于每一个下界。",
+        "en": "The infimum is at least every lower bound."
+      },
+      "notes": {
+        "zh": "须有 S⊆ℝ、L,l∈ℝ、$is_real_greatest_lower_bound(S,L)，并证明 ∀x∈S, l≤x；结论为 l≤L。与 L 比较的是整个 S 的下界，不是 S 中任意一个元素。",
+        "en": "Prove S⊆ℝ, L,l∈ℝ, $is_real_greatest_lower_bound(S,L), and ∀x∈S, l≤x; conclude l≤L. The comparison uses a lower bound of all of S, not an arbitrary member of S."
+      },
+      "example": "release thm real_greatest_lower_bound_exists({0}, -1)\nobtain L from exist L R st {$is_real_greatest_lower_bound({0}, L)}\nrelease thm real_lower_bound_le_greatest_lower_bound({0}, L, -1)\n-1 <= L"
+    },
+    "RealArchimedeanNaturalUpperBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "real_archimedean_natural_upper_bound(a)",
+      "summary": {
+        "zh": "对每个实数，都存在严格大于它的正整数。",
+        "en": "Every real number is strictly less than some positive integer."
+      },
+      "notes": {
+        "zh": "前提为 a∈ℝ。结论为存在 n∈ℕ+，使 a<n；a 可以为负数或零。本定理给出存在性，不计算或指定最小的此类正整数。例中 a=3，可从存在命题取出一个满足 3<n 的 n。",
+        "en": "The premise is a∈ℝ. The conclusion provides an n∈ℕ+ with a<n; a may be negative or zero. This is an existence theorem, not a computation or specification of the least such integer. At a=3 it supplies an existential witness satisfying 3<n."
+      },
+      "example": "release thm real_archimedean_natural_upper_bound(3)\nexist n N+ st {3 < n}"
+    },
+    "RationalBetweenReals": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "rational_between_reals(a, b)",
+      "summary": {
+        "zh": "两个严格有序的实数之间存在有理数。",
+        "en": "There is a rational number strictly between any two strictly ordered reals."
+      },
+      "notes": {
+        "zh": "须有 a,b∈ℝ 且 a<b；结论为存在 q∈ℚ，满足 a<q<b。两个端点都不包含在结论中，a=b 时不能应用。本定理给出有理数的存在性，不指定 q 为中点，也不要求端点为有理数。",
+        "en": "Prove a,b∈ℝ and a<b. The conclusion gives a q∈ℚ with a<q<b, excluding both endpoints. Equal endpoints are not allowed. This proves existence rather than selecting the midpoint; the endpoints need not be rational."
+      },
+      "example": "release thm rational_between_reals(0, 1)\nexist q Q st {0 < q and q < 1}"
+    },
+    "SequenceLimitFromEpsilon": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_from_epsilon(a, L)",
+      "summary": {
+        "zh": "由完整的 ε−N 条件证明实数数列收敛到给定值。",
+        "en": "Prove convergence to a specified real value from the full epsilon–N condition."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ)、L∈ℝ，并证明 ∀ε>0，存在 N∈ℕ+，使所有 n≥N 均满足 |a(n)−L|<ε。结论为 $has_seq_limit(a,L)。N 可以依赖 ε；不能只为某一个精度找到尾段，也不能交换这两个量词的顺序。源码用尾指标集到 ε 邻域原像的包含关系表达同一条件。",
+        "en": "Prove a∈seq(ℝ), L∈ℝ, and that for every ε>0 there is an N∈ℕ+ such that |a(n)−L|<ε for all n≥N. Conclude $has_seq_limit(a,L). N may depend on ε; one accuracy level is insufficient, and the quantifier order matters. The source expresses this condition by inclusion of the tail index set in the preimage of the epsilon neighborhood."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),target_limit R:\n        forall epsilon R+:\n            exist cutoff N+ st {{k N+: k>=cutoff} $subset preimage_set(seq_u,{v R: abs(v-target_limit)<epsilon})}\n        =>:\n            $has_seq_limit(seq_u,target_limit)\n    by thm seq_limit_from_epsilon(seq_u,target_limit) => $has_seq_limit(seq_u,target_limit)"
+    },
+    "SequenceLimitTail": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_tail(a, L, epsilon)",
+      "summary": {
+        "zh": "从收敛到 L 的证明中取出给定精度所需的尾段。",
+        "en": "Extract a tail cutoff for a specified accuracy from a proved limit."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ)、$has_seq_limit(a,L) 及 epsilon∈ℝ+。结论为存在 N∈ℕ+，使 n≥N 时 |a(n)−L|<epsilon；源码返回相应尾指标集的包含关系。N 针对此次给定的正精度，不指定最小截断点，也不要求前 N−1 项已经接近 L。",
+        "en": "Require a∈seq(ℝ), $has_seq_limit(a,L), and epsilon∈ℝ+. The conclusion supplies N∈ℕ+ with |a(n)−L|<epsilon whenever n≥N, represented by the corresponding tail-set inclusion. This cutoff serves the supplied positive accuracy, need not be minimal, and imposes no closeness condition on the earlier terms."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),target_limit R,epsilon R+:\n        $has_seq_limit(seq_u,target_limit)\n        =>:\n            exist cutoff N+ st {{k N+: k>=cutoff} $subset preimage_set(seq_u,{v R: abs(v-target_limit)<epsilon})}\n    release thm seq_limit_tail(seq_u,target_limit,epsilon)"
+    },
+    "SequenceLimitConstant": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_constant(a, L)",
+      "summary": {
+        "zh": "每一项都等于同一实数的数列收敛到该实数。",
+        "en": "A real sequence whose every term equals the same real value converges to that value."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ)、L∈ℝ，并对每个 n∈ℕ+ 证明 a(n)=L；结论为 $has_seq_limit(a,L)。此入口要求全部项恒等，不是只检查有限多个样本。若只在某个尾段恒等，应提供相应的最终相等或 ε−N 证明。",
+        "en": "Require a∈seq(ℝ), L∈ℝ, and a(n)=L for every n∈ℕ+; conclude $has_seq_limit(a,L). This entry requires equality at all indices rather than a finite sample. A merely constant tail needs the corresponding eventual-equality or epsilon–N proof."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),target_limit R:\n        forall k N+:\n            seq_u(k)=target_limit\n        =>:\n            $has_seq_limit(seq_u,target_limit)\n    by thm seq_limit_constant(seq_u,target_limit) => $has_seq_limit(seq_u,target_limit)"
+    },
+    "SequenceLimitNeg": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_neg(a, L)",
+      "summary": {
+        "zh": "取负保持收敛，并使极限取负。",
+        "en": "Negating a convergent sequence negates its limit."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ) 且 $has_seq_limit(a,L)。结论为数列 n↦−a(n) 收敛到 −L；索引仍为全部正整数。定理使用已知的极限证明，不从数列的函数类型推测其是否收敛。",
+        "en": "Require a∈seq(ℝ) and $has_seq_limit(a,L). The conclusion gives limit −L for n↦−a(n), still indexed by all positive integers. A proved limit is used; convergence is not inferred merely from the function type."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),limit_u R:\n        $has_seq_limit(seq_u,limit_u)\n        =>:\n            $has_seq_limit(fn(k N+) R {-seq_u(k)},-limit_u)\n    by thm seq_limit_neg(seq_u,limit_u) => $has_seq_limit(fn(k N+) R {-seq_u(k)},-limit_u)"
+    },
+    "SequenceLimitAbs": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_abs(a, L)",
+      "summary": {
+        "zh": "绝对值保持收敛，极限为原极限的绝对值。",
+        "en": "The absolute values of a convergent sequence converge to the absolute value of its limit."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ) 且 $has_seq_limit(a,L)。结论为数列 n↦|a(n)| 收敛到 |L|；索引仍为全部正整数。定理使用已知的极限证明，不从数列的函数类型推测其是否收敛。",
+        "en": "Require a∈seq(ℝ) and $has_seq_limit(a,L). The conclusion gives limit |L| for n↦|a(n)|, still indexed by all positive integers. A proved limit is used; convergence is not inferred merely from the function type."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),limit_u R:\n        $has_seq_limit(seq_u,limit_u)\n        =>:\n            $has_seq_limit(fn(k N+) R {abs(seq_u(k))},abs(limit_u))\n    by thm seq_limit_abs(seq_u,limit_u) => $has_seq_limit(fn(k N+) R {abs(seq_u(k))},abs(limit_u))"
+    },
+    "SequenceLimitScale": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_scale(a, L, c)",
+      "summary": {
+        "zh": "乘以固定实数后，收敛数列的极限乘以同一实数。",
+        "en": "Multiplying a convergent sequence by a fixed real scalar multiplies its limit by that scalar."
+      },
+      "notes": {
+        "zh": "前提为 a∈seq(ℝ)、$has_seq_limit(a,L)、c∈ℝ；结论为 n↦c·a(n) 收敛到 cL。c 可以为负数或零。这里 c 是不依赖 n 的常数；两个都随 n 变化的因子应使用数列乘积定理。",
+        "en": "Require a∈seq(ℝ), $has_seq_limit(a,L), and c∈ℝ. Then n↦c·a(n) converges to cL. Negative and zero scalars are allowed. The scalar is independent of n; two varying factors require the product theorem."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),limit_u R:\n        $has_seq_limit(seq_u,limit_u)\n        =>:\n            $has_seq_limit(fn(k N+) R {2*seq_u(k)},2*limit_u)\n    by thm seq_limit_scale(seq_u,limit_u,2) => $has_seq_limit(fn(k N+) R {2*seq_u(k)},2*limit_u)"
+    },
+    "SequenceLimitPower": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_power(a, L, p)",
+      "summary": {
+        "zh": "固定自然数次幂保持实数数列的收敛。",
+        "en": "A fixed natural-number power preserves convergence of a real sequence."
+      },
+      "notes": {
+        "zh": "前提为 a∈seq(ℝ)、$has_seq_limit(a,L)、p∈ℕ；结论为 n↦a(n)^p 收敛到 L^p，相关幂表达式仍须有定义。p 是固定自然数，不随 n 变化。此接口不接受负指数或任意实指数；倒数需要非零条件及商的极限定理。",
+        "en": "Require a∈seq(ℝ), $has_seq_limit(a,L), and a fixed p∈ℕ. Then n↦a(n)^p converges to L^p, with the power expressions well-defined. The exponent does not vary with n. Negative or arbitrary real exponents are outside this interface; reciprocals require nonzero conditions and the quotient theorem."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),limit_u R:\n        $has_seq_limit(seq_u,limit_u)\n        =>:\n            $has_seq_limit(fn(k N+) R {seq_u(k)^2},limit_u^2)\n    by thm seq_limit_power(seq_u,limit_u,2) => $has_seq_limit(fn(k N+) R {seq_u(k)^2},limit_u^2)"
+    },
+    "SequenceLimitAdd": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_add(a, b, L, M)",
+      "summary": {
+        "zh": "两个收敛实数数列的和收敛到极限之和。",
+        "en": "The sum of two convergent real sequences converges to the sum of their limits."
+      },
+      "notes": {
+        "zh": "须有 a,b∈seq(ℝ)、$has_seq_limit(a,L) 与 $has_seq_limit(b,M)。结论为 n↦a(n)+b(n) 收敛到 L+M。两项在同一个正整数索引 n 处组合；每个输入数列均须有相应极限证明。",
+        "en": "Require a,b∈seq(ℝ), $has_seq_limit(a,L), and $has_seq_limit(b,M). Then n↦a(n)+b(n) converges to L+M. Terms are combined at the same positive integer index, and both input limits need proofs."
+      },
+      "example": "claim:\n    ? forall seq_u,seq_v seq(R),limit_u,limit_v R:\n        $has_seq_limit(seq_u,limit_u)\n        $has_seq_limit(seq_v,limit_v)\n        =>:\n            $has_seq_limit(fn(k N+) R {seq_u(k)+seq_v(k)},limit_u+limit_v)\n    by thm seq_limit_add(seq_u,seq_v,limit_u,limit_v) => $has_seq_limit(fn(k N+) R {seq_u(k)+seq_v(k)},limit_u+limit_v)"
+    },
+    "SequenceLimitSubtract": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_subtract(a, b, L, M)",
+      "summary": {
+        "zh": "两个收敛实数数列的差收敛到极限之差。",
+        "en": "The difference of two convergent real sequences converges to the difference of their limits."
+      },
+      "notes": {
+        "zh": "须有 a,b∈seq(ℝ)、$has_seq_limit(a,L) 与 $has_seq_limit(b,M)。结论为 n↦a(n)−b(n) 收敛到 L−M。两项在同一个正整数索引 n 处组合；每个输入数列均须有相应极限证明。",
+        "en": "Require a,b∈seq(ℝ), $has_seq_limit(a,L), and $has_seq_limit(b,M). Then n↦a(n)−b(n) converges to L−M. Terms are combined at the same positive integer index, and both input limits need proofs."
+      },
+      "example": "claim:\n    ? forall seq_u,seq_v seq(R),limit_u,limit_v R:\n        $has_seq_limit(seq_u,limit_u)\n        $has_seq_limit(seq_v,limit_v)\n        =>:\n            $has_seq_limit(fn(k N+) R {seq_u(k)-seq_v(k)},limit_u-limit_v)\n    by thm seq_limit_subtract(seq_u,seq_v,limit_u,limit_v) => $has_seq_limit(fn(k N+) R {seq_u(k)-seq_v(k)},limit_u-limit_v)"
+    },
+    "SequenceLimitMultiply": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_multiply(a, b, L, M)",
+      "summary": {
+        "zh": "两个收敛实数数列的积收敛到极限之积。",
+        "en": "The product of two convergent real sequences converges to the product of their limits."
+      },
+      "notes": {
+        "zh": "须有 a,b∈seq(ℝ)、$has_seq_limit(a,L) 与 $has_seq_limit(b,M)。结论为 n↦a(n)·b(n) 收敛到 L·M。两项在同一个正整数索引 n 处组合；每个输入数列均须有相应极限证明。",
+        "en": "Require a,b∈seq(ℝ), $has_seq_limit(a,L), and $has_seq_limit(b,M). Then n↦a(n)·b(n) converges to L·M. Terms are combined at the same positive integer index, and both input limits need proofs."
+      },
+      "example": "claim:\n    ? forall seq_u,seq_v seq(R),limit_u,limit_v R:\n        $has_seq_limit(seq_u,limit_u)\n        $has_seq_limit(seq_v,limit_v)\n        =>:\n            $has_seq_limit(fn(k N+) R {seq_u(k)*seq_v(k)},limit_u*limit_v)\n    by thm seq_limit_multiply(seq_u,seq_v,limit_u,limit_v) => $has_seq_limit(fn(k N+) R {seq_u(k)*seq_v(k)},limit_u*limit_v)"
+    },
+    "SequenceLimitDivide": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_divide(a, b, L, M)",
+      "summary": {
+        "zh": "在分母极限及各分母项均非零的条件下，商数列收敛到极限之商。",
+        "en": "The quotient converges to the quotient of the limits when the denominator limit and every denominator term are nonzero."
+      },
+      "notes": {
+        "zh": "须有 a,b∈seq(ℝ)、a→L、b→M、M≠0，并对所有 n∈ℕ+ 证明 b(n)≠0。结论为 n↦a(n)/b(n) 收敛到 L/M。M≠0 保证极限之商有定义；全部 b(n)≠0 保证商数列在完整正整数域上有定义。仅有非零极限，不能排除前面有限多项分母为零。",
+        "en": "Require a,b∈seq(ℝ), a→L, b→M, M≠0, and b(n)≠0 for every n∈ℕ+. Then n↦a(n)/b(n) converges to L/M. M≠0 makes the limiting quotient defined; nonzero terms make the quotient sequence defined on its entire positive-integer domain. A nonzero limit alone does not exclude zeros among the early denominator terms."
+      },
+      "example": "claim:\n    ? forall seq_u,seq_v seq(R),limit_u,limit_v R:\n        $has_seq_limit(seq_u,limit_u)\n        $has_seq_limit(seq_v,limit_v)\n        limit_v!=0\n        forall k N+:\n            seq_v(k)!=0\n        =>:\n            $has_seq_limit(fn(k N+) R {seq_u(k)/seq_v(k)},limit_u/limit_v)\n    by thm seq_limit_divide(seq_u,seq_v,limit_u,limit_v) => $has_seq_limit(fn(k N+) R {seq_u(k)/seq_v(k)},limit_u/limit_v)"
+    },
+    "SequenceLimitEventuallyEqual": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_eventually_equal(a, b, L, N0)",
+      "summary": {
+        "zh": "两个实数数列若最终相等，则可以传递已知极限。",
+        "en": "Eventual equality transfers a known limit between real sequences."
+      },
+      "notes": {
+        "zh": "须有 a,b∈seq(ℝ)、a→L、N0∈ℕ+，并证明所有 n≥N0 满足 a(n)=b(n)。结论为 b→L。前面的有限项可以不同，但整个尾段必须相等；只在无穷多个索引相等仍不足以使用此规则。",
+        "en": "Require a,b∈seq(ℝ), a→L, N0∈ℕ+, and a(n)=b(n) for all n≥N0. Conclude b→L. The finite initial segments may differ, but equality is needed throughout the tail; agreement at infinitely many indices alone is insufficient."
+      },
+      "example": "claim:\n    ? forall seq_u,seq_v seq(R),target_limit R,tail_cutoff N+:\n        $has_seq_limit(seq_u,target_limit)\n        forall k N+:\n            k>=tail_cutoff\n            =>:\n                seq_u(k)=seq_v(k)\n        =>:\n            $has_seq_limit(seq_v,target_limit)\n    by thm seq_limit_eventually_equal(seq_u,seq_v,target_limit,tail_cutoff) => $has_seq_limit(seq_v,target_limit)"
+    },
+    "SequenceLimitShift": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_shift(a, L, m)",
+      "summary": {
+        "zh": "删除固定有限个初始项，不改变实数数列的极限。",
+        "en": "Deleting a fixed finite initial segment leaves the limit unchanged."
+      },
+      "notes": {
+        "zh": "前提为 a∈seq(ℝ)、a→L、m∈ℕ；结论为 n↦a(n+m) 收敛到 L。新数列仍从 n=1 开始，m=0 时不发生平移。m 是固定非负整数；负平移可能使索引越出原定义域，不属于此接口。",
+        "en": "Require a∈seq(ℝ), a→L, and m∈ℕ. The sequence n↦a(n+m), still starting at n=1, converges to L. The shift is fixed and nonnegative; m=0 changes nothing. Negative shifts may leave the original index domain and are outside this interface."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),target_limit R,amount N:\n        $has_seq_limit(seq_u,target_limit)\n        =>:\n            $has_seq_limit(fn(k N+) R {seq_u(k+amount)},target_limit)\n    by thm seq_limit_shift(seq_u,target_limit,amount) => $has_seq_limit(fn(k N+) R {seq_u(k+amount)},target_limit)"
+    },
+    "SequenceLimitCompare": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_compare(a, b, L, M, N0)",
+      "summary": {
+        "zh": "最终的逐项大小关系传递为两个极限之间的非严格不等式。",
+        "en": "An eventual termwise order yields a non-strict order between two limits."
+      },
+      "notes": {
+        "zh": "须有实数数列 a→L、b→M、N0∈ℕ+，并证明 n≥N0 时 a(n)≤b(n)；结论为 L≤M。前面的有限项不影响结论。该规则不推出 L<M，即使逐项比较可以写成严格不等式。",
+        "en": "Require real sequences a→L and b→M, N0∈ℕ+, and a(n)≤b(n) for all n≥N0. Conclude L≤M; earlier terms do not matter. The conclusion is not L<M, even when the termwise inequalities happen to be strict."
+      },
+      "example": "claim:\n    ? forall seq_u,seq_v seq(R),limit_u,limit_v R,tail_cutoff N+:\n        $has_seq_limit(seq_u,limit_u)\n        $has_seq_limit(seq_v,limit_v)\n        forall k N+:\n            k>=tail_cutoff\n            =>:\n                seq_u(k)<=seq_v(k)\n        =>:\n            limit_u<=limit_v\n    by thm seq_limit_compare(seq_u,seq_v,limit_u,limit_v,tail_cutoff) => limit_u<=limit_v"
+    },
+    "SequenceLimitSqueeze": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_squeeze(a, b, c, L, N0)",
+      "summary": {
+        "zh": "最终夹在两个具有相同极限的实数数列之间的数列，也收敛到该极限。",
+        "en": "A real sequence eventually squeezed between two sequences with the same limit converges to that limit."
+      },
+      "notes": {
+        "zh": "须有 a,b,c∈seq(ℝ)、a→L、c→L、N0∈ℕ+，并对每个 n≥N0 证明 a(n)≤b(n)≤c(n)。结论为 b→L。上下两个界必须趋于同一个 L，且夹逼关系要覆盖整个尾段；不预先要求中间数列收敛。",
+        "en": "Require a,b,c∈seq(ℝ), a→L, c→L, N0∈ℕ+, and a(n)≤b(n)≤c(n) throughout n≥N0. Conclude b→L. Both bounds must approach the same L and the inequalities must cover the whole tail; convergence of the middle sequence is not assumed."
+      },
+      "example": "claim:\n    ? forall seq_u,seq_v,seq_w seq(R),target_limit R,tail_cutoff N+:\n        $has_seq_limit(seq_u,target_limit)\n        $has_seq_limit(seq_w,target_limit)\n        forall k N+:\n            k>=tail_cutoff\n            =>:\n                seq_u(k)<=seq_v(k)\n                seq_v(k)<=seq_w(k)\n        =>:\n            $has_seq_limit(seq_v,target_limit)\n    by thm seq_limit_squeeze(seq_u,seq_v,seq_w,target_limit,tail_cutoff) => $has_seq_limit(seq_v,target_limit)"
+    },
+    "SequenceLimitUnique": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_unique(a, L, M)",
+      "summary": {
+        "zh": "同一个实数数列的两个极限相等。",
+        "en": "Two limits of the same real sequence are equal."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ)，并分别证明 $has_seq_limit(a,L) 与 $has_seq_limit(a,M)；结论为 L=M。两个候选值都需要自己的收敛证明，不能仅凭数列有某个极限就把任意实数认作该极限。",
+        "en": "Require a∈seq(ℝ), with separate proofs of $has_seq_limit(a,L) and $has_seq_limit(a,M); conclude L=M. Both candidates need convergence proofs. Mere existence of some limit does not identify an arbitrary real candidate."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),limit_u,limit_v R:\n        $has_seq_limit(seq_u,limit_u)\n        $has_seq_limit(seq_u,limit_v)\n        =>:\n            limit_u=limit_v\n    by thm seq_limit_unique(seq_u,limit_u,limit_v) => limit_u=limit_v"
+    },
+    "SequenceLimitExists": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_exists(a, L)",
+      "summary": {
+        "zh": "由一个已证明的极限候选值，建立该数列存在实数极限。",
+        "en": "Establish existence of a real limit from a proved candidate."
+      },
+      "notes": {
+        "zh": "前提为 a∈seq(ℝ) 及 $has_seq_limit(a,L)。结论为存在 t∈ℝ，使 $has_seq_limit(a,t)；已知的 L 提供见证。此规则不声称每个实数数列都收敛，也不凭空寻找候选值。存在命题可供后续 lim(a) 的使用。",
+        "en": "Require a∈seq(ℝ) and $has_seq_limit(a,L). Conclude that some t∈ℝ satisfies $has_seq_limit(a,t), with L furnishing the witness. This does not assert convergence of every real sequence or discover a candidate from nothing. The existence proposition supports subsequent use of lim(a)."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R),target_limit R:\n        $has_seq_limit(seq_u,target_limit)\n        =>:\n            exist limit_witness R st {$has_seq_limit(seq_u,limit_witness)}\n    release thm seq_limit_exists(seq_u,target_limit)"
+    },
+    "SequenceLimitSelected": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_selected(a)",
+      "summary": {
+        "zh": "已证明极限存在时，确认 lim(a) 是该数列的极限。",
+        "en": "Once a limit is proved to exist, certify lim(a) as a limit of the sequence."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ)，并已证明存在 L∈ℝ 满足 $has_seq_limit(a,L)。结论为 $has_seq_limit(a,lim(a))。lim 只接收数列这一个参数；其使用需要保留的存在性证明。数列的类型、若干数值样本或一个尚未证明的候选值，均不能替代此前提。",
+        "en": "Require a∈seq(ℝ) and a proof that some L∈ℝ satisfies $has_seq_limit(a,L). Conclude $has_seq_limit(a,lim(a)). lim takes the sequence as its single argument and consumes retained existence evidence. A sequence type, a numerical sample, or an unproved candidate does not replace that premise."
+      },
+      "example": "claim:\n    ? forall seq_u seq(R):\n        exist limit_witness R st {$has_seq_limit(seq_u,limit_witness)}\n        =>:\n            $has_seq_limit(seq_u,lim(seq_u))\n    by thm seq_limit_selected(seq_u) => $has_seq_limit(seq_u,lim(seq_u))"
+    },
+    "SequenceLimsupFromEpsilon": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_from_epsilon(a, L)",
+      "summary": {
+        "zh": "由最终界与每个尾段中的逼近条件，证明给定上极限。",
+        "en": "Certify a proposed limsup from an eventual bound and hits on every tail."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 L∈ℝ，并证明两部分：∀ε>0，存在 N∈ℕ+，使所有 n≥N 满足 a(n)<L+ε；且 ∀ε>0、∀N0∈ℕ+，存在 n≥N0 满足 L−ε<a(n)。结论为 $has_seq_limsup(a,L)。两部分缺一不可，只有最终界或只有反复逼近都不够。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. For L∈ℝ prove both clauses: for every ε>0 some N∈ℕ+ makes a(n)<L+ε hold for all n≥N; and for every ε>0 and N0∈ℕ+ some n≥N0 satisfies L−ε<a(n). Conclude $has_seq_limsup(a,L). Neither an eventual bound alone nor repeated hits alone suffices."
+      },
+      "example": "thm seq_limsup_from_epsilon_example:\n    ? forall a seq(R),L R:\n        forall epsilon R+:\n            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:v<L+epsilon})}\n        forall epsilon R+,n0 N+:\n            exist n N+ st {n>=n0 and L-epsilon<a(n)}\n        =>:\n            $has_seq_limsup(a,L)\n    release thm seq_limsup_from_epsilon(a,L)"
+    },
+    "SequenceLimsupBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_bound(a, L, epsilon)",
+      "summary": {
+        "zh": "从已知上极限取出给定正精度下的最终界。",
+        "en": "Extract the eventual bound at a given positive accuracy from a proved limsup."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。前提为 $has_seq_limsup(a,L)、epsilon∈ℝ+。结论为存在 N∈ℕ+，使所有 n≥N 满足 a(n)<L+epsilon。源码用尾指标集包含于对应原像来表达这个全称结论。它不是对全部初始项的界。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L) and epsilon∈ℝ+. There is an N∈ℕ+ after which a(n)<L+epsilon. A tail-set inclusion represents this universal conclusion. The earlier terms are not constrained by this bound."
+      },
+      "example": "thm seq_limsup_bound_example:\n    ? forall a seq(R),L R,epsilon R+:\n        $has_seq_limsup(a,L)\n        =>:\n            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:v<L+epsilon})}\n    release thm seq_limsup_bound(a,L,epsilon)"
+    },
+    "SequenceLimsupHit": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_hit(a, L, epsilon, N0)",
+      "summary": {
+        "zh": "在任意指定尾段中，找到从另一侧逼近上极限的项。",
+        "en": "Find a term approaching the limsup from the other side in any specified tail."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、epsilon∈ℝ+、N0∈ℕ+。结论为存在 n∈ℕ+，同时满足 n≥N0 与 L−epsilon<a(n)。这里保证每个尾段中至少有一项，并不要求该尾段的所有项都满足同一侧的逼近不等式。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), epsilon∈ℝ+, and N0∈ℕ+. The conclusion supplies n∈ℕ+ with n≥N0 and L−epsilon<a(n). At least one such term exists in every tail; this is not an assertion about all terms of that tail."
+      },
+      "example": "thm seq_limsup_hit_example:\n    ? forall a seq(R),L R,epsilon R+,n0 N+:\n        $has_seq_limsup(a,L)\n        =>:\n            exist n N+ st {n>=n0 and L-epsilon<a(n)}\n    release thm seq_limsup_hit(a,L,epsilon,n0)"
+    },
+    "SequenceLimsupUnique": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_unique(a, L, M)",
+      "summary": {
+        "zh": "同一实数数列的两个有限上极限相等。",
+        "en": "Two finite limsup candidates for the same real sequence are equal."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须分别有 $has_seq_limsup(a,L) 与 $has_seq_limsup(a,M) 的证明；结论为 L=M。只知道其中一个候选值，或只证明另一个候选值的一部分 ε 条件，不能应用唯一性。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Prove both $has_seq_limsup(a,L) and $has_seq_limsup(a,M); conclude L=M. One candidate, or only part of the epsilon conditions for the other, is insufficient."
+      },
+      "example": "thm seq_limsup_unique_example:\n    ? forall a seq(R),A,B R:\n        $has_seq_limsup(a,A)\n        $has_seq_limsup(a,B)\n        =>:\n            A=B\n    release thm seq_limsup_unique(a,A,B)"
+    },
+    "SequenceLimsupExists": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_exists(a, L)",
+      "summary": {
+        "zh": "由已证明的上极限候选值建立有限上极限的存在性。",
+        "en": "Establish existence of a finite limsup from a proved candidate."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。前提为 $has_seq_limsup(a,L)，结论为存在 t∈ℝ 满足 $has_seq_limsup(a,t)。本规则使用已有候选值 L，不声称任意实数数列都具有有限上极限；也不计算新的数值。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. From $has_seq_limsup(a,L), conclude that some t∈ℝ satisfies $has_seq_limsup(a,t). This uses the existing candidate L, asserts no finite limsup for arbitrary real sequences, and computes no new numerical value."
+      },
+      "example": "thm seq_limsup_exists_example:\n    ? forall a seq(R),L R:\n        $has_seq_limsup(a,L)\n        =>:\n            exist u R st {$has_seq_limsup(a,u)}\n    release thm seq_limsup_exists(a,L)"
+    },
+    "SequenceLimsupSelected": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_selected(a)",
+      "summary": {
+        "zh": "有限上极限已证明存在时，确认 limsup(a) 的候选值性质。",
+        "en": "Certify limsup(a) after a finite limsup has been proved to exist."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须先证明存在 L∈ℝ 满足 $has_seq_limsup(a,L)；结论为 $has_seq_limsup(a,limsup(a))。选择项 limsup(a) 需要这一存在性依据，不能只由 a 的数列类型或未验证的数值猜测引入。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. First prove that some L∈ℝ satisfies $has_seq_limsup(a,L); conclude $has_seq_limsup(a,limsup(a)). The selector limsup(a) requires this existence evidence, not merely a sequence type or an unverified numerical guess."
+      },
+      "example": "thm seq_limsup_selected_example:\n    ? forall a seq(R):\n        exist L R st {$has_seq_limsup(a,L)}\n        =>:\n            $has_seq_limsup(a,limsup(a))\n    release thm seq_limsup_selected(a)"
+    },
+    "SequenceLimsupConstant": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_constant(a, L)",
+      "summary": {
+        "zh": "恒为实数 L 的数列，其有限上极限为 L。",
+        "en": "A sequence constantly equal to a real L has finite limsup L."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 L∈ℝ，且对所有 n∈ℕ+ 证明 a(n)=L；结论为 $has_seq_limsup(a,L)。此入口检查所有项的恒等条件，不把有限样本当作恒等证明。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Prove L∈ℝ and a(n)=L for every n∈ℕ+; conclude $has_seq_limsup(a,L). This entry requires the identity at every index, not a finite sample."
+      },
+      "example": "thm seq_limsup_constant_example:\n    ? forall a seq(R),L R:\n        forall n N+:\n            a(n)=L\n        =>:\n            $has_seq_limsup(a,L)\n    release thm seq_limsup_constant(a,L)"
+    },
+    "SequenceLimsupFromLimit": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_from_limit(a, L)",
+      "summary": {
+        "zh": "实数数列收敛到 L 时，其有限上极限也为 L。",
+        "en": "A real sequence converging to L has finite limsup L."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。前提为 $has_seq_limit(a,L)，结论为 $has_seq_limsup(a,L)。该方向从通常的收敛证明推出上极限性质；只知道一个上极限存在，不能反向推出数列收敛。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. From $has_seq_limit(a,L), conclude $has_seq_limsup(a,L). This direction uses ordinary convergence; existence of just one extremal limit does not imply convergence in the reverse direction."
+      },
+      "example": "thm seq_limsup_from_limit_example:\n    ? forall a seq(R),L R:\n        $has_seq_limit(a,L)\n        =>:\n            $has_seq_limsup(a,L)\n    release thm seq_limsup_from_limit(a,L)"
+    },
+    "SequenceLimsupCompare": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_compare(a, b, L, M, N0)",
+      "summary": {
+        "zh": "最终逐项有序的数列，其有限上极限保持同一非严格顺序。",
+        "en": "Eventual termwise order is preserved by finite limsup values."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、$has_seq_limsup(b,M)、N0∈ℕ+，并证明 n≥N0 时 a(n)≤b(n)；结论为 L≤M。比较覆盖整个尾段，结论为非严格不等式。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), $has_seq_limsup(b,M), N0∈ℕ+, and a(n)≤b(n) for all n≥N0. Conclude L≤M. The order must cover the entire tail, and the conclusion is non-strict."
+      },
+      "example": "thm seq_limsup_compare_example:\n    ? forall a,b seq(R),A,B R,n0 N+:\n        $has_seq_limsup(a,A)\n        $has_seq_limsup(b,B)\n        forall n N+:\n            n>=n0\n            =>:\n                a(n)<=b(n)\n        =>:\n            A<=B\n    release thm seq_limsup_compare(a,b,A,B,n0)"
+    },
+    "SequenceLimsupEventuallyEqual": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_eventually_equal(a, b, L, N0)",
+      "summary": {
+        "zh": "最终相等的实数数列具有相同的有限上极限。",
+        "en": "Eventually equal real sequences share the same finite limsup."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、N0∈ℕ+，以及所有 n≥N0 上的 b(n)=a(n)；结论为 $has_seq_limsup(b,L)。允许有限个初始项不同，但不能把“整个尾段相等”换成“某些索引处相等”。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), N0∈ℕ+, and b(n)=a(n) at every n≥N0; conclude $has_seq_limsup(b,L). Finitely many initial differences are allowed; equality only at selected indices is insufficient."
+      },
+      "example": "thm seq_limsup_eventually_equal_example:\n    ? forall a,b seq(R),L R,n0 N+:\n        $has_seq_limsup(a,L)\n        forall n N+:\n            n>=n0\n            =>:\n                b(n)=a(n)\n        =>:\n            $has_seq_limsup(b,L)\n    release thm seq_limsup_eventually_equal(a,b,L,n0)"
+    },
+    "SequenceLimsupShift": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_shift(a, b, L, m)",
+      "summary": {
+        "zh": "删除固定有限个初始项，不改变有限上极限。",
+        "en": "A fixed nonnegative index shift preserves a finite limsup."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、m∈ℕ，并对所有 n∈ℕ+ 证明 b(n)=a(n+m)；结论为 $has_seq_limsup(b,L)。此接口显式接收新数列 b 并核验其关系，和直接构造平移数列的 seq_limit_shift 接口不同。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), m∈ℕ, and b(n)=a(n+m) for every n∈ℕ+; conclude $has_seq_limsup(b,L). This interface takes the new sequence b explicitly and checks its relation, unlike seq_limit_shift, which constructs the shifted sequence."
+      },
+      "example": "thm seq_limsup_shift_example:\n    ? forall a,b seq(R),L R,m N:\n        $has_seq_limsup(a,L)\n        forall n N+:\n            b(n)=a(n+m)\n        =>:\n            $has_seq_limsup(b,L)\n    release thm seq_limsup_shift(a,b,L,m)"
+    },
+    "SequenceLimsupNeg": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_neg(a, b, L)",
+      "summary": {
+        "zh": "取负把有限上极限变为相反数列的有限下极限。",
+        "en": "Negation converts a finite limsup into the opposite extremal limit."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L) 及对所有 n∈ℕ+ 成立的 b(n)=−a(n)；结论为 $has_seq_liminf(b,−L)。取负会交换上极限和下极限，不能把结论仍写成 has_seq_limsup(b,−L)。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L) and b(n)=−a(n) for every n∈ℕ+; conclude $has_seq_liminf(b,−L). Negation swaps limsup and liminf; it does not retain has_seq_limsup(b,−L)."
+      },
+      "example": "thm seq_limsup_neg_example:\n    ? forall a,b seq(R),L R:\n        $has_seq_limsup(a,L)\n        forall n N+:\n            b(n)=-a(n)\n        =>:\n            $has_seq_liminf(b,-L)\n    release thm seq_limsup_neg(a,b,L)"
+    },
+    "SequenceLimsupAddConstant": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_add_constant(a, b, L, c)",
+      "summary": {
+        "zh": "逐项加上固定实数，使有限上极限加上同一实数。",
+        "en": "Adding a fixed real constant adds that constant to a finite limsup."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、c∈ℝ，以及所有 n∈ℕ+ 上的 b(n)=a(n)+c；结论为 $has_seq_limsup(b,L+c)。c 不随索引变化；一个变化的加数应使用相应的收敛加数或和估计定理。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), c∈ℝ, and b(n)=a(n)+c for every n∈ℕ+; conclude $has_seq_limsup(b,L+c). The constant is independent of the index; varying addends need the convergent-addend or sum-bound law."
+      },
+      "example": "thm seq_limsup_add_constant_example:\n    ? forall a,b seq(R),L,c R:\n        $has_seq_limsup(a,L)\n        forall n N+:\n            b(n)=a(n)+c\n        =>:\n            $has_seq_limsup(b,L+c)\n    release thm seq_limsup_add_constant(a,b,L,c)"
+    },
+    "SequenceLimsupScaleNonnegative": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_scale_nonnegative(a, b, L, c)",
+      "summary": {
+        "zh": "非负实数倍保持有限上极限的种类，并按比例缩放其值。",
+        "en": "Nonnegative scaling preserves the kind of finite extremal limit and scales its value."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、c∈ℝ、0≤c，且对所有 n∈ℕ+ 有 b(n)=c·a(n)；结论为 $has_seq_limsup(b,cL)。c=0 允许使用此规则，c<0 则不允许；负倍数会交换上下极限。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), c∈ℝ, 0≤c, and b(n)=c·a(n) for every n∈ℕ+; conclude $has_seq_limsup(b,cL). Zero is allowed. Negative scalars are excluded because they swap the extremal-limit kinds."
+      },
+      "example": "thm seq_limsup_scale_nonnegative_example:\n    ? forall a,b seq(R),L,c R:\n        $has_seq_limsup(a,L)\n        0<=c\n        forall n N+:\n            b(n)=c*a(n)\n        =>:\n            $has_seq_limsup(b,c*L)\n    release thm seq_limsup_scale_nonnegative(a,b,L,c)"
+    },
+    "SequenceLimsupScaleNegative": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_scale_negative(a, b, L, c)",
+      "summary": {
+        "zh": "严格负实数倍把有限上极限变为有限下极限。",
+        "en": "Strictly negative scaling swaps the kind of finite extremal limit."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、c∈ℝ、c<0，且对所有 n∈ℕ+ 有 b(n)=c·a(n)；结论为 $has_seq_liminf(b,cL)。这里负号交换上下极限；c=0 不满足此前提，应使用非负倍数规则。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), c∈ℝ, c<0, and b(n)=c·a(n) for every n∈ℕ+; conclude $has_seq_liminf(b,cL). The negative sign swaps limsup and liminf. Zero does not satisfy this premise and belongs to the nonnegative-scaling rule."
+      },
+      "example": "thm seq_limsup_scale_negative_example:\n    ? forall a,b seq(R),L,c R:\n        $has_seq_limsup(a,L)\n        c<0\n        forall n N+:\n            b(n)=c*a(n)\n        =>:\n            $has_seq_liminf(b,c*L)\n    release thm seq_limsup_scale_negative(a,b,L,c)"
+    },
+    "SequenceLimsupAddConvergent": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_add_convergent(a, b, h, L, M)",
+      "summary": {
+        "zh": "加上收敛实数数列后，有限上极限加上该加数的极限。",
+        "en": "Adding a convergent real sequence adds its ordinary limit to a finite limsup."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、$has_seq_limit(b,M)，并对所有 n∈ℕ+ 证明 h(n)=a(n)+b(n)；结论为 $has_seq_limsup(h,L+M)。不要求 a 本身收敛；但 b 需要通常的极限证明，仅有其上极限不够。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), $has_seq_limit(b,M), and h(n)=a(n)+b(n) for every n∈ℕ+; conclude $has_seq_limsup(h,L+M). The sequence a need not converge, but b needs an ordinary limit, not merely an extremal-limit candidate."
+      },
+      "example": "thm seq_limsup_add_convergent_example:\n    ? forall a,b,h seq(R),L,M R:\n        $has_seq_limsup(a,L)\n        $has_seq_limit(b,M)\n        forall n N+:\n            h(n)=a(n)+b(n)\n        =>:\n            $has_seq_limsup(h,L+M)\n    release thm seq_limsup_add_convergent(a,b,h,L,M)"
+    },
+    "SequenceLimsupSumBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_sum_bound(a, b, h, L, M, H, B1, B2)",
+      "summary": {
+        "zh": "两个有界实数数列之和的有限上极限满足次可加不等式。",
+        "en": "The finite limsup of a sum satisfies a subadditive bound."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须有 $has_seq_limsup(a,L)、$has_seq_limsup(b,M)、$has_seq_limsup(h,H)，且所有 n∈ℕ+ 满足 h(n)=a(n)+b(n)。还须给出 B1,B2∈ℝ+ 并对所有 n 证明 |a(n)|≤B1、|b(n)|≤B2。结论为 H≤L+M，不是一般的等式；不能只凭两个上极限就省略绝对值界或和数列的候选值证明。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Require $has_seq_limsup(a,L), $has_seq_limsup(b,M), $has_seq_limsup(h,H), and h(n)=a(n)+b(n) for every n∈ℕ+. Supply B1,B2∈ℝ+ with |a(n)|≤B1 and |b(n)|≤B2 for all n. Conclude H≤L+M, not an equality in general. The explicit absolute bounds and the candidate for the sum cannot be omitted."
+      },
+      "example": "thm seq_limsup_sum_bound_example:\n    ? forall a,b,h seq(R),A,B,S R,M1,M2 R+:\n        $has_seq_limsup(a,A)\n        $has_seq_limsup(b,B)\n        $has_seq_limsup(h,S)\n        forall n N+:\n            h(n)=a(n)+b(n)\n        forall n N+:\n            abs(a(n))<=M1\n        forall n N+:\n            abs(b(n))<=M2\n        =>:\n            S<=A+B\n    release thm seq_limsup_sum_bound(a,b,h,A,B,S,M1,M2)"
+    },
+    "SequenceLimsupBoundedExists": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limsup_bounded_exists(a, B)",
+      "summary": {
+        "zh": "有界实数数列存在有限实数上极限。",
+        "en": "A bounded real sequence has a finite real limsup."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的上极限取有限实数值，不包括 ±∞。须给出 B∈ℝ+，并对所有 n∈ℕ+ 证明 |a(n)|≤B。结论为存在 L∈ℝ，使 $has_seq_limsup(a,L)。这是全体项的双侧有界性，不仅是单侧上界或下界；该定理不声称数列收敛，也不指定候选值等于 B。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real limsup values, not ±∞. Supply B∈ℝ+ with |a(n)|≤B for every n∈ℕ+. The conclusion provides some L∈ℝ with $has_seq_limsup(a,L). This is a two-sided bound on all terms, not merely a one-sided bound. The theorem neither asserts convergence nor identifies B as the extremal value."
+      },
+      "example": "thm seq_limsup_bounded_exists_example:\n    ? forall a seq(R),M R+:\n        forall n N+:\n            abs(a(n))<=M\n        =>:\n            exist L R st {$has_seq_limsup(a,L)}\n    release thm seq_limsup_bounded_exists(a,M)"
+    },
+    "SequenceLiminfFromEpsilon": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_from_epsilon(a, L)",
+      "summary": {
+        "zh": "由最终界与每个尾段中的逼近条件，证明给定下极限。",
+        "en": "Certify a proposed liminf from an eventual bound and hits on every tail."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 L∈ℝ，并证明两部分：∀ε>0，存在 N∈ℕ+，使所有 n≥N 满足 L−ε<a(n)；且 ∀ε>0、∀N0∈ℕ+，存在 n≥N0 满足 a(n)<L+ε。结论为 $has_seq_liminf(a,L)。两部分缺一不可，只有最终界或只有反复逼近都不够。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. For L∈ℝ prove both clauses: for every ε>0 some N∈ℕ+ makes L−ε<a(n) hold for all n≥N; and for every ε>0 and N0∈ℕ+ some n≥N0 satisfies a(n)<L+ε. Conclude $has_seq_liminf(a,L). Neither an eventual bound alone nor repeated hits alone suffices."
+      },
+      "example": "thm seq_liminf_from_epsilon_example:\n    ? forall a seq(R),L R:\n        forall epsilon R+:\n            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:L-epsilon<v})}\n        forall epsilon R+,n0 N+:\n            exist n N+ st {n>=n0 and a(n)<L+epsilon}\n        =>:\n            $has_seq_liminf(a,L)\n    release thm seq_liminf_from_epsilon(a,L)"
+    },
+    "SequenceLiminfBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_bound(a, L, epsilon)",
+      "summary": {
+        "zh": "从已知下极限取出给定正精度下的最终界。",
+        "en": "Extract the eventual bound at a given positive accuracy from a proved liminf."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。前提为 $has_seq_liminf(a,L)、epsilon∈ℝ+。结论为存在 N∈ℕ+，使所有 n≥N 满足 L−epsilon<a(n)。源码用尾指标集包含于对应原像来表达这个全称结论。它不是对全部初始项的界。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L) and epsilon∈ℝ+. There is an N∈ℕ+ after which L−epsilon<a(n). A tail-set inclusion represents this universal conclusion. The earlier terms are not constrained by this bound."
+      },
+      "example": "thm seq_liminf_bound_example:\n    ? forall a seq(R),L R,epsilon R+:\n        $has_seq_liminf(a,L)\n        =>:\n            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:L-epsilon<v})}\n    release thm seq_liminf_bound(a,L,epsilon)"
+    },
+    "SequenceLiminfHit": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_hit(a, L, epsilon, N0)",
+      "summary": {
+        "zh": "在任意指定尾段中，找到从另一侧逼近下极限的项。",
+        "en": "Find a term approaching the liminf from the other side in any specified tail."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、epsilon∈ℝ+、N0∈ℕ+。结论为存在 n∈ℕ+，同时满足 n≥N0 与 a(n)<L+epsilon。这里保证每个尾段中至少有一项，并不要求该尾段的所有项都满足同一侧的逼近不等式。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), epsilon∈ℝ+, and N0∈ℕ+. The conclusion supplies n∈ℕ+ with n≥N0 and a(n)<L+epsilon. At least one such term exists in every tail; this is not an assertion about all terms of that tail."
+      },
+      "example": "thm seq_liminf_hit_example:\n    ? forall a seq(R),L R,epsilon R+,n0 N+:\n        $has_seq_liminf(a,L)\n        =>:\n            exist n N+ st {n>=n0 and a(n)<L+epsilon}\n    release thm seq_liminf_hit(a,L,epsilon,n0)"
+    },
+    "SequenceLiminfUnique": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_unique(a, L, M)",
+      "summary": {
+        "zh": "同一实数数列的两个有限下极限相等。",
+        "en": "Two finite liminf candidates for the same real sequence are equal."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须分别有 $has_seq_liminf(a,L) 与 $has_seq_liminf(a,M) 的证明；结论为 L=M。只知道其中一个候选值，或只证明另一个候选值的一部分 ε 条件，不能应用唯一性。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Prove both $has_seq_liminf(a,L) and $has_seq_liminf(a,M); conclude L=M. One candidate, or only part of the epsilon conditions for the other, is insufficient."
+      },
+      "example": "thm seq_liminf_unique_example:\n    ? forall a seq(R),A,B R:\n        $has_seq_liminf(a,A)\n        $has_seq_liminf(a,B)\n        =>:\n            A=B\n    release thm seq_liminf_unique(a,A,B)"
+    },
+    "SequenceLiminfExists": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_exists(a, L)",
+      "summary": {
+        "zh": "由已证明的下极限候选值建立有限下极限的存在性。",
+        "en": "Establish existence of a finite liminf from a proved candidate."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。前提为 $has_seq_liminf(a,L)，结论为存在 t∈ℝ 满足 $has_seq_liminf(a,t)。本规则使用已有候选值 L，不声称任意实数数列都具有有限下极限；也不计算新的数值。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. From $has_seq_liminf(a,L), conclude that some t∈ℝ satisfies $has_seq_liminf(a,t). This uses the existing candidate L, asserts no finite liminf for arbitrary real sequences, and computes no new numerical value."
+      },
+      "example": "thm seq_liminf_exists_example:\n    ? forall a seq(R),L R:\n        $has_seq_liminf(a,L)\n        =>:\n            exist u R st {$has_seq_liminf(a,u)}\n    release thm seq_liminf_exists(a,L)"
+    },
+    "SequenceLiminfSelected": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_selected(a)",
+      "summary": {
+        "zh": "有限下极限已证明存在时，确认 liminf(a) 的候选值性质。",
+        "en": "Certify liminf(a) after a finite liminf has been proved to exist."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须先证明存在 L∈ℝ 满足 $has_seq_liminf(a,L)；结论为 $has_seq_liminf(a,liminf(a))。选择项 liminf(a) 需要这一存在性依据，不能只由 a 的数列类型或未验证的数值猜测引入。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. First prove that some L∈ℝ satisfies $has_seq_liminf(a,L); conclude $has_seq_liminf(a,liminf(a)). The selector liminf(a) requires this existence evidence, not merely a sequence type or an unverified numerical guess."
+      },
+      "example": "thm seq_liminf_selected_example:\n    ? forall a seq(R):\n        exist L R st {$has_seq_liminf(a,L)}\n        =>:\n            $has_seq_liminf(a,liminf(a))\n    release thm seq_liminf_selected(a)"
+    },
+    "SequenceLiminfConstant": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_constant(a, L)",
+      "summary": {
+        "zh": "恒为实数 L 的数列，其有限下极限为 L。",
+        "en": "A sequence constantly equal to a real L has finite liminf L."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 L∈ℝ，且对所有 n∈ℕ+ 证明 a(n)=L；结论为 $has_seq_liminf(a,L)。此入口检查所有项的恒等条件，不把有限样本当作恒等证明。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Prove L∈ℝ and a(n)=L for every n∈ℕ+; conclude $has_seq_liminf(a,L). This entry requires the identity at every index, not a finite sample."
+      },
+      "example": "thm seq_liminf_constant_example:\n    ? forall a seq(R),L R:\n        forall n N+:\n            a(n)=L\n        =>:\n            $has_seq_liminf(a,L)\n    release thm seq_liminf_constant(a,L)"
+    },
+    "SequenceLiminfFromLimit": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_from_limit(a, L)",
+      "summary": {
+        "zh": "实数数列收敛到 L 时，其有限下极限也为 L。",
+        "en": "A real sequence converging to L has finite liminf L."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。前提为 $has_seq_limit(a,L)，结论为 $has_seq_liminf(a,L)。该方向从通常的收敛证明推出下极限性质；只知道一个下极限存在，不能反向推出数列收敛。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. From $has_seq_limit(a,L), conclude $has_seq_liminf(a,L). This direction uses ordinary convergence; existence of just one extremal limit does not imply convergence in the reverse direction."
+      },
+      "example": "thm seq_liminf_from_limit_example:\n    ? forall a seq(R),L R:\n        $has_seq_limit(a,L)\n        =>:\n            $has_seq_liminf(a,L)\n    release thm seq_liminf_from_limit(a,L)"
+    },
+    "SequenceLiminfCompare": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_compare(a, b, L, M, N0)",
+      "summary": {
+        "zh": "最终逐项有序的数列，其有限下极限保持同一非严格顺序。",
+        "en": "Eventual termwise order is preserved by finite liminf values."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、$has_seq_liminf(b,M)、N0∈ℕ+，并证明 n≥N0 时 a(n)≤b(n)；结论为 L≤M。比较覆盖整个尾段，结论为非严格不等式。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), $has_seq_liminf(b,M), N0∈ℕ+, and a(n)≤b(n) for all n≥N0. Conclude L≤M. The order must cover the entire tail, and the conclusion is non-strict."
+      },
+      "example": "thm seq_liminf_compare_example:\n    ? forall a,b seq(R),A,B R,n0 N+:\n        $has_seq_liminf(a,A)\n        $has_seq_liminf(b,B)\n        forall n N+:\n            n>=n0\n            =>:\n                a(n)<=b(n)\n        =>:\n            A<=B\n    release thm seq_liminf_compare(a,b,A,B,n0)"
+    },
+    "SequenceLiminfEventuallyEqual": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_eventually_equal(a, b, L, N0)",
+      "summary": {
+        "zh": "最终相等的实数数列具有相同的有限下极限。",
+        "en": "Eventually equal real sequences share the same finite liminf."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、N0∈ℕ+，以及所有 n≥N0 上的 b(n)=a(n)；结论为 $has_seq_liminf(b,L)。允许有限个初始项不同，但不能把“整个尾段相等”换成“某些索引处相等”。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), N0∈ℕ+, and b(n)=a(n) at every n≥N0; conclude $has_seq_liminf(b,L). Finitely many initial differences are allowed; equality only at selected indices is insufficient."
+      },
+      "example": "thm seq_liminf_eventually_equal_example:\n    ? forall a,b seq(R),L R,n0 N+:\n        $has_seq_liminf(a,L)\n        forall n N+:\n            n>=n0\n            =>:\n                b(n)=a(n)\n        =>:\n            $has_seq_liminf(b,L)\n    release thm seq_liminf_eventually_equal(a,b,L,n0)"
+    },
+    "SequenceLiminfShift": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_shift(a, b, L, m)",
+      "summary": {
+        "zh": "删除固定有限个初始项，不改变有限下极限。",
+        "en": "A fixed nonnegative index shift preserves a finite liminf."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、m∈ℕ，并对所有 n∈ℕ+ 证明 b(n)=a(n+m)；结论为 $has_seq_liminf(b,L)。此接口显式接收新数列 b 并核验其关系，和直接构造平移数列的 seq_limit_shift 接口不同。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), m∈ℕ, and b(n)=a(n+m) for every n∈ℕ+; conclude $has_seq_liminf(b,L). This interface takes the new sequence b explicitly and checks its relation, unlike seq_limit_shift, which constructs the shifted sequence."
+      },
+      "example": "thm seq_liminf_shift_example:\n    ? forall a,b seq(R),L R,m N:\n        $has_seq_liminf(a,L)\n        forall n N+:\n            b(n)=a(n+m)\n        =>:\n            $has_seq_liminf(b,L)\n    release thm seq_liminf_shift(a,b,L,m)"
+    },
+    "SequenceLiminfNeg": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_neg(a, b, L)",
+      "summary": {
+        "zh": "取负把有限下极限变为相反数列的有限上极限。",
+        "en": "Negation converts a finite liminf into the opposite extremal limit."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L) 及对所有 n∈ℕ+ 成立的 b(n)=−a(n)；结论为 $has_seq_limsup(b,−L)。取负会交换上极限和下极限，不能把结论仍写成 has_seq_liminf(b,−L)。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L) and b(n)=−a(n) for every n∈ℕ+; conclude $has_seq_limsup(b,−L). Negation swaps limsup and liminf; it does not retain has_seq_liminf(b,−L)."
+      },
+      "example": "thm seq_liminf_neg_example:\n    ? forall a,b seq(R),L R:\n        $has_seq_liminf(a,L)\n        forall n N+:\n            b(n)=-a(n)\n        =>:\n            $has_seq_limsup(b,-L)\n    release thm seq_liminf_neg(a,b,L)"
+    },
+    "SequenceLiminfAddConstant": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_add_constant(a, b, L, c)",
+      "summary": {
+        "zh": "逐项加上固定实数，使有限下极限加上同一实数。",
+        "en": "Adding a fixed real constant adds that constant to a finite liminf."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、c∈ℝ，以及所有 n∈ℕ+ 上的 b(n)=a(n)+c；结论为 $has_seq_liminf(b,L+c)。c 不随索引变化；一个变化的加数应使用相应的收敛加数或和估计定理。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), c∈ℝ, and b(n)=a(n)+c for every n∈ℕ+; conclude $has_seq_liminf(b,L+c). The constant is independent of the index; varying addends need the convergent-addend or sum-bound law."
+      },
+      "example": "thm seq_liminf_add_constant_example:\n    ? forall a,b seq(R),L,c R:\n        $has_seq_liminf(a,L)\n        forall n N+:\n            b(n)=a(n)+c\n        =>:\n            $has_seq_liminf(b,L+c)\n    release thm seq_liminf_add_constant(a,b,L,c)"
+    },
+    "SequenceLiminfScaleNonnegative": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_scale_nonnegative(a, b, L, c)",
+      "summary": {
+        "zh": "非负实数倍保持有限下极限的种类，并按比例缩放其值。",
+        "en": "Nonnegative scaling preserves the kind of finite extremal limit and scales its value."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、c∈ℝ、0≤c，且对所有 n∈ℕ+ 有 b(n)=c·a(n)；结论为 $has_seq_liminf(b,cL)。c=0 允许使用此规则，c<0 则不允许；负倍数会交换上下极限。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), c∈ℝ, 0≤c, and b(n)=c·a(n) for every n∈ℕ+; conclude $has_seq_liminf(b,cL). Zero is allowed. Negative scalars are excluded because they swap the extremal-limit kinds."
+      },
+      "example": "thm seq_liminf_scale_nonnegative_example:\n    ? forall a,b seq(R),L,c R:\n        $has_seq_liminf(a,L)\n        0<=c\n        forall n N+:\n            b(n)=c*a(n)\n        =>:\n            $has_seq_liminf(b,c*L)\n    release thm seq_liminf_scale_nonnegative(a,b,L,c)"
+    },
+    "SequenceLiminfScaleNegative": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_scale_negative(a, b, L, c)",
+      "summary": {
+        "zh": "严格负实数倍把有限下极限变为有限上极限。",
+        "en": "Strictly negative scaling swaps the kind of finite extremal limit."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、c∈ℝ、c<0，且对所有 n∈ℕ+ 有 b(n)=c·a(n)；结论为 $has_seq_limsup(b,cL)。这里负号交换上下极限；c=0 不满足此前提，应使用非负倍数规则。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), c∈ℝ, c<0, and b(n)=c·a(n) for every n∈ℕ+; conclude $has_seq_limsup(b,cL). The negative sign swaps limsup and liminf. Zero does not satisfy this premise and belongs to the nonnegative-scaling rule."
+      },
+      "example": "thm seq_liminf_scale_negative_example:\n    ? forall a,b seq(R),L,c R:\n        $has_seq_liminf(a,L)\n        c<0\n        forall n N+:\n            b(n)=c*a(n)\n        =>:\n            $has_seq_limsup(b,c*L)\n    release thm seq_liminf_scale_negative(a,b,L,c)"
+    },
+    "SequenceLiminfAddConvergent": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_add_convergent(a, b, h, L, M)",
+      "summary": {
+        "zh": "加上收敛实数数列后，有限下极限加上该加数的极限。",
+        "en": "Adding a convergent real sequence adds its ordinary limit to a finite liminf."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、$has_seq_limit(b,M)，并对所有 n∈ℕ+ 证明 h(n)=a(n)+b(n)；结论为 $has_seq_liminf(h,L+M)。不要求 a 本身收敛；但 b 需要通常的极限证明，仅有其下极限不够。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), $has_seq_limit(b,M), and h(n)=a(n)+b(n) for every n∈ℕ+; conclude $has_seq_liminf(h,L+M). The sequence a need not converge, but b needs an ordinary limit, not merely an extremal-limit candidate."
+      },
+      "example": "thm seq_liminf_add_convergent_example:\n    ? forall a,b,h seq(R),L,M R:\n        $has_seq_liminf(a,L)\n        $has_seq_limit(b,M)\n        forall n N+:\n            h(n)=a(n)+b(n)\n        =>:\n            $has_seq_liminf(h,L+M)\n    release thm seq_liminf_add_convergent(a,b,h,L,M)"
+    },
+    "SequenceLiminfSumBound": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_sum_bound(a, b, h, L, M, H, B1, B2)",
+      "summary": {
+        "zh": "两个有界实数数列之和的有限下极限满足超可加不等式。",
+        "en": "The finite liminf of a sum satisfies a superadditive bound."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须有 $has_seq_liminf(a,L)、$has_seq_liminf(b,M)、$has_seq_liminf(h,H)，且所有 n∈ℕ+ 满足 h(n)=a(n)+b(n)。还须给出 B1,B2∈ℝ+ 并对所有 n 证明 |a(n)|≤B1、|b(n)|≤B2。结论为 L+M≤H，不是一般的等式；不能只凭两个下极限就省略绝对值界或和数列的候选值证明。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Require $has_seq_liminf(a,L), $has_seq_liminf(b,M), $has_seq_liminf(h,H), and h(n)=a(n)+b(n) for every n∈ℕ+. Supply B1,B2∈ℝ+ with |a(n)|≤B1 and |b(n)|≤B2 for all n. Conclude L+M≤H, not an equality in general. The explicit absolute bounds and the candidate for the sum cannot be omitted."
+      },
+      "example": "thm seq_liminf_sum_bound_example:\n    ? forall a,b,h seq(R),A,B,S R,M1,M2 R+:\n        $has_seq_liminf(a,A)\n        $has_seq_liminf(b,B)\n        $has_seq_liminf(h,S)\n        forall n N+:\n            h(n)=a(n)+b(n)\n        forall n N+:\n            abs(a(n))<=M1\n        forall n N+:\n            abs(b(n))<=M2\n        =>:\n            A+B<=S\n    release thm seq_liminf_sum_bound(a,b,h,A,B,S,M1,M2)"
+    },
+    "SequenceLiminfBoundedExists": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_liminf_bounded_exists(a, B)",
+      "summary": {
+        "zh": "有界实数数列存在有限实数下极限。",
+        "en": "A bounded real sequence has a finite real liminf."
+      },
+      "notes": {
+        "zh": "涉及的数列均为 seq(ℝ)，这里的下极限取有限实数值，不包括 ±∞。须给出 B∈ℝ+，并对所有 n∈ℕ+ 证明 |a(n)|≤B。结论为存在 L∈ℝ，使 $has_seq_liminf(a,L)。这是全体项的双侧有界性，不仅是单侧上界或下界；该定理不声称数列收敛，也不指定候选值等于 B。",
+        "en": "All sequences involved are in seq(ℝ); this interface uses finite real liminf values, not ±∞. Supply B∈ℝ+ with |a(n)|≤B for every n∈ℕ+. The conclusion provides some L∈ℝ with $has_seq_liminf(a,L). This is a two-sided bound on all terms, not merely a one-sided bound. The theorem neither asserts convergence nor identifies B as the extremal value."
+      },
+      "example": "thm seq_liminf_bounded_exists_example:\n    ? forall a seq(R),M R+:\n        forall n N+:\n            abs(a(n))<=M\n        =>:\n            exist L R st {$has_seq_liminf(a,L)}\n    release thm seq_liminf_bounded_exists(a,M)"
+    },
+    "SequenceLimitFromExtrema": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_limit_from_extrema(a, L)",
+      "summary": {
+        "zh": "有限上极限与有限下极限相等时，实数数列收敛到这个公共值。",
+        "en": "A real sequence converges when its finite limsup and liminf coincide."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ)，并证明 $has_seq_limsup(a,L) 与 $has_seq_liminf(a,L)；结论为 $has_seq_limit(a,L)。两个条件使用同一个有限实数 L。仅有上极限或下极限中的一个，或两者存在但值不同，都不足以得到收敛。",
+        "en": "Require a∈seq(ℝ), $has_seq_limsup(a,L), and $has_seq_liminf(a,L); conclude $has_seq_limit(a,L). Both candidates use the same finite real L. One extremal candidate alone, or two existing but unequal extremal values, is insufficient."
+      },
+      "example": "thm seq_limit_from_extrema_example:\n    ? forall a seq(R),L R:\n        $has_seq_limsup(a,L)\n        $has_seq_liminf(a,L)\n        =>:\n            $has_seq_limit(a,L)\n    release thm seq_limit_from_extrema(a,L)"
+    },
+    "SequenceExtremaOrder": {
+      "kind": {
+        "zh": "内置定理",
+        "en": "Builtin theorem"
+      },
+      "syntax": "seq_extrema_order(a, L, U)",
+      "summary": {
+        "zh": "同一实数数列的有限下极限不大于其有限上极限。",
+        "en": "The finite liminf of a real sequence is at most its finite limsup."
+      },
+      "notes": {
+        "zh": "须有 a∈seq(ℝ)、$has_seq_liminf(a,L)、$has_seq_limsup(a,U)；结论为 L≤U。两种候选值必须来自同一个数列，结论不要求 L=U，也不推出数列已经收敛。",
+        "en": "Require a∈seq(ℝ), $has_seq_liminf(a,L), and $has_seq_limsup(a,U); conclude L≤U. Both candidates must refer to the same sequence. Equality and ordinary convergence are not asserted."
+      },
+      "example": "thm seq_extrema_order_example:\n    ? forall a seq(R),L,U R:\n        $has_seq_liminf(a,L)\n        $has_seq_limsup(a,U)\n        =>:\n            L<=U\n    release thm seq_extrema_order(a,L,U)"
     }
   }
 }

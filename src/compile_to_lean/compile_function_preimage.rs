@@ -143,7 +143,7 @@ impl LitexToLeanCompiler {
                 },
             )?;
             lines.push(format!(
-                "have _preimage_target : {} := {}",
+                "let _preimage_target : {} := {}",
                 proved.0, proved.1
             ));
         }
@@ -161,9 +161,11 @@ impl LitexToLeanCompiler {
             "preimage"
         };
         lines.push(format!(
-            "exact Litex.{ctor} {} {} {signature} {member}",
+            "Litex.{ctor} {} {} {signature} {member}",
             terms[0], terms[1]
         ));
-        Ok(format!("(by\n  {})", lines.join("\n  ")))
+        // A later child may project the certified function from this object.
+        // Term lets expose its host type before elaborating that projection.
+        Ok(format!("({})", lines.join(";\n  ")))
     }
 }

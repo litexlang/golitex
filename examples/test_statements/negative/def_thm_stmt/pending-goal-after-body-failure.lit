@@ -1,0 +1,21 @@
+# Tracer: distinguish an unchecked goal from an unsuccessful proof.
+# Before:
+# thm body_stops_before_goal:
+#     ? 1 = 1
+#     have helper R = 1
+#     helper = 1
+#     1 = 2
+#     have unreachable R = 3
+# Former reading behavior: the question-mark row had no sentence hover.
+# Now: the same source still fails in the body at1=2. The goal1=1 has
+# not been checked in this run; its source status links to the stopped step.
+thm body_stops_before_goal:
+    ? 1 = 1
+    have helper R = 1
+    helper = 1
+    1 = 2
+    have unreachable R = 3
+
+# Boundary: this does not assert that1=1 is false or assume it as a premise.
+# No goal proof, inferred fact, theorem registration or outer helper is created.
+# Evidence: src/reading/web/tests/pending-goals.cjs; expected strict CLI exit1.

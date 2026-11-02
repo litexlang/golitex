@@ -18,6 +18,19 @@ impl LitexToLeanCompiler {
         while let Some(current) = cursor {
             if let SourceOwner::StructLayer(layer) = current.owner {
                 let (declaration, _, _) = current.visible_struct(&layer.struct_obj.name)?;
+                if !has_dependent_fields(&declaration.statement) {
+                    let mut substitution =
+                        header_substitution(&declaration.statement, &layer.struct_obj)?;
+                    substitution.extend(field_substitution(&declaration.statement, &layer.obj));
+                    if let Some(index) = declaration.statement.fields.iter().position(|field| {
+                        instantiated_object_matches(&field.field_type, object, &substitution)
+                    }) {
+                        let base =
+                            self.compile_struct_base_reference(&layer.struct_obj, current)?;
+                        let n = declaration.statement.fields.len();
+                        return Ok(Some(format!("(let _field_carriers := {base}; Litex.semanticObject (_field_carriers.val.factors ({index} : Fin {n})) (_field_carriers.wd ({index} : Fin {n})))")));
+                    }
+                }
                 if has_dependent_fields(&declaration.statement) {
                     let mut subst = header_substitution(&declaration.statement, &layer.struct_obj)?;
                     subst.extend(field_substitution(&declaration.statement, &layer.obj));
@@ -82,9 +95,14 @@ impl LitexToLeanCompiler {
             let prior = SourcePosition::new(Some(&header), SourceOwner::StructFields(proof), index);
             ensure_object(&field.field_type, &stage.well_defined)?;
             let carrier = self.compile_wd(&stage.well_defined, &prior)?;
+            let formed = SourcePosition::new(
+                Some(&prior),
+                SourceOwner::WD(&stage.well_defined),
+                usize::MAX,
+            );
             let raw = self.compile_function_raw_expression_bound(
                 &field.field_type,
-                &prior,
+                &formed,
                 &raw_bindings,
             )?;
             self.validate_parameter_store_capture(&stage.defined)?;

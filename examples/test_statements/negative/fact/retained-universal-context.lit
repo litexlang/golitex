@@ -1,0 +1,10 @@
+# An unfinished universal proof: ∀x∈ℝ with the premise x>0.
+# Before: the reader omitted the retained hypotheses and checked clause prefix.
+# Now: the source preview retains that local context; x<0 remains unproved.
+# Boundary: x=x is not checked after failure, and the forall is not published.
+forall x R:
+    x > 0
+    =>:
+        x >= 0
+        x < 0
+        x = x

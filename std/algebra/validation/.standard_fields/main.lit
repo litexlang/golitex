@@ -1,0 +1,49 @@
+# Tracer: reusable standard real and complex Field instances.
+#
+# Before: each consumer rebuilt its scalar operations and checked this tuple:
+# have real_field &Algebra::field::Field<R> = (0,1,real_add,real_neg,real_mul,real_inv)
+# Former boundary: std exposed Field but no standard R/C instances.
+#
+# Now: open the imported values and the arithmetic definitions used below.
+# Boundary: inversion at zero and i*i=1 are rejected by check.py.
+# Evidence: python3 std/algebra/validation/.standard_fields/check.py
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_inv
+
+release obj def Algebra::field::complex_mul
+
+release obj def Algebra::field::complex_inv
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+release struct def Algebra::field::real_field
+
+release struct def Algebra::field::complex_field
+
+Algebra::field::real_field.add(2,3)=5
+
+Algebra::field::complex_field.mul(1+i,1-i)=2
+
+Algebra::field::real_field.zero=0
+
+Algebra::field::complex_field.zero=0
+
+release thm Algebra::field::nonzero_field_inverse(R,Algebra::field::real_field,2)
+
+release thm Algebra::field::field_inverse_involution(R,Algebra::field::real_field,2)
+
+release thm Algebra::field::nonzero_field_inverse(C,Algebra::field::complex_field,1+i)
+
+release thm Algebra::field::field_inverse_involution(C,Algebra::field::complex_field,1+i)
+
+Algebra::field::complex_field.inv(1+i)=(1-i)/2
+
+Algebra::field::real_field.inv(2)=1/2
+
+Algebra::field::complex_field.mul(i,i)=-1
+
+Algebra::field::complex_field.inv(i)=-i

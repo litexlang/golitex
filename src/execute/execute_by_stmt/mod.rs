@@ -1,9 +1,12 @@
 mod builtin_thm;
+mod by_cases_branch_failure;
+mod contradiction_failure;
 mod enumerate_forall;
 mod enumerate_helpers;
 mod exec_by_axiom_of_choice_stmt;
 mod exec_by_cases_stmt;
 mod exec_by_contra_stmt;
+mod exec_by_def_local_failure;
 mod exec_by_def_stmt;
 mod exec_by_enumerate_finite_set_stmt;
 mod exec_by_extension_stmt;
@@ -20,7 +23,9 @@ mod negate_forall_iff;
 mod negate_unique_exist;
 mod recover_induction_param;
 mod result;
+mod theorem_invocation_failure;
 
+pub use contradiction_failure::*;
 pub use exec_by_axiom_of_choice_stmt::exec_release_axiom_of_choice_stmt;
 pub use exec_by_cases_stmt::exec_by_cases_stmt;
 pub use exec_by_contra_stmt::exec_by_contra_stmt;
@@ -55,10 +60,17 @@ pub use result::{
 };
 pub(crate) use result::{ByContradictionClosingFailed, ExecByContraStmtFailed};
 // Existing failure IR consumed by the crate's Normal/Detailed JSON projection.
+pub(crate) use by_cases_branch_failure::ByCasesBranchFailure;
+pub(crate) use exec_by_def_local_failure::{
+    ExecByDefEnteredFailed, ExecByDefLocalFailure, ExecByDefStoreFailure,
+};
+pub(crate) use exec_by_thm_stmt::PreparedRelease;
 pub(crate) use helper::{proof_verify_state, store_goal_fact, verify_goal_fact};
+pub(crate) use result::ByCasesEnteredBranchFailed;
 pub(crate) use result::ExecByFnExtensionStmtFailed;
 pub(crate) use result::{ByCasesBranchFailed, ExecByCasesStmtFailed, ExecByExtensionStmtFailed};
 pub(crate) use result::{ExecByDefStmtFailed, ExecByForStmtFailed};
+pub(crate) use theorem_invocation_failure::*;
 
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/showcase_regressions/tests.rs"]

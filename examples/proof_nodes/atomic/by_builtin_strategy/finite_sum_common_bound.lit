@@ -1,0 +1,20 @@
+# Direct sum-bound-composition composition.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/finite_sum_common_bound.lit
+# Historical explicit proof:
+# claim:
+#     ? forall a,b,c,M R:
+#         a<=M
+#         b<=M
+#         c<=M
+#         =>:
+#             (a+b)+c<=3*M
+#     a+b<=2*M
+#     (a+b)+c<=2*M+M=3*M
+#     (a+b)+c<=3*M
+# Boundary: all original domains and premises are required.
+forall a,b,c,M R:
+    a<=M
+    b<=M
+    c<=M
+    =>:
+        (a+b)+c<=3*M

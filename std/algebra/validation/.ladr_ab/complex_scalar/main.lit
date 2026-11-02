@@ -1,0 +1,112 @@
+# Native complex-coordinate and field-law concordance with LADR 1.1, 1.3, 1.5.
+
+claim:
+    ? forall z C:
+        z=re(z)+img(z)*i
+    z=re(z)+img(z)*i
+
+claim:
+    ? forall a,b,c,d R:
+        (a+b*i)+(c+d*i)=(a+c)+(b+d)*i
+        (a+b*i)*(c+d*i)=(a*c-b*d)+(a*d+b*c)*i
+    (a+b*i)+(c+d*i)=(a+c)+(b+d)*i
+    (a+b*i)*(c+d*i)=(a*c-b*d)+(a*d+b*c)*i
+
+claim:
+    ? forall a,b R:
+        re(a+b*i)=a
+        img(a+b*i)=b
+    re(a+b*i)=a
+    img(a+b*i)=b
+
+claim:
+    ? forall z C:
+        exist! coordinates R × R st {z=coordinates(1)+coordinates(2)*i}
+    have chosen R × R=(re(z),img(z))
+    chosen(1)=re(z)
+    chosen(2)=img(z)
+    z=re(z)+img(z)*i=chosen(1)+chosen(2)*i
+    claim:
+        ? forall first,second R × R:
+            z=first(1)+first(2)*i
+            z=second(1)+second(2)*i
+            =>:
+                first=second
+        first(1) $in R
+        first(2) $in R
+        second(1) $in R
+        second(2) $in R
+        re(first(1)+first(2)*i)=first(1)
+        img(first(1)+first(2)*i)=first(2)
+        re(second(1)+second(2)*i)=second(1)
+        img(second(1)+second(2)*i)=second(2)
+        first(1)=re(first(1)+first(2)*i)=re(z)=re(second(1)+second(2)*i)=second(1)
+        first(2)=img(first(1)+first(2)*i)=img(z)=img(second(1)+second(2)*i)=second(2)
+        first=(first(1),first(2))=(second(1),second(2))=second
+    witness exist! coordinates R × R st {z=coordinates(1)+coordinates(2)*i} from chosen
+
+claim:
+    ? forall x,y,z C:
+        x+y=y+x
+        (x+y)+z=x+(y+z)
+        x*y=y*x
+        (x*y)*z=x*(y*z)
+        x*(y+z)=x*y+x*z
+        x+0=x
+        x*1=x
+        x+(-x)=0
+    x+y=y+x
+    (x+y)+z=x+(y+z)
+    x*y=y*x
+    (x*y)*z=x*(y*z)
+    x*(y+z)=x*y+x*z
+    x+0=x
+    x*1=x
+    x+(-x)=0
+
+claim:
+    ? forall x C:
+        exist! inverse C st {x+inverse=0}
+    x+(-x)=0
+    claim:
+        ? forall first,second C:
+            x+first=0
+            x+second=0
+            =>:
+                first=second
+        first=0+first=(-x+x)+first=-x+(x+first)=-x+0=-x
+        second=0+second=(-x+x)+second=-x+(x+second)=-x+0=-x
+        first=-x=second
+    witness exist! inverse C st {x+inverse=0} from -x
+
+claim:
+    ? forall x C:
+        x!=0
+        =>:
+            exist! inverse C st {x*inverse=1}
+    x*(1/x)=1
+    claim:
+        ? forall first,second C:
+            x*first=1
+            x*second=1
+            =>:
+                first=second
+        first=(x*first)/x=1/x
+        second=(x*second)/x=1/x
+        first=1/x=second
+    witness exist! inverse C st {x*inverse=1} from 1/x
+
+claim:
+    ? forall x,y C:
+        x-y=x+(-y)
+    x-y=x+(-y)
+
+claim:
+    ? forall x,y C:
+        y!=0
+        =>:
+            x/y=x*(1/y)
+            (x/y)*y=x
+    x/y=x*(1/y)
+    (x/y)*y=x
+

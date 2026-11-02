@@ -1,3 +1,7 @@
+use super::{
+    ExecDefThmBodyFailed, ExecDefThmForallEnteredFailed, ExecDefThmForallFailed,
+    ExecDefThmLocalFailure, ExecDefThmNonForallFailed,
+};
 use crate::ast::fact::{Fact, ForallFact};
 use crate::ast::stmt::{DefThmStmt, Stmt};
 use crate::exec_env::exec_env::ExecEnv;
@@ -6,7 +10,7 @@ use crate::execute::execute_by_stmt::{proof_verify_state, store_goal_fact, verif
 use crate::execute::execute_fact_stmt::{
     AssumeDomFactResult, VerifyFactResult, VerifyFactWellDefinedResult,
 };
-use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
 use crate::execute::IntroduceTypedParametersResult;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
@@ -50,13 +54,14 @@ pub enum ExecDefThmStmtFailed {
     NameClash(String),
     GoalUnsupported(String),
     GoalWd(VerifyFactWellDefinedResult),
-    Introduce(String),
-    ProofBody(ProofBlockBodyFailed),
-    Conclusion {
-        index: usize,
-        result: VerifyFactResult,
+    Local(ExecDefThmLocalFailure),
+    Store {
+        statement: DefThmStmt,
+        goal_wd: VerifyFactWellDefinedResult,
+        body: ExecDefThmBodyProof,
+        local_env: Box<ExecEnv>,
+        message: String,
     },
-    Store(String),
 }
 
 impl ExecDefThmStmtResult {
@@ -94,26 +99,31 @@ pub fn exec_def_thm_stmt(
 
     let (local_outcome, local_env) =
         runtime.run_in_local_env_and_take_env(|rt| match &stmt.fact {
-            Fact::ForallFact(forall) => exec_def_thm_forall_body(rt, forall, &stmt.prove_process),
-            _ => {
-                let proof_steps = match run_proof_body_stmts(rt, &stmt.prove_process)? {
-                    Ok(steps) => steps,
-                    Err(failed) => return Ok(Err(ExecDefThmStmtFailed::ProofBody(failed))),
-                };
-                let proof = verify_goal_fact(rt, &stmt.fact)?;
-                if proof.is_failed() {
-                    return Ok(Err(ExecDefThmStmtFailed::Conclusion {
-                        index: 0,
-                        result: proof,
-                    }));
-                }
-                Ok(Ok(ExecDefThmNonForallProof::new(proof_steps, proof).into()))
-            }
+            Fact::ForallFact(forall) => Ok(
+                match exec_def_thm_forall_body(rt, forall, &stmt.prove_process)? {
+                    Ok(body) => Ok(body.into()),
+                    Err(failed) => Err(ExecDefThmBodyFailed::Forall(failed)),
+                },
+            ),
+            _ => Ok(
+                match exec_def_thm_non_forall_body(rt, &stmt.fact, &stmt.prove_process)? {
+                    Ok(body) => Ok(body.into()),
+                    Err(failed) => Err(ExecDefThmBodyFailed::NonForall(failed)),
+                },
+            ),
         })?;
 
     let body = match local_outcome {
         Ok(v) => v,
-        Err(failed) => return Ok(ExecDefThmStmtResult::Failed(failed)),
+        Err(failed) => {
+            return Ok(ExecDefThmStmtFailed::Local(ExecDefThmLocalFailure::new(
+                stmt.clone(),
+                goal_wd,
+                failed,
+                local_env,
+            ))
+            .into())
+        }
     };
 
     runtime.top_exec_env_mut().store_def_thm(stmt.clone());
@@ -121,9 +131,14 @@ pub fn exec_def_thm_stmt(
     let stored = match store_goal_fact(runtime, &stmt.fact)? {
         Ok(s) => s,
         Err(msg) => {
-            return Ok(ExecDefThmStmtResult::Failed(ExecDefThmStmtFailed::Store(
-                msg,
-            )));
+            return Ok(ExecDefThmStmtFailed::Store {
+                statement: stmt.clone(),
+                goal_wd,
+                body,
+                local_env,
+                message: msg,
+            }
+            .into());
         }
     };
 
@@ -134,25 +149,26 @@ fn exec_def_thm_forall_body(
     runtime: &mut Runtime,
     forall: &ForallFact,
     proof: &[Stmt],
-) -> RuntimeResult<Result<ExecDefThmBodyProof, ExecDefThmStmtFailed>> {
+) -> RuntimeResult<Result<ExecDefThmForallProof, ExecDefThmForallFailed>> {
     let introduced_params =
         match runtime.introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())? {
             Ok(introduced) => introduced,
-            Err(_) => {
-                return Ok(Err(ExecDefThmStmtFailed::Introduce(
-                    "thm: failed to introduce forall parameters".to_string(),
-                )))
-            }
+            Err(failed) => return Ok(Err(ExecDefThmForallFailed::Introduce(failed))),
         };
 
     let mut assumed_dom_facts = Vec::with_capacity(forall.dom_facts.len());
-    for dom in &forall.dom_facts {
+    for (index, dom) in forall.dom_facts.iter().enumerate() {
         let well_defined = match runtime.verify_fact_well_definedness(dom, proof_verify_state())? {
             VerifyFactWellDefinedResult::Success(proof) => proof,
-            VerifyFactWellDefinedResult::Failed(_) => {
-                return Ok(Err(ExecDefThmStmtFailed::Introduce(
-                    "thm: forall domain fact is not well-defined".to_string(),
-                )))
+            failed @ VerifyFactWellDefinedResult::Failed(_) => {
+                return Ok(Err(ExecDefThmForallFailed::Entered {
+                    introduced_params,
+                    assumed_dom_facts,
+                    failure: ExecDefThmForallEnteredFailed::PremiseWd {
+                        index,
+                        result: failed,
+                    },
+                }))
             }
         };
         let store_and_infer = runtime.store_fact_and_infer(
@@ -167,7 +183,13 @@ fn exec_def_thm_forall_body(
 
     let proof_steps = match run_proof_body_stmts(runtime, proof)? {
         Ok(steps) => steps,
-        Err(failed) => return Ok(Err(ExecDefThmStmtFailed::ProofBody(failed))),
+        Err(failed) => {
+            return Ok(Err(ExecDefThmForallFailed::Entered {
+                introduced_params,
+                assumed_dom_facts,
+                failure: ExecDefThmForallEnteredFailed::ProofBody(failed),
+            }))
+        }
     };
 
     let mut conclusion_proofs = Vec::with_capacity(forall.then_facts.len());
@@ -175,9 +197,15 @@ fn exec_def_thm_forall_body(
         let then_fact: Fact = then.clone().into();
         let proof = verify_goal_fact(runtime, &then_fact)?;
         if proof.is_failed() {
-            return Ok(Err(ExecDefThmStmtFailed::Conclusion {
-                index,
-                result: proof,
+            return Ok(Err(ExecDefThmForallFailed::Entered {
+                introduced_params,
+                assumed_dom_facts,
+                failure: ExecDefThmForallEnteredFailed::Conclusion {
+                    proof_steps,
+                    conclusion_proofs,
+                    index,
+                    result: proof,
+                },
             }));
         }
         conclusion_proofs.push(proof);
@@ -188,8 +216,26 @@ fn exec_def_thm_forall_body(
         assumed_dom_facts,
         proof_steps,
         conclusion_proofs,
-    )
-    .into()))
+    )))
+}
+
+fn exec_def_thm_non_forall_body(
+    runtime: &mut Runtime,
+    fact: &Fact,
+    proof: &[Stmt],
+) -> RuntimeResult<Result<ExecDefThmNonForallProof, ExecDefThmNonForallFailed>> {
+    let proof_steps = match run_proof_body_stmts(runtime, proof)? {
+        Ok(steps) => steps,
+        Err(failed) => return Ok(Err(ExecDefThmNonForallFailed::ProofBody(failed))),
+    };
+    let result = verify_goal_fact(runtime, fact)?;
+    if result.is_failed() {
+        return Ok(Err(ExecDefThmNonForallFailed::Conclusion {
+            proof_steps,
+            result,
+        }));
+    }
+    Ok(Ok(ExecDefThmNonForallProof::new(proof_steps, result)))
 }
 
 impl ExecDefThmStmtSuccess {

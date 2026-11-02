@@ -120,17 +120,20 @@ pub use execute_def_algo_by_induc_stmt::{
     ExecDefAlgoByInducStmtFailed, ExecDefAlgoByInducStmtResult, ExecDefAlgoByInducStmtSuccessResult,
 };
 pub use execute_def_prop_stmt::{
-    ExecDefPropStmtFailed, ExecDefPropStmtResult, ExecDefPropStmtSuccessResult,
+    DefPropLocalFailed, ExecDefPropLocalFailure, ExecDefPropStmtFailed, ExecDefPropStmtResult,
+    ExecDefPropStmtSuccessResult,
 };
 pub use execute_def_strategy_stmt::{
     ExecDefStrategyStmtFailed, ExecDefStrategyStmtResult, ExecDefStrategyStmtSuccess,
 };
 pub use execute_def_struct_stmt::{
-    ExecDefStructFieldScopeSuccessResult, ExecDefStructStmtFailed, ExecDefStructStmtResult,
-    ExecDefStructStmtSuccessResult,
+    DefStructFieldLocalFailed, DefStructLocalFailed, ExecDefStructFieldLocalFailure,
+    ExecDefStructFieldScopeSuccessResult, ExecDefStructLocalFailure, ExecDefStructStmtFailed,
+    ExecDefStructStmtResult, ExecDefStructStmtSuccessResult,
 };
 pub use execute_def_template_stmt::{
-    ExecDefTemplateStmtFailed, ExecDefTemplateStmtResult, ExecDefTemplateStmtSuccessResult,
+    DefTemplateLocalFailed, ExecDefTemplateLocalFailure, ExecDefTemplateStmtFailed,
+    ExecDefTemplateStmtResult, ExecDefTemplateStmtSuccessResult,
 };
 pub use execute_def_thm_stmt::{
     ExecDefThmBodyProof, ExecDefThmForallProof, ExecDefThmNonForallProof, ExecDefThmStmtFailed,
@@ -256,3 +259,20 @@ mod tuple_cart_object_call_tests;
 pub(crate) use execute_have_obj_in_nonempty_set_stmt::HaveObjInNonemptySetGroupResult;
 
 pub(crate) use execute_have_by_replacement_axiom_stmt::forall_is_replacement_uniqueness;
+
+// Ordered failure evidence retained by object-introduction owners.
+pub use execute_have_obj_by_exist_facts_stmt::ExecHaveObjByExistFactsFailure;
+pub use execute_have_obj_equal_stmt::{
+    ExecHaveObjEqualAfterPreflightFailure, ExecHaveObjEqualContextFailure,
+    ExecHaveObjEqualPreflightFailure, HaveObjEqualAfterPreflightFailed,
+};
+pub use execute_have_obj_in_nonempty_set_stmt::{
+    ExecHaveObjInNonemptySetLocalFailure, HaveObjInNonemptySetLocalFailed,
+};
+pub use execute_obtain_obj_from_atomic_fact_stmt::{
+    ExecObtainObjFromAtomicFactContextFailure, ExecObtainObjFromAtomicFactDefinitionFailure,
+    ExecObtainObjFromAtomicFactProjectedFailure, ExecObtainObjFromAtomicFactVerifiedFailure,
+};
+pub use execute_obtain_obj_from_exist_fact_stmt::{
+    ExecObtainObjFromExistFactContextFailure, ExecObtainObjFromExistFactVerifiedFailure,
+};

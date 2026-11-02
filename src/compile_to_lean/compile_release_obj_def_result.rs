@@ -1,6 +1,5 @@
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
-use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_release_obj_def_stmt::{
     ExecReleaseObjDefStmtResult, ReleaseObjDefByKind,
 };
@@ -18,15 +17,35 @@ impl LitexToLeanCompiler {
         let ExecReleaseObjDefStmtResult::Success(proof) = result else {
             return Err(LeanCompileError::unsupported("ReleaseObj/Failed"));
         };
-        let IdentifierObj::Plain { id, name } = &proof.statement.name else {
-            return Err(LeanCompileError::unsupported("ReleaseObj/QualifiedName"));
+        let (id, name, scope) = match &proof.statement.name {
+            IdentifierObj::Plain { id, name } => (*id, name.as_str(), *position),
+            identifier => {
+                let (bound, scope, captured) =
+                    position.qualified_identifier_scope(identifier, &self.runtime)?;
+                if captured != &proof.looked_up {
+                    return Err(LeanCompileError::unsupported(
+                        "ReleaseObj/DeclarationCapture",
+                    ));
+                }
+                (bound.id, bound.name.as_str(), scope)
+            }
         };
-        // Resolve the captured introducing declaration, not a matching fact in
-        // the final environment. Each family fixes its original store offsets.
-        let definition = position.visible_object_definition(|definition| {
-            same_definition(&proof.looked_up, definition, name)
-        })?;
-        let pairs = original_release_facts(definition, &proof.released, *id, name)?;
+        let (definition, declaration_site, _statement) =
+            scope.visible_object_definition(|definition| {
+                super::helper::captured_identifier_definition_matches(
+                    &proof.looked_up,
+                    definition,
+                    name,
+                )
+            })?;
+        let pairs = original_release_facts(definition, &proof.released, id, name)?;
+        // A historical declaration is complete in its original enclosing
+        // prefix; constructor visitors retain their pre-declaration ceiling.
+        let declaration = SourcePosition {
+            before: declaration_site.before + 1,
+            ..declaration_site
+        };
+        position.validate_declaration_context(&declaration_site)?;
         if pairs.len() != proof.store_and_infer.len() {
             return Err(LeanCompileError::unsupported("ReleaseObj/StoreCount"));
         }
@@ -38,7 +57,12 @@ impl LitexToLeanCompiler {
                 before: offset,
                 ..*position
             };
-            let (original, reference) = self.cited_fact_reference(*original_id, &prior)?;
+            // Explicit release authorizes this original declaration publication,
+            // rather than making the exporting file's ordinary facts visible.
+            // The original publication distinguishes a global theorem from
+            // a free parameter's hypothesis. Only the former takes model and
+            // source-context arguments; both retain their original namespace.
+            let (original, reference) = declaration.visible_fact(*original_id, &self.runtime)?;
             if original.ir() != released.ir() {
                 return Err(LeanCompileError::new(
                     "ReleaseObj/Subject",
@@ -46,7 +70,7 @@ impl LitexToLeanCompiler {
                 ));
             }
             self.validate_store(&store.store, released)?;
-            let proposition = self.fact_proposition(released, &prior)?;
+            let proposition = self.fact_proposition(released, &declaration)?;
             emitted.push(self.emit_fact(
                 released,
                 (proposition.clone(), reference),
@@ -72,44 +96,6 @@ impl LitexToLeanCompiler {
             )?);
         }
         Ok(emitted.join("\n\n"))
-    }
-}
-
-fn same_definition(
-    captured: &StoredIdentifierDefinition,
-    source: &ExecDefinitionStmtResult,
-    name: &str,
-) -> bool {
-    match (captured, source) {
-        (
-            StoredIdentifierDefinition::LetObj((key, a)),
-            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::LetObj(
-                ExecLetObjStmtResult::Success(b),
-            )),
-        ) => key == name && a.as_ref() == &b.statement,
-        (
-            StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((key, a)),
-            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjInNonemptySet(
-                ExecHaveObjInNonemptySetStmtResult::Success(b),
-            )),
-        ) => key == name && a.as_ref() == &b.statement,
-        (
-            StoredIdentifierDefinition::HaveObjEqual((key, a)),
-            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjEqual(
-                ExecHaveObjEqualStmtResult::Success(b),
-            )),
-        ) => key == name && a.as_ref() == &b.statement,
-        (
-            StoredIdentifierDefinition::HaveObjByExistFacts((key, a)),
-            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjByExistFacts(
-                ExecHaveObjByExistFactsStmtResult::Success(b),
-            )),
-        ) => key == name && a.as_ref() == &b.statement,
-        (
-            StoredIdentifierDefinition::HaveFnEqual((key, a)),
-            ExecDefinitionStmtResult::HaveFnEqual(ExecHaveFnEqualStmtResult::Success(b)),
-        ) => key == name && a.as_ref() == &b.statement,
-        _ => false,
     }
 }
 

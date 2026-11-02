@@ -137,7 +137,7 @@ impl LitexToLeanCompiler {
         reference: String,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        for (run, index, statement, before) in position.context_statements() {
+        for (prior, _index, statement, before) in position.context_statements() {
             let stages = crate::compile_to_lean::compile_assumption_stmt_result::assumption_stages(
                 statement,
             );
@@ -154,7 +154,6 @@ impl LitexToLeanCompiler {
                     continue;
                 }
                 if let (Fact::ForallFact(fact), FactWellDefinedProof::ForallFact(wd)) = (fact, wd) {
-                    let prior = SourcePosition::new(None, SourceOwner::Run(run), index);
                     let before = SourcePosition::new(
                         Some(&prior),
                         SourceOwner::Statement(statement),

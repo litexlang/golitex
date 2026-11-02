@@ -258,6 +258,7 @@ pub struct HomogeneousTupleCoordinateKnownProof {
 pub struct FnApplicationInCodomainKnownSpecialPropertyProof {
     pub cite_property_fact_id: FactId,
     pub function_equal: KnownEqualityPathProof,
+    pub applied: AppliedFnSetReturnSignature,
     pub signature_uses: Vec<SignatureCodomainUseProof>,
 }
 
@@ -952,12 +953,12 @@ impl Runtime {
                     ),
                 );
             }
-            let Some(applied_return) = self.applied_fn_set_return_set(application, &signature)
+            let Some(applied) = self.applied_fn_set_return_signature(application, &signature)
             else {
                 continue;
             };
             if self
-                .lookup_exact_property_obj_equality(&applied_return, &fact.set)
+                .lookup_exact_property_obj_equality(&applied.return_set, &fact.set)
                 .is_none()
             {
                 continue;
@@ -1008,6 +1009,7 @@ impl Runtime {
                         FnApplicationInCodomainKnownSpecialPropertyProof {
                             cite_property_fact_id: definition_id,
                             function_equal: KnownEqualityPathProof::new(function_path),
+                            applied,
                             signature_uses: matches,
                         },
                     ),

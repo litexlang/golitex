@@ -66,6 +66,11 @@ impl SharedHaveDefinition {
 
 pub enum IntroduceTypedParametersFailed {
     ParamType(VerifyObjWellDefinedResult),
+    ParamTypeWithPrefix {
+        param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
+        defined_params: StoreHaveObjAndInferResult,
+        failed: VerifyObjWellDefinedResult,
+    },
     AutoOpenStructLayer {
         param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
         defined_params: StoreHaveObjAndInferResult,
@@ -115,9 +120,11 @@ impl Runtime {
             {
                 VerifyParamTypeWellDefinedResult::Success(proof) => proof,
                 VerifyParamTypeWellDefinedResult::Failed { obj, reason } => {
-                    return Ok(Err(IntroduceTypedParametersFailed::ParamType(
-                        VerifyObjWellDefinedResult::Failed { obj, reason },
-                    )));
+                    return Ok(Err(IntroduceTypedParametersFailed::ParamTypeWithPrefix {
+                        param_type_well_defined,
+                        defined_params,
+                        failed: VerifyObjWellDefinedResult::Failed { obj, reason },
+                    }));
                 }
             };
             param_type_well_defined.push(proof);

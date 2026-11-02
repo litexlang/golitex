@@ -415,10 +415,45 @@ impl LitexToLeanCompiler {
             ));
         }
         match infer {
-            InferAtomicFactResult::MultivariableAnalysisFact(_)
-            | InferAtomicFactResult::NotMultivariableAnalysisFact(_) => Err(
-                LeanCompileError::unsupported("Inference/MultivariableAnalysis"),
-            ),
+            InferAtomicFactResult::MultivariableAnalysisFact(_) => {
+                if matches!(seed,Fact::AtomicFact(a) if super::compile_total_differential::parts(a).is_some())
+                {
+                    self.compile_total_differential_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_scalar_differential::parts(a).is_some())
+                {
+                    self.compile_scalar_differential_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_laplacian::parts(a).is_some())
+                {
+                    self.compile_laplacian_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_hessian::parts(a).is_some())
+                {
+                    self.compile_hessian_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_second_partial::parts(a).is_some())
+                {
+                    self.compile_second_partial_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_curl::parts(a).is_some())
+                {
+                    self.compile_curl_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_divergence::parts(a).is_some())
+                {
+                    self.compile_divergence_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_jacobian::parts(a).is_some())
+                {
+                    self.compile_jacobian_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_gradient::parts(a).is_some())
+                {
+                    self.compile_gradient_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_partial_derivative::parts(a).is_some())
+                {
+                    self.compile_partial_derivative_inferences(infer, seed, compiled, position)
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_multivariable_vector_limit::parts(a).is_some())
+                {
+                    self.compile_multivariable_vector_inferences(infer, seed, compiled, position)
+                } else {
+                    self.compile_multivariable_scalar_inferences(infer, seed, compiled, position)
+                }
+            }
+            InferAtomicFactResult::NotMultivariableAnalysisFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::RealSetBoundFact(_)
             | InferAtomicFactResult::RealSetBoundedFact(_) => {
                 self.compile_real_bound_inferences(infer, seed, compiled, position)
@@ -433,12 +468,14 @@ impl LitexToLeanCompiler {
                 self.compile_real_accumulation_inferences(infer, seed, compiled, position)
             }
             InferAtomicFactResult::NotRealAccumulationFact(_) => Ok(Vec::new()),
-            InferAtomicFactResult::HasRiemannIntegralFact(_)
-            | InferAtomicFactResult::NotHasRiemannIntegralFact(_)
-            | InferAtomicFactResult::FunctionRiemannIntegrableFact(_)
-            | InferAtomicFactResult::NotFunctionRiemannIntegrableFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RiemannIntegral"))
+            InferAtomicFactResult::HasRiemannIntegralFact(_) => {
+                self.compile_riemann_inferences(infer, seed, compiled, position)
             }
+            InferAtomicFactResult::FunctionRiemannIntegrableFact(_) => {
+                self.compile_riemann_integrability_inferences(infer, seed, compiled, position)
+            }
+            InferAtomicFactResult::NotHasRiemannIntegralFact(_)
+            | InferAtomicFactResult::NotFunctionRiemannIntegrableFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::NotHasDerivativeAtFact(_)
             | InferAtomicFactResult::NotFunctionDifferentiableAtFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::HasDerivativeAtFact(_) => {
@@ -498,14 +535,20 @@ impl LitexToLeanCompiler {
             | InferAtomicFactResult::ProperSupersetFact(_) => {
                 self.compile_proper_inclusion_inferences(infer, seed, compiled, position)
             }
+            InferAtomicFactResult::SubsetFact(rules) => {
+                self.compile_subset_inferences(rules, seed, compiled, position)
+            }
+            InferAtomicFactResult::PrimeFact(rules) => {
+                self.compile_prime_inferences(rules, seed, compiled, position)
+            }
+            InferAtomicFactResult::DvdFact(rules) => {
+                self.compile_dvd_inferences(rules, seed, compiled, position)
+            }
             InferAtomicFactResult::IsSetFact(_)
             | InferAtomicFactResult::IsNonemptySetFact(_)
             | InferAtomicFactResult::IsFiniteSetFact(_)
-            | InferAtomicFactResult::SubsetFact(_)
             | InferAtomicFactResult::SupersetFact(_)
-            | InferAtomicFactResult::PrimeFact(_)
             | InferAtomicFactResult::CoprimeFact(_)
-            | InferAtomicFactResult::DvdFact(_)
             | InferAtomicFactResult::IsChoiceFunctionForFact(_)
             | InferAtomicFactResult::NotNormalAtomicFact(_)
             | InferAtomicFactResult::NotEqualFact(_)

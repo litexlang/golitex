@@ -136,6 +136,7 @@ pub struct ByContradictionClosingSuccess {
 }
 
 pub enum ByContradictionClosingFailed {
+    AfterImpossible(Box<super::ByContradictionAfterImpossibleFailed>),
     Impossible(VerifyFactResult),
     NegateImpossibleUnsupported(String),
     NegatedImpossible(VerifyFactResult),
@@ -168,6 +169,9 @@ pub struct ExecByContraStmtSuccess {
 }
 
 pub enum ExecByContraStmtFailed {
+    Negation(Box<super::ExecByContraNegationFailure>),
+    Local(Box<super::ExecByContraLocalFailure>),
+    StoreAfterProof(Box<super::ExecByContraStoreFailure>),
     GoalWd(VerifyFactWellDefinedResult),
     NegationUnsupported(String),
     NegationAssume(String),
@@ -179,6 +183,19 @@ pub enum ExecByContraStmtFailed {
 impl ExecByContraStmtResult {
     pub fn is_failed(&self) -> bool {
         matches!(self, Self::Failed(_))
+    }
+}
+
+impl ExecByContraStmtFailed {
+    pub fn closing_failure(&self) -> Option<&ByContradictionClosingFailed> {
+        match self {
+            Self::Closing(failure) => Some(failure),
+            Self::Local(context) => match &context.failure {
+                super::ExecByContraEnteredFailed::Closing { failure, .. } => Some(failure),
+                _ => None,
+            },
+            _ => None,
+        }
     }
 }
 
@@ -227,6 +244,9 @@ pub enum ExecByCasesStmtFailed {
     },
     Coverage(VerifyFactResult),
     Branch {
+        then_facts_wd: Vec<VerifyFactWellDefinedResult>,
+        coverage: VerifyFactResult,
+        branches: Vec<ByCasesBranchSuccess>,
         index: usize,
         failed: ByCasesBranchFailed,
     },
@@ -238,12 +258,21 @@ pub enum ExecByCasesStmtFailed {
 
 pub enum ByCasesBranchFailed {
     AssumeCase(String),
+    AfterAssumption(super::ByCasesBranchFailure),
+}
+
+pub enum ByCasesEnteredBranchFailed {
     ProofBody(ProofBlockBodyFailed),
     ClosingThen {
+        proof_steps: Vec<ExecStmtResult>,
+        proved_then_facts: Vec<ProveAndStoreThenFactResult>,
         then_index: usize,
         result: VerifyFactResult,
     },
-    ClosingImpossible(ByContradictionClosingFailed),
+    ClosingImpossible {
+        proof_steps: Vec<ExecStmtResult>,
+        failed: ByContradictionClosingFailed,
+    },
 }
 
 impl ExecByCasesStmtResult {
@@ -270,6 +299,8 @@ pub struct ExecByDefStmtSuccess {
 }
 
 pub enum ExecByDefStmtFailed {
+    Local(Box<super::ExecByDefLocalFailure>),
+    StoreAfterProof(Box<super::ExecByDefStoreFailure>),
     // No supported definition, or its defining obligations did not verify.
     Definition(crate::prelude::DefinitionProofFailed),
     GoalWd(VerifyFactWellDefinedResult),
@@ -338,6 +369,9 @@ pub struct ExecReleaseThmStmtSuccess {
 }
 
 pub enum ExecReleaseThmStmtFailed {
+    Preparation(Box<super::TheoremInvocationPreparationFailure>),
+    Local(Box<super::TheoremInvocationLocalFailure>),
+    Closing(Box<super::TheoremInvocationClosingFailure>),
     BuiltinArity {
         theorem: crate::builtin_theorem::BuiltinTheoremId,
         expected: usize,
@@ -415,6 +449,9 @@ pub struct ExecByThmStmtSuccess {
 }
 
 pub enum ExecByThmStmtFailed {
+    Preparation(Box<super::TheoremInvocationPreparationFailure>),
+    Local(Box<super::TheoremInvocationLocalFailure>),
+    Closing(Box<super::TheoremInvocationClosingFailure>),
     Release(ExecReleaseThmStmtFailed),
     NotReturned {
         theorem: String,

@@ -5,6 +5,10 @@ use crate::prelude::*;
 #[path = "../../../../tests/unit/execute/positive_sign_composition.rs"]
 mod tests;
 
+#[cfg(test)]
+#[path = "../../../../tests/unit/execute/elementary_composition.rs"]
+mod elementary_composition_tests;
+
 impl Runtime {
     // Truth only after enclosing object WD. No verify_fact/rule dispatcher,
     // definition search, state reset, or publication occurs in this traversal.
@@ -21,7 +25,18 @@ impl Runtime {
         {
             return leaf;
         }
-        let derived = self.search_real_sign_expression(element, state);
+        let derived = self
+            .search_real_sign_expression(element, state)
+            .or_else(|| {
+                self.search_membership_of_checked_object(element, &StandardSet::N, state)
+                    .map(|member| {
+                        StructuralRealSignProof::new(
+                            element.clone(),
+                            S::Nonnegative,
+                            StructuralRealSignReason::Membership(Box::new(member)),
+                        )
+                    })
+            });
         match (leaf, derived) {
             (Some(a), Some(b)) => {
                 if a.sign.implies(b.sign) {
@@ -84,6 +99,10 @@ impl Runtime {
                 )
             }
             Obj::ArithmeticOperator(ArithmeticOperator::Sub(v)) => {
+                if let Some(proof) = self.search_difference_sign(element, &v.left, &v.right, state)
+                {
+                    return Some(proof);
+                }
                 let left = self.search_structural_real_sign(&v.left, state)?;
                 let right = self.search_structural_real_sign(&v.right, state)?;
                 (
@@ -229,6 +248,48 @@ impl Runtime {
             _ => return None,
         };
         Some(StructuralRealSignProof::new(element.clone(), sign, reason))
+    }
+
+    // The comparison is read, never searched. Both operands keep their real
+    // carriers, so this same certificate is safe for order and WD consumers.
+    fn search_difference_sign(
+        &mut self,
+        element: &Obj,
+        left: &Obj,
+        right: &Obj,
+        state: VerifyState,
+    ) -> Option<StructuralRealSignProof> {
+        use RealSign as S;
+        let source = self
+            .known_greater_proof(left, right)
+            .or_else(|| self.known_less_proof(right, left))
+            .map(|p| (S::Positive, p))
+            .or_else(|| {
+                self.known_less_proof(left, right)
+                    .or_else(|| self.known_greater_proof(right, left))
+                    .map(|p| (S::Negative, p))
+            })
+            .or_else(|| {
+                self.known_greater_equal_proof(left, right)
+                    .or_else(|| self.known_less_equal_proof(right, left))
+                    .map(|p| (S::Nonnegative, p))
+            })
+            .or_else(|| {
+                self.known_less_equal_proof(left, right)
+                    .or_else(|| self.known_greater_equal_proof(right, left))
+                    .map(|p| (S::Nonpositive, p))
+            })?;
+        let left_real = self.search_membership_of_checked_object(left, &StandardSet::R, state)?;
+        let right_real = self.search_membership_of_checked_object(right, &StandardSet::R, state)?;
+        Some(StructuralRealSignProof::new(
+            element.clone(),
+            source.0,
+            StructuralRealSignReason::DifferenceFromOrder {
+                left_real: Box::new(left_real),
+                right_real: Box::new(right_real),
+                source: Box::new(source.1),
+            },
+        ))
     }
 
     fn search_real_sign_leaf(

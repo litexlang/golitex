@@ -11,18 +11,100 @@ use crate::execute::ReleaseOneStructLayerProof;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_struct_function_membership(
+        &self,
+        access: &FieldAccess,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if access.fields.len() != 1 || !has_direct_record_receiver(access) {
+            return self.with_struct_field_evidence(access, position, |proof, scope| {
+                let (_, member) = self.compile_struct_projection(access, proof, scope)?;
+                let step = proof
+                    .projection_steps
+                    .last()
+                    .ok_or_else(|| LeanCompileError::unsupported("StructField/ProjectionStages"))?;
+                let (declaration, _, _) = scope.visible_struct(&step.carrier.name)?;
+                let mut substitution = header_substitution(&declaration.statement, &step.carrier)?;
+                let receiver = super::compile_struct_projection::field_receiver(
+                    access,
+                    access.fields.len() - 1,
+                );
+                substitution.extend(field_substitution(&declaration.statement, &receiver));
+                if !instantiated_object_matches(
+                    &declaration.statement.fields[step.field_index].field_type,
+                    &Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())),
+                    &substitution,
+                ) {
+                    return Err(LeanCompileError::unsupported(
+                        "StructField/FunctionSignature",
+                    ));
+                }
+                Ok(member)
+            });
+        }
+        let [field] = access.fields.as_slice() else {
+            return Err(LeanCompileError::unsupported("StructField/NestedPath"));
+        };
+        let (carrier, member) = self.compile_struct_receiver(&access.obj, position)?;
+        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        let fields = &declaration.statement.fields;
+        let index = fields
+            .iter()
+            .position(|f| &f.binding.name == field)
+            .ok_or_else(|| LeanCompileError::unsupported("StructField/Name"))?;
+        let mut substitution = header_substitution(&declaration.statement, &carrier)?;
+        substitution.extend(field_substitution(&declaration.statement, &access.obj));
+        if !instantiated_object_matches(
+            &fields[index].field_type,
+            &Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone())),
+            &substitution,
+        ) {
+            return Err(LeanCompileError::unsupported(
+                "StructField/FunctionSignature",
+            ));
+        }
+        let receiver = self.compile_object_reference(&access.obj, position)?;
+        let member = self.compile_struct_cart_membership(&carrier, &receiver, &member, position)?;
+        let n = fields.len();
+        Ok(format!("(Litex.FiniteFunction.coordinate_mem_number (M := M) {member} ({index} : Fin {n}) ({} : ℂ) (by norm_num))", index + 1))
+    }
+
     pub(super) fn compile_struct_receiver(
         &self,
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<(StructObj, String), LeanCompileError> {
+        if let Obj::FnObj(application) = object {
+            return position
+                .with_visible_wd(object, &mut |wd, producer| {
+                    ensure_object(object, wd)?;
+                    let DetailedObjWellDefinedProof::ByDef {
+                        proof: ObjWellDefinedProofByDef::FnObj(evidence),
+                        ..
+                    } = wd.detailed_ref()
+                    else {
+                        return Err(LeanCompileError::unsupported("StructField/ReceiverCallWD"));
+                    };
+                    let scope = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
+                    let (_, output, member) =
+                        self.compile_fn_call(application, evidence, &scope)?;
+                    let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) =
+                        output
+                    else {
+                        return Err(LeanCompileError::unsupported("StructField/ReceiverReturn"));
+                    };
+                    Ok((carrier, member))
+                })?
+                .ok_or_else(|| LeanCompileError::unsupported("StructField/ReceiverCallWD"));
+        }
         let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object else {
             return Err(LeanCompileError::unsupported("StructField/Receiver"));
         };
         let (carrier, member) = match position.visible_parameter(*id, &self.runtime) {
             Ok((_, Some(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier))), _, member)) => (carrier.clone(), member),
             Ok(_) => return Err(LeanCompileError::unsupported("StructField/DeclaredCarrier")),
-            Err(error) => position.with_visible_alias(object, &mut |parameter, _, _, producer| {
+            Err(error) => position.with_visible_alias(object, &self.runtime, &mut |parameter, _, _, producer| {
                 let SourceOwner::Statement(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
                     ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(p))))) = producer.owner else {
                     return Err(LeanCompileError::unsupported("StructField/TypedAlias"));
@@ -51,6 +133,12 @@ impl LitexToLeanCompiler {
         access: &FieldAccess,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if access.fields.len() != 1 || !has_direct_record_receiver(access) {
+            return self.with_struct_field_evidence(access, position, |proof, scope| {
+                self.compile_struct_projection(access, proof, scope)
+                    .map(|(value, _)| value)
+            });
+        }
         let [field] = access.fields.as_slice() else {
             return Err(LeanCompileError::unsupported("StructField/NestedPath"));
         };
@@ -79,15 +167,106 @@ impl LitexToLeanCompiler {
         proof: &FieldAccessObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let [child] = proof.child_obj_well_defined.as_slice() else {
+        let Some(child) = proof.child_obj_well_defined.first() else {
             return Err(LeanCompileError::unsupported("StructField/ChildWD"));
         };
-        if proof.argument_scope.is_some() || !proof.requirement_fact_verified.is_empty() {
-            return Err(LeanCompileError::unsupported("StructField/CallStages"));
-        }
         ensure_object(&access.obj, child)?;
         self.compile_wd(child, position)?;
-        self.compile_struct_field_reference(access, position)
+        let mut declared_input = None;
+        if let Obj::FnObj(application) = access.obj.as_ref() {
+            declared_input = Some(match application.head.as_ref() {
+                FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) => {
+                    if let Ok((_, carrier, _, _)) = position.visible_parameter(*id, &self.runtime) {
+                        let Some(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) = carrier
+                        else {
+                            return Err(LeanCompileError::unsupported(
+                                "StructField/DeclaredParameterSignature",
+                            ));
+                        };
+                        let signature_term = self.compile_fn_signature(signature, position)?;
+                        self.compile_struct_declared_input(
+                            application,
+                            proof,
+                            signature,
+                            &signature_term,
+                            position,
+                        )?
+                    } else {
+                        let (declaration, _, _) = position.visible_function(id)?;
+                        let head = self.compile_object_reference(
+                            &Obj::Identifier(IdentifierObj::from_bound_name(
+                                &declaration.statement.name,
+                            )),
+                            position,
+                        )?;
+                        self.compile_struct_declared_input(
+                            application,
+                            proof,
+                            &declaration.statement.equal_to_anonymous_fn.body,
+                            &format!("({head}).val.signature"),
+                            position,
+                        )?
+                    }
+                }
+                FnObjHead::InstantiatedTemplateObj(instance) => {
+                    self.compile_template_record_call_input(application, instance, proof, position)?
+                }
+                _ => {
+                    return Err(LeanCompileError::unsupported(
+                        "StructField/DeclaredCallHead",
+                    ))
+                }
+            });
+        } else if proof.child_obj_well_defined.len() != 1
+            || proof.argument_scope.is_some()
+            || !proof.requirement_fact_verified.is_empty()
+        {
+            return Err(LeanCompileError::unsupported("StructField/CallStages"));
+        }
+        let formed = SourcePosition {
+            before: proof.child_obj_well_defined.len() + proof.requirement_fact_verified.len(),
+            ..*position
+        };
+        let (value, _) = self.compile_struct_projection(access, proof, &formed)?;
+        Ok(match declared_input {
+            Some(check) => format!("({check}{value})"),
+            None => value,
+        })
+    }
+
+    pub(super) fn compile_struct_declared_input(
+        &self,
+        application: &FnObj,
+        proof: &FieldAccessObjWellDefinedProof,
+        signature: &FnSet,
+        signature_term: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let first = proof
+            .projection_steps
+            .first()
+            .ok_or_else(|| LeanCompileError::unsupported("StructField/ProjectionStages"))?;
+        if signature.ret_set.as_ref()
+            != &Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                first.carrier.clone(),
+            ))
+            || proof.argument_scope.is_none()
+        {
+            return Err(LeanCompileError::unsupported(
+                "StructField/DeclaredCallSignature",
+            ));
+        }
+        let (input, domain) = self.compile_captured_call_domain(
+            application,
+            &proof.child_obj_well_defined,
+            &proof.requirement_fact_verified,
+            1,
+            signature,
+            position,
+        )?;
+        Ok(format!(
+            "let _field_declared_input : M.mem {input} ({signature_term}).domain := {domain};\n"
+        ))
     }
 
     pub(super) fn compile_auto_struct_layers(
@@ -273,5 +452,15 @@ impl LitexToLeanCompiler {
             )?);
         }
         Ok(output)
+    }
+}
+
+// Named functions and parameters expose their declaration-owned return carrier.
+// Template instances use their captured instantiation/projection path instead.
+pub(super) fn has_direct_record_receiver(access: &FieldAccess) -> bool {
+    match access.obj.as_ref() {
+        Obj::Identifier(_) => true,
+        Obj::FnObj(call) => matches!(call.head.as_ref(), FnObjHead::Identifier(_)),
+        _ => false,
     }
 }

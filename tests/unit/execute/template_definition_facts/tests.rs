@@ -176,6 +176,123 @@ fn template_definition_stores_are_visible_in_normal_and_detailed_json() {
     }
 }
 
+#[test]
+fn multi_output_templates_register_and_publish_every_output_together() {
+    let code = include_str!("../../../../lean/examples/dependent_template_point/statement.lit");
+    check(code, &[true; 3]);
+    let mut rt = runtime(true);
+    let run = rt.run_litex_code(code).unwrap();
+    assert!(run.success);
+    let definitions = &rt.top_exec_env().definitions.template_definitions;
+    assert_eq!(definitions["point_set"], definitions["point_member"]);
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+        ExecDefTemplateStmtResult::Success(p),
+    )) = &run.statement_results[1]
+    else {
+        panic!()
+    };
+    let output_ids = p
+        .statement
+        .template_def_stmt
+        .defined_bindings()
+        .into_iter()
+        .map(|p| p.id)
+        .collect::<std::collections::HashSet<_>>();
+    for publication in &p.definition_facts {
+        let fact = rt
+            .fact_by_id_in_stack(publication.store_and_infer.primary_fact_id())
+            .unwrap();
+        let mut free = std::collections::HashSet::new();
+        let Fact::ForallFact(fact) = fact else {
+            panic!("quantified publication")
+        };
+        for conclusion in &fact.then_facts {
+            let crate::ast::fact::ExistOrAndChainAtomicFact::AtomicFact(atomic) = conclusion else {
+                panic!("atomic conclusion")
+            };
+            for object in crate::prelude::atomic_fact_args_ref(atomic) {
+                crate::instantiate::collect_free_plain_ids(
+                    object,
+                    &std::collections::HashSet::new(),
+                    &mut free,
+                );
+            }
+        }
+        assert!(
+            free.is_disjoint(&output_ids),
+            "local output escaped: {fact:?}"
+        );
+    }
+}
+
+#[test]
+fn multi_output_guards_and_nonunique_choices_do_not_leak_extra_facts() {
+    check("template<t R: t != 0,>:\n    have divisor_copy, reciprocal_copy R = t, 1 / t\n\\reciprocal_copy<2> = 1 / 2\n\\divisor_copy<0> $in R\n\\reciprocal_copy<0> $in R\n0 != 0\n", &[true, true, false, false, false]);
+    let mut rt = runtime(true);
+    let result = rt
+        .run_litex_code(include_str!(
+            "../../../../lean/examples/correlated_template_witnesses/statement.lit"
+        ))
+        .unwrap();
+    assert!(result.success);
+    assert!(
+        !rt.run_litex_code("\\related_left<2> = 0\n")
+            .unwrap()
+            .success
+    );
+}
+
+#[test]
+fn secondary_name_collision_and_failed_body_roll_back_all_output_names() {
+    let mut rt = runtime(true);
+    assert!(
+        rt.run_litex_code("have occupied_output R = 0\n")
+            .unwrap()
+            .success
+    );
+    assert!(
+        !rt.run_litex_code(
+            "template<t R>:\n    have reusable_output, occupied_output R = t, t + 1\n"
+        )
+        .unwrap()
+        .success
+    );
+    assert!(rt
+        .top_exec_env()
+        .definitions
+        .template_definitions
+        .is_empty());
+    assert!(rt.run_litex_code("template<t R>:\n    have reusable_output, fresh_output R = t, t + 1\n\\fresh_output<2> = 3\noccupied_output = 0\n").unwrap().success);
+    assert!(
+        !rt.run_litex_code("template<S set>:\n    have retry_first, retry_second S\n")
+            .unwrap()
+            .success
+    );
+    assert!(!rt
+        .top_exec_env()
+        .definitions
+        .template_definitions
+        .contains_key("retry_first"));
+    assert!(!rt
+        .top_exec_env()
+        .definitions
+        .template_definitions
+        .contains_key("retry_second"));
+    assert!(rt.run_litex_code("template<S nonempty_set>:\n    have retry_first, retry_second S\n\\retry_first<R> $in R\n\\retry_second<R> $in R\n").unwrap().success);
+}
+
+#[test]
+fn secondary_alias_and_function_outputs_use_their_own_declarations() {
+    check(
+        include_str!("../../../../lean/examples/paired_template_aliases/statement.lit"),
+        &[true; 2],
+    );
+    check(
+        include_str!("../../../../lean/examples/paired_template_function/statement.lit"),
+        &[true; 5],
+    );
+}
+
 fn runtime(strict: bool) -> Runtime {
     Runtime::new_with_result_detail(
         LaunchCommand::Eval {

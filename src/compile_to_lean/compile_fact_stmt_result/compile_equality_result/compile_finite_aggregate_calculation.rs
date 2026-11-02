@@ -10,6 +10,7 @@ impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_finite_aggregate_value(
         &self,
         evaluation: &AggregateEvaluationResult,
+        term_values: &[String],
         position: &SourcePosition<'_>,
     ) -> Result<(EvalRational, String), LeanCompileError> {
         let (source, enumeration, terms, value, product) = match evaluation {
@@ -40,33 +41,24 @@ impl LitexToLeanCompiler {
         };
         let (arguments, enumeration_proof) =
             self.compile_numeric_enumeration(set, enumeration, position)?;
-        if terms.len() != arguments.len() {
+        if terms.len() != arguments.len() || term_values.len() != terms.len() {
             return Err(LeanCompileError::unsupported(
                 "FiniteAggregate/EnumerationStages",
             ));
         }
-        let source_term = self.compile_object_reference(source, position)?;
-        let standard_input = position
-            .with_visible_wd(source, &mut |wd, _| {
-                let DetailedObjWellDefinedProof::ByDef {
-                    proof: ObjWellDefinedProofByDef::IteratedOperator(p),
-                    ..
-                } = (wd).detailed_ref()
-                else {
-                    return Err(LeanCompileError::unsupported(
-                        "FiniteAggregate/CalculationWD",
-                    ));
-                };
-                Self::finite_aggregate_uses_standard_input(p)
-            })?
-            .ok_or_else(|| LeanCompileError::unsupported("FiniteAggregate/CalculationProducer"))?;
-        let denote_law = if standard_input {
-            "finiteAggregateListDenote"
-        } else {
-            "finiteAggregateOnListDenote"
-        };
-
-        let mut lines = vec![format!("let _aggregate := {source_term}")];
+        if terms.is_empty() {
+            let value_expected = EvalRational::new(if product { 1 } else { 0 }, 1).unwrap();
+            if EvalRational::from_obj(value).as_ref() != Some(&value_expected) {
+                return Err(LeanCompileError::unsupported("FiniteAggregate/EmptyValue"));
+            }
+            let raw =
+                self.compile_function_raw_expression_bound(source, position, &Default::default())?;
+            let number = exact_rational_literal(&value_expected, "ℂ")?;
+            return Ok((value_expected, format!("(show {raw} = M.number {number} from by\n  apply congrArg M.number\n  apply Litex.finiteAggregateValueEmpty\n  intro x hx\n  have impossible := ({enumeration_proof} x).mp hx\n  cases impossible)")));
+        }
+        let function_value = self.compile_normalization_value(function, position)?;
+        let set_value = self.compile_normalization_value(set, position)?;
+        let mut lines = vec![format!("let _aggregate_function := {function_value}")];
         let numbers = arguments
             .iter()
             .map(|n| exact_rational_literal(n, "ℂ"))
@@ -74,9 +66,7 @@ impl LitexToLeanCompiler {
         let mut term_facts = Vec::new();
         let mut accumulated = EvalRational::new(if product { 1 } else { 0 }, 1).unwrap();
         for (i, (argument_value, term)) in arguments.iter().zip(terms).enumerate() {
-            if EvalRational::from_obj(&term.argument).as_ref() != Some(argument_value)
-                || !term.nested_aggregate_evidence.is_empty()
-            {
+            if EvalRational::from_obj(&term.argument).as_ref() != Some(argument_value) {
                 return Err(LeanCompileError::unsupported(
                     "FiniteAggregate/TermEnumeration",
                 ));
@@ -96,17 +86,24 @@ impl LitexToLeanCompiler {
             }
             let argument_number = exact_rational_literal(&argument_value, "ℂ")?;
             let term_number = exact_rational_literal(&term_value, "ℂ")?;
-            let beta = self.compile_aggregate_term(term, function, &term_value, position)?;
+            let beta = self.compile_aggregate_term(
+                term,
+                function,
+                &term_value,
+                &term_values[i],
+                position,
+            )?;
             let name = format!("_aggregate_term_{i}");
-            lines.push(format!("have {name} : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number {argument_number})) = {term_number} := (congrArg (Litex.NativeBridge.complexValue (M := M)) {beta}).trans (Litex.NativeBridge.complexValue_number {term_number})"));
+            lines.push(format!("have {name} : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue _aggregate_function (M.number {argument_number})) = {term_number} := (congrArg (Litex.NativeBridge.complexValue (M := M)) {beta}).trans (Litex.NativeBridge.complexValue_number {term_number})"));
             term_facts.push(name);
         }
         if EvalRational::from_obj(value).as_ref() != Some(&accumulated) {
             return Err(LeanCompileError::unsupported("FiniteAggregate/ResultValue"));
         }
         let output = exact_rational_literal(&accumulated, "ℂ")?;
+        lines.push("apply congrArg M.number".into());
         lines.push(format!(
-            "apply Litex.{denote_law} _aggregate [{}] {output}",
+            "apply Litex.finiteAggregateValueList {product} {set_value} (fun x => Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue _aggregate_function x)) [{}] {output}",
             numbers.join(", ")
         ));
         lines.push(format!("· exact {enumeration_proof}"));
@@ -117,12 +114,67 @@ impl LitexToLeanCompiler {
         Ok((accumulated, denotation))
     }
     /// Replay the original numeric enumeration and its exact set-equality path.
-    pub(super) fn compile_numeric_enumeration(
+    pub(in crate::compile_to_lean) fn compile_numeric_enumeration(
         &self,
         set: &Obj,
         enumeration: &FiniteSetEnumerationResult,
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<EvalRational>, String), LeanCompileError> {
+        if let Obj::SetFormer(SetFormer::ClosedRange(range)) = &enumeration.resolved_set {
+            if set.ir() != enumeration.resolved_set.ir()
+                || !enumeration.set_equality.path.is_empty()
+                || !enumeration.cited_equal_fact_ids.is_empty()
+            {
+                return Err(LeanCompileError::unsupported(
+                    "FiniteAggregate/ClosedRangeEnumeration",
+                ));
+            }
+            let a = closed_integer(&range.start)
+                .ok_or_else(|| LeanCompileError::unsupported("FiniteAggregate/ClosedRangeLower"))?;
+            let b = closed_integer(&range.end)
+                .ok_or_else(|| LeanCompileError::unsupported("FiniteAggregate/ClosedRangeUpper"))?;
+            let (_, lower) = self.compile_eval_closed_value(&range.start, position)?;
+            let (_, upper) = self.compile_eval_closed_value(&range.end, position)?;
+            let raw = self.compile_normalization_value(set, position)?;
+            if a <= b {
+                let count = b
+                    .checked_sub(a)
+                    .and_then(|n| n.checked_add(1))
+                    .and_then(|n| usize::try_from(n).ok())
+                    .ok_or_else(|| {
+                        LeanCompileError::unsupported("FiniteAggregate/ClosedRangeSize")
+                    })?;
+                if enumeration.elements.len() != count {
+                    return Err(LeanCompileError::unsupported(
+                        "FiniteAggregate/ClosedRangeSize",
+                    ));
+                }
+                let mut values = Vec::with_capacity(count);
+                let mut indices = Vec::with_capacity(count);
+                let mut numbers = Vec::with_capacity(count);
+                for (index, element) in enumeration.elements.iter().enumerate() {
+                    let expected = a.checked_add(index as i128).ok_or_else(|| {
+                        LeanCompileError::unsupported("FiniteAggregate/ClosedRangeSize")
+                    })?;
+                    let value = EvalRational::from_obj(element)
+                        .filter(|v| v.to_i128_if_integer() == Some(expected))
+                        .ok_or_else(|| {
+                            LeanCompileError::unsupported("FiniteAggregate/ClosedRangeElement")
+                        })?;
+                    values.push(value);
+                    indices.push(format!("({expected} : ℤ)"));
+                    numbers.push(format!("M.number ({expected} : ℂ)"));
+                }
+                let integer_list = indices.join(", ");
+                return Ok((values, format!("(show ∀ x, M.mem x {raw} ↔ x ∈ ([{}] : List M.Value) from by\n  intro x\n  have bounds : {raw} = Litex.closedRangeValue (M.number ({a} : ℂ)) (M.number ({b} : ℂ)) := congrArg₂ (Litex.closedRangeValue (M := M)) {lower} {upper}\n  rw [bounds]\n  simpa only [List.map_cons, List.map_nil, Int.cast_ofNat, Int.cast_neg, Int.cast_zero, Int.cast_one, Nat.cast_ofNat, Nat.cast_zero, Nat.cast_one] using (Litex.closedRangeValueListMembers (M := M) ({a} : ℤ) ({b} : ℤ) [{integer_list}] (by decide) x))", numbers.join(", "))));
+            }
+            if !enumeration.elements.is_empty() {
+                return Err(LeanCompileError::unsupported(
+                    "FiniteAggregate/ClosedRangeSize",
+                ));
+            }
+            return Ok((vec![], format!("(show ∀ x, M.mem x {raw} ↔ x ∈ ([] : List M.Value) from by\n  intro x\n  have bounds : {raw} = Litex.closedRangeValue (M.number ({a} : ℂ)) (M.number ({b} : ℂ)) := congrArg₂ (Litex.closedRangeValue (M := M)) {lower} {upper}\n  have members := Litex.closedRangeValue_members (M := M) ({a} : ℤ) ({b} : ℤ) x\n  norm_num at members\n  rw [bounds, members]\n  constructor\n  · rintro ⟨k, _, hlo, hhi⟩\n    omega\n  · intro h\n    cases h)")));
+        }
         let Obj::SetFormer(SetFormer::ListSet(list)) = &enumeration.resolved_set else {
             return Err(LeanCompileError::unsupported(
                 "FiniteAggregate/EnumerationShape",
@@ -189,7 +241,10 @@ impl LitexToLeanCompiler {
         lines.push(format!("intro x\nexact Eq.mpr (congrArg (fun _set => M.mem x _set ↔ x ∈ ([{members}] : List M.Value)) _enumeration_same) (_members_0 x)"));
         Ok((
             values,
-            format!("(by\n  {})", lines.join("\n").replace('\n', "\n  ")),
+            format!(
+                "(show ∀ x, M.mem x (Litex.denote {set_term}) ↔ x ∈ ([{members}] : List M.Value) from by\n  {})",
+                lines.join("\n").replace('\n', "\n  ")
+            ),
         ))
     }
 }

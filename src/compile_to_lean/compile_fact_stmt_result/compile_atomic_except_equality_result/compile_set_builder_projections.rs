@@ -80,6 +80,7 @@ impl LitexToLeanCompiler {
                     StoreFactResult::AtomicFact(s) => Fact::AtomicFact(s.fact.clone()),
                     StoreFactResult::AndFact(s) => Fact::AndFact(s.fact.clone()),
                     StoreFactResult::ChainFact(s) => Fact::ChainFact(s.fact.clone()),
+                    StoreFactResult::OrFact(s) => Fact::OrFact(s.fact.clone()),
                     _ => {
                         return Err(LeanCompileError::unsupported(
                             "SetBuilder/CompoundProjection",

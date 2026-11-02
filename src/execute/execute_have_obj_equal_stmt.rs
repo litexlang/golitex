@@ -22,6 +22,51 @@ pub enum ExecHaveObjEqualStmtFailed {
     EqualToWellDefined(VerifyObjWellDefinedResult),
     Membership(VerifyFactResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
+    Context(Box<ExecHaveObjEqualContextFailure>),
+    Preflight(Box<ExecHaveObjEqualPreflightFailure>),
+    AfterPreflight(Box<ExecHaveObjEqualAfterPreflightFailure>),
+}
+
+pub struct ExecHaveObjEqualContextFailure {
+    pub statement: HaveObjEqualStmt,
+    pub failure: ExecHaveObjEqualStmtFailed,
+}
+
+pub struct ExecHaveObjEqualPreflightFailure {
+    pub statement: HaveObjEqualStmt,
+    pub failure: IntroduceTypedParametersFailed,
+    pub type_local_env: Box<ExecEnv>,
+}
+
+pub struct ExecHaveObjEqualAfterPreflightFailure {
+    pub statement: HaveObjEqualStmt,
+    pub type_preflight: IntroduceTypedParametersResult,
+    pub type_local_env: Box<ExecEnv>,
+    pub failure: HaveObjEqualAfterPreflightFailed,
+}
+
+pub enum HaveObjEqualAfterPreflightFailed {
+    ValueWd {
+        checked: Vec<VerifyObjWellDefinedResult>,
+        failed: VerifyObjWellDefinedResult,
+    },
+    Membership {
+        equal_to_well_defined: Vec<VerifyObjWellDefinedResult>,
+        instantiated_types: Vec<ParamType>,
+        requirements: Vec<Fact>,
+        checked: Vec<VerifyFactResult>,
+        failed: VerifyFactResult,
+    },
+    AutoOpen {
+        equal_to_well_defined: Vec<VerifyObjWellDefinedResult>,
+        membership_types: Vec<ParamType>,
+        membership_requirements: Vec<Fact>,
+        membership_checks: Vec<VerifyFactResult>,
+        defined_params: StoreHaveObjAndInferResult,
+        opened_before_fail: Vec<crate::execute::ReleaseOneStructLayerProof>,
+        failed: crate::execute::FailToReleaseOneStructLayer,
+        local_env: Box<ExecEnv>,
+    },
 }
 
 // Pipeline: check arity → WD param types → WD RHS → membership → define → store equals.
@@ -57,7 +102,10 @@ impl Runtime {
         let bindings = flatten_typed_param_bindings(&stmt.param_def);
         if bindings.len() != stmt.objs_equal_to.len() {
             return Ok(ExecHaveObjEqualStmtResult::Failed(
-                ExecHaveObjEqualStmtFailed::ParamCountMismatch,
+                ExecHaveObjEqualStmtFailed::Context(Box::new(ExecHaveObjEqualContextFailure {
+                    statement: stmt.clone(),
+                    failure: ExecHaveObjEqualStmtFailed::ParamCountMismatch,
+                })),
             ));
         }
 
@@ -68,14 +116,15 @@ impl Runtime {
         })?;
         let type_preflight = match preflight {
             Ok(result) => result,
-            Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
+            Err(failure) => {
                 return Ok(ExecHaveObjEqualStmtResult::Failed(
-                    ExecHaveObjEqualStmtFailed::ParamType(failed),
-                ));
-            }
-            Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
-                return Ok(ExecHaveObjEqualStmtResult::Failed(
-                    ExecHaveObjEqualStmtFailed::AutoOpenStructLayer(failed),
+                    ExecHaveObjEqualStmtFailed::Preflight(Box::new(
+                        ExecHaveObjEqualPreflightFailure {
+                            statement: stmt.clone(),
+                            failure,
+                            type_local_env,
+                        },
+                    )),
                 ));
             }
         };
@@ -85,13 +134,25 @@ impl Runtime {
             let wd = self.verify_obj_well_definedness(obj, verify_state.clone())?;
             if wd.is_failed() {
                 return Ok(ExecHaveObjEqualStmtResult::Failed(
-                    ExecHaveObjEqualStmtFailed::EqualToWellDefined(wd),
+                    ExecHaveObjEqualStmtFailed::AfterPreflight(Box::new(
+                        ExecHaveObjEqualAfterPreflightFailure {
+                            statement: stmt.clone(),
+                            type_preflight,
+                            type_local_env,
+                            failure: HaveObjEqualAfterPreflightFailed::ValueWd {
+                                checked: equal_to_well_defined,
+                                failed: wd,
+                            },
+                        },
+                    )),
                 ));
             }
             equal_to_well_defined.push(wd);
         }
 
         let mut membership_checks = Vec::with_capacity(bindings.len());
+        let mut membership_requirements = Vec::with_capacity(bindings.len());
+        let mut membership_types = Vec::with_capacity(bindings.len());
         let mut earlier_values = HashMap::new();
         let mut value_index = 0;
         for group in &stmt.param_def.groups {
@@ -132,9 +193,24 @@ impl Runtime {
                     }
                 };
                 let checked = self.verify_fact(&type_fact, verify_state.clone())?;
+                membership_types.push(param_type.clone());
+                membership_requirements.push(type_fact);
                 if checked.is_failed() {
                     return Ok(ExecHaveObjEqualStmtResult::Failed(
-                        ExecHaveObjEqualStmtFailed::Membership(checked),
+                        ExecHaveObjEqualStmtFailed::AfterPreflight(Box::new(
+                            ExecHaveObjEqualAfterPreflightFailure {
+                                statement: stmt.clone(),
+                                type_preflight,
+                                type_local_env,
+                                failure: HaveObjEqualAfterPreflightFailed::Membership {
+                                    equal_to_well_defined,
+                                    instantiated_types: membership_types,
+                                    requirements: membership_requirements,
+                                    checked: membership_checks,
+                                    failed: checked,
+                                },
+                            },
+                        )),
                     ));
                 }
                 membership_checks.push(checked);
@@ -157,8 +233,8 @@ impl Runtime {
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )? {
                 Ok(layers) => layers,
-                Err((_, failed)) => {
-                    return Ok(Err(failed));
+                Err((opened_before_fail, failed)) => {
+                    return Ok(Err((store_and_infer_result, opened_before_fail, failed)));
                 }
             };
 
@@ -184,9 +260,25 @@ impl Runtime {
 
         let (store_and_infer_result, auto_opened_struct_layers) = match commit {
             Ok(parts) => parts,
-            Err(failed) => {
+            Err((defined_params, opened_before_fail, failed)) => {
                 return Ok(ExecHaveObjEqualStmtResult::Failed(
-                    ExecHaveObjEqualStmtFailed::AutoOpenStructLayer(failed),
+                    ExecHaveObjEqualStmtFailed::AfterPreflight(Box::new(
+                        ExecHaveObjEqualAfterPreflightFailure {
+                            statement: stmt.clone(),
+                            type_preflight,
+                            type_local_env,
+                            failure: HaveObjEqualAfterPreflightFailed::AutoOpen {
+                                equal_to_well_defined,
+                                membership_types,
+                                membership_requirements,
+                                membership_checks,
+                                defined_params,
+                                opened_before_fail,
+                                failed,
+                                local_env: nested_env,
+                            },
+                        },
+                    )),
                 ));
             }
         };

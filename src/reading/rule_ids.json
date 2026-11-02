@@ -1234,6 +1234,7 @@
   "infer.InferEqualFactResult::NonzeroNumeratorCancellation": "infer.InferEqualFactResult::NonzeroNumeratorCancellation",
   "infer.InferEqualFactResult::PositiveRealPower": "infer.InferEqualFactResult::PositiveRealPower",
   "infer.InferEqualFactResult::SubtractiveCancellation": "infer.InferEqualFactResult::SubtractiveCancellation",
+  "infer.InferEqualFactResult::TupleCoordinates": "infer.InferEqualFactResult::TupleCoordinates",
   "infer.InferExistUniqueFactResult::NoInfer": "infer.InferExistUniqueFactResult::NoInfer",
   "infer.InferExistUniqueFactResult::UniquenessForall": "infer.InferExistUniqueFactResult::UniquenessForall",
   "infer.InferForallFactResult::NoInfer": "infer.InferForallFactResult::NoInfer",

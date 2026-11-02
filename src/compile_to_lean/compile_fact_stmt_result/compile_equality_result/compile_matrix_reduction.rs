@@ -149,7 +149,7 @@ impl LitexToLeanCompiler {
                     &std::collections::HashMap::new(),
                 )?;
                 let proof = format!(
-                    "(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.matrixMultiplyCall {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.matrixMultiplyBody (Litex.denote ({root}).val.left) (Litex.denote ({root}).val.right) ({root}).val.inner {pair} at h\n  unfold Litex.matrixMultiplyBody Litex.matrixMultiplyTerm at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)"
+                    "(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.matrixMultiplyCall {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.matrixMultiplyBody (Litex.denote ({root}).val.left) (Litex.denote ({root}).val.right) ({root}).val.inner {pair} at h\n  unfold Litex.matrixMultiplyBody Litex.matrixMultiplyRawBody Litex.matrixMultiplyTerm at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)"
                 );
                 Ok((value, proof))
             }

@@ -1,0 +1,156 @@
+# Independent finite complex-sum bounds and zero-tail use.
+
+claim:
+    ? forall f fn(k N) C,n N:
+        C_abs(sum(0,n,f))<=sum(0,n,fn(k N) R {C_abs(f(k))})
+    release thm ComplexSums::main::complex_natural_sum_triangle(f,n)
+
+claim:
+    ? forall f fn(k N) C,m,n N:
+        m<=n
+        forall k N:
+            k>m
+            =>:
+                f(k)=0
+        =>:
+            sum(0,n,f)=sum(0,m,f)
+    release thm ComplexSums::main::complex_natural_sum_zero_tail(f,m,n)
+
+claim:
+    ? forall n N,M R:
+        sum(0,n,fn(k N) R {M})=(n+1)*M
+    release thm ComplexSums::main::real_natural_constant_sum(n,M)
+
+claim:
+    ? forall f fn(k N) C,n N,M R:
+        forall k closed_range(0,n):
+            C_abs(f(k))<=M
+        =>:
+            C_abs(sum(0,n,f))<=(n+1)*M
+    release thm ComplexSums::main::complex_natural_sum_uniform_bound(f,n,M)
+
+have fn sum_check_terms(k N) C by cases:
+    case k<=1: k+i
+    case k>1: 0
+
+sum_check_terms(0)=i
+
+sum_check_terms(1)=1+i
+
+sum(0,1,sum_check_terms)=sum(0,0,sum_check_terms)+sum_check_terms(1)=sum_check_terms(0)+sum_check_terms(1)=i+(1+i)=1+2*i
+
+claim:
+    ? forall k N:
+        k>1
+        =>:
+            sum_check_terms(k)=0
+    sum_check_terms(k)=0
+
+release thm ComplexSums::main::complex_natural_sum_zero_tail(sum_check_terms,1,4)
+
+sum(0,4,sum_check_terms)=sum(0,1,sum_check_terms)=1+2*i
+
+claim:
+    ? forall k closed_range(0,1):
+        C_abs(sum_check_terms(k))<=2
+    k $in N
+    k $in R
+    by cases:
+        ? C_abs(sum_check_terms(k))<=2
+        case k=0:
+            sum_check_terms(k)=sum_check_terms(0)=i
+            C_abs(sum_check_terms(k))=C_abs(i)=1<=2
+        case k!=0:
+            k>0
+            k>=1
+            k=1
+            sum_check_terms(k)=sum_check_terms(1)=1+i
+            C_abs(1+i)<=C_abs(1)+C_abs(i)
+            C_abs(1)=1
+            C_abs(i)=1
+            C_abs(sum_check_terms(k))=C_abs(1+i)<=C_abs(1)+C_abs(i)=2
+
+release thm ComplexSums::main::complex_natural_sum_uniform_bound(sum_check_terms,1,2)
+
+C_abs(sum(0,1,sum_check_terms))<=4
+
+release thm ComplexSums::main::complex_natural_sum_triangle(sum_check_terms,1)
+
+release thm ComplexSums::main::real_natural_constant_sum(4,3/2)
+
+sum(0,4,fn(k N) R {3/2})=15/2
+
+release thm ComplexSums::main::complex_natural_sum_triangle(sum_check_terms,0)
+
+sum(0,0,sum_check_terms)=sum_check_terms(0)=i
+
+sum(0,0,sum_check_terms) $in C
+
+C_abs(sum(0,0,sum_check_terms))=C_abs(sum_check_terms(0))=C_abs(i)=1
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n):
+        \ComplexSums::main::complex_finite_sequence_moduli<n,coefficients> $in finite_seq(R,n)
+        \ComplexSums::main::complex_finite_sequence_moduli<n,coefficients> $in fn(k closed_range(1,n)) R
+    release thm ComplexSums::main::complex_finite_sequence_moduli_carrier(n,coefficients)
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n):
+        finite_set_sum(closed_range(1,n),\ComplexSums::main::complex_finite_sequence_moduli<n,coefficients>) $in R
+    release thm ComplexSums::main::complex_finite_sequence_norm_sum_carrier(n,coefficients)
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n):
+        \ComplexSums::main::complex_finite_sequence_moduli<n,coefficients> $in finite_seq(R,n)
+        \ComplexSums::main::complex_finite_sequence_moduli<n,coefficients> $in fn(k closed_range(1,n)) R
+    release thm ComplexSums::main::complex_finite_sequence_moduli_carrier(n,coefficients)
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n):
+        finite_set_sum(closed_range(1,n),\ComplexSums::main::complex_finite_sequence_moduli<n,coefficients>) $in R
+    release thm ComplexSums::main::complex_finite_sequence_norm_sum_carrier(n,coefficients)
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n),j closed_range(1,n):
+        C_abs(coefficients(j))<abs(finite_set_sum(closed_range(1,n),\ComplexSums::main::complex_finite_sequence_moduli<n,coefficients>))+1
+    release thm ComplexSums::main::complex_finite_sequence_strict_bound(n,coefficients,j)
+
+have bound_check_coefficients finite_seq(C,2)=fn(j closed_range(1,2)) C {j*i}
+
+bound_check_coefficients(1)=i
+
+bound_check_coefficients(2)=2*i
+
+release thm ComplexSums::main::complex_finite_sequence_moduli_carrier(2,bound_check_coefficients)
+
+\ComplexSums::main::complex_finite_sequence_moduli<2,bound_check_coefficients>(1)=C_abs(bound_check_coefficients(1))=C_abs(i)=1
+
+\ComplexSums::main::complex_finite_sequence_moduli<2,bound_check_coefficients>(2)=C_abs(bound_check_coefficients(2))=C_abs(2*i)=2
+
+release thm ComplexSums::main::complex_finite_sequence_norm_sum_carrier(2,bound_check_coefficients)
+
+closed_range(1,2)={1,2}
+
+have fn bound_check_norms(j closed_range(1,2)) R=\ComplexSums::main::complex_finite_sequence_moduli<2,bound_check_coefficients>(j)
+
+bound_check_norms(1)=\ComplexSums::main::complex_finite_sequence_moduli<2,bound_check_coefficients>(1)=1
+
+bound_check_norms(2)=\ComplexSums::main::complex_finite_sequence_moduli<2,bound_check_coefficients>(2)=2
+
+release thm finite_set_sum_substitution(finite_set_sum(closed_range(1,2),\ComplexSums::main::complex_finite_sequence_moduli<2,bound_check_coefficients>),finite_set_sum(closed_range(1,2),bound_check_norms))
+
+finite_set_sum(closed_range(1,2),\ComplexSums::main::complex_finite_sequence_moduli<2,bound_check_coefficients>)=finite_set_sum(closed_range(1,2),bound_check_norms)=finite_set_sum({1,2},bound_check_norms)=bound_check_norms(1)+bound_check_norms(2)=1+2=3
+
+release thm ComplexSums::main::complex_finite_sequence_strict_bound(2,bound_check_coefficients,2)
+
+C_abs(bound_check_coefficients(2))<abs(finite_set_sum(closed_range(1,2),\ComplexSums::main::complex_finite_sequence_moduli<2,bound_check_coefficients>))+1
+
+have bound_check_empty finite_seq(C,0)=tuple()
+
+release thm ComplexSums::main::complex_finite_sequence_moduli_carrier(0,bound_check_empty)
+
+release thm ComplexSums::main::complex_finite_sequence_norm_sum_carrier(0,bound_check_empty)
+
+finite_set_sum(closed_range(1,0),\ComplexSums::main::complex_finite_sequence_moduli<0,bound_check_empty>)=0
+
+

@@ -158,6 +158,11 @@ fn every_current_statement_fixture_renders_in_every_language() {
                 .unwrap_or_else(|error| panic!("{} / {lang:?}: {error}", path.display()));
             assert!(!text.trim().is_empty(), "{}", path.display());
             assert!(!text.contains("@a@"), "{}", path.display());
+            assert!(
+                !text.contains("$$"),
+                "{} / {lang:?}: {text}",
+                path.display()
+            );
         }
     }
     assert_eq!(
@@ -292,4 +297,102 @@ fn single_conclusions_and_calls_omit_redundant_parentheses() {
     assert!(text.contains(r"\exists! k\in \mathbb{N}:\ k = 0"), "{text}");
     assert!(text.contains(r"\neg a"), "{text}");
     assert!(!text.contains(r"a\left("), "{text}");
+}
+
+#[test]
+fn structured_proofs_keep_case_boundaries_and_one_outer_proof_caption() {
+    let source =
+        include_str!("../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit");
+    for language in OutputLanguage::ALL {
+        let text = to_latex_from_source(source, language).unwrap();
+        let case = super::language::phrase(language, super::language::Phrase::Case);
+        let proof = super::language::phrase(language, super::language::Phrase::Proof);
+        assert!(text.contains(r"\begin{description}"), "{text}");
+        for index in [1, 2] {
+            assert!(
+                text.contains(&format!(r"\item[\textbf{{{case} {index}.}}]")),
+                "{text}"
+            );
+        }
+        assert_eq!(
+            text.matches(&format!(r"\textbf{{{proof}.}}")).count(),
+            1,
+            "{text}"
+        );
+        assert!(text.contains(r"\begin{quote}"), "{text}");
+        assert!(text.contains(r"\neg\left(n > 1\right)"), "{text}");
+        assert!(
+            text.contains(concat!(r"$n \leq 1$;", "\n\\par\n$n = 1$;")),
+            "{text}"
+        );
+        assert_eq!(text.matches(r"\square").count(), 1, "{text}");
+        assert!(text.contains(r"n\in \mathbb{N}_{>0}"), "{text}");
+    }
+}
+
+#[test]
+fn mixed_calculation_rows_preserve_each_original_adjacent_comparison() {
+    let text = to_latex_from_source("1 < 4 > 3 < 5 <= 6", OutputLanguage::English).unwrap();
+    for row in ["1 &< 4", "4 &> 3", "3 &< 5", r"5 &\leq 6"] {
+        assert!(text.contains(row), "{text}");
+    }
+    assert!(!text.contains("1 &> 3"), "{text}");
+    let equality =
+        to_latex_from_source("1 + 1 = 2 = 4 / 2 = 6 / 3", OutputLanguage::English).unwrap();
+    assert!(equality.contains(r"\begin{aligned}"), "{equality}");
+    assert!(
+        equality.contains(r"1 + 1 &= 2")
+            && equality.contains(r"&= \frac{4}{2}")
+            && equality.contains(r"&= \frac{6}{3}"),
+        "{equality}"
+    );
+}
+
+#[test]
+fn multiclause_statements_and_definitions_retain_every_clause_and_domain() {
+    let source = "prop in_unit_interval(x R):\n    x >= 0\n    x <= 1\nforall x R:\n    x >= 0\n    x <= 1\n    =>:\n        x^2 >= 0\n        x^2 <= 1\nexist x R st {x >= 0, x <= 1}";
+    let text = to_latex_from_source(source, OutputLanguage::English).unwrap();
+    for clause in [
+        r"\forall x\in \mathbb{R}",
+        r"\exists x\in \mathbb{R}",
+        r"x \geq 0",
+        r"x \leq 1",
+        r"x^{2} \geq 0",
+        r"x^{2} \leq 1",
+        r"\Longleftrightarrow",
+        r"\Longrightarrow",
+        r"\land",
+    ] {
+        assert!(text.contains(clause), "{text}");
+    }
+    assert!(
+        text.contains(r"\begin{gathered}") && text.contains(r"\begin{aligned}"),
+        "{text}"
+    );
+}
+
+#[test]
+fn induction_phases_are_distinct_list_items_without_nested_proof_quotations() {
+    let source =
+        include_str!("../../examples/stmt_nodes/by/induction_domain_and_proof_actions.lit");
+    let text = to_latex_from_source(source, OutputLanguage::English).unwrap();
+    assert!(
+        text.contains(r"\item[\textbf{Base case.}]")
+            && text.contains(r"\item[\textbf{Induction step.}]"),
+        "{text}"
+    );
+    assert!(!text.contains(r"\begin{quote}"), "{text}");
+}
+
+#[test]
+fn bodyless_theorems_do_not_acquire_a_fabricated_proof_or_end_marker() {
+    let text = to_latex_from_source(
+        "thm reflexivity:\n    ? forall x R:\n        x = x",
+        OutputLanguage::English,
+    )
+    .unwrap();
+    assert!(
+        !text.contains(r"\textbf{Proof.}") && !text.contains(r"\square"),
+        "{text}"
+    );
 }

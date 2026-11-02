@@ -1,0 +1,22 @@
+# Before: a later case failure discarded earlier completed branch proofs.
+#     case case_prefix_value = 0:
+#         by def $case_prefix_nonnegative(case_prefix_value)
+#     case case_prefix_value != 0:
+#         3 = 3
+#         2 = 3
+# Now: retain the coverage proof, first branch and second branch's prefix.
+# Expected: strict CLI exit 1, proof_body, case 1, step 1; no common conclusion.
+# Boundary: sibling assumptions and local consequences must not leak.
+# Evidence: target/release/litex -strict -lang en -f examples/test_statements/negative/by_cases_stmt/completed-branch-before-failure.lit
+prop case_prefix_nonnegative(x R):
+    x >= 0
+have case_prefix_value R
+by cases:
+    ? $case_prefix_nonnegative(case_prefix_value)
+    case case_prefix_value = 0:
+        by def $case_prefix_nonnegative(case_prefix_value)
+    case case_prefix_value != 0:
+        3 = 3
+        2 = 3
+    case case_prefix_value = case_prefix_value:
+        4 = 4

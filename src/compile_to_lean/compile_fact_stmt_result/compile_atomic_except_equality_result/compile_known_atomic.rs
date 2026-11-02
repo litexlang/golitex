@@ -126,6 +126,7 @@ impl LitexToLeanCompiler {
                 AtomicFact::NormalAtomicFact(_)
                     | AtomicFact::NotNormalAtomicFact(_)
                     | AtomicFact::IsNonemptySetFact(_)
+                    | AtomicFact::IsFiniteSetFact(_)
                     | AtomicFact::SupersetFact(_)
                     | AtomicFact::NotSupersetFact(_)
                     | AtomicFact::ProperSubsetFact(_)

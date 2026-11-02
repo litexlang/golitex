@@ -15,9 +15,7 @@ use crate::ast::obj::{InstantiatedTemplateObj, Obj};
 use crate::ast::stmt::TemplateDefEnum;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
-use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
-use std::collections::HashMap;
 
 // Success evidence for one orientation of the unfold.
 // Field order: expanded RHS, then residual equality proof.
@@ -65,7 +63,7 @@ impl Runtime {
         ))
     }
 
-    // Look up template body; only HaveObjEqual with a single RHS is supported here.
+    // Select this output's RHS from the original shared template body.
     pub(crate) fn expanded_have_obj_equal_rhs_of_instantiated_template(
         &mut self,
         inst: &InstantiatedTemplateObj,
@@ -76,19 +74,21 @@ impl Runtime {
         let TemplateDefEnum::HaveObjEqualStmt(have) = &def.template_def_stmt else {
             return Ok(None);
         };
-        if have.objs_equal_to.len() != 1 {
+        let Some(index) = have
+            .param_def
+            .groups
+            .iter()
+            .flat_map(|g| &g.params)
+            .position(|p| p.name == inst.template_name.local_name())
+        else {
             return Ok(None);
-        }
-        let expected = def.template_arg_def.ordered_param_ids().len();
-        if inst.args.len() != expected {
+        };
+        let Some(rhs) = have.objs_equal_to.get(index).cloned() else {
             return Ok(None);
-        }
-        let rhs = have.objs_equal_to[0].clone();
-        let param_ids = def.template_arg_def.ordered_param_ids();
-        let mut subst: HashMap<IdentifierId, Obj> = HashMap::new();
-        for (id, arg) in param_ids.into_iter().zip(inst.args.iter()) {
-            subst.insert(id, arg.clone());
-        }
+        };
+        let Some(subst) = self.template_instance_substitution(def, inst) else {
+            return Ok(None);
+        };
         match self.inst_obj(&rhs, &subst) {
             Ok(expanded) => Ok(Some(expanded)),
             Err(_) => Ok(None),

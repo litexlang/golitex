@@ -1,0 +1,992 @@
+# Real-set upper bounds and total extended-valued suprema.
+
+prop is_real_set_upper_bound(E power_set(R),M R):
+    forall x E:
+        x <= M
+
+prop is_real_set_bounded_above(E power_set(R)):
+    exist M R st {$is_real_set_upper_bound(E,M)}
+
+thm real_least_upper_bound_is_source_upper_bound:
+    ? forall E power_set(R),L R:
+        $is_real_least_upper_bound(E,L)
+        =>:
+            $is_real_set_upper_bound(E,L)
+    E $subset R
+    release thm real_least_upper_bound_upper_bound(E,L)
+    by def $is_real_set_upper_bound(E,L)
+
+thm real_least_upper_bound_le_source_upper_bound:
+    ? forall E power_set(R),L,M R:
+        $is_real_least_upper_bound(E,L)
+        $is_real_set_upper_bound(E,M)
+        =>:
+            L <= M
+    E $subset R
+    forall x E:
+        x <= M
+    release thm real_least_upper_bound_le_upper_bound(E,L,M)
+
+thm real_least_upper_bound_from_source_properties:
+    ? forall E power_set(R),L R:
+        $is_real_set_upper_bound(E,L)
+        forall M R:
+            $is_real_set_upper_bound(E,M)
+            =>:
+                L <= M
+        =>:
+            $is_real_least_upper_bound(E,L)
+    E $subset R
+    by contra:
+        ? $is_nonempty_set(E)
+        claim:
+            ? forall x E:
+                x <= L-1
+            by contra:
+                ? x <= L-1
+                witness $is_nonempty_set(E) from x
+                impossible $is_nonempty_set(E)
+        by def $is_real_set_upper_bound(E,L-1)
+        L <= L-1
+        L-1 < L
+        impossible L <= L-1
+    claim:
+        ? forall M R:
+            forall x E:
+                x <= M
+            =>:
+                L <= M
+        by def $is_real_set_upper_bound(E,M)
+        L <= M
+    forall x E:
+        x <= L
+    release thm real_least_upper_bound_from_definition(E,L)
+
+thm bounded_nonempty_real_set_has_supremum:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $is_real_set_bounded_above(E)
+        =>:
+            exist L R st {$is_real_least_upper_bound(E,L)}
+    E $subset R
+    obtain M from $is_real_set_bounded_above(E)
+    $is_real_set_upper_bound(E,M)
+    forall x E:
+        x <= M
+    release thm real_least_upper_bound_exists(E,M)
+
+thm bounded_nonempty_real_set_has_unique_supremum:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $is_real_set_bounded_above(E)
+        =>:
+            exist! L R st {$is_real_least_upper_bound(E,L)}
+    E $subset R
+    release thm bounded_nonempty_real_set_has_supremum(E)
+    claim:
+        ? forall L,M R:
+            $is_real_least_upper_bound(E,L)
+            $is_real_least_upper_bound(E,M)
+            =>:
+                L = M
+        release thm real_least_upper_bound_unique(E,L,M)
+    obtain L from exist L R st {$is_real_least_upper_bound(E,L)}
+    witness exist! M R st {$is_real_least_upper_bound(E,M)} from L
+
+thm real_numbers_are_not_bounded_above:
+    ? not $is_real_set_bounded_above(R)
+    by contra:
+        ? not $is_real_set_bounded_above(R)
+        obtain M from $is_real_set_bounded_above(R)
+        $is_real_set_upper_bound(R,M)
+        M+1 $in R
+        M+1 <= M
+        M < M+1
+        impossible M+1 <= M
+
+thm empty_set_is_not_nonempty:
+    ? not $is_nonempty_set({})
+
+have real_positive_infinity set = {x R:not x $in x}
+
+thm real_positive_infinity_is_not_real:
+    ? not real_positive_infinity $in R
+    release thm sets::russell_diagonal_outside(R)
+    real_positive_infinity = {x R:not x $in x}
+    not real_positive_infinity $in R
+
+have real_negative_infinity set = {x union(R,{real_positive_infinity}):not x $in x}
+
+thm real_negative_infinity_is_not_real:
+    ? not real_negative_infinity $in R
+    release thm sets::russell_diagonal_outside(union(R,{real_positive_infinity}))
+    real_negative_infinity = {x union(R,{real_positive_infinity}):not x $in x}
+    not real_negative_infinity $in union(R,{real_positive_infinity})
+    R $subset union(R,{real_positive_infinity})
+    by contra:
+        ? not real_negative_infinity $in R
+        real_negative_infinity $in union(R,{real_positive_infinity})
+        impossible real_negative_infinity $in union(R,{real_positive_infinity})
+
+thm real_infinity_markers_are_distinct:
+    ? real_positive_infinity != real_negative_infinity
+    release thm sets::russell_diagonal_outside(union(R,{real_positive_infinity}))
+    not real_negative_infinity $in union(R,{real_positive_infinity})
+    real_positive_infinity $in {real_positive_infinity}
+    real_positive_infinity $in union(R,{real_positive_infinity})
+    by contra:
+        ? real_positive_infinity != real_negative_infinity
+        real_positive_infinity = real_negative_infinity
+        real_negative_infinity $in union(R,{real_positive_infinity})
+        impossible real_negative_infinity $in union(R,{real_positive_infinity})
+
+have ExtendedReal set = union(R,union({real_positive_infinity},{real_negative_infinity}))
+
+thm real_number_is_extended_real:
+    ? forall x R:
+        x $in ExtendedReal
+    x $in union(R,union({real_positive_infinity},{real_negative_infinity}))
+    x $in ExtendedReal
+
+thm positive_infinity_is_extended_real:
+    ? real_positive_infinity $in ExtendedReal
+    real_positive_infinity $in {real_positive_infinity}
+    real_positive_infinity $in union({real_positive_infinity},{real_negative_infinity})
+    real_positive_infinity $in union(R,union({real_positive_infinity},{real_negative_infinity}))
+    real_positive_infinity $in ExtendedReal
+
+thm negative_infinity_is_extended_real:
+    ? real_negative_infinity $in ExtendedReal
+    real_negative_infinity $in {real_negative_infinity}
+    real_negative_infinity $in union({real_positive_infinity},{real_negative_infinity})
+    real_negative_infinity $in union(R,union({real_positive_infinity},{real_negative_infinity}))
+    real_negative_infinity $in ExtendedReal
+
+thm extended_real_has_three_cases:
+    ? forall x ExtendedReal:
+        x $in R or x = real_positive_infinity or x = real_negative_infinity
+    x $in union(R,union({real_positive_infinity},{real_negative_infinity}))
+    by cases:
+        ? x $in R or x = real_positive_infinity or x = real_negative_infinity
+        case x $in R:
+            x $in R or x = real_positive_infinity or x = real_negative_infinity
+        case x $in union({real_positive_infinity},{real_negative_infinity}):
+            by cases:
+                ? x $in R or x = real_positive_infinity or x = real_negative_infinity
+                case x $in {real_positive_infinity}:
+                    x = real_positive_infinity
+                    x $in R or x = real_positive_infinity or x = real_negative_infinity
+                case x $in {real_negative_infinity}:
+                    x = real_negative_infinity
+                    x $in R or x = real_positive_infinity or x = real_negative_infinity
+
+thm bounded_nonempty_real_supremum_is_extended:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $is_real_set_bounded_above(E)
+        =>:
+            sup(E) $in ExtendedReal
+    release thm bounded_nonempty_real_set_has_supremum(E)
+    E $subset R
+    sup(E) $in R
+    release thm real_number_is_extended_real(sup(E))
+
+thm real_set_supremum_cases_are_exhaustive:
+    ? forall E power_set(R):
+        not $is_nonempty_set(E) or $is_nonempty_set(E) and not $is_real_set_bounded_above(E) or $is_nonempty_set(E) and $is_real_set_bounded_above(E)
+    by cases:
+        ? not $is_nonempty_set(E) or $is_nonempty_set(E) and not $is_real_set_bounded_above(E) or $is_nonempty_set(E) and $is_real_set_bounded_above(E)
+        case not $is_nonempty_set(E):
+            not $is_nonempty_set(E) or $is_nonempty_set(E) and not $is_real_set_bounded_above(E) or $is_nonempty_set(E) and $is_real_set_bounded_above(E)
+        case $is_nonempty_set(E):
+            by cases:
+                ? not $is_nonempty_set(E) or $is_nonempty_set(E) and not $is_real_set_bounded_above(E) or $is_nonempty_set(E) and $is_real_set_bounded_above(E)
+                case not $is_real_set_bounded_above(E):
+                    $is_nonempty_set(E) and not $is_real_set_bounded_above(E)
+                    not $is_nonempty_set(E) or $is_nonempty_set(E) and not $is_real_set_bounded_above(E) or $is_nonempty_set(E) and $is_real_set_bounded_above(E)
+                case $is_real_set_bounded_above(E):
+                    $is_nonempty_set(E) and $is_real_set_bounded_above(E)
+                    not $is_nonempty_set(E) or $is_nonempty_set(E) and not $is_real_set_bounded_above(E) or $is_nonempty_set(E) and $is_real_set_bounded_above(E)
+
+have fn extended_real_sup(E power_set(R)) ExtendedReal by cases:
+    case not $is_nonempty_set(E): real_negative_infinity
+    case $is_nonempty_set(E) and not $is_real_set_bounded_above(E): real_positive_infinity
+    case $is_nonempty_set(E) and $is_real_set_bounded_above(E): sup(E)
+
+thm extended_real_sup_of_empty_set:
+    ? forall E power_set(R):
+        not $is_nonempty_set(E)
+        =>:
+            extended_real_sup(E) = real_negative_infinity
+
+thm extended_real_sup_of_unbounded_set:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        not $is_real_set_bounded_above(E)
+        =>:
+            extended_real_sup(E) = real_positive_infinity
+
+thm extended_real_sup_of_bounded_nonempty_set:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $is_real_set_bounded_above(E)
+        =>:
+            extended_real_sup(E) = sup(E)
+
+thm extended_real_sup_finite_certificate:
+    ? forall E power_set(R):
+        $is_nonempty_set(E)
+        $is_real_set_bounded_above(E)
+        =>:
+            $is_real_least_upper_bound(E,extended_real_sup(E))
+    release thm extended_real_sup_of_bounded_nonempty_set(E)
+    E $subset R
+    sup(E) $in R
+    extended_real_sup(E) = sup(E)
+    release thm real_supremum_selected(E)
+    $is_real_least_upper_bound(E,sup(E))
+    $is_real_least_upper_bound(E,extended_real_sup(E))
+
+thm extended_real_sup_empty_value:
+    ? extended_real_sup({}) = real_negative_infinity
+    release thm empty_set_is_not_nonempty
+    release thm extended_real_sup_of_empty_set({})
+
+thm extended_real_sup_reals_value:
+    ? extended_real_sup(R) = real_positive_infinity
+    witness $is_nonempty_set(R) from 0
+    release thm real_numbers_are_not_bounded_above
+    release thm extended_real_sup_of_unbounded_set(R)
+
+thm extended_real_sup_equals_maximum:
+    ? forall E power_set(R),maximum R:
+        maximum $in E
+        $is_real_set_upper_bound(E,maximum)
+        =>:
+            extended_real_sup(E) = maximum
+    E $subset R
+    witness $is_nonempty_set(E) from maximum
+    witness $is_real_set_bounded_above(E) from maximum
+    claim:
+        ? forall M R:
+            $is_real_set_upper_bound(E,M)
+            =>:
+                maximum <= M
+        maximum <= M
+    release thm real_least_upper_bound_from_source_properties(E,maximum)
+    release thm extended_real_sup_of_bounded_nonempty_set(E)
+    extended_real_sup(E) = sup(E)
+    sup(E) $in R
+    extended_real_sup(E) $in R
+    release thm extended_real_sup_finite_certificate(E)
+    release thm real_least_upper_bound_unique(E,extended_real_sup(E),maximum)
+
+thm real_numbers_subset_extended_reals:
+    ? R $subset ExtendedReal
+    claim:
+        ? forall x R:
+            x $in ExtendedReal
+        release thm real_number_is_extended_real(x)
+    by def R $subset ExtendedReal
+
+thm real_set_is_extended_real_set:
+    ? forall E power_set(R):
+        E $in power_set(ExtendedReal)
+    E $subset R
+    R $subset ExtendedReal
+    E $subset ExtendedReal
+    E $in power_set(ExtendedReal)
+
+prop is_finite_extended_real(x ExtendedReal):
+    x $in R
+
+prop is_infinite_extended_real(x ExtendedReal):
+    x=real_positive_infinity or x=real_negative_infinity
+
+have fn extended_real_negate(x ExtendedReal) ExtendedReal by cases:
+    case x $in R: -x
+    case x=real_positive_infinity: real_negative_infinity
+    case x=real_negative_infinity: real_positive_infinity
+
+thm extended_real_negate_finite:
+    ? forall x R:
+        extended_real_negate(x)=-x
+
+thm extended_real_negate_positive_infinity:
+    ? extended_real_negate(real_positive_infinity)=real_negative_infinity
+
+thm extended_real_negate_negative_infinity:
+    ? extended_real_negate(real_negative_infinity)=real_positive_infinity
+
+thm extended_real_negate_involutive:
+    ? forall x ExtendedReal:
+        extended_real_negate(extended_real_negate(x))=x
+    release thm extended_real_has_three_cases(x)
+    by cases:
+        ? extended_real_negate(extended_real_negate(x))=x
+        case x $in R:
+            release thm extended_real_negate_finite(x)
+            -x $in R
+            release thm extended_real_negate_finite(-x)
+            extended_real_negate(extended_real_negate(x))=extended_real_negate(-x)=-(-x)=x
+        case x=real_positive_infinity:
+            extended_real_negate(x)=real_negative_infinity
+            extended_real_negate(extended_real_negate(x))=extended_real_negate(real_negative_infinity)=real_positive_infinity=x
+        case x=real_negative_infinity:
+            extended_real_negate(x)=real_positive_infinity
+            extended_real_negate(extended_real_negate(x))=extended_real_negate(real_positive_infinity)=real_negative_infinity=x
+
+prop is_finite_extended_real_le(x,y ExtendedReal):
+    exist a,b R st {x=a and y=b and a<=b}
+
+prop extended_real_le(x,y ExtendedReal):
+    y=real_positive_infinity or x=real_negative_infinity or $is_finite_extended_real_le(x,y)
+
+prop extended_real_lt(x,y ExtendedReal):
+    $extended_real_le(x,y)
+    x!=y
+
+thm real_order_is_extended_real_order:
+    ? forall x,y R:
+        x<=y
+        =>:
+            $extended_real_le(x,y)
+    witness exist a,b R st {x=a and y=b and a<=b} from x,y
+    by def $is_finite_extended_real_le(x,y)
+    by def $extended_real_le(x,y)
+
+thm extended_real_le_positive_infinity:
+    ? forall x ExtendedReal:
+        $extended_real_le(x,real_positive_infinity)
+    by def $extended_real_le(x,real_positive_infinity)
+
+thm negative_infinity_le_extended_real:
+    ? forall x ExtendedReal:
+        $extended_real_le(real_negative_infinity,x)
+    by def $extended_real_le(real_negative_infinity,x)
+
+thm extended_real_order_on_reals:
+    ? forall x,y R:
+        $extended_real_le(x,y)
+        =>:
+            x<=y
+    by cases:
+        ? x<=y
+        case y=real_positive_infinity:
+            by contra:
+                ? x<=y
+                real_positive_infinity=y
+                real_positive_infinity $in R
+                impossible real_positive_infinity $in R
+        case x=real_negative_infinity:
+            by contra:
+                ? x<=y
+                real_negative_infinity=x
+                real_negative_infinity $in R
+                impossible real_negative_infinity $in R
+        case $is_finite_extended_real_le(x,y):
+            obtain a,b from $is_finite_extended_real_le(x,y)
+            x=a<=b=y
+            x<=y
+
+thm positive_infinity_le_only_itself:
+    ? forall y ExtendedReal:
+        $extended_real_le(real_positive_infinity,y)
+        =>:
+            y=real_positive_infinity
+    by cases:
+        ? y=real_positive_infinity
+        case y=real_positive_infinity:
+            y=real_positive_infinity
+        case real_positive_infinity=real_negative_infinity:
+            by contra:
+                ? y=real_positive_infinity
+                impossible real_positive_infinity=real_negative_infinity
+        case $is_finite_extended_real_le(real_positive_infinity,y):
+            by contra:
+                ? y=real_positive_infinity
+                obtain a,b from $is_finite_extended_real_le(real_positive_infinity,y)
+                real_positive_infinity=a
+                real_positive_infinity $in R
+                impossible real_positive_infinity $in R
+
+thm only_negative_infinity_le_negative_infinity:
+    ? forall x ExtendedReal:
+        $extended_real_le(x,real_negative_infinity)
+        =>:
+            x=real_negative_infinity
+    by cases:
+        ? x=real_negative_infinity
+        case real_negative_infinity=real_positive_infinity:
+            by contra:
+                ? x=real_negative_infinity
+                real_positive_infinity=real_negative_infinity
+                impossible real_positive_infinity=real_negative_infinity
+        case x=real_negative_infinity:
+            x=real_negative_infinity
+        case $is_finite_extended_real_le(x,real_negative_infinity):
+            by contra:
+                ? x=real_negative_infinity
+                obtain a,b from $is_finite_extended_real_le(x,real_negative_infinity)
+                real_negative_infinity=b
+                real_negative_infinity $in R
+                impossible real_negative_infinity $in R
+
+thm nontrivial_extended_real_order_is_finite:
+    ? forall x,y ExtendedReal:
+        $extended_real_le(x,y)
+        x!=real_negative_infinity
+        y!=real_positive_infinity
+        =>:
+            x $in R
+            y $in R
+    y=real_positive_infinity or x=real_negative_infinity or $is_finite_extended_real_le(x,y)
+    claim:
+        ? $is_finite_extended_real_le(x,y)
+        by cases:
+            ? $is_finite_extended_real_le(x,y)
+            case y=real_positive_infinity:
+                by contra:
+                    ? $is_finite_extended_real_le(x,y)
+                    impossible y=real_positive_infinity
+            case x=real_negative_infinity:
+                by contra:
+                    ? $is_finite_extended_real_le(x,y)
+                    impossible x=real_negative_infinity
+            case $is_finite_extended_real_le(x,y):
+                $is_finite_extended_real_le(x,y)
+    obtain a,b from $is_finite_extended_real_le(x,y)
+    x=a
+    y=b
+    x $in R
+    y $in R
+
+thm extended_real_order_reflexive:
+    ? forall x ExtendedReal:
+        $extended_real_le(x,x)
+    release thm extended_real_has_three_cases(x)
+    by cases:
+        ? $extended_real_le(x,x)
+        case x $in R:
+            x<=x
+            release thm real_order_is_extended_real_order(x,x)
+        case x=real_positive_infinity:
+            release thm extended_real_le_positive_infinity(x)
+        case x=real_negative_infinity:
+            release thm negative_infinity_le_extended_real(x)
+
+thm extended_real_order_antisymmetric:
+    ? forall x,y ExtendedReal:
+        $extended_real_le(x,y)
+        $extended_real_le(y,x)
+        =>:
+            x=y
+    by cases:
+        ? x=y
+        case x=real_negative_infinity:
+            $extended_real_le(y,real_negative_infinity)
+            release thm only_negative_infinity_le_negative_infinity(y)
+            x=real_negative_infinity=y
+        case x!=real_negative_infinity:
+            by cases:
+                ? x=y
+                case y=real_positive_infinity:
+                    $extended_real_le(real_positive_infinity,x)
+                    release thm positive_infinity_le_only_itself(x)
+                    x=real_positive_infinity=y
+                case y!=real_positive_infinity:
+                    release thm nontrivial_extended_real_order_is_finite(x,y)
+                    release thm extended_real_order_on_reals(x,y)
+                    release thm extended_real_order_on_reals(y,x)
+                    x<=y
+                    y<=x
+                    x=y
+
+thm extended_real_order_transitive:
+    ? forall x,y,z ExtendedReal:
+        $extended_real_le(x,y)
+        $extended_real_le(y,z)
+        =>:
+            $extended_real_le(x,z)
+    by cases:
+        ? $extended_real_le(x,z)
+        case x=real_negative_infinity:
+            release thm negative_infinity_le_extended_real(z)
+        case x!=real_negative_infinity:
+            by cases:
+                ? $extended_real_le(x,z)
+                case z=real_positive_infinity:
+                    release thm extended_real_le_positive_infinity(x)
+                case z!=real_positive_infinity:
+                    by contra:
+                        ? y!=real_positive_infinity
+                        $extended_real_le(real_positive_infinity,z)
+                        release thm positive_infinity_le_only_itself(z)
+                        impossible z=real_positive_infinity
+                    by contra:
+                        ? y!=real_negative_infinity
+                        $extended_real_le(x,real_negative_infinity)
+                        release thm only_negative_infinity_le_negative_infinity(x)
+                        impossible x=real_negative_infinity
+                    release thm nontrivial_extended_real_order_is_finite(x,y)
+                    release thm nontrivial_extended_real_order_is_finite(y,z)
+                    release thm extended_real_order_on_reals(x,y)
+                    release thm extended_real_order_on_reals(y,z)
+                    x<=y<=z
+                    x<=z
+                    release thm real_order_is_extended_real_order(x,z)
+
+thm extended_real_order_total:
+    ? forall x,y ExtendedReal:
+        $extended_real_le(x,y) or $extended_real_le(y,x)
+    release thm extended_real_has_three_cases(x)
+    release thm extended_real_has_three_cases(y)
+    by cases:
+        ? $extended_real_le(x,y) or $extended_real_le(y,x)
+        case x $in R:
+            by cases:
+                ? $extended_real_le(x,y) or $extended_real_le(y,x)
+                case y $in R:
+                    by cases:
+                        ? $extended_real_le(x,y) or $extended_real_le(y,x)
+                        case x<=y:
+                            release thm real_order_is_extended_real_order(x,y)
+                            $extended_real_le(x,y) or $extended_real_le(y,x)
+                        case x>y:
+                            y<=x
+                            release thm real_order_is_extended_real_order(y,x)
+                            $extended_real_le(x,y) or $extended_real_le(y,x)
+                case y=real_positive_infinity:
+                    release thm extended_real_le_positive_infinity(x)
+                    $extended_real_le(x,y) or $extended_real_le(y,x)
+                case y=real_negative_infinity:
+                    release thm negative_infinity_le_extended_real(x)
+                    $extended_real_le(x,y) or $extended_real_le(y,x)
+        case x=real_positive_infinity:
+            release thm extended_real_le_positive_infinity(y)
+            $extended_real_le(x,y) or $extended_real_le(y,x)
+        case x=real_negative_infinity:
+            release thm negative_infinity_le_extended_real(y)
+            $extended_real_le(x,y) or $extended_real_le(y,x)
+
+thm extended_real_order_trichotomy:
+    ? forall x,y ExtendedReal:
+        $extended_real_lt(x,y) or x=y or $extended_real_lt(y,x)
+    release thm extended_real_order_total(x,y)
+    by cases:
+        ? $extended_real_lt(x,y) or x=y or $extended_real_lt(y,x)
+        case x=y:
+            $extended_real_lt(x,y) or x=y or $extended_real_lt(y,x)
+        case x!=y:
+            by cases:
+                ? $extended_real_lt(x,y) or x=y or $extended_real_lt(y,x)
+                case $extended_real_le(x,y):
+                    by def $extended_real_lt(x,y)
+                    $extended_real_lt(x,y) or x=y or $extended_real_lt(y,x)
+                case $extended_real_le(y,x):
+                    y!=x
+                    by def $extended_real_lt(y,x)
+                    $extended_real_lt(x,y) or x=y or $extended_real_lt(y,x)
+
+thm extended_real_strict_order_asymmetric:
+    ? forall x,y ExtendedReal:
+        $extended_real_lt(x,y)
+        =>:
+            not $extended_real_lt(y,x)
+    by contra:
+        ? not $extended_real_lt(y,x)
+        $extended_real_le(x,y)
+        $extended_real_le(y,x)
+        release thm extended_real_order_antisymmetric(x,y)
+        x=y
+        impossible x=y
+
+thm extended_real_strict_order_irreflexive:
+    ? forall x ExtendedReal:
+        not $extended_real_lt(x,x)
+    by contra:
+        ? not $extended_real_lt(x,x)
+        x!=x
+        impossible x!=x
+
+thm extended_real_negation_reverses_order:
+    ? forall x,y ExtendedReal:
+        $extended_real_le(x,y)
+        =>:
+            $extended_real_le(extended_real_negate(y),extended_real_negate(x))
+    by cases:
+        ? $extended_real_le(extended_real_negate(y),extended_real_negate(x))
+        case y=real_positive_infinity:
+            extended_real_negate(y)=real_negative_infinity
+            release thm negative_infinity_le_extended_real(extended_real_negate(x))
+            $extended_real_le(extended_real_negate(y),extended_real_negate(x))
+        case x=real_negative_infinity:
+            extended_real_negate(x)=real_positive_infinity
+            release thm extended_real_le_positive_infinity(extended_real_negate(y))
+            $extended_real_le(extended_real_negate(y),extended_real_negate(x))
+        case $is_finite_extended_real_le(x,y):
+            obtain a,b from $is_finite_extended_real_le(x,y)
+            x=a
+            y=b
+            x $in R
+            y $in R
+            -b<=-a
+            release thm real_order_is_extended_real_order(-b,-a)
+            release thm extended_real_negate_finite(x)
+            release thm extended_real_negate_finite(y)
+            extended_real_negate(x)=-x=-a
+            extended_real_negate(y)=-y=-b
+            $extended_real_le(extended_real_negate(y),extended_real_negate(x))
+
+thm extended_set_real_intersection_is_real_set:
+    ? forall E power_set(ExtendedReal):
+        intersect(E,R) $in power_set(R)
+    intersect(E,R) $subset R
+    intersect(E,R) $in power_set(R)
+
+thm real_set_intersection_with_reals:
+    ? forall E power_set(R):
+        intersect(E,R)=E
+    E $subset R
+    intersect(E,R)=E
+
+have fn extended_set_supremum(E power_set(ExtendedReal)) ExtendedReal by cases:
+    case real_positive_infinity $in E: real_positive_infinity
+    case not real_positive_infinity $in E: extended_real_sup(intersect(E,R))
+
+thm extended_set_supremum_contains_positive_infinity:
+    ? forall E power_set(ExtendedReal):
+        real_positive_infinity $in E
+        =>:
+            extended_set_supremum(E)=real_positive_infinity
+
+thm extended_set_supremum_without_positive_infinity:
+    ? forall E power_set(ExtendedReal):
+        not real_positive_infinity $in E
+        =>:
+            extended_set_supremum(E)=extended_real_sup(intersect(E,R))
+
+thm extended_set_supremum_of_real_set:
+    ? forall E power_set(R):
+        extended_set_supremum(E)=extended_real_sup(E)
+    E $subset R
+    release thm real_set_is_extended_real_set(E)
+    by contra:
+        ? not real_positive_infinity $in E
+        real_positive_infinity $in R
+        impossible real_positive_infinity $in R
+    release thm extended_set_supremum_without_positive_infinity(E)
+    release thm real_set_intersection_with_reals(E)
+    extended_set_supremum(E)=extended_real_sup(intersect(E,R))=extended_real_sup(E)
+
+template<E power_set(ExtendedReal)>:
+    have extended_negated_set power_set(ExtendedReal) = fn_range(fn(x E) ExtendedReal {extended_real_negate(x)})
+
+thm extended_set_negated_image_member:
+    ? forall E power_set(ExtendedReal),x E:
+        extended_real_negate(x) $in \extended_negated_set<E>
+    (fn(t E) ExtendedReal {extended_real_negate(t)})(x)=extended_real_negate(x)
+    (fn(t E) ExtendedReal {extended_real_negate(t)})(x) $in fn_range(fn(t E) ExtendedReal {extended_real_negate(t)})
+    \extended_negated_set<E> =fn_range(fn(t E) ExtendedReal {extended_real_negate(t)})
+    extended_real_negate(x) $in \extended_negated_set<E>
+
+thm extended_set_negated_image_preimage:
+    ? forall E power_set(ExtendedReal),y \extended_negated_set<E>:
+        exist x E st {y=extended_real_negate(x)}
+    \extended_negated_set<E> =fn_range(fn(t E) ExtendedReal {extended_real_negate(t)})
+    y $in fn_range(fn(t E) ExtendedReal {extended_real_negate(t)})
+    have by fn_preimage: x from y $in fn_range(fn(t E) ExtendedReal {extended_real_negate(t)})
+    y=(fn(t E) ExtendedReal {extended_real_negate(t)})(x)=extended_real_negate(x)
+    witness exist source E st {y=extended_real_negate(source)} from x
+
+have fn extended_set_infimum(E power_set(ExtendedReal)) ExtendedReal = extended_real_negate(extended_set_supremum(\extended_negated_set<E>))
+
+prop is_extended_set_upper_bound(E power_set(ExtendedReal),M ExtendedReal):
+    forall x E:
+        $extended_real_le(x,M)
+
+prop is_extended_set_lower_bound(E power_set(ExtendedReal),M ExtendedReal):
+    forall x E:
+        $extended_real_le(M,x)
+
+thm real_set_extended_supremum_bounds_members:
+    ? forall E power_set(R),x E:
+        $extended_real_le(x,extended_real_sup(E))
+    E $subset R
+    x $in R
+    witness $is_nonempty_set(E) from x
+    by cases:
+        ? $extended_real_le(x,extended_real_sup(E))
+        case $is_real_set_bounded_above(E):
+            release thm bounded_nonempty_real_set_has_supremum(E)
+            sup(E) $in R
+            release thm extended_real_sup_of_bounded_nonempty_set(E)
+            release thm real_supremum_selected(E)
+            release thm real_least_upper_bound_upper_bound(E,sup(E))
+            x<=sup(E)
+            release thm real_order_is_extended_real_order(x,sup(E))
+            $extended_real_le(x,extended_real_sup(E))
+        case not $is_real_set_bounded_above(E):
+            release thm extended_real_sup_of_unbounded_set(E)
+            release thm extended_real_le_positive_infinity(x)
+            $extended_real_le(x,extended_real_sup(E))
+
+thm real_set_extended_supremum_le_upper_bound:
+    ? forall E power_set(R),M ExtendedReal:
+        $is_extended_set_upper_bound(E,M)
+        =>:
+            $extended_real_le(extended_real_sup(E),M)
+    E $subset R
+    release thm extended_real_has_three_cases(M)
+    by cases:
+        ? $extended_real_le(extended_real_sup(E),M)
+        case M $in R:
+            claim:
+                ? forall x E:
+                    x<=M
+                x $in R
+                $extended_real_le(x,M)
+                release thm extended_real_order_on_reals(x,M)
+            by def $is_real_set_upper_bound(E,M)
+            witness $is_real_set_bounded_above(E) from M
+            by cases:
+                ? $extended_real_le(extended_real_sup(E),M)
+                case not $is_nonempty_set(E):
+                    release thm extended_real_sup_of_empty_set(E)
+                    release thm negative_infinity_le_extended_real(M)
+                    $extended_real_le(extended_real_sup(E),M)
+                case $is_nonempty_set(E):
+                    release thm bounded_nonempty_real_set_has_supremum(E)
+                    sup(E) $in R
+                    release thm real_supremum_selected(E)
+                    release thm real_least_upper_bound_le_source_upper_bound(E,sup(E),M)
+                    sup(E)<=M
+                    release thm real_order_is_extended_real_order(sup(E),M)
+                    release thm extended_real_sup_of_bounded_nonempty_set(E)
+                    $extended_real_le(extended_real_sup(E),M)
+        case M=real_positive_infinity:
+            release thm extended_real_le_positive_infinity(extended_real_sup(E))
+            $extended_real_le(extended_real_sup(E),M)
+        case M=real_negative_infinity:
+            claim:
+                ? forall x E:
+                    x $in {}
+                by contra:
+                    ? x $in {}
+                    x $in R
+                    $extended_real_le(x,real_negative_infinity)
+                    release thm only_negative_infinity_le_negative_infinity(x)
+                    real_negative_infinity=x
+                    real_negative_infinity $in R
+                    impossible real_negative_infinity $in R
+            claim:
+                ? forall x {}:
+                    x $in E
+                by contra:
+                    ? x $in E
+                    impossible x $in {}
+            by extension E={}
+            extended_real_sup(E)=extended_real_sup({})=real_negative_infinity
+            release thm negative_infinity_le_extended_real(M)
+            $extended_real_le(extended_real_sup(E),M)
+
+thm extended_set_supremum_bounds_members:
+    ? forall E power_set(ExtendedReal),x E:
+        $extended_real_le(x,extended_set_supremum(E))
+    E $subset ExtendedReal
+    x $in ExtendedReal
+    by cases:
+        ? $extended_real_le(x,extended_set_supremum(E))
+        case real_positive_infinity $in E:
+            release thm extended_set_supremum_contains_positive_infinity(E)
+            release thm extended_real_le_positive_infinity(x)
+            $extended_real_le(x,extended_set_supremum(E))
+        case not real_positive_infinity $in E:
+            release thm extended_set_supremum_without_positive_infinity(E)
+            release thm extended_real_has_three_cases(x)
+            by cases:
+                ? $extended_real_le(x,extended_set_supremum(E))
+                case x $in R:
+                    x $in intersect(E,R)
+                    release thm extended_set_real_intersection_is_real_set(E)
+                    release thm real_set_extended_supremum_bounds_members(intersect(E,R),x)
+                    $extended_real_le(x,extended_set_supremum(E))
+                case x=real_positive_infinity:
+                    by contra:
+                        ? $extended_real_le(x,extended_set_supremum(E))
+                        real_positive_infinity $in E
+                        impossible real_positive_infinity $in E
+                case x=real_negative_infinity:
+                    release thm negative_infinity_le_extended_real(extended_set_supremum(E))
+                    $extended_real_le(x,extended_set_supremum(E))
+
+thm extended_set_supremum_le_upper_bound:
+    ? forall E power_set(ExtendedReal),M ExtendedReal:
+        $is_extended_set_upper_bound(E,M)
+        =>:
+            $extended_real_le(extended_set_supremum(E),M)
+    by cases:
+        ? $extended_real_le(extended_set_supremum(E),M)
+        case real_positive_infinity $in E:
+            release thm extended_set_supremum_contains_positive_infinity(E)
+            $extended_real_le(real_positive_infinity,M)
+            $extended_real_le(extended_set_supremum(E),M)
+        case not real_positive_infinity $in E:
+            release thm extended_set_real_intersection_is_real_set(E)
+            claim:
+                ? forall x intersect(E,R):
+                    $extended_real_le(x,M)
+                x $in E
+                $extended_real_le(x,M)
+            by def $is_extended_set_upper_bound(intersect(E,R),M)
+            release thm real_set_extended_supremum_le_upper_bound(intersect(E,R),M)
+            release thm extended_set_supremum_without_positive_infinity(E)
+            $extended_real_le(extended_set_supremum(E),M)
+
+thm extended_set_infimum_bounds_members:
+    ? forall E power_set(ExtendedReal),x E:
+        $extended_real_le(extended_set_infimum(E),x)
+    release thm extended_set_negated_image_member(E,x)
+    release thm extended_set_supremum_bounds_members(\extended_negated_set<E>,extended_real_negate(x))
+    release thm extended_real_negation_reverses_order(extended_real_negate(x),extended_set_supremum(\extended_negated_set<E>))
+    release thm extended_real_negate_involutive(x)
+    extended_set_infimum(E)=extended_real_negate(extended_set_supremum(\extended_negated_set<E>))
+    $extended_real_le(extended_set_infimum(E),x)
+
+thm extended_set_infimum_ge_lower_bound:
+    ? forall E power_set(ExtendedReal),M ExtendedReal:
+        $is_extended_set_lower_bound(E,M)
+        =>:
+            $extended_real_le(M,extended_set_infimum(E))
+    claim:
+        ? forall y \extended_negated_set<E>:
+            $extended_real_le(y,extended_real_negate(M))
+        release thm extended_set_negated_image_preimage(E,y)
+        obtain x from exist x E st {y=extended_real_negate(x)}
+        $extended_real_le(M,x)
+        release thm extended_real_negation_reverses_order(M,x)
+        y=extended_real_negate(x)
+        $extended_real_le(y,extended_real_negate(M))
+    by def $is_extended_set_upper_bound(\extended_negated_set<E>,extended_real_negate(M))
+    release thm extended_set_supremum_le_upper_bound(\extended_negated_set<E>,extended_real_negate(M))
+    release thm extended_real_negation_reverses_order(extended_set_supremum(\extended_negated_set<E>),extended_real_negate(M))
+    release thm extended_real_negate_involutive(M)
+    extended_set_infimum(E)=extended_real_negate(extended_set_supremum(\extended_negated_set<E>))
+    $extended_real_le(M,extended_set_infimum(E))
+
+thm no_positive_infinity_remove_negative_is_real_set:
+    ? forall E power_set(ExtendedReal):
+        not real_positive_infinity $in E
+        =>:
+            set_minus(E,{real_negative_infinity}) $in power_set(R)
+    E $subset ExtendedReal
+    claim:
+        ? forall x set_minus(E,{real_negative_infinity}):
+            x $in R
+        x $in E
+        not x $in {real_negative_infinity}
+        x $in ExtendedReal
+        release thm extended_real_has_three_cases(x)
+        by cases:
+            ? x $in R
+            case x $in R:
+                x $in R
+            case x=real_positive_infinity:
+                by contra:
+                    ? x $in R
+                    real_positive_infinity $in E
+                    impossible real_positive_infinity $in E
+            case x=real_negative_infinity:
+                by contra:
+                    ? x $in R
+                    x $in {real_negative_infinity}
+                    impossible x $in {real_negative_infinity}
+    by def set_minus(E,{real_negative_infinity}) $subset R
+    set_minus(E,{real_negative_infinity}) $in power_set(R)
+
+thm no_positive_infinity_real_intersection_removes_negative:
+    ? forall E power_set(ExtendedReal):
+        not real_positive_infinity $in E
+        =>:
+            intersect(E,R)=set_minus(E,{real_negative_infinity})
+    release thm no_positive_infinity_remove_negative_is_real_set(E)
+    set_minus(E,{real_negative_infinity}) $subset R
+    claim:
+        ? forall x intersect(E,R):
+            x $in set_minus(E,{real_negative_infinity})
+        x $in E
+        x $in R
+        by contra:
+            ? not x $in {real_negative_infinity}
+            x=real_negative_infinity
+            real_negative_infinity=x
+            real_negative_infinity $in R
+            impossible real_negative_infinity $in R
+        x $in set_minus(E,{real_negative_infinity})
+    claim:
+        ? forall x set_minus(E,{real_negative_infinity}):
+            x $in intersect(E,R)
+        x $in E
+        x $in R
+        x $in intersect(E,R)
+    by extension intersect(E,R)=set_minus(E,{real_negative_infinity})
+
+thm extended_set_supremum_remove_negative_infinity:
+    ? forall E power_set(ExtendedReal):
+        not real_positive_infinity $in E
+        =>:
+            extended_set_supremum(E)=extended_real_sup(set_minus(E,{real_negative_infinity}))
+    release thm no_positive_infinity_remove_negative_is_real_set(E)
+    release thm no_positive_infinity_real_intersection_removes_negative(E)
+    release thm extended_set_supremum_without_positive_infinity(E)
+    extended_set_supremum(E)=extended_real_sup(intersect(E,R))=extended_real_sup(set_minus(E,{real_negative_infinity}))
+
+thm extended_set_supremum_equals_maximum:
+    ? forall E power_set(ExtendedReal),maximum ExtendedReal:
+        maximum $in E
+        $is_extended_set_upper_bound(E,maximum)
+        =>:
+            extended_set_supremum(E)=maximum
+    release thm extended_set_supremum_bounds_members(E,maximum)
+    release thm extended_set_supremum_le_upper_bound(E,maximum)
+    release thm extended_real_order_antisymmetric(extended_set_supremum(E),maximum)
+
+thm extended_set_infimum_equals_minimum:
+    ? forall E power_set(ExtendedReal),minimum ExtendedReal:
+        minimum $in E
+        $is_extended_set_lower_bound(E,minimum)
+        =>:
+            extended_set_infimum(E)=minimum
+    release thm extended_set_infimum_bounds_members(E,minimum)
+    release thm extended_set_infimum_ge_lower_bound(E,minimum)
+    release thm extended_real_order_antisymmetric(extended_set_infimum(E),minimum)
+
+thm extended_set_supremum_empty:
+    ? extended_set_supremum({})=real_negative_infinity
+    release thm extended_set_supremum_of_real_set({})
+    extended_set_supremum({})=extended_real_sup({})=real_negative_infinity
+
+thm extended_negated_empty_set:
+    ? \extended_negated_set<{}> = {}
+    claim:
+        ? forall y \extended_negated_set<{}>:
+            y $in {}
+        by contra:
+            ? y $in {}
+            release thm extended_set_negated_image_preimage({},y)
+            obtain x from exist x {} st {y=extended_real_negate(x)}
+            impossible x $in {}
+    claim:
+        ? forall y {}:
+            y $in \extended_negated_set<{}>
+        by contra:
+            ? y $in \extended_negated_set<{}>
+            impossible y $in {}
+    by extension \extended_negated_set<{}> = {}
+
+thm extended_set_infimum_empty:
+    ? extended_set_infimum({})=real_positive_infinity
+    \extended_negated_set<{}> = {}
+    extended_set_supremum(\extended_negated_set<{}>)=extended_set_supremum({})=real_negative_infinity
+    extended_set_infimum({})=extended_real_negate(extended_set_supremum(\extended_negated_set<{}>))
+    extended_real_negate(extended_set_supremum(\extended_negated_set<{}>))=extended_real_negate(real_negative_infinity)=real_positive_infinity

@@ -1,0 +1,476 @@
+# Native complex modulus and the leading-term growth estimate.
+
+thm complex_modulus_of_real:
+    ? forall x R:
+        C_abs(x)=abs(x)
+    x $in C
+    re(x)=x
+    img(x)=0
+    x^2 $in R
+    0^2=0
+    x^2+0^2=x^2
+    x^2>=0
+    x^2+0^2>=0
+    C_abs(x)=sqrt(re(x)^2+img(x)^2)=sqrt(x^2+0^2)=sqrt(x^2)=abs(x)
+
+thm complex_modulus_natural_power:
+    ? forall z C,n N:
+        C_abs(z^n)=C_abs(z)^n
+    by induc length from 0:
+        ? C_abs(z^length)=C_abs(z)^length
+        ? from length=0:
+            z^0=1
+            C_abs(z^0)=C_abs(1)=1=C_abs(z)^0
+        ? induc:
+            z^length $in C
+            C_abs(z) $in R
+            z^(length+1)=z^length*z
+            C_abs(z^(length+1))=C_abs(z^length*z)=C_abs(z^length)*C_abs(z)=C_abs(z)^length*C_abs(z)=C_abs(z)^(length+1)
+    C_abs(z^n)=C_abs(z)^n
+
+thm real_natural_power_exponent_monotone:
+    ? forall x R+,m,n N:
+        x>=1
+        m<=n
+        =>:
+            x^m<=x^n
+    by induc length from m:
+        ? x^m<=x^length
+        ? from length=m:
+            x^m<=x^m
+        ? induc:
+            x^length $in R+
+            x^length<=x^length*x
+            x^(length+1)=x^length*x
+            x^m<=x^length<=x^length*x=x^(length+1)
+    x^m<=x^n
+
+thm complex_modulus_nonzero_positive:
+    ? forall z C:
+        z!=0
+        =>:
+            C_abs(z)>0
+    by contra:
+        ? C_abs(z)>0
+        C_abs(z)<=0
+        C_abs(z)>=0
+        C_abs(z)=0
+        z=0
+        impossible z!=0
+
+claim:
+    ? forall n,k N:
+        k<=n
+        =>:
+            k+1 $in closed_range(1,n+1)
+    k+1 $in Z
+    1<=k+1<=n+1
+    k+1 $in closed_range(1,n+1)
+
+claim:
+    ? forall n N+,j closed_range(1,n):
+        j $in closed_range(1,n+1)
+    j $in Z
+    1<=j<=n<n+1
+    j<=n+1
+    j $in closed_range(1,n+1)
+
+claim:
+    ? forall n N+,k closed_range(0,n):
+        k+1 $in closed_range(1,n+1)
+    k $in N
+    k+1 $in Z
+    1<=k+1<=n+1
+    k+1 $in closed_range(1,n+1)
+
+claim:
+    ? forall n N+:
+        n+1 $in closed_range(1,n+1)
+    n+1 $in Z
+    n+1>=1
+    n+1 $in closed_range(1,n+1)
+
+thm complex_power_sum_nonzero_from_leading_bound:
+    ? forall n N+,coefficients finite_seq(C,n+1),M,x R+,terms fn(k N) C:
+        x>=1
+        forall j closed_range(1,n):
+            C_abs(coefficients(j))<=M
+        forall k closed_range(0,n):
+            terms(k)=coefficients(k+1)*x^k
+        x*C_abs(coefficients(n+1))>n*M
+        =>:
+            sum(0,n,terms)!=0
+    n $in N
+    n $in Z
+    n-1 $in Z
+    n-1>=0
+    n-1 $in N
+    n=(n-1)+1
+    x^(n-1) $in R+
+    M*x^(n-1) $in R
+    claim:
+        ? forall k closed_range(0,n-1):
+            C_abs(terms(k))<=M*x^(n-1)
+        k $in N
+        k<=n-1<n
+        k<=n
+        k $in closed_range(0,n)
+        k+1 $in Z
+        1<=k+1<=n
+        k+1 $in closed_range(1,n)
+        k+1 $in closed_range(1,n+1)
+        coefficients(k+1) $in C
+        x^k $in R+
+        x^k $in R
+        x^k $in C
+        release thm complex_modulus_of_real(x^k)
+        abs(x^k)=x^k
+        C_abs(x^k)=abs(x^k)=x^k
+        terms(k)=coefficients(k+1)*x^k
+        C_abs(terms(k))=C_abs(coefficients(k+1)*x^k)=C_abs(coefficients(k+1))*C_abs(x^k)=C_abs(coefficients(k+1))*x^k
+        C_abs(coefficients(k+1))<=M
+        release thm real_natural_power_exponent_monotone(x,k,n-1)
+        C_abs(coefficients(k+1))*x^k<=M*x^k<=M*x^(n-1)
+        C_abs(terms(k))=C_abs(coefficients(k+1))*x^k<=M*x^k<=M*x^(n-1)
+    release thm main::complex_natural_sum_uniform_bound(terms,n-1,M*x^(n-1))
+    C_abs(sum(0,n-1,terms))<=((n-1)+1)*(M*x^(n-1))=n*M*x^(n-1)
+    n $in closed_range(0,n)
+    n+1 $in closed_range(1,n+1)
+    coefficients(n+1) $in C
+    x^n $in R+
+    x^n $in R
+    x^n $in C
+    release thm complex_modulus_of_real(x^n)
+    abs(x^n)=x^n
+    C_abs(x^n)=abs(x^n)=x^n
+    terms(n)=coefficients(n+1)*x^n
+    C_abs(terms(n))=C_abs(coefficients(n+1)*x^n)=C_abs(coefficients(n+1))*C_abs(x^n)=C_abs(coefficients(n+1))*x^n
+    x^n=x^((n-1)+1)=x^(n-1)*x
+    C_abs(terms(n))=C_abs(coefficients(n+1))*x^n=C_abs(coefficients(n+1))*(x^(n-1)*x)=(x*C_abs(coefficients(n+1)))*x^(n-1)>n*M*x^(n-1)
+    by contra:
+        ? sum(0,n,terms)!=0
+        sum(0,n,terms)=0
+        sum(0,n,terms)=sum(0,(n-1)+1,terms)=sum(0,n-1,terms)+terms((n-1)+1)=sum(0,n-1,terms)+terms(n)
+        sum(0,n-1,terms) $in C
+        terms(n) $in C
+        terms(n)=sum(0,n,terms)-sum(0,n-1,terms)=0-sum(0,n-1,terms)=-sum(0,n-1,terms)
+        -sum(0,n-1,terms)=(-1)*sum(0,n-1,terms)
+        C_abs(terms(n))=C_abs(-sum(0,n-1,terms))=C_abs((-1)*sum(0,n-1,terms))=C_abs(-1)*C_abs(sum(0,n-1,terms))=1*C_abs(sum(0,n-1,terms))=C_abs(sum(0,n-1,terms))
+        C_abs(terms(n))=C_abs(sum(0,n-1,terms))<=n*M*x^(n-1)
+        impossible C_abs(terms(n))>n*M*x^(n-1)
+
+thm complex_power_representation_has_nonzero_value:
+    ? forall n N+,coefficients finite_seq(C,n+1),p fn(x R+) C:
+        coefficients(n+1)!=0
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})
+        =>:
+            exist x R+ st {p(x)!=0}
+    n $in N
+    n+1 $in N
+    n+1 $in closed_range(1,n+1)
+    coefficients(n+1) $in C
+    release thm main::complex_finite_sequence_moduli_carrier(n+1,coefficients)
+    release thm main::complex_finite_sequence_norm_sum_carrier(n+1,coefficients)
+    finite_set_sum(closed_range(1,n+1),\main::complex_finite_sequence_moduli<n+1,coefficients>) $in R
+    have total R=finite_set_sum(closed_range(1,n+1),\main::complex_finite_sequence_moduli<n+1,coefficients>)
+    total=finite_set_sum(closed_range(1,n+1),\main::complex_finite_sequence_moduli<n+1,coefficients>)
+    abs(total)>=0
+    abs(total)+1>0
+    have M R+=abs(total)+1
+    abs(total)=abs(finite_set_sum(closed_range(1,n+1),\main::complex_finite_sequence_moduli<n+1,coefficients>))
+    M=abs(total)+1=abs(finite_set_sum(closed_range(1,n+1),\main::complex_finite_sequence_moduli<n+1,coefficients>))+1
+    claim:
+        ? forall j closed_range(1,n):
+            C_abs(coefficients(j))<=M
+        j $in closed_range(1,n+1)
+        release thm main::complex_finite_sequence_strict_bound(n+1,coefficients,j)
+        C_abs(coefficients(j))<abs(finite_set_sum(closed_range(1,n+1),\main::complex_finite_sequence_moduli<n+1,coefficients>))+1=M
+        C_abs(coefficients(j))<=M
+    release thm complex_modulus_nonzero_positive(coefficients(n+1))
+    C_abs(coefficients(n+1)) $in R+
+    have leading_norm R+=C_abs(coefficients(n+1))
+    leading_norm=C_abs(coefficients(n+1))
+    n $in R+
+    n*M/leading_norm $in R+
+    1+n*M/leading_norm $in R+
+    have point R+=1+n*M/leading_norm
+    point=1+n*M/leading_norm>1
+    point>=1
+    point*C_abs(coefficients(n+1))=point*leading_norm=(1+n*M/leading_norm)*leading_norm=leading_norm+n*M>n*M
+    claim:
+        ? forall k N:
+            k<=n
+            =>:
+                k+1 $in closed_range(1,n+1)
+        k+1 $in Z
+        1<=k+1<=n+1
+        k+1 $in closed_range(1,n+1)
+    have fn terms(k N) C by cases:
+        case k<=n: coefficients(k+1)*point^k
+        case k>n: 0
+    claim:
+        ? forall k closed_range(0,n):
+            terms(k)=coefficients(k+1)*point^k
+        k $in N
+        k<=n
+        terms(k)=coefficients(k+1)*point^k
+    release thm complex_power_sum_nonzero_from_leading_bound(n,coefficients,M,point,terms)
+    p(point)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*point^k})
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*point^k}),finite_set_sum(closed_range(0,n),terms))
+    p(point)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*point^k})=finite_set_sum(closed_range(0,n),terms)=sum(0,n,terms)
+    claim:
+        ? p(point)!=0
+        by contra:
+            ? p(point)!=0
+            p(point)=0
+            sum(0,n,terms)=p(point)=0
+            impossible sum(0,n,terms)!=0
+    witness exist x R+ st {p(x)!=0} from point
+
+claim:
+    ? forall n,m N,j closed_range(1,m+1):
+        m<=n
+        =>:
+            j $in closed_range(1,n+1)
+    j $in Z
+    1<=j<=m+1<=n+1
+    j<=n+1
+    j $in closed_range(1,n+1)
+
+claim:
+    ? forall n N,k closed_range(0,n):
+        k+1 $in closed_range(1,n+1)
+    k+1 $in Z
+    1<=k+1<=n+1
+    k+1 $in closed_range(1,n+1)
+
+thm complex_power_representation_truncation:
+    ? forall n,m N,coefficients finite_seq(C,n+1),prefix finite_seq(C,m+1),p fn(x R+) C,x R+:
+        m<=n
+        forall j N+:
+            j<=m+1
+            j<=n+1
+            =>:
+                prefix(j)=coefficients(j)
+        forall j closed_range(1,n+1):
+            j>m+1
+            =>:
+                coefficients(j)=0
+        forall point R+:
+            p(point)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*point^k})
+        =>:
+            p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {prefix(k+1)*x^k})
+    claim:
+        ? forall k N:
+            k<=n
+            =>:
+                k+1 $in closed_range(1,n+1)
+        k+1 $in Z
+        1<=k+1<=n+1
+        k+1 $in closed_range(1,n+1)
+    have fn terms(k N) C by cases:
+        case k<=n: coefficients(k+1)*x^k
+        case k>n: 0
+    claim:
+        ? forall k N:
+            k>m
+            =>:
+                terms(k)=0
+        by cases:
+            ? terms(k)=0
+            case k<=n:
+                k+1 $in closed_range(1,n+1)
+                k+1>m+1
+                coefficients(k+1)=0
+                terms(k)=coefficients(k+1)*x^k=0*x^k=0
+            case k>n:
+                terms(k)=0
+    release thm main::complex_natural_sum_zero_tail(terms,m,n)
+    claim:
+        ? forall k closed_range(0,n):
+            terms(k)=coefficients(k+1)*x^k
+        k $in N
+        k<=n
+        terms(k)=coefficients(k+1)*x^k
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),terms))
+    p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),terms)=sum(0,n,terms)=sum(0,m,terms)=finite_set_sum(closed_range(0,m),terms)
+    claim:
+        ? forall k closed_range(0,m):
+            terms(k)=prefix(k+1)*x^k
+        k $in N
+        k<=m<=n
+        k<=n
+        k+1 $in closed_range(1,m+1)
+        k+1 $in closed_range(1,n+1)
+        prefix(k+1)=coefficients(k+1)
+        terms(k)=coefficients(k+1)*x^k=prefix(k+1)*x^k
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,m),terms),finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {prefix(k+1)*x^k}))
+    p(x)=finite_set_sum(closed_range(0,m),terms)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {prefix(k+1)*x^k})
+
+thm complex_zero_power_representation_coefficients:
+    ? forall n N,coefficients finite_seq(C,n+1),p fn(x R+) C,j closed_range(1,n+1):
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})
+        forall x R+:
+            p(x)=0
+        =>:
+            coefficients(j)=0
+    by contra:
+        ? coefficients(j)=0
+        coefficients(j)!=0
+        have active finite_set={idx closed_range(1,n+1): coefficients(idx)!=0}
+        j $in active
+        witness $is_nonempty_set(active) from j
+        active $subset closed_range(1,n+1)
+        closed_range(1,n+1) $subset R
+        active $subset R
+        finite_set_max(active) $in active
+        finite_set_max(active) $in closed_range(1,n+1)
+        finite_set_max(active) $in Z
+        finite_set_max(active)>=1
+        finite_set_max(active) $in N+
+        have k N+=finite_set_max(active)
+        k=finite_set_max(active)
+        k $in active
+        k $in closed_range(1,n+1)
+        coefficients(k)!=0
+        k<=n+1
+        claim:
+            ? forall idx closed_range(1,n+1):
+                idx>k
+                =>:
+                    coefficients(idx)=0
+            by contra:
+                ? coefficients(idx)=0
+                coefficients(idx)!=0
+                idx $in active
+                idx<=finite_set_max(active)=k
+                impossible idx>k
+        have m N=k-1
+        m=k-1
+        m+1=(k-1)+1=k
+        m=k-1<=(n+1)-1=n
+        m<=n
+        claim:
+            ? forall idx closed_range(1,m+1):
+                idx $in closed_range(1,n+1)
+            idx $in Z
+            1<=idx<=m+1=k<=n+1
+            idx<=n+1
+            idx $in closed_range(1,n+1)
+        have fn prefix(idx closed_range(1,m+1)) C=coefficients(idx)
+        prefix $in finite_seq(C,m+1)
+        claim:
+            ? forall idx N+:
+                idx<=m+1
+                idx<=n+1
+                =>:
+                    prefix(idx)=coefficients(idx)
+            idx $in closed_range(1,m+1)
+            prefix(idx)=coefficients(idx)
+        claim:
+            ? forall idx closed_range(1,n+1):
+                idx>m+1
+                =>:
+                    coefficients(idx)=0
+            idx>k
+            coefficients(idx)=0
+        claim:
+            ? forall x R+:
+                p(x)=finite_set_sum(closed_range(0,m),fn(r closed_range(0,m)) C {prefix(r+1)*x^r})
+            release thm complex_power_representation_truncation(n,m,coefficients,prefix,p,x)
+        m+1 $in closed_range(1,m+1)
+        prefix(m+1)=coefficients(m+1)=coefficients(k)
+        prefix(m+1)!=0
+        by cases:
+            ? 1=0
+            case m=0:
+                1 $in closed_range(1,m+1)
+                prefix(1) $in C
+                have fn constant_terms(r N) C=prefix(1)
+                claim:
+                    ? forall r closed_range(0,m):
+                        prefix(r+1)*1^r=constant_terms(r)
+                    r $in N
+                    0<=r<=m=0
+                    r=0
+                    r $in R
+                    r+1=1
+                    prefix(r+1)=prefix(1)
+                    1^r=1
+                    prefix(r+1)*1^r=prefix(1)*1=prefix(1)=constant_terms(r)
+                release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,m),fn(r closed_range(0,m)) C {prefix(r+1)*1^r}),finite_set_sum(closed_range(0,m),constant_terms))
+                p(1)=finite_set_sum(closed_range(0,m),fn(r closed_range(0,m)) C {prefix(r+1)*1^r})=finite_set_sum(closed_range(0,m),constant_terms)=sum(0,m,constant_terms)=sum(0,0,constant_terms)=constant_terms(0)=prefix(1)
+                p(1)=0
+                prefix(m+1)=prefix(0+1)=prefix(1)=p(1)=0
+                by contra:
+                    ? 1=0
+                    impossible prefix(m+1)!=0
+            case m!=0:
+                m>0
+                m $in N+
+                release thm complex_power_representation_has_nonzero_value(m,prefix,p)
+                obtain point from exist x R+ st {p(x)!=0}
+                p(point)=0
+                by contra:
+                    ? 1=0
+                    impossible p(point)!=0
+        impossible 1=0
+
+thm complex_power_representation_coefficients_unique:
+    ? forall n N,left,right finite_seq(C,n+1),p fn(x R+) C,j closed_range(1,n+1):
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left(k+1)*x^k})
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {right(k+1)*x^k})
+        =>:
+            left(j)=right(j)
+    have fn difference(idx closed_range(1,n+1)) C=left(idx)-right(idx)
+    difference $in finite_seq(C,n+1)
+    have fn zero_function(x R+) C=0
+    claim:
+        ? forall x R+:
+            zero_function(x)=0
+        zero_function(x)=0
+    claim:
+        ? forall x R+:
+            zero_function(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {difference(k+1)*x^k})
+        have left_terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {left(k+1)*x^k}
+        have right_terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {right(k+1)*x^k}
+        have negative_terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {(-1)*right_terms(k)}
+        claim:
+            ? forall k closed_range(0,n):
+                difference(k+1)*x^k=left_terms(k)+negative_terms(k)
+            k+1 $in closed_range(1,n+1)
+            left(k+1) $in C
+            right(k+1) $in C
+            x^k $in C
+            left_terms(k) $in C
+            right_terms(k) $in C
+            negative_terms(k) $in C
+            negative_terms(k)=(-1)*right_terms(k)
+            difference(k+1)=left(k+1)-right(k+1)
+            difference(k+1)*x^k=(left(k+1)-right(k+1))*x^k=left(k+1)*x^k-right(k+1)*x^k=left_terms(k)-right_terms(k)=left_terms(k)+(-1)*right_terms(k)=left_terms(k)+negative_terms(k)
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {difference(k+1)*x^k}),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_terms(k)+negative_terms(k)}))
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),left_terms),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left(k+1)*x^k}))
+        release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),right_terms),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {right(k+1)*x^k}))
+        finite_set_sum(closed_range(0,n),left_terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left(k+1)*x^k})=p(x)
+        finite_set_sum(closed_range(0,n),right_terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {right(k+1)*x^k})=p(x)
+        thm finite_complex_sum_scale:
+            ? forall S finite_set,a C,f fn(k S) C:
+                finite_set_sum(S,fn(k S) C {a*f(k)})=a*finite_set_sum(S,f)
+        release thm finite_complex_sum_scale(closed_range(0,n),-1,right_terms)
+        thm finite_complex_sum_add:
+            ? forall S finite_set,f,g fn(k S) C:
+                finite_set_sum(S,fn(k S) C {f(k)+g(k)})=finite_set_sum(S,f)+finite_set_sum(S,g)
+        release thm finite_complex_sum_add(closed_range(0,n),left_terms,negative_terms)
+        finite_set_sum(closed_range(0,n),negative_terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {(-1)*right_terms(k)})=(-1)*finite_set_sum(closed_range(0,n),right_terms)
+        finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_terms(k)+negative_terms(k)})=finite_set_sum(closed_range(0,n),left_terms)+finite_set_sum(closed_range(0,n),negative_terms)=finite_set_sum(closed_range(0,n),left_terms)+(-1)*finite_set_sum(closed_range(0,n),right_terms)=p(x)+(-1)*p(x)=0
+        zero_function(x)=0=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_terms(k)+negative_terms(k)})=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {difference(k+1)*x^k})
+    release thm complex_zero_power_representation_coefficients(n,difference,zero_function,j)
+    difference(j)=0
+    difference(j)=left(j)-right(j)
+    left(j)-right(j)=difference(j)=0
+    left(j)=(left(j)-right(j))+right(j)=0+right(j)=right(j)
+

@@ -14,16 +14,335 @@ type HintCandidates = BTreeMap<(usize, Vec<String>, String), (usize, Vec<(usize,
 pub(super) struct SourceHints {
     source: Option<Arc<str>>,
     lines: BTreeMap<usize, Vec<(String, usize, usize)>>,
+    children: BTreeMap<usize, Vec<usize>>,
 }
 
 impl SourceHints {
     pub(super) fn from_block(block: &TokenBlock) -> Self {
         let mut lines = BTreeMap::new();
         collect_tokens(block, &mut lines);
+        let mut children = BTreeMap::new();
+        collect_block_children(block, &mut children);
         Self {
             source: block.source.clone(),
             lines,
+            children,
         }
+    }
+
+    pub(super) fn block_anchors(
+        &self,
+        syntax: &JsonValue,
+        line: usize,
+        rendered: &str,
+    ) -> Vec<JsonValue> {
+        if field_text(syntax, "type") == "DefStructStmt" {
+            return self.struct_field_anchors(syntax, line);
+        }
+        if !matches!(
+            field_text(syntax, "type").as_str(),
+            "ByInducStmt" | "ByStrongInducStmt"
+        ) || !self.line_matches(rendered, line)
+        {
+            return Vec::new();
+        }
+        let Some(fields) = field(syntax, "fields") else {
+            return Vec::new();
+        };
+        if !matches!(field(fields, "base_proof"), Some(JsonValue::Array(_)))
+            || !matches!(field(fields, "step_proof"), Some(JsonValue::Array(_)))
+        {
+            return Vec::new();
+        }
+        let mut anchors = BTreeMap::new();
+        for child in self.children.get(&line).into_iter().flatten() {
+            let Some(tokens) = self.lines.get(child) else {
+                continue;
+            };
+            let words = tokens
+                .iter()
+                .map(|(token, _, _)| token.as_str())
+                .collect::<Vec<_>>();
+            let role = match words.as_slice() {
+                ["?", "from", ..] if words.last() == Some(&":") => "induction_base",
+                ["?", "induc" | "strong_induc", ":"] => "induction_step",
+                _ => continue,
+            };
+            let (Some(first), Some(last)) = (tokens.first(), tokens.last()) else {
+                continue;
+            };
+            let Some(original) = self
+                .source
+                .as_ref()
+                .and_then(|source| source.get(first.1..last.2))
+            else {
+                return Vec::new();
+            };
+            let anchor = object(vec![
+                ("role", text(role)),
+                ("line", JsonValue::Number(*child as f64)),
+                ("start_byte", JsonValue::Number(first.1 as f64)),
+                ("end_byte", JsonValue::Number(last.2 as f64)),
+                ("source_text", text(original)),
+            ]);
+            if anchors.insert(role, anchor).is_some() {
+                return Vec::new();
+            }
+        }
+        if anchors.len() != 2 {
+            return Vec::new();
+        }
+        anchors.into_values().collect()
+    }
+
+    /// Source syntax only: these conditions are not stored hypotheses or
+    /// execution-scope certificates. Retain the already captured original AST.
+    pub(super) fn case_contexts(
+        &self,
+        original: &crate::ast::stmt::ByCasesStmt,
+        syntax: &JsonValue,
+        source_id: &str,
+        spans: &BTreeMap<usize, (usize, usize)>,
+    ) -> Vec<JsonValue> {
+        let Some(fields) = field(syntax, "fields") else {
+            return Vec::new();
+        };
+        let (Some(cases), Some(proofs)) = (
+            field(fields, "cases").and_then(|value| value.as_array().ok()),
+            field(fields, "proofs").and_then(|value| value.as_array().ok()),
+        ) else {
+            return Vec::new();
+        };
+        if field_text(syntax, "type") != "ByCasesStmt"
+            || cases.len() != original.cases.len()
+            || proofs.len() != cases.len()
+            || original.proofs.len() != cases.len()
+            || original.impossible_facts.len() != cases.len()
+            || !self.line_matches(&original.readable_string(), original.line_file.line)
+        {
+            return Vec::new();
+        }
+        let mut contexts = Vec::new();
+        for (index, condition) in original.cases.iter().enumerate() {
+            let fact = crate::ast::fact::and_chain_as_fact(condition);
+            let Some(location) = crate::json_output::reading_fact_source_line(&fact) else {
+                return Vec::new();
+            };
+            let Some(tokens) = self.lines.get(&location.line) else {
+                return Vec::new();
+            };
+            if !self
+                .children
+                .get(&original.line_file.line)
+                .is_some_and(|lines| lines.contains(&location.line))
+                || tokens.first().map(|token| token.0.as_str()) != Some("case")
+                || tokens.last().map(|token| token.0.as_str()) != Some(":")
+                || !syntax_location_matches(&cases[index], source_id, location.line)
+            {
+                return Vec::new();
+            }
+            let Some(header) = self.source_span(location.line, source_id, None) else {
+                return Vec::new();
+            };
+            let Some(steps) = proofs[index].as_array().ok() else {
+                return Vec::new();
+            };
+            if steps.len() != original.proofs[index].len() {
+                return Vec::new();
+            }
+            let mut body = Vec::new();
+            for (step, captured) in original.proofs[index].iter().zip(steps) {
+                let Some(at) = crate::json_output::reading_statement_source_line(step) else {
+                    return Vec::new();
+                };
+                if field_text(captured, "type") != "Stmt"
+                    || field_text(captured, "text") != step.readable_string()
+                    || !syntax_location_matches(captured, source_id, at.line)
+                    || !self
+                        .children
+                        .get(&location.line)
+                        .is_some_and(|lines| lines.contains(&at.line))
+                {
+                    return Vec::new();
+                }
+                let Some(mut span) =
+                    self.source_span(at.line, source_id, spans.get(&at.line).copied())
+                else {
+                    return Vec::new();
+                };
+                if let JsonValue::Object(fields) = &mut span {
+                    fields.insert("statement_text".into(), text(&step.readable_string()));
+                }
+                body.push(span);
+            }
+            let impossible = match original.impossible_facts[index].as_ref() {
+                None => JsonValue::Null,
+                Some(atomic) => {
+                    let fact = Fact::AtomicFact(atomic.clone());
+                    let Some(at) = crate::json_output::reading_fact_source_line(&fact) else {
+                        return Vec::new();
+                    };
+                    if !self
+                        .children
+                        .get(&location.line)
+                        .is_some_and(|lines| lines.contains(&at.line))
+                        || self
+                            .lines
+                            .get(&at.line)
+                            .and_then(|tokens| tokens.first())
+                            .map(|token| token.0.as_str())
+                            != Some("impossible")
+                    {
+                        return Vec::new();
+                    }
+                    let Some(span) = self.source_span(at.line, source_id, None) else {
+                        return Vec::new();
+                    };
+                    span
+                }
+            };
+            contexts.push(object(vec![
+                ("index", JsonValue::Number(index as f64)),
+                ("condition", cases[index].clone()),
+                (
+                    "condition_text",
+                    text(&crate::display_and_ir::readable_string_from_ir_text(
+                        condition.ir().as_str(),
+                    )),
+                ),
+                ("header", header),
+                ("proof_steps", JsonValue::Array(body)),
+                ("impossible", impossible),
+            ]));
+        }
+        contexts
+    }
+
+    fn source_span(
+        &self,
+        line: usize,
+        source_id: &str,
+        span: Option<(usize, usize)>,
+    ) -> Option<JsonValue> {
+        let tokens = self.lines.get(&line)?;
+        let (start, end) = span.unwrap_or((tokens.first()?.1, tokens.last()?.2));
+        let source = self.source.as_ref()?;
+        let original = source.get(start..end)?;
+        if start >= end
+            || source
+                .get(..start)?
+                .bytes()
+                .filter(|byte| *byte == b'\n')
+                .count()
+                + 1
+                != line
+        {
+            return None;
+        }
+        Some(object(vec![
+            ("source_id", text(source_id)),
+            ("line", JsonValue::Number(line as f64)),
+            ("start_byte", JsonValue::Number(start as f64)),
+            ("end_byte", JsonValue::Number(end as f64)),
+            ("source_text", text(original)),
+        ]))
+    }
+
+    fn struct_field_anchors(&self, syntax: &JsonValue, line: usize) -> Vec<JsonValue> {
+        // Struct rendering retains the header only. Retokenizing that header
+        // as a whole block rejects its absent body. Validate the original
+        // lexical header against the typed declaration instead.
+        let name = field(syntax, "fields")
+            .and_then(|fields| field(fields, "name"))
+            .map(|value| field_text(value, "name"))
+            .unwrap_or_default();
+        let Some(header) = self.lines.get(&line) else {
+            return Vec::new();
+        };
+        if header.first().map(|t| t.0.as_str()) != Some("struct")
+            || header.get(1).map(|t| t.0.as_str()) != Some(name.as_str())
+            || header.last().map(|t| t.0.as_str()) != Some(":")
+        {
+            return Vec::new();
+        }
+        let Some(fields) = field(syntax, "fields")
+            .and_then(|fields| field(fields, "fields"))
+            .and_then(|value| value.as_array().ok())
+        else {
+            return Vec::new();
+        };
+        // The parser consumes one direct child per field, in declaration
+        // order, followed by an optional <=>: block. Resolved field types can
+        // acquire module qualifiers absent from the source; their rendered
+        // text is therefore not a source-location key.
+        let Some(children) = self.children.get(&line) else {
+            return Vec::new();
+        };
+        if children.len() != fields.len()
+            && !(children.len() == fields.len() + 1
+                && self
+                    .lines
+                    .get(&children[fields.len()])
+                    .is_some_and(|tokens| {
+                        tokens.len() == 2 && tokens[0].0 == "<=>" && tokens[1].0 == ":"
+                    }))
+        {
+            return Vec::new();
+        }
+        let mut anchors = Vec::new();
+        let mut names = BTreeSet::new();
+        for (index, definition) in fields.iter().enumerate() {
+            let Some(definition) = field(definition, "fields") else {
+                return Vec::new();
+            };
+            let Some(binding) = field(definition, "binding") else {
+                return Vec::new();
+            };
+            let name = field_text(binding, "name");
+            let symbol = field_text(binding, "symbol_id");
+            let type_text = field(definition, "field_type")
+                .map(|value| field_text(value, "text"))
+                .unwrap_or_default();
+            if name.is_empty()
+                || symbol.is_empty()
+                || type_text.is_empty()
+                || !names.insert(name.clone())
+            {
+                return Vec::new();
+            }
+            let child = children[index];
+            let Some(tokens) = self.lines.get(&child) else {
+                return Vec::new();
+            };
+            if tokens.len() < 2
+                || tokens[0].0 != name
+                || self
+                    .children
+                    .get(&child)
+                    .is_some_and(|body| !body.is_empty())
+            {
+                return Vec::new();
+            }
+            let start = tokens[0].1;
+            let end = tokens.last().unwrap().2;
+            let Some(original) = self
+                .source
+                .as_ref()
+                .and_then(|source| source.get(start..end))
+            else {
+                return Vec::new();
+            };
+            anchors.push(object(vec![
+                ("role", text("structure_field")),
+                ("index", JsonValue::Number(index as f64)),
+                ("symbol_id", text(&symbol)),
+                ("line", JsonValue::Number(child as f64)),
+                ("start_byte", JsonValue::Number(start as f64)),
+                ("end_byte", JsonValue::Number(end as f64)),
+                ("source_text", text(original)),
+            ]));
+        }
+        anchors
     }
 
     pub(super) fn for_syntax(
@@ -216,6 +535,33 @@ impl SourceHints {
             .map(|i| actual[i])
             .collect::<Vec<_>>();
         actual == expected || actual.first() == Some(&"?") && actual[1..] == expected
+    }
+}
+
+fn syntax_location_matches(mut node: &JsonValue, source_id: &str, line: usize) -> bool {
+    loop {
+        let Some(fields) = field(node, "fields") else {
+            return false;
+        };
+        if let Some(location) = field(fields, "line_file") {
+            return field_text(location, "source_id") == source_id
+                && field(location, "line").and_then(|value| value.as_u64().ok())
+                    == Some(line as u64);
+        }
+        let Some(child) = field(fields, "0") else {
+            return false;
+        };
+        node = child;
+    }
+}
+
+fn collect_block_children(block: &TokenBlock, children: &mut BTreeMap<usize, Vec<usize>>) {
+    children.insert(
+        block.line,
+        block.body.iter().map(|child| child.line).collect(),
+    );
+    for child in &block.body {
+        collect_block_children(child, children);
     }
 }
 

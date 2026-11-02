@@ -1,0 +1,139 @@
+# Natural-index finite sums of complex scalars and their norm bounds.
+
+thm complex_natural_sum_triangle:
+    ? forall f fn(k N) C,n N:
+        C_abs(sum(0,n,f))<=sum(0,n,fn(k N) R {C_abs(f(k))})
+    have fn norms(k N) R=C_abs(f(k))
+    by induc length from 0:
+        ? C_abs(sum(0,length,f))<=sum(0,length,norms)
+        ? from length=0:
+            sum(0,0,f)=f(0)
+            sum(0,0,norms)=norms(0)=C_abs(f(0))
+            C_abs(sum(0,0,f))=C_abs(f(0))=sum(0,0,norms)
+        ? induc:
+            sum(0,length,f) $in C
+            f(length+1) $in C
+            sum(0,length,norms) $in R
+            C_abs(f(length+1)) $in R
+            C_abs(sum(0,length,f)) $in R
+            C_abs(sum(0,length,f)+f(length+1))<=C_abs(sum(0,length,f))+C_abs(f(length+1))
+            sum(0,length+1,f)=sum(0,length,f)+f(length+1)
+            sum(0,length+1,norms)=sum(0,length,norms)+norms(length+1)=sum(0,length,norms)+C_abs(f(length+1))
+            C_abs(sum(0,length+1,f))=C_abs(sum(0,length,f)+f(length+1))<=C_abs(sum(0,length,f))+C_abs(f(length+1))<=sum(0,length,norms)+C_abs(f(length+1))=sum(0,length+1,norms)
+    C_abs(sum(0,n,f))<=sum(0,n,norms)
+    sum(0,n,norms)=sum(0,n,fn(k N) R {C_abs(f(k))})
+    C_abs(sum(0,n,f))<=sum(0,n,norms)=sum(0,n,fn(k N) R {C_abs(f(k))})
+
+thm complex_natural_sum_zero_tail:
+    ? forall f fn(k N) C,m,n N:
+        m<=n
+        forall k N:
+            k>m
+            =>:
+                f(k)=0
+        =>:
+            sum(0,n,f)=sum(0,m,f)
+    by induc last from m:
+        ? sum(0,last,f)=sum(0,m,f)
+        ? from last=m:
+            sum(0,m,f)=sum(0,m,f)
+        ? induc:
+            last>=m
+            last+1>m
+            f(last+1)=0
+            sum(0,last,f) $in C
+            sum(0,last+1,f)=sum(0,last,f)+f(last+1)=sum(0,m,f)
+    sum(0,n,f)=sum(0,m,f)
+
+thm real_natural_constant_sum:
+    ? forall n N,M R:
+        sum(0,n,fn(k N) R {M})=(n+1)*M
+    have fn constant(k N) R=M
+    by induc length from 0:
+        ? sum(0,length,constant)=(length+1)*M
+        ? from length=0:
+            sum(0,0,constant)=constant(0)=M=(0+1)*M
+        ? induc:
+            sum(0,length,constant) $in R
+            sum(0,length+1,constant)=sum(0,length,constant)+constant(length+1)=(length+1)*M+M=((length+1)+1)*M
+    sum(0,n,constant)=(n+1)*M
+    sum(0,n,fn(k N) R {M})=sum(0,n,constant)=(n+1)*M
+
+thm complex_natural_sum_uniform_bound:
+    ? forall f fn(k N) C,n N,M R:
+        forall k closed_range(0,n):
+            C_abs(f(k))<=M
+        =>:
+            C_abs(sum(0,n,f))<=(n+1)*M
+    have fn norms(k N) R=C_abs(f(k))
+    have fn constant(k N) R=M
+    claim:
+        ? forall k N:
+            0<=k
+            k<=n
+            =>:
+                norms(k)<=constant(k)
+        k $in Z
+        k $in closed_range(0,n)
+        norms(k)=C_abs(f(k))<=M=constant(k)
+    sum(0,n,norms) $in R
+    sum(0,n,constant) $in R
+    release thm sum_le_sum_from_pointwise(sum(0,n,norms),sum(0,n,constant))
+    release thm real_natural_constant_sum(n,M)
+    sum(0,n,constant)=sum(0,n,fn(k N) R {M})=(n+1)*M
+    release thm complex_natural_sum_triangle(f,n)
+    sum(0,n,fn(k N) R {C_abs(f(k))})=sum(0,n,norms)
+    C_abs(sum(0,n,f))<=sum(0,n,fn(k N) R {C_abs(f(k))})=sum(0,n,norms)<=sum(0,n,constant)=(n+1)*M
+
+template<n N,coefficients finite_seq(C,n)>:
+    have fn complex_finite_sequence_moduli(k closed_range(1,n)) R=C_abs(coefficients(k))
+
+thm complex_finite_sequence_moduli_carrier:
+    ? forall n N,coefficients finite_seq(C,n):
+        \complex_finite_sequence_moduli<n,coefficients> $in finite_seq(R,n)
+        \complex_finite_sequence_moduli<n,coefficients> $in fn(k closed_range(1,n)) R
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n):
+        \complex_finite_sequence_moduli<n,coefficients> $in finite_seq(R,n)
+        \complex_finite_sequence_moduli<n,coefficients> $in fn(k closed_range(1,n)) R
+    release thm complex_finite_sequence_moduli_carrier(n,coefficients)
+
+thm complex_finite_sequence_norm_sum_carrier:
+    ? forall n N,coefficients finite_seq(C,n):
+        finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>) $in R
+    have fn real_values(k closed_range(1,n)) R=C_abs(coefficients(k))
+    finite_set_sum(closed_range(1,n),real_values) $in R
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>),finite_set_sum(closed_range(1,n),real_values))
+    finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>) $in R
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n):
+        finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>) $in R
+    release thm complex_finite_sequence_norm_sum_carrier(n,coefficients)
+
+thm complex_finite_sequence_strict_bound:
+    ? forall n N,coefficients finite_seq(C,n),j closed_range(1,n):
+        C_abs(coefficients(j))<abs(finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>))+1
+    claim:
+        ? forall k closed_range(1,n):
+            0<=\complex_finite_sequence_moduli<n,coefficients>(k)
+        coefficients(k) $in C
+        0<=C_abs(coefficients(k))
+        \complex_finite_sequence_moduli<n,coefficients>(k)=C_abs(coefficients(k))
+        0<=\complex_finite_sequence_moduli<n,coefficients>(k)
+    release thm complex_finite_sequence_moduli_carrier(n,coefficients)
+    release thm complex_finite_sequence_norm_sum_carrier(n,coefficients)
+    finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>) $in R
+    release thm finite_set_summand_le_sum(\complex_finite_sequence_moduli<n,coefficients>(j),finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>))
+    finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>) $in R
+    have total R=finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>)
+    total=finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>)
+    total<=abs(total)
+    abs(total)<abs(total)+1
+    abs(total)=abs(finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>))
+    abs(total)+1=abs(finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>))+1
+    C_abs(coefficients(j))=\complex_finite_sequence_moduli<n,coefficients>(j)<=finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>)=total<=abs(total)<abs(total)+1=abs(finite_set_sum(closed_range(1,n),\complex_finite_sequence_moduli<n,coefficients>))+1
+
+
+

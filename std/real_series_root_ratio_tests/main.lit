@@ -1,0 +1,1606 @@
+claim:
+    ? forall start N+,n {j Z:j>=start}:
+        n $in N+
+        n $in R+
+        n $in R*
+        n $in R
+        n!=0
+    n $in Z
+    n>=start>=1
+    n>0
+    n!=0
+    n $in N+
+    n $in R+
+    n $in R
+    n $in R*
+
+claim:
+    ? forall start N+,a fn(n {j Z:j>=start}) R,n {j Z:j>=start}:
+        1/n $in R+
+        abs(a(n)) $in R
+        abs(a(n))>=0
+    n $in R*
+    n $in Z
+    n>=start
+    start>=1
+    n>=1
+    n>0
+    1/n>0
+    1/n $in R+
+    a(n) $in R
+    abs(a(n))>=0
+
+claim:
+    ? forall start N+,a fn(n {j Z:j>=start}) R,n {j Z:j>=start}:
+        a(n)!=0
+        =>:
+            abs(a(n))>0
+            abs(a(n)) $in R+
+    a(n) $in R
+    by cases:
+        ? abs(a(n))>0 and abs(a(n)) $in R+
+        case a(n)>=0:
+            a(n)>0
+            abs(a(n))=a(n)>0
+            abs(a(n)) $in R+
+        case a(n)<0:
+            -a(n)>0
+            abs(a(n))=-a(n)>0
+            abs(a(n)) $in R+
+
+template<start N+,a fn(n {j Z:j>=start}) R>:
+    have fn positive_start_real_tail_root_magnitudes(n {j Z:j>=start}) R by cases:
+        case a(n)=0: 0
+        case a(n)!=0: abs(a(n))^(1/n)
+
+claim:
+    ? forall start N+,n {j Z:j>=start}:
+        n $in N
+        n>=1
+        n>=0
+        n>0
+    n $in Z
+    n>=start
+    start>=1
+    n>=1
+    n>=0
+    n>0
+    n $in N
+
+thm positive_start_real_tail_root_power:
+    ? forall start N+,a fn(n {j Z:j>=start}) R,n {j Z:j>=start}:
+        \positive_start_real_tail_root_magnitudes<start,a>(n)>=0
+        \positive_start_real_tail_root_magnitudes<start,a>(n)^n=abs(a(n))
+    n $in N+
+    by cases:
+        ? \positive_start_real_tail_root_magnitudes<start,a>(n)>=0 and \positive_start_real_tail_root_magnitudes<start,a>(n)^n=abs(a(n))
+        case a(n)=0:
+            \positive_start_real_tail_root_magnitudes<start,a>(n)=0
+            abs(a(n))=0
+            \positive_start_real_tail_root_magnitudes<start,a>(n)>=0
+            \positive_start_real_tail_root_magnitudes<start,a>(n)^n=0^n=0=abs(a(n))
+        case a(n)!=0:
+            abs(a(n)) $in R+
+            abs(a(n))>=0
+            release thm series::nonnegative_root_power(abs(a(n)),n)
+            \positive_start_real_tail_root_magnitudes<start,a>(n)=abs(a(n))^(1/n)
+            \positive_start_real_tail_root_magnitudes<start,a>(n)>=0
+            \positive_start_real_tail_root_magnitudes<start,a>(n)^n=(abs(a(n))^(1/n))^n=abs(a(n))
+
+thm positive_start_real_tail_root_bound_gives_magnitude_bound:
+    ? forall start N+,a fn(n {j Z:j>=start}) R,q R+,n {j Z:j>=start}:
+        \positive_start_real_tail_root_magnitudes<start,a>(n)<=q
+        =>:
+            abs(a(n))<=q^n
+    n $in Z
+    n>=start>=1
+    n $in N+
+    n $in N
+    release thm positive_start_real_tail_root_power(start,a,n)
+    q>=0
+    release thm power::nonnegative_real_natural_power_preserves_order(\positive_start_real_tail_root_magnitudes<start,a>(n),q,n)
+    abs(a(n))=\positive_start_real_tail_root_magnitudes<start,a>(n)^n<=q^n
+
+claim:
+    ? forall start N+,k N+:
+        start+k-1 $in {j Z:j>=start}
+        start+k-1 $in N+
+        start+k-1 $in N
+    release thm rs::real_tail_positive_index(start,k)
+    start+k-1 $in Z
+    start>=1
+    k>=1
+    start+k-1>=start
+    start+k-1>=1
+    start+k-1 $in N+
+    start+k-1 $in N
+
+thm positive_start_real_root_reindex_uses_original_degree:
+    ? forall start N+,a fn(n {j Z:j>=start}) R,k N+:
+        \rs::real_tail_reindex<start,\positive_start_real_tail_root_magnitudes<start,a>>(k)=\positive_start_real_tail_root_magnitudes<start,a>(start+k-1)
+        \rs::real_tail_reindex<start,\positive_start_real_tail_root_magnitudes<start,a>>(k)>=0
+        \rs::real_tail_reindex<start,\positive_start_real_tail_root_magnitudes<start,a>>(k)^(start+k-1)=abs(a(start+k-1))
+    release thm rs::real_tail_positive_index(start,k)
+    start+k-1 $in {j Z:j>=start}
+    start+k-1>=start>=1
+    release thm rs::real_tail_reindex_at(start,\positive_start_real_tail_root_magnitudes<start,a>,k)
+    \rs::real_tail_reindex<start,\positive_start_real_tail_root_magnitudes<start,a>>(k)=\positive_start_real_tail_root_magnitudes<start,a>(start+k-1)
+    release thm positive_start_real_tail_root_power(start,a,start+k-1)
+
+thm native_absolute_series_is_real_tail_absolute_convergence:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $series::is_absolutely_convergent_series(\rs::real_tail_reindex<start,a>)
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(start,a)
+            $ts::is_convergent_real_tail_series(start,a)
+    $series::is_convergent_series(series::absolute_terms(\rs::real_tail_reindex<start,a>))
+    release thm ts::real_tail_series_absolute_reindex(start,a)
+    $series::is_convergent_series(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>)
+    release thm ts::native_convergent_series_is_real_tail_convergent(start,\limits::real_tail_absolute_values<start,a>)
+    by def $ts::is_absolutely_convergent_real_tail_series(start,a)
+    release thm ts::absolutely_convergent_real_tail_series_converges(start,a)
+
+thm real_tail_absolute_restriction_commutes:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,cutoff {j Z:j>=start}:
+        \limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,cutoff> = \limits::real_tail_absolute_values<cutoff,\limits::real_tail_restriction<start,a,cutoff>>
+    release thm fn_set_member(\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,cutoff>,fn(n {j Z:j>=cutoff}) R)
+    release thm fn_set_member(\limits::real_tail_absolute_values<cutoff,\limits::real_tail_restriction<start,a,cutoff>>,fn(n {j Z:j>=cutoff}) R)
+    claim:
+        ? forall n {j Z:j>=cutoff}:
+            \limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,cutoff>(n)=\limits::real_tail_absolute_values<cutoff,\limits::real_tail_restriction<start,a,cutoff>>(n)
+        n $in Z
+        n>=cutoff>=start
+        n $in {j Z:j>=start}
+        \limits::real_tail_restriction<start,a,cutoff>(n)=a(n)
+        \limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,cutoff>(n)=\limits::real_tail_absolute_values<start,a>(n)=abs(a(n))=abs(\limits::real_tail_restriction<start,a,cutoff>(n))=\limits::real_tail_absolute_values<cutoff,\limits::real_tail_restriction<start,a,cutoff>>(n)
+    by fn_extension \limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,cutoff> = \limits::real_tail_absolute_values<cutoff,\limits::real_tail_restriction<start,a,cutoff>>
+
+claim:
+    ? forall start Z,k N:
+        start+k $in {j Z:j>=start}
+    k $in Z
+    k>=0
+    start+k $in Z
+    start+k>=start+0=start
+    start+k $in {j Z:j>=start}
+
+thm real_tail_absolute_convergence_restores_finite_prefix:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,k N:
+        $ts::is_absolutely_convergent_real_tail_series(start+k,\limits::real_tail_restriction<start,a,start+k>)
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(start,a)
+            $ts::is_convergent_real_tail_series(start,a)
+    $ts::is_convergent_real_tail_series(start+k,\limits::real_tail_absolute_values<start+k,\limits::real_tail_restriction<start,a,start+k>>)
+    release thm real_tail_absolute_restriction_commutes(start,a,start+k)
+    $ts::is_convergent_real_tail_series(start+k,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+k>)
+    release thm ts::convergent_real_tail_restriction_gives_convergent_series(start,\limits::real_tail_absolute_values<start,a>,k)
+    by def $ts::is_absolutely_convergent_real_tail_series(start,a)
+    release thm ts::absolutely_convergent_real_tail_series_converges(start,a)
+
+thm positive_start_root_eventual_bound_gives_absolute_convergence:
+    ? forall start N+,a fn(n {j Z:j>=start}) R,q R+,cutoff {j Z:j>=start}:
+        q<1
+        forall n {j Z:j>=start}:
+            n>=cutoff
+            =>:
+                \positive_start_real_tail_root_magnitudes<start,a>(n)<=q
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(start,a)
+            $ts::is_convergent_real_tail_series(start,a)
+    start $in Z
+    start $in R
+    start>=1
+    start-1>=0
+    start-1 $in R
+    have coefficient R=q^(start-1)
+    cutoff $in Z
+    cutoff>=start>=1
+    cutoff+1 $in N+
+    claim:
+        ? forall k N+:
+            k>cutoff+1
+            =>:
+                abs(\rs::real_tail_reindex<start,a>(k))<=coefficient*q^k
+        k $in R
+        release thm rs::real_tail_positive_index(start,k)
+        start+k-1 $in {j Z:j>=start}
+        start+k-1 $in R
+        (start+k-1)-k=start-1>=0
+        release thm nn::real_difference_lower_bound_gives_additive_bound(start+k-1,k,0)
+        start+k-1>=k+0=k
+        start+k-1>=k
+        k>cutoff+1
+        cutoff+1>cutoff
+        k>cutoff
+        k>=cutoff
+        start+k-1>=k>=cutoff
+        start+k-1>=cutoff
+        \positive_start_real_tail_root_magnitudes<start,a>(start+k-1)<=q
+        release thm positive_start_real_tail_root_bound_gives_magnitude_bound(start,a,q,start+k-1)
+        release thm rs::real_tail_reindex_at(start,a,k)
+        release thm power::positive_real_power_addition(q,start-1,k)
+        (start-1)+k=start+k-1
+        abs(\rs::real_tail_reindex<start,a>(k))=abs(a(start+k-1))<=q^(start+k-1)=q^((start-1)+k)=q^(start-1)*q^k=coefficient*q^k
+    q>=0
+    release thm series::series_geometric_domination(\rs::real_tail_reindex<start,a>,q,coefficient,cutoff+1)
+    release thm native_absolute_series_is_real_tail_absolute_convergence(start,a)
+
+thm nonnegative_real_tail_has_nonnegative_extremal_limits:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)>=0
+        =>:
+            $xreal::extended_real_le(0,\limits::real_tail_liminf<start>(a))
+            $xreal::extended_real_le(0,\limits::real_tail_limsup<start>(a))
+    release thm rs::real_tail_constant_limit(start,0)
+    release thm limits::real_tail_limit_equals_extremal_limits(start,\rs::real_tail_constant<start,0>,0)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \rs::real_tail_constant<start,0>(n)<=a(n)
+        \rs::real_tail_constant<start,0>(n)=0<=a(n)
+    release thm limits::real_tail_liminf_pointwise_comparison(start,\rs::real_tail_constant<start,0>,a)
+    release thm limits::real_tail_limsup_pointwise_comparison(start,\rs::real_tail_constant<start,0>,a)
+    \limits::real_tail_liminf<start>(\rs::real_tail_constant<start,0>)=0
+    \limits::real_tail_limsup<start>(\rs::real_tail_constant<start,0>)=0
+    $xreal::extended_real_le(0,\limits::real_tail_liminf<start>(a))
+    $xreal::extended_real_le(0,\limits::real_tail_limsup<start>(a))
+
+thm positive_start_real_series_root_limsup_below_one_converges:
+    ? forall start N+,a fn(n {j Z:j>=start}) R:
+        $xreal::extended_real_lt(\limits::real_tail_limsup<start>(\positive_start_real_tail_root_magnitudes<start,a>),1)
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(start,a)
+            $ts::is_convergent_real_tail_series(start,a)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \positive_start_real_tail_root_magnitudes<start,a>(n)>=0
+        release thm positive_start_real_tail_root_power(start,a,n)
+    release thm nonnegative_real_tail_has_nonnegative_extremal_limits(start,\positive_start_real_tail_root_magnitudes<start,a>)
+    have alpha xreal::ExtendedReal=\limits::real_tail_limsup<start>(\positive_start_real_tail_root_magnitudes<start,a>)
+    $xreal::extended_real_le(0,alpha)
+    $xreal::extended_real_lt(alpha,1)
+    $xreal::extended_real_le(alpha,1)
+    release thm limits::extended_real_between_reals_is_real(alpha,0,1)
+    alpha $in R
+    release thm xreal::extended_real_order_on_reals(0,alpha)
+    release thm limits::extended_strict_order_on_reals(alpha,1)
+    0<=alpha
+    alpha<1
+    alpha+1>=0+1=1>0
+    (alpha+1)/2>0
+    (alpha+1)/2 $in R+
+    have q R+=(alpha+1)/2
+    alpha+1<1+1=2
+    (alpha+1)/2<2/2=1
+    q<1
+    alpha+alpha<alpha+1
+    2*alpha=alpha+alpha<alpha+1
+    alpha=2*alpha/2<(alpha+1)/2=q
+    alpha<q
+    release thm limits::real_strict_order_is_extended_order(alpha,q)
+    $xreal::extended_real_lt(\limits::real_tail_limsup<start>(\positive_start_real_tail_root_magnitudes<start,a>),q)
+    release thm limits::real_tail_limsup_eventually_below(start,\positive_start_real_tail_root_magnitudes<start,a>,q)
+    obtain cutoff from exist c {j Z:j>=start} st {$limits::is_real_tail_below_after(start,\positive_start_real_tail_root_magnitudes<start,a>,q,c)}
+    claim:
+        ? forall n {j Z:j>=start}:
+            n>=cutoff
+            =>:
+                \positive_start_real_tail_root_magnitudes<start,a>(n)<=q
+        $xreal::extended_real_lt(\positive_start_real_tail_root_magnitudes<start,a>(n),q)
+        release thm limits::extended_strict_order_on_reals(\positive_start_real_tail_root_magnitudes<start,a>(n),q)
+        \positive_start_real_tail_root_magnitudes<start,a>(n)<=q
+    release thm positive_start_root_eventual_bound_gives_absolute_convergence(start,a,q,cutoff)
+
+thm positive_start_real_series_root_limsup_above_one_diverges:
+    ? forall start N+,a fn(n {j Z:j>=start}) R:
+        $xreal::extended_real_lt(1,\limits::real_tail_limsup<start>(\main::positive_start_real_tail_root_magnitudes<start,a>))
+        =>:
+            not $ts::is_convergent_real_tail_series(start,a)
+            not $ts::is_absolutely_convergent_real_tail_series(start,a)
+    by contra:
+        ? not $ts::is_convergent_real_tail_series(start,a)
+        release thm ts::convergent_real_tail_series_terms_tend_to_zero(start,a)
+        $rs::is_eventually_real_tail_close(start,a,0,1/2)
+        obtain cutoff from exist c Z st {$rs::is_real_tail_close_after(start,a,0,1/2,c)}
+        cutoff>=start
+        cutoff $in {j Z:j>=start}
+        release thm limits::real_tail_limsup_arbitrarily_late_above(start,\main::positive_start_real_tail_root_magnitudes<start,a>,1,cutoff)
+        obtain hit from exist n {j Z:j>=start} st {n>=cutoff and $xreal::extended_real_lt(1,\main::positive_start_real_tail_root_magnitudes<start,a>(n))}
+        hit $in Z
+        hit>=start
+        hit>=cutoff
+        $approx::is_epsilon_close(a(hit),0,1/2)
+        abs(a(hit)-0)<=1/2
+        abs(a(hit))=abs(a(hit)-0)<=1/2
+        hit $in N+
+        release thm main::positive_start_real_tail_root_power(start,a,hit)
+        release thm limits::extended_strict_order_on_reals(1,\main::positive_start_real_tail_root_magnitudes<start,a>(hit))
+        1<\main::positive_start_real_tail_root_magnitudes<start,a>(hit)
+        release thm power::nonnegative_real_positive_natural_power_preserves_strict_order(1,\main::positive_start_real_tail_root_magnitudes<start,a>(hit),hit)
+        1=1^hit<\main::positive_start_real_tail_root_magnitudes<start,a>(hit)^hit=abs(a(hit))
+        1<abs(a(hit))
+        abs(a(hit))<=1
+        impossible 1<abs(a(hit))
+    by contra:
+        ? not $ts::is_absolutely_convergent_real_tail_series(start,a)
+        release thm ts::absolutely_convergent_real_tail_series_converges(start,a)
+        impossible $ts::is_convergent_real_tail_series(start,a)
+
+claim:
+    ? forall start Z,length {k N:start+k>=1}:
+        start+length $in N+
+        start+length $in {j Z:j>=start}
+    length $in N
+    length $in Z
+    length>=0
+    start+length $in Z
+    start+length>=1
+    start+length $in N+
+    start+length>=start+0=start
+    start+length $in {j Z:j>=start}
+
+thm real_tail_series_root_limsup_below_one_converges:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,length {k N:start+k>=1}:
+        $xreal::extended_real_lt(\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>),1)
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(start,a)
+            $ts::is_convergent_real_tail_series(start,a)
+    start+length $in N+
+    release thm main::positive_start_real_series_root_limsup_below_one_converges(start+length,\limits::real_tail_restriction<start,a,start+length>)
+    length $in N
+    release thm main::real_tail_absolute_convergence_restores_finite_prefix(start,a,length)
+
+thm real_tail_series_root_limsup_above_one_diverges:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,length {k N:start+k>=1}:
+        $xreal::extended_real_lt(1,\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>))
+        =>:
+            not $ts::is_convergent_real_tail_series(start,a)
+            not $ts::is_absolutely_convergent_real_tail_series(start,a)
+    start+length $in N+
+    release thm positive_start_real_series_root_limsup_above_one_diverges(start+length,\limits::real_tail_restriction<start,a,start+length>)
+    by contra:
+        ? not $ts::is_convergent_real_tail_series(start,a)
+        length $in N
+        release thm ts::convergent_real_tail_series_remains_convergent_after_finite_prefix(start,a,length)
+        impossible $ts::is_convergent_real_tail_series(start+length,\limits::real_tail_restriction<start,a,start+length>)
+    by contra:
+        ? not $ts::is_absolutely_convergent_real_tail_series(start,a)
+        release thm ts::absolutely_convergent_real_tail_series_converges(start,a)
+        impossible $ts::is_convergent_real_tail_series(start,a)
+
+thm integer_tail_has_positive_cutoff_length:
+    ? forall start Z:
+        exist length {k N:start+k>=1} st {start+length $in N+}
+    by cases:
+        ? exist length {k N:start+k>=1} st {start+length $in N+}
+        case start>=1:
+            start+0>=1
+            0 $in {k N:start+k>=1}
+            start+0 $in Z
+            start+0>=1
+            start+0 $in N+
+            witness exist length {k N:start+k>=1} st {start+length $in N+} from 0
+        case start<1:
+            1-start $in Z
+            1-start>0
+            1-start>=0
+            1-start $in N
+            start+(1-start)=1
+            start+(1-start)>=1
+            1-start $in {k N:start+k>=1}
+            start+(1-start) $in N+
+            witness exist length {k N:start+k>=1} st {start+length $in N+} from 1-start
+
+thm real_tail_limit_restricts_after_finite_prefix:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,length N:
+        $rs::has_real_tail_limit(start,a,L)
+        =>:
+            $rs::has_real_tail_limit(start+length,\limits::real_tail_restriction<start,a,start+length>,L)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(start+length,\limits::real_tail_restriction<start,a,start+length>,L,epsilon)
+        $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        obtain old from exist c Z st {$rs::is_real_tail_close_after(start,a,L,epsilon,c)}
+        old>=start
+        length>=0
+        have cutoff Z=old+length
+        cutoff>=old
+        cutoff>=start+length
+        claim:
+            ? forall n Z:
+                n>=start+length
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\limits::real_tail_restriction<start,a,start+length>(n),L,epsilon)
+            start+length>=start
+            n>=start+length>=start
+            n>=start
+            n>=cutoff>=old
+            n>=old
+            n $in {j Z:j>=start+length}
+            n $in {j Z:j>=start}
+            $approx::is_epsilon_close(a(n),L,epsilon)
+            \limits::real_tail_restriction<start,a,start+length>(n)=a(n)
+            $approx::is_epsilon_close(\limits::real_tail_restriction<start,a,start+length>(n),L,epsilon)
+        by def $rs::is_real_tail_close_after(start+length,\limits::real_tail_restriction<start,a,start+length>,L,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(start+length,\limits::real_tail_restriction<start,a,start+length>,L,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(start+length,\limits::real_tail_restriction<start,a,start+length>,L)
+
+thm real_tail_limit_restores_finite_prefix:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,length N:
+        $rs::has_real_tail_limit(start+length,\limits::real_tail_restriction<start,a,start+length>,L)
+        =>:
+            $rs::has_real_tail_limit(start,a,L)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        $rs::is_eventually_real_tail_close(start+length,\limits::real_tail_restriction<start,a,start+length>,L,epsilon)
+        obtain cutoff from exist c Z st {$rs::is_real_tail_close_after(start+length,\limits::real_tail_restriction<start,a,start+length>,L,epsilon,c)}
+        cutoff>=start+length
+        length>=0
+        start+length>=start
+        cutoff>=start
+        claim:
+            ? forall n Z:
+                n>=start
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(a(n),L,epsilon)
+            n>=cutoff>=start+length
+            n>=start+length
+            n $in {j Z:j>=start+length}
+            n $in {j Z:j>=start}
+            $approx::is_epsilon_close(\limits::real_tail_restriction<start,a,start+length>(n),L,epsilon)
+            \limits::real_tail_restriction<start,a,start+length>(n)=a(n)
+            $approx::is_epsilon_close(a(n),L,epsilon)
+        by def $rs::is_real_tail_close_after(start,a,L,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(start,a,L,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(start,a,L)
+
+thm nonnegative_extended_strict_pair_has_positive_real_between:
+    ? forall lower,upper xreal::ExtendedReal:
+        $xreal::extended_real_le(0,lower)
+        $xreal::extended_real_lt(lower,upper)
+        =>:
+            exist q R+ st {$xreal::extended_real_lt(lower,q) and $xreal::extended_real_lt(q,upper)}
+    $xreal::extended_real_le(lower,upper)
+    lower!=upper
+    release thm xreal::real_negative_infinity_is_not_real
+    release thm xreal::real_positive_infinity_is_not_real
+    by contra:
+        ? 0!=xreal::real_negative_infinity
+        xreal::real_negative_infinity=0
+        xreal::real_negative_infinity $in R
+        impossible xreal::real_negative_infinity $in R
+    by contra:
+        ? lower!=xreal::real_positive_infinity
+        $xreal::extended_real_le(xreal::real_positive_infinity,upper)
+        release thm xreal::positive_infinity_le_only_itself(upper)
+        upper=xreal::real_positive_infinity=lower
+        impossible lower!=upper
+    release thm xreal::nontrivial_extended_real_order_is_finite(0,lower)
+    lower $in R
+    release thm xreal::extended_real_order_on_reals(0,lower)
+    lower>=0
+    release thm xreal::extended_real_has_three_cases(upper)
+    by cases:
+        ? exist q R+ st {$xreal::extended_real_lt(lower,q) and $xreal::extended_real_lt(q,upper)}
+        case upper $in R:
+            release thm limits::extended_strict_order_on_reals(lower,upper)
+            lower<upper
+            upper>lower>=0
+            upper>0
+            lower+upper>=0+upper=upper>0
+            (lower+upper)/2>0
+            have finite_q R+=(lower+upper)/2
+            lower+lower<lower+upper
+            2*lower=lower+lower
+            2*lower<lower+upper
+            lower=2*lower/2<(lower+upper)/2=finite_q
+            lower<finite_q
+            lower+upper<upper+upper=2*upper
+            upper+upper=2*upper
+            lower+upper<2*upper
+            finite_q=(lower+upper)/2<(2*upper)/2=upper
+            finite_q<upper
+            release thm limits::real_strict_order_is_extended_order(lower,finite_q)
+            release thm limits::real_strict_order_is_extended_order(finite_q,upper)
+            witness exist r R+ st {$xreal::extended_real_lt(lower,r) and $xreal::extended_real_lt(r,upper)} from finite_q
+        case upper=xreal::real_positive_infinity:
+            lower+1>0
+            have infinite_q R+=lower+1
+            lower<infinite_q
+            release thm limits::real_strict_order_is_extended_order(lower,infinite_q)
+            release thm xreal::extended_real_le_positive_infinity(infinite_q)
+            by contra:
+                ? infinite_q!=xreal::real_positive_infinity
+                xreal::real_positive_infinity=infinite_q
+                xreal::real_positive_infinity $in R
+                impossible xreal::real_positive_infinity $in R
+            by def $xreal::extended_real_lt(infinite_q,upper)
+            witness exist r R+ st {$xreal::extended_real_lt(lower,r) and $xreal::extended_real_lt(r,upper)} from infinite_q
+        case upper=xreal::real_negative_infinity:
+            by contra:
+                ? exist q R+ st {$xreal::extended_real_lt(lower,q) and $xreal::extended_real_lt(q,upper)}
+                $xreal::extended_real_le(lower,xreal::real_negative_infinity)
+                release thm xreal::only_negative_infinity_le_negative_infinity(lower)
+                lower=xreal::real_negative_infinity
+                xreal::real_negative_infinity $in R
+                impossible xreal::real_negative_infinity $in R
+
+thm extended_real_not_le_gives_reverse_strict_order:
+    ? forall x,y xreal::ExtendedReal:
+        not $xreal::extended_real_le(x,y)
+        =>:
+            $xreal::extended_real_lt(y,x)
+    release thm xreal::extended_real_order_total(x,y)
+    claim:
+        ? $xreal::extended_real_le(y,x)
+        by cases:
+            ? $xreal::extended_real_le(y,x)
+            case $xreal::extended_real_le(x,y):
+                by contra:
+                    ? $xreal::extended_real_le(y,x)
+                    impossible $xreal::extended_real_le(x,y)
+            case $xreal::extended_real_le(y,x):
+                $xreal::extended_real_le(y,x)
+    by contra:
+        ? y!=x
+        y=x
+        release thm xreal::extended_real_order_reflexive(x)
+        $xreal::extended_real_le(x,y)
+        impossible $xreal::extended_real_le(x,y)
+    by def $xreal::extended_real_lt(y,x)
+
+claim:
+    ? forall start,substart Z,cutoff {j Z:j>=start and j>=substart},n {j Z:j>=cutoff}:
+        n $in {j Z:j>=start}
+        n $in {j Z:j>=substart}
+    n $in Z
+    n>=cutoff
+    cutoff>=start
+    cutoff>=substart
+    n>=start
+    n>=substart
+    n $in {j Z:j>=start}
+    n $in {j Z:j>=substart}
+
+thm nonnegative_real_tail_eventual_comparison_bounds_limsup:
+    ? forall start,substart Z,a fn(n {j Z:j>=start}) R,b fn(n {j Z:j>=substart}) R,cutoff {j Z:j>=start and j>=substart}:
+        forall n {j Z:j>=start}:
+            a(n)>=0
+        forall n {j Z:j>=substart}:
+            b(n)>=0
+        forall n {j Z:j>=cutoff}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\limits::real_tail_limsup<start>(a),\limits::real_tail_limsup<substart>(b))
+    release thm main::nonnegative_real_tail_has_nonnegative_extremal_limits(start,a)
+    release thm main::nonnegative_real_tail_has_nonnegative_extremal_limits(substart,b)
+    have upper_a xreal::ExtendedReal=\limits::real_tail_limsup<start>(a)
+    have upper_b xreal::ExtendedReal=\limits::real_tail_limsup<substart>(b)
+    by contra:
+        ? $xreal::extended_real_le(upper_a,upper_b)
+        release thm extended_real_not_le_gives_reverse_strict_order(upper_a,upper_b)
+        $xreal::extended_real_le(0,upper_b)
+        release thm nonnegative_extended_strict_pair_has_positive_real_between(upper_b,upper_a)
+        obtain q from exist r R+ st {$xreal::extended_real_lt(upper_b,r) and $xreal::extended_real_lt(r,upper_a)}
+        release thm limits::real_tail_limsup_eventually_below(substart,b,q)
+        obtain old from exist c {j Z:j>=substart} st {$limits::is_real_tail_below_after(substart,b,q,c)}
+        old $in Z
+        old>=substart
+        cutoff $in Z
+        cutoff>=start
+        cutoff>=substart
+        old $in R
+        cutoff $in R
+        substart $in R
+        have later Z=old+cutoff-substart
+        later-old=(old+cutoff-substart)-old=cutoff-substart>=0
+        release thm nn::real_difference_lower_bound_gives_additive_bound(later,old,0)
+        later>=old+0=old
+        later>=old
+        later-cutoff=(old+cutoff-substart)-cutoff=old-substart>=0
+        release thm nn::real_difference_lower_bound_gives_additive_bound(later,cutoff,0)
+        later>=cutoff+0=cutoff
+        later>=cutoff>=start
+        later>=start
+        later $in {j Z:j>=start}
+        release thm limits::real_tail_limsup_arbitrarily_late_above(start,a,q,later)
+        obtain hit from exist n {j Z:j>=start} st {n>=later and $xreal::extended_real_lt(q,a(n))}
+        hit $in Z
+        hit>=later>=cutoff
+        hit>=cutoff
+        hit>=later>=old
+        hit>=old
+        hit>=substart
+        hit $in {j Z:j>=cutoff}
+        hit $in {j Z:j>=substart}
+        a(hit)<=b(hit)
+        release thm xreal::real_order_is_extended_real_order(a(hit),b(hit))
+        $xreal::extended_real_lt(b(hit),q)
+        release thm limits::extended_real_lt_le_transitive(q,a(hit),b(hit))
+        release thm xreal::extended_real_strict_order_asymmetric(q,b(hit))
+        impossible $xreal::extended_real_lt(b(hit),q)
+
+thm nonnegative_real_tail_eventual_comparison_bounds_liminf:
+    ? forall start,substart Z,a fn(n {j Z:j>=start}) R,b fn(n {j Z:j>=substart}) R,cutoff {j Z:j>=start and j>=substart}:
+        forall n {j Z:j>=start}:
+            a(n)>=0
+        forall n {j Z:j>=substart}:
+            b(n)>=0
+        forall n {j Z:j>=cutoff}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\limits::real_tail_liminf<start>(a),\limits::real_tail_liminf<substart>(b))
+    release thm main::nonnegative_real_tail_has_nonnegative_extremal_limits(start,a)
+    release thm main::nonnegative_real_tail_has_nonnegative_extremal_limits(substart,b)
+    have lower_a xreal::ExtendedReal=\limits::real_tail_liminf<start>(a)
+    have lower_b xreal::ExtendedReal=\limits::real_tail_liminf<substart>(b)
+    by contra:
+        ? $xreal::extended_real_le(lower_a,lower_b)
+        release thm extended_real_not_le_gives_reverse_strict_order(lower_a,lower_b)
+        $xreal::extended_real_le(0,lower_b)
+        release thm nonnegative_extended_strict_pair_has_positive_real_between(lower_b,lower_a)
+        obtain q from exist r R+ st {$xreal::extended_real_lt(lower_b,r) and $xreal::extended_real_lt(r,lower_a)}
+        release thm limits::real_tail_liminf_eventually_above(start,a,q)
+        obtain old from exist c {j Z:j>=start} st {$limits::is_real_tail_above_after(start,a,q,c)}
+        old $in Z
+        old>=start
+        cutoff $in Z
+        cutoff>=start
+        cutoff>=substart
+        old $in R
+        cutoff $in R
+        start $in R
+        have later Z=old+cutoff-start
+        later-old=(old+cutoff-start)-old=cutoff-start>=0
+        release thm nn::real_difference_lower_bound_gives_additive_bound(later,old,0)
+        later>=old+0=old
+        later>=old
+        later-cutoff=(old+cutoff-start)-cutoff=old-start>=0
+        release thm nn::real_difference_lower_bound_gives_additive_bound(later,cutoff,0)
+        later>=cutoff+0=cutoff
+        later>=cutoff>=substart
+        later>=substart
+        later $in {j Z:j>=substart}
+        release thm limits::real_tail_liminf_arbitrarily_late_below(substart,b,q,later)
+        obtain hit from exist n {j Z:j>=substart} st {n>=later and $xreal::extended_real_lt(b(n),q)}
+        hit $in Z
+        hit>=later>=cutoff
+        hit>=cutoff
+        hit>=later>=old
+        hit>=old
+        hit>=start
+        hit $in {j Z:j>=cutoff}
+        hit $in {j Z:j>=start}
+        a(hit)<=b(hit)
+        release thm xreal::real_order_is_extended_real_order(a(hit),b(hit))
+        $xreal::extended_real_lt(q,a(hit))
+        release thm limits::extended_real_lt_le_transitive(q,a(hit),b(hit))
+        release thm xreal::extended_real_strict_order_asymmetric(q,b(hit))
+        impossible $xreal::extended_real_lt(b(hit),q)
+
+claim:
+    ? forall start Z,length N,n {j Z:j>=start+length}:
+        n $in {j Z:j>=start}
+    n $in Z
+    n>=start+length
+    length>=0
+    start+length>=start
+    n>=start+length>=start
+    n>=start
+    n $in {j Z:j>=start}
+
+thm nonnegative_real_tail_extremal_limits_ignore_finite_prefix:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,length N:
+        forall n {j Z:j>=start}:
+            a(n)>=0
+        =>:
+            \limits::real_tail_limsup<start+length>(\limits::real_tail_restriction<start,a,start+length>)=\limits::real_tail_limsup<start>(a)
+            \limits::real_tail_liminf<start+length>(\limits::real_tail_restriction<start,a,start+length>)=\limits::real_tail_liminf<start>(a)
+    start+length $in Z
+    start+length>=start
+    start+length>=start+length
+    start+length $in {j Z:j>=start and j>=start+length}
+    start+length $in {j Z:j>=start+length and j>=start}
+    claim:
+        ? forall n {j Z:j>=start+length}:
+            \limits::real_tail_restriction<start,a,start+length>(n)>=0
+            a(n)<=\limits::real_tail_restriction<start,a,start+length>(n)
+            \limits::real_tail_restriction<start,a,start+length>(n)<=a(n)
+        n $in {j Z:j>=start}
+        a(n)>=0
+        \limits::real_tail_restriction<start,a,start+length>(n)=a(n)
+        \limits::real_tail_restriction<start,a,start+length>(n)>=0
+        a(n)<=\limits::real_tail_restriction<start,a,start+length>(n)
+        \limits::real_tail_restriction<start,a,start+length>(n)<=a(n)
+    release thm nonnegative_real_tail_eventual_comparison_bounds_limsup(start,start+length,a,\limits::real_tail_restriction<start,a,start+length>,start+length)
+    release thm nonnegative_real_tail_eventual_comparison_bounds_limsup(start+length,start,\limits::real_tail_restriction<start,a,start+length>,a,start+length)
+    release thm nonnegative_real_tail_eventual_comparison_bounds_liminf(start,start+length,a,\limits::real_tail_restriction<start,a,start+length>,start+length)
+    release thm nonnegative_real_tail_eventual_comparison_bounds_liminf(start+length,start,\limits::real_tail_restriction<start,a,start+length>,a,start+length)
+    release thm xreal::extended_real_order_antisymmetric(\limits::real_tail_limsup<start+length>(\limits::real_tail_restriction<start,a,start+length>),\limits::real_tail_limsup<start>(a))
+    release thm xreal::extended_real_order_antisymmetric(\limits::real_tail_liminf<start+length>(\limits::real_tail_restriction<start,a,start+length>),\limits::real_tail_liminf<start>(a))
+
+prop is_strictly_positive_real_tail(start Z,c fn(n {j Z:j>=start}) R):
+    forall n {j Z:j>=start}:
+        c(n)>0
+
+claim:
+    ? forall start Z,n {j Z:j>=start},offset N:
+        n+offset $in {j Z:j>=start}
+    release thm sext::real_tail_natural_offset_member(start,n,offset)
+
+claim:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},n {j Z:j>=start}:
+        c(n)>0
+        c(n)!=0
+        c(n) $in R+
+        c(n) $in R*
+        c(n+1)>0
+        c(n+1)!=0
+        c(n+1) $in R+
+        c(n+1) $in R*
+    $is_strictly_positive_real_tail(start,c)
+    n+1 $in {j Z:j>=start}
+    c(n)>0
+    c(n)!=0
+    c(n) $in R+
+    c(n) $in R*
+    c(n+1)>0
+    c(n+1)!=0
+    c(n+1) $in R+
+    c(n+1) $in R*
+
+claim:
+    ? forall x,y R+:
+        x/y>0
+        x/y $in R+
+    x $in R
+    y $in R
+    x>0
+    y>0
+    y!=0
+    y $in R*
+    x/y>0
+    x/y $in R+
+
+claim:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},n {j Z:j>=start}:
+        c(n+1)/c(n)>0
+        c(n+1)/c(n) $in R+
+    $is_strictly_positive_real_tail(start,c)
+    c(n)>0
+    c(n+1)>0
+    c(n) $in R+
+    c(n+1) $in R+
+    c(n)!=0
+    c(n) $in R*
+    c(n+1)/c(n)>0
+    c(n+1)/c(n) $in R+
+
+template<start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)}>:
+    have fn positive_real_tail_successive_ratios(n {j Z:j>=start}) R+=c(n+1)/c(n)
+
+thm positive_real_tail_successive_ratio_value:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},n {j Z:j>=start}:
+        \positive_real_tail_successive_ratios<start,c>(n)=c(n+1)/c(n)
+        \positive_real_tail_successive_ratios<start,c>(n)>0
+        \positive_real_tail_successive_ratios<start,c>(n)*c(n)=c(n+1)
+    $is_strictly_positive_real_tail(start,c)
+    c(n)>0
+    c(n)!=0
+    c(n) $in R*
+    \positive_real_tail_successive_ratios<start,c>(n)=c(n+1)/c(n)
+    \positive_real_tail_successive_ratios<start,c>(n) $in R+
+    \positive_real_tail_successive_ratios<start,c>(n)>0
+    \positive_real_tail_successive_ratios<start,c>(n)*c(n)=(c(n+1)/c(n))*c(n)=c(n+1)
+
+thm nonnegative_real_positive_natural_power_reflects_order:
+    ? forall x,y R,n N+:
+        x>=0
+        y>=0
+        x^n<=y^n
+        =>:
+            x<=y
+    by contra:
+        ? x<=y
+        y<x
+        release thm power::nonnegative_real_positive_natural_power_preserves_strict_order(y,x,n)
+        x^n>y^n
+        impossible x^n>y^n
+
+thm positive_real_tail_ratio_upper_bound_gives_offset_bound:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},q R+,cutoff {j Z:j>=start},offset N:
+        forall n {j Z:j>=start}:
+            n>=cutoff
+            =>:
+                \positive_real_tail_successive_ratios<start,c>(n)<=q
+        =>:
+            c(cutoff+offset)<=c(cutoff)*q^offset
+    $is_strictly_positive_real_tail(start,c)
+    q>0
+    q>=0
+    by induc offset from 0:
+        ? c(cutoff+offset)<=c(cutoff)*q^offset
+        ? from offset=0:
+            cutoff+0=cutoff
+            c(cutoff+0)=c(cutoff)=c(cutoff)*1=c(cutoff)*q^0
+        ? induc:
+            cutoff+offset $in {j Z:j>=start}
+            offset>=0
+            cutoff+offset>=cutoff
+            c(cutoff+offset)>0
+            c(cutoff+offset)>=0
+            \positive_real_tail_successive_ratios<start,c>(cutoff+offset)<=q
+            release thm positive_real_tail_successive_ratio_value(start,c,cutoff+offset)
+            \positive_real_tail_successive_ratios<start,c>(cutoff+offset)*c(cutoff+offset)<=q*c(cutoff+offset)
+            q*c(cutoff+offset)<=q*(c(cutoff)*q^offset)
+            q^(offset+1)=q^offset*q
+            q*(c(cutoff)*q^offset)=c(cutoff)*(q^offset*q)=c(cutoff)*q^(offset+1)
+            cutoff+(offset+1)=(cutoff+offset)+1
+            c(cutoff+(offset+1))=c((cutoff+offset)+1)=\positive_real_tail_successive_ratios<start,c>(cutoff+offset)*c(cutoff+offset)<=q*c(cutoff+offset)<=q*(c(cutoff)*q^offset)=c(cutoff)*q^(offset+1)
+
+thm positive_real_tail_ratio_lower_bound_gives_offset_bound:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},q R+,cutoff {j Z:j>=start},offset N:
+        forall n {j Z:j>=start}:
+            n>=cutoff
+            =>:
+                \positive_real_tail_successive_ratios<start,c>(n)>=q
+        =>:
+            c(cutoff+offset)>=c(cutoff)*q^offset
+    $is_strictly_positive_real_tail(start,c)
+    q>0
+    q>=0
+    by induc offset from 0:
+        ? c(cutoff+offset)>=c(cutoff)*q^offset
+        ? from offset=0:
+            cutoff+0=cutoff
+            c(cutoff+0)=c(cutoff)=c(cutoff)*1=c(cutoff)*q^0
+        ? induc:
+            cutoff+offset $in {j Z:j>=start}
+            offset>=0
+            cutoff+offset>=cutoff
+            c(cutoff+offset)>0
+            c(cutoff+offset)>=0
+            \positive_real_tail_successive_ratios<start,c>(cutoff+offset)>=q
+            release thm positive_real_tail_successive_ratio_value(start,c,cutoff+offset)
+            \positive_real_tail_successive_ratios<start,c>(cutoff+offset)*c(cutoff+offset)>=q*c(cutoff+offset)
+            q*c(cutoff+offset)>=q*(c(cutoff)*q^offset)
+            q^(offset+1)=q^offset*q
+            q*(c(cutoff)*q^offset)=c(cutoff)*(q^offset*q)=c(cutoff)*q^(offset+1)
+            cutoff+(offset+1)=(cutoff+offset)+1
+            c(cutoff+(offset+1))=c((cutoff+offset)+1)=\positive_real_tail_successive_ratios<start,c>(cutoff+offset)*c(cutoff+offset)>=q*c(cutoff+offset)>=q*(c(cutoff)*q^offset)=c(cutoff)*q^(offset+1)
+
+thm positive_real_tail_ratio_upper_bound_gives_geometric_envelope:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},q R+,cutoff,n {j Z:j>=start}:
+        forall k {j Z:j>=start}:
+            k>=cutoff
+            =>:
+                \positive_real_tail_successive_ratios<start,c>(k)<=q
+        n>=cutoff
+        =>:
+            c(n)<=(c(cutoff)*q^(-cutoff))*q^n
+    n $in Z
+    cutoff $in Z
+    n-cutoff $in Z
+    n-cutoff>=0
+    n-cutoff $in N
+    n $in R
+    cutoff $in R
+    release thm positive_real_tail_ratio_upper_bound_gives_offset_bound(start,c,q,cutoff,n-cutoff)
+    cutoff+(n-cutoff)=n
+    c(n)=c(cutoff+(n-cutoff))<=c(cutoff)*q^(n-cutoff)
+    release thm power::positive_real_power_addition(q,-cutoff,n)
+    n-cutoff=(-cutoff)+n
+    c(cutoff)*q^(n-cutoff)=c(cutoff)*q^((-cutoff)+n)=c(cutoff)*(q^(-cutoff)*q^n)=(c(cutoff)*q^(-cutoff))*q^n
+    c(n)<=(c(cutoff)*q^(-cutoff))*q^n
+
+thm positive_real_tail_ratio_lower_bound_gives_geometric_envelope:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},q R+,cutoff,n {j Z:j>=start}:
+        forall k {j Z:j>=start}:
+            k>=cutoff
+            =>:
+                \positive_real_tail_successive_ratios<start,c>(k)>=q
+        n>=cutoff
+        =>:
+            c(n)>=(c(cutoff)*q^(-cutoff))*q^n
+    n $in Z
+    cutoff $in Z
+    n-cutoff $in Z
+    n-cutoff>=0
+    n-cutoff $in N
+    n $in R
+    cutoff $in R
+    release thm positive_real_tail_ratio_lower_bound_gives_offset_bound(start,c,q,cutoff,n-cutoff)
+    cutoff+(n-cutoff)=n
+    c(n)=c(cutoff+(n-cutoff))>=c(cutoff)*q^(n-cutoff)
+    release thm power::positive_real_power_addition(q,-cutoff,n)
+    n-cutoff=(-cutoff)+n
+    c(cutoff)*q^(n-cutoff)=c(cutoff)*q^((-cutoff)+n)=c(cutoff)*(q^(-cutoff)*q^n)=(c(cutoff)*q^(-cutoff))*q^n
+    c(n)>=(c(cutoff)*q^(-cutoff))*q^n
+
+claim:
+    ? forall A R+:
+        \standard::positive_base_nth_root_tail<A> $in fn(n {j Z:j>=1}) R
+    release thm fn_set_member(\standard::positive_base_nth_root_tail<A>,fn(n {j Z:j>=1}) R+)
+    release thm fn_set_member(\standard::positive_base_nth_root_tail<A>,fn(n {j Z:j>=1}) R)
+
+claim:
+    ? forall start N+,n {j Z:j>=start}:
+        n $in {j Z:j>=1}
+    n $in Z
+    n>=start
+    start>=1
+    n>=1
+    n $in {j Z:j>=1}
+
+thm positive_start_geometric_magnitude_upper_bound_gives_root_bound:
+    ? forall start N+,a fn(n {j Z:j>=start}) R,A,q R+,n {j Z:j>=start}:
+        abs(a(n))<=A*q^n
+        =>:
+            \main::positive_start_real_tail_root_magnitudes<start,a>(n)<=\standard::positive_base_nth_root_tail<A>(n)*q
+    n $in N+
+    n $in R
+    n $in {j Z:j>=1}
+    \standard::positive_base_nth_root_tail<A>(n) $in R+
+    q>0
+    \standard::positive_base_nth_root_tail<A>(n)*q>0
+    have upper R+=\standard::positive_base_nth_root_tail<A>(n)*q
+    upper>=0
+    A>=0
+    release thm standard::positive_base_nth_root_tail_power(A,n)
+    release thm power::positive_real_product_power(\standard::positive_base_nth_root_tail<A>(n),q,n)
+    upper^n=(\standard::positive_base_nth_root_tail<A>(n)*q)^n=(\standard::positive_base_nth_root_tail<A>(n))^n*q^n=A*q^n
+    release thm main::positive_start_real_tail_root_power(start,a,n)
+    \main::positive_start_real_tail_root_magnitudes<start,a>(n)^n=abs(a(n))<=A*q^n=upper^n
+    \main::positive_start_real_tail_root_magnitudes<start,a>(n)^n<=upper^n
+    release thm nonnegative_real_positive_natural_power_reflects_order(\main::positive_start_real_tail_root_magnitudes<start,a>(n),upper,n)
+    \main::positive_start_real_tail_root_magnitudes<start,a>(n)<=upper
+    upper=\standard::positive_base_nth_root_tail<A>(n)*q
+    \main::positive_start_real_tail_root_magnitudes<start,a>(n)<=\standard::positive_base_nth_root_tail<A>(n)*q
+
+thm positive_start_geometric_magnitude_lower_bound_gives_root_bound:
+    ? forall start N+,a fn(n {j Z:j>=start}) R,A,q R+,n {j Z:j>=start}:
+        abs(a(n))>=A*q^n
+        =>:
+            \main::positive_start_real_tail_root_magnitudes<start,a>(n)>=\standard::positive_base_nth_root_tail<A>(n)*q
+    n $in N+
+    n $in R
+    n $in {j Z:j>=1}
+    \standard::positive_base_nth_root_tail<A>(n) $in R+
+    q>0
+    \standard::positive_base_nth_root_tail<A>(n)*q>0
+    have lower R+=\standard::positive_base_nth_root_tail<A>(n)*q
+    lower>=0
+    A>=0
+    release thm standard::positive_base_nth_root_tail_power(A,n)
+    release thm power::positive_real_product_power(\standard::positive_base_nth_root_tail<A>(n),q,n)
+    lower^n=(\standard::positive_base_nth_root_tail<A>(n)*q)^n=(\standard::positive_base_nth_root_tail<A>(n))^n*q^n=A*q^n
+    release thm main::positive_start_real_tail_root_power(start,a,n)
+    lower^n=A*q^n<=abs(a(n))=\main::positive_start_real_tail_root_magnitudes<start,a>(n)^n
+    lower^n<=\main::positive_start_real_tail_root_magnitudes<start,a>(n)^n
+    release thm nonnegative_real_positive_natural_power_reflects_order(lower,\main::positive_start_real_tail_root_magnitudes<start,a>(n),n)
+    lower<=\main::positive_start_real_tail_root_magnitudes<start,a>(n)
+    lower=\standard::positive_base_nth_root_tail<A>(n)*q
+    \main::positive_start_real_tail_root_magnitudes<start,a>(n)>=\standard::positive_base_nth_root_tail<A>(n)*q
+
+claim:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)}:
+        \positive_real_tail_successive_ratios<start,c> $in fn(n {j Z:j>=start}) R
+    release thm fn_set_member(\positive_real_tail_successive_ratios<start,c>,fn(n {j Z:j>=start}) R+)
+    release thm fn_set_member(\positive_real_tail_successive_ratios<start,c>,fn(n {j Z:j>=start}) R)
+
+thm positive_start_ratio_upper_bound_bounds_root_limsup:
+    ? forall start N+,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},q R+,cutoff {j Z:j>=start}:
+        forall n {j Z:j>=start}:
+            n>=cutoff
+            =>:
+                \positive_real_tail_successive_ratios<start,c>(n)<=q
+        =>:
+            $xreal::extended_real_le(\limits::real_tail_limsup<start>(\main::positive_start_real_tail_root_magnitudes<start,c>),q)
+    $is_strictly_positive_real_tail(start,c)
+    start>=1
+    cutoff $in Z
+    cutoff $in R
+    cutoff>=start>=1
+    cutoff>=1
+    cutoff $in {j Z:j>=start and j>=1}
+    c(cutoff)>0
+    c(cutoff) $in R+
+    release thm power::positive_real_power_is_positive(q,-cutoff)
+    c(cutoff)*q^(-cutoff)>0
+    have A R+=c(cutoff)*q^(-cutoff)
+    have reference fn(n {j Z:j>=1}) R=\rs::real_tail_scaled<1,\standard::positive_base_nth_root_tail<A>,q>
+    release thm standard::positive_base_nth_root_tail_limit(A)
+    release thm rs::real_tail_scaled_limit(1,\standard::positive_base_nth_root_tail<A>,1,q)
+    1*q=q
+    $rs::has_real_tail_limit(1,reference,q)
+    release thm limits::real_tail_limit_equals_extremal_limits(1,reference,q)
+    claim:
+        ? forall n {j Z:j>=1}:
+            reference(n)>=0
+        n $in Z
+        n>=1
+        n>0
+        n!=0
+        n $in R*
+        1/n>0
+        1/n $in R+
+        release thm power::positive_real_power_is_positive(A,1/n)
+        \standard::positive_base_nth_root_tail<A>(n)=A^(1/n)
+        \standard::positive_base_nth_root_tail<A>(n)>0
+        q>0
+        reference(n)=\rs::real_tail_scaled<1,\standard::positive_base_nth_root_tail<A>,q>(n)=q*\standard::positive_base_nth_root_tail<A>(n)>0
+        reference(n)>=0
+    claim:
+        ? forall n {j Z:j>=start}:
+            \main::positive_start_real_tail_root_magnitudes<start,c>(n)>=0
+        release thm main::positive_start_real_tail_root_power(start,c,n)
+    claim:
+        ? forall n {j Z:j>=cutoff}:
+            \main::positive_start_real_tail_root_magnitudes<start,c>(n)<=reference(n)
+        n $in {j Z:j>=start}
+        n $in {j Z:j>=1}
+        n>=cutoff
+        c(n)>0
+        abs(c(n))=c(n)
+        release thm positive_real_tail_ratio_upper_bound_gives_geometric_envelope(start,c,q,cutoff,n)
+        c(n)<=(c(cutoff)*q^(-cutoff))*q^n=A*q^n
+        abs(c(n))<=A*q^n
+        release thm positive_start_geometric_magnitude_upper_bound_gives_root_bound(start,c,A,q,n)
+        reference(n)=\rs::real_tail_scaled<1,\standard::positive_base_nth_root_tail<A>,q>(n)=q*\standard::positive_base_nth_root_tail<A>(n)=q*\standard::positive_base_nth_root_tail<A>(n)=\standard::positive_base_nth_root_tail<A>(n)*q
+        \main::positive_start_real_tail_root_magnitudes<start,c>(n)<=\standard::positive_base_nth_root_tail<A>(n)*q=reference(n)
+        \main::positive_start_real_tail_root_magnitudes<start,c>(n)<=reference(n)
+    release thm nonnegative_real_tail_eventual_comparison_bounds_limsup(start,1,\main::positive_start_real_tail_root_magnitudes<start,c>,reference,cutoff)
+    \limits::real_tail_limsup<1>(reference)=q
+    $xreal::extended_real_le(\limits::real_tail_limsup<start>(\main::positive_start_real_tail_root_magnitudes<start,c>),q)
+
+thm positive_start_ratio_lower_bound_bounds_root_liminf:
+    ? forall start N+,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},q R+,cutoff {j Z:j>=start}:
+        forall n {j Z:j>=start}:
+            n>=cutoff
+            =>:
+                \positive_real_tail_successive_ratios<start,c>(n)>=q
+        =>:
+            $xreal::extended_real_le(q,\limits::real_tail_liminf<start>(\main::positive_start_real_tail_root_magnitudes<start,c>))
+    $is_strictly_positive_real_tail(start,c)
+    start>=1
+    cutoff $in Z
+    cutoff $in R
+    cutoff>=start>=1
+    cutoff>=1
+    cutoff $in {j Z:j>=1 and j>=start}
+    c(cutoff)>0
+    c(cutoff) $in R+
+    release thm power::positive_real_power_is_positive(q,-cutoff)
+    c(cutoff)*q^(-cutoff)>0
+    have A R+=c(cutoff)*q^(-cutoff)
+    have reference fn(n {j Z:j>=1}) R=\rs::real_tail_scaled<1,\standard::positive_base_nth_root_tail<A>,q>
+    release thm standard::positive_base_nth_root_tail_limit(A)
+    release thm rs::real_tail_scaled_limit(1,\standard::positive_base_nth_root_tail<A>,1,q)
+    1*q=q
+    $rs::has_real_tail_limit(1,reference,q)
+    release thm limits::real_tail_limit_equals_extremal_limits(1,reference,q)
+    claim:
+        ? forall n {j Z:j>=1}:
+            reference(n)>=0
+        n $in Z
+        n>=1
+        n>0
+        n!=0
+        n $in R*
+        1/n>0
+        1/n $in R+
+        release thm power::positive_real_power_is_positive(A,1/n)
+        \standard::positive_base_nth_root_tail<A>(n)=A^(1/n)
+        \standard::positive_base_nth_root_tail<A>(n)>0
+        q>0
+        reference(n)=\rs::real_tail_scaled<1,\standard::positive_base_nth_root_tail<A>,q>(n)=q*\standard::positive_base_nth_root_tail<A>(n)>0
+        reference(n)>=0
+    claim:
+        ? forall n {j Z:j>=start}:
+            \main::positive_start_real_tail_root_magnitudes<start,c>(n)>=0
+        release thm main::positive_start_real_tail_root_power(start,c,n)
+    claim:
+        ? forall n {j Z:j>=cutoff}:
+            reference(n)<=\main::positive_start_real_tail_root_magnitudes<start,c>(n)
+        n $in {j Z:j>=start}
+        n $in {j Z:j>=1}
+        n>=cutoff
+        c(n)>0
+        abs(c(n))=c(n)
+        release thm positive_real_tail_ratio_lower_bound_gives_geometric_envelope(start,c,q,cutoff,n)
+        c(n)>=(c(cutoff)*q^(-cutoff))*q^n=A*q^n
+        abs(c(n))>=A*q^n
+        release thm positive_start_geometric_magnitude_lower_bound_gives_root_bound(start,c,A,q,n)
+        reference(n)=\rs::real_tail_scaled<1,\standard::positive_base_nth_root_tail<A>,q>(n)=q*\standard::positive_base_nth_root_tail<A>(n)=q*\standard::positive_base_nth_root_tail<A>(n)=\standard::positive_base_nth_root_tail<A>(n)*q
+        reference(n)=\standard::positive_base_nth_root_tail<A>(n)*q<=\main::positive_start_real_tail_root_magnitudes<start,c>(n)
+        reference(n)<=\main::positive_start_real_tail_root_magnitudes<start,c>(n)
+    release thm nonnegative_real_tail_eventual_comparison_bounds_liminf(1,start,reference,\main::positive_start_real_tail_root_magnitudes<start,c>,cutoff)
+    \limits::real_tail_liminf<1>(reference)=q
+    $xreal::extended_real_le(q,\limits::real_tail_liminf<start>(\main::positive_start_real_tail_root_magnitudes<start,c>))
+
+thm positive_start_ratio_limsup_bounds_root_limsup:
+    ? forall start N+,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)}:
+        $xreal::extended_real_le(\limits::real_tail_limsup<start>(\main::positive_start_real_tail_root_magnitudes<start,c>),\limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,c>))
+    claim:
+        ? forall n {j Z:j>=start}:
+            \positive_real_tail_successive_ratios<start,c>(n)>=0
+        release thm positive_real_tail_successive_ratio_value(start,c,n)
+        \positive_real_tail_successive_ratios<start,c>(n)>0
+        \positive_real_tail_successive_ratios<start,c>(n)>=0
+    claim:
+        ? forall n {j Z:j>=start}:
+            \main::positive_start_real_tail_root_magnitudes<start,c>(n)>=0
+        release thm main::positive_start_real_tail_root_power(start,c,n)
+    release thm main::nonnegative_real_tail_has_nonnegative_extremal_limits(start,\positive_real_tail_successive_ratios<start,c>)
+    release thm main::nonnegative_real_tail_has_nonnegative_extremal_limits(start,\main::positive_start_real_tail_root_magnitudes<start,c>)
+    have ratio_sup xreal::ExtendedReal=\limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,c>)
+    have root_sup xreal::ExtendedReal=\limits::real_tail_limsup<start>(\main::positive_start_real_tail_root_magnitudes<start,c>)
+    by contra:
+        ? $xreal::extended_real_le(root_sup,ratio_sup)
+        release thm extended_real_not_le_gives_reverse_strict_order(root_sup,ratio_sup)
+        $xreal::extended_real_le(0,ratio_sup)
+        release thm nonnegative_extended_strict_pair_has_positive_real_between(ratio_sup,root_sup)
+        obtain q from exist r R+ st {$xreal::extended_real_lt(ratio_sup,r) and $xreal::extended_real_lt(r,root_sup)}
+        release thm limits::real_tail_limsup_eventually_below(start,\positive_real_tail_successive_ratios<start,c>,q)
+        obtain cutoff from exist k {j Z:j>=start} st {$limits::is_real_tail_below_after(start,\positive_real_tail_successive_ratios<start,c>,q,k)}
+        claim:
+            ? forall n {j Z:j>=start}:
+                n>=cutoff
+                =>:
+                    \positive_real_tail_successive_ratios<start,c>(n)<=q
+            $xreal::extended_real_lt(\positive_real_tail_successive_ratios<start,c>(n),q)
+            release thm limits::extended_strict_order_on_reals(\positive_real_tail_successive_ratios<start,c>(n),q)
+            \positive_real_tail_successive_ratios<start,c>(n)<=q
+        release thm positive_start_ratio_upper_bound_bounds_root_limsup(start,c,q,cutoff)
+        $xreal::extended_real_le(root_sup,q)
+        $xreal::extended_real_lt(q,root_sup)
+        $xreal::extended_real_le(q,root_sup)
+        q!=root_sup
+        release thm xreal::extended_real_order_antisymmetric(q,root_sup)
+        impossible q!=root_sup
+
+thm positive_start_ratio_liminf_bounds_root_liminf:
+    ? forall start N+,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)}:
+        $xreal::extended_real_le(\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,c>),\limits::real_tail_liminf<start>(\main::positive_start_real_tail_root_magnitudes<start,c>))
+    claim:
+        ? forall n {j Z:j>=start}:
+            \positive_real_tail_successive_ratios<start,c>(n)>=0
+        release thm positive_real_tail_successive_ratio_value(start,c,n)
+        \positive_real_tail_successive_ratios<start,c>(n)>0
+        \positive_real_tail_successive_ratios<start,c>(n)>=0
+    claim:
+        ? forall n {j Z:j>=start}:
+            \main::positive_start_real_tail_root_magnitudes<start,c>(n)>=0
+        release thm main::positive_start_real_tail_root_power(start,c,n)
+    release thm main::nonnegative_real_tail_has_nonnegative_extremal_limits(start,\positive_real_tail_successive_ratios<start,c>)
+    release thm main::nonnegative_real_tail_has_nonnegative_extremal_limits(start,\main::positive_start_real_tail_root_magnitudes<start,c>)
+    have ratio_inf xreal::ExtendedReal=\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,c>)
+    have root_inf xreal::ExtendedReal=\limits::real_tail_liminf<start>(\main::positive_start_real_tail_root_magnitudes<start,c>)
+    by contra:
+        ? $xreal::extended_real_le(ratio_inf,root_inf)
+        release thm extended_real_not_le_gives_reverse_strict_order(ratio_inf,root_inf)
+        $xreal::extended_real_le(0,root_inf)
+        release thm nonnegative_extended_strict_pair_has_positive_real_between(root_inf,ratio_inf)
+        obtain q from exist r R+ st {$xreal::extended_real_lt(root_inf,r) and $xreal::extended_real_lt(r,ratio_inf)}
+        release thm limits::real_tail_liminf_eventually_above(start,\positive_real_tail_successive_ratios<start,c>,q)
+        obtain cutoff from exist k {j Z:j>=start} st {$limits::is_real_tail_above_after(start,\positive_real_tail_successive_ratios<start,c>,q,k)}
+        claim:
+            ? forall n {j Z:j>=start}:
+                n>=cutoff
+                =>:
+                    \positive_real_tail_successive_ratios<start,c>(n)>=q
+            $xreal::extended_real_lt(q,\positive_real_tail_successive_ratios<start,c>(n))
+            release thm limits::extended_strict_order_on_reals(q,\positive_real_tail_successive_ratios<start,c>(n))
+            \positive_real_tail_successive_ratios<start,c>(n)>=q
+        release thm positive_start_ratio_lower_bound_bounds_root_liminf(start,c,q,cutoff)
+        $xreal::extended_real_le(q,root_inf)
+        $xreal::extended_real_lt(root_inf,q)
+        $xreal::extended_real_le(root_inf,q)
+        root_inf!=q
+        release thm xreal::extended_real_order_antisymmetric(root_inf,q)
+        impossible root_inf!=q
+
+thm positive_start_real_tail_ratio_root_extrema_chain:
+    ? forall start N+,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)}:
+        $xreal::extended_real_le(\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,c>),\limits::real_tail_liminf<start>(\main::positive_start_real_tail_root_magnitudes<start,c>))
+        $xreal::extended_real_le(\limits::real_tail_liminf<start>(\main::positive_start_real_tail_root_magnitudes<start,c>),\limits::real_tail_limsup<start>(\main::positive_start_real_tail_root_magnitudes<start,c>))
+        $xreal::extended_real_le(\limits::real_tail_limsup<start>(\main::positive_start_real_tail_root_magnitudes<start,c>),\limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,c>))
+    release thm positive_start_ratio_liminf_bounds_root_liminf(start,c)
+    release thm limits::real_tail_liminf_le_limsup(start,\main::positive_start_real_tail_root_magnitudes<start,c>)
+    release thm positive_start_ratio_limsup_bounds_root_limsup(start,c)
+
+claim:
+    ? forall start Z,cutoff {j Z:j>=start},n {j Z:j>=cutoff}:
+        n $in {j Z:j>=start}
+    n $in Z
+    n>=cutoff
+    cutoff>=start
+    n>=cutoff>=start
+    n>=start
+    n $in {j Z:j>=start}
+
+claim:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},cutoff {j Z:j>=start}:
+        $is_strictly_positive_real_tail(cutoff,\limits::real_tail_restriction<start,c,cutoff>)
+    $is_strictly_positive_real_tail(start,c)
+    claim:
+        ? forall n {j Z:j>=cutoff}:
+            \limits::real_tail_restriction<start,c,cutoff>(n)>0
+        n $in {j Z:j>=start}
+        c(n)>0
+        \limits::real_tail_restriction<start,c,cutoff>(n)=c(n)>0
+    by def $is_strictly_positive_real_tail(cutoff,\limits::real_tail_restriction<start,c,cutoff>)
+
+claim:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},cutoff {j Z:j>=start}:
+        \limits::real_tail_restriction<start,c,cutoff> $in {f fn(n {j Z:j>=cutoff}) R:$is_strictly_positive_real_tail(cutoff,f)}
+    release thm fn_set_member(\limits::real_tail_restriction<start,c,cutoff>,fn(n {j Z:j>=cutoff}) R)
+    \limits::real_tail_restriction<start,c,cutoff> $in fn(n {j Z:j>=cutoff}) R
+    $is_strictly_positive_real_tail(cutoff,\limits::real_tail_restriction<start,c,cutoff>)
+    \limits::real_tail_restriction<start,c,cutoff> $in {f fn(n {j Z:j>=cutoff}) R:$is_strictly_positive_real_tail(cutoff,f)}
+
+thm positive_real_tail_ratios_commute_with_restriction:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},cutoff {j Z:j>=start}:
+        \positive_real_tail_successive_ratios<cutoff,\limits::real_tail_restriction<start,c,cutoff>> = \limits::real_tail_restriction<start,\positive_real_tail_successive_ratios<start,c>,cutoff>
+    $is_strictly_positive_real_tail(start,c)
+    $is_strictly_positive_real_tail(cutoff,\limits::real_tail_restriction<start,c,cutoff>)
+    release thm fn_set_member(\positive_real_tail_successive_ratios<cutoff,\limits::real_tail_restriction<start,c,cutoff>>,fn(n {j Z:j>=cutoff}) R)
+    release thm fn_set_member(\limits::real_tail_restriction<start,\positive_real_tail_successive_ratios<start,c>,cutoff>,fn(n {j Z:j>=cutoff}) R)
+    claim:
+        ? forall n {j Z:j>=cutoff}:
+            \positive_real_tail_successive_ratios<cutoff,\limits::real_tail_restriction<start,c,cutoff>>(n)=\limits::real_tail_restriction<start,\positive_real_tail_successive_ratios<start,c>,cutoff>(n)
+        n $in {j Z:j>=start}
+        n+1 $in {j Z:j>=cutoff}
+        n+1 $in {j Z:j>=start}
+        c(n)>0
+        c(n)!=0
+        \limits::real_tail_restriction<start,c,cutoff>(n)=c(n)>0
+        \limits::real_tail_restriction<start,c,cutoff>(n)!=0
+        \limits::real_tail_restriction<start,c,cutoff>(n+1)=c(n+1)
+        release thm positive_real_tail_successive_ratio_value(cutoff,\limits::real_tail_restriction<start,c,cutoff>,n)
+        release thm positive_real_tail_successive_ratio_value(start,c,n)
+        \positive_real_tail_successive_ratios<cutoff,\limits::real_tail_restriction<start,c,cutoff>>(n)=\limits::real_tail_restriction<start,c,cutoff>(n+1)/\limits::real_tail_restriction<start,c,cutoff>(n)=c(n+1)/c(n)=\positive_real_tail_successive_ratios<start,c>(n)=\limits::real_tail_restriction<start,\positive_real_tail_successive_ratios<start,c>,cutoff>(n)
+    by fn_extension \positive_real_tail_successive_ratios<cutoff,\limits::real_tail_restriction<start,c,cutoff>> = \limits::real_tail_restriction<start,\positive_real_tail_successive_ratios<start,c>,cutoff>
+
+thm real_tail_ratio_root_extrema_chain_after_positive_cutoff:
+    ? forall start Z,c {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)},length {k N:start+k>=1}:
+        $xreal::extended_real_le(\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,c>),\limits::real_tail_liminf<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,c,start+length>>))
+        $xreal::extended_real_le(\limits::real_tail_liminf<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,c,start+length>>),\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,c,start+length>>))
+        $xreal::extended_real_le(\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,c,start+length>>),\limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,c>))
+    start+length $in N+
+    start+length $in {j Z:j>=start}
+    $is_strictly_positive_real_tail(start+length,\limits::real_tail_restriction<start,c,start+length>)
+    release thm positive_start_real_tail_ratio_root_extrema_chain(start+length,\limits::real_tail_restriction<start,c,start+length>)
+    release thm positive_real_tail_ratios_commute_with_restriction(start,c,start+length)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \positive_real_tail_successive_ratios<start,c>(n)>=0
+        release thm positive_real_tail_successive_ratio_value(start,c,n)
+        \positive_real_tail_successive_ratios<start,c>(n)>0
+        \positive_real_tail_successive_ratios<start,c>(n)>=0
+    length $in N
+    release thm nonnegative_real_tail_extremal_limits_ignore_finite_prefix(start,\positive_real_tail_successive_ratios<start,c>,length)
+    \limits::real_tail_liminf<start+length>(\positive_real_tail_successive_ratios<start+length,\limits::real_tail_restriction<start,c,start+length>>)=\limits::real_tail_liminf<start+length>(\limits::real_tail_restriction<start,\positive_real_tail_successive_ratios<start,c>,start+length>)=\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,c>)
+    \limits::real_tail_limsup<start+length>(\positive_real_tail_successive_ratios<start+length,\limits::real_tail_restriction<start,c,start+length>>)=\limits::real_tail_limsup<start+length>(\limits::real_tail_restriction<start,\positive_real_tail_successive_ratios<start,c>,start+length>)=\limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,c>)
+    $xreal::extended_real_le(\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,c>),\limits::real_tail_liminf<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,c,start+length>>))
+    $xreal::extended_real_le(\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,c,start+length>>),\limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,c>))
+
+prop is_nonvanishing_real_tail(start Z,a fn(n {j Z:j>=start}) R):
+    forall n {j Z:j>=start}:
+        a(n)!=0
+
+thm nonzero_real_absolute_value_is_positive:
+    ? forall x R*:
+        abs(x)>0
+        abs(x) $in R+
+    x $in R
+    x!=0
+    by cases:
+        ? abs(x)>0
+        case x>=0:
+            x>0
+            abs(x)=x
+            abs(x)>0
+        case x<0:
+            -x>0
+            abs(x)=-x
+            abs(x)>0
+    abs(x) $in R+
+
+thm nonvanishing_real_tail_absolute_values_are_strictly_positive:
+    ? forall start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)}:
+        $is_strictly_positive_real_tail(start,\limits::real_tail_absolute_values<start,a>)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \limits::real_tail_absolute_values<start,a>(n)>0
+        $is_nonvanishing_real_tail(start,a)
+        a(n)!=0
+        a(n) $in R*
+        release thm nonzero_real_absolute_value_is_positive(a(n))
+        \limits::real_tail_absolute_values<start,a>(n)=abs(a(n))
+        \limits::real_tail_absolute_values<start,a>(n)>0
+    by def $is_strictly_positive_real_tail(start,\limits::real_tail_absolute_values<start,a>)
+
+claim:
+    ? forall start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)}:
+        \limits::real_tail_absolute_values<start,a> $in {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)}
+    release thm fn_set_member(\limits::real_tail_absolute_values<start,a>,fn(n {j Z:j>=start}) R)
+    release thm nonvanishing_real_tail_absolute_values_are_strictly_positive(start,a)
+    \limits::real_tail_absolute_values<start,a> $in {f fn(n {j Z:j>=start}) R:$is_strictly_positive_real_tail(start,f)}
+
+template<start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)}>:
+    have fn real_tail_absolute_successive_ratios(n {j Z:j>=start}) R+=\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>(n)
+
+claim:
+    ? forall start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)},n {j Z:j>=start}:
+        abs(a(n))>0
+        abs(a(n))!=0
+        abs(a(n)) $in R+
+        abs(a(n)) $in R*
+        abs(a(n+1))>0
+        abs(a(n+1))!=0
+        abs(a(n+1)) $in R+
+    $is_nonvanishing_real_tail(start,a)
+    n+1 $in {j Z:j>=start}
+    a(n)!=0
+    a(n) $in R*
+    a(n+1)!=0
+    a(n+1) $in R*
+    release thm nonzero_real_absolute_value_is_positive(a(n))
+    release thm nonzero_real_absolute_value_is_positive(a(n+1))
+    abs(a(n))>0
+    abs(a(n))!=0
+    abs(a(n)) $in R+
+    abs(a(n)) $in R*
+    abs(a(n+1))>0
+    abs(a(n+1))!=0
+    abs(a(n+1)) $in R+
+
+thm real_tail_absolute_successive_ratio_value:
+    ? forall start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)},n {j Z:j>=start}:
+        \real_tail_absolute_successive_ratios<start,a>(n)=abs(a(n+1))/abs(a(n))
+        \real_tail_absolute_successive_ratios<start,a>(n)>0
+    n+1 $in {j Z:j>=start}
+    \limits::real_tail_absolute_values<start,a>(n)=abs(a(n))
+    \limits::real_tail_absolute_values<start,a>(n+1)=abs(a(n+1))
+    abs(a(n))>0
+    abs(a(n))!=0
+    abs(a(n)) $in R*
+    \limits::real_tail_absolute_values<start,a>(n)>0
+    \limits::real_tail_absolute_values<start,a>(n)!=0
+    \limits::real_tail_absolute_values<start,a>(n) $in R*
+    release thm positive_real_tail_successive_ratio_value(start,\limits::real_tail_absolute_values<start,a>,n)
+    \real_tail_absolute_successive_ratios<start,a>(n)=\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>(n)=abs(a(n+1))/abs(a(n))
+    \real_tail_absolute_successive_ratios<start,a>(n)>0
+
+claim:
+    ? forall start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)}:
+        \real_tail_absolute_successive_ratios<start,a> $in fn(n {j Z:j>=start}) R
+    release thm fn_set_member(\real_tail_absolute_successive_ratios<start,a>,fn(n {j Z:j>=start}) R)
+
+thm absolute_successive_ratios_are_positive_absolute_data_ratios:
+    ? forall start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)}:
+        \real_tail_absolute_successive_ratios<start,a> = \positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>
+    release thm fn_set_member(\real_tail_absolute_successive_ratios<start,a>,fn(n {j Z:j>=start}) R)
+    release thm fn_set_member(\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>,fn(n {j Z:j>=start}) R)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \real_tail_absolute_successive_ratios<start,a>(n)=\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>(n)
+        \real_tail_absolute_successive_ratios<start,a>(n)=\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>(n)
+    by fn_extension \real_tail_absolute_successive_ratios<start,a> = \positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>
+
+thm positive_start_roots_commute_with_absolute_values:
+    ? forall start N+,a fn(n {j Z:j>=start}) R:
+        \main::positive_start_real_tail_root_magnitudes<start,\limits::real_tail_absolute_values<start,a>> = \main::positive_start_real_tail_root_magnitudes<start,a>
+    release thm fn_set_member(\main::positive_start_real_tail_root_magnitudes<start,\limits::real_tail_absolute_values<start,a>>,fn(n {j Z:j>=start}) R)
+    release thm fn_set_member(\main::positive_start_real_tail_root_magnitudes<start,a>,fn(n {j Z:j>=start}) R)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \main::positive_start_real_tail_root_magnitudes<start,\limits::real_tail_absolute_values<start,a>>(n)=\main::positive_start_real_tail_root_magnitudes<start,a>(n)
+        n $in N+
+        \limits::real_tail_absolute_values<start,a>(n)=abs(a(n))
+        abs(abs(a(n)))=abs(a(n))
+        release thm main::positive_start_real_tail_root_power(start,\limits::real_tail_absolute_values<start,a>,n)
+        release thm main::positive_start_real_tail_root_power(start,a,n)
+        release thm power::nonnegative_real_root_unique(abs(a(n)),\main::positive_start_real_tail_root_magnitudes<start,\limits::real_tail_absolute_values<start,a>>(n),n)
+        release thm power::nonnegative_real_root_unique(abs(a(n)),\main::positive_start_real_tail_root_magnitudes<start,a>(n),n)
+        \main::positive_start_real_tail_root_magnitudes<start,\limits::real_tail_absolute_values<start,a>>(n)=abs(a(n))^(1/n)=\main::positive_start_real_tail_root_magnitudes<start,a>(n)
+    by fn_extension \main::positive_start_real_tail_root_magnitudes<start,\limits::real_tail_absolute_values<start,a>> = \main::positive_start_real_tail_root_magnitudes<start,a>
+
+thm real_tail_restricted_roots_commute_with_absolute_values:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,length {k N:start+k>=1}:
+        \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>> = \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>
+    start+length $in N+
+    start+length $in {j Z:j>=start}
+    release thm fn_set_member(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>,fn(n {j Z:j>=start+length}) R)
+    release thm fn_set_member(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>,fn(n {j Z:j>=start+length}) R)
+    claim:
+        ? forall n {j Z:j>=start+length}:
+            \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>(n)=\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>(n)
+        n $in N+
+        n>=start+length>=start
+        n $in {j Z:j>=start}
+        \limits::real_tail_restriction<start,a,start+length>(n)=a(n)
+        \limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>(n)=\limits::real_tail_absolute_values<start,a>(n)=abs(a(n))
+        abs(abs(a(n)))=abs(a(n))
+        release thm main::positive_start_real_tail_root_power(start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>,n)
+        release thm main::positive_start_real_tail_root_power(start+length,\limits::real_tail_restriction<start,a,start+length>,n)
+        \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>(n)^n=abs(a(n))
+        \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>(n)^n=abs(a(n))
+        release thm power::nonnegative_real_root_unique(abs(a(n)),\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>(n),n)
+        release thm power::nonnegative_real_root_unique(abs(a(n)),\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>(n),n)
+        \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>(n)=abs(a(n))^(1/n)=\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>(n)
+    by fn_extension \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>> = \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>
+
+thm real_tail_series_absolute_ratio_limsup_below_one_converges:
+    ? forall start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)}:
+        $xreal::extended_real_lt(\limits::real_tail_limsup<start>(\real_tail_absolute_successive_ratios<start,a>),1)
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(start,a)
+            $ts::is_convergent_real_tail_series(start,a)
+    release thm integer_tail_has_positive_cutoff_length(start)
+    obtain length from exist k {j N:start+j>=1} st {start+k $in N+}
+    length $in N
+    start+length>=1
+    length $in {k N:start+k>=1}
+    release thm absolute_successive_ratios_are_positive_absolute_data_ratios(start,a)
+    \real_tail_absolute_successive_ratios<start,a> = \positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>
+    \limits::real_tail_limsup<start>(\real_tail_absolute_successive_ratios<start,a>) = \limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>)
+    release thm real_tail_ratio_root_extrema_chain_after_positive_cutoff(start,\limits::real_tail_absolute_values<start,a>,length)
+    $xreal::extended_real_lt(\limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>),1)
+    release thm limits::extended_real_le_lt_transitive(\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>),\limits::real_tail_limsup<start>(\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>),1)
+    release thm real_tail_series_root_limsup_below_one_converges(start,\limits::real_tail_absolute_values<start,a>,length)
+    $ts::is_convergent_real_tail_series(start,\limits::real_tail_absolute_values<start,a>)
+    by def $ts::is_absolutely_convergent_real_tail_series(start,a)
+    release thm ts::absolutely_convergent_real_tail_series_converges(start,a)
+
+thm real_tail_series_absolute_ratio_liminf_above_one_diverges:
+    ? forall start Z,a {f fn(n {j Z:j>=start}) R:$is_nonvanishing_real_tail(start,f)}:
+        $xreal::extended_real_lt(1,\limits::real_tail_liminf<start>(\real_tail_absolute_successive_ratios<start,a>))
+        =>:
+            not $ts::is_convergent_real_tail_series(start,a)
+            not $ts::is_absolutely_convergent_real_tail_series(start,a)
+    release thm integer_tail_has_positive_cutoff_length(start)
+    obtain length from exist k {j N:start+j>=1} st {start+k $in N+}
+    length $in N
+    start+length>=1
+    length $in {k N:start+k>=1}
+    release thm absolute_successive_ratios_are_positive_absolute_data_ratios(start,a)
+    \real_tail_absolute_successive_ratios<start,a> = \positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>
+    \limits::real_tail_liminf<start>(\real_tail_absolute_successive_ratios<start,a>) = \limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>)
+    release thm real_tail_ratio_root_extrema_chain_after_positive_cutoff(start,\limits::real_tail_absolute_values<start,a>,length)
+    $xreal::extended_real_lt(1,\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>))
+    release thm xreal::extended_real_order_transitive(\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>),\limits::real_tail_liminf<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>),\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>))
+    release thm limits::extended_real_lt_le_transitive(1,\limits::real_tail_liminf<start>(\positive_real_tail_successive_ratios<start,\limits::real_tail_absolute_values<start,a>>),\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>))
+    release thm real_tail_restricted_roots_commute_with_absolute_values(start,a,length)
+    \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>> = \main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>
+    \limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,\limits::real_tail_absolute_values<start,a>,start+length>>) = \limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>)
+    $xreal::extended_real_lt(1,\limits::real_tail_limsup<start+length>(\main::positive_start_real_tail_root_magnitudes<start+length,\limits::real_tail_restriction<start,a,start+length>>))
+    release thm real_tail_series_root_limsup_above_one_diverges(start,a,length)
+
+have fn positive_integer_value_tail(n {j Z:j>=1}) R+=n
+
+claim:
+    ? positive_integer_value_tail $in {f fn(n {j Z:j>=1}) R:$is_strictly_positive_real_tail(1,f)}
+    release thm fn_set_member(positive_integer_value_tail,fn(n {j Z:j>=1}) R)
+    claim:
+        ? forall n {j Z:j>=1}:
+            positive_integer_value_tail(n)>0
+        n>=1
+        positive_integer_value_tail(n)=n>0
+    by def $is_strictly_positive_real_tail(1,positive_integer_value_tail)
+    positive_integer_value_tail $in {f fn(n {j Z:j>=1}) R:$is_strictly_positive_real_tail(1,f)}
+
+release obj def rs::positive_real_reciprocal_tail
+
+thm positive_integer_successive_ratios_are_one_plus_reciprocal:
+    ? \positive_real_tail_successive_ratios<1,positive_integer_value_tail> = \rs::real_tail_sum<1,\rs::real_tail_constant<1,1>,rs::positive_real_reciprocal_tail>
+    release thm fn_set_member(\positive_real_tail_successive_ratios<1,positive_integer_value_tail>,fn(n {j Z:j>=1}) R)
+    release thm fn_set_member(\rs::real_tail_sum<1,\rs::real_tail_constant<1,1>,rs::positive_real_reciprocal_tail>,fn(n {j Z:j>=1}) R)
+    claim:
+        ? forall n {j Z:j>=1}:
+            \positive_real_tail_successive_ratios<1,positive_integer_value_tail>(n)=\rs::real_tail_sum<1,\rs::real_tail_constant<1,1>,rs::positive_real_reciprocal_tail>(n)
+        n $in R+
+        n!=0
+        n $in R*
+        n+1 $in {j Z:j>=1}
+        positive_integer_value_tail(n)=n
+        positive_integer_value_tail(n+1)=n+1
+        release thm positive_real_tail_successive_ratio_value(1,positive_integer_value_tail,n)
+        \rs::real_tail_constant<1,1>(n)=1
+        rs::positive_real_reciprocal_tail(n)=1/n
+        \positive_real_tail_successive_ratios<1,positive_integer_value_tail>(n)=(n+1)/n=1+1/n=\rs::real_tail_constant<1,1>(n)+rs::positive_real_reciprocal_tail(n)=\rs::real_tail_sum<1,\rs::real_tail_constant<1,1>,rs::positive_real_reciprocal_tail>(n)
+    by fn_extension \positive_real_tail_successive_ratios<1,positive_integer_value_tail> = \rs::real_tail_sum<1,\rs::real_tail_constant<1,1>,rs::positive_real_reciprocal_tail>
+
+thm positive_integer_successive_ratios_tend_to_one:
+    ? $rs::has_real_tail_limit(1,\positive_real_tail_successive_ratios<1,positive_integer_value_tail>,1)
+    release thm rs::real_tail_constant_limit(1,1)
+    release thm rs::positive_real_reciprocal_tail_limit
+    release thm rs::real_tail_sum_limit(1,\rs::real_tail_constant<1,1>,rs::positive_real_reciprocal_tail,1,0)
+    release thm positive_integer_successive_ratios_are_one_plus_reciprocal
+    1+0=1
+    $rs::has_real_tail_limit(1,\positive_real_tail_successive_ratios<1,positive_integer_value_tail>,1)
+
+thm positive_integer_root_magnitudes_tend_to_one:
+    ? $rs::has_real_tail_limit(1,\main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>,1)
+    release thm positive_integer_successive_ratios_tend_to_one
+    release thm limits::real_tail_limit_equals_extremal_limits(1,\positive_real_tail_successive_ratios<1,positive_integer_value_tail>,1)
+    release thm positive_start_real_tail_ratio_root_extrema_chain(1,positive_integer_value_tail)
+    \limits::real_tail_liminf<1>(\positive_real_tail_successive_ratios<1,positive_integer_value_tail>)=1
+    \limits::real_tail_limsup<1>(\positive_real_tail_successive_ratios<1,positive_integer_value_tail>)=1
+    have root_inf xreal::ExtendedReal=\limits::real_tail_liminf<1>(\main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>)
+    have root_sup xreal::ExtendedReal=\limits::real_tail_limsup<1>(\main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>)
+    $xreal::extended_real_le(1,root_inf)
+    $xreal::extended_real_le(root_inf,root_sup)
+    $xreal::extended_real_le(root_sup,1)
+    release thm xreal::extended_real_order_transitive(1,root_inf,root_sup)
+    release thm xreal::extended_real_order_antisymmetric(1,root_sup)
+    root_sup=1
+    $xreal::extended_real_le(root_inf,1)
+    release thm xreal::extended_real_order_antisymmetric(1,root_inf)
+    root_inf=1
+    \limits::real_tail_limsup<1>(\main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>)=1
+    \limits::real_tail_liminf<1>(\main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>)=1
+    release thm limits::equal_finite_real_tail_extremal_limits_give_limit(1,\main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>,1)
+
+claim:
+    ? forall n {j Z:j>=1}:
+        n $in R+
+        n!=0
+        n $in R*
+        1/n $in R+
+    n>=1
+    n>0
+    n $in R+
+    n!=0
+    n $in R*
+    1/n>0
+    1/n $in R+
+
+claim:
+    ? forall n {j Z:j>=1}:
+        n^(1/n) $in R+
+    n $in N+
+    n $in R
+    n $in R+
+    n>=0
+    n!=0
+    n $in R*
+    1/n $in R
+    release thm power::nonnegative_real_root_is_real(n,n)
+    release thm power::positive_real_power_is_positive(n,1/n)
+    n^(1/n) $in R+
+
+have fn positive_index_nth_root_tail(n {j Z:j>=1}) R+=n^(1/n)
+
+claim:
+    ? positive_index_nth_root_tail $in fn(n {j Z:j>=1}) R
+    release thm fn_set_member(positive_index_nth_root_tail,fn(n {j Z:j>=1}) R)
+
+thm positive_index_nth_roots_are_integer_root_magnitudes:
+    ? positive_index_nth_root_tail = \main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>
+    release thm fn_set_member(positive_index_nth_root_tail,fn(n {j Z:j>=1}) R)
+    release thm fn_set_member(\main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>,fn(n {j Z:j>=1}) R)
+    claim:
+        ? forall n {j Z:j>=1}:
+            positive_index_nth_root_tail(n)=\main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>(n)
+        n $in N+
+        n>0
+        n $in R+
+        n!=0
+        n $in R*
+        positive_integer_value_tail(n)=n
+        abs(positive_integer_value_tail(n))=n
+        positive_integer_value_tail(n)!=0
+        \main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>(n)=abs(positive_integer_value_tail(n))^(1/n)=n^(1/n)=positive_index_nth_root_tail(n)
+    by fn_extension positive_index_nth_root_tail = \main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>
+
+thm positive_index_nth_root_tail_tends_to_one:
+    ? $rs::has_real_tail_limit(1,positive_index_nth_root_tail,1)
+    release thm positive_integer_root_magnitudes_tend_to_one
+    release thm positive_index_nth_roots_are_integer_root_magnitudes
+    positive_index_nth_root_tail = \main::positive_start_real_tail_root_magnitudes<1,positive_integer_value_tail>
+    $rs::has_real_tail_limit(1,positive_index_nth_root_tail,1)

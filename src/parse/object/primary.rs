@@ -164,7 +164,7 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     }
 
     let params = if tb.peek() == Some(LESS) {
-        parse_obj_list_angle(rt, tb)?
+        parse_obj_list_delimited(rt, tb, LESS, GREATER)?
     } else {
         Vec::new()
     };
@@ -174,9 +174,12 @@ fn parse_struct_view(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
     ))
 }
 
-// `\Name<args>` → InstantiatedTemplateObj. Angle args are required.
+// `Name[args]` / `\Name<args>` share the same template instance and name owner.
 fn parse_instantiated_template(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    tb.expect(TEMPLATE_INSTANCE_PREFIX)?;
+    let prefixed = tb.peek() == Some(TEMPLATE_INSTANCE_PREFIX);
+    if prefixed {
+        tb.advance()?;
+    }
     let name_tok = tb
         .peek()
         .ok_or_else(|| tb.parse_error("`\\` expects a template name"))?;
@@ -189,19 +192,30 @@ fn parse_instantiated_template(rt: &mut Runtime, tb: &mut TokenBlock) -> Runtime
         crate::runtime::RuntimeError::InternalBug(message) => tb.parse_error(message),
         other => other,
     })?;
-    if tb.peek() != Some(LESS) {
-        return Err(tb.parse_error("template instance expects `<...>` arguments (e.g. `\\T<a>`)"));
-    }
-    let args = parse_obj_list_angle(rt, tb)?;
+    let args = if prefixed {
+        if tb.peek() != Some(LESS) {
+            return Err(
+                tb.parse_error("template instance expects `<...>` arguments (e.g. `\\T<a>`)")
+            );
+        }
+        parse_obj_list_delimited(rt, tb, LESS, GREATER)?
+    } else {
+        parse_obj_list_delimited(rt, tb, LEFT_BRACKET, RIGHT_BRACKET)?
+    };
     Ok(Obj::InstantiatedTemplateObj(InstantiatedTemplateObj {
         template_name,
         args,
     }))
 }
 
-fn parse_obj_list_angle(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Vec<Obj>> {
-    tb.expect(LESS)?;
-    if tb.peek() == Some(GREATER) {
+fn parse_obj_list_delimited(
+    rt: &mut Runtime,
+    tb: &mut TokenBlock,
+    opening: &str,
+    closing: &str,
+) -> RuntimeResult<Vec<Obj>> {
+    tb.expect(opening)?;
+    if tb.peek() == Some(closing) {
         tb.advance()?;
         return Ok(vec![]);
     }
@@ -210,7 +224,7 @@ fn parse_obj_list_angle(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<
         tb.advance()?;
         objs.push(parse_obj(rt, tb)?);
     }
-    tb.expect(GREATER)?;
+    tb.expect(closing)?;
     Ok(objs)
 }
 
@@ -1229,6 +1243,14 @@ fn parse_identifier_or_mod_or_standard_set(
     rt: &mut Runtime,
     tb: &mut TokenBlock,
 ) -> RuntimeResult<Obj> {
+    let mut name_end = 1;
+    while matches!(tb.peek_at(name_end), Some(MOD_SIGN | MOD_FLAT_SIGN)) {
+        name_end += 2;
+    }
+    if tb.peek_at(name_end) == Some(LEFT_BRACKET) {
+        return parse_instantiated_template(rt, tb);
+    }
+
     let name = tb.advance()?;
     if tb.peek() == Some(MOD_FLAT_SIGN) {
         tb.advance()?;

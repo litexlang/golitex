@@ -3,6 +3,13 @@
 One concrete builtin rule or search path → one `.lit` file.
 File names mirror Rust variants / structs for easy cross-check.
 
+The [universal equality and symmetry tracer](equal/by_known_forall/instantiation_then_symmetry.lit)
+assumes that an arbitrary real function agrees with the identity. It obtains
+`f(a) = a` by the recorded substitution `x = a`, then proves `a = f(a)` by
+equality symmetry. This source actually selects
+`ByKnownForallFactViaSymmetry`; a filename or nearby registration alone does
+not certify the selected proof route.
+
 When a kernel feature is **new** or an existing surface is **updated /
 widened**, add a **new** `.lit` here (or under the matching
 `../wd` / `../stmt_nodes` / `../wd_negative` / `../infer` folder) in the same turn.
@@ -1164,3 +1171,24 @@ checks the flat factor count and every carrier match; dedicated
 [subset](atomic/by_builtin_rule/homogeneous_cartesian_sequence_subset.lit) and
 [membership](atomic/by_builtin_rule/homogeneous_cartesian_sequence_membership.lit)
 tracers consume that same certificate. Nested products and wrong dimensions remain distinct.
+
+## Retained function-call interfaces
+
+[Function return interface layers](atomic/by_known_special_property/function_return_interface_layers.lit)
+checks a function returning an aliased function space, then two successive calls.
+The native codomain and standard-superset results retain the exact application,
+each interface used before its arguments are substituted, and the final return
+set. Reading can therefore explain both parameter correspondences even when the
+second interface required an alias lookup. This metadata describes the existing
+return computation; it is not an independent proof of argument well-definedness.
+`reading_function_interfaces` executes this canonical tracer and rejection controls.
+
+## Actual registered transitivity
+
+[Registered transitivity with a checked residual](atomic/by_known_rewrite/registered_transitivity_application.lit)
+proves and registers a binary relation's law, then derives `below(a,c)` from
+`below(a,b)` and `b <= c`. Its actual route is KnownRewrite::Transitivity: the
+left relation is cited and the residual `below(b,c)` is checked by definition.
+The reader pairs those steps without inventing a particular registration-source
+citation. Executable deletion controls for registration and the residual premise
+live in `src/reading/web/tests/fixtures.py` under transitivity applications.

@@ -7,8 +7,13 @@ mod compile_forall_fact_result;
 pub(in crate::compile_to_lean) mod compile_forall_iff_result;
 pub(super) mod compile_formed_subjects;
 mod compile_obj_well_defined_result;
-pub(in crate::compile_to_lean) use compile_obj_well_defined_result::validate_finite_signature;
+pub(in crate::compile_to_lean) use compile_obj_well_defined_result::{
+    finite_call_parts, validate_finite_signature,
+};
 mod compile_not_forall_result;
+mod compile_or_classical_implication;
+mod compile_or_order_builtin;
+mod compile_or_residues;
 mod compile_verify_fact_result;
 mod compile_verify_or_fact_result;
 

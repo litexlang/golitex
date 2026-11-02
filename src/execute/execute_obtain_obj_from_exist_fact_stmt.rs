@@ -1,7 +1,7 @@
 //! `obtain x, y from exist …` / `exist!` — name witnesses from a known existential.
 //!
 //! Mathematical contract:
-//! - The source `exist` / `exist!` fact must already be known.
+//! - The source `exist` / `exist!` fact must verify in the current context.
 //! - `equal_tos` length must match the existential binders.
 //! - Each obtained name is introduced with the binder's (possibly dependent)
 //!   parameter type, and each existential body fact is stored after renaming.
@@ -37,6 +37,19 @@ pub enum ExecObtainObjFromExistFactStmtFailed {
     ArityMismatch { expected: usize, got: usize },
     NotExistSource,
     Exist(VerifyExistShapedFactFailed),
+    Context(Box<ExecObtainObjFromExistFactContextFailure>),
+    SourceVerified(Box<ExecObtainObjFromExistFactVerifiedFailure>),
+}
+
+pub struct ExecObtainObjFromExistFactContextFailure {
+    pub statement: ObtainObjFromExistFact,
+    pub failure: ExecObtainObjFromExistFactStmtFailed,
+}
+
+pub struct ExecObtainObjFromExistFactVerifiedFailure {
+    pub statement: ObtainObjFromExistFact,
+    pub verify_exist: ObtainExistVerifySuccess,
+    pub failure: ExecObtainObjFromExistFactStmtFailed,
 }
 
 pub enum ObtainExistVerifySuccess {
@@ -70,7 +83,12 @@ impl Runtime {
     ) -> RuntimeResult<ExecObtainObjFromExistFactStmtResult> {
         if matches!(stmt.fact, ExistShapedFact::NotExist(_)) {
             return Ok(ExecObtainObjFromExistFactStmtResult::Failed(
-                ExecObtainObjFromExistFactStmtFailed::NotExistSource,
+                ExecObtainObjFromExistFactStmtFailed::Context(Box::new(
+                    ExecObtainObjFromExistFactContextFailure {
+                        statement: stmt.clone(),
+                        failure: ExecObtainObjFromExistFactStmtFailed::NotExistSource,
+                    },
+                )),
             ));
         }
 
@@ -80,7 +98,12 @@ impl Runtime {
             Ok(success) => success,
             Err(failed) => {
                 return Ok(ExecObtainObjFromExistFactStmtResult::Failed(
-                    ExecObtainObjFromExistFactStmtFailed::Exist(failed),
+                    ExecObtainObjFromExistFactStmtFailed::Context(Box::new(
+                        ExecObtainObjFromExistFactContextFailure {
+                            statement: stmt.clone(),
+                            failure: ExecObtainObjFromExistFactStmtFailed::Exist(failed),
+                        },
+                    )),
                 ));
             }
         };
@@ -97,7 +120,15 @@ impl Runtime {
                     store_and_infer_result,
                 },
             )),
-            Err(failed) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(failed)),
+            Err(failure) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(
+                ExecObtainObjFromExistFactStmtFailed::SourceVerified(Box::new(
+                    ExecObtainObjFromExistFactVerifiedFailure {
+                        statement: stmt.clone(),
+                        verify_exist,
+                        failure,
+                    },
+                )),
+            )),
         }
     }
 

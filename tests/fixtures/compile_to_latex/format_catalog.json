@@ -1,0 +1,1121 @@
+{
+  "namespace_fixture": "tests/fixtures/compile_to_latex/catalog_namespace",
+  "statements": [
+    {
+      "kind": "Fact",
+      "fixture": "examples/test_statements/fact.lit",
+      "format": "Relation/conjunction/quantifier-specific mathematics; long calculations aligned; proof-step paragraph boundaries."
+    },
+    {
+      "kind": "Trust.TrustStmt",
+      "fixture": "examples/test_statements/trust_stmt.lit",
+      "format": "Explicit trust heading; assumption paragraph with all supplied facts."
+    },
+    {
+      "kind": "Trust.TrustHaveStmt",
+      "fixture": "examples/test_statements/trust_have_stmt.lit",
+      "format": "Explicit trust heading; typed bindings and their assumed conditions."
+    },
+    {
+      "kind": "Definition.DefineObj.LetObjStmt",
+      "fixture": "examples/test_statements/let_obj_stmt.lit",
+      "format": "Let sentence with a named equality; expression precedence preserved."
+    },
+    {
+      "kind": "Definition.DefineObj.HaveObjInNonemptySetStmt",
+      "fixture": "examples/test_statements/have_obj_in_nonempty_set_stmt.lit",
+      "format": "Let sentence listing all bindings with their carriers."
+    },
+    {
+      "kind": "Definition.DefineObj.HaveObjEqualStmt",
+      "fixture": "examples/test_statements/have_obj_equal_stmt.lit",
+      "format": "Typed bindings followed by their corresponding defining equalities."
+    },
+    {
+      "kind": "Definition.DefineObj.HaveObjByExistFactsStmt",
+      "fixture": "examples/test_statements/have_obj_by_exist_facts_stmt.lit",
+      "format": "Typed existential choice followed by its full condition conjunction."
+    },
+    {
+      "kind": "Definition.DefineObj.ObtainObjFromExistFact",
+      "fixture": "examples/test_statements/obtain_obj_from_exist_fact.lit",
+      "format": "Choose witness names from the complete existential formula."
+    },
+    {
+      "kind": "Definition.DefineObj.ObtainObjFromAtomicFact",
+      "fixture": "examples/test_statements/obtain_obj_from_atomic_fact.lit",
+      "format": "Choose witness names from the named predicate instance."
+    },
+    {
+      "kind": "Definition.DefineObj.HaveByPreimageStmt",
+      "fixture": "examples/test_statements/have_by_preimage_stmt.lit",
+      "format": "Choose named preimages from the original image-membership fact."
+    },
+    {
+      "kind": "Definition.DefineObj.HaveByReplacementAxiomStmt",
+      "fixture": "examples/test_statements/have_by_replacement_axiom_stmt.lit",
+      "format": "Replacement construction names the result, predicate and source set."
+    },
+    {
+      "kind": "Definition.HaveFnEqualStmt",
+      "fixture": "examples/test_statements/have_fn_equal_stmt.lit",
+      "format": "Definition heading; typed function signature; displayed defining equation."
+    },
+    {
+      "kind": "Definition.HaveFnEqualCaseByCaseStmt",
+      "fixture": "examples/test_statements/have_fn_equal_case_by_case_stmt.lit",
+      "format": "Definition heading and signature; piecewise cases array with every condition."
+    },
+    {
+      "kind": "Definition.HaveFnByInducStmt",
+      "fixture": "examples/test_statements/have_fn_by_induc_stmt.lit",
+      "format": "Definition heading, signature and measure/base; nested labelled recursive branches."
+    },
+    {
+      "kind": "Definition.HaveFnByForallExistUniqueStmt",
+      "fixture": "examples/test_statements/have_fn_by_forall_exist_unique_stmt.lit",
+      "format": "Definition heading; name linked to the full quantified unique-existence specification."
+    },
+    {
+      "kind": "Definition.DefPropStmt",
+      "fixture": "examples/test_statements/def_prop_stmt.lit",
+      "format": "Definition heading; typed universal parameters above an iff and conjunctive clauses."
+    },
+    {
+      "kind": "Definition.DefAbstractPropStmt",
+      "fixture": "examples/test_statements/def_abstract_prop_stmt.lit",
+      "format": "Abstract-predicate heading and arity-preserving signature; no invented body."
+    },
+    {
+      "kind": "Definition.DefTemplateStmt",
+      "fixture": "examples/test_statements/def_template_stmt.lit",
+      "format": "Template heading and typed parameters/guards; scoped rendering of the actual inner definition."
+    },
+    {
+      "kind": "Definition.DefStructStmt",
+      "fixture": "examples/test_statements/def_struct_stmt.lit",
+      "format": "Structure heading and parameters; labelled field/type list; displayed laws."
+    },
+    {
+      "kind": "Definition.DefAlgoByCasesStmt",
+      "fixture": "examples/test_statements/def_algo_by_cases_stmt.lit",
+      "format": "Algorithm heading and function signature; piecewise executable equations."
+    },
+    {
+      "kind": "Definition.DefAlgoByInducStmt",
+      "fixture": "examples/test_statements/def_algo_by_induc_stmt.lit",
+      "format": "Algorithm heading, signature, measure/base and nested recursive branches."
+    },
+    {
+      "kind": "Definition.DefThmStmt",
+      "fixture": "examples/test_statements/def_thm_stmt.lit",
+      "format": "Theorem heading, full goal; one source proof with a closing square when present."
+    },
+    {
+      "kind": "Definition.AxiomStmt",
+      "fixture": "examples/test_statements/axiom_stmt.lit",
+      "format": "Axiom heading and full quantified assertion; no fabricated proof."
+    },
+    {
+      "kind": "Definition.DefStrategyStmt",
+      "fixture": "examples/test_statements/def_strategy_stmt.lit",
+      "format": "Strategy heading, complete goal, source proof and closing marker."
+    },
+    {
+      "kind": "ReleaseAndExpand.ReleaseThmStmt",
+      "fixture": "examples/test_statements/release_thm_stmt.lit",
+      "format": "Theorem-application paragraph with exact theorem and argument groups."
+    },
+    {
+      "kind": "ReleaseAndExpand.ReleaseStructDefStmt",
+      "fixture": "examples/test_statements/release_struct_def_stmt.lit",
+      "format": "Structure-opening paragraph identifying the original object."
+    },
+    {
+      "kind": "ReleaseAndExpand.ReleaseObjDefStmt",
+      "fixture": "examples/test_statements/release_obj_def_stmt.lit",
+      "format": "Definition-opening paragraph identifying the original qualified name."
+    },
+    {
+      "kind": "ReleaseAndExpand.ReleaseCartDefStmt",
+      "fixture": "examples/test_statements/release_cart_def_stmt.lit",
+      "format": "Definition-opening paragraph displaying the complete Cartesian product."
+    },
+    {
+      "kind": "ReleaseAndExpand.ReleaseTupleDefStmt",
+      "fixture": "examples/test_statements/release_tuple_def_stmt.lit",
+      "format": "Definition-opening paragraph displaying the original tuple expression."
+    },
+    {
+      "kind": "ReleaseAndExpand.ExpandRangeStmt",
+      "fixture": "examples/test_statements/expand_range_stmt.lit",
+      "format": "Range-expansion paragraph; integer membership keeps open/closed end points."
+    },
+    {
+      "kind": "ReleaseAndExpand.ReleaseZornLemmaStmt",
+      "fixture": "examples/test_statements/release_zorn_lemma_stmt.lit",
+      "format": "Zorn application with set and all three named predicates; scoped hypothesis-checking proof."
+    },
+    {
+      "kind": "ReleaseAndExpand.ReleaseAxiomOfChoiceStmt",
+      "fixture": "examples/test_statements/release_axiom_of_choice_stmt.lit",
+      "format": "Choice application with the family; scoped hypothesis-checking proof."
+    },
+    {
+      "kind": "ReleaseAndExpand.ReleaseRegularityAxiomStmt",
+      "fixture": "examples/test_statements/release_regularity_axiom_stmt.lit",
+      "format": "Regularity-application paragraph naming the original set."
+    },
+    {
+      "kind": "By.ByCasesStmt",
+      "fixture": "examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit",
+      "format": "Goal paragraph; separately labelled case items with assumptions and structured proof steps."
+    },
+    {
+      "kind": "By.ByContraStmt",
+      "fixture": "examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit",
+      "format": "Contradiction heading; separate goal; indented negated assumption and proof steps; separate contradiction closure."
+    },
+    {
+      "kind": "By.ByEnumerateFiniteSetStmt",
+      "fixture": "examples/test_statements/by_enumerate_finite_set_stmt.lit",
+      "format": "Finite-enumeration goal paragraph followed by a scoped proof body."
+    },
+    {
+      "kind": "By.ByInducStmt",
+      "fixture": "examples/test_statements/by_induc_stmt.lit",
+      "format": "Goal and induction/base paragraph; separate base/step items when supplied; structured common-body steps."
+    },
+    {
+      "kind": "By.ByStrongInducStmt",
+      "fixture": "examples/test_statements/by_strong_induc_stmt.lit",
+      "format": "Goal and strong-induction/base paragraph; separate supplied base/step items."
+    },
+    {
+      "kind": "By.ByForStmt",
+      "fixture": "examples/test_statements/by_for_stmt.lit",
+      "format": "Finite-iteration goal paragraph followed by a scoped proof body."
+    },
+    {
+      "kind": "By.ByExtensionStmt",
+      "fixture": "examples/test_statements/by_extension_stmt.lit",
+      "format": "Set-extensionality target equality followed by a scoped proof body."
+    },
+    {
+      "kind": "By.ByFnExtensionStmt",
+      "fixture": "examples/test_statements/by_fn_extension_stmt.lit",
+      "format": "Function-extensionality target equality followed by a scoped proof body."
+    },
+    {
+      "kind": "By.ByDefStmt",
+      "fixture": "examples/test_statements/by_def_stmt.lit",
+      "format": "Definition-unfolding paragraph showing the exact predicate instance."
+    },
+    {
+      "kind": "By.ByThmStmt",
+      "fixture": "examples/test_statements/by_thm_stmt.lit",
+      "format": "Theorem citation paragraph with the call and the selected conclusion."
+    },
+    {
+      "kind": "Register.RegisterTransitivePropStmt",
+      "fixture": "examples/test_statements/register_transitive_prop_stmt.lit",
+      "format": "Transitivity-registration paragraph with the complete universal law."
+    },
+    {
+      "kind": "Register.RegisterSymmetricPropStmt",
+      "fixture": "examples/test_statements/register_symmetric_prop_stmt.lit",
+      "format": "Symmetry-registration paragraph with the complete universal law."
+    },
+    {
+      "kind": "Register.RegisterReflexivePropStmt",
+      "fixture": "examples/test_statements/register_reflexive_prop_stmt.lit",
+      "format": "Reflexivity-registration paragraph with the complete universal law."
+    },
+    {
+      "kind": "Witness.WitnessExistFact",
+      "fixture": "examples/test_statements/witness_exist_fact.lit",
+      "format": "Witness values and existential goal; indented source proof steps."
+    },
+    {
+      "kind": "Witness.WitnessAtomicFact",
+      "fixture": "examples/test_statements/witness_atomic_fact.lit",
+      "format": "Witness values and named atomic goal; indented source proof steps."
+    },
+    {
+      "kind": "Witness.WitnessNonemptySet",
+      "fixture": "examples/test_statements/witness_nonempty_set.lit",
+      "format": "Witness and nonempty-set goal; indented source proof steps."
+    },
+    {
+      "kind": "ProofBlock.ClaimStmt",
+      "fixture": "examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit",
+      "format": "Claim heading and full assertion; one proof caption with structured steps and closing square."
+    },
+    {
+      "kind": "ProofBlock.SketchStmt",
+      "fixture": "examples/test_statements/sketch_stmt.lit",
+      "format": "Explicit sketch heading and indented local statements; no proof-completion claim."
+    },
+    {
+      "kind": "Command.EvalStmt",
+      "fixture": "examples/test_statements/eval_stmt.lit",
+      "format": "Evaluation-request paragraph; the expression is shown without an invented computed result."
+    }
+  ],
+  "objects": [
+    {
+      "kind": "MatrixOperator.Determinant",
+      "source": "let specimen = det(A,n)",
+      "format": "\\det_n(A)"
+    },
+    {
+      "kind": "MatrixOperator.ZeroMatrix",
+      "source": "let specimen = zero_matrix(m,n)",
+      "format": "0_{m\\times n}"
+    },
+    {
+      "kind": "MatrixOperator.IdentityMatrix",
+      "source": "let specimen = identity_matrix(n)",
+      "format": "I_n"
+    },
+    {
+      "kind": "MatrixOperator.Transpose",
+      "source": "let specimen = transpose(A,m,n)",
+      "format": "(A^{\\mathsf T})_{[m,n]}"
+    },
+    {
+      "kind": "MatrixOperator.ConjugateTranspose",
+      "source": "let specimen = conjugate_transpose(A,m,n)",
+      "format": "(A^{\\mathsf H})_{[m,n]}"
+    },
+    {
+      "kind": "MatrixOperator.Trace",
+      "source": "let specimen = trace(A,n)",
+      "format": "\\operatorname{tr}_n(A)"
+    },
+    {
+      "kind": "MatrixOperator.Add",
+      "source": "let specimen = matrix_add(A,B,m,n)",
+      "format": "(A+B)_{[m,n]}"
+    },
+    {
+      "kind": "MatrixOperator.Subtract",
+      "source": "let specimen = matrix_sub(A,B,m,n)",
+      "format": "(A-B)_{[m,n]}"
+    },
+    {
+      "kind": "MatrixOperator.Scale",
+      "source": "let specimen = matrix_scale(c,A,m,n)",
+      "format": "(cA)_{[m,n]}"
+    },
+    {
+      "kind": "MatrixOperator.Multiply",
+      "source": "let specimen = matrix_mul(A,B,m,k,n)",
+      "format": "(AB)_{[m,k,n]}"
+    },
+    {
+      "kind": "MatrixOperator.Apply",
+      "source": "let specimen = matrix_apply(A,v,m,n)",
+      "format": "(Av)_{[m,n]}"
+    },
+    {
+      "kind": "MatrixOperator.Power",
+      "source": "let specimen = matrix_power(A,n,k)",
+      "format": "(A^k)_{[n]}"
+    },
+    {
+      "kind": "MatrixOperator.Inverse",
+      "source": "let specimen = matrix_inverse(A,n)",
+      "format": "(A^{-1})_{[n]}"
+    },
+    {
+      "kind": "MatrixOperator.Rank",
+      "source": "let specimen = matrix_rank(A,m,n)",
+      "format": "\\operatorname{rank}_{[m,n]}(A)"
+    },
+    {
+      "kind": "MatrixOperator.Minor",
+      "source": "let specimen = matrix_minor(A,n,k,j)",
+      "format": "A_{\\widehat k,\\widehat j}^{[n]}"
+    },
+    {
+      "kind": "MatrixOperator.Cofactor",
+      "source": "let specimen = matrix_cofactor(A,n,k,j)",
+      "format": "\\operatorname{cof}_{k,j}^{[n]}(A)"
+    },
+    {
+      "kind": "MatrixOperator.Adjugate",
+      "source": "let specimen = matrix_adjugate(A,n)",
+      "format": "\\operatorname{adj}_n(A)"
+    },
+    {
+      "kind": "MatrixOperator.Diagonal",
+      "source": "let specimen = diagonal_matrix(v,n)",
+      "format": "\\operatorname{diag}_n(v)"
+    },
+    {
+      "kind": "MatrixOperator.OuterProduct",
+      "source": "let specimen = outer_product(u,v,m,n)",
+      "format": "(uv^{\\mathsf T})_{[m,n]}"
+    },
+    {
+      "kind": "MatrixOperator.InnerProduct",
+      "source": "let specimen = inner_product(u,v,n)",
+      "format": "\\langle u,v\\rangle_{[n]}"
+    },
+    {
+      "kind": "MatrixOperator.EuclideanNorm",
+      "source": "let specimen = euclidean_norm(v,n)",
+      "format": "\\lVert v\\rVert_{2,[n]}"
+    },
+    {
+      "kind": "MatrixOperator.FrobeniusNorm",
+      "source": "let specimen = frobenius_norm(A,m,n)",
+      "format": "\\lVert A\\rVert_{\\mathrm F,[m,n]}"
+    },
+    {
+      "kind": "BoundOperator.Supremum",
+      "source": "let specimen = sup(S)",
+      "format": "\\sup(S)"
+    },
+    {
+      "kind": "BoundOperator.Infimum",
+      "source": "let specimen = inf(S)",
+      "format": "\\inf(S)"
+    },
+    {
+      "kind": "IntegralOperator.Riemann",
+      "source": "let specimen = integral(f,a,b)",
+      "format": "\\int_a^b f(\\xi)\\,\\mathrm d\\xi"
+    },
+    {
+      "kind": "DerivativeOperator.Partial",
+      "source": "let specimen = partial_derivative(f,a,n,j)",
+      "format": "(\\frac{\\partial f}{\\partial x_j}(a))_{[n]}"
+    },
+    {
+      "kind": "DerivativeOperator.ScalarDifferential",
+      "source": "let specimen = scalar_differential(f,a,n)",
+      "format": "(Df(a))_{[n]}"
+    },
+    {
+      "kind": "DerivativeOperator.TotalDifferential",
+      "source": "let specimen = differential(f,a,m,n)",
+      "format": "(Df(a))_{[m,n]}"
+    },
+    {
+      "kind": "DerivativeOperator.Gradient",
+      "source": "let specimen = gradient_at(f,a,n)",
+      "format": "(\\nabla f(a))_{[n]}"
+    },
+    {
+      "kind": "DerivativeOperator.Jacobian",
+      "source": "let specimen = jacobian(f,a,m,n)",
+      "format": "(J_f(a))_{[m,n]}"
+    },
+    {
+      "kind": "DerivativeOperator.Hessian",
+      "source": "let specimen = hessian(f,a,n)",
+      "format": "(H_f(a))_{[n]}"
+    },
+    {
+      "kind": "DerivativeOperator.Divergence",
+      "source": "let specimen = divergence(f,a,n)",
+      "format": "(\\nabla\\cdot f(a))_{[n]}"
+    },
+    {
+      "kind": "DerivativeOperator.Curl",
+      "source": "let specimen = curl(f,a)",
+      "format": "\\nabla\\times f(a)"
+    },
+    {
+      "kind": "DerivativeOperator.Laplacian",
+      "source": "let specimen = laplacian(f,a,n)",
+      "format": "(\\Delta f(a))_{[n]}"
+    },
+    {
+      "kind": "DerivativeOperator.AtPoint",
+      "source": "let specimen = derivative(f,a)",
+      "format": "f^{\\prime}(a)"
+    },
+    {
+      "kind": "Identifier.Plain",
+      "source": "let specimen = x",
+      "format": "x"
+    },
+    {
+      "kind": "Identifier.WithExportFileId",
+      "source": "let specimen = alpha::x",
+      "format": "\\mathit{alpha::x}"
+    },
+    {
+      "kind": "Identifier.WithModAndExportFileId",
+      "source": "let specimen = dep::beta::x",
+      "format": "\\mathit{dep::beta::x}"
+    },
+    {
+      "kind": "FnObj",
+      "source": "let specimen = f(x)(y)",
+      "format": "f(x)(y)"
+    },
+    {
+      "kind": "Literal.Number",
+      "source": "let specimen = 1.25",
+      "format": "1.25"
+    },
+    {
+      "kind": "Literal.ImaginaryUnit",
+      "source": "let specimen = i",
+      "format": "\\mathrm{i}"
+    },
+    {
+      "kind": "Literal.EulerNumber",
+      "source": "let specimen = e",
+      "format": "\\mathrm{e}"
+    },
+    {
+      "kind": "Literal.Pi",
+      "source": "let specimen = pi",
+      "format": "\\pi"
+    },
+    {
+      "kind": "StandardSet.NPos",
+      "source": "let specimen = N+",
+      "format": "\\mathbb{N}_{>0}"
+    },
+    {
+      "kind": "StandardSet.N",
+      "source": "let specimen = N",
+      "format": "\\mathbb{N}"
+    },
+    {
+      "kind": "StandardSet.Q",
+      "source": "let specimen = Q",
+      "format": "\\mathbb{Q}"
+    },
+    {
+      "kind": "StandardSet.Z",
+      "source": "let specimen = Z",
+      "format": "\\mathbb{Z}"
+    },
+    {
+      "kind": "StandardSet.R",
+      "source": "let specimen = R",
+      "format": "\\mathbb{R}"
+    },
+    {
+      "kind": "StandardSet.C",
+      "source": "let specimen = C",
+      "format": "\\mathbb{C}"
+    },
+    {
+      "kind": "StandardSet.QPos",
+      "source": "let specimen = Q+",
+      "format": "\\mathbb{Q}_{>0}"
+    },
+    {
+      "kind": "StandardSet.RPos",
+      "source": "let specimen = R+",
+      "format": "\\mathbb{R}_{>0}"
+    },
+    {
+      "kind": "StandardSet.QNeg",
+      "source": "let specimen = Q-",
+      "format": "\\mathbb{Q}_{<0}"
+    },
+    {
+      "kind": "StandardSet.ZNeg",
+      "source": "let specimen = Z-",
+      "format": "\\mathbb{Z}_{<0}"
+    },
+    {
+      "kind": "StandardSet.RNeg",
+      "source": "let specimen = R-",
+      "format": "\\mathbb{R}_{<0}"
+    },
+    {
+      "kind": "StandardSet.QStar",
+      "source": "let specimen = Q*",
+      "format": "\\mathbb{Q}_{\\ne 0}"
+    },
+    {
+      "kind": "StandardSet.ZStar",
+      "source": "let specimen = Z*",
+      "format": "\\mathbb{Z}_{\\ne 0}"
+    },
+    {
+      "kind": "StandardSet.RStar",
+      "source": "let specimen = R*",
+      "format": "\\mathbb{R}_{\\ne 0}"
+    },
+    {
+      "kind": "StandardSet.CStar",
+      "source": "let specimen = C*",
+      "format": "\\mathbb{C}_{\\ne 0}"
+    },
+    {
+      "kind": "ArithmeticOperator.Add",
+      "source": "let specimen = a+b",
+      "format": "a+b"
+    },
+    {
+      "kind": "ArithmeticOperator.Sub",
+      "source": "let specimen = a-b",
+      "format": "a-b"
+    },
+    {
+      "kind": "ArithmeticOperator.Neg",
+      "source": "let specimen = -a",
+      "format": "-a"
+    },
+    {
+      "kind": "ArithmeticOperator.Mul",
+      "source": "let specimen = a*b",
+      "format": "a\\cdot b"
+    },
+    {
+      "kind": "ArithmeticOperator.Div",
+      "source": "let specimen = a/b",
+      "format": "\\frac{a}{b}"
+    },
+    {
+      "kind": "ArithmeticOperator.Pow",
+      "source": "let specimen = a^b",
+      "format": "a^b"
+    },
+    {
+      "kind": "ArithmeticOperator.Abs",
+      "source": "let specimen = abs(a)",
+      "format": "\\lvert a\\rvert"
+    },
+    {
+      "kind": "ArithmeticOperator.Min",
+      "source": "let specimen = min(a,b)",
+      "format": "\\min(a,b)"
+    },
+    {
+      "kind": "ArithmeticOperator.Max",
+      "source": "let specimen = max(a,b)",
+      "format": "\\max(a,b)"
+    },
+    {
+      "kind": "ArithmeticOperator.Floor",
+      "source": "let specimen = floor(a)",
+      "format": "\\lfloor a\\rfloor"
+    },
+    {
+      "kind": "ArithmeticOperator.Ceil",
+      "source": "let specimen = ceil(a)",
+      "format": "\\lceil a\\rceil"
+    },
+    {
+      "kind": "ArithmeticOperator.Sign",
+      "source": "let specimen = sign(a)",
+      "format": "\\operatorname{sgn}(a)"
+    },
+    {
+      "kind": "IntegerOperator.Mod",
+      "source": "let specimen = a % b",
+      "format": "a\\bmod b"
+    },
+    {
+      "kind": "IntegerOperator.Quot",
+      "source": "let specimen = quot(a,b)",
+      "format": "\\operatorname{quot}(a,b)"
+    },
+    {
+      "kind": "IntegerOperator.Gcd",
+      "source": "let specimen = gcd(a,b)",
+      "format": "\\gcd(a,b)"
+    },
+    {
+      "kind": "IntegerOperator.Lcm",
+      "source": "let specimen = lcm(a,b)",
+      "format": "\\operatorname{lcm}(a,b)"
+    },
+    {
+      "kind": "IntegerOperator.Factorial",
+      "source": "let specimen = factorial(n)",
+      "format": "n!"
+    },
+    {
+      "kind": "TrigOperator.Sin",
+      "source": "let specimen = sin(x)",
+      "format": "\\operatorname{sin}(x)"
+    },
+    {
+      "kind": "TrigOperator.Cos",
+      "source": "let specimen = cos(x)",
+      "format": "\\operatorname{cos}(x)"
+    },
+    {
+      "kind": "TrigOperator.Tan",
+      "source": "let specimen = tan(x)",
+      "format": "\\operatorname{tan}(x)"
+    },
+    {
+      "kind": "TrigOperator.Cot",
+      "source": "let specimen = cot(x)",
+      "format": "\\operatorname{cot}(x)"
+    },
+    {
+      "kind": "TrigOperator.Sec",
+      "source": "let specimen = sec(x)",
+      "format": "\\operatorname{sec}(x)"
+    },
+    {
+      "kind": "TrigOperator.Csc",
+      "source": "let specimen = csc(x)",
+      "format": "\\operatorname{csc}(x)"
+    },
+    {
+      "kind": "TrigOperator.Arcsin",
+      "source": "let specimen = arcsin(x)",
+      "format": "\\operatorname{arcsin}(x)"
+    },
+    {
+      "kind": "TrigOperator.Arccos",
+      "source": "let specimen = arccos(x)",
+      "format": "\\operatorname{arccos}(x)"
+    },
+    {
+      "kind": "TrigOperator.Arctan",
+      "source": "let specimen = arctan(x)",
+      "format": "\\operatorname{arctan}(x)"
+    },
+    {
+      "kind": "TrigOperator.Arccot",
+      "source": "let specimen = arccot(x)",
+      "format": "\\operatorname{arccot}(x)"
+    },
+    {
+      "kind": "HyperbolicOperator.Sinh",
+      "source": "let specimen = sinh(x)",
+      "format": "\\operatorname{sinh}(x)"
+    },
+    {
+      "kind": "HyperbolicOperator.Cosh",
+      "source": "let specimen = cosh(x)",
+      "format": "\\operatorname{cosh}(x)"
+    },
+    {
+      "kind": "HyperbolicOperator.Tanh",
+      "source": "let specimen = tanh(x)",
+      "format": "\\operatorname{tanh}(x)"
+    },
+    {
+      "kind": "HyperbolicOperator.Coth",
+      "source": "let specimen = coth(x)",
+      "format": "\\operatorname{coth}(x)"
+    },
+    {
+      "kind": "HyperbolicOperator.Sech",
+      "source": "let specimen = sech(x)",
+      "format": "\\operatorname{sech}(x)"
+    },
+    {
+      "kind": "HyperbolicOperator.Csch",
+      "source": "let specimen = csch(x)",
+      "format": "\\operatorname{csch}(x)"
+    },
+    {
+      "kind": "LimitOperator.MultivariableScalar",
+      "source": "let specimen = lim_multi_at(f,a,n)",
+      "format": "(\\lim_{\\xi\\to a}f(\\xi))_{[n]}"
+    },
+    {
+      "kind": "LimitOperator.MultivariableVector",
+      "source": "let specimen = lim_vector_at(f,a,m,n)",
+      "format": "(\\lim_{\\xi\\to a}f(\\xi))_{[m,n]}"
+    },
+    {
+      "kind": "LimitOperator.Sequence",
+      "source": "let specimen = lim(a)",
+      "format": "\\lim_{n\\to\\infty}a(n)"
+    },
+    {
+      "kind": "LimitOperator.SequenceLimsup",
+      "source": "let specimen = limsup(a)",
+      "format": "\\limsup_{n\\to\\infty}a(n)"
+    },
+    {
+      "kind": "LimitOperator.SequenceLiminf",
+      "source": "let specimen = liminf(a)",
+      "format": "\\liminf_{n\\to\\infty}a(n)"
+    },
+    {
+      "kind": "LimitOperator.Function",
+      "source": "let specimen = fn_lim(f,a)",
+      "format": "\\lim_{x\\to a,\\ x\\in\\operatorname{dom}(f)} f(x)"
+    },
+    {
+      "kind": "ExpLogOperator.Exp",
+      "source": "let specimen = exp(x)",
+      "format": "\\mathrm{e}^{x}"
+    },
+    {
+      "kind": "ExpLogOperator.Ln",
+      "source": "let specimen = ln(x)",
+      "format": "\\ln(x)"
+    },
+    {
+      "kind": "ExpLogOperator.Log",
+      "source": "let specimen = log(b,x)",
+      "format": "\\log_b(x)"
+    },
+    {
+      "kind": "ExpLogOperator.Sqrt",
+      "source": "let specimen = sqrt(x)",
+      "format": "\\sqrt{x}"
+    },
+    {
+      "kind": "ComplexOperator.Conjugate",
+      "source": "let specimen = conj(z)",
+      "format": "\\overline{z}"
+    },
+    {
+      "kind": "ComplexOperator.RealPart",
+      "source": "let specimen = re(z)",
+      "format": "\\operatorname{Re}(z)"
+    },
+    {
+      "kind": "ComplexOperator.ImaginaryPart",
+      "source": "let specimen = img(z)",
+      "format": "\\operatorname{Im}(z)"
+    },
+    {
+      "kind": "ComplexOperator.ComplexAbs",
+      "source": "let specimen = C_abs(z)",
+      "format": "\\lvert z\\rvert"
+    },
+    {
+      "kind": "SetOperator.Union",
+      "source": "let specimen = union(A,B)",
+      "format": "A\\cup B"
+    },
+    {
+      "kind": "SetOperator.Intersect",
+      "source": "let specimen = intersect(A,B)",
+      "format": "A\\cap B"
+    },
+    {
+      "kind": "SetOperator.SetMinus",
+      "source": "let specimen = set_minus(A,B)",
+      "format": "A\\setminus B"
+    },
+    {
+      "kind": "SetOperator.SymmetricDifference",
+      "source": "let specimen = set_diff(A,B)",
+      "format": "A\\triangle B"
+    },
+    {
+      "kind": "SetOperator.FamilyUnion",
+      "source": "let specimen = family_union(F)",
+      "format": "\\bigcup F"
+    },
+    {
+      "kind": "SetOperator.FamilyIntersect",
+      "source": "let specimen = family_intersect(F)",
+      "format": "\\bigcap F"
+    },
+    {
+      "kind": "SetOperator.IndexUnion",
+      "source": "let specimen = index_union(I,X,F)",
+      "format": "\\{x\\in X\\mid\\exists i\\in I:x\\in F(i)\\}"
+    },
+    {
+      "kind": "SetOperator.IndexIntersect",
+      "source": "let specimen = index_intersect(I,X,F)",
+      "format": "\\{x\\in X\\mid\\forall i\\in I:x\\in F(i)\\}"
+    },
+    {
+      "kind": "SetOperator.PowerSet",
+      "source": "let specimen = power_set(A)",
+      "format": "\\mathcal P(A)"
+    },
+    {
+      "kind": "SetOperator.IndexCart",
+      "source": "let specimen = index_cart(I,S,F)",
+      "format": "\\operatorname{IndexCart}(I,S,F)"
+    },
+    {
+      "kind": "SetFormer.ListSet",
+      "source": "let specimen = {a,b}",
+      "format": "\\{a,b\\}"
+    },
+    {
+      "kind": "SetFormer.SetBuilder",
+      "source": "let specimen = {t R: t>0}",
+      "format": "\\{t\\in\\mathbb R\\mid t>0\\}"
+    },
+    {
+      "kind": "SetFormer.Range",
+      "source": "let specimen = range(a,b)",
+      "format": "\\{i\\in\\mathbb Z\\mid a\\le i<b\\}"
+    },
+    {
+      "kind": "SetFormer.ClosedRange",
+      "source": "let specimen = closed_range(a,b)",
+      "format": "\\{i\\in\\mathbb Z\\mid a\\le i\\le b\\}"
+    },
+    {
+      "kind": "SetFormer.FiniteSeqSet",
+      "source": "let specimen = finite_seq(S,n)",
+      "format": "S^{\\{i\\in\\mathbb N_{>0}\\mid i\\le n\\}}"
+    },
+    {
+      "kind": "SetFormer.MatrixSet",
+      "source": "let specimen = matrix(S,m,n)",
+      "format": "S^{m\\times n}"
+    },
+    {
+      "kind": "SetFormer.SeqSet",
+      "source": "let specimen = seq(S)",
+      "format": "S^{\\mathbb N_{>0}}"
+    },
+    {
+      "kind": "SetFormer.OneSideInfinityIntervalObj.LowerOpen",
+      "source": "let specimen = '(a,)",
+      "format": "(a,+\\infty)"
+    },
+    {
+      "kind": "SetFormer.OneSideInfinityIntervalObj.LowerClosed",
+      "source": "let specimen = '[a,)",
+      "format": "[a,+\\infty)"
+    },
+    {
+      "kind": "SetFormer.OneSideInfinityIntervalObj.UpperOpen",
+      "source": "let specimen = '(,b)",
+      "format": "(-\\infty,b)"
+    },
+    {
+      "kind": "SetFormer.OneSideInfinityIntervalObj.UpperClosed",
+      "source": "let specimen = '(,b]",
+      "format": "(-\\infty,b]"
+    },
+    {
+      "kind": "SetFormer.IntervalObj.LeftOpenRightOpen",
+      "source": "let specimen = '(a,b)",
+      "format": "(a,b)"
+    },
+    {
+      "kind": "SetFormer.IntervalObj.LeftOpenRightClosed",
+      "source": "let specimen = '(a,b]",
+      "format": "(a,b]"
+    },
+    {
+      "kind": "SetFormer.IntervalObj.LeftClosedRightOpen",
+      "source": "let specimen = '[a,b)",
+      "format": "[a,b)"
+    },
+    {
+      "kind": "SetFormer.IntervalObj.LeftClosedRightClosed",
+      "source": "let specimen = '[a,b]",
+      "format": "[a,b]"
+    },
+    {
+      "kind": "ProductShape.Cart",
+      "source": "let specimen = cart(A,B)",
+      "format": "A\\times B"
+    },
+    {
+      "kind": "ProductShape.Tuple",
+      "source": "let specimen = (a,b)",
+      "format": "(a,b)"
+    },
+    {
+      "kind": "FunctionSpace.FnSet",
+      "source": "let specimen = fn(t R) R",
+      "format": "\\mathbb R\\to\\mathbb R"
+    },
+    {
+      "kind": "FunctionSpace.AnonymousFn",
+      "source": "let specimen = fn(t R) R {t+1}",
+      "format": "[\\mathbb R\\to\\mathbb R;\\ t\\mapsto t+1]"
+    },
+    {
+      "kind": "FunctionSpace.Composition",
+      "source": "let specimen = compose(f,g)",
+      "format": "f\\circ g"
+    },
+    {
+      "kind": "FunctionSpace.FnRange",
+      "source": "let specimen = fn_range(f)",
+      "format": "\\operatorname{range}(f)"
+    },
+    {
+      "kind": "FunctionSpace.Preimage",
+      "source": "let specimen = preimage(f,y)",
+      "format": "f^{-1}[\\{y\\}]"
+    },
+    {
+      "kind": "FunctionSpace.PreimageSet",
+      "source": "let specimen = preimage_set(f,S)",
+      "format": "f^{-1}[S]"
+    },
+    {
+      "kind": "IteratedOperator.Sum",
+      "source": "let specimen = sum(a,b,f)",
+      "format": "\\sum_{i=a}^{b}f(i)"
+    },
+    {
+      "kind": "IteratedOperator.SumOfFiniteSet",
+      "source": "let specimen = finite_set_sum(S,f)",
+      "format": "\\sum_{i\\in S}f(i)"
+    },
+    {
+      "kind": "IteratedOperator.Product",
+      "source": "let specimen = product(a,b,f)",
+      "format": "\\prod_{i=a}^{b}f(i)"
+    },
+    {
+      "kind": "IteratedOperator.ProductOfFiniteSet",
+      "source": "let specimen = finite_set_product(S,f)",
+      "format": "\\prod_{i\\in S}f(i)"
+    },
+    {
+      "kind": "IteratedOperator.Reduce",
+      "source": "let specimen = reduce(a,b,f,op,s)",
+      "format": "\\operatorname{reduce}(a,b,f,op,s)"
+    },
+    {
+      "kind": "IteratedOperator.FiniteSetReduce",
+      "source": "let specimen = finite_set_reduce(S,f,op,s)",
+      "format": "\\operatorname{finiteReduce}(S,f,op,s)"
+    },
+    {
+      "kind": "FiniteSetStat.FiniteSetSize",
+      "source": "let specimen = finite_set_size(S)",
+      "format": "\\lvert S\\rvert"
+    },
+    {
+      "kind": "FiniteSetStat.FiniteSetMax",
+      "source": "let specimen = finite_set_max(S)",
+      "format": "\\max(S)"
+    },
+    {
+      "kind": "FiniteSetStat.FiniteSetMin",
+      "source": "let specimen = finite_set_min(S)",
+      "format": "\\min(S)"
+    },
+    {
+      "kind": "StructAndFieldAccessObj.StructObj",
+      "source": "let specimen = &Point<R>",
+      "format": "\\mathit{Point}\\langle\\mathbb R\\rangle"
+    },
+    {
+      "kind": "StructAndFieldAccessObj.FieldAccess",
+      "source": "let specimen = p.x.y",
+      "format": "p.x.y"
+    },
+    {
+      "kind": "InstantiatedTemplateObj",
+      "source": "let specimen = \\carrier<R>",
+      "format": "\\mathit{carrier}\\langle\\mathbb R\\rangle"
+    }
+  ],
+  "helpers": [
+    {
+      "kind": "FnObjHead.Identifier",
+      "source": "let specimen = f(x)",
+      "format": "Applied head preserves its own grouping, followed by each curried argument group."
+    },
+    {
+      "kind": "FnObjHead.AnonymousFnLiteral",
+      "source": "let specimen = fn(t R) R {t}(a)",
+      "format": "Applied head preserves its own grouping, followed by each curried argument group."
+    },
+    {
+      "kind": "FnObjHead.FieldAccess",
+      "source": "let specimen = p.f(x)",
+      "format": "Applied head preserves its own grouping, followed by each curried argument group."
+    },
+    {
+      "kind": "FnObjHead.InstantiatedTemplateObj",
+      "source": "let specimen = \\carrier<R>(x)",
+      "format": "Applied head preserves its own grouping, followed by each curried argument group."
+    },
+    {
+      "kind": "FnObjHead.Object",
+      "source": "let specimen = compose(f,g)(x)",
+      "format": "Applied head preserves its own grouping, followed by each curried argument group."
+    },
+    {
+      "kind": "LimitApproach.AtPoint",
+      "source": "let specimen = fn_lim(f,a)",
+      "format": "Limit direction and function-domain restriction remain explicit; generated variable avoids source-name collisions."
+    },
+    {
+      "kind": "LimitApproach.FromLeft",
+      "source": "let specimen = lim_left(f,a)",
+      "format": "Limit direction and function-domain restriction remain explicit; generated variable avoids source-name collisions."
+    },
+    {
+      "kind": "LimitApproach.FromRight",
+      "source": "let specimen = lim_right(f,a)",
+      "format": "Limit direction and function-domain restriction remain explicit; generated variable avoids source-name collisions."
+    },
+    {
+      "kind": "LimitApproach.AtPositiveInfinity",
+      "source": "let specimen = lim_pos_inf(f)",
+      "format": "Limit direction and function-domain restriction remain explicit; generated variable avoids source-name collisions."
+    },
+    {
+      "kind": "LimitApproach.AtNegativeInfinity",
+      "source": "let specimen = lim_neg_inf(f)",
+      "format": "Limit direction and function-domain restriction remain explicit; generated variable avoids source-name collisions."
+    }
+  ],
+  "facts": [
+    {
+      "kind": "AtomicFact",
+      "source": "a=b",
+      "format": "Atomic relation or named predicate with all arguments."
+    },
+    {
+      "kind": "ExistFact",
+      "source": "exist x R st {x>0}",
+      "format": "Existential binder followed by its full condition."
+    },
+    {
+      "kind": "ExistUniqueFact",
+      "source": "exist! x R st {x=0}",
+      "format": "Unique-existence binder and its complete condition."
+    },
+    {
+      "kind": "NotExistFact",
+      "source": "not exist x R st {x=0}",
+      "format": "Negated existential with preserved binder scope."
+    },
+    {
+      "kind": "OrFact",
+      "source": "a=b or a>b",
+      "format": "Grouped disjuncts joined by logical disjunction."
+    },
+    {
+      "kind": "AndFact",
+      "source": "a=b and b=c",
+      "format": "Conjunctive clauses displayed in aligned rows."
+    },
+    {
+      "kind": "ChainFact",
+      "source": "a=b=c=d",
+      "format": "Aligned calculation preserving each adjacent relation."
+    },
+    {
+      "kind": "ForallFact",
+      "source": "forall x R:\n    x=x",
+      "format": "Typed universal statement; guards and all conclusions retained."
+    },
+    {
+      "kind": "ForallFactWithIff",
+      "source": "forall x R:\n    =>:\n        x=0\n    <=>:\n        0=x",
+      "format": "Typed universal binder followed by a grouped equivalence."
+    },
+    {
+      "kind": "NotForall",
+      "source": "not forall x R:\n    x=0",
+      "format": "Negation scopes over the entire quantified assertion."
+    }
+  ]
+}

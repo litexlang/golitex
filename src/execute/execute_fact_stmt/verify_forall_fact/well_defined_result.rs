@@ -1,14 +1,18 @@
 use super::result::AssumeDomFactResult;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
+use crate::execute::execute_fact_stmt::well_defined_results::VerifyAndDefineWdParametersFailed;
 use crate::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, FailToVerifyObjWellDefinedResult,
 };
+use crate::execute::IntroduceTypedParametersFailed;
 use crate::execute::IntroduceTypedParametersResult;
 use crate::result_detail::OutputDetail;
 use crate::runtime::RuntimeResult;
 
 pub enum FailToVerifyForallFactWellDefinedResult {
+    LocalIntroduction(Box<ForallIntroductionFormationFailure>),
+    LocalWellDefinedness(Box<ForallWellDefinedLocalFailure>),
     ParamType {
         fact: crate::ast::fact::ForallFact,
         reason: FailToVerifyObjWellDefinedResult,
@@ -34,9 +38,57 @@ pub enum FailToVerifyForallFactWellDefinedResult {
     },
 }
 
+/// The actual local-proof scope, stopped before conclusion verification.
+pub struct ForallIntroductionFormationFailure {
+    pub fact: crate::ast::fact::ForallFact,
+    pub failure: ForallIntroductionFormationFailed,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum ForallIntroductionFormationFailed {
+    Parameters(IntroduceTypedParametersFailed),
+    Premise {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_dom_facts: Vec<AssumeDomFactResult>,
+        failed_index: usize,
+        failed_dom: Box<FailToVerifyFactWellDefinedResult>,
+    },
+}
+
+/// Formation-only checks never prove or assume the consequent clauses.
+pub struct ForallWellDefinedLocalFailure {
+    pub fact: crate::ast::fact::ForallFact,
+    pub failure: ForallWellDefinedLocalFailed,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum ForallWellDefinedLocalFailed {
+    Parameters(VerifyAndDefineWdParametersFailed),
+    AutoOpen {
+        introduced_params: IntroduceTypedParametersResult,
+        opened_before_fail: Vec<crate::execute::ReleaseOneStructLayerProof>,
+        failed: crate::execute::FailToReleaseOneStructLayer,
+    },
+    Premise {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_dom_facts: Vec<AssumeDomFactResult>,
+        failed_index: usize,
+        failed_dom: Box<FailToVerifyFactWellDefinedResult>,
+    },
+    Conclusion {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_dom_facts: Vec<AssumeDomFactResult>,
+        checked_then: Vec<FactWellDefinedProof>,
+        failed_index: usize,
+        failed_then: Box<FailToVerifyFactWellDefinedResult>,
+    },
+}
+
 impl FailToVerifyForallFactWellDefinedResult {
     pub fn fact(&self) -> &crate::ast::fact::ForallFact {
         match self {
+            Self::LocalIntroduction(local) => &local.fact,
+            Self::LocalWellDefinedness(local) => &local.fact,
             Self::ParamType { fact, .. }
             | Self::AutoOpenStructLayer { fact, .. }
             | Self::DomFact { fact, .. }

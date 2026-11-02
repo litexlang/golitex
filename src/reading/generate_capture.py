@@ -410,11 +410,25 @@ class Generator:
                 lines.append(f'let saved_location = {binding}.as_ref().map(|line| capture.enter_location(line));')
             else:
                 lines.append(f'let saved_location = Some(capture.enter_location({binding}));')
-        environments = [binding for (_, raw), binding in zip(data, bindings) if re.search(r'\bExecEnv\b', raw)]
+        environments = [(binding, raw) for (_, raw), binding in zip(data, bindings) if re.search(r'\bExecEnv\b', raw)]
+        optional_environments = environments and all('Option' in raw for _, raw in environments)
+        failed_case_branch = record['name'] == 'ExecByCasesStmtFailed' and name == 'Branch'
+        if failed_case_branch:
+            branch = bindings[[field for field, _ in data].index('index')]
+            lines.append(f'let saved_branch = capture.proof_branch.replace(*{branch});')
         if environments:
-            lines.append('let saved_scope = capture.enter_scope();')
-            for binding in environments:
-                lines.append(f'capture.index_environment({binding}, runtime);')
+            if optional_environments:
+                present = ' || '.join(f'{binding}.is_some()' for binding, _ in environments)
+                lines.append(f'let saved_scope = if {present} {{ Some(capture.enter_scope()) }} else {{ None }};')
+            else:
+                lines.append('let saved_scope = capture.enter_scope();')
+            for binding, raw in environments:
+                if 'Option' in raw:
+                    lines.append(f'if let Some(environment) = {binding}.as_ref() {{ capture.index_environment(environment, runtime); }}')
+                else:
+                    lines.append(f'capture.index_environment({binding}, runtime);')
+        if record['name'] == 'ProofBlockBodyFailed':
+            lines.append('let saved_body_scope = capture.enter_failed_body_scope();')
         is_infer = record['name'].startswith('Infer') and record['name'].endswith('Result')
         is_theorem = record['name'] == 'BuiltinTheoremId'
         is_rule = record['kind'] == 'enum' and not mode_dispatcher and ('SearchProofByBuiltinRule' in record['name'] or record['name'] == 'EqualitySearchProofByBuiltinRule' or is_infer or is_theorem)
@@ -471,7 +485,12 @@ class Generator:
                 value = f'JsonValue::Array(({binding}).iter().enumerate().map(|(index, body)| capture.ast_body(&format!("{field}:{{index}}"), body, runtime)).collect())'
             if re.fullmatch(r'Vec<(?:crate::execute::)?ExecStmtResult>', raw):
                 value = f'capture.proof_steps({json.dumps(record["name"])}, {binding}, runtime)'
-            if record['name'] == 'ExecByCasesStmtSuccess' and field == 'branches':
+            if record['name'] == 'ProofBlockBodyFailed' and field == 'result':
+                statement=bindings[[name for name,_ in data].index('statement')]
+                value=f'capture.failed_body_result({statement}, {binding}, runtime)'
+            if record['name'] == 'ProofBlockBodyFailed' and field == 'prior_steps':
+                value='capture.failed_body_prefix(value, runtime)'
+            if record['name'] in {'ExecByCasesStmtSuccess', 'ExecByCasesStmtFailed'} and field == 'branches':
                 child = self.expression('ByCasesBranchSuccess', 'item', record['module'])
                 value = f'JsonValue::Array(({binding}).iter().enumerate().map(|(index, item)| {{ let saved = capture.proof_branch.replace(index); let value = {child}; capture.proof_branch = saved; value }}).collect())'
             if record['name'] == 'ByInducBodySuccess' and field in {'base', 'step'}:
@@ -534,7 +553,14 @@ class Generator:
         if record['name'] == 'StructuralMembershipReason':
             lines.append('capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh());')
         if environments:
-            lines.append('capture.leave_scope(saved_scope);')
+            if optional_environments:
+                lines.append('if let Some(scope) = saved_scope { capture.leave_scope(scope); }')
+            else:
+                lines.append('capture.leave_scope(saved_scope);')
+        if record['name'] == 'ProofBlockBodyFailed':
+            lines.append('if let Some(scope) = saved_body_scope { capture.leave_scope(scope); }')
+        if failed_case_branch:
+            lines.append('capture.proof_branch = saved_branch;')
         if locations:
             lines.append('if let Some(location) = saved_location { capture.leave_location(location); }')
         lines.append('output')

@@ -75,12 +75,14 @@ impl Runtime {
                 // sources are not covered by this declaration-only evidence.
                 _ => return None,
             };
-            let Some(ret) = self.applied_fn_set_return_set(application, &signature) else {
+            let Some(applied) = self.applied_fn_set_return_signature(application, &signature)
+            else {
                 continue;
             };
-            let Obj::StandardSet(source) = ret else {
+            let Obj::StandardSet(source) = &applied.return_set else {
                 return None;
             };
+            let source = source.clone();
             if !standard_set_is_subset_eq(&source, target) {
                 return None;
             }
@@ -98,10 +100,11 @@ impl Runtime {
         }
         let mut signature_returns = Vec::new();
         for (signature, id) in self.collect_in_function_set_candidates(&head) {
-            let Some(ret) = self.applied_fn_set_return_set(application, &signature) else {
+            let Some(applied) = self.applied_fn_set_return_signature(application, &signature)
+            else {
                 continue;
             };
-            let Obj::StandardSet(source) = ret else {
+            let Obj::StandardSet(source) = &applied.return_set else {
                 return None;
             };
             if !standard_set_is_subset_eq(&source, target) {
@@ -117,9 +120,11 @@ impl Runtime {
                 _ => return None,
             };
             let path = self.exact_property_equality_path(&head, property.function_subject()?)?;
+            let source = source.clone();
             strict_inclusion |= source != *target;
             signature_returns.push(SignatureStandardReturnProof {
                 cite_signature_fact_id: id,
+                applied,
                 source_set: source,
                 function_equal: KnownEqualityPathProof::new(path),
             });

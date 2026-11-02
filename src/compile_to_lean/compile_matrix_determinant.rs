@@ -81,6 +81,7 @@ impl LitexToLeanCompiler {
                     &proof.expression,
                     other,
                     evaluation,
+                    None,
                     position,
                 )?;
                 return Ok(format!(

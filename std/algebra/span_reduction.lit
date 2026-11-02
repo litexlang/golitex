@@ -115,6 +115,7 @@ thm span_inclusion_from_generators:
 
 thm remove_redundant_vector_preserves_span:
     ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N+,vectors finite_seq(V,n),k N+,reduced finite_seq(V,n-1):
+        k<=n
         $basis::is_list_with_index_removed(V,n,vectors,k,reduced)
         vectors(k) $in \finite_span::span<K,field,V,space,n-1,reduced>
         =>:
@@ -137,6 +138,7 @@ thm remove_redundant_vector_preserves_span:
                 j<n
                 j+1<=n
                 j+1 $in N+
+                j+1 $in closed_range(1,n)
                 reduced(j)=vectors(j+1)
                 by thm span_contains_generator(K,field,V,space,n,vectors,j+1) => vectors(j+1) $in \finite_span::span<K,field,V,space,n,vectors>
     by thm span_inclusion_from_generators(K,field,V,space,n-1,reduced,n,vectors) => \finite_span::span<K,field,V,space,n-1,reduced> $subset \finite_span::span<K,field,V,space,n,vectors>
@@ -164,6 +166,8 @@ thm remove_redundant_vector_preserves_span:
                 j-1<=n-1
                 k<=j-1
                 (j-1)+1=j
+                j $in closed_range(1,n)
+                (j-1)+1 $in closed_range(1,n)
                 reduced(j-1)=vectors((j-1)+1)=vectors(j)
                 by thm span_contains_generator(K,field,V,space,n-1,reduced,j-1) => reduced(j-1) $in \finite_span::span<K,field,V,space,n-1,reduced>
     by thm span_inclusion_from_generators(K,field,V,space,n,vectors,n-1,reduced) => \finite_span::span<K,field,V,space,n,vectors> $subset \finite_span::span<K,field,V,space,n-1,reduced>

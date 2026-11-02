@@ -173,7 +173,7 @@ impl LitexToLeanCompiler {
         Err(LeanCompileError::unsupported("Sign/NegationSubject"))
     }
 
-    fn compile_negated_value(
+    pub(in crate::compile_to_lean) fn compile_negated_value(
         &self,
         negative: &Obj,
         argument: &str,

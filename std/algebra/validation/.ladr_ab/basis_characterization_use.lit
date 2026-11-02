@@ -1,0 +1,111 @@
+# Unique-coordinate and dependence converses, with a spanning dependent real list.
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def Algebra::field::real_mul
+
+release thm Algebra::vector_space::scalar_space_carrier(R,Algebra::field::real_field)
+
+have basis_check_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,R> =\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field> =(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+basis_check_space=(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+release struct def basis_check_space
+
+basis_check_space.smul=Algebra::field::real_field.mul
+
+have basis_check_vectors finite_seq(R,4)=fn(j closed_range(1,4)) R {j-1}
+
+release thm Algebra::finite_span::span_is_subspace(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors)
+
+release thm Algebra::span_reduction::span_contains_generator(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors,2)
+
+basis_check_vectors(2)=1
+
+1 $in \Algebra::finite_span::span<R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors>
+
+claim:
+    ? forall x R:
+        x $in \Algebra::finite_span::span<R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors>
+    basis_check_space.smul(x,1) $in \Algebra::finite_span::span<R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors>
+    basis_check_space.smul(x,1)=Algebra::field::real_field.mul(x,1)=Algebra::field::real_mul(x,1)=x
+
+by extension \Algebra::finite_span::span<R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors> =R
+
+by def $Algebra::finite_span::spans(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        forall x V:
+            exist! coefficients finite_seq(K,n) st {$Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)}
+        =>:
+            $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+    release thm Algebra::basis_characterization::unique_representations_imply_basis(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),x V:
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            exist! coefficients finite_seq(K,n) st {$Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)}
+    release thm Algebra::basis::basis_representation_exists_unique(K,field,V,space,n,vectors,x)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::has_nontrivial_dependence_coefficients(K,field,V,space,n,vectors)
+        =>:
+            $Algebra::basis::is_linearly_dependent(K,field,V,space,n,vectors)
+    release thm Algebra::basis_characterization::nontrivial_dependence_coefficients_imply_dependent(K,field,V,space,n,vectors)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_linearly_dependent(K,field,V,space,n,vectors)
+        =>:
+            $Algebra::basis::has_nontrivial_dependence_coefficients(K,field,V,space,n,vectors)
+    release thm Algebra::basis::dependent_has_nontrivial_coefficients(K,field,V,space,n,vectors)
+
+release thm Algebra::coordinate_maps::unit_coefficients_carrier(R,Algebra::field::real_field,4,1)
+
+have basis_check_relation finite_seq(R,4)=\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,4,1>
+
+release thm Algebra::coordinate_maps::unit_linear_combination(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors,1)
+
+basis_check_space.zero=Algebra::field::real_field.zero=0
+
+\Algebra::finite_span::linear_combination<R,Algebra::field::real_field,R,basis_check_space,4>(basis_check_relation,basis_check_vectors)=\Algebra::finite_span::linear_combination<R,Algebra::field::real_field,R,basis_check_space,4>(\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,4,1>,basis_check_vectors)=basis_check_vectors(1)=0=basis_check_space.zero
+
+release thm Algebra::finite_span::linear_combination_has_value(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_relation,basis_check_vectors)
+
+$Algebra::finite_span::has_linear_combination_value(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_relation,basis_check_vectors,basis_check_space.zero)
+
+basis_check_relation(1)=\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,4,1>(1)=Algebra::field::real_field.one=1
+
+basis_check_relation(1)!=0
+
+claim:
+    ? not $Algebra::basis::has_only_zero_coefficients(R,Algebra::field::real_field,4,basis_check_relation)
+    by contra:
+        ? not $Algebra::basis::has_only_zero_coefficients(R,Algebra::field::real_field,4,basis_check_relation)
+        basis_check_relation(1)=Algebra::field::real_field.zero=0
+        impossible basis_check_relation(1)!=0
+
+witness $Algebra::basis::has_nontrivial_dependence_coefficients(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors) from basis_check_relation
+
+release thm Algebra::basis_characterization::nontrivial_dependence_coefficients_imply_dependent(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors)
+
+$Algebra::basis::is_linearly_dependent(R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors)
+
+have basis_check_empty finite_seq(R,0)=fn(j closed_range(1,0)) R {0}
+
+release thm Algebra::dependence::empty_list_is_independent(R,Algebra::field::real_field,R,basis_check_space,basis_check_empty)
+
+claim:
+    ? forall x R:
+        exist coefficients finite_seq(R,4) st {$Algebra::finite_span::has_linear_combination_value(R,Algebra::field::real_field,R,basis_check_space,4,coefficients,basis_check_vectors,x)}
+    x $in \Algebra::finite_span::span<R,Algebra::field::real_field,R,basis_check_space,4,basis_check_vectors>
+    $Algebra::finite_span::is_linear_combination(R,Algebra::field::real_field,R,basis_check_space,4,x,basis_check_vectors)
+    obtain coefficients from $Algebra::finite_span::is_linear_combination(R,Algebra::field::real_field,R,basis_check_space,4,x,basis_check_vectors)
+    witness exist selected finite_seq(R,4) st {$Algebra::finite_span::has_linear_combination_value(R,Algebra::field::real_field,R,basis_check_space,4,selected,basis_check_vectors,x)} from coefficients

@@ -677,3 +677,528 @@ thm dimension_additivity_has_trivial_intersection:
     release struct def \subspace::restricted_space<K,field,V,space,intersect(U,W)>
     \subspace::restricted_space<K,field,V,space,intersect(U,W)>.zero=space.zero
     intersect(U,W) ={space.zero}
+
+# Arbitrary finite families of subspaces, their sums and the empty family.
+
+prop is_subspace_family(K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n)):
+    forall j closed_range(1,n):
+        $vector_space::is_subspace(K,F,V,space,members(j))
+
+prop is_family_decomposition(K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),terms finite_seq(V,n)):
+    $is_subspace_family(K,F,V,space,n,members)
+    forall j closed_range(1,n):
+        terms(j) $in members(j)
+
+prop is_finite_subspace_sum_vector(K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),value V):
+    exist terms finite_seq(V,n) st {$is_family_decomposition(K,F,V,space,n,members,terms), value=\finite_span::vector_list_sum<K,F,V,space,n>(terms)}
+
+template<K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n): $is_subspace_family(K,F,V,space,n,members)>:
+    have finite_subspace_sum power_set(V)={value V: $is_finite_subspace_sum_vector(K,F,V,space,n,members,value)}
+
+thm finite_subspace_sum_carrier:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n):
+        $is_subspace_family(K,F,V,space,n,members)
+        =>:
+            \finite_subspace_sum<K,F,V,space,n,members> $in power_set(V)
+
+thm finite_subspace_sum_contains_decomposition:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),terms finite_seq(V,n):
+        $is_family_decomposition(K,F,V,space,n,members,terms)
+        =>:
+            \finite_span::vector_list_sum<K,F,V,space,n>(terms) $in \finite_subspace_sum<K,F,V,space,n,members>
+    witness $is_finite_subspace_sum_vector(K,F,V,space,n,members,\finite_span::vector_list_sum<K,F,V,space,n>(terms)) from terms
+
+thm finite_subspace_sum_zero:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n):
+        $is_subspace_family(K,F,V,space,n,members)
+        =>:
+            space.zero $in \finite_subspace_sum<K,F,V,space,n,members>
+    have zero_terms finite_seq(V,n)=fn(j closed_range(1,n)) V {space.zero}
+    claim:
+        ? forall j closed_range(1,n):
+            zero_terms(j) $in members(j)
+        zero_terms(j)=space.zero
+        $vector_space::is_subspace(K,F,V,space,members(j))
+        space.zero $in members(j)
+    by def $is_family_decomposition(K,F,V,space,n,members,zero_terms)
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                zero_terms(j)=space.zero
+        j $in closed_range(1,n)
+        zero_terms(j)=space.zero
+    release thm finite_span::zero_vector_list_sum(K,F,V,space,n,zero_terms)
+    witness $is_finite_subspace_sum_vector(K,F,V,space,n,members,space.zero) from zero_terms
+
+thm finite_subspace_sum_is_subspace:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n):
+        $is_subspace_family(K,F,V,space,n,members)
+        =>:
+            $vector_space::is_subspace(K,F,V,space,\finite_subspace_sum<K,F,V,space,n,members>)
+    release thm finite_subspace_sum_zero(K,F,V,space,n,members)
+    claim:
+        ? forall x,y V:
+            x $in \finite_subspace_sum<K,F,V,space,n,members>
+            y $in \finite_subspace_sum<K,F,V,space,n,members>
+            =>:
+                space.add(x,y) $in \finite_subspace_sum<K,F,V,space,n,members>
+        obtain left_terms from $is_finite_subspace_sum_vector(K,F,V,space,n,members,x)
+        obtain right_terms from $is_finite_subspace_sum_vector(K,F,V,space,n,members,y)
+        have added_terms finite_seq(V,n)=fn(j closed_range(1,n)) V {space.add(left_terms(j),right_terms(j))}
+        claim:
+            ? forall j closed_range(1,n):
+                added_terms(j) $in members(j)
+            left_terms(j) $in members(j)
+            right_terms(j) $in members(j)
+            $vector_space::is_subspace(K,F,V,space,members(j))
+            added_terms(j)=space.add(left_terms(j),right_terms(j))
+            space.add(left_terms(j),right_terms(j)) $in members(j)
+        by def $is_family_decomposition(K,F,V,space,n,members,added_terms)
+        claim:
+            ? forall j N+:
+                j<=n
+                =>:
+                    added_terms(j)=space.add(left_terms(j),right_terms(j))
+            j $in closed_range(1,n)
+            added_terms(j)=space.add(left_terms(j),right_terms(j))
+        release thm finite_span::vector_list_sum_add(K,F,V,space,n,left_terms,right_terms,added_terms)
+        \finite_span::vector_list_sum<K,F,V,space,n>(left_terms)=x
+        \finite_span::vector_list_sum<K,F,V,space,n>(right_terms)=y
+        \finite_span::vector_list_sum<K,F,V,space,n>(added_terms)=space.add(x,y)
+        witness $is_finite_subspace_sum_vector(K,F,V,space,n,members,space.add(x,y)) from added_terms
+    claim:
+        ? forall a K,x V:
+            x $in \finite_subspace_sum<K,F,V,space,n,members>
+            =>:
+                space.smul(a,x) $in \finite_subspace_sum<K,F,V,space,n,members>
+        obtain terms from $is_finite_subspace_sum_vector(K,F,V,space,n,members,x)
+        have scaled_terms finite_seq(V,n)=fn(j closed_range(1,n)) V {space.smul(a,terms(j))}
+        claim:
+            ? forall j closed_range(1,n):
+                scaled_terms(j) $in members(j)
+            terms(j) $in members(j)
+            $vector_space::is_subspace(K,F,V,space,members(j))
+            scaled_terms(j)=space.smul(a,terms(j))
+            space.smul(a,terms(j)) $in members(j)
+        by def $is_family_decomposition(K,F,V,space,n,members,scaled_terms)
+        claim:
+            ? forall j N+:
+                j<=n
+                =>:
+                    scaled_terms(j)=space.smul(a,terms(j))
+            j $in closed_range(1,n)
+            scaled_terms(j)=space.smul(a,terms(j))
+        release thm finite_span::vector_list_sum_smul(K,F,V,space,n,a,terms,scaled_terms)
+        \finite_span::vector_list_sum<K,F,V,space,n>(terms)=x
+        \finite_span::vector_list_sum<K,F,V,space,n>(scaled_terms)=space.smul(a,x)
+        witness $is_finite_subspace_sum_vector(K,F,V,space,n,members,space.smul(a,x)) from scaled_terms
+    by def $vector_space::is_subspace(K,F,V,space,\finite_subspace_sum<K,F,V,space,n,members>)
+
+thm vector_list_sum_in_subspace:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,terms finite_seq(V,n),U power_set(V):
+        $vector_space::is_subspace(K,F,V,space,U)
+        forall j N+:
+            j<=n
+            =>:
+                terms(j) $in U
+        =>:
+            \finite_span::vector_list_sum<K,F,V,space,n>(terms) $in U
+    release thm finite_span::one_coefficients_carrier(K,F,n)
+    have ones finite_seq(K,n)=\finite_span::one_coefficients<K,F,n>
+    have value V=\finite_span::vector_list_sum<K,F,V,space,n>(terms)
+    release thm finite_span::linear_combination_has_value(K,F,V,space,n,ones,terms)
+    value=\finite_span::vector_list_sum<K,F,V,space,n>(terms)=\finite_span::linear_combination<K,F,V,space,n>(\finite_span::one_coefficients<K,F,n>,terms)
+    \finite_span::linear_combination<K,F,V,space,n>(\finite_span::one_coefficients<K,F,n>,terms)=\finite_span::linear_combination<K,F,V,space,n>(ones,terms)
+    value=\finite_span::linear_combination<K,F,V,space,n>(ones,terms)
+    $finite_span::has_linear_combination_value(K,F,V,space,n,ones,terms,value)
+    release thm span_reduction::linear_combination_in_subspace(K,F,V,space,n,ones,terms,value,U)
+
+thm finite_subspace_sum_is_least:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),U power_set(V):
+        $is_subspace_family(K,F,V,space,n,members)
+        $vector_space::is_subspace(K,F,V,space,U)
+        forall j closed_range(1,n):
+            members(j) $subset U
+        =>:
+            \finite_subspace_sum<K,F,V,space,n,members> $subset U
+    claim:
+        ? forall value V:
+            value $in \finite_subspace_sum<K,F,V,space,n,members>
+            =>:
+                value $in U
+        obtain terms from $is_finite_subspace_sum_vector(K,F,V,space,n,members,value)
+        claim:
+            ? forall j N+:
+                j<=n
+                =>:
+                    terms(j) $in U
+            j $in closed_range(1,n)
+            terms(j) $in members(j)
+            members(j) $subset U
+        release thm vector_list_sum_in_subspace(K,F,V,space,n,terms,U)
+        value=\finite_span::vector_list_sum<K,F,V,space,n>(terms)
+    by def \finite_subspace_sum<K,F,V,space,n,members> $subset U
+
+thm single_vector_list_sum:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,index closed_range(1,n),terms finite_seq(V,n):
+        forall j N+:
+            j<=n
+            j!=index
+            =>:
+                terms(j)=space.zero
+        =>:
+            \finite_span::vector_list_sum<K,F,V,space,n>(terms)=terms(index)
+    release thm finite_span::one_coefficients_carrier(K,F,n)
+    release thm coordinate_maps::unit_coefficients_carrier(K,F,n,index)
+    have ones finite_seq(K,n)=\finite_span::one_coefficients<K,F,n>
+    have weights finite_seq(K,n)=\coordinate_maps::unit_coefficients<K,F,n,index>
+    have constant_terms finite_seq(V,n)=fn(j closed_range(1,n)) V {terms(index)}
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                space.smul(ones(j),terms(j))=space.smul(weights(j),constant_terms(j))
+        j $in closed_range(1,n)
+        release thm finite_span::one_coefficients_entry(K,F,n,ones,j)
+        constant_terms(j)=terms(index)
+        by cases:
+            ? space.smul(ones(j),terms(j))=space.smul(weights(j),constant_terms(j))
+            case j=index:
+                weights(j)=\coordinate_maps::unit_coefficients<K,F,n,index>(j)=F.one
+                terms(j)=terms(index)
+                space.smul(ones(j),terms(j))=space.smul(F.one,terms(index))=space.smul(weights(j),constant_terms(j))
+            case j!=index:
+                weights(j)=\coordinate_maps::unit_coefficients<K,F,n,index>(j)=F.zero
+                terms(j)=space.zero
+                release thm vector_space::zero_scalar_times_vector(K,F,V,space,constant_terms(j))
+                space.smul(ones(j),terms(j))=space.smul(F.one,space.zero)=space.zero=space.smul(F.zero,constant_terms(j))=space.smul(weights(j),constant_terms(j))
+    release thm finite_span::equal_contributions_equal_combinations(K,F,V,space,n,ones,weights,terms,constant_terms)
+    claim:
+        ? forall j N+:
+            j<=n
+            j!=index
+            =>:
+                weights(j)=F.zero
+        j $in closed_range(1,n)
+        weights(j)=\coordinate_maps::unit_coefficients<K,F,n,index>(j)=F.zero
+    index $in N+
+    index<=n
+    weights(index)=\coordinate_maps::unit_coefficients<K,F,n,index>(index)=F.one
+    constant_terms(index)=terms(index)
+    release thm finite_span::single_coefficient_linear_combination(K,F,V,space,n,weights,constant_terms,index)
+    \finite_span::vector_list_sum<K,F,V,space,n>(terms)=\finite_span::linear_combination<K,F,V,space,n>(\finite_span::one_coefficients<K,F,n>,terms)=\finite_span::linear_combination<K,F,V,space,n>(ones,terms)
+    \finite_span::linear_combination<K,F,V,space,n>(weights,constant_terms)=space.smul(weights(index),constant_terms(index))=space.smul(F.one,terms(index))=terms(index)
+
+thm finite_subspace_sum_contains_summand:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),index closed_range(1,n):
+        $is_subspace_family(K,F,V,space,n,members)
+        =>:
+            members(index) $subset \finite_subspace_sum<K,F,V,space,n,members>
+    members(index) $in power_set(V)
+    members(index) $subset V
+    claim:
+        ? forall value V:
+            value $in members(index)
+            =>:
+                value $in \finite_subspace_sum<K,F,V,space,n,members>
+        have fn terms(j closed_range(1,n)) V by cases:
+            case j=index: value
+            case j!=index: space.zero
+        claim:
+            ? forall j closed_range(1,n):
+                terms(j) $in members(j)
+            by cases:
+                ? terms(j) $in members(j)
+                case j=index:
+                    terms(j)=value
+                    members(j)=members(index)
+                case j!=index:
+                    terms(j)=space.zero
+                    $vector_space::is_subspace(K,F,V,space,members(j))
+                    space.zero $in members(j)
+        by def $is_family_decomposition(K,F,V,space,n,members,terms)
+        claim:
+            ? forall j N+:
+                j<=n
+                j!=index
+                =>:
+                    terms(j)=space.zero
+            j $in closed_range(1,n)
+            terms(j)=space.zero
+        release thm single_vector_list_sum(K,F,V,space,n,index,terms)
+        terms(index)=value
+        \finite_span::vector_list_sum<K,F,V,space,n>(terms)=value
+        witness $is_finite_subspace_sum_vector(K,F,V,space,n,members,value) from terms
+    by def members(index) $subset \finite_subspace_sum<K,F,V,space,n,members>
+
+thm empty_is_subspace_family:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,members finite_seq(power_set(V),0):
+        $is_subspace_family(K,F,V,space,0,members)
+    claim:
+        ? forall j closed_range(1,0):
+            $vector_space::is_subspace(K,F,V,space,members(j))
+        by contra:
+            ? $vector_space::is_subspace(K,F,V,space,members(j))
+            j $in N+
+            j<=0
+            j>0
+            impossible j<=0
+    by def $is_subspace_family(K,F,V,space,0,members)
+
+thm empty_subspace_family_sum:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,members finite_seq(power_set(V),0):
+        $is_subspace_family(K,F,V,space,0,members)
+        =>:
+            \finite_subspace_sum<K,F,V,space,0,members> = {space.zero}
+    claim:
+        ? forall value V:
+            value $in \finite_subspace_sum<K,F,V,space,0,members>
+            =>:
+                value $in {space.zero}
+        obtain terms from $is_finite_subspace_sum_vector(K,F,V,space,0,members,value)
+        release thm finite_span::empty_vector_list_sum(K,F,V,space,terms)
+        value=\finite_span::vector_list_sum<K,F,V,space,0>(terms)=space.zero
+    by def \finite_subspace_sum<K,F,V,space,0,members> $subset {space.zero}
+    release thm finite_subspace_sum_zero(K,F,V,space,0,members)
+    by def {space.zero} $subset \finite_subspace_sum<K,F,V,space,0,members>
+    by extension \finite_subspace_sum<K,F,V,space,0,members> = {space.zero}
+
+# Direct finite subspace families and the zero-decomposition criterion.
+
+prop is_direct_subspace_family(K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n)):
+    $is_subspace_family(K,F,V,space,n,members)
+    forall left_terms,right_terms finite_seq(V,n):
+        $is_family_decomposition(K,F,V,space,n,members,left_terms)
+        $is_family_decomposition(K,F,V,space,n,members,right_terms)
+        \finite_span::vector_list_sum<K,F,V,space,n>(left_terms)=\finite_span::vector_list_sum<K,F,V,space,n>(right_terms)
+        =>:
+            left_terms=right_terms
+
+thm direct_subspace_family_unique_decomposition:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),value V:
+        $is_direct_subspace_family(K,F,V,space,n,members)
+        value $in \finite_subspace_sum<K,F,V,space,n,members>
+        =>:
+            exist! terms finite_seq(V,n) st {$is_family_decomposition(K,F,V,space,n,members,terms), value=\finite_span::vector_list_sum<K,F,V,space,n>(terms)}
+    obtain terms from $is_finite_subspace_sum_vector(K,F,V,space,n,members,value)
+    claim:
+        ? forall left_terms,right_terms finite_seq(V,n):
+            $is_family_decomposition(K,F,V,space,n,members,left_terms)
+            value=\finite_span::vector_list_sum<K,F,V,space,n>(left_terms)
+            $is_family_decomposition(K,F,V,space,n,members,right_terms)
+            value=\finite_span::vector_list_sum<K,F,V,space,n>(right_terms)
+            =>:
+                left_terms=right_terms
+        \finite_span::vector_list_sum<K,F,V,space,n>(left_terms)=value=\finite_span::vector_list_sum<K,F,V,space,n>(right_terms)
+        left_terms=right_terms
+    witness exist! selected_terms finite_seq(V,n) st {$is_family_decomposition(K,F,V,space,n,members,selected_terms), value=\finite_span::vector_list_sum<K,F,V,space,n>(selected_terms)} from terms
+
+thm direct_subspace_family_zero_decomposition:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),terms finite_seq(V,n),index closed_range(1,n):
+        $is_direct_subspace_family(K,F,V,space,n,members)
+        $is_family_decomposition(K,F,V,space,n,members,terms)
+        \finite_span::vector_list_sum<K,F,V,space,n>(terms)=space.zero
+        =>:
+            terms(index)=space.zero
+    $is_subspace_family(K,F,V,space,n,members)
+    have zero_terms finite_seq(V,n)=fn(j closed_range(1,n)) V {space.zero}
+    claim:
+        ? forall j closed_range(1,n):
+            zero_terms(j) $in members(j)
+        zero_terms(j)=space.zero
+        $vector_space::is_subspace(K,F,V,space,members(j))
+        space.zero $in members(j)
+    by def $is_family_decomposition(K,F,V,space,n,members,zero_terms)
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                zero_terms(j)=space.zero
+        j $in closed_range(1,n)
+        zero_terms(j)=space.zero
+    release thm finite_span::zero_vector_list_sum(K,F,V,space,n,zero_terms)
+    \finite_span::vector_list_sum<K,F,V,space,n>(terms)=\finite_span::vector_list_sum<K,F,V,space,n>(zero_terms)
+    terms=zero_terms
+    terms(index)=zero_terms(index)=space.zero
+
+thm trivial_zero_decompositions_imply_direct:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n):
+        $is_subspace_family(K,F,V,space,n,members)
+        forall terms finite_seq(V,n),index closed_range(1,n):
+            $is_family_decomposition(K,F,V,space,n,members,terms)
+            \finite_span::vector_list_sum<K,F,V,space,n>(terms)=space.zero
+            =>:
+                terms(index)=space.zero
+        =>:
+            $is_direct_subspace_family(K,F,V,space,n,members)
+    claim:
+        ? forall left_terms,right_terms finite_seq(V,n):
+            $is_family_decomposition(K,F,V,space,n,members,left_terms)
+            $is_family_decomposition(K,F,V,space,n,members,right_terms)
+            \finite_span::vector_list_sum<K,F,V,space,n>(left_terms)=\finite_span::vector_list_sum<K,F,V,space,n>(right_terms)
+            =>:
+                left_terms=right_terms
+        have negative_one K=F.neg(F.one)
+        have negative_terms finite_seq(V,n)=fn(j closed_range(1,n)) V {space.smul(negative_one,right_terms(j))}
+        have difference_terms finite_seq(V,n)=fn(j closed_range(1,n)) V {space.add(left_terms(j),negative_terms(j))}
+        claim:
+            ? forall j closed_range(1,n):
+                negative_terms(j) $in members(j)
+                difference_terms(j) $in members(j)
+            $vector_space::is_subspace(K,F,V,space,members(j))
+            left_terms(j) $in members(j)
+            right_terms(j) $in members(j)
+            negative_terms(j)=space.smul(negative_one,right_terms(j))
+            space.smul(negative_one,right_terms(j)) $in members(j)
+            difference_terms(j)=space.add(left_terms(j),negative_terms(j))
+            space.add(left_terms(j),negative_terms(j)) $in members(j)
+        by def $is_family_decomposition(K,F,V,space,n,members,negative_terms)
+        by def $is_family_decomposition(K,F,V,space,n,members,difference_terms)
+        claim:
+            ? forall j N+:
+                j<=n
+                =>:
+                    negative_terms(j)=space.smul(negative_one,right_terms(j))
+                    difference_terms(j)=space.add(left_terms(j),negative_terms(j))
+            j $in closed_range(1,n)
+            negative_terms(j)=space.smul(negative_one,right_terms(j))
+            difference_terms(j)=space.add(left_terms(j),negative_terms(j))
+        release thm finite_span::vector_list_sum_smul(K,F,V,space,n,negative_one,right_terms,negative_terms)
+        release thm finite_span::vector_list_sum_add(K,F,V,space,n,left_terms,negative_terms,difference_terms)
+        have left_value V=\finite_span::vector_list_sum<K,F,V,space,n>(left_terms)
+        have right_value V=\finite_span::vector_list_sum<K,F,V,space,n>(right_terms)
+        left_value=right_value
+        release thm vector_space::minus_one_times_vector(K,F,V,space,right_value)
+        release thm vector_space::vector_neg_spec(K,F,V,space,right_value)
+        space.smul(negative_one,right_value)=space.smul(F.neg(F.one),right_value)=\vector_space::vector_neg<K,F,V,space>(right_value)
+        \finite_span::vector_list_sum<K,F,V,space,n>(negative_terms)=space.smul(negative_one,\finite_span::vector_list_sum<K,F,V,space,n>(right_terms))=space.smul(negative_one,right_value)=\vector_space::vector_neg<K,F,V,space>(right_value)
+        \finite_span::vector_list_sum<K,F,V,space,n>(difference_terms)=space.add(\finite_span::vector_list_sum<K,F,V,space,n>(left_terms),\finite_span::vector_list_sum<K,F,V,space,n>(negative_terms))=space.add(left_value,\vector_space::vector_neg<K,F,V,space>(right_value))=space.add(right_value,\vector_space::vector_neg<K,F,V,space>(right_value))=space.zero
+        claim:
+            ? forall j closed_range(1,n):
+                left_terms(j)=right_terms(j)
+            difference_terms(j)=space.zero
+            have negative V=negative_terms(j)
+            release thm vector_space::minus_one_times_vector(K,F,V,space,right_terms(j))
+            release thm vector_space::vector_neg_spec(K,F,V,space,right_terms(j))
+            negative=negative_terms(j)=space.smul(negative_one,right_terms(j))=space.smul(F.neg(F.one),right_terms(j))=\vector_space::vector_neg<K,F,V,space>(right_terms(j))
+            space.add(right_terms(j),negative)=space.add(right_terms(j),\vector_space::vector_neg<K,F,V,space>(right_terms(j)))=space.zero
+            space.add(negative,right_terms(j))=space.add(right_terms(j),negative)=space.zero
+            difference_terms(j)=space.add(left_terms(j),negative_terms(j))=space.add(left_terms(j),negative)
+            space.add(negative,left_terms(j))=space.add(left_terms(j),negative)=difference_terms(j)=space.zero
+            release thm vector_space::vector_neg_characterization(K,F,V,space,negative,left_terms(j))
+            release thm vector_space::vector_neg_characterization(K,F,V,space,negative,right_terms(j))
+            left_terms(j)=\vector_space::vector_neg<K,F,V,space>(negative)=right_terms(j)
+        by fn_extension left_terms=right_terms
+    by def $is_direct_subspace_family(K,F,V,space,n,members)
+
+# Pair directness is relative to its sum; the sum need not fill V.
+
+thm direct_pair_family_intersection:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,members finite_seq(power_set(V),2):
+        $is_direct_subspace_family(K,F,V,space,2,members)
+        =>:
+            intersect(members(1),members(2))={space.zero}
+    $is_subspace_family(K,F,V,space,2,members)
+    $vector_space::is_subspace(K,F,V,space,members(1))
+    $vector_space::is_subspace(K,F,V,space,members(2))
+    members(1) $in power_set(V)
+    members(2) $in power_set(V)
+    members(1) $subset V
+    members(2) $subset V
+    claim:
+        ? forall value intersect(members(1),members(2)):
+            value $in {space.zero}
+        value $in members(1)
+        value $in members(2)
+        value $in V
+        have negative V=space.smul(F.neg(F.one),value)
+        negative $in members(2)
+        have fn terms(j closed_range(1,2)) V by cases:
+            case j=1: value
+            case j!=1: negative
+        claim:
+            ? forall j closed_range(1,2):
+                terms(j) $in members(j)
+            j $in N+
+            j<=2
+            by cases:
+                ? terms(j) $in members(j)
+                case j=1:
+                    terms(j)=value
+                    members(j)=members(1)
+                case j!=1:
+                    j $in Z
+                    j>=1
+                    by contra:
+                        ? j>=2
+                        j<2
+                        j<=1
+                        j>=1
+                        j=1
+                        impossible j!=1
+                    j>=2
+                    j=2
+                    terms(j)=negative
+                    members(j)=members(2)
+        by def $is_family_decomposition(K,F,V,space,2,members,terms)
+        release thm finite_span::two_vector_list_sum(K,F,V,space,terms)
+        release thm vector_space::minus_one_times_vector(K,F,V,space,value)
+        release thm vector_space::vector_neg_spec(K,F,V,space,value)
+        terms(1)=value
+        terms(2)=negative
+        negative=space.smul(F.neg(F.one),value)=\vector_space::vector_neg<K,F,V,space>(value)
+        \finite_span::vector_list_sum<K,F,V,space,2>(terms)=space.add(terms(1),terms(2))=space.add(value,negative)=space.add(value,\vector_space::vector_neg<K,F,V,space>(value))=space.zero
+        release thm direct_subspace_family_zero_decomposition(K,F,V,space,2,members,terms,1)
+        value=terms(1)=space.zero
+    by def intersect(members(1),members(2)) $subset {space.zero}
+    space.zero $in members(1)
+    space.zero $in members(2)
+    space.zero $in intersect(members(1),members(2))
+    by def {space.zero} $subset intersect(members(1),members(2))
+    by extension intersect(members(1),members(2))={space.zero}
+
+thm trivial_pair_intersection_implies_direct:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,members finite_seq(power_set(V),2):
+        $is_subspace_family(K,F,V,space,2,members)
+        intersect(members(1),members(2))={space.zero}
+        =>:
+            $is_direct_subspace_family(K,F,V,space,2,members)
+    claim:
+        ? forall terms finite_seq(V,2),index closed_range(1,2):
+            $is_family_decomposition(K,F,V,space,2,members,terms)
+            \finite_span::vector_list_sum<K,F,V,space,2>(terms)=space.zero
+            =>:
+                terms(index)=space.zero
+        $vector_space::is_subspace(K,F,V,space,members(2))
+        terms(1) $in members(1)
+        terms(2) $in members(2)
+        release thm finite_span::two_vector_list_sum(K,F,V,space,terms)
+        space.add(terms(1),terms(2))=\finite_span::vector_list_sum<K,F,V,space,2>(terms)=space.zero
+        space.add(terms(2),terms(1))=space.add(terms(1),terms(2))=space.zero
+        space.zero $in members(2)
+        space.add(terms(2),terms(1)) $in members(2)
+        release thm exchange::subspace_additive_cancellation(K,F,V,space,members(2),terms(2),terms(1))
+        terms(1) $in intersect(members(1),members(2))
+        terms(1) $in {space.zero}
+        terms(1)=space.zero
+        terms(2)=space.add(space.zero,terms(2))=space.add(terms(1),terms(2))=space.zero
+        by cases:
+            ? terms(index)=space.zero
+            case index=1:
+                terms(index)=terms(1)=space.zero
+            case index!=1:
+                index $in Z
+                index>=1
+                index<=2
+                by contra:
+                    ? index>=2
+                    index<2
+                    index<=1
+                    index>=1
+                    index=1
+                    impossible index!=1
+                index>=2
+                index=2
+                terms(index)=terms(2)=space.zero
+    release thm trivial_zero_decompositions_imply_direct(K,F,V,space,2,members)

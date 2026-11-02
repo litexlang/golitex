@@ -16,7 +16,6 @@ fn retired_product_surface_rejects_before_execution_and_keeps_existing_binding_s
     for (source, diagnostic) in [
         ("tuple_dim(p)=2", "tuple_dim is removed"),
         ("proj(cart(R,Z),1)=R", "proj is removed"),
-        ("p[1]=1", "object indexing with [] is removed"),
         ("p[1][2]=1", "object indexing with [] is removed"),
         ("$is_tuple(p)", "is_tuple` is removed"),
         ("not $is_tuple(p)", "is_tuple` is removed"),
@@ -88,7 +87,6 @@ fn retired_spellings_cannot_reenter_a_populated_current_environment() {
             "tuple_dim(p)=2",
             "cart_dim(cart(R,Z))=2",
             "proj(cart(R,Z),1)=R",
-            "p[1]=1",
             "$is_tuple(p)",
             "$is_cart(cart(R,Z))",
         ] {

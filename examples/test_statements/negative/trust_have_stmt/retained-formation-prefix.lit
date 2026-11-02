@@ -1,0 +1,15 @@
+# Tracer: trust-have formation prefix, before any body assumption is stored.
+# Before (incomplete reading history):
+# trust have denominator R:
+#     denominator != 0
+#     1 / denominator $in R
+#     denominator = denominator
+# Former behavior: rejection retained only the terminal WD failure.
+# Now: same rejection, with actual parameter/formation prefix and unchecked tail.
+trust have denominator R:
+    denominator != 0
+    1 / denominator $in R
+    denominator = denominator
+# Boundary: the first body clause is checked for formation, not yet assumed.
+# Evidence: target/release/litex -lang en -f examples/test_statements/negative/trust_have_stmt/retained-formation-prefix.lit
+# Expected: exit 1, Normal run_result=failure, phase=trust_have.

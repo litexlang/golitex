@@ -15,7 +15,7 @@ use crate::execute::{
 };
 use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::prelude::*;
-use crate::runtime::{FactId, IdentifierId, Runtime, RuntimeError, RuntimeResult};
+use crate::runtime::{FactId, Runtime, RuntimeError, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
 use std::collections::{HashMap, HashSet};
 
@@ -43,19 +43,28 @@ impl Runtime {
         local_env: &ExecEnv,
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Vec<StoreTemplateDefinitionFactResult>> {
-        let (binding_id, source_ids) = definition_binding_and_fact_ids(body)?;
-        let args = template
+        let source_ids = definition_fact_ids(body)?;
+        let args: Vec<_> = template
             .template_arg_def
             .groups
             .iter()
             .flat_map(|group| group.params.iter())
             .map(|param| Obj::Identifier(IdentifierObj::from_bound_name(param)))
             .collect();
-        let surface = Obj::InstantiatedTemplateObj(InstantiatedTemplateObj {
-            template_name: self.atomic_name_for_plain_prop_ref(template.template_name.clone()),
-            args,
-        });
-        let substitution = HashMap::from([(binding_id, surface)]);
+        let substitution = template
+            .template_def_stmt
+            .defined_bindings()
+            .into_iter()
+            .map(|binding| {
+                (
+                    binding.id,
+                    Obj::InstantiatedTemplateObj(InstantiatedTemplateObj {
+                        template_name: self.atomic_name_for_plain_prop_ref(binding.name.clone()),
+                        args: args.clone(),
+                    }),
+                )
+            })
+            .collect::<HashMap<_, _>>();
         let mut seen = HashSet::new();
         let mut published = Vec::new();
         for source_fact_id in source_ids {
@@ -152,82 +161,56 @@ impl Runtime {
     }
 }
 
-fn definition_binding_and_fact_ids(
-    body: &ExecStmtResult,
-) -> RuntimeResult<(IdentifierId, Vec<FactId>)> {
+fn definition_fact_ids(body: &ExecStmtResult) -> RuntimeResult<Vec<FactId>> {
     Ok(match body {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjInNonemptySet(
-                ExecHaveObjInNonemptySetStmtResult::Success(result),
+                ExecHaveObjInNonemptySetStmtResult::Success(p),
             ),
-        )) => (
-            result.statement.param_def.ordered_param_ids()[0],
-            result.store_and_infer_result.stored_fact_ids.clone(),
-        ),
+        )) => p.store_and_infer_result.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-            ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(result)),
-        )) => (
-            result.statement.param_def.ordered_param_ids()[0],
-            result.store_and_infer_result.stored_fact_ids.clone(),
-        ),
+            ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(p)),
+        )) => p.store_and_infer_result.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjByExistFacts(
-                ExecHaveObjByExistFactsStmtResult::Success(result),
+                ExecHaveObjByExistFactsStmtResult::Success(p),
             ),
-        )) => (
-            result.statement.param_def.ordered_param_ids()[0],
-            result.store_and_infer_result.stored_fact_ids.clone(),
-        ),
+        )) => p.store_and_infer_result.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveByReplacementAxiom(
-                ExecHaveByReplacementAxiomStmtResult::Success(result),
+                ExecHaveByReplacementAxiomStmtResult::Success(p),
             ),
-        )) => (result.statement.name.id, result.stored_fact_ids.clone()),
+        )) => p.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::ObtainObjFromExistFact(
-                ExecObtainObjFromExistFactStmtResult::Success(result),
+                ExecObtainObjFromExistFactStmtResult::Success(p),
             ),
-        )) => (
-            result.statement.equal_tos[0].id,
-            result.store_and_infer_result.stored_fact_ids.clone(),
-        ),
+        )) => p.store_and_infer_result.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
-                ExecObtainObjFromAtomicFactStmtResult::Success(result),
+                ExecObtainObjFromAtomicFactStmtResult::Success(p),
             ),
-        )) => (
-            result.statement.equal_tos[0].id,
-            result.store_and_infer_result.stored_fact_ids.clone(),
-        ),
+        )) => p.store_and_infer_result.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
-            ExecHaveFnEqualStmtResult::Success(result),
-        )) => (
-            result.statement.name.id,
-            result.store_and_infer_result.stored_fact_ids.clone(),
-        ),
+            ExecHaveFnEqualStmtResult::Success(p),
+        )) => p.store_and_infer_result.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
-            ExecHaveFnEqualCaseByCaseStmtResult::Success(result),
-        )) => (
-            result.statement.name.id,
-            result.store_and_infer_result.stored_fact_ids.clone(),
-        ),
+            ExecHaveFnEqualCaseByCaseStmtResult::Success(p),
+        )) => p.store_and_infer_result.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(
-            ExecHaveFnByForallExistUniqueStmtResult::Success(result),
-        )) => (result.statement.name.id, result.stored_fact_ids.clone()),
+            ExecHaveFnByForallExistUniqueStmtResult::Success(p),
+        )) => p.stored_fact_ids.clone(),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
-            ExecHaveFnByInducStmtResult::Success(result),
-        )) => (
-            result.statement.name.id,
-            result.store_and_infer_result.stored_fact_ids.clone(),
-        ),
+            ExecHaveFnByInducStmtResult::Success(p),
+        )) => p.store_and_infer_result.stored_fact_ids.clone(),
         ExecStmtResult::Trust(ExecTrustBoundaryStmtResult::TrustHaveStmt(
-            ExecTrustHaveStmtResult::Success(result),
+            ExecTrustHaveStmtResult::Success(p),
         )) => {
-            let mut ids = result.defined_param_store_and_infer.stored_fact_ids.clone();
-            for stored in &result.body_store_and_infer_results {
-                ids.extend(stored.stored_fact_ids());
+            let mut ids = p.defined_param_store_and_infer.stored_fact_ids.clone();
+            for store in &p.body_store_and_infer_results {
+                ids.extend(store.stored_fact_ids());
             }
-            (result.statement.param_def.ordered_param_ids()[0], ids)
+            ids
         }
         _ => {
             return Err(RuntimeError::InternalBug(

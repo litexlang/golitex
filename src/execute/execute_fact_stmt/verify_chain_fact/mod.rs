@@ -10,4 +10,4 @@ pub use well_defined_result::{
     VerifyChainFactWellDefinedResult,
 };
 
-pub(crate) use result::VerifyChainFactSuccess;
+pub(crate) use result::{KnownForallChainProof, VerifyChainFactSuccess};

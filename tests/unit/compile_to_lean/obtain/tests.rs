@@ -327,6 +327,18 @@ fn have_by_existence_replays_global_and_local_choices() {
     let output = compiler.compile_run(&run, "have_by_existence").unwrap();
     assert!(output.contains("Classical.choose"));
     assert!(output.contains("rcases"));
+    for statement in &run.statement_results {
+        if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjByExistFacts(
+                crate::execute::ExecHaveObjByExistFactsStmtResult::Success(proof),
+            ),
+        )) = statement
+        {
+            let id = proof.verify_exist.fact.plain().fact_id.value();
+            assert_eq!(output.matches(&format!("theorem h_{id} :")).count(), 1);
+            assert!(output.contains(&format!("Classical.choose ((h_{id} (M := M)))")));
+        }
+    }
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
         ExecDefineObjStmtResult::HaveObjByExistFacts(
             crate::execute::ExecHaveObjByExistFactsStmtResult::Success(proof),

@@ -484,7 +484,9 @@ impl LitexToLeanCompiler {
         }
         if matches!(
             builtin.theorem,
-            BuiltinTheoremId::MatrixPowerZero | BuiltinTheoremId::MatrixPowerSuccessor
+            BuiltinTheoremId::MatrixPowerZero
+                | BuiltinTheoremId::MatrixPowerSuccessor
+                | BuiltinTheoremId::MatrixPowerAdd
         ) {
             return self.compile_builtin_matrix_power_theorem(
                 call,
@@ -504,6 +506,9 @@ impl LitexToLeanCompiler {
             BuiltinTheoremId::MatrixRankBounds
                 | BuiltinTheoremId::MatrixRankZero
                 | BuiltinTheoremId::MatrixRankIdentity
+                | BuiltinTheoremId::MatrixRankTranspose
+                | BuiltinTheoremId::MatrixRankAdjoint
+                | BuiltinTheoremId::MatrixRankInvertible
         ) {
             return self.compile_builtin_rank_theorem(
                 call,
@@ -518,9 +523,38 @@ impl LitexToLeanCompiler {
                 position,
             );
         }
+        if builtin.theorem == BuiltinTheoremId::MatrixInverseLaws {
+            return self.compile_builtin_matrix_inverse_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::MatrixAdjugateIdentity {
+            return self.compile_builtin_matrix_adjugate_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if matches!(
             builtin.theorem,
-            BuiltinTheoremId::MatrixDetIdentity
+            BuiltinTheoremId::MatrixDetMul
+                | BuiltinTheoremId::MatrixDetIdentity
                 | BuiltinTheoremId::MatrixDetTranspose
                 | BuiltinTheoremId::MatrixDetAdjoint
         ) {
@@ -554,8 +588,309 @@ impl LitexToLeanCompiler {
                 position,
             );
         }
+        if builtin.theorem == BuiltinTheoremId::InnerProductConjugateSymmetry {
+            return self.compile_builtin_inner_symmetry_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixTraceLinearity | BuiltinTheoremId::MatrixTraceCyclic
+        ) {
+            return self.compile_builtin_trace_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixMulIdentity | BuiltinTheoremId::MatrixMulZero
+        ) {
+            return self.compile_builtin_matrix_simple_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixMulAssociative
+                | BuiltinTheoremId::MatrixMulDistributiveLeft
+                | BuiltinTheoremId::MatrixMulDistributiveRight
+        ) {
+            return self.compile_builtin_matrix_algebra_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixApplyIdentity | BuiltinTheoremId::MatrixApplyCompose
+        ) {
+            return self.compile_builtin_matrix_apply_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixTransposeMul | BuiltinTheoremId::MatrixAdjointMul
+        ) {
+            return self.compile_builtin_matrix_transform_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::FrobeniusNormScale {
+            return self.compile_builtin_frobenius_scale_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::FiniteSetHasBijectiveIndex {
+            return self.compile_builtin_finite_index_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::FiniteSetSummandLessEqualSum {
+            return self.compile_builtin_finite_summand_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::SumLessEqualFromPointwise {
+            return self.compile_builtin_range_sum_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromFamily
+                | BuiltinTheoremId::IndexCartesianNonemptyByChoiceFromPointwise
+        ) {
+            return self.compile_builtin_indexed_choice_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::FamilyIntersectionMemberFacts {
+            return self.compile_builtin_intersection_facts_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FiniteSetSumSubstitution
+                | BuiltinTheoremId::FiniteSetSumLessEqualFromPointwise
+        ) {
+            return self.compile_builtin_finite_sum_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::RationalHasUniqueReducedFraction {
+            return self.compile_builtin_reduced_fraction_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::GcdWithPrimeIsOneOrPrime
+                | BuiltinTheoremId::PrimeDividesProduct
+                | BuiltinTheoremId::PrimeDividesPower
+                | BuiltinTheoremId::PrimeDivisor
+        ) {
+            return self.compile_builtin_number_theory_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::RealArchimedeanNaturalUpperBound
+                | BuiltinTheoremId::RationalBetweenReals
+        ) {
+            return self.compile_builtin_dense_order_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::SubsetOfFiniteSetIsFinite {
+            return self.compile_builtin_finite_subset_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if builtin.theorem == BuiltinTheoremId::FiniteSetReduceSingleton {
             return self.compile_builtin_fold_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::SumOverBijectiveFiniteSetEnumerations {
+            return self.compile_builtin_enumeration_sum_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::InnerProductPositive {
+            return self.compile_builtin_inner_positive_theorem(
                 call,
                 builtin,
                 derivation,
@@ -575,6 +910,7 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::IndexedIntersectionMember
                 | BuiltinTheoremId::IndexCartesianMember
                 | BuiltinTheoremId::DefinedSetMember
+                | BuiltinTheoremId::StructMember
                 | BuiltinTheoremId::CartesianMemberFromCoordinates
                 | BuiltinTheoremId::FunctionSetMember
         ) || !matches!(derivation, TheoremDerivationProof::NativeSchema)
@@ -619,6 +955,7 @@ impl LitexToLeanCompiler {
                 BuiltinTheoremId::SetBuilderMember
                 | BuiltinTheoremId::FamilyIntersectionMember
                 | BuiltinTheoremId::DefinedSetMember
+                | BuiltinTheoremId::StructMember
                 | BuiltinTheoremId::IndexedIntersectionMember
                 | BuiltinTheoremId::IndexCartesianMember,
                 None,
@@ -735,6 +1072,20 @@ impl LitexToLeanCompiler {
                     return Err(LeanCompileError::unsupported(
                         "BuiltinMembership/DefinedSet",
                     ));
+                }
+                references.remove(0)
+            }
+            BuiltinTheoremId::StructMember => {
+                // The verifier's structural membership proof is the premise
+                // of this identity contract. Replay it before publishing the
+                // conclusion, even when the two share their original fact ID.
+                if !matches!(
+                    member.set,
+                    Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(_))
+                ) || builtin.requirements.len() != 1
+                    || builtin.requirements[0].ir() != builtin.conclusions[0].ir()
+                {
+                    return Err(LeanCompileError::unsupported("BuiltinMembership/Struct"));
                 }
                 references.remove(0)
             }

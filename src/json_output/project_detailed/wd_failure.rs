@@ -36,12 +36,29 @@ pub(super) fn project_fact_wd_failure(
         ExistFact(p) => project_exist_wd_failure(p, rt),
         ForallFact(p) => project_forall_wd_failure(p, rt),
         ForallFactWithIff(p) => match p {
+            crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::Local(local) => {
+                use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallIffWellDefinedLocalFailed;
+                match &local.failure {
+                    ForallIffWellDefinedLocalFailed::Parameters(failed) => project_parameter_wd_failure(&failed.failed, rt, "param type well-definedness failed"),
+                    ForallIffWellDefinedLocalFailed::Premise { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
+                    ForallIffWellDefinedLocalFailed::LeftSide { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
+                    ForallIffWellDefinedLocalFailed::RightSide { failed_index, failed_iff, .. } => node(rt, "failed_iff", Some(*failed_index), project_fact_wd_failure(failed_iff, rt)),
+                }
+            },
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::ParamType { reason: p, .. } => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::DomFact { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::ThenFact { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::IffFact { failed_index, failed_iff, .. } => node(rt, "failed_iff", Some(*failed_index), project_fact_wd_failure(failed_iff, rt)),
         },
         NotForall(p) => match p {
+            crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::Local(local) => {
+                use crate::execute::execute_fact_stmt::verify_not_forall_fact::NotForallWellDefinedLocalFailed;
+                match &local.failure {
+                    NotForallWellDefinedLocalFailed::Parameters(failed) => project_parameter_wd_failure(&failed.failed, rt, "param type well-definedness failed"),
+                    NotForallWellDefinedLocalFailed::Premise { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
+                    NotForallWellDefinedLocalFailed::Conclusion { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
+                }
+            },
             crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::ParamType { reason: p, .. } => node(rt, "parameter_type", None, project_obj_wd_failure(p, rt)),
             crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::DomFact { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
             crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::ThenFact { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
@@ -56,6 +73,28 @@ pub(super) fn project_exist_wd_failure(
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::FailToVerifyExistShapedFactWellDefinedResult;
     let projected = match failure {
+        FailToVerifyExistShapedFactWellDefinedResult::Local(local) => {
+            use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedWellDefinedLocalFailed;
+            match &local.failure {
+                ExistShapedWellDefinedLocalFailed::Parameters(failed) => {
+                    project_parameter_wd_failure(
+                        &failed.failed,
+                        rt,
+                        "param type well-definedness failed",
+                    )
+                }
+                ExistShapedWellDefinedLocalFailed::Body {
+                    failed_index,
+                    failed_body,
+                    ..
+                } => node(
+                    rt,
+                    "failed_body",
+                    Some(*failed_index),
+                    project_fact_wd_failure(failed_body, rt),
+                ),
+            }
+        }
         FailToVerifyExistShapedFactWellDefinedResult::ParamType { reason: failed, .. } => node(
             rt,
             "parameter_type",
@@ -86,6 +125,68 @@ pub(super) fn project_forall_wd_failure(
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFactWellDefinedResult::*;
     let projected = match failure {
+        LocalIntroduction(local) => {
+            use crate::execute::execute_fact_stmt::verify_forall_fact::ForallIntroductionFormationFailed;
+            use crate::execute::IntroduceTypedParametersFailed;
+            match &local.failure {
+                ForallIntroductionFormationFailed::Parameters(failed) => match failed {
+                    IntroduceTypedParametersFailed::ParamType(failed)
+                    | IntroduceTypedParametersFailed::ParamTypeWithPrefix { failed, .. } => {
+                        project_parameter_wd_failure(
+                            failed,
+                            rt,
+                            "forall: typed parameter well-definedness failed",
+                        )
+                    }
+                    IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. } => {
+                        project_forall_open_failure(failed, rt)
+                    }
+                },
+                ForallIntroductionFormationFailed::Premise {
+                    failed_index,
+                    failed_dom,
+                    ..
+                } => node(
+                    rt,
+                    "failed_dom",
+                    Some(*failed_index),
+                    project_fact_wd_failure(failed_dom, rt),
+                ),
+            }
+        }
+        LocalWellDefinedness(local) => {
+            use crate::execute::execute_fact_stmt::verify_forall_fact::ForallWellDefinedLocalFailed;
+            match &local.failure {
+                ForallWellDefinedLocalFailed::Parameters(failed) => project_parameter_wd_failure(
+                    &failed.failed,
+                    rt,
+                    "param type well-definedness failed",
+                ),
+                ForallWellDefinedLocalFailed::AutoOpen { failed, .. } => {
+                    project_forall_open_failure(failed, rt)
+                }
+                ForallWellDefinedLocalFailed::Premise {
+                    failed_index,
+                    failed_dom,
+                    ..
+                } => node(
+                    rt,
+                    "failed_dom",
+                    Some(*failed_index),
+                    project_fact_wd_failure(failed_dom, rt),
+                ),
+                ForallWellDefinedLocalFailed::Conclusion {
+                    failed_index,
+                    failed_then,
+                    ..
+                } => node(
+                    rt,
+                    "failed_then",
+                    Some(*failed_index),
+                    project_fact_wd_failure(failed_then, rt),
+                ),
+            }
+        }
         ParamType { reason: p, .. } => {
             node(rt, "parameter_type", None, project_obj_wd_failure(p, rt))
         }
@@ -122,6 +223,45 @@ pub(super) fn project_forall_wd_failure(
         rt,
         projected,
         crate::ast::fact::Fact::ForallFact(failure.fact().clone()),
+    )
+}
+
+fn project_parameter_wd_failure(
+    failed: &crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult,
+    rt: &Runtime,
+    fallback: &str,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::VerifyObjWellDefinedResult;
+    match failed {
+        VerifyObjWellDefinedResult::Failed { reason, .. } => node(
+            rt,
+            "parameter_type",
+            None,
+            project_obj_wd_failure(reason, rt),
+        ),
+        _ => node(
+            rt,
+            "parameter_type",
+            None,
+            project_obj_wd_failure(
+                &crate::execute::execute_fact_stmt::fail_to_verify_obj_well_defined_others(
+                    fallback.to_owned(),
+                ),
+                rt,
+            ),
+        ),
+    }
+}
+
+fn project_forall_open_failure(
+    failed: &crate::execute::FailToReleaseOneStructLayer,
+    rt: &Runtime,
+) -> JsonValue {
+    crate::json_output::helper::with_failure_diagnostic(
+        rt,
+        super::definition_failure::project_struct_layer_failure(failed, rt),
+        crate::json_output::failure_kind::FailureKind::WellDefined,
+        vec![],
     )
 }
 

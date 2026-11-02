@@ -3,8 +3,8 @@
 Task: detailed per-statement tests requested on 2026-10-01.
 The authoritative inventory is `src/ast/stmt.rs`: 52 reachable statement
 leaves, including `Stmt::Fact`. Each leaf has one primary `.lit` file with
-multiple runnable scenarios. There are 174 positive scenarios,
-143 negative scenarios, 24 additional boundary/regression checks, and no open
+multiple runnable scenarios. There are 176 positive scenarios,
+160 negative scenarios, 24 additional boundary/regression checks, and no open
 K-number gap reproduction. Each scenario runs independently;
 each complete primary file also runs in a fresh process.
 
@@ -29,6 +29,23 @@ The field-function and square-inference repair (historical task record; retired)
 passes a fresh scoped CLI gate of 378 Stmt checks and 175 basics, plus 46
 relevant Rust tests. Its new tracers live with their Stmt/infer owners; this
 is not a full release or independent-replay claim.
+
+## Current CLI compatibility qualification
+
+The legacy Python runner still reads failure phases from each statement's
+`why_failed.phase`. Current Normal output instead puts diagnostics in the
+run's `errors` array, keyed by `statement_index`. Its old `by_def` expected
+phase labels also need migration to the actual `definition_requirement` or
+`goal_wd` stages. Consequently, the current `ByDefStmt` leaf run passes four
+positive checks but reports three phase-extraction failures for correctly
+rejected inputs. The previous reading executable and the current one emit
+identical Normal results on those seven checks; this is not a newly accepted
+or rejected mathematical statement. The runner is not currently a green gate.
+
+The interactive-reading work retains these exact reports and independently
+checks the current CLI envelopes, statement statuses, diagnostic indices and
+phases. Migrate the shared runner and its legacy phase expectations together
+before treating it as an authoritative all-statement regression gate.
 
 ## Run
 
@@ -153,7 +170,7 @@ recursive `.lit` file in this directory as a positive example.
 | --- | --- | ---: | ---: |
 | `Fact` | [fact.lit](fact.lit) | 4 | 4 |
 | `TrustStmt` | [trust_stmt.lit](trust_stmt.lit) | 3 | 2 |
-| `TrustHaveStmt` | [trust_have_stmt.lit](trust_have_stmt.lit) | 3 | 2 |
+| `TrustHaveStmt` | [trust_have_stmt.lit](trust_have_stmt.lit) | 3 | 3 |
 | `LetObjStmt` | [let_obj_stmt.lit](let_obj_stmt.lit) | 3 | 3 |
 | `HaveObjInNonemptySetStmt` | [have_obj_in_nonempty_set_stmt.lit](have_obj_in_nonempty_set_stmt.lit) | 3 | 2 |
 | `HaveObjEqualStmt` | [have_obj_equal_stmt.lit](have_obj_equal_stmt.lit) | 3 | 4 |
@@ -166,13 +183,13 @@ recursive `.lit` file in this directory as a positive example.
 | `HaveFnEqualCaseByCaseStmt` | [have_fn_equal_case_by_case_stmt.lit](have_fn_equal_case_by_case_stmt.lit) | 3 | 2 |
 | `HaveFnByInducStmt` | [have_fn_by_induc_stmt.lit](have_fn_by_induc_stmt.lit) | 4 | 2 |
 | `HaveFnByForallExistUniqueStmt` | [have_fn_by_forall_exist_unique_stmt.lit](have_fn_by_forall_exist_unique_stmt.lit) | 3 | 2 |
-| `DefPropStmt` | [def_prop_stmt.lit](def_prop_stmt.lit) | 3 | 3 |
+| `DefPropStmt` | [def_prop_stmt.lit](def_prop_stmt.lit) | 5 | 7 |
 | `DefAbstractPropStmt` | [def_abstract_prop_stmt.lit](def_abstract_prop_stmt.lit) | 3 | 2 |
-| `DefTemplateStmt` | [def_template_stmt.lit](def_template_stmt.lit) | 9 | 2 |
-| `DefStructStmt` | [def_struct_stmt.lit](def_struct_stmt.lit) | 3 | 3 |
+| `DefTemplateStmt` | [def_template_stmt.lit](def_template_stmt.lit) | 9 | 3 |
+| `DefStructStmt` | [def_struct_stmt.lit](def_struct_stmt.lit) | 3 | 4 |
 | `DefAlgoByCasesStmt` | [def_algo_by_cases_stmt.lit](def_algo_by_cases_stmt.lit) | 3 | 2 |
 | `DefAlgoByInducStmt` | [def_algo_by_induc_stmt.lit](def_algo_by_induc_stmt.lit) | 5 | 2 |
-| `DefThmStmt` | [def_thm_stmt.lit](def_thm_stmt.lit) | 3 | 2 |
+| `DefThmStmt` | [def_thm_stmt.lit](def_thm_stmt.lit) | 3 | 6 |
 | `AxiomStmt` | [axiom_stmt.lit](axiom_stmt.lit) | 3 | 2 |
 | `DefStrategyStmt` | [def_strategy_stmt.lit](def_strategy_stmt.lit) | 4 | 3 |
 | `ReleaseThmStmt` | [release_thm_stmt.lit](release_thm_stmt.lit) | 3 | 3 |
@@ -194,7 +211,7 @@ recursive `.lit` file in this directory as a positive example.
 | `ByThmStmt` | [by_thm_stmt.lit](by_thm_stmt.lit) | 3 | 2 |
 | `RegisterReflexivePropStmt` | [register_reflexive_prop_stmt.lit](register_reflexive_prop_stmt.lit) | 3 | 5 |
 | `RegisterSymmetricPropStmt` | [register_symmetric_prop_stmt.lit](register_symmetric_prop_stmt.lit) | 3 | 5 |
-| `RegisterTransitivePropStmt` | [register_transitive_prop_stmt.lit](register_transitive_prop_stmt.lit) | 3 | 5 |
+| `RegisterTransitivePropStmt` | [register_transitive_prop_stmt.lit](register_transitive_prop_stmt.lit) | 3 | 6 |
 | `WitnessExistFact` | [witness_exist_fact.lit](witness_exist_fact.lit) | 3 | 3 |
 | `WitnessAtomicFact` | [witness_atomic_fact.lit](witness_atomic_fact.lit) | 3 | 3 |
 | `WitnessNonemptySet` | [witness_nonempty_set.lit](witness_nonempty_set.lit) | 3 | 2 |

@@ -38,6 +38,9 @@ impl LitexToLeanCompiler {
                 InferEqualFactResult::PositiveRealPower(rule) => {
                     self.compile_positive_power_inference(rule, source, compiled, &group)?
                 }
+                InferEqualFactResult::TupleCoordinates(rule) => {
+                    self.compile_tuple_coordinate_inference(rule, source, compiled, &group)?
+                }
             };
             declarations.extend(emitted);
         }

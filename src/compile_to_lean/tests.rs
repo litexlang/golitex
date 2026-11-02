@@ -1,9 +1,59 @@
+#[path = "../../tests/unit/compile_to_lean/abs_builtin_tests.rs"]
+mod abs_builtin_tests;
+#[path = "../../tests/unit/compile_to_lean/complex_projection_builtin_tests.rs"]
+mod complex_projection_builtin_tests;
+#[path = "../../tests/unit/compile_to_lean/dense_order_theorem_tests.rs"]
+mod dense_order_theorem_tests;
+#[path = "../../tests/unit/compile_to_lean/dense_order_witness_tests.rs"]
+mod dense_order_witness_tests;
+#[path = "../../tests/unit/compile_to_lean/dvd_definition_tests.rs"]
+mod dvd_definition_tests;
+#[path = "../../tests/unit/compile_to_lean/dvd_inference_tests.rs"]
+mod dvd_inference_tests;
+#[path = "../../tests/unit/compile_to_lean/elementary_identity_tests.rs"]
+mod elementary_identity_tests;
 #[path = "../../tests/unit/compile_to_lean/exist_unique_tests.rs"]
 mod exist_unique_tests;
+#[path = "../../tests/unit/compile_to_lean/exponential_logarithm_tests.rs"]
+mod exponential_logarithm_tests;
+#[path = "../../tests/unit/compile_to_lean/finite_cardinality_tests.rs"]
+mod finite_cardinality_tests;
+#[path = "../../tests/unit/compile_to_lean/finite_subset_theorem_tests.rs"]
+mod finite_subset_theorem_tests;
+#[path = "../../tests/unit/compile_to_lean/integer_elementary_tests.rs"]
+mod integer_elementary_tests;
+#[path = "../../tests/unit/compile_to_lean/log_algebra_tests.rs"]
+mod log_algebra_tests;
 #[path = "../../tests/unit/compile_to_lean/logical_closing_tests.rs"]
 mod logical_closing_tests;
+#[path = "../../tests/unit/compile_to_lean/member_witness_tests.rs"]
+mod member_witness_tests;
+#[path = "../../tests/unit/compile_to_lean/multi_output_template_tests.rs"]
+mod multi_output_template_tests;
+#[path = "../../tests/unit/compile_to_lean/negative_factor_order_tests.rs"]
+mod negative_factor_order_tests;
 #[path = "../../tests/unit/compile_to_lean/not_exist_tests.rs"]
 mod not_exist_tests;
+#[path = "../../tests/unit/compile_to_lean/number_theory_theorem_tests.rs"]
+mod number_theory_theorem_tests;
+#[path = "../../tests/unit/compile_to_lean/prime_inference_tests.rs"]
+mod prime_inference_tests;
+#[path = "../../tests/unit/compile_to_lean/rational_integer_witness_tests.rs"]
+mod rational_integer_witness_tests;
+#[path = "../../tests/unit/compile_to_lean/reduced_fraction_theorem_tests.rs"]
+mod reduced_fraction_theorem_tests;
+#[path = "../../tests/unit/compile_to_lean/rounding_bounds_tests.rs"]
+mod rounding_bounds_tests;
+#[path = "../../tests/unit/compile_to_lean/set_builtin_tests.rs"]
+mod set_builtin_tests;
+#[path = "../../tests/unit/compile_to_lean/signed_bound_tests.rs"]
+mod signed_bound_tests;
+#[path = "../../tests/unit/compile_to_lean/sqrt_builtin_tests.rs"]
+mod sqrt_builtin_tests;
+#[path = "../../tests/unit/compile_to_lean/sqrt_known_argument_tests.rs"]
+mod sqrt_known_argument_tests;
+#[path = "../../tests/unit/compile_to_lean/transcendental_builtin_tests.rs"]
+mod transcendental_builtin_tests;
 #[path = "../../tests/unit/compile_to_lean/unique_contra_tests.rs"]
 mod unique_contra_tests;
 
@@ -20,8 +70,22 @@ mod extremum_strategy_tests;
 mod finite_product_pointwise_tests;
 #[path = "../../tests/unit/compile_to_lean/mod_congruence_tests.rs"]
 mod mod_congruence_tests;
+#[path = "../../tests/unit/compile_to_lean/module_closure_tests.rs"]
+mod module_closure_tests;
+#[path = "../../tests/unit/compile_to_lean/module_identifier_tests.rs"]
+mod module_identifier_tests;
+#[path = "../../tests/unit/compile_to_lean/module_predicate_tests.rs"]
+mod module_predicate_tests;
+#[path = "../../tests/unit/compile_to_lean/native_matrix_basic_law_tests.rs"]
+mod native_matrix_basic_law_tests;
 #[path = "../../tests/unit/compile_to_lean/native_matrix_law_tests.rs"]
 mod native_matrix_law_tests;
+#[path = "../../tests/unit/compile_to_lean/native_matrix_rank_transform_tests.rs"]
+mod native_matrix_rank_transform_tests;
+#[path = "../../tests/unit/compile_to_lean/native_vector_law_tests.rs"]
+mod native_vector_law_tests;
+#[path = "../../tests/unit/compile_to_lean/strategy_replay_tests.rs"]
+mod strategy_replay_tests;
 #[path = "../../tests/unit/compile_to_lean/template_membership_replay_tests.rs"]
 mod template_membership_replay_tests;
 
@@ -2495,7 +2559,19 @@ fn phase2_hierarchy_and_rational_closure_preserve_structural_carriers() {
         }
         let error = compile_run(&result, &compiler, "phase2_corrupted_hierarchy")
             .expect_err("value-level inclusion must preserve the original evidence checks");
-        assert_eq!(error.route, expected_route, "{change}");
+        if change == "reverse" {
+            // This mutation also invalidates the child's original carrier WD.
+            // Either rejection may occur before the illegal reverse inclusion.
+            assert!(
+                matches!(
+                    error.route.as_str(),
+                    "WD/Producer" | "StructuralMembership/StandardSuperset"
+                ),
+                "{error}"
+            );
+        } else {
+            assert_eq!(error.route, expected_route, "{change}");
+        }
     }
 
     let (mut result, compiler) = execute(PHASE2_DIVISION);
@@ -3599,6 +3675,9 @@ mod composition_tests;
 #[path = "../../tests/unit/compile_to_lean/returned_function_tests.rs"]
 mod returned_function_tests;
 
+#[path = "../../tests/unit/compile_to_lean/matrix_formula_body_tests.rs"]
+mod matrix_formula_body_tests;
+
 #[path = "../../tests/unit/compile_to_lean/abstract_predicate_tests.rs"]
 mod abstract_predicate_tests;
 #[path = "../../tests/unit/compile_to_lean/captured_function_tests.rs"]
@@ -3606,8 +3685,18 @@ mod captured_function_tests;
 #[path = "../../tests/unit/compile_to_lean/literal_function_tests.rs"]
 mod literal_function_tests;
 
+#[path = "../../tests/unit/compile_to_lean/dependent_record_carrier_tests.rs"]
+mod dependent_record_carrier_tests;
+#[path = "../../tests/unit/compile_to_lean/record_projection_tests.rs"]
+mod record_projection_tests;
 #[path = "../../tests/unit/compile_to_lean/struct_tests.rs"]
 mod struct_tests;
+
+#[path = "../../tests/unit/compile_to_lean/returned_record_field_tests.rs"]
+mod returned_record_field_tests;
+
+#[path = "../../tests/unit/compile_to_lean/template_record_field_tests.rs"]
+mod template_record_field_tests;
 
 #[path = "../../tests/unit/compile_to_lean/dependent_struct_tests.rs"]
 mod dependent_struct_tests;
@@ -3704,3 +3793,290 @@ mod function_derivative_tests;
 
 #[path = "../../tests/unit/compile_to_lean/automatic_derivative_tests.rs"]
 mod automatic_derivative_tests;
+#[path = "../../tests/unit/compile_to_lean/multivariable_scalar_limit_tests.rs"]
+mod multivariable_scalar_limit_tests;
+
+#[path = "../../tests/unit/compile_to_lean/multivariable_vector_limit_tests.rs"]
+mod multivariable_vector_limit_tests;
+
+#[path = "../../tests/unit/compile_to_lean/partial_derivative_tests.rs"]
+mod partial_derivative_tests;
+
+#[path = "../../tests/unit/compile_to_lean/divergence_tests.rs"]
+mod divergence_tests;
+#[path = "../../tests/unit/compile_to_lean/gradient_tests.rs"]
+mod gradient_tests;
+#[path = "../../tests/unit/compile_to_lean/jacobian_tests.rs"]
+mod jacobian_tests;
+
+#[path = "../../tests/unit/compile_to_lean/module_function_tests.rs"]
+mod module_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_trace_tests.rs"]
+mod native_matrix_trace_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_simple_tests.rs"]
+mod native_matrix_simple_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_algebra_tests.rs"]
+mod native_matrix_algebra_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_apply_tests.rs"]
+mod native_matrix_apply_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_transform_tests.rs"]
+mod native_matrix_transform_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_power_frobenius_tests.rs"]
+mod native_power_frobenius_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_det_product_tests.rs"]
+mod native_matrix_det_product_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_adjugate_tests.rs"]
+mod native_matrix_adjugate_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_inverse_tests.rs"]
+mod native_matrix_inverse_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_rank_invertible_tests.rs"]
+mod native_matrix_rank_invertible_tests;
+
+#[path = "../../tests/unit/compile_to_lean/empty_function_return_tests.rs"]
+mod empty_function_return_tests;
+#[path = "../../tests/unit/compile_to_lean/finite_complete_domain_tests.rs"]
+mod finite_complete_domain_tests;
+#[path = "../../tests/unit/compile_to_lean/function_graph_nonempty_tests.rs"]
+mod function_graph_nonempty_tests;
+#[path = "../../tests/unit/compile_to_lean/function_range_empty_tests.rs"]
+mod function_range_empty_tests;
+#[path = "../../tests/unit/compile_to_lean/function_range_widening_tests.rs"]
+mod function_range_widening_tests;
+#[path = "../../tests/unit/compile_to_lean/function_space_nonempty_tests.rs"]
+mod function_space_nonempty_tests;
+
+#[path = "../../tests/unit/compile_to_lean/curl_tests.rs"]
+mod curl_tests;
+
+#[path = "../../tests/unit/compile_to_lean/second_partial_tests.rs"]
+mod second_partial_tests;
+
+#[path = "../../tests/unit/compile_to_lean/hessian_tests.rs"]
+mod hessian_tests;
+
+#[path = "../../tests/unit/compile_to_lean/laplacian_tests.rs"]
+mod laplacian_tests;
+
+#[path = "../../tests/unit/compile_to_lean/scalar_differential_tests.rs"]
+mod scalar_differential_tests;
+
+#[path = "../../tests/unit/compile_to_lean/total_differential_tests.rs"]
+mod total_differential_tests;
+
+#[path = "../../tests/unit/compile_to_lean/riemann_integral_tests.rs"]
+mod riemann_integral_tests;
+
+#[path = "../../tests/unit/compile_to_lean/trig_principal_tests.rs"]
+mod trig_principal_tests;
+
+#[path = "../../tests/unit/compile_to_lean/power_builtin_tests.rs"]
+mod power_builtin_tests;
+
+#[path = "../../tests/unit/compile_to_lean/finite_index_theorem_tests.rs"]
+mod finite_index_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/inverse_principal_bounds_tests.rs"]
+mod inverse_principal_bounds_tests;
+
+#[path = "../../tests/unit/compile_to_lean/absolute_order_tests.rs"]
+mod absolute_order_tests;
+
+#[path = "../../tests/unit/compile_to_lean/log_product_sign_tests.rs"]
+mod log_product_sign_tests;
+
+#[path = "../../tests/unit/compile_to_lean/integer_power_profile_tests.rs"]
+mod integer_power_profile_tests;
+
+#[path = "../../tests/unit/compile_to_lean/scalar_identity_tests.rs"]
+mod scalar_identity_tests;
+
+#[path = "../../tests/unit/compile_to_lean/elementary_arithmetic_tests.rs"]
+mod elementary_arithmetic_tests;
+
+#[path = "../../tests/unit/compile_to_lean/finite_sum_theorem_tests.rs"]
+mod finite_sum_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/finite_set_transport_tests.rs"]
+mod finite_set_transport_tests;
+
+#[path = "../../tests/unit/compile_to_lean/finite_summand_theorem_tests.rs"]
+mod finite_summand_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/range_sum_theorem_tests.rs"]
+mod range_sum_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/or_order_builtin_tests.rs"]
+mod or_order_builtin_tests;
+
+#[path = "../../tests/unit/compile_to_lean/or_residue_builtin_tests.rs"]
+mod or_residue_builtin_tests;
+
+#[path = "../../tests/unit/compile_to_lean/or_implication_builtin_tests.rs"]
+mod or_implication_builtin_tests;
+
+#[path = "../../tests/unit/compile_to_lean/or_existing_profile_tests.rs"]
+mod or_existing_profile_tests;
+
+#[path = "../../tests/unit/compile_to_lean/indexed_choice_theorem_tests.rs"]
+mod indexed_choice_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/intersection_facts_theorem_tests.rs"]
+mod intersection_facts_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/struct_member_theorem_tests.rs"]
+mod struct_member_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/enumeration_sum_theorem_tests.rs"]
+mod enumeration_sum_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/inner_positive_theorem_tests.rs"]
+mod inner_positive_theorem_tests;
+
+#[path = "../../tests/unit/compile_to_lean/composition_match_tests.rs"]
+mod composition_match_tests;
+#[path = "../../tests/unit/compile_to_lean/constant_function_range_tests.rs"]
+mod constant_function_range_tests;
+#[path = "../../tests/unit/compile_to_lean/finite_constructor_equality_tests.rs"]
+mod finite_constructor_equality_tests;
+#[path = "../../tests/unit/compile_to_lean/finite_seq_space_equality_tests.rs"]
+mod finite_seq_space_equality_tests;
+#[path = "../../tests/unit/compile_to_lean/function_constructor_equality_tests.rs"]
+mod function_constructor_equality_tests;
+#[path = "../../tests/unit/compile_to_lean/function_constructor_match_tests.rs"]
+mod function_constructor_match_tests;
+#[path = "../../tests/unit/compile_to_lean/function_graph_empty_tests.rs"]
+mod function_graph_empty_tests;
+#[path = "../../tests/unit/compile_to_lean/function_space_singleton_tests.rs"]
+mod function_space_singleton_tests;
+#[path = "../../tests/unit/compile_to_lean/interval_constructor_equality_tests.rs"]
+mod interval_constructor_equality_tests;
+#[path = "../../tests/unit/compile_to_lean/known_finite_seq_match_tests.rs"]
+mod known_finite_seq_match_tests;
+#[path = "../../tests/unit/compile_to_lean/known_sequence_match_tests.rs"]
+mod known_sequence_match_tests;
+#[path = "../../tests/unit/compile_to_lean/known_set_binary_match_tests.rs"]
+mod known_set_binary_match_tests;
+#[path = "../../tests/unit/compile_to_lean/known_symdiff_match_tests.rs"]
+mod known_symdiff_match_tests;
+#[path = "../../tests/unit/compile_to_lean/known_unary_set_match_tests.rs"]
+mod known_unary_set_match_tests;
+#[path = "../../tests/unit/compile_to_lean/native_symdiff_identity_tests.rs"]
+mod native_symdiff_identity_tests;
+#[path = "../../tests/unit/compile_to_lean/set_constructor_equality_tests.rs"]
+mod set_constructor_equality_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_range_empty_nested_tests.rs"]
+mod function_range_empty_nested_tests;
+
+#[path = "../../tests/unit/compile_to_lean/aggregate_output_tests.rs"]
+mod aggregate_output_tests;
+
+#[path = "../../tests/unit/compile_to_lean/integer_interval_context_tests.rs"]
+mod integer_interval_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/disjunctive_set_builder_tests.rs"]
+mod disjunctive_set_builder_tests;
+
+#[path = "../../tests/unit/compile_to_lean/raw_set_function_tests.rs"]
+mod raw_set_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/known_interval_match_tests.rs"]
+mod known_interval_match_tests;
+
+#[path = "../../tests/unit/compile_to_lean/known_cartesian_match_tests.rs"]
+mod known_cartesian_match_tests;
+
+#[path = "../../tests/unit/compile_to_lean/cartesian_coordinate_strategy_tests.rs"]
+mod cartesian_coordinate_strategy_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_application_strategy_tests.rs"]
+mod function_application_strategy_tests;
+
+#[path = "../../tests/unit/compile_to_lean/abs_product_strategy_tests.rs"]
+mod abs_product_strategy_tests;
+
+#[path = "../../tests/unit/compile_to_lean/scalar_forall_structure_tests.rs"]
+mod scalar_forall_structure_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_scalar_evaluation_tests.rs"]
+mod matrix_scalar_evaluation_tests;
+#[path = "../../tests/unit/compile_to_lean/template_function_replay_tests.rs"]
+mod template_function_replay_tests;
+
+#[path = "../../tests/unit/compile_to_lean/analytic_forall_structure_tests.rs"]
+mod analytic_forall_structure_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_contextual_structure_tests.rs"]
+mod matrix_contextual_structure_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_entrywise_context_tests.rs"]
+mod matrix_entrywise_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_linear_context_tests.rs"]
+mod matrix_linear_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/nested_record_value_tests.rs"]
+mod nested_record_value_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_multiply_context_tests.rs"]
+mod matrix_multiply_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/template_definition_body_tests.rs"]
+mod template_definition_body_tests;
+
+#[path = "../../tests/unit/compile_to_lean/selected_template_composition_tests.rs"]
+mod selected_template_composition_tests;
+#[path = "../../tests/unit/compile_to_lean/unique_template_function_tests.rs"]
+mod unique_template_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_graph_family_context_tests.rs"]
+mod matrix_graph_family_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_constant_context_tests.rs"]
+mod matrix_constant_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/obtained_template_composition_tests.rs"]
+mod obtained_template_composition_tests;
+
+#[path = "../../tests/unit/compile_to_lean/have_template_body_tests.rs"]
+mod have_template_body_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_remainder_context_tests.rs"]
+mod matrix_remainder_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/recursive_template_body_tests.rs"]
+mod recursive_template_body_tests;
+
+#[path = "../../tests/unit/compile_to_lean/recursive_template_citation_tests.rs"]
+mod recursive_template_citation_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_bound_head_context_tests.rs"]
+mod function_bound_head_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/set_kind_declaration_tests.rs"]
+mod set_kind_declaration_tests;
+
+#[path = "../../tests/unit/compile_to_lean/set_kind_quantifier_tests.rs"]
+mod set_kind_quantifier_tests;
+
+#[path = "../../tests/unit/compile_to_lean/replacement_template_tests.rs"]
+mod replacement_template_tests;
+
+#[path = "../../tests/unit/compile_to_lean/function_multigroup_context_tests.rs"]
+mod function_multigroup_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/exist_multigroup_context_tests.rs"]
+mod exist_multigroup_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/or_multigroup_context_tests.rs"]
+mod or_multigroup_context_tests;

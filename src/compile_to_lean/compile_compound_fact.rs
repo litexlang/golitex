@@ -20,7 +20,7 @@ impl LitexToLeanCompiler {
             }
             return self.compile_known_application(
                 &Fact::ChainFact(proof.fact.clone()),
-                known,
+                &known.application,
                 position,
             );
         }

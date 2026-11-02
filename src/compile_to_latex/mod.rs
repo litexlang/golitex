@@ -1,9 +1,12 @@
 //! Parse-only compilation into mathematical LaTeX with localized prose.
+#[cfg(test)]
+mod catalog_tests;
 mod compile;
 mod fact;
 mod helper;
 mod language;
 mod math_display;
+mod matrix;
 mod obj;
 mod source;
 mod stmt;

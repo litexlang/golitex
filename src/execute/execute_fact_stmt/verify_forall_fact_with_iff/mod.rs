@@ -9,5 +9,6 @@ pub use result::{
 pub use well_defined_result::{
     CompactForallFactWithIffWellDefinedProof, DetailedForallFactWithIffWellDefinedProof,
     FailToVerifyForallFactWithIffWellDefinedResult, ForallFactWithIffWellDefinedProof,
+    ForallIffWellDefinedLocalFailed, ForallIffWellDefinedLocalFailure,
     NormalForallFactWithIffWellDefinedProof, VerifyForallFactWithIffWellDefinedResult,
 };

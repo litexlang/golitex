@@ -11,10 +11,44 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_symmetric_difference::SymmetricDifferenceEqualityProof as Rule;
+        if let Rule::SymDiffFiniteRationals(proof) = rule {
+            return self.compile_sym_diff_finite_rationals(fact, proof, position);
+        }
         for (left, right, reversed) in [
             (&fact.left, &fact.right, false),
             (&fact.right, &fact.left, true),
         ] {
+            if let Rule::IntersectionDistributesSymDiff(_) = rule {
+                let Obj::SetOperator(SetOperator::Intersect(intersection)) = left else {
+                    continue;
+                };
+                let Obj::SetOperator(SetOperator::SymmetricDifference(inner)) =
+                    intersection.right.as_ref()
+                else {
+                    continue;
+                };
+                let Obj::SetOperator(SetOperator::SymmetricDifference(result)) = right else {
+                    continue;
+                };
+                let (
+                    Obj::SetOperator(SetOperator::Intersect(a)),
+                    Obj::SetOperator(SetOperator::Intersect(b)),
+                ) = (result.left.as_ref(), result.right.as_ref())
+                else {
+                    continue;
+                };
+                if a.left.ir() != intersection.left.ir()
+                    || b.left.ir() != intersection.left.ir()
+                    || a.right.ir() != inner.left.ir()
+                    || b.right.ir() != inner.right.ir()
+                {
+                    continue;
+                }
+                let term = self.compile_object_reference(left, position)?;
+                self.compile_object_reference(right, position)?;
+                let orientation = if reversed { ".symm" } else { "" };
+                return Ok(format!("(let _litex_set := {term}; (Litex.intersectDistributesSymmetricDifference _litex_set.val.left _litex_set.val.right.val.left _litex_set.val.right.val.right){orientation})"));
+            }
             let Obj::SetOperator(SetOperator::SymmetricDifference(p)) = left else {
                 continue;
             };
@@ -29,7 +63,7 @@ impl LitexToLeanCompiler {
                     let (
                         Obj::SetOperator(SetOperator::SetMinus(a)),
                         Obj::SetOperator(SetOperator::SetMinus(b)),
-                    ) = (&*u.left, &*u.right)
+                    ) = (u.left.as_ref(), u.right.as_ref())
                     else {
                         continue;
                     };
@@ -42,15 +76,190 @@ impl LitexToLeanCompiler {
                     }
                     "symmetricDifferenceDefinition _litex_set.val.left _litex_set.val.right"
                 }
+                Rule::SymDiffCommutative(_) => {
+                    let Obj::SetOperator(SetOperator::SymmetricDifference(q)) = right else {
+                        continue;
+                    };
+                    if q.left.ir() != p.right.ir() || q.right.ir() != p.left.ir() {
+                        continue;
+                    }
+                    "symmetricDifferenceCommutative _litex_set.val.left _litex_set.val.right"
+                }
+                Rule::SymDiffEmpty(_) if empty_set(&p.right) && right.ir() == p.left.ir() => {
+                    "symmetricDifferenceEmpty _litex_set.val.left"
+                }
+                Rule::SymDiffEmptyLeft(_) if empty_set(&p.left) && right.ir() == p.right.ir() => {
+                    "symmetricDifferenceEmptyLeft _litex_set.val.right"
+                }
+                Rule::SymDiffCancel(_) => {
+                    let Obj::SetOperator(SetOperator::SymmetricDifference(inner)) = p.left.as_ref()
+                    else {
+                        continue;
+                    };
+                    if inner.right.ir() != p.right.ir() || inner.left.ir() != right.ir() {
+                        continue;
+                    }
+                    "symmetricDifferenceCancel _litex_set.val.left.val.left _litex_set.val.left.val.right"
+                }
+                Rule::SymDiffUnionMinusIntersection(_) => {
+                    let Obj::SetOperator(SetOperator::SetMinus(q)) = right else {
+                        continue;
+                    };
+                    let (
+                        Obj::SetOperator(SetOperator::Union(a)),
+                        Obj::SetOperator(SetOperator::Intersect(b)),
+                    ) = (q.left.as_ref(), q.right.as_ref())
+                    else {
+                        continue;
+                    };
+                    if a.left.ir() != p.left.ir()
+                        || a.right.ir() != p.right.ir()
+                        || b.left.ir() != p.left.ir()
+                        || b.right.ir() != p.right.ir()
+                    {
+                        continue;
+                    }
+                    "symmetricDifferenceUnionMinusIntersection _litex_set.val.left _litex_set.val.right"
+                }
+                Rule::SymDiffAssociative(_) => {
+                    let Obj::SetOperator(SetOperator::SymmetricDifference(a)) = p.left.as_ref()
+                    else {
+                        continue;
+                    };
+                    let Obj::SetOperator(SetOperator::SymmetricDifference(q)) = right else {
+                        continue;
+                    };
+                    let Obj::SetOperator(SetOperator::SymmetricDifference(b)) = q.right.as_ref()
+                    else {
+                        continue;
+                    };
+                    if q.left.ir() != a.left.ir()
+                        || b.left.ir() != a.right.ir()
+                        || b.right.ir() != p.right.ir()
+                    {
+                        continue;
+                    }
+                    "symmetricDifferenceAssociative _litex_set.val.left.val.left _litex_set.val.left.val.right _litex_set.val.right"
+                }
                 _ => continue,
             };
             let term = self.compile_object_reference(left, position)?;
+            self.compile_object_reference(right, position)?;
             let orientation = if reversed { ".symm" } else { "" };
             return Ok(format!(
                 "(let _litex_set := {term}; (Litex.{law}){orientation})"
             ));
         }
         Err(LeanCompileError::unsupported("SymDiff/SelectedIdentity"))
+    }
+
+    fn compile_sym_diff_finite_rationals(
+        &self,
+        fact: &EqualFact,
+        proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_symmetric_difference::SymDiffFiniteRationalsProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        // Validate the retained finite certificate without selecting a new proof.
+        if proof
+            .left_values
+            .iter()
+            .chain(&proof.right_values)
+            .any(|value| {
+                (proof.left_values.contains(value) ^ proof.right_values.contains(value))
+                    != proof.result_values.contains(value)
+            })
+            || proof.result_values.iter().any(|value| {
+                !(proof.left_values.contains(value) ^ proof.right_values.contains(value))
+            })
+        {
+            return Err(LeanCompileError::unsupported("SymDiff/FiniteCertificate"));
+        }
+        for (native, target, reversed) in [
+            (&fact.left, &fact.right, false),
+            (&fact.right, &fact.left, true),
+        ] {
+            let Obj::SetOperator(SetOperator::SymmetricDifference(pair)) = native else {
+                continue;
+            };
+            let source = self.compile_object_reference(native, position)?;
+            let result = self.compile_object_reference(target, position)?;
+            let (left_value, left_equal) =
+                self.compile_sym_diff_numeric_list(&pair.left, &proof.left_values, position)?;
+            let (right_value, right_equal) =
+                self.compile_sym_diff_numeric_list(&pair.right, &proof.right_values, position)?;
+            let (result_value, result_equal) =
+                self.compile_sym_diff_numeric_list(target, &proof.result_values, position)?;
+            // This finite case split is determined only by the retained values.
+            // The kernel checks membership equivalence; no replacement native search.
+            let mut cases = Vec::new();
+            for value in proof
+                .left_values
+                .iter()
+                .chain(&proof.right_values)
+                .chain(&proof.result_values)
+            {
+                if !cases.contains(value) {
+                    cases.push(value.clone());
+                }
+            }
+            let mut membership = String::from("classical\n");
+            let mut excluded = Vec::new();
+            for (index, value) in cases.iter().enumerate() {
+                let literal = crate::compile_to_lean::helper::exact_rational_literal(value, "ℂ")?;
+                let indent = "  ".repeat(index);
+                membership.push_str(&format!("by_cases _symdiff_case_{index} : _symdiff_x = M.number {literal}\n{indent}· rw [_symdiff_case_{index}]\n{indent}  (norm_num only [Litex.symmetricDifference_members, Litex.SetSemantics.insert_members, Litex.SetSemantics.empty_members, M.number_injective.eq_iff]; decide)\n{indent}· "));
+                excluded.push(format!("_symdiff_case_{index}"));
+            }
+            membership.push_str(&format!("(norm_num only [Litex.symmetricDifference_members, Litex.SetSemantics.insert_members, Litex.SetSemantics.empty_members{}]; decide)\n", if excluded.is_empty() { String::new() } else { format!(", {}", excluded.join(", ")) }));
+            let term = format!("(by\n  let _symdiff_source := {source}\n  let _symdiff_result := {result}\n  have _symdiff_left : Litex.denote _symdiff_source.val.left = {left_value} := {left_equal}\n  have _symdiff_right : Litex.denote _symdiff_source.val.right = {right_value} := {right_equal}\n  have _symdiff_target : Litex.denote _symdiff_result = {result_value} := {result_equal}\n  apply Litex.SetSemantics.ext _ _ (Litex.isSet _symdiff_source) (Litex.isSet _symdiff_result)\n  intro _symdiff_x\n  have _symdiff_members : M.mem _symdiff_x (Litex.symmetricDifferenceValue {left_value} {right_value}) ↔ M.mem _symdiff_x {result_value} := by\n    {}\n  exact (iff_of_eq (congrArg (fun value => M.mem _symdiff_x value) (congrArg₂ (Litex.symmetricDifferenceValue (M := M)) _symdiff_left _symdiff_right))).trans (_symdiff_members.trans (iff_of_eq (congrArg (fun value => M.mem _symdiff_x value) _symdiff_target)).symm)\n)", membership.trim_end().replace('\n', "\n    "));
+            return Ok(if reversed {
+                format!("(Eq.symm (show Litex.Same {source} {result} from {term}))")
+            } else {
+                term
+            });
+        }
+        Err(LeanCompileError::unsupported("SymDiff/FiniteSubject"))
+    }
+
+    fn compile_sym_diff_numeric_list(
+        &self,
+        object: &Obj,
+        values: &[EvalRational],
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let Obj::SetFormer(SetFormer::ListSet(list)) = object else {
+            return Err(LeanCompileError::unsupported("SymDiff/FiniteList"));
+        };
+        if list.list.len() != values.len() {
+            return Err(LeanCompileError::unsupported("SymDiff/ValueArity"));
+        }
+        let original = self.compile_object_reference(object, position)?;
+        let mut elements = Vec::new();
+        for (element, value) in list.list.iter().zip(values) {
+            let observation = self.compile_numeric_observation(element, position)?;
+            if observation.3.as_ref() != Some(value) {
+                return Err(LeanCompileError::unsupported("SymDiff/RetainedValue"));
+            }
+            let literal = crate::compile_to_lean::helper::exact_rational_literal(value, "ℂ")?;
+            let equal = format!(
+                "(({}).trans (congrArg M.number (by norm_num : {} = {literal})))",
+                observation.1, observation.0
+            );
+            elements.push((literal, equal));
+        }
+        let mut value = "(Litex.SetSemantics.emptyValue (M := M))".to_string();
+        let mut equal = format!("(Eq.refl {value})");
+        for (literal, element_equal) in elements.into_iter().rev() {
+            value =
+                format!("(Litex.SetSemantics.insertValue (M := M) (M.number {literal}) {value})");
+            equal = format!(
+                "(congrArg₂ (Litex.SetSemantics.insertValue (M := M)) {element_equal} {equal})"
+            );
+        }
+        Ok((
+            value.clone(),
+            format!("(show Litex.denote {original} = {value} from {equal})"),
+        ))
     }
 
     pub(super) fn compile_set_identity(

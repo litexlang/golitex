@@ -44,19 +44,23 @@ impl LitexToLeanCompiler {
         application: &FnObj,
         proof: &FnObjObjWellDefinedProof,
         call: &str,
+        position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let signature = match &proof.domain_fn_set {
             Some(
                 FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
-                | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set },
+                | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }
+                | FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, .. },
             ) => fn_set,
             Some(FnObjDomainFnSetEvidence::Matrix(p)) => &p.function.body,
             Some(FnObjDomainFnSetEvidence::Composition(p)) => &p.function.body,
+            Some(FnObjDomainFnSetEvidence::MultivariableSelector(p)) => &p.signature,
             _ => return Err(LeanCompileError::unsupported("Function/OutputSignature")),
         };
         if application.body.len() > 1 {
-            Self::fixed_function_call_output(application, signature)?;
-            return Ok(format!("(Litex.callOnInOutput {call})"));
+            return self
+                .compile_fn_call(application, proof, position)
+                .map(|(_, _, member)| member);
         }
         let law = if !Self::function_uses_numeric_interface(signature) {
             "callOnInOutput"
@@ -99,7 +103,7 @@ impl LitexToLeanCompiler {
         ))
     }
 
-    fn compile_fn_call(
+    pub(in crate::compile_to_lean) fn compile_fn_call(
         &self,
         application: &FnObj,
         proof: &FnObjObjWellDefinedProof,
@@ -111,10 +115,12 @@ impl LitexToLeanCompiler {
             if let Some(call) = position.bound_fn_call(application, proof) {
                 if let Some(
                     FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
-                    | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set },
+                    | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }
+                    | FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, .. },
                 ) = &proof.domain_fn_set
                 {
-                    let member = self.compile_call_output_proof(application, proof, &call)?;
+                    let member =
+                        self.compile_call_output_proof(application, proof, &call, position)?;
                     return Ok((call, fn_set.ret_set.as_ref().clone(), member));
                 }
             }
@@ -124,24 +130,7 @@ impl LitexToLeanCompiler {
         if application.body.len() == 1 {
             return Ok((call, output, member));
         }
-        if matches!(
-            output,
-            Obj::SetFormer(SetFormer::MatrixSet(_) | SetFormer::FiniteSeqSet(_))
-        ) {
-            return self.compile_returned_array_call(application, proof, &call, &output, position);
-        }
-        if matches!(output, Obj::FunctionSpace(FunctionSpace::FnSet(_))) {
-            return self.compile_returned_fn_calls(application, proof, call, output, position);
-        }
-        self.compile_returned_cart_call(
-            application,
-            proof,
-            &call,
-            &output,
-            proof.child_obj_well_defined.len() - 1,
-            proof.requirement_fact_verified.len() - 1,
-            position,
-        )
+        self.compile_returned_fn_calls(application, proof, call, output, member, position)
     }
 
     /// Borrow the first application stage from the actual complete call WD.
@@ -161,9 +150,11 @@ impl LitexToLeanCompiler {
         })?;
         let signature = match evidence {
             FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
-            | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => fn_set,
+            | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }
+            | FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, .. } => fn_set,
             FnObjDomainFnSetEvidence::Matrix(p) => &p.function.body,
             FnObjDomainFnSetEvidence::Composition(p) => &p.function.body,
+            FnObjDomainFnSetEvidence::MultivariableSelector(p) => &p.signature,
             _ => return Err(LeanCompileError::unsupported("WD/FnObj/DomainEvidence")),
         };
         let parameter_count: usize = signature
@@ -179,44 +170,46 @@ impl LitexToLeanCompiler {
                 "The first argument group must match its recorded signature.",
             ));
         }
-        // A Cartesian return is itself a finite function. The original WD
-        // stores the second group's child and domain check after the first
-        // group's evidence; consume those slices without fabricating a WD.
         let layered = application.body.len() > 1;
-        let returned_coordinate =
-            layered && matches!(&output, Obj::ProductShape(ProductShape::Cart(_)));
-        let returned_array_arity = if layered {
-            match &output {
-                Obj::SetFormer(SetFormer::MatrixSet(_)) => 2,
-                Obj::SetFormer(SetFormer::FiniteSeqSet(_)) => 1,
-                _ => 0,
-            }
-        } else {
-            0
-        };
-        if returned_array_arity > 0
-            && (application.body.len() != 2 || application.body[1].len() != returned_array_arity)
-        {
-            return Err(LeanCompileError::unsupported("ReturnedArray/CallShape"));
-        }
-        let layers = if layered && !returned_coordinate && returned_array_arity == 0 {
-            Self::fixed_function_call_layers(application, signature)?
-        } else {
-            if returned_coordinate
-                && (application.body.len() != 2 || application.body[1].len() != 1)
-            {
-                return Err(LeanCompileError::unsupported(
-                    "WD/FnObj/ReturnedFunctionShape",
-                ));
-            }
-            vec![signature]
-        };
         let arguments = &application.body[0];
         let (head, head_offset) = match (evidence, application.head.as_ref()) {
+            (FnObjDomainFnSetEvidence::AnonymousLiteral { .. }, FnObjHead::FieldAccess(field)) => (
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field.clone())),
+                1,
+            ),
+            (FnObjDomainFnSetEvidence::TemplateDefinition { .. }, head) => {
+                let object = match head {
+                    FnObjHead::InstantiatedTemplateObj(instance) => {
+                        Obj::InstantiatedTemplateObj(instance.clone())
+                    }
+                    FnObjHead::Identifier(identifier) => Obj::Identifier(identifier.clone()),
+                    FnObjHead::Object(object) => object.as_ref().clone(),
+                    FnObjHead::FieldAccess(field) => Obj::StructAndFieldAccessObj(
+                        StructAndFieldAccessObj::FieldAccess(field.clone()),
+                    ),
+                    _ => return Err(LeanCompileError::unsupported("WD/FnObj/TemplateHead")),
+                };
+                (object, 1)
+            }
             (FnObjDomainFnSetEvidence::Matrix(_), FnObjHead::Identifier(identifier)) => {
                 (Obj::Identifier(identifier.clone()), 0)
             }
             (FnObjDomainFnSetEvidence::Matrix(_), FnObjHead::Object(object)) => {
+                (object.as_ref().clone(), 0)
+            }
+            (FnObjDomainFnSetEvidence::MultivariableSelector(p), FnObjHead::Object(object)) => {
+                use crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof;
+                let CompleteFunctionDomainSourceProof::MultivariableSelector(source) = &p.source
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "MultivariableSelector/CallSource",
+                    ));
+                };
+                if source.selector.ir() != object.ir() {
+                    return Err(LeanCompileError::unsupported(
+                        "MultivariableSelector/CallSubject",
+                    ));
+                }
                 (object.as_ref().clone(), 0)
             }
             (FnObjDomainFnSetEvidence::Composition(_), FnObjHead::Identifier(identifier)) => {
@@ -225,8 +218,10 @@ impl LitexToLeanCompiler {
             (FnObjDomainFnSetEvidence::Composition(_), FnObjHead::Object(object)) => {
                 (object.as_ref().clone(), 0)
             }
-            (FnObjDomainFnSetEvidence::InFunctionSet { .. }, FnObjHead::Identifier(identifier)) => {
-                (Obj::Identifier(identifier.clone()), 0)
+            (FnObjDomainFnSetEvidence::InFunctionSet { .. }, head) => {
+                // The exact membership citation owns the callable contract.
+                // This route retains argument children only, for every head.
+                (function_head_obj(head), 0)
             }
             (
                 FnObjDomainFnSetEvidence::AnonymousLiteral { .. },
@@ -247,21 +242,14 @@ impl LitexToLeanCompiler {
         };
         let child_count = head_offset + application.body.iter().map(Vec::len).sum::<usize>();
         let first_requirement_count = arguments.len() + signature.dom_facts.len();
+        let requirements = Self::returned_call_layout(
+            application,
+            &output,
+            &proof.requirement_fact_verified,
+            first_requirement_count,
+        )?;
         if proof.child_obj_well_defined.len() != child_count
-            || proof.requirement_fact_verified.len()
-                != layers
-                    .iter()
-                    .map(|s| {
-                        s.set_bound_parameters
-                            .groups
-                            .iter()
-                            .map(|g| g.params.len())
-                            .sum::<usize>()
-                            + s.dom_facts.len()
-                    })
-                    .sum::<usize>()
-                    + usize::from(returned_coordinate)
-                    + returned_array_arity
+            || proof.requirement_fact_verified.len() != requirements.1
         {
             return Err(LeanCompileError::new(
                 "WD/FnObj/StageArity",
@@ -281,7 +269,8 @@ impl LitexToLeanCompiler {
                 let member = format!("(Litex.callOnInOutput {call})");
                 (call, member)
             } else {
-                let member = self.compile_call_output_proof(application, proof, &complete)?;
+                let member =
+                    self.compile_call_output_proof(application, proof, &complete, position)?;
                 (complete, member)
             };
             return Ok((call, output, member));
@@ -307,6 +296,42 @@ impl LitexToLeanCompiler {
                     self.compile_wd(wd, &SourcePosition {before:0, ..*position})?
                 }
                 _ => self.compile_object_reference(&head, &SourcePosition {before:0, ..*position})?,
+            }
+        } else if let FnObjDomainFnSetEvidence::MultivariableSelector(p) = evidence {
+            use crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof;
+            let CompleteFunctionDomainSourceProof::MultivariableSelector(source) = &p.source else {
+                return Err(LeanCompileError::unsupported(
+                    "MultivariableSelector/CallSource",
+                ));
+            };
+            ensure_object(&head, &source.well_defined)?;
+            self.compile_wd(
+                &source.well_defined,
+                &SourcePosition {
+                    before: 0,
+                    ..*position
+                },
+            )?
+        } else if matches!(
+            evidence,
+            FnObjDomainFnSetEvidence::TemplateDefinition { .. }
+        ) {
+            let wd = &proof.child_obj_well_defined[0];
+            let Obj::InstantiatedTemplateObj(instance) = wd.obj() else {
+                return Err(LeanCompileError::unsupported("WD/FnObj/TemplateProducer"));
+            };
+            self.validate_template_function(instance, signature, None, position)?;
+            let value = self.compile_wd(
+                wd,
+                &SourcePosition {
+                    before: 0,
+                    ..*position
+                },
+            )?;
+            if head.ir() == wd.obj().ir() {
+                value
+            } else {
+                self.compile_object_reference(&head, position)?
             }
         } else if head_offset == 1 {
             ensure_object(&head, &proof.child_obj_well_defined[0])?;
@@ -410,7 +435,10 @@ impl LitexToLeanCompiler {
                 }),
             _ => false,
         };
-        let matrix_head_binding = if let FnObjDomainFnSetEvidence::Matrix(p) = evidence {
+        let selector_head = matches!(evidence, FnObjDomainFnSetEvidence::MultivariableSelector(_));
+        let matrix_head_binding = if selector_head {
+            Some(format!("let _litex_matrix_head := {head_term};\n"))
+        } else if let FnObjDomainFnSetEvidence::Matrix(p) = evidence {
             if p.function_equal.path.is_empty() {
                 if head.ir() != Obj::MatrixOperator(p.operator.clone()).ir() {
                     return Err(LeanCompileError::unsupported("Matrix/CallHeadIdentity"));
@@ -427,12 +455,27 @@ impl LitexToLeanCompiler {
         } else {
             head_term
         };
+        let template_interface = if matches!(
+            evidence,
+            FnObjDomainFnSetEvidence::TemplateDefinition { .. }
+        ) {
+            let wd = &proof.child_obj_well_defined[0];
+            let Obj::InstantiatedTemplateObj(instance) = wd.obj() else {
+                return Err(LeanCompileError::unsupported("WD/FnObj/TemplateProducer"));
+            };
+            let template = self.compile_wd(wd, position)?;
+            Some(self.template_call_interface(instance, &template, &formed)?)
+        } else {
+            None
+        };
         let compiled_signature = if let FnObjDomainFnSetEvidence::Matrix(p) = evidence {
             if matrix_head_binding.is_some() {
                 Self::matrix_callable_signature_term(p, &head_term)?
             } else {
                 self.compile_matrix_callable_signature(p, &formed)?
             }
+        } else if let Some((signature, _)) = &template_interface {
+            signature.clone()
         } else if named_signature {
             format!("({head_term}).val.signature")
         } else {
@@ -440,6 +483,14 @@ impl LitexToLeanCompiler {
         };
         let guard = self.compile_function_guard_template(signature, &formed)?;
         let membership = match evidence {
+            FnObjDomainFnSetEvidence::TemplateDefinition { function_equal, .. } => {
+                let wd = &proof.child_obj_well_defined[0];
+                let template = self.compile_wd(wd, position)?;
+                let path = self.compile_equality_path(&head, wd.obj(), function_equal, &formed)?;
+                let space = format!("(Litex.fnSet {compiled_signature})");
+                let member = &template_interface.as_ref().unwrap().1;
+                format!("(Litex.inOfSame {template} {head_term} {space} {space} ({path}).symm (Litex.sameRefl {space}) {member})")
+            }
             FnObjDomainFnSetEvidence::Matrix(p) => {
                 if matrix_head_binding.is_some() {
                     self.compile_matrix_root_member(p, &head_term, &formed)?
@@ -450,8 +501,17 @@ impl LitexToLeanCompiler {
             FnObjDomainFnSetEvidence::Composition(p) => {
                 self.compile_composition_member(&head, p, &formed)?
             }
+            FnObjDomainFnSetEvidence::MultivariableSelector(p) => {
+                self.validate_multivariable_selector_domain(&head, p)?;
+                let(_,law)=crate::compile_to_lean::compile_multivariable_vector_limit::multivariable_selector_carrier(&head)?;
+                format!("(Litex.{law} {head_term})")
+            }
             FnObjDomainFnSetEvidence::AnonymousLiteral { .. } => {
-                format!("(Litex.formulaFnInFnSet {head_term})")
+                if let FnObjHead::FieldAccess(field) = application.head.as_ref() {
+                    self.compile_struct_function_membership(field, signature, &formed)?
+                } else {
+                    format!("(Litex.formulaFnInFnSet {head_term})")
+                }
             }
             FnObjDomainFnSetEvidence::InFunctionSet {
                 fact_id,
@@ -545,22 +605,41 @@ impl LitexToLeanCompiler {
             let local_arguments = (0..argument_terms.len())
                 .map(|index| format!("_litex_call_arg_{index}"))
                 .collect::<Vec<_>>();
-            let bindings = local_arguments
+            let source_sets = self.compile_function_input_sets(signature, &formed)?;
+            let local_sets = (0..source_sets.len())
+                .map(|index| format!("_litex_call_set_{index}"))
+                .collect::<Vec<_>>();
+            let mut bindings = local_arguments
                 .iter()
                 .zip(&argument_terms)
                 .map(|(name, term)| format!("{name} := {term}"))
-                .collect::<Vec<_>>()
-                .join(";\nlet ");
+                .collect::<Vec<_>>();
+            // Finish each original carrier constructor once. The packed
+            // domain and its original membership proof share these same values,
+            // including carriers that are themselves function spaces.
+            bindings.extend(
+                local_sets
+                    .iter()
+                    .zip(&source_sets)
+                    .map(|(name, term)| format!("{name} := {term}")),
+            );
+            let bindings = bindings.join(";\nlet ");
             let (domain, argument, base_member, packed_guard_proof) = self
-                .compile_packed_call_arguments(
+                .compile_packed_call_arguments_from_sets(
                     signature,
                     &local_arguments,
+                    &local_sets,
                     &members,
                     &guard_proof,
                     &formed,
                 )?;
-            let call = if named_signature || matches!(evidence, FnObjDomainFnSetEvidence::Matrix(_))
-            {
+            let call = if named_signature
+                || matches!(
+                    evidence,
+                    FnObjDomainFnSetEvidence::Matrix(_)
+                        | FnObjDomainFnSetEvidence::MultivariableSelector(_)
+                        | FnObjDomainFnSetEvidence::TemplateDefinition { .. }
+                ) {
                 format!(
                     "(let {bindings};\nLitex.callOn {compiled_signature} {head_term} {argument} {membership} ((Litex.SetSemantics.sep_members (M := M) _ _ _).mpr ⟨{base_member}, {packed_guard_proof}⟩))"
                 )
@@ -568,8 +647,10 @@ impl LitexToLeanCompiler {
                 let output_set = self.compile_object_reference(&signature.ret_set, &formed)?;
                 let packed_guard =
                     self.compile_function_packed_guard_template(signature, &formed)?;
+                // Bind the checked constructors once, retaining a transparent
+                // call term so later field projections can read its signature.
                 format!(
-                    "(let {bindings};\nLitex.callOnDomain {domain} {output_set} {packed_guard} {head_term} {argument} {membership} {base_member} {packed_guard_proof})"
+                    "(show Litex.Obj (M := M) (Litex.CallOnObj (M := M) _ _) from (let {bindings};\nlet _litex_call_domain := {domain};\nlet _litex_call_output := {output_set};\nLitex.callOnDomain _litex_call_domain _litex_call_output {packed_guard} {head_term} {argument} {membership} {base_member} {packed_guard_proof}))"
                 )
             };
             let call = match &matrix_head_binding {
@@ -611,6 +692,20 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(String, String, String, String), LeanCompileError> {
         let sets = self.compile_function_input_sets(signature, position)?;
+        self.compile_packed_call_arguments_from_sets(
+            signature, arguments, &sets, members, guard, position,
+        )
+    }
+
+    fn compile_packed_call_arguments_from_sets(
+        &self,
+        signature: &FnSet,
+        arguments: &[String],
+        sets: &[String],
+        members: &[String],
+        guard: &str,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String, String, String), LeanCompileError> {
         if sets.len() != arguments.len() || sets.len() != members.len() {
             return Err(LeanCompileError::new(
                 "Function/PackedDomain",
@@ -696,15 +791,109 @@ impl LitexToLeanCompiler {
         rule: &InFactSearchProofByKnownSpecialProperty,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if matches!(
-            rule,
-            InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(_)
-        ) {
-            // Template/field intrinsic call WD is not compiled yet. Preserve
-            // that explicit boundary instead of inventing a standard return.
-            return Err(LeanCompileError::unsupported(
-                "FunctionReturn/TemplateStandardSuperset",
+        if let InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(proof) =
+            rule
+        {
+            let Obj::FunctionSpace(FunctionSpace::FnSet(target)) = &goal.set else {
+                return Err(LeanCompileError::unsupported(
+                    "TemplateFunction/TargetSignature",
+                ));
+            };
+            if goal.element != Obj::InstantiatedTemplateObj(proof.instance.clone())
+                || !exact_signature_identity(
+                    &proof.declared_signature,
+                    target,
+                    &proof.signature_match,
+                )
+            {
+                return Err(LeanCompileError::unsupported(
+                    "TemplateFunction/SignatureMatch",
+                ));
+            }
+            self.validate_template_function(
+                &proof.instance,
+                &proof.declared_signature,
+                None,
+                position,
+            )?;
+            let object = self.compile_object_reference(&goal.element, position)?;
+            let target = self.compile_object_reference(&goal.set, position)?;
+            let (_, member) = self.template_call_interface(&proof.instance, &object, position)?;
+            return Ok(format!(
+                "(show Litex.In {object} {target} from by exact {member})"
             ));
+        }
+        if let InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(
+            proof,
+        ) = rule
+        {
+            return self.compile_template_standard_return(goal, proof, position);
+        }
+        if let InFactSearchProofByKnownSpecialProperty::TemplateApplicationInDeclaredCodomain(
+            proof,
+        ) = rule
+        {
+            return self.compile_template_declared_return(goal, proof, position);
+        }
+        if let InFactSearchProofByKnownSpecialProperty::FieldInDeclaredSet(proof) = rule {
+            return self.compile_struct_declared_member(goal, proof, position);
+        }
+        if let InFactSearchProofByKnownSpecialProperty::MultivariableSelectorApplicationInCodomain(
+            p,
+        ) = rule
+        {
+            let Obj::FnObj(application) = &goal.element else {
+                return Err(LeanCompileError::unsupported(
+                    "MultivariableSelector/ReturnCall",
+                ));
+            };
+            let head = match application.head.as_ref() {
+                FnObjHead::Object(o) => o.as_ref(),
+                _ => {
+                    return Err(LeanCompileError::unsupported(
+                        "MultivariableSelector/ReturnHead",
+                    ))
+                }
+            };
+            if head.ir() != p.selector.ir() {
+                return Err(LeanCompileError::unsupported(
+                    "MultivariableSelector/ReturnSubject",
+                ));
+            }
+            let(carrier,_)=crate::compile_to_lean::compile_multivariable_vector_limit::multivariable_selector_carrier(head)?;
+            self.validate_function_carrier_signature(&carrier, &p.declared_signature)?;
+            let output = Self::fixed_function_call_output(application, &p.declared_signature)?;
+            if output.ir() != p.applied_return_set.ir() {
+                return Err(LeanCompileError::unsupported(
+                    "MultivariableSelector/ReturnOutput",
+                ));
+            }
+            let q = EqualFact {
+                fact_id: goal.fact_id,
+                left: p.applied_return_set.clone(),
+                right: goal.set.clone(),
+                line_file: None,
+            };
+            let same = self.compile_equality_search(&q, &p.return_set_match, position)?;
+            let call = self.compile_object_reference(&goal.element, position)?;
+            return Ok(format!("((congrArg (fun A => M.mem (Litex.denote {call}) A) {same}).mp (Litex.callOnInOutput {call}))"));
+        }
+        if let InFactSearchProofByKnownSpecialProperty::MultivariableSelectorInCarrier(p) = rule {
+            let(expected,law)=crate::compile_to_lean::compile_multivariable_vector_limit::multivariable_selector_carrier(&p.selector)?;
+            if p.selector.ir() != goal.element.ir() || p.declared_carrier.ir() != expected.ir() {
+                return Err(LeanCompileError::unsupported(
+                    "MultivariableSelector/CarrierSubject",
+                ));
+            }
+            let q = EqualFact {
+                fact_id: goal.fact_id,
+                left: p.declared_carrier.clone(),
+                right: goal.set.clone(),
+                line_file: None,
+            };
+            let equality = self.compile_equality_search(&q, &p.carrier_match, position)?;
+            let object = self.compile_object_reference(&goal.element, position)?;
+            return Ok(format!("((congrArg (fun A => M.mem (Litex.denote {object}) A) {equality}).mp (Litex.{law} {object}))"));
         }
         if let InFactSearchProofByKnownSpecialProperty::RealMatrixApplicationCodomain(proof) = rule
         {
@@ -719,7 +908,7 @@ impl LitexToLeanCompiler {
             self.validate_function_carrier_signature(&goal.set, &p.target_signature)?;
             if !p.subject_equal.path.is_empty()
                 || p.declared_signature != function.body
-                || !crate::execute::execute_fact_stmt::fn_sets_alpha_equal(
+                || !crate::compile_to_lean::compile_returned_function::function_carrier_signatures_alpha_equal(
                     &p.normalized_signature,
                     &function.body,
                 )
@@ -752,7 +941,7 @@ impl LitexToLeanCompiler {
                 ));
             };
             if member.element.ir() != goal.element.ir()
-                || !crate::execute::execute_fact_stmt::fn_sets_alpha_equal(
+                || !crate::compile_to_lean::compile_returned_function::function_carrier_signatures_alpha_equal(
                     signature,
                     &p.normalized_signature,
                 )
@@ -780,6 +969,71 @@ impl LitexToLeanCompiler {
             let target = self.compile_object_reference(&goal.set, position)?;
             return Ok(format!("(Litex.inOfSame {object} {object} {source} {target} (Litex.sameRefl {object}) {equality} {member_proof})"));
         }
+        if let InFactSearchProofByKnownSpecialProperty::DeclaredNumericSequenceCarrier(p) = rule {
+            let (
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)),
+                Obj::SetFormer(SetFormer::FiniteSeqSet(sequence)),
+            ) = (&goal.element, &goal.set)
+            else {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionCarrier/NumericSequenceSubject",
+                ));
+            };
+            let mut widened = p.declared_signature.clone();
+            widened.ret_set = Box::new(Obj::StandardSet(p.target_return.clone()));
+            if function.body != p.declared_signature
+                || p.declared_signature.ret_set.as_ref()
+                    != &Obj::StandardSet(p.source_return.clone())
+                || widened != p.widened_signature
+                || !crate::execute::execute_fact_stmt::fn_sets_alpha_equal(
+                    &p.widened_signature,
+                    &p.target_signature,
+                )
+                || !matches!(
+                    p.signature_match.as_ref(),
+                    EqualFactSearchedProof::ByTheyAreTheSame(_)
+                )
+            {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionCarrier/NumericSequenceSignature",
+                ));
+            }
+            Self::validate_finite_seq_signature(sequence, &p.target_signature)?;
+            let include = standard_inclusion_term(
+                &p.source_return,
+                &p.target_return,
+                "_returned",
+                "_return",
+            )?;
+            let object = self.compile_object_reference(&goal.element, position)?;
+            return Ok(format!("(by\n  let _function := {object}\n  have _source := Litex.formulaFnInFnSet _function\n  apply Litex.FunctionSemantics.fnSet_of_returns _source\n  intro input h_input\n  have _return := Litex.FunctionSemantics.call_mem _ _ _ _ _source h_input\n  let _returned := Litex.semanticObject (Litex.FunctionSemantics.callValue (Litex.denote _function) input) (M.member_isSet _return)\n  exact {include}\n)"));
+        }
+        if let InFactSearchProofByKnownSpecialProperty::AnonymousFnInFiniteSeq(p) = rule {
+            let (
+                Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)),
+                Obj::SetFormer(SetFormer::FiniteSeqSet(sequence)),
+            ) = (&goal.element, &goal.set)
+            else {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionCarrier/LiteralFiniteSeqSubject",
+                ));
+            };
+            if function.body != p.declared_signature
+                || !matches!(
+                    &p.signature_match,
+                    EqualFactSearchedProof::ByTheyAreTheSame(_)
+                )
+            {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionCarrier/LiteralFiniteSeqSignature",
+                ));
+            }
+            Self::validate_finite_seq_signature(sequence, &p.declared_signature)?;
+            return Ok(format!(
+                "(Litex.formulaFnInFnSet {})",
+                self.compile_object_reference(&goal.element, position)?
+            ));
+        }
         if let InFactSearchProofByKnownSpecialProperty::FiniteTupleInStandardFunctionSpace(proof) =
             rule
         {
@@ -791,6 +1045,13 @@ impl LitexToLeanCompiler {
         if let InFactSearchProofByKnownSpecialProperty::TupleCoordinate(proof) = rule {
             return self.compile_tuple_coordinate_member(goal, proof, position);
         }
+        if matches!(
+            rule,
+            InFactSearchProofByKnownSpecialProperty::LiteralTupleNumericCoordinate(_)
+                | InFactSearchProofByKnownSpecialProperty::UniformTupleCoordinateCarrier(_)
+        ) {
+            return self.compile_tuple_coordinate_membership(goal, rule, position);
+        }
         if let InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(proof) = rule {
             return self.compile_fn_return_codomain(goal, proof, position);
         }
@@ -799,7 +1060,7 @@ impl LitexToLeanCompiler {
                 obj: Obj::FnObj(application),
                 proof: ObjWellDefinedProofByDef::FnObj(evidence),
             } = (wd).detailed_ref() else {
-                return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The original constructor is not this function application."));
+                return Err(LeanCompileError::new("FunctionReturn/WDSubject", &format!("Return goal `{}` has captured constructor `{}` instead of a call WD.",goal.element.readable_string(),wd.obj().readable_string())));
             };
             let ctor_position = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
             let call = match position.bound_wd_child(wd).or_else(|| producer.bound_wd_child(wd)) {
@@ -809,28 +1070,57 @@ impl LitexToLeanCompiler {
             let selected = evidence.domain_fn_set.as_ref().ok_or_else(|| LeanCompileError::new("FunctionReturn/DomainEvidence", "The original call has no domain source."))?;
             let (selected_signature, selected_id) = match selected {
                 FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id, .. } => (fn_set, Some(*fact_id)),
-                FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => (fn_set, None),
+                FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set }
+                | FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, .. } => (fn_set, None),
                 FnObjDomainFnSetEvidence::Matrix(p) => {
                     Self::validate_matrix_callable(p)?;
                     (&p.function.body, None)
                 },
                 _ => return Err(LeanCompileError::unsupported("FunctionReturn/DomainEvidence")),
             };
-            let head = match application.head.as_ref() {
-                FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
-                FnObjHead::Object(head) if matches!(selected, FnObjDomainFnSetEvidence::Matrix(_)) => head.as_ref().clone(),
-                FnObjHead::AnonymousFnLiteral(function) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.as_ref().clone())),
-                _ => return Err(LeanCompileError::unsupported("FunctionReturn/Head")),
-            };
+            let head = function_head_obj(application.head.as_ref());
             let head_term = self.compile_object_reference(&head, position)?;
             match rule {
+                InFactSearchProofByKnownSpecialProperty::FieldApplicationInDeclaredCodomain(p) => {
+                    let FnObjHead::FieldAccess(field) = application.head.as_ref() else {
+                        return Err(LeanCompileError::unsupported("FieldReturn/Head"));
+                    };
+                    self.compile_struct_function_membership(field, &p.declared_signature, position)?;
+                    if !crate::compile_to_lean::compile_returned_function::function_carrier_signatures_alpha_equal(selected_signature, &p.declared_signature)
+                        || Self::fixed_function_call_output(application, selected_signature)? != &p.applied_return_set {
+                        return Err(LeanCompileError::unsupported("FieldReturn/DeclaredSignature"));
+                    }
+                    let mut ids = std::collections::HashSet::new();
+                    let mut lines = Vec::new();
+                    for (index, entry) in p.alternative_signature_matches.iter().enumerate() {
+                        if !ids.insert(entry.cite_signature_fact_id) {
+                            return Err(LeanCompileError::unsupported("FieldReturn/DuplicateSignature"));
+                        }
+                        let (signature, member) = self.compile_fn_return_citation(entry.cite_signature_fact_id, &head, &head_term, None, position)?;
+                        let output = Self::fixed_function_call_output(application, signature)?;
+                        let equality = self.compile_fn_return_set_match(output, &goal.set, &entry.return_set_match, position)?;
+                        let source = self.compile_object_reference(output, position)?;
+                        let target = self.compile_object_reference(&goal.set, position)?;
+                        lines.push(format!("have _field_signature_{index} := {member}"));
+                        lines.push(format!("have _field_return_{index} : Litex.Same {source} {target} := {equality}"));
+                    }
+                    if selected_id.is_some_and(|id| !ids.contains(&id)) {
+                        return Err(LeanCompileError::unsupported("FieldReturn/SelectedSignature"));
+                    }
+                    let equality = self.compile_fn_return_set_match(&p.applied_return_set, &goal.set, &p.return_set_match, position)?;
+                    let member = self.compile_call_output_proof(application, evidence, &call, &ctor_position)?;
+                    let source = self.compile_object_reference(&p.applied_return_set, position)?;
+                    let target = self.compile_object_reference(&goal.set, position)?;
+                    lines.push(format!("exact Litex.inOfSame {call} {call} {source} {target} (Litex.sameRefl {call}) {equality} {member}"));
+                    Ok(format!("(by\n  {})", lines.join("\n").replace('\n', "\n  ")))
+                }
                 InFactSearchProofByKnownSpecialProperty::AnonymousFnApplicationInCodomain(p) => {
                     let output_set = Self::fixed_function_call_output(application, selected_signature)?;
                     if selected_id.is_some() || p.signature != *selected_signature || p.applied_return_set != *output_set {
                         return Err(LeanCompileError::new("FunctionReturn/LiteralSignature", "The literal return payload differs from the actual owned call signature."));
                     }
                     let equality = self.compile_fn_return_set_match(&p.applied_return_set, &goal.set, &p.return_set_match, position)?;
-                    let member = self.compile_call_output_proof(application, evidence, &call)?;
+                    let member = self.compile_call_output_proof(application, evidence, &call, &ctor_position)?;
                     let source_set = self.compile_object_reference(&p.applied_return_set, position)?;
                     let target_set = self.compile_object_reference(&goal.set, position)?;
                     Ok(format!("(Litex.inOfSame {call} {call} {source_set} {target_set} (Litex.sameRefl {call}) {equality} {member})"))
@@ -887,7 +1177,7 @@ impl LitexToLeanCompiler {
                         return lift_fn_return(&call, &source, target, &member);
                     }
                     let source = self.compile_numeric_carrier(Self::fixed_function_call_output(application, selected_signature)?, position)?;
-                    let member = self.compile_call_output_proof(application, evidence, &call)?;
+                    let member = self.compile_call_output_proof(application, evidence, &call, &ctor_position)?;
                     lift_fn_return(&call, &source, target, &member)
                 }
                 _ => Err(LeanCompileError::unsupported("FunctionReturn/KnownRule")),
@@ -909,107 +1199,237 @@ impl LitexToLeanCompiler {
         p: &FnApplicationInCodomainKnownSpecialPropertyProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let proof = position.with_visible_wd(&goal.element, &mut |wd, producer| {
-            let DetailedObjWellDefinedProof::ByDef {
-                obj: Obj::FnObj(application),
-                proof: ObjWellDefinedProofByDef::FnObj(evidence),
-            } = (wd).detailed_ref() else {
-                return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The original constructor is not this function application."));
-            };
-            let ctor_position = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
-            let call = match position.bound_wd_child(wd).or_else(|| producer.bound_wd_child(wd)) {
+        if let Some(proof) = position.with_visible_wd(&goal.element, &mut |wd, producer| {
+            self.compile_fn_return_from_original(goal, p, wd, producer, position, false)
+        })? {
+            return Ok(proof);
+        }
+        position.with_visible_call_prefix(&goal.element, &mut |wd, producer| {
+            self.compile_fn_return_from_original(goal, p, wd, producer, position, true)
+        })?.ok_or_else(|| LeanCompileError::new("FunctionReturn/Producer", "No earlier original call constructor or checked prefix supplies this return proof."))
+    }
+
+    fn compile_fn_return_from_original(
+        &self,
+        goal: &InFact,
+        p: &FnApplicationInCodomainKnownSpecialPropertyProof,
+        wd: &ObjWellDefinedProof,
+        producer: &SourcePosition<'_>,
+        position: &SourcePosition<'_>,
+        prefix: bool,
+    ) -> Result<String, LeanCompileError> {
+        let DetailedObjWellDefinedProof::ByDef {
+            obj: Obj::FnObj(whole_application),
+            proof: ObjWellDefinedProofByDef::FnObj(evidence),
+        } = (wd).detailed_ref()
+        else {
+            return Err(LeanCompileError::new(
+                "FunctionReturn/WDSubject",
+                "The original constructor is not this function application.",
+            ));
+        };
+        let Obj::FnObj(application) = &goal.element else {
+            return Err(LeanCompileError::unsupported(
+                "FunctionReturn/ApplicationSubject",
+            ));
+        };
+        let ctor_position = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
+        let call = if prefix {
+            self.compile_checked_call_prefix(&goal.element, wd, producer, position)?
+        } else {
+            match position
+                .bound_wd_child(wd)
+                .or_else(|| producer.bound_wd_child(wd))
+            {
                 Some(call) => call,
-                None => self.compile_fn_obj_wd(application, evidence, &ctor_position)?,
+                None => self.compile_fn_obj_wd(whole_application, evidence, &ctor_position)?,
+            }
+        };
+        let selected = evidence.domain_fn_set.as_ref().ok_or_else(|| {
+            LeanCompileError::new(
+                "FunctionReturn/DomainEvidence",
+                "The original call has no domain source.",
+            )
+        })?;
+        let (selected_signature, selected_id, selected_path) = match selected {
+            FnObjDomainFnSetEvidence::InFunctionSet {
+                fn_set,
+                fact_id,
+                function_equal,
+            } => (fn_set, Some(*fact_id), Some(function_equal)),
+            FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => (fn_set, None, None),
+            FnObjDomainFnSetEvidence::Matrix(p) => {
+                Self::validate_matrix_callable(p)?;
+                (&p.function.body, None, None)
+            }
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionReturn/DomainEvidence",
+                ))
+            }
+        };
+        let head = function_head_obj(application.head.as_ref());
+        let head_term = self.compile_object_reference(&head, position)?;
+        let (main_signature, main_member) = self.compile_fn_return_citation(
+            p.cite_property_fact_id,
+            &head,
+            &head_term,
+            Some(&p.function_equal),
+            position,
+        )?;
+        let mut ids = Vec::new();
+        let mut main_match = None;
+        let mut selected_match = None;
+        let mut selected_same_domains = false;
+        for entry in &p.signature_uses {
+            let (id, path) = match entry {
+                SignatureCodomainUseProof::ReturnSetMatch(entry) => (
+                    entry.cite_signature_fact_id,
+                    if entry.cite_signature_fact_id == p.cite_property_fact_id {
+                        Some(&p.function_equal)
+                    } else if selected_id == Some(entry.cite_signature_fact_id) {
+                        selected_path
+                    } else {
+                        None
+                    },
+                ),
+                SignatureCodomainUseProof::SameCallDomains {
+                    cite_signature_fact_id,
+                    function_equal,
+                    ..
+                } => (*cite_signature_fact_id, Some(function_equal)),
             };
-            let selected = evidence.domain_fn_set.as_ref().ok_or_else(|| LeanCompileError::new("FunctionReturn/DomainEvidence", "The original call has no domain source."))?;
-            let (selected_signature, selected_id, selected_path) = match selected {
-                FnObjDomainFnSetEvidence::InFunctionSet { fn_set, fact_id, function_equal } => (fn_set, Some(*fact_id), Some(function_equal)),
-                FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => (fn_set, None, None),
-                FnObjDomainFnSetEvidence::Matrix(p) => {
-                    Self::validate_matrix_callable(p)?;
-                    (&p.function.body, None, None)
-                },
-                _ => return Err(LeanCompileError::unsupported("FunctionReturn/DomainEvidence")),
-            };
-            let head = match application.head.as_ref() {
-                FnObjHead::Identifier(id) => Obj::Identifier(id.clone()),
-                FnObjHead::Object(head) if matches!(selected, FnObjDomainFnSetEvidence::Matrix(_)) => head.as_ref().clone(),
-                FnObjHead::AnonymousFnLiteral(function) => Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.as_ref().clone())),
-                _ => return Err(LeanCompileError::unsupported("FunctionReturn/Head")),
-            };
-            let head_term = self.compile_object_reference(&head, position)?;
-            let (main_signature, main_member) = self.compile_fn_return_citation(p.cite_property_fact_id, &head, &head_term, Some(&p.function_equal), position)?;
-            let mut ids = Vec::new();
-            let mut main_match = None;
-            let mut selected_match = None;
-            let mut selected_same_domains = false;
-            for entry in &p.signature_uses {
-                let (id, path) = match entry {
-                    SignatureCodomainUseProof::ReturnSetMatch(entry) => (entry.cite_signature_fact_id, if entry.cite_signature_fact_id == p.cite_property_fact_id { Some(&p.function_equal) } else if selected_id == Some(entry.cite_signature_fact_id) { selected_path } else { None }),
-                    SignatureCodomainUseProof::SameCallDomains { cite_signature_fact_id, function_equal, .. } => (*cite_signature_fact_id, Some(function_equal)),
-                };
-                if ids.contains(&id) {
-                    return Err(LeanCompileError::new("FunctionReturn/DuplicateSignature", "The return payload repeats a source citation."));
-                }
-                ids.push(id);
-                let (signature, _) = self.compile_fn_return_citation(id, &head, &head_term, path, position)?;
-                match entry {
-                    SignatureCodomainUseProof::ReturnSetMatch(entry) => {
-                        let output_set = Self::fixed_function_call_output(application, signature)?;
-                        let equality = self.compile_fn_return_set_match(output_set, &goal.set, &entry.return_set_match, position)?;
-                        if id == p.cite_property_fact_id { main_match = Some(equality.clone()); }
-                        if selected_id == Some(id) {
-                            if signature != selected_signature {
-                                return Err(LeanCompileError::new("FunctionReturn/SelectedSignature", "The actual constructor signature differs from its source return row."));
-                            }
-                            selected_match = Some(equality);
-                        }
+            if ids.contains(&id) {
+                return Err(LeanCompileError::new(
+                    "FunctionReturn/DuplicateSignature",
+                    "The return payload repeats a source citation.",
+                ));
+            }
+            ids.push(id);
+            let (signature, _) =
+                self.compile_fn_return_citation(id, &head, &head_term, path, position)?;
+            match entry {
+                SignatureCodomainUseProof::ReturnSetMatch(entry) => {
+                    let output_set = Self::fixed_function_call_output(application, signature)?;
+                    let equality = self.compile_fn_return_set_match(
+                        output_set,
+                        &goal.set,
+                        &entry.return_set_match,
+                        position,
+                    )?;
+                    if id == p.cite_property_fact_id {
+                        main_match = Some(equality.clone());
                     }
-                    SignatureCodomainUseProof::SameCallDomains { domains, .. } => {
-                        if domains.layers.len() != 1 || domains.layers[0].return_carriers.is_some()
-                            || &domains.layers[0].selected != main_signature
-                            || &domains.layers[0].alternative != signature
-                            || !function_domains_alpha_equal(main_signature, signature)
-                        {
-                            return Err(LeanCompileError::new("FunctionReturn/SameDomains", "The recorded one-layer domains do not match these exact source signatures."));
+                    if selected_id == Some(id) {
+                        if signature != selected_signature {
+                            return Err(LeanCompileError::new("FunctionReturn/SelectedSignature", "The actual constructor signature differs from its source return row."));
                         }
-                        if selected_id == Some(id) {
-                            if signature != selected_signature {
-                                return Err(LeanCompileError::new("FunctionReturn/SelectedSignature", "The same-domain row differs from the original selected source."));
-                            }
-                            selected_same_domains = true;
+                        selected_match = Some(equality);
+                    }
+                }
+                SignatureCodomainUseProof::SameCallDomains { domains, .. } => {
+                    if domains.layers.len() != 1
+                        || domains.layers[0].return_carriers.is_some()
+                        || &domains.layers[0].selected != main_signature
+                        || &domains.layers[0].alternative != signature
+                        || !function_domains_alpha_equal(main_signature, signature)
+                    {
+                        return Err(LeanCompileError::new("FunctionReturn/SameDomains", "The recorded one-layer domains do not match these exact source signatures."));
+                    }
+                    if selected_id == Some(id) {
+                        if signature != selected_signature {
+                            return Err(LeanCompileError::new(
+                                "FunctionReturn/SelectedSignature",
+                                "The same-domain row differs from the original selected source.",
+                            ));
                         }
+                        selected_same_domains = true;
                     }
                 }
             }
-            let main_match = main_match.ok_or_else(|| LeanCompileError::new("FunctionReturn/SelectedSignature", "The chosen return source has no recorded return-set match."))?;
-            let (source_set, equality, member) = if let Some(equality) = selected_match {
-                let member = self.compile_call_output_proof(application, evidence, "_litex_return_call")?;
-                (Self::fixed_function_call_output(application, selected_signature)?, equality, member)
-            } else if selected_same_domains || (matches!(selected, FnObjDomainFnSetEvidence::Matrix(_))
-                && function_domains_alpha_equal(selected_signature, main_signature)) {
-                let (packed, domain) = self.compile_fn_return_domain(application, evidence, main_signature, &ctor_position)?;
-                let signature = self.compile_fn_signature(main_signature, position)?;
-                let member = format!("(Litex.FunctionSemantics.call_mem (M := M) (Litex.FunctionSignature.domain {signature}) (Litex.FunctionSignature.target {signature}) (Litex.denote {head_term}) {packed} {main_member} {domain})");
-                (main_signature.ret_set.as_ref(), main_match, member)
-            } else {
-                return Err(LeanCompileError::new("FunctionReturn/SelectedSignature", "The return payload does not cover the actual constructor's selected signature."));
-            };
-            let source_set = self.compile_object_reference(source_set, position)?;
-            let target_set = self.compile_object_reference(&goal.set, position)?;
-            // All original constructor and selected-return evidence was checked
-            // above. Only the emitted term is shared; no obligation is skipped.
-            let call = position.bound_compatible_fn_call(application, evidence).unwrap_or(call);
-            // The exact checked call supplies all three equality endpoints
-            // and the output law. Elaborate its constructor once locally.
-            Ok(format!("(by\n  let _litex_return_call := {call}\n  exact Litex.inOfSame _litex_return_call _litex_return_call {source_set} {target_set} (Litex.sameRefl _litex_return_call) {equality} {member})"))
-        })?;
-        proof.ok_or_else(|| {
+        }
+        let main_match = main_match.ok_or_else(|| {
             LeanCompileError::new(
-                "FunctionReturn/Producer",
-                "No earlier original call constructor supplies this return proof.",
+                "FunctionReturn/SelectedSignature",
+                "The chosen return source has no recorded return-set match.",
             )
-        })
+        })?;
+        let (source_set, equality, member) = if let Some(equality) = selected_match {
+            let member = if prefix {
+                "(Litex.callOnInOutput _litex_return_call)".into()
+            } else {
+                self.compile_call_output_proof(
+                    application,
+                    evidence,
+                    "_litex_return_call",
+                    &ctor_position,
+                )?
+            };
+            (
+                Self::fixed_function_call_output(application, selected_signature)?,
+                equality,
+                member,
+            )
+        } else if selected_same_domains
+            || (matches!(selected, FnObjDomainFnSetEvidence::Matrix(_))
+                && function_domains_alpha_equal(selected_signature, main_signature))
+        {
+            let (packed, domain) = if prefix {
+                let offset = usize::from(matches!(
+                    selected,
+                    FnObjDomainFnSetEvidence::AnonymousLiteral { .. }
+                ));
+                let children_end = offset + application.body[0].len();
+                let requirements_end =
+                    application.body[0].len() + selected_signature.dom_facts.len();
+                let children = evidence
+                    .child_obj_well_defined
+                    .get(..children_end)
+                    .ok_or_else(|| LeanCompileError::unsupported("FunctionReturn/PrefixStages"))?;
+                let requirements = evidence
+                    .requirement_fact_verified
+                    .get(..requirements_end)
+                    .ok_or_else(|| LeanCompileError::unsupported("FunctionReturn/PrefixStages"))?;
+                self.compile_captured_call_domain_at(
+                    application,
+                    children,
+                    requirements,
+                    offset,
+                    main_signature,
+                    &ctor_position,
+                    evidence.child_obj_well_defined.len(),
+                )?
+            } else {
+                self.compile_fn_return_domain(
+                    application,
+                    evidence,
+                    main_signature,
+                    &ctor_position,
+                )?
+            };
+            let signature = self.compile_fn_signature(main_signature, position)?;
+            let member = format!("(Litex.FunctionSemantics.call_mem (M := M) (Litex.FunctionSignature.domain {signature}) (Litex.FunctionSignature.target {signature}) (Litex.denote {head_term}) {packed} {main_member} {domain})");
+            (main_signature.ret_set.as_ref(), main_match, member)
+        } else {
+            return Err(LeanCompileError::new(
+                "FunctionReturn/SelectedSignature",
+                "The return payload does not cover the actual constructor's selected signature.",
+            ));
+        };
+        let source_set = self.compile_object_reference(source_set, position)?;
+        let target_set = self.compile_object_reference(&goal.set, position)?;
+        // All original constructor and selected-return evidence was checked
+        // above. Only the emitted term is shared; no obligation is skipped.
+        let call = if prefix {
+            call
+        } else {
+            position
+                .bound_compatible_fn_call(application, evidence)
+                .unwrap_or(call)
+        };
+        // The exact checked call supplies all three equality endpoints
+        // and the output law. Elaborate its constructor once locally.
+        Ok(format!("(by\n  let _litex_return_call := {call}\n  exact Litex.inOfSame _litex_return_call _litex_return_call {source_set} {target_set} (Litex.sameRefl _litex_return_call) {equality} {member})"))
     }
 
     pub(in crate::compile_to_lean) fn compile_fn_return_builtin(
@@ -1024,7 +1444,7 @@ impl LitexToLeanCompiler {
             InFactSearchProofByBuiltinRule::AnonymousFnApplicationScalarCodomain(p) => {
                 position.with_visible_wd(&goal.element, &mut |wd, producer| {
                     let DetailedObjWellDefinedProof::ByDef { obj: Obj::FnObj(application), proof: ObjWellDefinedProofByDef::FnObj(evidence) } = (wd).detailed_ref() else {
-                        return Err(LeanCompileError::new("FunctionReturn/WDSubject", "The source constructor is not the recorded application."));
+                        return Err(LeanCompileError::new("FunctionReturn/WDSubject", &format!("Literal return goal `{}` has captured constructor `{}` instead of a call WD.",goal.element.readable_string(),wd.obj().readable_string())));
                     };
                     let FnObjHead::AnonymousFnLiteral(literal) = application.head.as_ref() else {
                         return Err(LeanCompileError::new("FunctionReturn/LiteralSubject", "The scalar literal rule has another function head."));
@@ -1191,6 +1611,27 @@ impl LitexToLeanCompiler {
         signature: &FnSet,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
+        self.compile_captured_call_domain_at(
+            application,
+            children,
+            requirements,
+            offset,
+            signature,
+            position,
+            children.len(),
+        )
+    }
+
+    fn compile_captured_call_domain_at(
+        &self,
+        application: &FnObj,
+        children: &[Box<ObjWellDefinedProof>],
+        requirements: &[VerifyFactResult],
+        offset: usize,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+        requirement_offset: usize,
+    ) -> Result<(String, String), LeanCompileError> {
         if application.body.len() != 1 {
             return Err(LeanCompileError::unsupported("FunctionReturn/DomainArity"));
         }
@@ -1245,7 +1686,7 @@ impl LitexToLeanCompiler {
                 self.compile_verify(
                     requirement,
                     &SourcePosition {
-                        before: children.len() + index,
+                        before: requirement_offset + index,
                         ..*position
                     },
                 )?
@@ -1259,7 +1700,7 @@ impl LitexToLeanCompiler {
             &terms,
             &proofs,
             &SourcePosition {
-                before: children.len() + requirements.len(),
+                before: requirement_offset + requirements.len(),
                 ..*position
             },
         )

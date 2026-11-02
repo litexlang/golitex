@@ -4,8 +4,9 @@ mod exec_def_struct_stmt;
 mod store_struct_definition_facts;
 
 pub use exec_def_struct_stmt::{
-    ExecDefStructFieldScopeSuccessResult, ExecDefStructStmtFailed, ExecDefStructStmtResult,
-    ExecDefStructStmtSuccessResult,
+    DefStructFieldLocalFailed, DefStructLocalFailed, ExecDefStructFieldLocalFailure,
+    ExecDefStructFieldScopeSuccessResult, ExecDefStructLocalFailure, ExecDefStructStmtFailed,
+    ExecDefStructStmtResult, ExecDefStructStmtSuccessResult,
 };
 
 pub(crate) use exec_def_struct_stmt::StructEquivalentFactWellDefinedProof;

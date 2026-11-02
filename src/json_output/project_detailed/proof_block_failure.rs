@@ -2,11 +2,12 @@
 use super::verify::project_verify_fact;
 use super::wd::project_verify_fact_wd_result;
 use crate::execute::execute_by_stmt::{
-    ByCasesBranchFailed, ByContradictionClosingFailed, ExecByCasesStmtFailed,
-    ExecByContraStmtFailed, ExecByExtensionStmtFailed,
+    ByCasesBranchFailed, ByCasesEnteredBranchFailed, ByContradictionClosingFailed,
+    ExecByCasesStmtFailed, ExecByContraStmtFailed, ExecByExtensionStmtFailed,
 };
 use crate::execute::execute_proof_block_stmt::{
-    ExecClaimStmtFailed, ExecSketchStmtFailed, ProofBlockBodyFailed,
+    ExecClaimBodyFailed, ExecClaimForallEnteredFailed, ExecClaimForallFailed,
+    ExecClaimNonForallFailed, ExecClaimStmtFailed, ExecSketchStmtFailed, ProofBlockBodyFailed,
 };
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
@@ -89,22 +90,57 @@ pub(in crate::json_output) fn project_claim_failure(
         match failure {
             GoalWd(result) => wd(result, rt),
             GoalUnsupported(text) => message("goal_unsupported", text, rt),
-            Introduce(text) => message("introduce", text, rt),
-            ProofBody(failure) => body(failure, rt),
-            Conclusion { index: i, result } => object_for(
-                rt,
-                vec![
-                    ("phase", string("conclusion")),
-                    ("index", index(*i)),
-                    ("result", project_verify_fact(result, rt)),
-                ],
-            ),
-            Store(text) => message("store", text, rt),
+            Local(context) => project_claim_body_failure(&context.body, rt),
+            Store { message: text, .. } => message("store", text, rt),
         }
     };
     let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
     let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
     projected
+}
+
+fn project_claim_body_failure(failure: &ExecClaimBodyFailed, rt: &Runtime) -> JsonValue {
+    match failure {
+        ExecClaimBodyFailed::NonForall(failed) => match failed {
+            ExecClaimNonForallFailed::ProofBody(failed) => body(failed, rt),
+            ExecClaimNonForallFailed::Conclusion { result, .. } => {
+                project_claim_conclusion_failure(0, result, rt)
+            }
+        },
+        ExecClaimBodyFailed::Forall(failed) => match failed {
+            ExecClaimForallFailed::Introduce(_) => message(
+                "introduce",
+                "claim: failed to introduce forall parameters",
+                rt,
+            ),
+            ExecClaimForallFailed::Entered { failure, .. } => match failure {
+                ExecClaimForallEnteredFailed::PremiseWd { .. } => message(
+                    "introduce",
+                    "claim: forall domain fact is not well-defined",
+                    rt,
+                ),
+                ExecClaimForallEnteredFailed::ProofBody(failed) => body(failed, rt),
+                ExecClaimForallEnteredFailed::Conclusion { index, result, .. } => {
+                    project_claim_conclusion_failure(*index, result, rt)
+                }
+            },
+        },
+    }
+}
+
+fn project_claim_conclusion_failure(
+    failed_index: usize,
+    result: &crate::execute::execute_fact_stmt::VerifyFactResult,
+    rt: &Runtime,
+) -> JsonValue {
+    object_for(
+        rt,
+        vec![
+            ("phase", string("conclusion")),
+            ("index", index(failed_index)),
+            ("result", project_verify_fact(result, rt)),
+        ],
+    )
 }
 
 pub(in crate::json_output) fn project_sketch_failure(
@@ -157,7 +193,9 @@ pub(in crate::json_output) fn project_cases_failure(
                 ],
             ),
             Coverage(result) => verify("coverage", result, rt),
-            Branch { index: i, failed } => object_for(
+            Branch {
+                index: i, failed, ..
+            } => object_for(
                 rt,
                 vec![
                     ("phase", string("branch")),
@@ -183,12 +221,19 @@ pub(in crate::json_output) fn project_cases_failure(
     projected
 }
 fn branch(failure: &ByCasesBranchFailed, rt: &Runtime) -> JsonValue {
+    match failure {
+        ByCasesBranchFailed::AssumeCase(text) => message("assume_case", text, rt),
+        ByCasesBranchFailed::AfterAssumption(context) => entered_branch(&context.failure, rt),
+    }
+}
+fn entered_branch(failure: &ByCasesEnteredBranchFailed, rt: &Runtime) -> JsonValue {
     let projected = {
-        use ByCasesBranchFailed::*;
+        use ByCasesEnteredBranchFailed::*;
         match failure {
-            AssumeCase(text) => message("assume_case", text, rt),
             ProofBody(failure) => body(failure, rt),
-            ClosingThen { then_index, result } => object_for(
+            ClosingThen {
+                then_index, result, ..
+            } => object_for(
                 rt,
                 vec![
                     ("phase", string("closing_then")),
@@ -196,11 +241,11 @@ fn branch(failure: &ByCasesBranchFailed, rt: &Runtime) -> JsonValue {
                     ("result", project_verify_fact(result, rt)),
                 ],
             ),
-            ClosingImpossible(failure) => object_for(
+            ClosingImpossible { failed, .. } => object_for(
                 rt,
                 vec![
                     ("phase", string("closing_impossible")),
-                    ("failure", closing(failure, rt)),
+                    ("failure", closing(failed, rt)),
                 ],
             ),
         }
@@ -213,6 +258,19 @@ fn closing(failure: &ByContradictionClosingFailed, rt: &Runtime) -> JsonValue {
     let projected = {
         use ByContradictionClosingFailed::*;
         match failure {
+            AfterImpossible(context) => {
+                let mut value = match &context.failure {
+                    crate::execute::execute_by_stmt::ByContradictionOppositeFailed::NegationUnsupported(text) => message("negate_impossible", text, rt),
+                    crate::execute::execute_by_stmt::ByContradictionOppositeFailed::Verification(result) => verify("negated_impossible", result, rt),
+                };
+                if let JsonValue::Object(fields) = &mut value {
+                    fields.insert(
+                        "proved_impossible".into(),
+                        project_verify_fact(&context.impossible, rt),
+                    );
+                }
+                value
+            }
             Impossible(result) => verify("impossible", result, rt),
             NegateImpossibleUnsupported(text) => message("negate_impossible", text, rt),
             NegatedImpossible(result) => verify("negated_impossible", result, rt),
@@ -229,6 +287,46 @@ pub(in crate::json_output) fn project_contra_failure(
     let projected = {
         use ExecByContraStmtFailed::*;
         match failure {
+            Negation(context) => message("negation_unsupported", &context.message, rt),
+            Local(context) => match &context.failure {
+                crate::execute::execute_by_stmt::ExecByContraEnteredFailed::AssumptionWd(
+                    result,
+                ) => {
+                    let mut value =
+                        message("negation_assume", "assumption well-definedness failed", rt);
+                    if let JsonValue::Object(fields) = &mut value {
+                        fields.insert(
+                            "well_defined_result".into(),
+                            super::wd::project_verify_fact_wd_result(result, rt),
+                        );
+                    }
+                    value
+                }
+                crate::execute::execute_by_stmt::ExecByContraEnteredFailed::ProofBody {
+                    failure,
+                    ..
+                } => body(failure, rt),
+                crate::execute::execute_by_stmt::ExecByContraEnteredFailed::Closing {
+                    failure,
+                    ..
+                } => object_for(
+                    rt,
+                    vec![
+                        ("phase", string("closing")),
+                        ("failure", closing(failure, rt)),
+                    ],
+                ),
+            },
+            StoreAfterProof(context) => {
+                let mut value = message("store", "goal well-definedness failed at store", rt);
+                if let JsonValue::Object(fields) = &mut value {
+                    fields.insert(
+                        "well_defined_result".into(),
+                        super::wd::project_verify_fact_wd_result(&context.result, rt),
+                    );
+                }
+                value
+            }
             GoalWd(result) => wd(result, rt),
             NegationUnsupported(text) => message("negation_unsupported", text, rt),
             NegationAssume(text) => message("negation_assume", text, rt),

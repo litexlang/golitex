@@ -1,0 +1,1374 @@
+# Real and complex polynomial functions with finite coefficient witnesses.
+# Entry k+1 is the coefficient of x^k; trailing zeros are permitted.
+# Exact degree, full coefficient uniqueness and FTA remain separate obligations.
+
+template<n N>:
+    have fn real_polynomial_value(coefficients finite_seq(R,n+1),x R) R=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*x^k})
+
+template<n N>:
+    have fn complex_polynomial_value(coefficients finite_seq(C,n+1),x C) C=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})
+
+template<n N>:
+    have fn real_polynomial_from_coefficients(coefficients finite_seq(R,n+1)) fn(x R) R=fn(x R) R {\real_polynomial_value<n>(coefficients,x)}
+
+template<n N>:
+    have fn complex_polynomial_from_coefficients(coefficients finite_seq(C,n+1)) fn(x C) C=fn(x C) C {\complex_polynomial_value<n>(coefficients,x)}
+
+prop is_real_polynomial(p fn(x R) R):
+    exist n N,coefficients finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(coefficients)}
+
+prop is_complex_polynomial(p fn(x C) C):
+    exist n N,coefficients finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(coefficients)}
+
+claim:
+    ? {p fn(x R) R: $is_real_polynomial(p)} $in power_set(fn(x R) R)
+    by def {p fn(x R) R: $is_real_polynomial(p)} $subset fn(x R) R
+    {p fn(x R) R: $is_real_polynomial(p)} $in power_set(fn(x R) R)
+
+have real_polynomials power_set(fn(x R) R) = {p fn(x R) R: $is_real_polynomial(p)}
+
+claim:
+    ? {p fn(x C) C: $is_complex_polynomial(p)} $in power_set(fn(x C) C)
+    by def {p fn(x C) C: $is_complex_polynomial(p)} $subset fn(x C) C
+    {p fn(x C) C: $is_complex_polynomial(p)} $in power_set(fn(x C) C)
+
+have complex_polynomials power_set(fn(x C) C) = {p fn(x C) C: $is_complex_polynomial(p)}
+
+thm real_polynomial_from_coefficients_is_polynomial:
+    ? forall n N,coefficients finite_seq(R,n+1):
+        $is_real_polynomial(\real_polynomial_from_coefficients<n>(coefficients))
+    witness exist m N,values finite_seq(R,m+1) st {\real_polynomial_from_coefficients<n>(coefficients)=\real_polynomial_from_coefficients<m>(values)} from n,coefficients
+
+thm complex_polynomial_from_coefficients_is_polynomial:
+    ? forall n N,coefficients finite_seq(C,n+1):
+        $is_complex_polynomial(\complex_polynomial_from_coefficients<n>(coefficients))
+    witness exist m N,values finite_seq(C,m+1) st {\complex_polynomial_from_coefficients<n>(coefficients)=\complex_polynomial_from_coefficients<m>(values)} from n,coefficients
+
+thm real_polynomial_value_at:
+    ? forall n N,coefficients finite_seq(R,n+1),x R:
+        \real_polynomial_from_coefficients<n>(coefficients)(x)=\real_polynomial_value<n>(coefficients,x)
+
+thm complex_polynomial_value_at:
+    ? forall n N,coefficients finite_seq(C,n+1),x C:
+        \complex_polynomial_from_coefficients<n>(coefficients)(x)=\complex_polynomial_value<n>(coefficients,x)
+
+thm real_polynomial_of_pointwise_representation:
+    ? forall n N,coefficients finite_seq(R,n+1),p fn(x R) R:
+        forall x R:
+            p(x)=\real_polynomial_value<n>(coefficients,x)
+        =>:
+            $is_real_polynomial(p)
+    claim:
+        ? forall x R:
+            p(x)=\real_polynomial_from_coefficients<n>(coefficients)(x)
+        \real_polynomial_from_coefficients<n>(coefficients)(x)=\real_polynomial_value<n>(coefficients,x)
+    by fn_extension p=\real_polynomial_from_coefficients<n>(coefficients)
+    release thm real_polynomial_from_coefficients_is_polynomial(n,coefficients)
+
+thm complex_polynomial_of_pointwise_representation:
+    ? forall n N,coefficients finite_seq(C,n+1),p fn(x C) C:
+        forall x C:
+            p(x)=\complex_polynomial_value<n>(coefficients,x)
+        =>:
+            $is_complex_polynomial(p)
+    claim:
+        ? forall x C:
+            p(x)=\complex_polynomial_from_coefficients<n>(coefficients)(x)
+        \complex_polynomial_from_coefficients<n>(coefficients)(x)=\complex_polynomial_value<n>(coefficients,x)
+    by fn_extension p=\complex_polynomial_from_coefficients<n>(coefficients)
+    release thm complex_polynomial_from_coefficients_is_polynomial(n,coefficients)
+
+thm real_constant_polynomial_value:
+    ? forall coefficients finite_seq(R,0+1),x R:
+        \real_polynomial_value<0>(coefficients,x)=coefficients(1)
+    have terms fn(k closed_range(0,0)) C=fn(k closed_range(0,0)) C {coefficients(k+1)*x^k}
+    \real_polynomial_value<0>(coefficients,x)=finite_set_sum(closed_range(0,0),fn(k closed_range(0,0)) R {coefficients(k+1)*x^k})
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,0),fn(k closed_range(0,0)) R {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,0),terms))
+    closed_range(0,0)={0}
+    finite_set_sum(closed_range(0,0),terms)=finite_set_sum({0},terms)=terms(0)
+    0+1=1
+    coefficients(0+1)=coefficients(1)
+    coefficients(1) $in R
+    coefficients(1) $in C
+    x^0=1
+    terms(0)=coefficients(0+1)*x^0
+    coefficients(0+1)*x^0=coefficients(1)*1=coefficients(1)
+
+thm complex_constant_polynomial_value:
+    ? forall coefficients finite_seq(C,0+1),x C:
+        \complex_polynomial_value<0>(coefficients,x)=coefficients(1)
+    have terms fn(k closed_range(0,0)) C=fn(k closed_range(0,0)) C {coefficients(k+1)*x^k}
+    \complex_polynomial_value<0>(coefficients,x)=finite_set_sum(closed_range(0,0),fn(k closed_range(0,0)) C {coefficients(k+1)*x^k})
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,0),fn(k closed_range(0,0)) C {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,0),terms))
+    closed_range(0,0)={0}
+    finite_set_sum(closed_range(0,0),terms)=finite_set_sum({0},terms)=terms(0)
+    0+1=1
+    coefficients(0+1)=coefficients(1)
+    coefficients(1) $in C
+    x^0=1
+    terms(0)=coefficients(0+1)*x^0
+    coefficients(0+1)*x^0=coefficients(1)*1=coefficients(1)
+
+thm real_polynomial_contains:
+    ? forall p fn(x R) R:
+        $is_real_polynomial(p)
+        =>:
+            p $in real_polynomials
+    real_polynomials={q fn(x R) R: $is_real_polynomial(q)}
+    release thm set_builder_member(p,{q fn(x R) R: $is_real_polynomial(q)})
+
+thm complex_polynomial_contains:
+    ? forall p fn(x C) C:
+        $is_complex_polynomial(p)
+        =>:
+            p $in complex_polynomials
+    complex_polynomials={q fn(x C) C: $is_complex_polynomial(q)}
+    release thm set_builder_member(p,{q fn(x C) C: $is_complex_polynomial(q)})
+
+thm real_polynomial_representation:
+    ? forall p fn(x R) R:
+        $is_real_polynomial(p)
+        =>:
+            exist n N,coefficients finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(coefficients)}
+
+thm complex_polynomial_representation:
+    ? forall p fn(x C) C:
+        $is_complex_polynomial(p)
+        =>:
+            exist n N,coefficients finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(coefficients)}
+
+thm real_constant_function_is_polynomial:
+    ? forall c R:
+        $is_real_polynomial(fn(x R) R {c})
+        fn(x R) R {c} $in real_polynomials
+    have coefficients finite_seq(R,0+1)=fn(j closed_range(1,0+1)) R {c}
+    claim:
+        ? forall x R:
+            fn(t R) R {c}(x)=\real_polynomial_value<0>(coefficients,x)
+        release thm real_constant_polynomial_value(coefficients,x)
+        coefficients(1)=c
+        fn(t R) R {c}(x)=c=coefficients(1)=\real_polynomial_value<0>(coefficients,x)
+    release thm real_polynomial_of_pointwise_representation(0,coefficients,fn(x R) R {c})
+    release thm real_polynomial_contains(fn(x R) R {c})
+
+thm complex_constant_function_is_polynomial:
+    ? forall c C:
+        $is_complex_polynomial(fn(x C) C {c})
+        fn(x C) C {c} $in complex_polynomials
+    have coefficients finite_seq(C,0+1)=fn(j closed_range(1,0+1)) C {c}
+    claim:
+        ? forall x C:
+            fn(t C) C {c}(x)=\complex_polynomial_value<0>(coefficients,x)
+        release thm complex_constant_polynomial_value(coefficients,x)
+        coefficients(1)=c
+        fn(t C) C {c}(x)=c=coefficients(1)=\complex_polynomial_value<0>(coefficients,x)
+    release thm complex_polynomial_of_pointwise_representation(0,coefficients,fn(x C) C {c})
+    release thm complex_polynomial_contains(fn(x C) C {c})
+
+claim:
+    ? forall c R:
+        fn(x R) R {c} $in real_polynomials
+    release thm real_constant_function_is_polynomial(c)
+
+have fn real_constant_polynomial(c R) real_polynomials=fn(x R) R {c}
+
+claim:
+    ? forall c C:
+        fn(x C) C {c} $in complex_polynomials
+    release thm complex_constant_function_is_polynomial(c)
+
+have fn complex_constant_polynomial(c C) complex_polynomials=fn(x C) C {c}
+
+thm real_polynomial_function_carrier:
+    ? forall p real_polynomials:
+        p $in fn(x R) R
+    release obj def real_polynomials
+    real_polynomials $in power_set(fn(x R) R)
+    real_polynomials $subset fn(x R) R
+    p $in fn(x R) R
+
+thm complex_polynomial_function_carrier:
+    ? forall p complex_polynomials:
+        p $in fn(x C) C
+    release obj def complex_polynomials
+    complex_polynomials $in power_set(fn(x C) C)
+    complex_polynomials $subset fn(x C) C
+    p $in fn(x C) C
+
+thm complex_polynomial_value_spec:
+    ? forall n N,coefficients finite_seq(C,n+1),x C:
+        \complex_polynomial_value<n>(coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})
+
+thm real_polynomial_value_spec:
+    ? forall n N,coefficients finite_seq(R,n+1),x R:
+        \real_polynomial_value<n>(coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*x^k})
+
+thm complex_linear_polynomial_value:
+    ? forall coefficients finite_seq(C,1+1),x C:
+        \complex_polynomial_value<1>(coefficients,x)=coefficients(1)+coefficients(2)*x
+    have terms fn(k closed_range(0,1)) C=fn(k closed_range(0,1)) C {coefficients(k+1)*x^k}
+    release thm complex_polynomial_value_spec(1,coefficients,x)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) C {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,1),terms))
+    \complex_polynomial_value<1>(coefficients,x)=finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) C {coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,1),terms)
+    closed_range(0,1)={0,1}
+    finite_set_sum(closed_range(0,1),terms)=finite_set_sum({0,1},terms)=terms(0)+terms(1)
+    0+1=1
+    1+1=2
+    x^0=1
+    x^1=x
+    terms(0)=coefficients(1)*1=coefficients(1)
+    terms(1)=coefficients(2)*x
+    finite_set_sum(closed_range(0,1),terms)=coefficients(1)+coefficients(2)*x
+
+thm real_linear_polynomial_value:
+    ? forall coefficients finite_seq(R,1+1),x R:
+        \real_polynomial_value<1>(coefficients,x)=coefficients(1)+coefficients(2)*x
+    have terms fn(k closed_range(0,1)) C=fn(k closed_range(0,1)) C {coefficients(k+1)*x^k}
+    release thm real_polynomial_value_spec(1,coefficients,x)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) R {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,1),terms))
+    \real_polynomial_value<1>(coefficients,x)=finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) R {coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,1),terms)
+    closed_range(0,1)={0,1}
+    finite_set_sum(closed_range(0,1),terms)=finite_set_sum({0,1},terms)=terms(0)+terms(1)
+    0+1=1
+    1+1=2
+    x^0=1
+    x^1=x
+    terms(0)=coefficients(1)*1=coefficients(1)
+    terms(1)=coefficients(2)*x
+    finite_set_sum(closed_range(0,1),terms)=coefficients(1)+coefficients(2)*x
+
+thm real_polynomials_nonempty:
+    ? $is_nonempty_set(real_polynomials)
+    witness $is_nonempty_set(real_polynomials) from real_constant_polynomial(0)
+
+thm complex_polynomials_nonempty:
+    ? $is_nonempty_set(complex_polynomials)
+    witness $is_nonempty_set(complex_polynomials) from complex_constant_polynomial(0)
+
+thm complex_polynomial_value_add:
+    ? forall n N,left_coefficients,right_coefficients,result_coefficients finite_seq(C,n+1),x C:
+        forall j closed_range(1,n+1):
+            result_coefficients(j)=left_coefficients(j)+right_coefficients(j)
+        =>:
+            \complex_polynomial_value<n>(result_coefficients,x)=\complex_polynomial_value<n>(left_coefficients,x)+\complex_polynomial_value<n>(right_coefficients,x)
+    have left_terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {left_coefficients(k+1)*x^k}
+    have right_terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {right_coefficients(k+1)*x^k}
+    claim:
+        ? forall k closed_range(0,n):
+            result_coefficients(k+1)*x^k=left_terms(k)+right_terms(k)
+        k+1 $in closed_range(1,n+1)
+        result_coefficients(k+1) $in C
+        left_coefficients(k+1) $in C
+        right_coefficients(k+1) $in C
+        x^k $in C
+        result_coefficients(k+1)=left_coefficients(k+1)+right_coefficients(k+1)
+        result_coefficients(k+1)*x^k=(left_coefficients(k+1)+right_coefficients(k+1))*x^k=left_coefficients(k+1)*x^k+right_coefficients(k+1)*x^k=left_terms(k)+right_terms(k)
+    release thm complex_polynomial_value_spec(n,left_coefficients,x)
+    release thm complex_polynomial_value_spec(n,right_coefficients,x)
+    release thm complex_polynomial_value_spec(n,result_coefficients,x)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {result_coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_terms(k)+right_terms(k)}))
+    thm finite_complex_sum_add:
+        ? forall S finite_set,f,g fn(k S) C:
+            finite_set_sum(S,fn(k S) C {f(k)+g(k)})=finite_set_sum(S,f)+finite_set_sum(S,g)
+    release thm finite_complex_sum_add(closed_range(0,n),left_terms,right_terms)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),left_terms),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_coefficients(k+1)*x^k}))
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),right_terms),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {right_coefficients(k+1)*x^k}))
+    finite_set_sum(closed_range(0,n),left_terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_coefficients(k+1)*x^k})=\complex_polynomial_value<n>(left_coefficients,x)
+    finite_set_sum(closed_range(0,n),right_terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {right_coefficients(k+1)*x^k})=\complex_polynomial_value<n>(right_coefficients,x)
+    \complex_polynomial_value<n>(result_coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {result_coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_terms(k)+right_terms(k)})=finite_set_sum(closed_range(0,n),left_terms)+finite_set_sum(closed_range(0,n),right_terms)=\complex_polynomial_value<n>(left_coefficients,x)+\complex_polynomial_value<n>(right_coefficients,x)
+
+thm real_polynomial_value_add:
+    ? forall n N,left_coefficients,right_coefficients,result_coefficients finite_seq(R,n+1),x R:
+        forall j closed_range(1,n+1):
+            result_coefficients(j)=left_coefficients(j)+right_coefficients(j)
+        =>:
+            \real_polynomial_value<n>(result_coefficients,x)=\real_polynomial_value<n>(left_coefficients,x)+\real_polynomial_value<n>(right_coefficients,x)
+    have left_terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {left_coefficients(k+1)*x^k}
+    have right_terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {right_coefficients(k+1)*x^k}
+    claim:
+        ? forall k closed_range(0,n):
+            result_coefficients(k+1)*x^k=left_terms(k)+right_terms(k)
+        k+1 $in closed_range(1,n+1)
+        result_coefficients(k+1) $in C
+        left_coefficients(k+1) $in C
+        right_coefficients(k+1) $in C
+        x^k $in C
+        result_coefficients(k+1)=left_coefficients(k+1)+right_coefficients(k+1)
+        result_coefficients(k+1)*x^k=(left_coefficients(k+1)+right_coefficients(k+1))*x^k=left_coefficients(k+1)*x^k+right_coefficients(k+1)*x^k=left_terms(k)+right_terms(k)
+    release thm real_polynomial_value_spec(n,left_coefficients,x)
+    release thm real_polynomial_value_spec(n,right_coefficients,x)
+    release thm real_polynomial_value_spec(n,result_coefficients,x)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {result_coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_terms(k)+right_terms(k)}))
+    thm finite_complex_sum_add:
+        ? forall S finite_set,f,g fn(k S) C:
+            finite_set_sum(S,fn(k S) C {f(k)+g(k)})=finite_set_sum(S,f)+finite_set_sum(S,g)
+    release thm finite_complex_sum_add(closed_range(0,n),left_terms,right_terms)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),left_terms),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {left_coefficients(k+1)*x^k}))
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),right_terms),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {right_coefficients(k+1)*x^k}))
+    finite_set_sum(closed_range(0,n),left_terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {left_coefficients(k+1)*x^k})=\real_polynomial_value<n>(left_coefficients,x)
+    finite_set_sum(closed_range(0,n),right_terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {right_coefficients(k+1)*x^k})=\real_polynomial_value<n>(right_coefficients,x)
+    \real_polynomial_value<n>(result_coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {result_coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left_terms(k)+right_terms(k)})=finite_set_sum(closed_range(0,n),left_terms)+finite_set_sum(closed_range(0,n),right_terms)=\real_polynomial_value<n>(left_coefficients,x)+\real_polynomial_value<n>(right_coefficients,x)
+
+thm complex_polynomial_value_smul:
+    ? forall n N,coefficients,result_coefficients finite_seq(C,n+1),a,x C:
+        forall j closed_range(1,n+1):
+            result_coefficients(j)=a*coefficients(j)
+        =>:
+            \complex_polynomial_value<n>(result_coefficients,x)=a*\complex_polynomial_value<n>(coefficients,x)
+    have terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {coefficients(k+1)*x^k}
+    claim:
+        ? forall k closed_range(0,n):
+            result_coefficients(k+1)*x^k=a*terms(k)
+        k+1 $in closed_range(1,n+1)
+        coefficients(k+1) $in C
+        result_coefficients(k+1) $in C
+        x^k $in C
+        result_coefficients(k+1)=a*coefficients(k+1)
+        result_coefficients(k+1)*x^k=(a*coefficients(k+1))*x^k=a*(coefficients(k+1)*x^k)=a*terms(k)
+    release thm complex_polynomial_value_spec(n,coefficients,x)
+    release thm complex_polynomial_value_spec(n,result_coefficients,x)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {result_coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {a*terms(k)}))
+    thm finite_complex_sum_smul:
+        ? forall S finite_set,c C,f fn(k S) C:
+            finite_set_sum(S,fn(k S) C {c*f(k)})=c*finite_set_sum(S,f)
+    release thm finite_complex_sum_smul(closed_range(0,n),a,terms)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),terms),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k}))
+    finite_set_sum(closed_range(0,n),terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})=\complex_polynomial_value<n>(coefficients,x)
+    \complex_polynomial_value<n>(result_coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {result_coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {a*terms(k)})=a*finite_set_sum(closed_range(0,n),terms)=a*\complex_polynomial_value<n>(coefficients,x)
+
+thm real_polynomial_value_smul:
+    ? forall n N,coefficients,result_coefficients finite_seq(R,n+1),a,x R:
+        forall j closed_range(1,n+1):
+            result_coefficients(j)=a*coefficients(j)
+        =>:
+            \real_polynomial_value<n>(result_coefficients,x)=a*\real_polynomial_value<n>(coefficients,x)
+    have terms fn(k closed_range(0,n)) C=fn(k closed_range(0,n)) C {coefficients(k+1)*x^k}
+    claim:
+        ? forall k closed_range(0,n):
+            result_coefficients(k+1)*x^k=a*terms(k)
+        k+1 $in closed_range(1,n+1)
+        coefficients(k+1) $in C
+        result_coefficients(k+1) $in C
+        x^k $in C
+        result_coefficients(k+1)=a*coefficients(k+1)
+        result_coefficients(k+1)*x^k=(a*coefficients(k+1))*x^k=a*(coefficients(k+1)*x^k)=a*terms(k)
+    release thm real_polynomial_value_spec(n,coefficients,x)
+    release thm real_polynomial_value_spec(n,result_coefficients,x)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {result_coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {a*terms(k)}))
+    thm finite_complex_sum_smul:
+        ? forall S finite_set,c C,f fn(k S) C:
+            finite_set_sum(S,fn(k S) C {c*f(k)})=c*finite_set_sum(S,f)
+    release thm finite_complex_sum_smul(closed_range(0,n),a,terms)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),terms),finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*x^k}))
+    finite_set_sum(closed_range(0,n),terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*x^k})=\real_polynomial_value<n>(coefficients,x)
+    \real_polynomial_value<n>(result_coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {result_coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {a*terms(k)})=a*finite_set_sum(closed_range(0,n),terms)=a*\real_polynomial_value<n>(coefficients,x)
+
+# Monomial lists and correspondence with existing linear combinations.
+
+release obj def field::complex_field
+
+release obj def field::real_field
+
+release thm vector_space::scalar_space_carrier(C,field::complex_field)
+
+release thm vector_space::scalar_space_carrier(R,field::real_field)
+
+release thm vector_space::function_space_carrier(C,field::complex_field,C)
+
+release thm vector_space::function_space_carrier(R,field::real_field,R)
+
+template<n N>:
+    have fn complex_monomial_values(x C) finite_seq(C,n+1)=fn(j closed_range(1,n+1)) C {x^(j-1)}
+
+template<n N>:
+    have fn real_monomial_values(x R) finite_seq(R,n+1)=fn(j closed_range(1,n+1)) R {x^(j-1)}
+
+template<n N>:
+    have fn complex_monomials(j closed_range(1,n+1)) fn(t C) C=fn(z C) C {z^(j-1)}
+
+template<n N>:
+    have fn real_monomials(j closed_range(1,n+1)) fn(t R) R=fn(z R) R {z^(j-1)}
+
+thm complex_monomials_carrier:
+    ? forall n N:
+        \complex_monomials<n> $in finite_seq(fn(t C) C,n+1)
+
+thm real_monomials_carrier:
+    ? forall n N:
+        \real_monomials<n> $in finite_seq(fn(t R) R,n+1)
+
+thm complex_monomial_values_entry:
+    ? forall n N,x C,j closed_range(1,n+1):
+        \complex_monomial_values<n>(x)(j)=x^(j-1)
+
+thm real_monomial_values_entry:
+    ? forall n N,x R,j closed_range(1,n+1):
+        \real_monomial_values<n>(x)(j)=x^(j-1)
+
+thm complex_monomials_entry:
+    ? forall n N,j closed_range(1,n+1),x C:
+        \complex_monomials<n>(j)(x)=x^(j-1)
+
+thm real_monomials_entry:
+    ? forall n N,j closed_range(1,n+1),x R:
+        \real_monomials<n>(j)(x)=x^(j-1)
+
+thm complex_monomial_values_carrier:
+    ? forall n N,x C:
+        \complex_monomial_values<n>(x) $in finite_seq(C,n+1)
+
+thm real_monomial_values_carrier:
+    ? forall n N,x R:
+        \real_monomial_values<n>(x) $in finite_seq(R,n+1)
+
+thm complex_polynomial_value_as_combination:
+    ? forall n N,coefficients finite_seq(C,n+1),x C:
+        \complex_polynomial_value<n>(coefficients,x)=\finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\complex_monomial_values<n>(x))
+    n $in Z
+    n>=0
+    release thm vector_space::scalar_space_carrier(C,field::complex_field)
+    release struct def field::complex_field
+    release obj def field::complex_add
+    release obj def field::complex_mul
+    \vector_space::scalar_space<C,field::complex_field> =(field::complex_field.zero,field::complex_field.add,field::complex_field.mul)
+    release struct def \vector_space::scalar_space<C,field::complex_field>
+    \vector_space::scalar_space<C,field::complex_field>.zero=field::complex_field.zero=0
+    \vector_space::scalar_space<C,field::complex_field>.add=field::complex_field.add
+    \vector_space::scalar_space<C,field::complex_field>.smul=field::complex_field.mul
+    field::complex_field.mul=field::complex_mul
+    field::complex_field.add=field::complex_add
+    claim:
+        ? forall k N:
+            k<=n
+            =>:
+                k+1 $in closed_range(1,n+1)
+        k>=0
+        k+1 $in Z
+        1<=k+1<=n+1
+    have fn terms(k N) C by cases:
+        case k<=n: coefficients(k+1)*x^k
+        case k>n: 0
+    claim:
+        ? forall j closed_range(0,n+1):
+            j=0 or j>=1
+        j $in N
+        by cases:
+            ? j=0 or j>=1
+            case j=0:
+                j=0
+            case j!=0:
+                by contra:
+                    ? j>0
+                    j<=0
+                    j=0
+                    impossible j!=0
+                j $in N+
+                j>=1
+    have fn sums(j closed_range(0,n+1)) C by cases:
+        case j=0: 0
+        case j>=1: sum(0,j-1,terms)
+    sums(0)=0=\vector_space::scalar_space<C,field::complex_field>.zero
+    thm natural_sum_step:
+        ? forall t N,f fn(k N) C:
+            sum(0,t+1,f)=sum(0,t,f)+f(t+1)
+    claim:
+        ? forall j N+:
+            j<=n+1
+            =>:
+                sums(j)=\vector_space::scalar_space<C,field::complex_field>.add(sums(j-1),\vector_space::scalar_space<C,field::complex_field>.smul(coefficients(j),\complex_monomial_values<n>(x)(j)))
+        j>=1
+        j $in Z
+        j<=n+1
+        j-1 $in N
+        (n+1)-1=n
+        j-1<=(n+1)-1=n
+        j $in closed_range(1,n+1)
+        j-1 $in closed_range(0,n+1)
+        j $in closed_range(0,n+1)
+        release thm complex_monomial_values_entry(n,x,j)
+        (j-1)+1=j
+        coefficients(j) $in C
+        \complex_monomial_values<n>(x)(j) $in C
+        x^(j-1) $in C
+        terms(j-1)=coefficients((j-1)+1)*x^(j-1)=coefficients(j)*x^(j-1)=coefficients(j)*\complex_monomial_values<n>(x)(j)
+        sums(j-1) $in C
+        terms(j-1) $in C
+        claim:
+            ? sums(j)=sums(j-1)+terms(j-1)
+            by cases:
+                ? sums(j)=sums(j-1)+terms(j-1)
+                case j=1:
+                    j-1=0
+                    terms(j-1)=terms(0)
+                    sums(j)=sums(1)=sum(0,0,terms)=terms(0)
+                    sums(j-1)=sums(0)=0
+                    terms(0) $in C
+                    sums(j)=terms(0)=0+terms(0)=sums(j-1)+terms(j-1)
+                case j>1:
+                    j-1 $in Z
+                    j-1>0
+                    j-1 $in N+
+                    j-1>=1
+                    j>=2
+                    j-2 $in Z
+                    j-2>=0
+                    j-2 $in N
+                    (j-2)+1=j-1
+                    (j-1)-1=j-2
+                    release thm natural_sum_step(j-2,terms)
+                    sums(j)=sum(0,j-1,terms)
+                    sums(j-1)=sum(0,(j-1)-1,terms)=sum(0,j-2,terms)
+                    terms((j-2)+1)=terms(j-1)
+                    terms(j-1) $in C
+                    sum(0,j-2,terms) $in C
+                    sum(0,j-1,terms)=sum(0,(j-2)+1,terms)
+                    sum(0,(j-2)+1,terms)=sum(0,j-2,terms)+terms((j-2)+1)
+                    sum(0,j-2,terms)+terms((j-2)+1)=sum(0,j-2,terms)+terms(j-1)
+                    sum(0,j-1,terms)=sum(0,(j-2)+1,terms)=sum(0,j-2,terms)+terms((j-2)+1)=sum(0,j-2,terms)+terms(j-1)
+                    sums(j)=sum(0,j-1,terms)=sum(0,j-2,terms)+terms(j-1)=sums(j-1)+terms(j-1)
+        \vector_space::scalar_space<C,field::complex_field>.smul(coefficients(j),\complex_monomial_values<n>(x)(j))=field::complex_field.mul(coefficients(j),\complex_monomial_values<n>(x)(j))=field::complex_mul(coefficients(j),\complex_monomial_values<n>(x)(j))=coefficients(j)*\complex_monomial_values<n>(x)(j)=terms(j-1)
+        sums(j-1) $in C
+        terms(j-1) $in C
+        \vector_space::scalar_space<C,field::complex_field>.add(sums(j-1),terms(j-1))=field::complex_field.add(sums(j-1),terms(j-1))=field::complex_add(sums(j-1),terms(j-1))=sums(j-1)+terms(j-1)=sums(j)
+    by def $finite_span::is_partial_sum(C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1,coefficients,\complex_monomial_values<n>(x),sums)
+    release thm finite_span::partial_sum_determines_combination(C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1,coefficients,\complex_monomial_values<n>(x),sums)
+    n+1>=1
+    (n+1)-1=n
+    sums(n+1)=sum(0,(n+1)-1,terms)=sum(0,n,terms)
+    claim:
+        ? forall k closed_range(0,n):
+            terms(k)=coefficients(k+1)*x^k
+        k $in N
+        k<=n
+        terms(k)=coefficients(k+1)*x^k
+    release thm complex_polynomial_value_spec(n,coefficients,x)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),terms))
+    finite_set_sum(closed_range(0,n),terms)=sum(0,n,terms)=sums(n+1)
+    \complex_polynomial_value<n>(coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),terms)=sums(n+1)=\finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\complex_monomial_values<n>(x))
+
+thm real_polynomial_value_as_combination:
+    ? forall n N,coefficients finite_seq(R,n+1),x R:
+        \real_polynomial_value<n>(coefficients,x)=\finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\real_monomial_values<n>(x))
+    n $in Z
+    n>=0
+    release thm vector_space::scalar_space_carrier(R,field::real_field)
+    release struct def field::real_field
+    release obj def field::real_add
+    release obj def field::real_mul
+    \vector_space::scalar_space<R,field::real_field> =(field::real_field.zero,field::real_field.add,field::real_field.mul)
+    release struct def \vector_space::scalar_space<R,field::real_field>
+    \vector_space::scalar_space<R,field::real_field>.zero=field::real_field.zero=0
+    \vector_space::scalar_space<R,field::real_field>.add=field::real_field.add
+    \vector_space::scalar_space<R,field::real_field>.smul=field::real_field.mul
+    field::real_field.mul=field::real_mul
+    field::real_field.add=field::real_add
+    claim:
+        ? forall k N:
+            k<=n
+            =>:
+                k+1 $in closed_range(1,n+1)
+        k>=0
+        k+1 $in Z
+        1<=k+1<=n+1
+    have fn terms(k N) R by cases:
+        case k<=n: coefficients(k+1)*x^k
+        case k>n: 0
+    claim:
+        ? forall j closed_range(0,n+1):
+            j=0 or j>=1
+        j $in N
+        by cases:
+            ? j=0 or j>=1
+            case j=0:
+                j=0
+            case j!=0:
+                by contra:
+                    ? j>0
+                    j<=0
+                    j=0
+                    impossible j!=0
+                j $in N+
+                j>=1
+    have fn sums(j closed_range(0,n+1)) R by cases:
+        case j=0: 0
+        case j>=1: sum(0,j-1,terms)
+    sums(0)=0=\vector_space::scalar_space<R,field::real_field>.zero
+    thm natural_sum_step:
+        ? forall t N,f fn(k N) R:
+            sum(0,t+1,f)=sum(0,t,f)+f(t+1)
+    claim:
+        ? forall j N+:
+            j<=n+1
+            =>:
+                sums(j)=\vector_space::scalar_space<R,field::real_field>.add(sums(j-1),\vector_space::scalar_space<R,field::real_field>.smul(coefficients(j),\real_monomial_values<n>(x)(j)))
+        j>=1
+        j $in Z
+        j<=n+1
+        j-1 $in N
+        (n+1)-1=n
+        j-1<=(n+1)-1=n
+        j $in closed_range(1,n+1)
+        j-1 $in closed_range(0,n+1)
+        j $in closed_range(0,n+1)
+        release thm real_monomial_values_entry(n,x,j)
+        (j-1)+1=j
+        coefficients(j) $in R
+        \real_monomial_values<n>(x)(j) $in R
+        x^(j-1) $in R
+        terms(j-1)=coefficients((j-1)+1)*x^(j-1)=coefficients(j)*x^(j-1)=coefficients(j)*\real_monomial_values<n>(x)(j)
+        sums(j-1) $in R
+        terms(j-1) $in R
+        claim:
+            ? sums(j)=sums(j-1)+terms(j-1)
+            by cases:
+                ? sums(j)=sums(j-1)+terms(j-1)
+                case j=1:
+                    j-1=0
+                    terms(j-1)=terms(0)
+                    sums(j)=sums(1)=sum(0,0,terms)=terms(0)
+                    sums(j-1)=sums(0)=0
+                    terms(0) $in R
+                    sums(j)=terms(0)=0+terms(0)=sums(j-1)+terms(j-1)
+                case j>1:
+                    j-1 $in Z
+                    j-1>0
+                    j-1 $in N+
+                    j-1>=1
+                    j>=2
+                    j-2 $in Z
+                    j-2>=0
+                    j-2 $in N
+                    (j-2)+1=j-1
+                    (j-1)-1=j-2
+                    release thm natural_sum_step(j-2,terms)
+                    sums(j)=sum(0,j-1,terms)
+                    sums(j-1)=sum(0,(j-1)-1,terms)=sum(0,j-2,terms)
+                    terms((j-2)+1)=terms(j-1)
+                    terms(j-1) $in R
+                    sum(0,j-2,terms) $in R
+                    sum(0,j-1,terms)=sum(0,(j-2)+1,terms)
+                    sum(0,(j-2)+1,terms)=sum(0,j-2,terms)+terms((j-2)+1)
+                    sum(0,j-2,terms)+terms((j-2)+1)=sum(0,j-2,terms)+terms(j-1)
+                    sum(0,j-1,terms)=sum(0,(j-2)+1,terms)=sum(0,j-2,terms)+terms((j-2)+1)=sum(0,j-2,terms)+terms(j-1)
+                    sums(j)=sum(0,j-1,terms)=sum(0,j-2,terms)+terms(j-1)=sums(j-1)+terms(j-1)
+        \vector_space::scalar_space<R,field::real_field>.smul(coefficients(j),\real_monomial_values<n>(x)(j))=field::real_field.mul(coefficients(j),\real_monomial_values<n>(x)(j))=field::real_mul(coefficients(j),\real_monomial_values<n>(x)(j))=coefficients(j)*\real_monomial_values<n>(x)(j)=terms(j-1)
+        sums(j-1) $in R
+        terms(j-1) $in R
+        \vector_space::scalar_space<R,field::real_field>.add(sums(j-1),terms(j-1))=field::real_field.add(sums(j-1),terms(j-1))=field::real_add(sums(j-1),terms(j-1))=sums(j-1)+terms(j-1)=sums(j)
+    by def $finite_span::is_partial_sum(R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1,coefficients,\real_monomial_values<n>(x),sums)
+    release thm finite_span::partial_sum_determines_combination(R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1,coefficients,\real_monomial_values<n>(x),sums)
+    n+1>=1
+    (n+1)-1=n
+    sums(n+1)=sum(0,(n+1)-1,terms)=sum(0,n,terms)
+    claim:
+        ? forall k closed_range(0,n):
+            terms(k)=coefficients(k+1)*x^k
+        k $in N
+        k<=n
+        terms(k)=coefficients(k+1)*x^k
+    release thm real_polynomial_value_spec(n,coefficients,x)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,n),terms))
+    finite_set_sum(closed_range(0,n),terms)=sum(0,n,terms)=sums(n+1)
+    \real_polynomial_value<n>(coefficients,x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*x^k})=finite_set_sum(closed_range(0,n),terms)=sums(n+1)=\finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\real_monomial_values<n>(x))
+
+thm complex_monomials_evaluation:
+    ? forall n N,x C:
+        \finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>)=\complex_monomial_values<n>(x)
+    release thm complex_monomials_carrier(n)
+    release thm complex_monomial_values_carrier(n,x)
+    release thm vector_space::function_evaluation_carrier(C,C,x)
+    claim:
+        ? forall j closed_range(1,n+1):
+            \finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>)(j)=\complex_monomial_values<n>(x)(j)
+        release thm vector_space::function_evaluation_spec(C,C,x,\complex_monomials<n>(j))
+        release thm complex_monomials_entry(n,j,x)
+        release thm complex_monomial_values_entry(n,x,j)
+        \finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>)(j)=\vector_space::function_evaluation<C,C,x>(\complex_monomials<n>(j))=\complex_monomials<n>(j)(x)=x^(j-1)=\complex_monomial_values<n>(x)(j)
+    by fn_extension \finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>)=\complex_monomial_values<n>(x)
+
+thm real_monomials_evaluation:
+    ? forall n N,x R:
+        \finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>)=\real_monomial_values<n>(x)
+    release thm real_monomials_carrier(n)
+    release thm real_monomial_values_carrier(n,x)
+    release thm vector_space::function_evaluation_carrier(R,R,x)
+    claim:
+        ? forall j closed_range(1,n+1):
+            \finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>)(j)=\real_monomial_values<n>(x)(j)
+        release thm vector_space::function_evaluation_spec(R,R,x,\real_monomials<n>(j))
+        release thm real_monomials_entry(n,j,x)
+        release thm real_monomial_values_entry(n,x,j)
+        \finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>)(j)=\vector_space::function_evaluation<R,R,x>(\real_monomials<n>(j))=\real_monomials<n>(j)(x)=x^(j-1)=\real_monomial_values<n>(x)(j)
+    by fn_extension \finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>)=\real_monomial_values<n>(x)
+
+thm complex_polynomial_function_as_combination:
+    ? forall n N,coefficients finite_seq(C,n+1):
+        \complex_polynomial_from_coefficients<n>(coefficients)=\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)
+    release thm vector_space::function_space_carrier(C,field::complex_field,C)
+    release thm vector_space::scalar_space_carrier(C,field::complex_field)
+    release thm complex_monomials_carrier(n)
+    have combined fn(t C) C=\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)
+    claim:
+        ? forall x C:
+            \complex_polynomial_from_coefficients<n>(coefficients)(x)=combined(x)
+        release thm vector_space::function_evaluation_is_linear(C,field::complex_field,C,x)
+        release thm finite_span::linear_map_preserves_combination(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,C,\vector_space::scalar_space<C,field::complex_field>,\vector_space::function_evaluation<C,C,x>,n+1,coefficients,\complex_monomials<n>)
+        release thm complex_monomials_evaluation(n,x)
+        release thm complex_polynomial_value_as_combination(n,coefficients,x)
+        release thm vector_space::function_evaluation_spec(C,C,x,combined)
+        release thm complex_polynomial_value_at(n,coefficients,x)
+        release thm complex_monomial_values_carrier(n,x)
+        \finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>) $in finite_seq(C,n+1)
+        \finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>)=\complex_monomial_values<n>(x)
+        coefficients $in finite_seq(C,n+1)
+        \finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1> $in fn(a,b finite_seq(C,n+1)) C
+        thm binary_function_congruence:
+            ? forall A,B set,f fn(a,b A) B,c,u,v A:
+                u=v
+                =>:
+                    f(c,u)=f(c,v)
+        release thm binary_function_congruence(finite_seq(C,n+1),C,\finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>,coefficients,\finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>),\complex_monomial_values<n>(x))
+        have action fn(a,b finite_seq(C,n+1)) C=\finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>
+        release thm binary_function_congruence(finite_seq(C,n+1),C,action,coefficients,\finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>),\complex_monomial_values<n>(x))
+        \finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>))=action(coefficients,\finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>))
+        action(coefficients,\finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>))=action(coefficients,\complex_monomial_values<n>(x))
+        action(coefficients,\complex_monomial_values<n>(x))=\finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\complex_monomial_values<n>(x))
+        \finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>))=\finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\complex_monomial_values<n>(x))
+        release thm vector_space::function_evaluation_carrier(C,C,x)
+        have evaluate fn(f fn(t C) C) C=\vector_space::function_evaluation<C,C,x>
+        thm unary_function_congruence:
+            ? forall A,B set,f fn(a A) B,u,v A:
+                u=v
+                =>:
+                    f(u)=f(v)
+        \finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>) $in fn(t C) C
+        combined=\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)
+        release thm unary_function_congruence(fn(t C) C,C,evaluate,combined,\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>))
+        \vector_space::function_evaluation<C,C,x>(combined)=evaluate(combined)
+        evaluate(combined)=evaluate(\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>))
+        evaluate(\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>))=\vector_space::function_evaluation<C,C,x>(\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>))
+        \vector_space::function_evaluation<C,C,x>(combined)=evaluate(combined)=evaluate(\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>))=\vector_space::function_evaluation<C,C,x>(\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>))
+        combined(x) $in C
+        \vector_space::function_evaluation<C,C,x>(combined) $in C
+        \vector_space::function_evaluation<C,C,x>(\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)) $in C
+        \finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>)) $in C
+        \finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\complex_monomial_values<n>(x)) $in C
+        \complex_polynomial_value<n>(coefficients,x) $in C
+        \complex_polynomial_from_coefficients<n>(coefficients)(x) $in C
+        evaluate(combined) $in C
+        evaluate(\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)) $in C
+        combined(x)=\vector_space::function_evaluation<C,C,x>(combined)=\vector_space::function_evaluation<C,C,x>(\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>))=\finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\finite_span::map_vectors<fn(t C) C,C,n+1>(\vector_space::function_evaluation<C,C,x>,\complex_monomials<n>))=\finite_span::linear_combination<C,field::complex_field,C,\vector_space::scalar_space<C,field::complex_field>,n+1>(coefficients,\complex_monomial_values<n>(x))=\complex_polynomial_value<n>(coefficients,x)=\complex_polynomial_from_coefficients<n>(coefficients)(x)
+    by fn_extension \complex_polynomial_from_coefficients<n>(coefficients)=combined
+    \complex_polynomial_from_coefficients<n>(coefficients) $in fn(t C) C
+    \finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>) $in fn(t C) C
+    \complex_polynomial_from_coefficients<n>(coefficients)=combined=\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)
+
+thm real_polynomial_function_as_combination:
+    ? forall n N,coefficients finite_seq(R,n+1):
+        \real_polynomial_from_coefficients<n>(coefficients)=\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)
+    release thm vector_space::function_space_carrier(R,field::real_field,R)
+    release thm vector_space::scalar_space_carrier(R,field::real_field)
+    release thm real_monomials_carrier(n)
+    have combined fn(t R) R=\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)
+    claim:
+        ? forall x R:
+            \real_polynomial_from_coefficients<n>(coefficients)(x)=combined(x)
+        release thm vector_space::function_evaluation_is_linear(R,field::real_field,R,x)
+        release thm finite_span::linear_map_preserves_combination(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,R,\vector_space::scalar_space<R,field::real_field>,\vector_space::function_evaluation<R,R,x>,n+1,coefficients,\real_monomials<n>)
+        release thm real_monomials_evaluation(n,x)
+        release thm real_polynomial_value_as_combination(n,coefficients,x)
+        release thm vector_space::function_evaluation_spec(R,R,x,combined)
+        release thm real_polynomial_value_at(n,coefficients,x)
+        release thm real_monomial_values_carrier(n,x)
+        \finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>) $in finite_seq(R,n+1)
+        \finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>)=\real_monomial_values<n>(x)
+        coefficients $in finite_seq(R,n+1)
+        \finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1> $in fn(a,b finite_seq(R,n+1)) R
+        thm binary_function_congruence:
+            ? forall A,B set,f fn(a,b A) B,c,u,v A:
+                u=v
+                =>:
+                    f(c,u)=f(c,v)
+        release thm binary_function_congruence(finite_seq(R,n+1),R,\finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>,coefficients,\finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>),\real_monomial_values<n>(x))
+        have action fn(a,b finite_seq(R,n+1)) R=\finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>
+        release thm binary_function_congruence(finite_seq(R,n+1),R,action,coefficients,\finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>),\real_monomial_values<n>(x))
+        \finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>))=action(coefficients,\finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>))
+        action(coefficients,\finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>))=action(coefficients,\real_monomial_values<n>(x))
+        action(coefficients,\real_monomial_values<n>(x))=\finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\real_monomial_values<n>(x))
+        \finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>))=\finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\real_monomial_values<n>(x))
+        release thm vector_space::function_evaluation_carrier(R,R,x)
+        have evaluate fn(f fn(t R) R) R=\vector_space::function_evaluation<R,R,x>
+        thm unary_function_congruence:
+            ? forall A,B set,f fn(a A) B,u,v A:
+                u=v
+                =>:
+                    f(u)=f(v)
+        \finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>) $in fn(t R) R
+        combined=\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)
+        release thm unary_function_congruence(fn(t R) R,R,evaluate,combined,\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>))
+        \vector_space::function_evaluation<R,R,x>(combined)=evaluate(combined)
+        evaluate(combined)=evaluate(\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>))
+        evaluate(\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>))=\vector_space::function_evaluation<R,R,x>(\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>))
+        \vector_space::function_evaluation<R,R,x>(combined)=evaluate(combined)=evaluate(\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>))=\vector_space::function_evaluation<R,R,x>(\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>))
+        combined(x) $in R
+        \vector_space::function_evaluation<R,R,x>(combined) $in R
+        \vector_space::function_evaluation<R,R,x>(\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)) $in R
+        \finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>)) $in R
+        \finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\real_monomial_values<n>(x)) $in R
+        \real_polynomial_value<n>(coefficients,x) $in R
+        \real_polynomial_from_coefficients<n>(coefficients)(x) $in R
+        evaluate(combined) $in R
+        evaluate(\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)) $in R
+        combined(x)=\vector_space::function_evaluation<R,R,x>(combined)=\vector_space::function_evaluation<R,R,x>(\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>))=\finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\finite_span::map_vectors<fn(t R) R,R,n+1>(\vector_space::function_evaluation<R,R,x>,\real_monomials<n>))=\finite_span::linear_combination<R,field::real_field,R,\vector_space::scalar_space<R,field::real_field>,n+1>(coefficients,\real_monomial_values<n>(x))=\real_polynomial_value<n>(coefficients,x)=\real_polynomial_from_coefficients<n>(coefficients)(x)
+    by fn_extension \real_polynomial_from_coefficients<n>(coefficients)=combined
+    \real_polynomial_from_coefficients<n>(coefficients) $in fn(t R) R
+    \finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>) $in fn(t R) R
+    \real_polynomial_from_coefficients<n>(coefficients)=combined=\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)
+
+# Bounded monomial spans and the full polynomial vector spaces.
+
+claim:
+    ? forall n N:
+        \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>> $in power_set(fn(t C) C)
+    release thm complex_monomials_carrier(n)
+    release thm vector_space::function_space_carrier(C,field::complex_field,C)
+    release thm finite_span::span_is_subspace(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>)
+    \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>> $in power_set(fn(t C) C)
+
+template<n N>:
+    have complex_polynomials_up_to power_set(fn(t C) C)=\finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>>
+
+claim:
+    ? forall n N:
+        \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>> $in power_set(fn(t R) R)
+    release thm real_monomials_carrier(n)
+    release thm vector_space::function_space_carrier(R,field::real_field,R)
+    release thm finite_span::span_is_subspace(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>)
+    \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>> $in power_set(fn(t R) R)
+
+template<n N>:
+    have real_polynomials_up_to power_set(fn(t R) R)=\finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>>
+
+thm complex_polynomials_up_to_carrier:
+    ? forall n N:
+        \complex_polynomials_up_to<n> $in power_set(fn(t C) C)
+
+thm complex_polynomials_up_to_is_subspace:
+    ? forall n N:
+        $vector_space::is_subspace(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,\complex_polynomials_up_to<n>)
+    \complex_polynomials_up_to<n> =\finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>>
+    release thm finite_span::span_is_subspace(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>)
+
+thm real_polynomials_up_to_carrier:
+    ? forall n N:
+        \real_polynomials_up_to<n> $in power_set(fn(t R) R)
+
+thm real_polynomials_up_to_is_subspace:
+    ? forall n N:
+        $vector_space::is_subspace(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,\real_polynomials_up_to<n>)
+    \real_polynomials_up_to<n> =\finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>>
+    release thm finite_span::span_is_subspace(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>)
+
+thm complex_polynomials_up_to_contains_representation:
+    ? forall n N,p fn(t C) C:
+        exist coefficients finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(coefficients)}
+        =>:
+            p $in \complex_polynomials_up_to<n>
+    obtain coefficients from exist values finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(values)}
+    release thm complex_polynomial_function_as_combination(n,coefficients)
+    p=\complex_polynomial_from_coefficients<n>(coefficients)=\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)
+    release thm finite_span::linear_combination_has_value(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,coefficients,\complex_monomials<n>)
+    $finite_span::has_linear_combination_value(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,coefficients,\complex_monomials<n>,p)
+    witness exist values finite_seq(C,n+1) st {$finite_span::has_linear_combination_value(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,values,\complex_monomials<n>,p)} from coefficients
+    by def $finite_span::is_linear_combination(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,p,\complex_monomials<n>)
+    \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>> = {q fn(t C) C: $finite_span::is_linear_combination(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,q,\complex_monomials<n>)}
+    release thm set_builder_member(p,{q fn(t C) C: $finite_span::is_linear_combination(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,q,\complex_monomials<n>)})
+    \complex_polynomials_up_to<n> = \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>>
+    p $in \complex_polynomials_up_to<n>
+
+thm real_polynomials_up_to_contains_representation:
+    ? forall n N,p fn(t R) R:
+        exist coefficients finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(coefficients)}
+        =>:
+            p $in \real_polynomials_up_to<n>
+    obtain coefficients from exist values finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(values)}
+    release thm real_polynomial_function_as_combination(n,coefficients)
+    p=\real_polynomial_from_coefficients<n>(coefficients)=\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)
+    release thm finite_span::linear_combination_has_value(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,coefficients,\real_monomials<n>)
+    $finite_span::has_linear_combination_value(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,coefficients,\real_monomials<n>,p)
+    witness exist values finite_seq(R,n+1) st {$finite_span::has_linear_combination_value(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,values,\real_monomials<n>,p)} from coefficients
+    by def $finite_span::is_linear_combination(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,p,\real_monomials<n>)
+    \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>> = {q fn(t R) R: $finite_span::is_linear_combination(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,q,\real_monomials<n>)}
+    release thm set_builder_member(p,{q fn(t R) R: $finite_span::is_linear_combination(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,q,\real_monomials<n>)})
+    \real_polynomials_up_to<n> = \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>>
+    p $in \real_polynomials_up_to<n>
+
+thm complex_polynomials_up_to_representation:
+    ? forall n N,p fn(t C) C:
+        p $in \complex_polynomials_up_to<n>
+        =>:
+            exist coefficients finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(coefficients)}
+    \complex_polynomials_up_to<n> = \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>>
+    \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>> = {q fn(t C) C: $finite_span::is_linear_combination(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,q,\complex_monomials<n>)}
+    p $in \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>>
+    $finite_span::is_linear_combination(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,p,\complex_monomials<n>)
+    obtain coefficients from exist values finite_seq(C,n+1) st {$finite_span::has_linear_combination_value(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,values,\complex_monomials<n>,p)}
+    release thm finite_span::linear_combination_has_value(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,coefficients,\complex_monomials<n>)
+    release thm finite_span::linear_combination_exists_unique(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,coefficients,\complex_monomials<n>)
+    \finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)=p
+    release thm complex_polynomial_function_as_combination(n,coefficients)
+    p=\finite_span::linear_combination<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1>(coefficients,\complex_monomials<n>)=\complex_polynomial_from_coefficients<n>(coefficients)
+    witness exist values finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(values)} from coefficients
+
+thm real_polynomials_up_to_representation:
+    ? forall n N,p fn(t R) R:
+        p $in \real_polynomials_up_to<n>
+        =>:
+            exist coefficients finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(coefficients)}
+    \real_polynomials_up_to<n> = \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>>
+    \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>> = {q fn(t R) R: $finite_span::is_linear_combination(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,q,\real_monomials<n>)}
+    p $in \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>>
+    $finite_span::is_linear_combination(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,p,\real_monomials<n>)
+    obtain coefficients from exist values finite_seq(R,n+1) st {$finite_span::has_linear_combination_value(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,values,\real_monomials<n>,p)}
+    release thm finite_span::linear_combination_has_value(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,coefficients,\real_monomials<n>)
+    release thm finite_span::linear_combination_exists_unique(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,coefficients,\real_monomials<n>)
+    \finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)=p
+    release thm real_polynomial_function_as_combination(n,coefficients)
+    p=\finite_span::linear_combination<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1>(coefficients,\real_monomials<n>)=\real_polynomial_from_coefficients<n>(coefficients)
+    witness exist values finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(values)} from coefficients
+
+thm complex_polynomials_up_to_subset:
+    ? forall n N:
+        \complex_polynomials_up_to<n> $subset complex_polynomials
+    claim:
+        ? forall p \complex_polynomials_up_to<n>:
+            p $in complex_polynomials
+        release thm complex_polynomials_up_to_carrier(n)
+        \complex_polynomials_up_to<n> $subset fn(t C) C
+        p $in fn(t C) C
+        release thm complex_polynomials_up_to_representation(n,p)
+        obtain coefficients from exist values finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(values)}
+        witness exist m N,values finite_seq(C,m+1) st {p=\complex_polynomial_from_coefficients<m>(values)} from n,coefficients
+        by def $is_complex_polynomial(p)
+        release thm complex_polynomial_contains(p)
+    by def \complex_polynomials_up_to<n> $subset complex_polynomials
+
+thm real_polynomials_up_to_subset:
+    ? forall n N:
+        \real_polynomials_up_to<n> $subset real_polynomials
+    claim:
+        ? forall p \real_polynomials_up_to<n>:
+            p $in real_polynomials
+        release thm real_polynomials_up_to_carrier(n)
+        \real_polynomials_up_to<n> $subset fn(t R) R
+        p $in fn(t R) R
+        release thm real_polynomials_up_to_representation(n,p)
+        obtain coefficients from exist values finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(values)}
+        witness exist m N,values finite_seq(R,m+1) st {p=\real_polynomial_from_coefficients<m>(values)} from n,coefficients
+        by def $is_real_polynomial(p)
+        release thm real_polynomial_contains(p)
+    by def \real_polynomials_up_to<n> $subset real_polynomials
+
+thm complex_polynomials_up_to_inclusion:
+    ? forall n,m N:
+        n<=m
+        =>:
+            \complex_polynomials_up_to<n> $subset \complex_polynomials_up_to<m>
+    release thm complex_polynomials_up_to_carrier(n)
+    release thm complex_polynomials_up_to_carrier(m)
+    claim:
+        ? forall j N+:
+            j<=n+1
+            =>:
+                \complex_monomials<n>(j) $in \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,m+1,\complex_monomials<m>>
+        j>=1
+        j<=n+1
+        n+1<=m+1
+        j<=m+1
+        j $in closed_range(1,n+1)
+        j $in closed_range(1,m+1)
+        claim:
+            ? forall x C:
+                \complex_monomials<n>(j)(x)=\complex_monomials<m>(j)(x)
+            release thm complex_monomials_entry(n,j,x)
+            release thm complex_monomials_entry(m,j,x)
+            \complex_monomials<n>(j)(x)=x^(j-1)=\complex_monomials<m>(j)(x)
+        by fn_extension \complex_monomials<n>(j)=\complex_monomials<m>(j)
+        release thm span_reduction::span_contains_generator(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,m+1,\complex_monomials<m>,j)
+        \complex_monomials<n>(j) $in \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,m+1,\complex_monomials<m>>
+    release thm span_reduction::span_inclusion_from_generators(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>,m+1,\complex_monomials<m>)
+    \complex_polynomials_up_to<n> = \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,n+1,\complex_monomials<n>>
+    \complex_polynomials_up_to<m> = \finite_span::span<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,m+1,\complex_monomials<m>>
+    by def \complex_polynomials_up_to<n> $subset \complex_polynomials_up_to<m>
+
+thm real_polynomials_up_to_inclusion:
+    ? forall n,m N:
+        n<=m
+        =>:
+            \real_polynomials_up_to<n> $subset \real_polynomials_up_to<m>
+    release thm real_polynomials_up_to_carrier(n)
+    release thm real_polynomials_up_to_carrier(m)
+    claim:
+        ? forall j N+:
+            j<=n+1
+            =>:
+                \real_monomials<n>(j) $in \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,m+1,\real_monomials<m>>
+        j>=1
+        j<=n+1
+        n+1<=m+1
+        j<=m+1
+        j $in closed_range(1,n+1)
+        j $in closed_range(1,m+1)
+        claim:
+            ? forall x R:
+                \real_monomials<n>(j)(x)=\real_monomials<m>(j)(x)
+            release thm real_monomials_entry(n,j,x)
+            release thm real_monomials_entry(m,j,x)
+            \real_monomials<n>(j)(x)=x^(j-1)=\real_monomials<m>(j)(x)
+        by fn_extension \real_monomials<n>(j)=\real_monomials<m>(j)
+        release thm span_reduction::span_contains_generator(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,m+1,\real_monomials<m>,j)
+        \real_monomials<n>(j) $in \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,m+1,\real_monomials<m>>
+    release thm span_reduction::span_inclusion_from_generators(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>,m+1,\real_monomials<m>)
+    \real_polynomials_up_to<n> = \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,n+1,\real_monomials<n>>
+    \real_polynomials_up_to<m> = \finite_span::span<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,m+1,\real_monomials<m>>
+    by def \real_polynomials_up_to<n> $subset \real_polynomials_up_to<m>
+
+claim:
+    ? forall n N:
+        $is_nonempty_set(\complex_polynomials_up_to<n>)
+    release thm complex_polynomials_up_to_is_subspace(n)
+    release thm subspace::subspace_is_nonempty(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,\complex_polynomials_up_to<n>)
+
+claim:
+    ? forall n N:
+        \subspace::restricted_space<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,\complex_polynomials_up_to<n>> $in &vector_space::VectorSpace<C,field::complex_field,\complex_polynomials_up_to<n>>
+    release thm complex_polynomials_up_to_is_subspace(n)
+    release thm subspace::subspace_is_nonempty(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,\complex_polynomials_up_to<n>)
+    release thm subspace::restricted_space_is_vector_space(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,\complex_polynomials_up_to<n>)
+
+template<n N>:
+    have complex_bounded_polynomial_space &vector_space::VectorSpace<C,field::complex_field,\complex_polynomials_up_to<n>> = \subspace::restricted_space<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,\complex_polynomials_up_to<n>>
+
+claim:
+    ? forall n N:
+        $is_nonempty_set(\real_polynomials_up_to<n>)
+    release thm real_polynomials_up_to_is_subspace(n)
+    release thm subspace::subspace_is_nonempty(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,\real_polynomials_up_to<n>)
+
+claim:
+    ? forall n N:
+        \subspace::restricted_space<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,\real_polynomials_up_to<n>> $in &vector_space::VectorSpace<R,field::real_field,\real_polynomials_up_to<n>>
+    release thm real_polynomials_up_to_is_subspace(n)
+    release thm subspace::subspace_is_nonempty(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,\real_polynomials_up_to<n>)
+    release thm subspace::restricted_space_is_vector_space(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,\real_polynomials_up_to<n>)
+
+template<n N>:
+    have real_bounded_polynomial_space &vector_space::VectorSpace<R,field::real_field,\real_polynomials_up_to<n>> = \subspace::restricted_space<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,\real_polynomials_up_to<n>>
+
+release obj def complex_polynomials
+
+thm complex_polynomials_is_subspace:
+    ? $vector_space::is_subspace(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,complex_polynomials)
+    release thm complex_polynomials_up_to_is_subspace(0)
+    release thm complex_polynomials_up_to_subset(0)
+    \vector_space::function_space<C,field::complex_field,C>.zero $in \complex_polynomials_up_to<0>
+    \vector_space::function_space<C,field::complex_field,C>.zero $in complex_polynomials
+    claim:
+        ? forall p,q fn(t C) C:
+            p $in complex_polynomials
+            q $in complex_polynomials
+            =>:
+                \vector_space::function_space<C,field::complex_field,C>.add(p,q) $in complex_polynomials
+        $is_complex_polynomial(p)
+        $is_complex_polynomial(q)
+        release thm complex_polynomial_representation(p)
+        release thm complex_polynomial_representation(q)
+        obtain n,left_coefficients from exist k N,values finite_seq(C,k+1) st {p=\complex_polynomial_from_coefficients<k>(values)}
+        obtain m,right_coefficients from exist k N,values finite_seq(C,k+1) st {q=\complex_polynomial_from_coefficients<k>(values)}
+        witness exist values finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(values)} from left_coefficients
+        witness exist values finite_seq(C,m+1) st {q=\complex_polynomial_from_coefficients<m>(values)} from right_coefficients
+        release thm complex_polynomials_up_to_contains_representation(n,p)
+        release thm complex_polynomials_up_to_contains_representation(m,q)
+        n+m $in N
+        n<=n+m
+        m<=n+m
+        release thm complex_polynomials_up_to_inclusion(n,n+m)
+        release thm complex_polynomials_up_to_inclusion(m,n+m)
+        p $in \complex_polynomials_up_to<n+m>
+        q $in \complex_polynomials_up_to<n+m>
+        release thm complex_polynomials_up_to_is_subspace(n+m)
+        \vector_space::function_space<C,field::complex_field,C>.add(p,q) $in \complex_polynomials_up_to<n+m>
+        release thm complex_polynomials_up_to_subset(n+m)
+        \vector_space::function_space<C,field::complex_field,C>.add(p,q) $in complex_polynomials
+    claim:
+        ? forall a C,p fn(t C) C:
+            p $in complex_polynomials
+            =>:
+                \vector_space::function_space<C,field::complex_field,C>.smul(a,p) $in complex_polynomials
+        $is_complex_polynomial(p)
+        release thm complex_polynomial_representation(p)
+        obtain n,coefficients from exist k N,values finite_seq(C,k+1) st {p=\complex_polynomial_from_coefficients<k>(values)}
+        witness exist values finite_seq(C,n+1) st {p=\complex_polynomial_from_coefficients<n>(values)} from coefficients
+        release thm complex_polynomials_up_to_contains_representation(n,p)
+        release thm complex_polynomials_up_to_is_subspace(n)
+        \vector_space::function_space<C,field::complex_field,C>.smul(a,p) $in \complex_polynomials_up_to<n>
+        release thm complex_polynomials_up_to_subset(n)
+        \vector_space::function_space<C,field::complex_field,C>.smul(a,p) $in complex_polynomials
+    by def $vector_space::is_subspace(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,complex_polynomials)
+
+release obj def real_polynomials
+
+thm real_polynomials_is_subspace:
+    ? $vector_space::is_subspace(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,real_polynomials)
+    release thm real_polynomials_up_to_is_subspace(0)
+    release thm real_polynomials_up_to_subset(0)
+    \vector_space::function_space<R,field::real_field,R>.zero $in \real_polynomials_up_to<0>
+    \vector_space::function_space<R,field::real_field,R>.zero $in real_polynomials
+    claim:
+        ? forall p,q fn(t R) R:
+            p $in real_polynomials
+            q $in real_polynomials
+            =>:
+                \vector_space::function_space<R,field::real_field,R>.add(p,q) $in real_polynomials
+        $is_real_polynomial(p)
+        $is_real_polynomial(q)
+        release thm real_polynomial_representation(p)
+        release thm real_polynomial_representation(q)
+        obtain n,left_coefficients from exist k N,values finite_seq(R,k+1) st {p=\real_polynomial_from_coefficients<k>(values)}
+        obtain m,right_coefficients from exist k N,values finite_seq(R,k+1) st {q=\real_polynomial_from_coefficients<k>(values)}
+        witness exist values finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(values)} from left_coefficients
+        witness exist values finite_seq(R,m+1) st {q=\real_polynomial_from_coefficients<m>(values)} from right_coefficients
+        release thm real_polynomials_up_to_contains_representation(n,p)
+        release thm real_polynomials_up_to_contains_representation(m,q)
+        n+m $in N
+        n<=n+m
+        m<=n+m
+        release thm real_polynomials_up_to_inclusion(n,n+m)
+        release thm real_polynomials_up_to_inclusion(m,n+m)
+        p $in \real_polynomials_up_to<n+m>
+        q $in \real_polynomials_up_to<n+m>
+        release thm real_polynomials_up_to_is_subspace(n+m)
+        \vector_space::function_space<R,field::real_field,R>.add(p,q) $in \real_polynomials_up_to<n+m>
+        release thm real_polynomials_up_to_subset(n+m)
+        \vector_space::function_space<R,field::real_field,R>.add(p,q) $in real_polynomials
+    claim:
+        ? forall a R,p fn(t R) R:
+            p $in real_polynomials
+            =>:
+                \vector_space::function_space<R,field::real_field,R>.smul(a,p) $in real_polynomials
+        $is_real_polynomial(p)
+        release thm real_polynomial_representation(p)
+        obtain n,coefficients from exist k N,values finite_seq(R,k+1) st {p=\real_polynomial_from_coefficients<k>(values)}
+        witness exist values finite_seq(R,n+1) st {p=\real_polynomial_from_coefficients<n>(values)} from coefficients
+        release thm real_polynomials_up_to_contains_representation(n,p)
+        release thm real_polynomials_up_to_is_subspace(n)
+        \vector_space::function_space<R,field::real_field,R>.smul(a,p) $in \real_polynomials_up_to<n>
+        release thm real_polynomials_up_to_subset(n)
+        \vector_space::function_space<R,field::real_field,R>.smul(a,p) $in real_polynomials
+    by def $vector_space::is_subspace(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,real_polynomials)
+
+release thm subspace::subspace_is_nonempty(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,complex_polynomials)
+
+release thm subspace::restricted_space_is_vector_space(C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,complex_polynomials)
+
+have complex_polynomial_space &vector_space::VectorSpace<C,field::complex_field,complex_polynomials> = \subspace::restricted_space<C,field::complex_field,fn(t C) C,\vector_space::function_space<C,field::complex_field,C>,complex_polynomials>
+
+release thm subspace::subspace_is_nonempty(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,real_polynomials)
+
+release thm subspace::restricted_space_is_vector_space(R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,real_polynomials)
+
+have real_polynomial_space &vector_space::VectorSpace<R,field::real_field,real_polynomials> = \subspace::restricted_space<R,field::real_field,fn(t R) R,\vector_space::function_space<R,field::real_field,R>,real_polynomials>
+
+# Evaluation at zero, the constant coefficient, and nonconstant linear roots.
+claim:
+    ? forall n N:
+        1 $in closed_range(1,n+1)
+    n>=0
+    1<=n+1
+    1 $in closed_range(1,n+1)
+
+thm complex_zero_tail_sum:
+    ? forall f fn(k N) C,bound N:
+        forall k N+:
+            f(k)=0
+        =>:
+            sum(0,bound,f)=f(0)
+    by induc n from 0:
+        ? sum(0,n,f)=f(0)
+        ? from n=0:
+            sum(0,0,f)=f(0)
+        ? induc:
+            n $in N
+            n+1 $in N+
+            f(n+1)=0
+            sum(0,n,f) $in C
+            f(0) $in C
+            sum(0,n+1,f)=sum(0,n,f)+f(n+1)=f(0)
+    sum(0,bound,f)=f(0)
+
+thm real_zero_tail_sum:
+    ? forall f fn(k N) R,bound N:
+        forall k N+:
+            f(k)=0
+        =>:
+            sum(0,bound,f)=f(0)
+    by induc n from 0:
+        ? sum(0,n,f)=f(0)
+        ? from n=0:
+            sum(0,0,f)=f(0)
+        ? induc:
+            n $in N
+            n+1 $in N+
+            f(n+1)=0
+            sum(0,n,f) $in R
+            f(0) $in R
+            sum(0,n+1,f)=sum(0,n,f)+f(n+1)=f(0)
+    sum(0,bound,f)=f(0)
+
+thm complex_polynomial_value_at_zero:
+    ? forall n N,coefficients finite_seq(C,n+1):
+        \complex_polynomial_value<n>(coefficients,0)=coefficients(1)
+    claim:
+        ? forall k N:
+            k<=n
+            =>:
+                k+1 $in closed_range(1,n+1)
+        k+1 $in Z
+        1<=k+1<=n+1
+    have fn terms(k N) C by cases:
+        case k<=n: coefficients(k+1)*0^k
+        case k>n: 0
+    claim:
+        ? forall k N+:
+            terms(k)=0
+        by cases:
+            ? terms(k)=0
+            case k<=n:
+                k $in N
+                k>0
+                0^k=0
+                terms(k)=coefficients(k+1)*0^k=0
+            case k>n:
+                terms(k)=0
+    terms(0)=coefficients(1)*0^0=coefficients(1)
+    release thm complex_zero_tail_sum(terms,n)
+    claim:
+        ? forall k closed_range(0,n):
+            coefficients(k+1)*0^k=terms(k)
+        k $in N
+        k<=n
+        terms(k)=coefficients(k+1)*0^k
+    \complex_polynomial_value<n>(coefficients,0)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*0^k})
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*0^k}),finite_set_sum(closed_range(0,n),terms))
+    finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*0^k})=finite_set_sum(closed_range(0,n),terms)=sum(0,n,terms)=terms(0)=coefficients(1)
+
+thm real_polynomial_value_at_zero:
+    ? forall n N,coefficients finite_seq(R,n+1):
+        \real_polynomial_value<n>(coefficients,0)=coefficients(1)
+    claim:
+        ? forall k N:
+            k<=n
+            =>:
+                k+1 $in closed_range(1,n+1)
+        k+1 $in Z
+        1<=k+1<=n+1
+    have fn terms(k N) R by cases:
+        case k<=n: coefficients(k+1)*0^k
+        case k>n: 0
+    claim:
+        ? forall k N+:
+            terms(k)=0
+        by cases:
+            ? terms(k)=0
+            case k<=n:
+                k $in N
+                k>0
+                0^k=0
+                terms(k)=coefficients(k+1)*0^k=0
+            case k>n:
+                terms(k)=0
+    terms(0)=coefficients(1)*0^0=coefficients(1)
+    release thm real_zero_tail_sum(terms,n)
+    claim:
+        ? forall k closed_range(0,n):
+            coefficients(k+1)*0^k=terms(k)
+        k $in N
+        k<=n
+        terms(k)=coefficients(k+1)*0^k
+    \real_polynomial_value<n>(coefficients,0)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*0^k})
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*0^k}),finite_set_sum(closed_range(0,n),terms))
+    finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) R {coefficients(k+1)*0^k})=finite_set_sum(closed_range(0,n),terms)=sum(0,n,terms)=terms(0)=coefficients(1)
+
+thm complex_polynomial_first_coefficient_unique:
+    ? forall n,m N,left_coefficients finite_seq(C,n+1),right_coefficients finite_seq(C,m+1):
+        \complex_polynomial_from_coefficients<n>(left_coefficients)=\complex_polynomial_from_coefficients<m>(right_coefficients)
+        =>:
+            left_coefficients(1)=right_coefficients(1)
+    release thm complex_polynomial_value_at(n,left_coefficients,0)
+    release thm complex_polynomial_value_at(m,right_coefficients,0)
+    release thm complex_polynomial_value_at_zero(n,left_coefficients)
+    release thm complex_polynomial_value_at_zero(m,right_coefficients)
+    have left fn(x C) C=\complex_polynomial_from_coefficients<n>(left_coefficients)
+    have right fn(x C) C=\complex_polynomial_from_coefficients<m>(right_coefficients)
+    left=right
+    left(0) $in C
+    right(0) $in C
+    left_coefficients(1) $in C
+    right_coefficients(1) $in C
+    left(0)=right(0)
+    left_coefficients(1)=\complex_polynomial_value<n>(left_coefficients,0)=left(0)=right(0)=\complex_polynomial_value<m>(right_coefficients,0)=right_coefficients(1)
+
+thm real_polynomial_first_coefficient_unique:
+    ? forall n,m N,left_coefficients finite_seq(R,n+1),right_coefficients finite_seq(R,m+1):
+        \real_polynomial_from_coefficients<n>(left_coefficients)=\real_polynomial_from_coefficients<m>(right_coefficients)
+        =>:
+            left_coefficients(1)=right_coefficients(1)
+    release thm real_polynomial_value_at(n,left_coefficients,0)
+    release thm real_polynomial_value_at(m,right_coefficients,0)
+    release thm real_polynomial_value_at_zero(n,left_coefficients)
+    release thm real_polynomial_value_at_zero(m,right_coefficients)
+    have left fn(x R) R=\real_polynomial_from_coefficients<n>(left_coefficients)
+    have right fn(x R) R=\real_polynomial_from_coefficients<m>(right_coefficients)
+    left=right
+    left(0) $in R
+    right(0) $in R
+    left_coefficients(1) $in R
+    right_coefficients(1) $in R
+    left(0)=right(0)
+    left_coefficients(1)=\real_polynomial_value<n>(left_coefficients,0)=left(0)=right(0)=\real_polynomial_value<m>(right_coefficients,0)=right_coefficients(1)
+
+thm complex_linear_polynomial_has_root:
+    ? forall coefficients finite_seq(C,1+1):
+        coefficients(2)!=0
+        =>:
+            exist z C st {\complex_polynomial_from_coefficients<1>(coefficients)(z)=0}
+    coefficients(1) $in C
+    coefficients(2) $in C
+    have root C=-coefficients(1)/coefficients(2)
+    release thm complex_linear_polynomial_value(coefficients,root)
+    release thm complex_polynomial_value_at(1,coefficients,root)
+    -coefficients(1) $in C
+    -coefficients(1)/coefficients(2) $in C
+    coefficients(2)*(-coefficients(1)/coefficients(2))=-coefficients(1)
+    coefficients(2)*root=coefficients(2)*(-coefficients(1)/coefficients(2))=-coefficients(1)
+    coefficients(1)+coefficients(2)*root=coefficients(1)+(-coefficients(1))=0
+    \complex_polynomial_from_coefficients<1>(coefficients)(root)=0
+    witness exist z C st {\complex_polynomial_from_coefficients<1>(coefficients)(z)=0} from root
+
+thm real_linear_polynomial_has_root:
+    ? forall coefficients finite_seq(R,1+1):
+        coefficients(2)!=0
+        =>:
+            exist z R st {\real_polynomial_from_coefficients<1>(coefficients)(z)=0}
+    coefficients(1) $in R
+    coefficients(2) $in R
+    have root R=-coefficients(1)/coefficients(2)
+    release thm real_linear_polynomial_value(coefficients,root)
+    release thm real_polynomial_value_at(1,coefficients,root)
+    -coefficients(1) $in R
+    -coefficients(1)/coefficients(2) $in R
+    coefficients(2)*(-coefficients(1)/coefficients(2))=-coefficients(1)
+    coefficients(2)*root=coefficients(2)*(-coefficients(1)/coefficients(2))=-coefficients(1)
+    coefficients(1)+coefficients(2)*root=coefficients(1)+(-coefficients(1))=0
+    \real_polynomial_from_coefficients<1>(coefficients)(root)=0
+    witness exist z R st {\real_polynomial_from_coefficients<1>(coefficients)(z)=0} from root

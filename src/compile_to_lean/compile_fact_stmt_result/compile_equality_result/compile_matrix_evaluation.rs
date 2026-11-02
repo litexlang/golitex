@@ -245,9 +245,74 @@ impl LitexToLeanCompiler {
         expression: &Obj,
         other: &Obj,
         evaluation: &MatrixExactEvaluationProof,
+        definition: Option<&Obj>,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        if !evaluation.cited_equal_fact_ids.is_empty()
+        if !evaluation.matrix_scalar_evaluations.is_empty()
+            || !evaluation.aggregate_evaluations.is_empty()
+        {
+            if !evaluation.cited_equal_fact_ids.is_empty() {
+                return Err(LeanCompileError::unsupported("Matrix/ExactScalarCitations"));
+            }
+            let mut functions = evaluation.function_evaluations.len();
+            let mut aggregates = evaluation.aggregate_evaluations.len();
+            let mut matrices = evaluation.matrix_scalar_evaluations.len();
+            let (y, right, right_cites) = self.compile_eval_value(
+                other,
+                &evaluation.function_evaluations,
+                &mut functions,
+                &evaluation.aggregate_evaluations,
+                &mut aggregates,
+                &evaluation.matrix_scalar_evaluations,
+                &mut matrices,
+                position,
+            )?;
+            // The source evaluator visits left then right. Only after replaying
+            // the right side does this cursor identify the left outer sum.
+            let definition_bridge = if let Some(native) = definition {
+                let aggregate = aggregates
+                    .checked_sub(1)
+                    .and_then(|i| evaluation.aggregate_evaluations.get(i))
+                    .ok_or_else(|| LeanCompileError::unsupported("Matrix/NormExactAggregate"))?;
+                Some(
+                    self.compile_matrix_scalar_definition(native, expression, aggregate, position)?,
+                )
+            } else {
+                None
+            };
+            let (x, left, left_cites) = self.compile_eval_value(
+                expression,
+                &evaluation.function_evaluations,
+                &mut functions,
+                &evaluation.aggregate_evaluations,
+                &mut aggregates,
+                &evaluation.matrix_scalar_evaluations,
+                &mut matrices,
+                position,
+            )?;
+            if functions != 0
+                || aggregates != 0
+                || matrices != 0
+                || !left_cites.is_empty()
+                || !right_cites.is_empty()
+                || x != y
+                || EvalRational::from_obj(&evaluation.left_value).as_ref() != Some(&x)
+                || EvalRational::from_obj(&evaluation.right_value).as_ref() != Some(&y)
+            {
+                return Err(LeanCompileError::unsupported("Matrix/ExactScalarResult"));
+            }
+            let raw =
+                self.compile_normalization_value(definition.unwrap_or(expression), position)?;
+            let right = self.compile_calculation_endpoint(other, &y, right, position)?;
+            let left = if let Some(bridge) = definition_bridge {
+                format!("({bridge}.trans {left})")
+            } else {
+                left
+            };
+            return Ok((raw, format!("(({left}).trans ({right}).symm)")));
+        }
+        if definition.is_some()
+            || !evaluation.cited_equal_fact_ids.is_empty()
             || !evaluation.matrix_scalar_evaluations.is_empty()
             || !evaluation.aggregate_evaluations.is_empty()
         {

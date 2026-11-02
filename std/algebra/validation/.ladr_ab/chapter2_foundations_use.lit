@@ -1,0 +1,53 @@
+# Reuse audit: finite combinations, span, finite dimension and empty independence.
+
+# LADR 2.2
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,coefficients finite_seq(K,n),vectors finite_seq(V,n):
+        $Algebra::finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,\Algebra::finite_span::linear_combination<K,field,V,space,n>(coefficients,vectors))
+    release thm Algebra::finite_span::linear_combination_has_value(K,field,V,space,n,coefficients,vectors)
+
+# LADR 2.4
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,vectors finite_seq(V,0):
+        \Algebra::finite_span::span<K,field,V,space,0,vectors> ={space.zero}
+    release thm Algebra::linear_criteria::empty_span_is_zero(K,field,V,space,vectors)
+
+# LADR 2.6-subspace
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::vector_space::is_subspace(K,field,V,space,\Algebra::finite_span::span<K,field,V,space,n,vectors>)
+    release thm Algebra::finite_span::span_is_subspace(K,field,V,space,n,vectors)
+
+# LADR 2.6-generators
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),j N+:
+        j<=n
+        =>:
+            vectors(j) $in \Algebra::finite_span::span<K,field,V,space,n,vectors>
+    release thm Algebra::span_reduction::span_contains_generator(K,field,V,space,n,vectors,j)
+
+# LADR 2.6-least
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n),U power_set(V):
+        $Algebra::vector_space::is_subspace(K,field,V,space,U)
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j) $in U
+        =>:
+            \Algebra::finite_span::span<K,field,V,space,n,vectors> $subset U
+    release thm Algebra::span_reduction::span_subset_subspace(K,field,V,space,n,vectors,U)
+
+# LADR 2.9
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            $Algebra::basis::is_finite_dimensional(K,field,V,space)
+    witness $Algebra::basis::is_finite_dimensional(K,field,V,space) from n,vectors
+
+# LADR 2.15
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,vectors finite_seq(V,0):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,0,vectors)
+    release thm Algebra::dependence::empty_list_is_independent(K,field,V,space,vectors)

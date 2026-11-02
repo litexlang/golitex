@@ -58,11 +58,9 @@ fn failed_parameter_declaration_rolls_back_and_retry_retains_only_success_eviden
         &failed.statement_results[0],
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Failed(
-                crate::execute::ExecHaveObjEqualStmtFailed::ParamType(
-                    VerifyObjWellDefinedResult::Failed { .. }
-                )
+                crate::execute::ExecHaveObjEqualStmtFailed::Preflight(context)
             ))
-        ))
+        )) if matches!(context.failure, crate::execute::IntroduceTypedParametersFailed::ParamTypeWithPrefix { .. })
     ));
     assert_eq!(rt.execution_environments_stack.len(), 1);
     assert!(!rt.execution_environments_stack[0]

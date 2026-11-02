@@ -219,9 +219,11 @@ impl ExecEnv {
     }
 
     pub fn store_def_template(&mut self, def_template: DefTemplateStmt) {
-        self.definitions
-            .template_definitions
-            .insert(def_template.template_name.clone(), def_template);
+        for binding in def_template.template_def_stmt.defined_bindings() {
+            self.definitions
+                .template_definitions
+                .insert(binding.name.clone(), def_template.clone());
+        }
     }
 
     pub fn lookup_axiom(&self, name: &str) -> Option<&AxiomStmt> {

@@ -149,11 +149,13 @@ impl LitexToLeanCompiler {
         let operation_term = arithmetic_operation_term(operation);
         Ok(if children.len() == 1 {
             format!("(congrArg {operation_term} {})", children[0])
-        } else {
+        } else if children.len() == 2 {
             format!(
                 "(congrArg₂ {operation_term} {} {})",
                 children[0], children[1]
             )
+        } else {
+            curried_value_congruence(&operation_term, &children)?
         })
     }
     fn compile_fn_equal_to_anonymous_function_rewrite(
@@ -266,11 +268,13 @@ impl LitexToLeanCompiler {
         let operation_term = arithmetic_operation_term(operation);
         Ok(if children.len() == 1 {
             format!("(congrArg {operation_term} {})", children[0])
-        } else {
+        } else if children.len() == 2 {
             format!(
                 "(congrArg₂ {operation_term} {} {})",
                 children[0], children[1]
             )
+        } else {
+            curried_value_congruence(&operation_term, &children)?
         })
     }
 }

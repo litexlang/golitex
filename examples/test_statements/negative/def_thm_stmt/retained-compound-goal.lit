@@ -1,0 +1,18 @@
+# Tracer: locate the actual failed component of a compound theorem goal.
+# Before:
+# thm compound_failed:
+#     ? 1 = 1 and 1 = 2
+#     have compound_helper R = 1
+# Former reading behavior: the question-mark row had no proof hover because
+# the retained failed_component was not followed to its source.
+# Now: the same source still fails; 1=1 is checked, 1=2 is not established.
+thm compound_failed:
+    ? 1 = 1 and 1 = 2
+    have compound_helper R = 1
+
+# Boundary: a checked component does not prove the conjunction or register
+# the theorem. The helper remains local. No assumption is added.
+# Evidence: tests/reading_failed_theorem_context.rs and
+# src/reading/web/tests/failed-theorem-context.cjs.
+# Run (expected exit1): target/release/litex -strict -lang en -f
+# examples/test_statements/negative/def_thm_stmt/retained-compound-goal.lit

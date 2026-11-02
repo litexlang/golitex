@@ -12,17 +12,23 @@ impl LitexToLeanCompiler {
     pub(super) fn compile_returned_cart_call(
         &self,
         application: &FnObj,
+        arguments: &[Box<Obj>],
         proof: &FnObjObjWellDefinedProof,
         receiver: &str,
         output: &Obj,
+        receiver_member: &str,
         child_index: usize,
         requirement_index: usize,
+        final_layer: bool,
         position: &SourcePosition<'_>,
     ) -> Result<(String, Obj, String), LeanCompileError> {
         let Obj::ProductShape(ProductShape::Cart(cart)) = output else {
             return Err(LeanCompileError::unsupported("ReturnedCart/Carrier"));
         };
-        let argument = &application.body[1][0];
+        if arguments.len() != 1 {
+            return Err(LeanCompileError::unsupported("ReturnedCart/Arity"));
+        }
+        let argument = &arguments[0];
         let index = literal_positive_usize(argument)
             .ok_or_else(|| LeanCompileError::unsupported("ReturnedCart/VariableCoordinate"))?;
         let factor = cart.args.get(index - 1).ok_or_else(|| {
@@ -71,13 +77,15 @@ impl LitexToLeanCompiler {
         let cart_term = self.compile_object_reference(output, &formed)?;
         self.compile_object_reference(&domain_member.set, &formed)?;
         let factor_term = self.compile_object_reference(factor, &formed)?;
-        // A Cartesian return uses the generic CallOn constructor. Its first
-        // stage has already replayed every domain proof; use that same call's
-        // output law without printing the receiver construction again.
+        // Carry the preceding stage's checked membership; the receiver may
+        // itself be a Cartesian projection or another supported call.
         let setup = format!(
-            "let _receiver := {receiver}\nlet _argument := {argument_term}\nlet _cart := {cart_term}\nhave _cartMember : Litex.In _receiver _cart := Litex.callOnInOutput _receiver"
+            "let _receiver := {receiver}\nlet _argument := {argument_term}\nlet _cart := {cart_term}\nhave _cartMember : Litex.In _receiver _cart  := {receiver_member}"
         );
-        let call = match position.bound_fn_call(application, proof) {
+        let call = match final_layer
+            .then(|| position.bound_fn_call(application, proof))
+            .flatten()
+        {
             Some(call) => call,
             None => {
                 let body = format!(

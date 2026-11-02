@@ -5,6 +5,25 @@ pub(in crate::json_output) fn project_by_def_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecByDefStmtFailed::Local(context) => match &context.failure {
+            crate::execute::execute_by_stmt::ExecByDefEnteredFailed::Definition(failed) => {
+                project_definition_failure(failed, rt)
+            }
+            crate::execute::execute_by_stmt::ExecByDefEnteredFailed::Proof { result, .. } => {
+                super::helper::verification_failure(
+                    rt,
+                    "proof",
+                    result,
+                    super::super::failure_kind::FailureKind::ProofSearch,
+                )
+            }
+        },
+        ExecByDefStmtFailed::StoreAfterProof(context) => super::helper::failure_message(
+            rt,
+            "store",
+            super::super::failure_kind::FailureKind::Storage,
+            &context.message,
+        ),
         ExecByDefStmtFailed::Definition(failed) => project_definition_failure(failed, rt),
         ExecByDefStmtFailed::GoalWd(result) => super::helper::failure_stage(
             rt,
@@ -159,6 +178,8 @@ fn project_definition_failure(failure: &DefinitionProofFailed, rt: &Runtime) -> 
             super::helper::failure_message(rt, "instantiate", FailureKind::Instantiation, message)
         }
         DefinitionProofFailed::Requirement {
+            requirement_facts,
+            proof_of_requirement_facts,
             index,
             fact,
             result,
@@ -169,6 +190,24 @@ fn project_definition_failure(failure: &DefinitionProofFailed, rt: &Runtime) -> 
                     ("phase", string("definition_requirement")),
                     ("index", JsonValue::Number(*index as f64)),
                     ("goal", string(fact.readable_string())),
+                    (
+                        "requirement_facts",
+                        JsonValue::Array(
+                            requirement_facts
+                                .iter()
+                                .map(|fact| string(fact.readable_string()))
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "proof_of_requirement_facts",
+                        JsonValue::Array(
+                            proof_of_requirement_facts
+                                .iter()
+                                .map(|proof| super::verify::project_verify_fact(proof, rt))
+                                .collect(),
+                        ),
+                    ),
                     ("result", super::verify::project_verify_fact(result, rt)),
                 ],
             );

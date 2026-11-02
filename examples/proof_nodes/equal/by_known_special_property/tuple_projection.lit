@@ -3,12 +3,15 @@
 # have gp cart(R,R) = (a,b)
 # gp[1] = a
 # Former result: search_proof failure unless intermediate equalities were added.
-# Now: cite the tuple equality path and select the literal index.
+# Now: direct coordinates are inferred when the tuple equality is stored.
+# The nested example below still selects the on-demand tuple projection rule.
 # Boundary: gp[1] = b is not justified for arbitrary a,b.
 # Gate: target/release/litex -strict -f examples/proof_nodes/equal/by_known_special_property/tuple_projection.lit
 have a,b R
 have gp cart(R,R) = (a,b)
 gp(1) = a
+have nested cart(cart(R,R),R) = ((a,b),a)
+nested(1)(2) = b
 have alias cart(R,R) = gp
 alias = (a,b)
 alias = (a,b)

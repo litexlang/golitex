@@ -1,0 +1,93 @@
+# Actual scalar-line spaces over the standard real and complex fields.
+
+release obj def Algebra::field::real_mul
+
+release obj def Algebra::field::real_neg
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_mul
+
+release obj def Algebra::field::complex_neg
+
+release obj def Algebra::field::complex_field
+
+release struct def Algebra::field::real_field
+
+release struct def Algebra::field::complex_field
+
+release thm Algebra::vector_space::scalar_space_carrier(R,Algebra::field::real_field)
+
+have real_scalars &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,R> = \Algebra::vector_space::scalar_space<R,Algebra::field::real_field>
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field> = (Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+real_scalars = (Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+real_scalars.zero=Algebra::field::real_field.zero
+
+real_scalars.add=Algebra::field::real_field.add
+
+real_scalars.smul=Algebra::field::real_field.mul
+
+real_scalars.smul(2,3)=Algebra::field::real_field.mul(2,3)=Algebra::field::real_mul(2,3)=6
+
+Algebra::field::real_field.neg(3)=Algebra::field::real_neg(3)=-3
+
+real_scalars.add(3,Algebra::field::real_field.neg(3))=Algebra::field::real_field.add(3,Algebra::field::real_field.neg(3))=Algebra::field::real_field.zero=real_scalars.zero
+
+release thm Algebra::vector_space::vector_neg_characterization(R,Algebra::field::real_field,R,real_scalars,3,Algebra::field::real_field.neg(3))
+
+\Algebra::vector_space::vector_neg<R,Algebra::field::real_field,R,real_scalars>(3)=Algebra::field::real_field.neg(3)=-3
+
+release thm Algebra::vector_space::scalar_space_carrier(C,Algebra::field::complex_field)
+
+have complex_scalars &Algebra::vector_space::VectorSpace<C,Algebra::field::complex_field,C> = \Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>
+
+\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field> = (Algebra::field::complex_field.zero,Algebra::field::complex_field.add,Algebra::field::complex_field.mul)
+
+complex_scalars = (Algebra::field::complex_field.zero,Algebra::field::complex_field.add,Algebra::field::complex_field.mul)
+
+complex_scalars.smul=Algebra::field::complex_field.mul
+
+complex_scalars.smul(i,i)=Algebra::field::complex_field.mul(i,i)=Algebra::field::complex_mul(i,i)=-1
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,space &Algebra::vector_space::VectorSpace<K,F,K>,x K:
+        space=\Algebra::vector_space::scalar_space<K,F>
+        =>:
+            \Algebra::vector_space::vector_neg<K,F,K,space>(x)=F.neg(x)
+    \Algebra::vector_space::scalar_space<K,F> = (F.zero,F.add,F.mul)
+    space=(F.zero,F.add,F.mul)
+    space.zero=F.zero
+    space.add=F.add
+    space.add(x,F.neg(x))=F.add(x,F.neg(x))=F.zero=space.zero
+    release thm Algebra::vector_space::vector_neg_characterization(K,F,K,space,x,F.neg(x))
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,candidate V:
+        forall x V:
+            space.add(candidate,x)=x
+        =>:
+            candidate=space.zero
+    release thm Algebra::vector_space::additive_identity_unique(K,F,V,space,candidate)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,x V:
+        exist! y V st {space.add(x,y)=space.zero}
+    release thm Algebra::vector_space::additive_inverse_exists_unique(K,F,V,space,x)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,x V:
+        space.smul(F.zero,x)=space.zero
+    release thm Algebra::vector_space::zero_scalar_times_vector(K,F,V,space,x)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,a K:
+        space.smul(a,space.zero)=space.zero
+    release thm Algebra::vector_space::scalar_times_zero(K,F,V,space,a)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,x V:
+        space.smul(F.neg(F.one),x)=\Algebra::vector_space::vector_neg<K,F,V,space>(x)
+    release thm Algebra::vector_space::minus_one_times_vector(K,F,V,space,x)

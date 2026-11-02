@@ -60,6 +60,7 @@ use crate::parse::keywords::TEMPLATE;
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum ExecDefTemplateStmtFailed {
+    Local(Box<ExecDefTemplateLocalFailure>),
     NameClash(String),
     ParamType(VerifyObjWellDefinedResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
@@ -76,6 +77,40 @@ pub enum ExecDefTemplateStmtFailed {
     BodyHaveFnByInduc(ExecHaveFnByInducStmtFailed),
     BodyTrustHave(ExecTrustHaveStmtFailed),
     UnsupportedBody(String),
+}
+
+pub struct ExecDefTemplateLocalFailure {
+    pub statement: DefTemplateStmt,
+    pub failure: DefTemplateLocalFailed,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum DefTemplateLocalFailed {
+    Parameters(IntroduceTypedParametersFailed),
+    Domain {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_dom_facts: Vec<AssumeDomFactResult>,
+        failed: FailToVerifyFactWellDefinedResult,
+    },
+    Body {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_dom_facts: Vec<AssumeDomFactResult>,
+        failed: ExecDefTemplateStmtFailed,
+    },
+}
+
+impl ExecDefTemplateLocalFailure {
+    pub fn new(
+        statement: DefTemplateStmt,
+        failure: DefTemplateLocalFailed,
+        local_env: Box<ExecEnv>,
+    ) -> Self {
+        Self {
+            statement,
+            failure,
+            local_env,
+        }
+    }
 }
 
 pub type AssumeDomFactResult = crate::execute::execute_fact_stmt::AssumeDomFactResult;
@@ -117,10 +152,12 @@ impl Runtime {
         &mut self,
         def_template: &DefTemplateStmt,
     ) -> RuntimeResult<ExecDefTemplateStmtResult> {
-        if let Some(msg) = self.def_template_name_clash(&def_template.template_name) {
-            return Ok(ExecDefTemplateStmtResult::Failed(
-                ExecDefTemplateStmtFailed::NameClash(msg),
-            ));
+        for binding in def_template.template_def_stmt.defined_bindings() {
+            if let Some(msg) = self.def_template_name_clash(&binding.name) {
+                return Ok(ExecDefTemplateStmtResult::Failed(
+                    ExecDefTemplateStmtFailed::NameClash(msg),
+                ));
+            }
         }
 
         let (local_outcome, local_env) = self
@@ -128,7 +165,15 @@ impl Runtime {
 
         let parts = match local_outcome {
             Ok(parts) => parts,
-            Err(failed) => return Ok(ExecDefTemplateStmtResult::Failed(failed)),
+            Err(failed) => {
+                return Ok(ExecDefTemplateStmtResult::Failed(
+                    ExecDefTemplateStmtFailed::Local(Box::new(ExecDefTemplateLocalFailure::new(
+                        def_template.clone(),
+                        failed,
+                        local_env,
+                    ))),
+                ))
+            }
         };
 
         self.top_exec_env_mut()
@@ -165,19 +210,14 @@ impl Runtime {
     fn exec_def_template_stmt_in_local(
         &mut self,
         def_template: &DefTemplateStmt,
-    ) -> RuntimeResult<Result<LocalParts, ExecDefTemplateStmtFailed>> {
+    ) -> RuntimeResult<Result<LocalParts, DefTemplateLocalFailed>> {
         let verify_state = VerifyState::top_level();
 
         let introduced_params = match self
             .introduce_typed_parameters(&def_template.template_arg_def, verify_state.clone())?
         {
             Ok(result) => result,
-            Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
-                return Ok(Err(ExecDefTemplateStmtFailed::ParamType(failed)));
-            }
-            Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
-                return Ok(Err(ExecDefTemplateStmtFailed::AutoOpenStructLayer(failed)));
-            }
+            Err(failed) => return Ok(Err(DefTemplateLocalFailed::Parameters(failed))),
         };
 
         let mut assumed_dom_facts = Vec::with_capacity(def_template.template_arg_dom.len());
@@ -187,7 +227,11 @@ impl Runtime {
                 match self.verify_fact_well_definedness(&fact, verify_state.clone())? {
                     VerifyFactWellDefinedResult::Success(proof) => proof,
                     VerifyFactWellDefinedResult::Failed(reason) => {
-                        return Ok(Err(ExecDefTemplateStmtFailed::DomainFact(reason)));
+                        return Ok(Err(DefTemplateLocalFailed::Domain {
+                            introduced_params,
+                            assumed_dom_facts,
+                            failed: reason,
+                        }));
                     }
                 };
             let store_and_infer = self.store_fact_and_infer(
@@ -202,7 +246,13 @@ impl Runtime {
 
         let body = match self.exec_template_def_body(&def_template.template_def_stmt)? {
             Ok(body) => body,
-            Err(failed) => return Ok(Err(failed)),
+            Err(failed) => {
+                return Ok(Err(DefTemplateLocalFailed::Body {
+                    introduced_params,
+                    assumed_dom_facts,
+                    failed,
+                }))
+            }
         };
 
         Ok(Ok(LocalParts {

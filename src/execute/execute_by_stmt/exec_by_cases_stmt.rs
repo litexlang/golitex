@@ -3,14 +3,16 @@ use super::helper::{
     proof_verify_state, store_goal_fact_with_wd, verify_goal_fact,
 };
 use super::result::{
-    ByCasesBranchClosingSuccess, ByCasesBranchFailed, ByCasesBranchSuccess, ExecByCasesStmtFailed,
-    ExecByCasesStmtResult, ExecByCasesStmtSuccess, ExecByStmtResult,
+    ByCasesBranchClosingSuccess, ByCasesBranchFailed, ByCasesBranchSuccess,
+    ByCasesEnteredBranchFailed, ExecByCasesStmtFailed, ExecByCasesStmtResult,
+    ExecByCasesStmtSuccess, ExecByStmtResult,
 };
-use crate::ast::fact::Fact;
+use super::ByCasesBranchFailure;
+use crate::ast::fact::{AtomicFact, Fact};
 use crate::ast::stmt::ByCasesStmt;
-use crate::execute::execute_fact_stmt::ProveAndStoreThenFactResult;
+use crate::execute::execute_fact_stmt::{AssumeDomFactResult, ProveAndStoreThenFactResult};
 use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
-use crate::runtime::{Runtime, RuntimeResult};
+use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 pub fn exec_by_cases_stmt(
     runtime: &mut Runtime,
@@ -59,7 +61,13 @@ pub fn exec_by_cases_stmt(
             Ok(branch) => branches.push(branch),
             Err(failed) => {
                 return Ok(ExecByStmtResult::Cases(ExecByCasesStmtResult::Failed(
-                    ExecByCasesStmtFailed::Branch { index, failed },
+                    ExecByCasesStmtFailed::Branch {
+                        then_facts_wd,
+                        coverage,
+                        branches,
+                        index,
+                        failed,
+                    },
                 )));
             }
         }
@@ -102,21 +110,34 @@ fn exec_one_case_branch(
     let (outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
         let assumed = match assume_fact_with_wd(rt, &case_fact)? {
             Ok(s) => s,
-            Err(msg) => return Ok(Err(ByCasesBranchFailed::AssumeCase(msg))),
+            Err(msg) => return Ok(Err(CaseBranchCheckFailed::AssumeCase(msg))),
         };
-        let assumption_wd = assumed.well_defined;
-        let assumptions_stored = assumed.store_and_infer;
-        let assumption_fact_id = assumptions_stored.primary_fact_id();
-        let assumption_components = assumptions_stored.atomic_components();
+        let assumption_fact_id = assumed.store_and_infer.primary_fact_id();
+        let assumption_components = assumed.store_and_infer.atomic_components();
         let proof_steps = match run_proof_body_stmts(rt, &stmt.proofs[index])? {
             Ok(steps) => steps,
-            Err(failed) => return Ok(Err(ByCasesBranchFailed::ProofBody(failed))),
+            Err(failed) => {
+                return Ok(Err(CaseBranchCheckFailed::Entered {
+                    assumption_fact_id,
+                    assumption_components,
+                    assumed,
+                    failure: ByCasesEnteredBranchFailed::ProofBody(failed),
+                }))
+            }
         };
         let closing = if let Some(impossible) = &stmt.impossible_facts[index] {
             match close_by_contradiction(rt, &impossible.clone().into())? {
                 Ok(c) => ByCasesBranchClosingSuccess::Impossible(c),
                 Err(failed) => {
-                    return Ok(Err(ByCasesBranchFailed::ClosingImpossible(failed)));
+                    return Ok(Err(CaseBranchCheckFailed::Entered {
+                        assumption_fact_id,
+                        assumption_components,
+                        assumed,
+                        failure: ByCasesEnteredBranchFailed::ClosingImpossible {
+                            proof_steps,
+                            failed,
+                        },
+                    }));
                 }
             }
         } else {
@@ -124,9 +145,16 @@ fn exec_one_case_branch(
             for (then_index, then_fact) in stmt.then_facts.iter().enumerate() {
                 let proof = verify_goal_fact(rt, then_fact)?;
                 if proof.is_failed() {
-                    return Ok(Err(ByCasesBranchFailed::ClosingThen {
-                        then_index,
-                        result: proof,
+                    return Ok(Err(CaseBranchCheckFailed::Entered {
+                        assumption_fact_id,
+                        assumption_components,
+                        assumed,
+                        failure: ByCasesEnteredBranchFailed::ClosingThen {
+                            proof_steps,
+                            proved_then_facts,
+                            then_index,
+                            result: proof,
+                        },
                     }));
                 }
                 let stored = rt.store_fact_and_infer(
@@ -143,31 +171,52 @@ fn exec_one_case_branch(
         Ok(Ok((
             assumption_fact_id,
             assumption_components,
-            assumption_wd,
-            assumptions_stored,
+            assumed,
             proof_steps,
             closing,
         )))
     })?;
 
     match outcome {
-        Ok((
+        Ok((assumption_fact_id, assumption_components, assumed, proof_steps, closing)) => {
+            Ok(Ok(ByCasesBranchSuccess {
+                assumption,
+                assumption_fact_id,
+                assumption_components,
+                assumption_wd: assumed.well_defined,
+                assumptions_stored: assumed.store_and_infer,
+                proof_steps,
+                closing,
+                local_env,
+            }))
+        }
+        Err(CaseBranchCheckFailed::AssumeCase(message)) => {
+            Ok(Err(ByCasesBranchFailed::AssumeCase(message)))
+        }
+        Err(CaseBranchCheckFailed::Entered {
             assumption_fact_id,
             assumption_components,
-            assumption_wd,
-            assumptions_stored,
-            proof_steps,
-            closing,
-        )) => Ok(Ok(ByCasesBranchSuccess {
-            assumption,
-            assumption_fact_id,
-            assumption_components,
-            assumption_wd,
-            assumptions_stored,
-            proof_steps,
-            closing,
-            local_env,
-        })),
-        Err(failed) => Ok(Err(failed)),
+            assumed,
+            failure,
+        }) => Ok(Err(ByCasesBranchFailed::AfterAssumption(
+            ByCasesBranchFailure {
+                assumption,
+                assumption_fact_id,
+                assumption_components,
+                assumed,
+                failure,
+                local_env,
+            },
+        ))),
     }
+}
+
+enum CaseBranchCheckFailed {
+    AssumeCase(String),
+    Entered {
+        assumption_fact_id: FactId,
+        assumption_components: Vec<(FactId, AtomicFact)>,
+        assumed: AssumeDomFactResult,
+        failure: ByCasesEnteredBranchFailed,
+    },
 }

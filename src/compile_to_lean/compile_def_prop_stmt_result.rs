@@ -168,18 +168,15 @@ impl LitexToLeanCompiler {
         let mut parameter_definitions = Vec::new();
         let mut offset = 0;
         for (group, wd) in groups.iter().zip(&proof.param_type_well_defined) {
-            let set = match &group.param_type {
-                ParamType::Obj(set) => Some(set),
-                ParamType::Set(_) => None,
-                _ => return Err(LeanCompileError::unsupported("Prop/ParameterCarrier")),
-            };
             let group_position = SourcePosition {
                 before: offset,
                 ..*position
             };
-            match (wd, set) {
-                (ParamTypeWellDefinedProof::Set, None) => {}
-                (ParamTypeWellDefinedProof::Obj(wd), Some(set)) => {
+            match (wd, &group.param_type) {
+                (ParamTypeWellDefinedProof::Set, ParamType::Set(_))
+                | (ParamTypeWellDefinedProof::NonemptySet, ParamType::NonemptySet(_))
+                | (ParamTypeWellDefinedProof::FiniteSet, ParamType::FiniteSet(_)) => {}
+                (ParamTypeWellDefinedProof::Obj(wd), ParamType::Obj(set)) => {
                     ensure_object(set, wd)?;
                     self.compile_wd(wd, &group_position)?;
                 }
@@ -203,18 +200,24 @@ impl LitexToLeanCompiler {
                 let store = &stores[offset];
                 let fact = self.resolve_fact(store.primary_fact_id(), &introduced)?;
                 let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
-                match &fact {
-                    Fact::AtomicFact(AtomicFact::InFact(member))
-                        if member.element.ir() == object.ir()
-                            && set.is_some_and(|set| member.set.ir() == set.ir()) => {}
-                    Fact::AtomicFact(AtomicFact::IsSetFact(member))
-                        if set.is_none() && member.set.ir() == object.ir() => {}
-                    _ => {
-                        return Err(LeanCompileError::new(
-                            "Prop/ParameterSubject",
-                            "The stored predicate parameter has another object or carrier.",
-                        ))
-                    }
+                if !parameter_type_fact_matches(
+                    &group.param_type,
+                    &object,
+                    &fact,
+                    &Default::default(),
+                ) {
+                    return Err(LeanCompileError::new(
+                        "Prop/ParameterSubject",
+                        "The stored predicate parameter has another object or exact domain kind.",
+                    ));
+                }
+                if !matches!(group.param_type, ParamType::Obj(_)) {
+                    self.introduce_set_kind_parameter(
+                        parameter,
+                        &group.param_type,
+                        store,
+                        &introduced,
+                    )?;
                 }
                 self.validate_store(&store.store, &fact)?;
                 let id = parameter.id.value();

@@ -1,0 +1,200 @@
+# Actual finite products, including the empty product, and finite choice.
+
+template<n N,S set,g fn(k closed_range(1,n)) S>:
+    have finite_cartesian_product set = {p fn(k closed_range(1,n)) family_union(S):$is_choice_function_for(closed_range(1,n),S,g,p)}
+
+thm finite_cartesian_product_member:
+    ? forall n N,S set,g fn(k closed_range(1,n)) S,p fn(k closed_range(1,n)) family_union(S):
+        forall k closed_range(1,n):
+            p(k) $in g(k)
+        =>:
+            p $in \finite_cartesian_product<n,S,g>
+    by def $is_choice_function_for(closed_range(1,n),S,g,p)
+    \finite_cartesian_product<n,S,g> = {q fn(k closed_range(1,n)) family_union(S):$is_choice_function_for(closed_range(1,n),S,g,q)}
+    release thm set_builder_member(p,{q fn(k closed_range(1,n)) family_union(S):$is_choice_function_for(closed_range(1,n),S,g,q)})
+
+thm finite_cartesian_product_signature:
+    ? forall n N,S set,g fn(k closed_range(1,n)) S,p \finite_cartesian_product<n,S,g>:
+        p $in fn(k closed_range(1,n)) family_union(S)
+    \finite_cartesian_product<n,S,g> = {q fn(k closed_range(1,n)) family_union(S):$is_choice_function_for(closed_range(1,n),S,g,q)}
+    p $in fn(k closed_range(1,n)) family_union(S)
+
+thm finite_cartesian_product_factor:
+    ? forall n N,S set,g fn(k closed_range(1,n)) S,p fn(k closed_range(1,n)) family_union(S),k closed_range(1,n):
+        p $in \finite_cartesian_product<n,S,g>
+        =>:
+            p(k) $in g(k)
+    \finite_cartesian_product<n,S,g> = {q fn(t closed_range(1,n)) family_union(S):$is_choice_function_for(closed_range(1,n),S,g,q)}
+    $is_choice_function_for(closed_range(1,n),S,g,p)
+    p(k) $in g(k)
+
+thm finite_cartesian_product_empty_member:
+    ? forall S set,g fn(k closed_range(1,0)) S:
+        tuple() $in \finite_cartesian_product<0,S,g>
+    tuple() $in fn(k closed_range(1,0)) family_union(S)
+    claim:
+        ? forall k closed_range(1,0):
+            tuple()(k) $in g(k)
+        by contra:
+            ? tuple()(k) $in g(k)
+            k >= 1
+            k <= 0 < 1
+            impossible k >= 1
+    release thm finite_cartesian_product_member(0,S,g,tuple())
+
+thm finite_cartesian_product_zero:
+    ? forall S set,g fn(k closed_range(1,0)) S:
+        \finite_cartesian_product<0,S,g> = {tuple()}
+    claim:
+        ? forall p \finite_cartesian_product<0,S,g>:
+            p $in {tuple()}
+        release thm finite_cartesian_product_signature(0,S,g,p)
+        p $in finite_seq(family_union(S),0)
+        p = tuple()
+        p $in {tuple()}
+    claim:
+        ? forall p {tuple()}:
+            p $in \finite_cartesian_product<0,S,g>
+        p = tuple()
+        release thm finite_cartesian_product_empty_member(S,g)
+        p $in \finite_cartesian_product<0,S,g>
+    by extension \finite_cartesian_product<0,S,g> = {tuple()}
+
+thm finite_cartesian_product_choice:
+    ? forall n N,S set,g fn(k closed_range(1,n)) S:
+        forall k closed_range(1,n):
+            $is_nonempty_set(g(k))
+        =>:
+            exist p fn(k closed_range(1,n)) family_union(S) st {p $in \finite_cartesian_product<n,S,g>}
+    prop has_finite_selection(length N):
+        forall F set,h fn(k closed_range(1,length)) F:
+            forall k closed_range(1,length):
+                $is_nonempty_set(h(k))
+            =>:
+                exist p fn(k closed_range(1,length)) family_union(F) st {$is_choice_function_for(closed_range(1,length),F,h,p)}
+    by induc length from 0:
+        ? $has_finite_selection(length)
+        ? from length = 0:
+            claim:
+                ? forall F set,h fn(k closed_range(1,0)) F:
+                    forall k closed_range(1,0):
+                        $is_nonempty_set(h(k))
+                    =>:
+                        exist p fn(k closed_range(1,0)) family_union(F) st {$is_choice_function_for(closed_range(1,0),F,h,p)}
+                have empty_selection fn(k closed_range(1,0)) family_union(F) = tuple()
+                claim:
+                    ? forall k closed_range(1,0):
+                        empty_selection(k) $in h(k)
+                    by contra:
+                        ? empty_selection(k) $in h(k)
+                        k >= 1
+                        k <= 0 < 1
+                        impossible k >= 1
+                witness exist p fn(k closed_range(1,0)) family_union(F) st {$is_choice_function_for(closed_range(1,0),F,h,p)} from empty_selection:
+                    by def $is_choice_function_for(closed_range(1,0),F,h,empty_selection)
+            by def $has_finite_selection(0)
+        ? induc:
+            length + 1 $in N
+            claim:
+                ? forall F set,h fn(k closed_range(1,length+1)) F:
+                    forall k closed_range(1,length+1):
+                        $is_nonempty_set(h(k))
+                    =>:
+                        exist p fn(k closed_range(1,length+1)) family_union(F) st {$is_choice_function_for(closed_range(1,length+1),F,h,p)}
+                claim:
+                    ? forall k closed_range(1,length):
+                        k $in closed_range(1,length+1)
+                    k >= 1
+                    k <= length < length+1
+                    k $in closed_range(1,length+1)
+                have fn prefix_family(k closed_range(1,length)) F = h(k)
+                claim:
+                    ? forall k closed_range(1,length):
+                        $is_nonempty_set(prefix_family(k))
+                    k $in closed_range(1,length+1)
+                    prefix_family(k) = h(k)
+                    $is_nonempty_set(h(k))
+                    $is_nonempty_set(prefix_family(k))
+                obtain prefix from exist p fn(k closed_range(1,length)) family_union(F) st {$is_choice_function_for(closed_range(1,length),F,prefix_family,p)}
+                length+1 $in closed_range(1,length+1)
+                $is_nonempty_set(h(length+1))
+                have last h(length+1)
+                h(length+1) $in F
+                last $in family_union(F)
+                have fn extended(k closed_range(1,length+1)) family_union(F) by cases:
+                    case k <= length: prefix(k)
+                    case k > length: last
+                claim:
+                    ? forall k closed_range(1,length+1):
+                        extended(k) $in h(k)
+                    by cases:
+                        ? extended(k) $in h(k)
+                        case k <= length:
+                            k $in closed_range(1,length)
+                            prefix(k) $in prefix_family(k)
+                            prefix_family(k) = h(k)
+                            extended(k) = prefix(k)
+                            extended(k) $in h(k)
+                        case k > length:
+                            k = length+1
+                            extended(k) = last
+                            h(k) = h(length+1)
+                            extended(k) $in h(k)
+                witness exist p fn(k closed_range(1,length+1)) family_union(F) st {$is_choice_function_for(closed_range(1,length+1),F,h,p)} from extended:
+                    by def $is_choice_function_for(closed_range(1,length+1),F,h,extended)
+            by def $has_finite_selection(length+1)
+    $has_finite_selection(n)
+    obtain selected from exist p fn(k closed_range(1,n)) family_union(S) st {$is_choice_function_for(closed_range(1,n),S,g,p)}
+    release thm finite_cartesian_product_member(n,S,g,selected)
+    witness exist p fn(k closed_range(1,n)) family_union(S) st {p $in \finite_cartesian_product<n,S,g>} from selected
+
+thm finite_cartesian_product_native:
+    ? forall n N+,S nonempty_set,g fn(k closed_range(1,n)) S:
+        \finite_cartesian_product<n,S,g> = index_cart(closed_range(1,n),S,g)
+    claim:
+        ? forall p \finite_cartesian_product<n,S,g>:
+            p $in index_cart(closed_range(1,n),S,g)
+        release thm finite_cartesian_product_signature(n,S,g,p)
+        \finite_cartesian_product<n,S,g> = {q fn(k closed_range(1,n)) family_union(S):$is_choice_function_for(closed_range(1,n),S,g,q)}
+        $is_choice_function_for(closed_range(1,n),S,g,p)
+        release thm index_cart_member(p,index_cart(closed_range(1,n),S,g))
+    claim:
+        ? forall p index_cart(closed_range(1,n),S,g):
+            p $in \finite_cartesian_product<n,S,g>
+        p $in fn(k closed_range(1,n)) family_union(S)
+        $is_choice_function_for(closed_range(1,n),S,g,p)
+        claim:
+            ? forall k closed_range(1,n):
+                p(k) $in g(k)
+            p(k) $in g(k)
+        release thm finite_cartesian_product_member(n,S,g,p)
+    by def \finite_cartesian_product<n,S,g> $subset index_cart(closed_range(1,n),S,g)
+    by def index_cart(closed_range(1,n),S,g) $subset \finite_cartesian_product<n,S,g>
+    by extension \finite_cartesian_product<n,S,g> = index_cart(closed_range(1,n),S,g)
+
+thm finite_cartesian_product_empty_factor:
+    ? forall n N,S set,g fn(k closed_range(1,n)) S,k closed_range(1,n):
+        g(k) = {}
+        =>:
+            \finite_cartesian_product<n,S,g> = {}
+    claim:
+        ? forall p \finite_cartesian_product<n,S,g>:
+            p $in {}
+        release thm finite_cartesian_product_signature(n,S,g,p)
+        release thm finite_cartesian_product_factor(n,S,g,p,k)
+        p(k) $in {}
+        by contra:
+            ? p $in {}
+            impossible p(k) $in {}
+    by def \finite_cartesian_product<n,S,g> $subset {}
+    by extension \finite_cartesian_product<n,S,g> = {}
+
+thm finite_cartesian_product_nonempty:
+    ? forall n N,S set,g fn(k closed_range(1,n)) S:
+        forall k closed_range(1,n):
+            $is_nonempty_set(g(k))
+        =>:
+            $is_nonempty_set(\finite_cartesian_product<n,S,g>)
+    release thm finite_cartesian_product_choice(n,S,g)
+    obtain selected from exist p fn(k closed_range(1,n)) family_union(S) st {p $in \finite_cartesian_product<n,S,g>}
+    release thm sets::set_with_member_is_nonempty(\finite_cartesian_product<n,S,g>,selected)

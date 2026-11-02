@@ -1,0 +1,14 @@
+# Before: the same case's assumption and successful prefix were discarded.
+#     case 0 = 0:
+#         3 = 3
+#         2 = 3
+# Reading now retains that local assumption, accepted prefix and failure.
+# Expected: strict CLI exit 1, proof_body, branch 0, step 1; no outer conclusion.
+# Run: target/release/litex -strict -lang en -f examples/test_statements/negative/by_cases_stmt/failed-body-context.lit
+by cases:
+    ? 0 = 0
+    case 0 = 0:
+        3 = 3
+        2 = 3
+    case 0 != 0:
+        0 = 0

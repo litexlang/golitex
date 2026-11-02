@@ -12,6 +12,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match rule {
+            SubsetFactSearchProofByBuiltinRule::IntegerRangeSubsetNumericCarrier(p) => {
+                self.compile_integer_interval_subset(fact, &p.proof_of_requirement_facts, position)
+            }
             SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset(p) => {
                 if !matches!(
                     &p.equality,
@@ -147,6 +150,69 @@ impl LitexToLeanCompiler {
             }
             _ => Err(LeanCompileError::unsupported("Set/SubsetRule")),
         }
+    }
+
+    fn compile_integer_interval_subset(
+        &self,
+        fact: &SubsetFact,
+        requirements: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (start, member_iff) = match &fact.left {
+            Obj::SetFormer(SetFormer::Range(r)) => (&r.start, "inRange_iff"),
+            Obj::SetFormer(SetFormer::ClosedRange(r)) => (&r.start, "inClosedRange_iff"),
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "IntegerIntervalSubset/Constructor",
+                ))
+            }
+        };
+        let Obj::StandardSet(target) = &fact.right else {
+            return Err(LeanCompileError::unsupported(
+                "IntegerIntervalSubset/Carrier",
+            ));
+        };
+        let needs_start = match target {
+            StandardSet::N | StandardSet::NPos => true,
+            StandardSet::Z | StandardSet::Q | StandardSet::R | StandardSet::C => false,
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "IntegerIntervalSubset/Carrier",
+                ))
+            }
+        };
+        if requirements.len() != usize::from(needs_start) {
+            return Err(LeanCompileError::unsupported(
+                "IntegerIntervalSubset/Requirements",
+            ));
+        }
+        let range = self.compile_object_reference(&fact.left, position)?;
+        let upper = standard_term(target)?;
+        if !needs_start {
+            let member = standard_inclusion_term(&StandardSet::Z, target, "_x", "_integer")?;
+            return Ok(format!(
+                "(by\n  let _range := {range}\n  refine Litex.subsetOfForall _range {upper} (fun _x _hx => ?_)\n  have _integer : Litex.In _x Litex.Z := ((Litex.SetSemantics.sep_members (M := M) _ _ _).mp _hx).1\n  exact {member})"
+            ));
+        }
+        let Fact::AtomicFact(AtomicFact::InFact(source)) = source_subject(&requirements[0])? else {
+            return Err(LeanCompileError::unsupported(
+                "IntegerIntervalSubset/StartMembership",
+            ));
+        };
+        if source.element.ir() != start.ir() || source.set != fact.right {
+            return Err(LeanCompileError::unsupported(
+                "IntegerIntervalSubset/StartMembership",
+            ));
+        }
+        let start_member = self.compile_verify(&requirements[0], position)?.1;
+        let above = if matches!(target, StandardSet::N) {
+            "integerInNaturalAbove"
+        } else {
+            "integerInPositiveAbove"
+        };
+        Ok(format!(
+            "(by\n  let _range := {range}\n  have _start : Litex.In _range.val.start {upper} := {start_member}\n  refine Litex.subsetOfForall _range {upper} (fun _x _hx => ?_)\n  obtain ⟨_lower, _upper, _k, _lower_eq, _, _x_eq, _bound, _⟩ := (Litex.{member_iff} _range.val.start _range.val.finish _x _range.wd.1 _range.wd.2).mp _hx\n  have _lower_bound : Litex.NativeBridge.integerValue (Litex.denote _range.val.start) ≤ _k := by\n    rw [_lower_eq, Litex.NativeBridge.integerValue_number]\n    exact _bound\n  change M.mem (Litex.denote _x) (Litex.denote {upper})\n  rw [_x_eq]\n  exact Litex.{above} _range.val.start _start _k _lower_bound)"
+        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_list_subset(

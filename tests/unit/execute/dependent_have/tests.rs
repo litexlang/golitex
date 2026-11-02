@@ -47,10 +47,10 @@ fn dependent_have_requires_nonempty_before_defining_its_own_witness() {
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             crate::execute::ExecDefineObjStmtResult::HaveObjInNonemptySet(
                 ExecHaveObjInNonemptySetStmtResult::Failed(
-                    ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(_)
+                    ExecHaveObjInNonemptySetStmtFailed::Local(context)
                 )
             )
-        ))
+        )) if matches!(context.failure, crate::execute::HaveObjInNonemptySetLocalFailed::Nonempty { .. })
     ));
     assert!(
         rt.run_litex_code("have A nonempty_set, x A\nx $in A\n")
@@ -71,9 +71,9 @@ fn dependent_have_equal_rejects_later_mismatch_and_rolls_back_all_bindings() {
         &run.statement_results[0],
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             crate::execute::ExecDefineObjStmtResult::HaveObjEqual(
-                ExecHaveObjEqualStmtResult::Failed(ExecHaveObjEqualStmtFailed::Membership(_))
+                ExecHaveObjEqualStmtResult::Failed(ExecHaveObjEqualStmtFailed::AfterPreflight(context))
             )
-        ))
+        )) if matches!(context.failure, crate::execute::HaveObjEqualAfterPreflightFailed::Membership { .. })
     ));
     assert!(
         rt.run_litex_code("have A set, x A, n N = R, 0, 1\nx = 0\nn = 1\n")

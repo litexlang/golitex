@@ -12,14 +12,13 @@ use crate::execute::execute_fact_stmt::verify_forall_fact::FailToVerifyForallFac
 use crate::execute::execute_fact_stmt::verify_forall_fact::{
     AssumeDomFactResult, ForallParameterRenaming, ProveAndStoreThenFactResult,
     VerifyForallFactProof, VerifyForallFactResult, VerifyForallFactWellDefinedResult,
-    VerifyKnownForallFactProof,
+    VerifyKnownForallFactProof, ForallIntroductionFormationFailure, ForallIntroductionFormationFailed,
 };
-use crate::execute::execute_fact_stmt::well_defined_results::fail_to_verify_obj_well_defined_others;
 use crate::execute::execute_fact_stmt::{
-    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult, VerifyState,
+    VerifyFactWellDefinedResult, VerifyState,
 };
 use crate::execute::introduce_typed_parameters::{
-    IntroduceTypedParametersFailed, IntroduceTypedParametersResult,
+    IntroduceTypedParametersResult,
 };
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
@@ -31,7 +30,7 @@ enum ForallLocalOutcome {
         assumed_dom_facts: Vec<AssumeDomFactResult>,
         proved_then_facts: Vec<ProveAndStoreThenFactResult>,
     },
-    FailWd(FailToVerifyForallFactWellDefinedResult),
+    FailWd(ForallIntroductionFormationFailed),
     FailThen {
         introduced_params: IntroduceTypedParametersResult,
         assumed_dom_facts: Vec<AssumeDomFactResult>,
@@ -149,7 +148,15 @@ impl Runtime {
                 proved_then_facts,
                 local_env,
             )),
-            ForallLocalOutcome::FailWd(reason) => Ok(forall_fact_result_from_wd_fail(reason)),
+            ForallLocalOutcome::FailWd(failure) => Ok(forall_fact_result_from_wd_fail(
+                FailToVerifyForallFactWellDefinedResult::LocalIntroduction(Box::new(
+                    ForallIntroductionFormationFailure {
+                        fact: fact.clone(),
+                        failure,
+                        local_env,
+                    },
+                )),
+            )),
             ForallLocalOutcome::FailThen {
                 introduced_params,
                 assumed_dom_facts,
@@ -279,26 +286,9 @@ impl Runtime {
         let introduced_params =
             match self.introduce_typed_parameters(&fact.typed_parameters, verify_state.clone())? {
                 Ok(result) => result,
-                Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
-                    let reason = match failed {
-                        VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
-                        _ => fail_to_verify_obj_well_defined_others(
-                            "forall: typed parameter well-definedness failed".to_string(),
-                        ),
-                    };
+                Err(failed) => {
                     return Ok(ForallLocalOutcome::FailWd(
-                        FailToVerifyForallFactWellDefinedResult::ParamType {
-                            fact: fact.clone(),
-                            reason: reason,
-                        },
-                    ));
-                }
-                Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
-                    return Ok(ForallLocalOutcome::FailWd(
-                        FailToVerifyForallFactWellDefinedResult::AutoOpenStructLayer {
-                            fact: fact.clone(),
-                            reason: failed,
-                        },
+                        ForallIntroductionFormationFailed::Parameters(failed),
                     ));
                 }
             };
@@ -311,26 +301,10 @@ impl Runtime {
                 }
                 Err(failed_dom) => {
                     return Ok(ForallLocalOutcome::FailWd(
-                        FailToVerifyForallFactWellDefinedResult::DomFact {
-                            fact: fact.clone(),
+                        ForallIntroductionFormationFailed::Premise {
+                            introduced_params,
+                            assumed_dom_facts,
                             failed_index,
-                            param_type_well_defined: if self.result_detail()
-                                == crate::result_detail::OutputDetail::Detailed
-                            {
-                                introduced_params.param_type_well_defined
-                            } else {
-                                Vec::new()
-                            },
-                            succeeded_dom: if self.result_detail()
-                                == crate::result_detail::OutputDetail::Detailed
-                            {
-                                assumed_dom_facts
-                                    .into_iter()
-                                    .map(|a| a.well_defined)
-                                    .collect()
-                            } else {
-                                Vec::new()
-                            },
                             failed_dom: Box::new(failed_dom),
                         },
                     ));

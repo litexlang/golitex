@@ -88,7 +88,7 @@ fn riemann_integral_representation_negation_substitution_and_capture() {
     }
 }
 #[test]
-fn riemann_integral_representation_parser_latex_and_lean_boundary() {
+fn riemann_integral_representation_parser_latex_and_lean_replay() {
     for source in [
         "have integral R=1",
         "integral()=0",
@@ -115,13 +115,10 @@ fn riemann_integral_representation_parser_latex_and_lean_boundary() {
     let run = check(&mut rt, source, true);
     let json = crate::json_output::project_run_detailed(&run, &rt, "riemann", None).stringify();
     assert!(json.contains("RiemannIntegralSelectedValue"));
-    let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
-        .compile_run(&run, "riemann_boundary")
-        .unwrap_err();
-    assert!(
-        error.message.contains("not supported") || error.message.contains("Unsupported"),
-        "{error}"
-    );
+    let lean = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run, "riemann_replay")
+        .expect("the original selected-candidate result compiles");
+    assert!(lean.contains("riemannIntegralEqCandidate"));
 }
 
 fn runtime() -> Runtime {

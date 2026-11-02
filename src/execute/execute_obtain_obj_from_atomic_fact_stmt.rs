@@ -21,7 +21,7 @@ use crate::ast::fact::{
     exist_shaped_fact_from_fact, exist_shaped_fact_to_fact, AtomicFact, ExistShapedFact, Fact,
 };
 use crate::ast::obj::Obj;
-use crate::ast::stmt::ObtainObjFromAtomicFact;
+use crate::ast::stmt::{DefPropStmt, ObtainObjFromAtomicFact};
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyState};
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::execute::execute_obtain_obj_from_exist_fact_stmt::ExecObtainObjFromExistFactStmtFailed;
@@ -34,6 +34,36 @@ pub enum ExecObtainObjFromAtomicFactStmtFailed {
     AtomicVerifyFailed(VerifyFactResult),
     Instantiate(String),
     Apply(ExecObtainObjFromExistFactStmtFailed),
+    Context(Box<ExecObtainObjFromAtomicFactContextFailure>),
+    DefinitionResolved(Box<ExecObtainObjFromAtomicFactDefinitionFailure>),
+    Projected(Box<ExecObtainObjFromAtomicFactProjectedFailure>),
+    SourceVerified(Box<ExecObtainObjFromAtomicFactVerifiedFailure>),
+}
+
+pub struct ExecObtainObjFromAtomicFactContextFailure {
+    pub statement: ObtainObjFromAtomicFact,
+    pub failure: ExecObtainObjFromAtomicFactStmtFailed,
+}
+
+pub struct ExecObtainObjFromAtomicFactDefinitionFailure {
+    pub statement: ObtainObjFromAtomicFact,
+    pub definition: DefPropStmt,
+    pub failure: ExecObtainObjFromAtomicFactStmtFailed,
+}
+
+pub struct ExecObtainObjFromAtomicFactProjectedFailure {
+    pub statement: ObtainObjFromAtomicFact,
+    pub definition: DefPropStmt,
+    pub projected_exist: ExistShapedFact,
+    pub failure: ExecObtainObjFromAtomicFactStmtFailed,
+}
+
+pub struct ExecObtainObjFromAtomicFactVerifiedFailure {
+    pub statement: ObtainObjFromAtomicFact,
+    pub definition: DefPropStmt,
+    pub projected_exist: ExistShapedFact,
+    pub verify_atomic: VerifyFactResult,
+    pub failure: ExecObtainObjFromAtomicFactStmtFailed,
 }
 
 pub struct ExecObtainObjFromAtomicFactStmtSuccessResult {
@@ -67,13 +97,23 @@ impl Runtime {
             .is_some()
         {
             return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
-                ExecObtainObjFromAtomicFactStmtFailed::AbstractProp,
+                ExecObtainObjFromAtomicFactStmtFailed::Context(Box::new(
+                    ExecObtainObjFromAtomicFactContextFailure {
+                        statement: stmt.clone(),
+                        failure: ExecObtainObjFromAtomicFactStmtFailed::AbstractProp,
+                    },
+                )),
             ));
         }
 
         let Some(definition) = self.def_prop_visible(&stmt.fact.predicate).cloned() else {
             return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
-                ExecObtainObjFromAtomicFactStmtFailed::PropNotFound,
+                ExecObtainObjFromAtomicFactStmtFailed::Context(Box::new(
+                    ExecObtainObjFromAtomicFactContextFailure {
+                        statement: stmt.clone(),
+                        failure: ExecObtainObjFromAtomicFactStmtFailed::PropNotFound,
+                    },
+                )),
             ));
         };
 
@@ -81,7 +121,13 @@ impl Runtime {
             Ok(family) => family,
             Err(msg) => {
                 return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
-                    ExecObtainObjFromAtomicFactStmtFailed::BadDefinition(msg),
+                    ExecObtainObjFromAtomicFactStmtFailed::DefinitionResolved(Box::new(
+                        ExecObtainObjFromAtomicFactDefinitionFailure {
+                            statement: stmt.clone(),
+                            definition: definition.clone(),
+                            failure: ExecObtainObjFromAtomicFactStmtFailed::BadDefinition(msg),
+                        },
+                    )),
                 ));
             }
         };
@@ -89,11 +135,17 @@ impl Runtime {
         let param_ids = definition.typed_parameters.ordered_param_ids();
         if param_ids.len() != stmt.fact.body.len() {
             return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
-                ExecObtainObjFromAtomicFactStmtFailed::BadDefinition(format!(
-                    "prop `{}` expects {} argument(s), got {}",
-                    definition.name,
-                    param_ids.len(),
-                    stmt.fact.body.len()
+                ExecObtainObjFromAtomicFactStmtFailed::DefinitionResolved(Box::new(
+                    ExecObtainObjFromAtomicFactDefinitionFailure {
+                        statement: stmt.clone(),
+                        definition: definition.clone(),
+                        failure: ExecObtainObjFromAtomicFactStmtFailed::BadDefinition(format!(
+                            "prop `{}` expects {} argument(s), got {}",
+                            definition.name,
+                            param_ids.len(),
+                            stmt.fact.body.len()
+                        )),
+                    },
                 )),
             ));
         }
@@ -108,15 +160,29 @@ impl Runtime {
                 Some(family) => family,
                 None => {
                     return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
-                        ExecObtainObjFromAtomicFactStmtFailed::Instantiate(
-                            "instantiated prop clause is not an exist family".to_string(),
-                        ),
+                        ExecObtainObjFromAtomicFactStmtFailed::DefinitionResolved(Box::new(
+                            ExecObtainObjFromAtomicFactDefinitionFailure {
+                                statement: stmt.clone(),
+                                definition: definition.clone(),
+                                failure: ExecObtainObjFromAtomicFactStmtFailed::Instantiate(
+                                    "instantiated prop clause is not an exist family".to_string(),
+                                ),
+                            },
+                        )),
                     ));
                 }
             },
             Err(err) => {
                 return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
-                    ExecObtainObjFromAtomicFactStmtFailed::Instantiate(err.to_string()),
+                    ExecObtainObjFromAtomicFactStmtFailed::DefinitionResolved(Box::new(
+                        ExecObtainObjFromAtomicFactDefinitionFailure {
+                            statement: stmt.clone(),
+                            definition: definition.clone(),
+                            failure: ExecObtainObjFromAtomicFactStmtFailed::Instantiate(
+                                err.to_string(),
+                            ),
+                        },
+                    )),
                 ));
             }
         };
@@ -126,7 +192,16 @@ impl Runtime {
         let verify_atomic = self.verify_fact(&atomic_as_fact, verify_state)?;
         if verify_atomic.is_failed() {
             return Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
-                ExecObtainObjFromAtomicFactStmtFailed::AtomicVerifyFailed(verify_atomic),
+                ExecObtainObjFromAtomicFactStmtFailed::Projected(Box::new(
+                    ExecObtainObjFromAtomicFactProjectedFailure {
+                        statement: stmt.clone(),
+                        definition: definition.clone(),
+                        projected_exist,
+                        failure: ExecObtainObjFromAtomicFactStmtFailed::AtomicVerifyFailed(
+                            verify_atomic,
+                        ),
+                    },
+                )),
             ));
         }
 
@@ -144,7 +219,15 @@ impl Runtime {
                 },
             )),
             Err(failed) => Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
-                ExecObtainObjFromAtomicFactStmtFailed::Apply(failed),
+                ExecObtainObjFromAtomicFactStmtFailed::SourceVerified(Box::new(
+                    ExecObtainObjFromAtomicFactVerifiedFailure {
+                        statement: stmt.clone(),
+                        definition: definition.clone(),
+                        projected_exist,
+                        verify_atomic,
+                        failure: ExecObtainObjFromAtomicFactStmtFailed::Apply(failed),
+                    },
+                )),
             )),
         }
     }

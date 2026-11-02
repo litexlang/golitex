@@ -20,6 +20,15 @@
 
 ## Acceptance
 
+`equal/tuple_coordinates.lit` stores literal tuple equalities and immediately
+uses their coordinates in arithmetic without manual coordinate assertions.
+The named `TupleCoordinates` inference accepts either equality orientation,
+publishes one layer in the current scope, and retains the source FactId and
+ordered coordinate stores. Empty tuples publish no coordinates; singleton
+tuples publish exactly one. Focused `tuple_coordinate_inference` tests cover
+actual publication, wrong values, invalid indices, local scope, rollback and
+compiler replay.
+
 `atomic/cart_exact_function_coordinates.lit` and the migrated
 `atomic/in_cart_projection.lit` use ordinary applications after exact Cartesian
 membership. They cover zero/one/multiple coordinates, literal and carrier

@@ -36,12 +36,73 @@ use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactResult;
 
 pub enum ExecDefStructStmtFailed {
+    Local(Box<ExecDefStructLocalFailure>),
     NameClash(String),
     ParamType(VerifyObjWellDefinedResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     StructureDomain(FailToVerifyFactWellDefinedResult),
     FieldType(VerifyObjWellDefinedResult),
     EquivalentFact(FailToVerifyFactWellDefinedResult),
+}
+
+pub struct ExecDefStructLocalFailure {
+    pub statement: DefStructStmt,
+    pub failure: DefStructLocalFailed,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum DefStructLocalFailed {
+    Parameters(IntroduceTypedParametersFailed),
+    Domain {
+        introduced_params: Option<IntroduceTypedParametersResult>,
+        structure_domains: Vec<FactWellDefinedProof>,
+        failed: FailToVerifyFactWellDefinedResult,
+    },
+    Fields {
+        introduced_params: Option<IntroduceTypedParametersResult>,
+        structure_domains: Vec<FactWellDefinedProof>,
+        field_failure: ExecDefStructFieldLocalFailure,
+    },
+}
+
+pub struct ExecDefStructFieldLocalFailure {
+    pub failure: DefStructFieldLocalFailed,
+    pub field_local_env: Box<ExecEnv>,
+}
+
+pub enum DefStructFieldLocalFailed {
+    Field {
+        fields: Vec<StructFieldWellDefinedAndIntroduced>,
+        failed: VerifyObjWellDefinedResult,
+    },
+    Condition {
+        fields: Vec<StructFieldWellDefinedAndIntroduced>,
+        equivalent_facts: Vec<StructEquivalentFactWellDefinedProof>,
+        failed: FailToVerifyFactWellDefinedResult,
+    },
+}
+
+impl ExecDefStructLocalFailure {
+    pub fn new(
+        statement: DefStructStmt,
+        failure: DefStructLocalFailed,
+        local_env: Box<ExecEnv>,
+    ) -> Self {
+        Self {
+            statement,
+            failure,
+            local_env,
+        }
+    }
+}
+
+impl ExecDefStructFieldLocalFailure {
+    pub fn new(failure: DefStructFieldLocalFailed, field_local_env: Box<ExecEnv>) -> Self {
+        Self {
+            failure,
+            field_local_env,
+        }
+    }
 }
 
 /// Nested field-binder scope evidence (taken, not merged into the outer local env).
@@ -105,7 +166,15 @@ impl Runtime {
 
         let parts = match local_outcome {
             Ok(parts) => parts,
-            Err(failed) => return Ok(ExecDefStructStmtResult::Failed(failed)),
+            Err(failed) => {
+                return Ok(ExecDefStructStmtResult::Failed(
+                    ExecDefStructStmtFailed::Local(Box::new(ExecDefStructLocalFailure::new(
+                        def_struct.clone(),
+                        failed,
+                        local_env,
+                    ))),
+                ))
+            }
         };
 
         self.top_exec_env_mut().store_def_struct(def_struct.clone());
@@ -146,18 +215,13 @@ impl Runtime {
     fn exec_def_struct_stmt_in_local(
         &mut self,
         def_struct: &DefStructStmt,
-    ) -> RuntimeResult<Result<OuterLocalParts, ExecDefStructStmtFailed>> {
+    ) -> RuntimeResult<Result<OuterLocalParts, DefStructLocalFailed>> {
         let verify_state = VerifyState::top_level();
 
         let introduced_params = if let Some((params, _)) = &def_struct.param_def_with_dom {
             match self.introduce_typed_parameters(params, verify_state.clone())? {
                 Ok(result) => Some(result),
-                Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
-                    return Ok(Err(ExecDefStructStmtFailed::ParamType(failed)));
-                }
-                Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
-                    return Ok(Err(ExecDefStructStmtFailed::AutoOpenStructLayer(failed)));
-                }
+                Err(failed) => return Ok(Err(DefStructLocalFailed::Parameters(failed))),
             }
         } else {
             None
@@ -172,7 +236,11 @@ impl Runtime {
                         structure_domains.push(proof);
                     }
                     VerifyFactWellDefinedResult::Failed(reason) => {
-                        return Ok(Err(ExecDefStructStmtFailed::StructureDomain(reason)));
+                        return Ok(Err(DefStructLocalFailed::Domain {
+                            introduced_params,
+                            structure_domains,
+                            failed: reason,
+                        }));
                     }
                 }
             }
@@ -184,7 +252,13 @@ impl Runtime {
 
         let (fields, equivalent_facts) = match field_outcome {
             Ok(parts) => parts,
-            Err(failed) => return Ok(Err(failed)),
+            Err(failed) => {
+                return Ok(Err(DefStructLocalFailed::Fields {
+                    introduced_params,
+                    structure_domains,
+                    field_failure: ExecDefStructFieldLocalFailure::new(failed, field_local_env),
+                }))
+            }
         };
 
         Ok(Ok(OuterLocalParts {
@@ -208,7 +282,7 @@ impl Runtime {
                 Vec<StructFieldWellDefinedAndIntroduced>,
                 Vec<StructEquivalentFactWellDefinedProof>,
             ),
-            ExecDefStructStmtFailed,
+            DefStructFieldLocalFailed,
         >,
     > {
         let verify_state = VerifyState::top_level();
@@ -221,7 +295,10 @@ impl Runtime {
                 match self.verify_obj_well_definedness(&field.field_type, verify_state)? {
                     VerifyObjWellDefinedResult::Success(proof) => proof,
                     failed @ VerifyObjWellDefinedResult::Failed { .. } => {
-                        return Ok(Err(ExecDefStructStmtFailed::FieldType(failed)));
+                        return Ok(Err(DefStructFieldLocalFailed::Field {
+                            fields: introduced_fields,
+                            failed,
+                        }));
                     }
                 };
             let field_params = field_typed_parameters(std::slice::from_ref(field));
@@ -244,7 +321,11 @@ impl Runtime {
                     });
                 }
                 VerifyFactWellDefinedResult::Failed(reason) => {
-                    return Ok(Err(ExecDefStructStmtFailed::EquivalentFact(reason)));
+                    return Ok(Err(DefStructFieldLocalFailed::Condition {
+                        fields: introduced_fields,
+                        equivalent_facts: checked,
+                        failed: reason,
+                    }));
                 }
             }
         }

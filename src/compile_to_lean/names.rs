@@ -44,6 +44,10 @@ impl LitexToLeanCompiler {
         }
         fn statement(result: &ExecStmtResult, out: &mut Vec<IdentifierId>) {
             match result {
+                ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(crate::execute::ExecDefStrategyStmtResult::Success(p))) => {
+                    parameters(&Fact::ForallFact(p.statement.forall_fact.clone()), out);
+                    for step in &p.body.proof_steps { statement(step, out); }
+                }
                 ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(crate::execute::ExecDefTemplateStmtResult::Success(p))) => {
                     out.extend(p.statement.template_arg_def.ordered_param_ids());
                     statement(&p.body, out);
@@ -242,25 +246,23 @@ impl LitexToLeanCompiler {
                 )
             })
             .collect::<Vec<_>>();
-        for (run, index, statement, before) in position.context_statements() {
+        for (prior, _index, statement, before) in position.context_statements() {
             if super::source_position::context_parameter_parts(statement).is_some() {
                 let mut parameters = Vec::new();
                 super::source_position::append_have_parameters(statement, before, &mut parameters);
-                for (parameter, set, fact_id) in parameters {
+                for (parameter, kind, fact_id) in parameters {
                     let id = parameter.id.value();
                     let fact_id = fact_id.value();
-                    let proposition = match set {
-                        Some(set) => format!(
+                    let proposition = match kind {
+                        ParamType::Obj(set) => format!(
                             "Litex.In _value_i{id} {}",
                             self.compile_object_reference(set, position)?
                         ),
-                        None => format!("Litex.IsSet _value_i{id}"),
+                        kind => format!("{} _value_i{id}", set_kind_predicate(kind).unwrap()),
                     };
                     binders.push(format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : {proposition})"));
                 }
             }
-            let prior =
-                SourcePosition::new(None, super::source_position::SourceOwner::Run(run), index);
             binders.extend(self.assumption_binders(statement, before, &prior)?);
             binders.extend(self.closed_assumption_binders(statement, &prior)?);
         }
@@ -317,15 +319,24 @@ impl LitexToLeanCompiler {
                 text[*start..boundaries.get(index + 1).copied().unwrap_or(text.len())].trim_end()
             })
             .collect::<Vec<_>>();
+        // Dependency ownership comes from these actual local declarations,
+        // including auxiliary existence proofs. A name-prefix whitelist can
+        // silently drop a required producer when another body kind uses it.
+        let local_names = chunks
+            .iter()
+            .map(|chunk| {
+                chunk
+                    .strip_prefix("have ")
+                    .or_else(|| chunk.strip_prefix("let "))
+                    .expect("compiler-controlled local declaration")
+                    .split_whitespace()
+                    .next()
+                    .expect("local declaration name")
+            })
+            .collect::<std::collections::HashSet<_>>();
         let tokens = |text: &str| {
             text.split(|character: char| !character.is_ascii_alphanumeric() && character != '_')
-                .filter(|token| {
-                    token.starts_with("h_")
-                        || token.starts_with("_value_i")
-                        || token.starts_with("_object_i")
-                        || token.starts_with("_object_w")
-                        || token.starts_with("_object_h")
-                })
+                .filter(|token| local_names.contains(token))
                 .map(str::to_string)
                 .collect::<Vec<_>>()
         };
@@ -916,13 +927,84 @@ impl LitexToLeanCompiler {
                     term
                 })
             }
-            AtomicFact::HasRiemannIntegralFact(_)
+            fact @ (AtomicFact::MultivariableAnalysisFact(_)
+            | AtomicFact::NotMultivariableAnalysisFact(_)) => {
+                let (relation, negative) = match fact {
+                    AtomicFact::MultivariableAnalysisFact(f) => (&f.relation, false),
+                    AtomicFact::NotMultivariableAnalysisFact(f) => (&f.relation, true),
+                    _ => unreachable!(),
+                };
+                let predicate = match relation {
+                    MultivariableAnalysisRelation::ScalarLimit(_) => {
+                        "HasMultivariableScalarLimitValue"
+                    }
+                    MultivariableAnalysisRelation::VectorLimit(_) => {
+                        "HasMultivariableVectorLimitValue"
+                    }
+                    MultivariableAnalysisRelation::PartialDerivativeAt(_) => {
+                        "HasPartialDerivativeAtValue"
+                    }
+                    MultivariableAnalysisRelation::GradientAt(_) => "HasGradientAtValue",
+                    MultivariableAnalysisRelation::HessianAt(_) => "HasHessianAtValue",
+                    MultivariableAnalysisRelation::ScalarDifferentialAt(_) => {
+                        "HasScalarDifferentialAtValue"
+                    }
+                    MultivariableAnalysisRelation::TotalDerivativeAt(_) => {
+                        "HasTotalDifferentialAtValue"
+                    }
+                    MultivariableAnalysisRelation::LaplacianAt(_) => "HasLaplacianAtValue",
+                    MultivariableAnalysisRelation::JacobianAt(_) => "HasJacobianAtValue",
+                    MultivariableAnalysisRelation::DivergenceAt(_) => "HasDivergenceAtValue",
+                    MultivariableAnalysisRelation::CurlAt(_) => "HasCurlAtValue",
+                    MultivariableAnalysisRelation::SecondPartialDerivativeAt(_) => {
+                        "HasSecondPartialAtValue"
+                    }
+                    _ => return Err(LeanCompileError::unsupported("Atomic/MultivariableFamily")),
+                };
+                let args = relation
+                    .argument_refs()
+                    .into_iter()
+                    .map(|x| match x {
+                        Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) => self
+                            .compile_function_raw_expression_bound(
+                                x,
+                                position,
+                                &std::collections::HashMap::new(),
+                            ),
+                        Obj::FnObj(_) => {
+                            self.compile_object_reference(x, position)?;
+                            self.compile_function_raw_expression_bound(
+                                x,
+                                position,
+                                &std::collections::HashMap::new(),
+                            )
+                        }
+                        _ => self
+                            .compile_object_reference(x, position)
+                            .map(|s| format!("(Litex.denote {s})")),
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                let term = format!("Litex.{predicate} M {}", args.join(" "));
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
+            fact @ (AtomicFact::HasRiemannIntegralFact(_)
             | AtomicFact::NotHasRiemannIntegralFact(_)
             | AtomicFact::FunctionRiemannIntegrableFact(_)
-            | AtomicFact::NotFunctionRiemannIntegrableFact(_)
-            | AtomicFact::MultivariableAnalysisFact(_)
-            | AtomicFact::NotMultivariableAnalysisFact(_)
-            | AtomicFact::FunctionContinuousFact(_)
+            | AtomicFact::NotFunctionRiemannIntegrableFact(_)) => {
+                let args = atomic_fact_args_ref(fact)
+                    .into_iter()
+                    .map(|x| {
+                        self.compile_object_reference(x, position)
+                            .map(|s| format!("(Litex.denote {s})"))
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                super::compile_riemann_integral::raw_proposition(fact, &args)
+            }
+            AtomicFact::FunctionContinuousFact(_)
             | AtomicFact::NotFunctionContinuousFact(_)
             | AtomicFact::FunctionLipschitzFact(_)
             | AtomicFact::NotFunctionLipschitzFact(_)
@@ -956,31 +1038,42 @@ impl LitexToLeanCompiler {
         if let Some(term) = position.bound_object_child(object) {
             return Ok(term);
         }
+        // Standard-set constructors have a fixed Core representation. The
+        // active inference's exact subject is sufficient provenance; searching
+        // its entire earlier WD tree cannot produce a different host value.
+        if matches!(object, Obj::StandardSet(_)) && position.has_bound_inferred_subject(object) {
+            return self.compile_inferred_obj(object, position);
+        }
         if let Some(term) = position.registered_wd_reference(object, None)? {
             return Ok(term);
         }
-        if let Some(term) =
-            position.with_visible_alias(object, &mut |parameter, _, _, producer| {
+        if let Some(term) = position.with_visible_alias(
+            object,
+            &self.runtime,
+            &mut |parameter, _, _, producer| {
                 let name = format!("_object_i{}", parameter.id.value());
-                Ok(if producer.is_local() {
-                    name
-                } else {
-                    self.context_application(&name, producer)
-                })
-            })?
-        {
+                position.declaration_reference(&name, producer)
+            },
+        )? {
             return Ok(term);
         }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
             if let Some((_, producer)) = position.visible_replacement(*id) {
-                return Ok(self.context_application(&format!("_object_i{}", id.value()), &producer));
+                let name = format!("_object_i{}", id.value());
+                return Ok(if producer.is_local() {
+                    name
+                } else {
+                    self.context_application(&name, &producer)
+                });
             }
 
             if let Ok((_, producer)) = position.visible_piecewise_function(id) {
-                return Ok(self.context_application(&format!("_object_i{}", id.value()), &producer));
+                return position
+                    .declaration_reference(&format!("_object_i{}", id.value()), &producer);
             }
             if let Ok((_, producer)) = position.visible_selected_function(id) {
-                return Ok(self.context_application(&format!("_object_i{}", id.value()), &producer));
+                return position
+                    .declaration_reference(&format!("_object_i{}", id.value()), &producer);
             }
             if let Ok((proof, _)) = position.visible_recursive_self(id) {
                 return Ok(format!("_object_i{}", proof.statement.name.id.value()));
@@ -1001,21 +1094,32 @@ impl LitexToLeanCompiler {
             }
             return self.compile_parameter_reference(*id, position);
         }
+        if matches!(object, Obj::Identifier(_)) {
+            return Err(LeanCompileError::new(
+                "Identifier/Producer",
+                "The qualified identifier has no available original declaration constructor.",
+            ));
+        }
         if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) = object {
             return self.compile_struct_field_reference(access, position);
         }
-        if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) = object {
-            return self.compile_struct_reference(carrier, position);
-        }
         if let Some(carrier) = self.compile_released_struct_carrier(object, position)? {
             return Ok(carrier);
+        }
+        if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier)) = object {
+            return self.compile_struct_reference(carrier, position);
         }
         if let Some(term) = self.compile_recursive_signature_reference(object, position)? {
             return Ok(term);
         }
         if is_literal_coordinate_call(object) {
-            if let Some(term) = position
-                .with_visible_inferred_subject_filter(object, &mut |store, producer| {
+            if let Some(term) =
+                position.with_visible_inferred_subject_filter(object, &mut |store, producer| {
+                    if let Some(term) =
+                        self.compile_tuple_inferred_subject(object, store, producer)?
+                    {
+                        return Ok(Some(term));
+                    }
                     self.compile_cart_inferred_subject(object, store, producer)
                 })?
             {
@@ -1024,6 +1128,13 @@ impl LitexToLeanCompiler {
         }
         if let Some(term) =
             position.with_visible_wd(object, &mut |wd, producer| self.compile_wd(wd, producer))?
+        {
+            return Ok(term);
+        }
+        if let Some(term) =
+            position.with_released_definition_wd(object, &self.runtime, &mut |wd, producer| {
+                self.compile_wd(wd, producer)
+            })?
         {
             return Ok(term);
         }
@@ -1046,6 +1157,9 @@ impl LitexToLeanCompiler {
                 if let Some(term) = self.compile_cart_inferred_subject(object, store, producer)? {
                     return Ok(term);
                 }
+                if let Some(term) = self.compile_tuple_inferred_subject(object, store, producer)? {
+                    return Ok(term);
+                }
                 if let Some((term, _)) =
                     self.compile_preimage_inferred_subject(object, store, producer)?
                 {
@@ -1056,9 +1170,20 @@ impl LitexToLeanCompiler {
                 {
                     return Ok(term);
                 }
-                if let Some(term) =
-                    self.compile_sequence_inferred_subject(object, store, producer)?
+                if position
+                    .visible_fact(store.primary_fact_id(), &self.runtime)
+                    .is_ok()
                 {
+                    if let Some(term) =
+                        self.compile_sequence_inferred_subject(object, store, producer)?
+                    {
+                        return Ok(term);
+                    }
+                }
+                if let Some(term) = self.compile_prime_inferred_subject(object, store, producer)? {
+                    return Ok(term);
+                }
+                if let Some(term) = self.compile_dvd_inferred_subject(object, store, producer)? {
                     return Ok(term);
                 }
                 // The named rule creates this primitive; its Lean constructor proves WD.
@@ -1069,6 +1194,11 @@ impl LitexToLeanCompiler {
             return Ok(term);
         }
         if let Some(term) = self.compile_callee_constructor_reference(object, position)? {
+            return Ok(term);
+        }
+        if let Some(term) = position.with_visible_call_prefix(object, &mut |wd, producer| {
+            self.compile_checked_call_prefix(object, wd, producer, position)
+        })? {
             return Ok(term);
         }
         Err(LeanCompileError::new(

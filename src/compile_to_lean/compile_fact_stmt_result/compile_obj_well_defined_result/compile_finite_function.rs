@@ -393,6 +393,40 @@ impl LitexToLeanCompiler {
         shape: &KnownTupleShapeProof,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
+        if let KnownTupleShapeProof::CartesianCoordinate(proof) = shape {
+            let Obj::FnObj(application) = receiver else {
+                return Err(LeanCompileError::unsupported(
+                    "FiniteShape/CoordinateApplication",
+                ));
+            };
+            let (parent, argument) = finite_call_parts(application)?;
+            let n = proof.receiver.dimension();
+            let Some(offset) = proof.index.checked_sub(1).filter(|i| *i < n) else {
+                return Err(LeanCompileError::unsupported("FiniteShape/CoordinateIndex"));
+            };
+            if literal_positive_usize(argument) != Some(proof.index) {
+                return Err(LeanCompileError::unsupported(
+                    "FiniteShape/CoordinateSubject",
+                ));
+            }
+            let factor = proof
+                .receiver
+                .cart()
+                .and_then(|c| c.args.get(offset))
+                .ok_or_else(|| LeanCompileError::unsupported("FiniteShape/CoordinateFactor"))?;
+            let (parent_cart, parent_member) =
+                self.compile_cart_shape_member(&parent, &proof.receiver, position)?;
+            let parent = self.compile_object_reference(&parent, position)?;
+            let call = self.compile_object_reference(receiver, position)?;
+            let factor_term = self.compile_object_reference(factor, position)?;
+            let cart_obj = Obj::ProductShape(ProductShape::Cart(proof.cart.clone()));
+            let cart = self.compile_object_reference(&cart_obj, position)?;
+            let same =
+                self.compile_equality_path(factor, &cart_obj, &proof.carrier_equal, position)?;
+            let coordinate = coordinate_membership("_coordinate_parent_member", offset, n);
+            let member = format!("(by\n  let _coordinate_parent := {parent}\n  let _coordinate_call := {call}\n  let _coordinate_parent_cart := {parent_cart}\n  have _coordinate_parent_member : Litex.In _coordinate_parent _coordinate_parent_cart := {parent_member}\n  have _coordinate_member : Litex.In _coordinate_call {factor_term} := {coordinate}\n  exact Litex.inOfSame _coordinate_call _coordinate_call {factor_term} {cart} (Litex.sameRefl _) {same} _coordinate_member)");
+            return Ok((cart, member));
+        }
         if let KnownTupleShapeProof::TupleEquality(proof) = shape {
             let tuple_object = Obj::ProductShape(ProductShape::Tuple(proof.value.clone()));
             let tuple = self.compile_object_reference(&tuple_object, position)?;

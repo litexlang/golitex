@@ -1,0 +1,10 @@
+{
+  "retained-assumption-body.lit": {
+    "zh": "反证法中的临时假设",
+    "en": "Temporary assumptions in a contradiction proof"
+  },
+  "missing-compound-opposite.lit": {
+    "zh": "尚未闭合的反证",
+    "en": "An unfinished contradiction"
+  }
+}

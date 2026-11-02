@@ -18,6 +18,13 @@ use std::rc::Rc;
 
 pub enum ExecHaveObjByExistFactsStmtFailed {
     Exist(VerifyExistShapedFactFailed),
+    Context(Box<ExecHaveObjByExistFactsFailure>),
+}
+
+pub struct ExecHaveObjByExistFactsFailure {
+    pub statement: HaveObjByExistFactsStmt,
+    pub exist_family: ExistShapedFact,
+    pub failed: VerifyExistShapedFactFailed,
 }
 
 // Pipeline: synthesize exist → verify exist → define params + store body facts.
@@ -59,7 +66,13 @@ impl Runtime {
             Ok(success) => success,
             Err(failed) => {
                 return Ok(ExecHaveObjByExistFactsStmtResult::Failed(
-                    ExecHaveObjByExistFactsStmtFailed::Exist(failed),
+                    ExecHaveObjByExistFactsStmtFailed::Context(Box::new(
+                        ExecHaveObjByExistFactsFailure {
+                            statement: stmt.clone(),
+                            exist_family,
+                            failed,
+                        },
+                    )),
                 ));
             }
         };

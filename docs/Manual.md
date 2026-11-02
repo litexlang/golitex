@@ -12165,6 +12165,13 @@ Typical consequences include:
 - equality to a tuple or product is ordinary object equality; a directly indexed
   tuple value or exact-object membership supplies its complete function domain
   and coordinates, without traversing an alias chain;
+- storing `x = (a,b)` or `(a,b) = x` automatically publishes `x(1)=a` and
+  `x(2)=b` in the same scope, so later arithmetic can use these values without
+  explicit coordinate assertions. This named `TupleCoordinates` inference
+  projects one layer only; an inferred tuple-valued coordinate does not trigger
+  another infer step. Empty tuples publish no coordinates. The result retains
+  the source equality FactId and each ordered coordinate store; detailed output
+  reports the named rule. See the [runnable tracer](../examples/infer/equal/tuple_coordinates.lit);
 - equality to an anonymous function records the
   corresponding structural information;
 - a known concrete `prop` call may expose instantiated definition clauses.

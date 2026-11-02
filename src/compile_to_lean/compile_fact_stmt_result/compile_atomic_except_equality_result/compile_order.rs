@@ -353,7 +353,51 @@ impl LitexToLeanCompiler {
         rule: &AtomicExceptEqualityFactSearchProofByBuiltinRule,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if Self::negative_factor_evidence(rule).is_some() {
+            return self.compile_negative_factor_order(goal, rule, position);
+        }
+        match rule {
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeSubsetLe(p),
+            ) => {
+                return self.compile_finite_cardinality_weak_bound(goal, &p.subset_proof, position);
+            }
+            AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(p),
+            ) => {
+                return self.compile_finite_cardinality_strict_bound(
+                    goal,
+                    &p.inclusion_proof,
+                    position,
+                );
+            }
+            _ => {}
+        }
         match (goal, rule) {
+            (
+                AtomicFact::LessEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(
+                    LessEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(p),
+                ),
+            ) => self.compile_closed_subtraction_bound(goal, &p.bound, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound(p),
+                ),
+            ) => self.compile_closed_subtraction_bound(goal, &p.bound, position),
+            (
+                AtomicFact::GreaterEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(
+                    GreaterEqualFactSearchProofByBuiltinRule::ClosedSubtractionBound(p),
+                ),
+            ) => self.compile_closed_subtraction_bound(goal, &p.bound, position),
+            (
+                AtomicFact::GreaterFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(
+                    GreaterFactSearchProofByBuiltinRule::ClosedSubtractionStrictBound(p),
+                ),
+            ) => self.compile_closed_subtraction_bound(goal, &p.bound, position),
             (
                 AtomicFact::NotEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
@@ -538,6 +582,66 @@ impl LitexToLeanCompiler {
                 AtomicFact::LessEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(rule),
             ) => match rule {
+                LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalLowerBound(_) => {
+                    self.compile_inverse_principal_range_bound(goal, "Arcsin", true, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::ArcsinPrincipalUpperBound(_) => {
+                    self.compile_inverse_principal_range_bound(goal, "Arcsin", false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalLowerBound(_) => {
+                    self.compile_inverse_principal_range_bound(goal, "Arccos", true, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::ArccosPrincipalUpperBound(_) => {
+                    self.compile_inverse_principal_range_bound(goal, "Arccos", false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::ProductNonnegativeNegativeWeak(p) => self
+                    .compile_mixed_product_sign(
+                        goal,
+                        false,
+                        &p.nonnegative_factor,
+                        &p.negative_factor,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::AbsSelfUpper(_) => {
+                    self.compile_abs_self_order(goal, false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AbsSelfLower(_) => {
+                    self.compile_abs_self_order(goal, true, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AbsTriangleInequality(_) => {
+                    self.compile_abs_triangle_order(goal, 0, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AbsReverseTriangleAdd(_) => {
+                    self.compile_abs_triangle_order(goal, 1, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AbsReverseTriangleSub(_) => {
+                    self.compile_abs_triangle_order(goal, 2, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AbsLeFromSymmetricBounds(p) => self
+                    .compile_abs_symmetric_bound(
+                        goal,
+                        &p.upper_proof,
+                        &p.neg_upper_proof,
+                        position,
+                    ),
+                LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesUpper(p) => {
+                    self.compile_abs_bound_projection(goal, false, &p.premise_proof, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::AbsLeImpliesNegUpper(p) => {
+                    self.compile_abs_bound_projection(goal, true, &p.premise_proof, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::UnitCircleLowerBound(_) => {
+                    self.compile_unit_circle_bound(goal, true, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::UnitCircleUpperBound(_) => {
+                    self.compile_unit_circle_bound(goal, false, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::OrderSignFromNegativeLiteralBound(p) => {
+                    self.compile_signed_literal_bound(goal, p.cite_fact_id, position)
+                }
+                LessEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(p) => {
+                    self.compile_positive_natural_lower_bound(goal, &p.premise_proof, position)
+                }
                 LessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(p) => {
                     self.compile_order_complement(goal, p, position)
                 }
@@ -991,6 +1095,90 @@ impl LitexToLeanCompiler {
                 Ok(format!("(fun _litex_same => {child} _litex_same.symm)"))
             }
             (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ArctanPrincipalLowerBound(_),
+                ),
+            ) => self.compile_inverse_principal_range_bound(goal, "Arctan", true, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ArctanPrincipalUpperBound(_),
+                ),
+            ) => self.compile_inverse_principal_range_bound(goal, "Arctan", false, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ArccotPrincipalLowerBound(_),
+                ),
+            ) => self.compile_inverse_principal_range_bound(goal, "Arccot", true, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ArccotPrincipalUpperBound(_),
+                ),
+            ) => self.compile_inverse_principal_range_bound(goal, "Arccot", false, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::LnPositiveAboveOne(p),
+                ),
+            ) => self.compile_natural_log_sign(goal, true, &p.above_one, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::LnNegativeBelowOne(p),
+                ),
+            ) => self.compile_natural_log_sign(goal, false, &p.below_one, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::ProductPositiveNegativeStrict(p),
+                ),
+            ) => self.compile_mixed_product_sign(
+                goal,
+                true,
+                &p.positive_factor,
+                &p.negative_factor,
+                position,
+            ),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::CosNonzeroOnOpenHalfPi(p),
+                ),
+            ) => self.compile_principal_trig_nonzero(
+                goal,
+                true,
+                &p.lower_bound_proof,
+                &p.upper_bound_proof,
+                position,
+            ),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::SinNonzeroOnOpenPi(p),
+                ),
+            ) => self.compile_principal_trig_nonzero(
+                goal,
+                false,
+                &p.lower_bound_proof,
+                &p.upper_bound_proof,
+                position,
+            ),
+            (
+                AtomicFact::NotEqualFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::NonzeroFromSignedBound(p),
+                ),
+            ) => self.compile_signed_literal_bound(goal, p.cite_fact_id, position),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::OrderSignFromPositiveLiteralBound(p),
+                ),
+            ) => self.compile_signed_literal_bound(goal, p.cite_fact_id, position),
+            (
                 AtomicFact::NotEqualFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
                     NotEqualFactSearchProofByBuiltinRule::FromKnownStrictOrder(p),
@@ -1164,6 +1352,39 @@ impl LitexToLeanCompiler {
             self.compile_object_reference(low, position)?,
             self.compile_real_membership_certificate(low, position)?
         ))
+    }
+
+    fn compile_positive_natural_lower_bound(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (one, value, strict) = source_order_oriented(goal)?;
+        if strict
+            || EvalRational::from_obj(one).and_then(|q| q.to_i128_if_integer()) != Some(1)
+            || !matches!(&premise.fact, AtomicFact::InFact(f) if f.element.ir() == value.ir() && f.set == Obj::StandardSet(StandardSet::NPos))
+        {
+            return Err(LeanCompileError::unsupported(
+                "PositiveNaturalBound/Subject",
+            ));
+        }
+        let child = SourcePosition::new(
+            Some(position),
+            crate::compile_to_lean::source_position::SourceOwner::AtomicSearch(
+                &premise.searched_proof,
+            ),
+            0,
+        );
+        let evidence = self.compile_atomic_searched_proof(
+            &premise.fact,
+            &premise.searched_proof,
+            None,
+            &child,
+        )?;
+        let value = self.compile_object_reference(value, position)?;
+        let reference = format!("h_{}", premise.fact.fact_id().value());
+        Ok(format!("(let {reference} := {evidence}; Litex.integerSuccessorLowerBound {value} (Litex.naturalToInteger {value} (Litex.inNPos_natural {value} {reference})) (Litex.inNPos_positive {value} {reference}))"))
     }
 
     pub(in crate::compile_to_lean) fn compile_order_known_premise(
@@ -1980,7 +2201,7 @@ impl LitexToLeanCompiler {
         Ok(format!("(let _sum := {sum}; let _other := {other}; fun _litex_equal => (Litex.notSameNegOfNonzeroSum{side} _sum _other {negation} {nonzero}) {equality})"))
     }
 
-    fn compile_log_guard(
+    pub(in crate::compile_to_lean) fn compile_log_guard(
         &self,
         subject: &Obj,
         proof: &LogAlgebraBaseProof,
@@ -2486,7 +2707,7 @@ impl LitexToLeanCompiler {
         goal: &AtomicFact,
         argument_equalities: &[String],
         citation_proof: &str,
-        position: &SourcePosition<'_>,
+        _position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let (kind, _, _) = source_order_parts(cited)?;
         let (goal_kind, _, _) = source_order_parts(goal)?;
@@ -2496,8 +2717,7 @@ impl LitexToLeanCompiler {
                 "Recorded order transport changes its source family or ordered argument arity.",
             ));
         }
-        let (old_low, old_high, strict) = source_order_oriented(cited)?;
-        let (new_low, new_high, _) = source_order_oriented(goal)?;
+        let (_, _, strict) = source_order_oriented(cited)?;
         let (low_equality, high_equality) = match kind {
             SourceOrderKind::Less | SourceOrderKind::LessEqual => {
                 (&argument_equalities[0], &argument_equalities[1])
@@ -2506,13 +2726,12 @@ impl LitexToLeanCompiler {
                 (&argument_equalities[1], &argument_equalities[0])
             }
         };
+        // The checked children are equalities of denotations. Transport the
+        // existing real-witness predicate directly, preserving strictness and
+        // orientation without asking Lean to reconstruct an operand host type.
+        let comparison = if strict { "<" } else { "≤" };
         Ok(format!(
-            "(Litex.{} {} {} {} {} {low_equality} {high_equality} {citation_proof})",
-            if strict { "ltOfSame" } else { "leOfSame" },
-            self.compile_object_reference(old_low, position)?,
-            self.compile_object_reference(new_low, position)?,
-            self.compile_object_reference(old_high, position)?,
-            self.compile_object_reference(new_high, position)?
+            "(Eq.mp (congrArg₂ (fun (a b : M.Value) => ∃ r s : ℝ, a = M.number (r : ℂ) ∧ b = M.number (s : ℂ) ∧ r {comparison} s) (show @Eq M.Value _ _ from {low_equality}) (show @Eq M.Value _ _ from {high_equality})) {citation_proof})"
         ))
     }
 }

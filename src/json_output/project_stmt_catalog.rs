@@ -259,11 +259,11 @@ fn project_definition(def: &ExecDefinitionStmtResult, runtime: &Runtime) -> Json
 fn project_define_obj(obj: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonValue {
     match obj {
         ExecDefineObjStmtResult::LetObj(r) => match r {
-            ExecLetObjStmtResult::Success(s) => success_with_ids(
+            ExecLetObjStmtResult::Success(s) => success_from_store(
                 runtime,
                 s.statement.readable_string(),
                 "let",
-                &s.stored_fact_ids,
+                &s.store_and_infer_result,
             ),
             ExecLetObjStmtResult::Failed(failed) => match failed {
                 crate::execute::ExecLetObjStmtFailed::ValueWellDefined(wd) => failed_with_details(

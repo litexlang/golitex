@@ -304,13 +304,9 @@ fn multivariable_calculus_lean_boundary_and_polarity() {
     let mut rt = runtime();
     let source="forall f fn(x cart_n(R,2)) R,p cart_n(R,2),L R:\n    $has_partial_derivative_at(f,p,2,1,L)\n    =>:\n        partial_derivative(f,p,2,1)=L";
     let run = check(&mut rt, source, true);
-    let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
-        .compile_run(&run, "multivariable_boundary")
-        .unwrap_err();
-    assert!(
-        error.message.contains("not supported") || error.message.contains("Unsupported"),
-        "{error}"
-    );
+    crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run, "coordinate_partial_derivative")
+        .expect("the original standard coordinate-quotient result is replayed");
     let mut rt = runtime();
     let tokens = crate::tokenize::Tokenizer::new()
         .tokenize(

@@ -21,17 +21,18 @@ impl Runtime {
         // Whole-chain forall cite still requires each adjacent edge to be WD.
         // Atomic edge verification remains the fallback when the cite misses
         // or the goal is not well-defined.
-        let mut known_forall =
-            self.search_chain_fact_by_known_forall(fact, verify_state.clone())?;
-        if let Some(proof) = known_forall.take() {
-            if matches!(
-                self.verify_chain_fact_well_definedness(fact, verify_state.clone())?,
-                VerifyChainFactWellDefinedResult::Success(_)
-            ) {
+        let known_forall = self.search_chain_fact_by_known_forall(fact, verify_state.clone())?;
+        if let Some(application) = known_forall {
+            if let VerifyChainFactWellDefinedResult::Success(well_defined_proof) =
+                self.verify_chain_fact_well_definedness(fact, verify_state.clone())?
+            {
                 return Ok(chain_fact_result_from_success(
                     fact,
                     Vec::new(),
-                    Some(proof),
+                    Some(super::KnownForallChainProof::new(
+                        application,
+                        well_defined_proof,
+                    )),
                 ));
             }
             // WD failed: fall through so the Failed shape matches adjacent WD misses.

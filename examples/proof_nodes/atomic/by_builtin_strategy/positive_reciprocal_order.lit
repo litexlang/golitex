@@ -1,0 +1,17 @@
+# Direct reciprocal-order composition.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/positive_reciprocal_order.lit
+# Historical explicit proof:
+# claim:
+#     ? forall x,y R+:
+#         x<=y
+#         =>:
+#             1/y<=1/x
+#     1/y=x/(x*y)
+#     1/x=y/(x*y)
+#     x/(x*y)<=y/(x*y)
+#     1/y<=1/x
+# Boundary: all original domains and premises are required.
+forall x,y R+:
+    x<=y
+    =>:
+        1/y<=1/x

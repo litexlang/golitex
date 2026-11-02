@@ -13,7 +13,7 @@ impl LitexToLeanCompiler {
         predicate_proof: &str,
         caller: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, parent, _) = caller.visible_prop(&normal.predicate)?;
+        let (declaration, parent, _) = caller.visible_prop(&normal.predicate, &self.runtime)?;
         if index != 0 || declaration.statement.iff_facts.len() != 1 {
             return Err(LeanCompileError::unsupported("Prop/DependentExistClause"));
         }

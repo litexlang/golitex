@@ -22,11 +22,24 @@ fn quantified_premise_closes_its_original_coordinate_inferences() {
         };
         let premise = fact.dom_facts[0].fact_id();
         let generated = compiler.compile_run(&result, "coordinate_premise").unwrap();
-        let binder = format!("(h_{} : (by\n", premise.value());
+        let binder = format!("(h_{} : ", premise.value());
         let start = generated
             .find(&binder)
             .expect("premise type owns its required original proofs");
-        let exact = generated[start..].find("exact Litex.Same").unwrap() + start;
-        assert!(generated[start..exact].contains("FiniteFunction.coordinate_mem_number"));
+        let mut depth = 0usize;
+        let end = generated[start..]
+            .char_indices()
+            .find_map(|(offset, character)| {
+                match character {
+                    '(' => depth += 1,
+                    ')' => depth -= 1,
+                    _ => {}
+                }
+                (depth == 0).then_some(start + offset + 1)
+            })
+            .expect("complete original premise binder");
+        let premise_type = &generated[start..end];
+        assert!(premise_type.contains("FiniteFunction.coordinate_mem_number"));
+        assert!(premise_type.contains("Litex.Same"));
     }
 }

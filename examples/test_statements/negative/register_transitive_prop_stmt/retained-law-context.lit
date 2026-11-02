@@ -1,0 +1,23 @@
+# Tracer: the local context of a rejected transitivity law.
+# Before: the same source only reported an unproved conclusion.
+# prop different(x, y set):
+#     x != y
+# register transitive:
+#     ? forall x, y, z set:
+#         $different(x, y)
+#         $different(y, z)
+#         =>:
+#             $different(x, z)
+# Now: show arbitrary x,y,z and the two adopted local premises.
+prop different(x, y set):
+    x != y
+register transitive:
+    ? forall x, y, z set:
+        $different(x, y)
+        $different(y, z)
+        =>:
+            $different(x, z)
+
+# The law is not registered; its premises and consequences stay local.
+# Rejection does not itself prove a counterexample.
+# Evidence: strict release CLI exits1 at forall; web/tests/registration-failures.cjs.

@@ -184,13 +184,7 @@ impl LitexToLeanCompiler {
                 before: position.before + index,
                 ..*position
             };
-            self.compile_fact_wd(wd, &fact, &then_position)?;
-            let formed = SourcePosition {
-                parent: Some(&then_position),
-                owner: SourceOwner::FactWD(wd),
-                before: usize::MAX,
-            };
-            propositions.push(self.fact_proposition(&fact, &formed)?);
+            propositions.push(self.compile_formed_fact_proposition(wd, &fact, &then_position)?);
         }
         let mut arguments = Vec::new();
         let mut offset = 0;

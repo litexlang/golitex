@@ -526,6 +526,12 @@ For larger developments, follow the relevant module's `README.md` and
 `(x,y,)` are two-coordinate tuples. Use `tuple()` for the empty tuple; bare
 `()` is invalid. The explicit forms `tuple(x)` and `tuple(x,y)` remain valid.
 
+Storing `have p cart(C,C) = (3/5,4/5)` automatically publishes
+`p(1)=3/5` and `p(2)=4/5`. Later arithmetic can use those values directly,
+without repeating coordinate assertions. The same one-layer inference applies
+to `let p=(3/5,4/5)` and to a literal tuple on either side of a stored equality.
+It does not recursively project tuple-valued coordinates.
+
 ### Template numeric return carriers
 
 After its arguments and guards have checked, an R-valued template call can

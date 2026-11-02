@@ -27,8 +27,37 @@ impl LitexToLeanCompiler {
         outer: &HashMap<IdentifierId, String>,
     ) -> Result<(String, String, String), LeanCompileError> {
         let signature = &function.body;
+        let (domain, output, bindings) =
+            self.compile_function_signature_value_parts(signature, position, outer)?;
+        let parameters = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|g| &g.params)
+            .map(|parameter| format!("(_raw_i{} : M.Value)", parameter.id.value()))
+            .collect::<Vec<_>>();
+        let body =
+            self.compile_function_raw_expression_bound(&function.equal_to, position, &bindings)?;
+        let values = self
+            .compile_function_packed_values(signature, "_captured_input")?
+            .join(" ");
+        let body = format!("(fun {} => {body})", parameters.join(" "));
+        Ok((
+            domain,
+            output,
+            format!("(fun (_captured_input : M.Value) => {body} {values})"),
+        ))
+    }
+
+    /// The raw function-space denotation is shared with literal construction.
+    /// It carries no new WD evidence; callers must replay the source WD separately.
+    pub(super) fn compile_function_signature_value_parts(
+        &self,
+        signature: &FnSet,
+        position: &SourcePosition<'_>,
+        outer: &HashMap<IdentifierId, String>,
+    ) -> Result<(String, String, HashMap<IdentifierId, String>), LeanCompileError> {
         let mut bindings = outer.clone();
-        let mut parameters = Vec::new();
         for parameter in signature
             .set_bound_parameters
             .groups
@@ -41,12 +70,12 @@ impl LitexToLeanCompiler {
                     "Function/CaptureBinderIdentity",
                 ));
             }
-            parameters.push(format!("({name} : M.Value)"));
         }
 
         // Input carriers are raw denotations under the outer lexical bindings.
         // Dependence on this literal's own parameters still needs a dependent
-        // product adapter. Output-carrier dependence retains its existing gate.
+        // product adapter. A captured output carrier is fixed for this literal;
+        // only dependence on the literal's own inputs needs a dependent codomain.
         let local_ids = signature
             .set_bound_parameters
             .groups
@@ -73,7 +102,7 @@ impl LitexToLeanCompiler {
             &HashSet::new(),
             &mut output_free,
         );
-        if output_free.iter().any(|id| bindings.contains_key(id)) {
+        if output_free.iter().any(|id| local_ids.contains(id)) {
             return Err(LeanCompileError::unsupported(
                 "Function/CapturedSignatureCarrier",
             ));
@@ -101,16 +130,13 @@ impl LitexToLeanCompiler {
         let output =
             self.compile_function_raw_expression_bound(&signature.ret_set, position, outer)?;
         let guard = self.compile_function_guard_template_bound(signature, position, &bindings)?;
-        let body =
-            self.compile_function_raw_expression_bound(&function.equal_to, position, &bindings)?;
         let values = self
             .compile_function_packed_values(signature, "_captured_input")?
             .join(" ");
-        let body = format!("(fun {} => {body})", parameters.join(" "));
         Ok((
             format!("(Litex.SetSemantics.sepValue (M := M) {domain} (fun (_captured_input : M.Value) => {guard} {values}))"),
             output,
-            format!("(fun (_captured_input : M.Value) => {body} {values})"),
+            bindings,
         ))
     }
 }

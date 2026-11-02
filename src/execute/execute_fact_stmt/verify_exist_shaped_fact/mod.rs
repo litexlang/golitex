@@ -13,7 +13,8 @@ pub use result::{
 };
 pub use well_defined_result::{
     CompactExistShapedFactWellDefinedProof, DetailedExistShapedFactWellDefinedProof,
-    ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
+    ExistShapedFactWellDefinedProof, ExistShapedWellDefinedLocalFailed,
+    ExistShapedWellDefinedLocalFailure, FailToVerifyExistShapedFactWellDefinedResult,
     NormalExistShapedFactWellDefinedProof, VerifyExistShapedFactWellDefinedResult,
 };
 mod align_exist_conclusion;

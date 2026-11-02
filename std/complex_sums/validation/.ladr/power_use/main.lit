@@ -1,0 +1,316 @@
+# Independent native-complex power-representation consumers.
+
+claim:
+    ? forall n N,k closed_range(0,n):
+        k+1 $in closed_range(1,n+1)
+    k+1 $in Z
+    1<=k+1<=n+1
+    k+1 $in closed_range(1,n+1)
+
+claim:
+    ? forall x R:
+        C_abs(x)=abs(x)
+    release thm ComplexSums::growth::complex_modulus_of_real(x)
+
+claim:
+    ? forall z C,n N:
+        C_abs(z^n)=C_abs(z)^n
+    release thm ComplexSums::growth::complex_modulus_natural_power(z,n)
+
+claim:
+    ? forall x R+,m,n N:
+        x>=1
+        m<=n
+        =>:
+            x^m<=x^n
+    release thm ComplexSums::growth::real_natural_power_exponent_monotone(x,m,n)
+
+claim:
+    ? forall z C:
+        z!=0
+        =>:
+            C_abs(z)>0
+    release thm ComplexSums::growth::complex_modulus_nonzero_positive(z)
+
+claim:
+    ? forall n N+,coefficients finite_seq(C,n+1),p fn(x R+) C:
+        coefficients(n+1)!=0
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})
+        =>:
+            exist x R+ st {p(x)!=0}
+    release thm ComplexSums::growth::complex_power_representation_has_nonzero_value(n,coefficients,p)
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n+1),p fn(x R+) C,j closed_range(1,n+1):
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*x^k})
+        forall x R+:
+            p(x)=0
+        =>:
+            coefficients(j)=0
+    release thm ComplexSums::growth::complex_zero_power_representation_coefficients(n,coefficients,p,j)
+
+claim:
+    ? forall n N,left,right finite_seq(C,n+1),p fn(x R+) C,j closed_range(1,n+1):
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left(k+1)*x^k})
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {right(k+1)*x^k})
+        =>:
+            left(j)=right(j)
+    release thm ComplexSums::growth::complex_power_representation_coefficients_unique(n,left,right,p,j)
+
+claim:
+    ? forall n,m N,vector finite_seq(C,n):
+        n<=m
+        =>:
+            \ComplexSums::coefficients::complex_finite_sequence_zero_padding<n,m,vector> $in finite_seq(C,m)
+    release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_carrier(n,m,vector)
+
+claim:
+    ? forall n,m N,vector finite_seq(C,n),j N+:
+        n<=m
+        j<=n
+        j<=m
+        =>:
+            \ComplexSums::coefficients::complex_finite_sequence_zero_padding<n,m,vector>(j)=vector(j)
+    release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_head(n,m,vector,j)
+
+claim:
+    ? forall n,m N,vector finite_seq(C,n),j N+:
+        n<=m
+        j>n
+        j<=m
+        =>:
+            \ComplexSums::coefficients::complex_finite_sequence_zero_padding<n,m,vector>(j)=0
+    release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_tail(n,m,vector,j)
+
+claim:
+    ? forall n,m N,coefficients finite_seq(C,n+1),p fn(x R+) C,x R+:
+        n<=m
+        forall point R+:
+            p(point)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {coefficients(k+1)*point^k})
+        =>:
+            p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {\ComplexSums::coefficients::complex_finite_sequence_zero_padding<n+1,m+1,coefficients>(k+1)*x^k})
+    release thm ComplexSums::coefficients::complex_power_representation_padding(n,m,coefficients,p,x)
+
+claim:
+    ? forall n,m N,left finite_seq(C,n+1),right finite_seq(C,m+1),p fn(x R+) C,j N+:
+        j<=n+1
+        j<=m+1
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left(k+1)*x^k})
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {right(k+1)*x^k})
+        =>:
+            left(j)=right(j)
+    release thm ComplexSums::coefficients::complex_power_representations_common_coefficients(n,m,left,right,p,j)
+
+claim:
+    ? forall n,m N,left finite_seq(C,n+1),right finite_seq(C,m+1),p fn(x R+) C,j N+:
+        n<m
+        j>n+1
+        j<=m+1
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {left(k+1)*x^k})
+        forall x R+:
+            p(x)=finite_set_sum(closed_range(0,m),fn(k closed_range(0,m)) C {right(k+1)*x^k})
+        =>:
+            right(j)=0
+    release thm ComplexSums::coefficients::complex_power_representation_excess_coefficients_zero(n,m,left,right,p,j)
+
+have fn linear_coefficients(j closed_range(1,2)) C by cases:
+    case j=1: i
+    case j!=1: 1
+
+linear_coefficients $in finite_seq(C,2)
+
+have fn linear_value(x R+) C=i+x
+
+claim:
+    ? forall k closed_range(0,1):
+        k+1 $in closed_range(1,2)
+    k $in Z
+    0<=k<=1
+    k+1 $in Z
+    k+1>=1
+    k+1<=1+1=2
+    k+1<=2
+    k+1 $in closed_range(1,2)
+
+claim:
+    ? forall x R+:
+        linear_value(x)=finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) C {linear_coefficients(k+1)*x^k})
+    have fn terms(k N) C by cases:
+        case k=0: i
+        case k!=0: x
+    claim:
+        ? forall k closed_range(0,1):
+            linear_coefficients(k+1)*x^k=terms(k)
+        k $in N
+        k $in R
+        0<=k<=1
+        x $in C
+        by cases:
+            ? linear_coefficients(k+1)*x^k=terms(k)
+            case k=0:
+                k+1=1
+                linear_coefficients(1)=i
+                linear_coefficients(k+1)=linear_coefficients(1)=i
+                x^k=x^0=1
+                terms(k)=i
+                linear_coefficients(k+1)*x^k=i*1=i=terms(k)
+            case k!=0:
+                k>0
+                k $in N+
+                k>=1
+                k=1
+                k+1=2
+                linear_coefficients(2)=1
+                linear_coefficients(k+1)=linear_coefficients(2)=1
+                x^k=x^1=x
+                terms(k)=x
+                linear_coefficients(k+1)*x^k=1*x=x=terms(k)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) C {linear_coefficients(k+1)*x^k}),finite_set_sum(closed_range(0,1),terms))
+    terms(0)=i
+    terms(1)=x
+    sum(0,1,terms)=sum(0,0,terms)+terms(1)=terms(0)+terms(1)=i+x
+    linear_value(x)=i+x=sum(0,1,terms)=finite_set_sum(closed_range(0,1),terms)=finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) C {linear_coefficients(k+1)*x^k})
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_carrier(2,4,linear_coefficients)
+
+have padded_coefficients finite_seq(C,4)=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<2,4,linear_coefficients>
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_head(2,4,linear_coefficients,1)
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_head(2,4,linear_coefficients,2)
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_tail(2,4,linear_coefficients,3)
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_tail(2,4,linear_coefficients,4)
+
+padded_coefficients(1)=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<2,4,linear_coefficients>(1)=linear_coefficients(1)=i
+
+padded_coefficients(2)=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<2,4,linear_coefficients>(2)=linear_coefficients(2)=1
+
+padded_coefficients(3)=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<2,4,linear_coefficients>(3)=0
+
+padded_coefficients(4)=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<2,4,linear_coefficients>(4)=0
+
+claim:
+    ? forall k closed_range(0,3):
+        k+1 $in closed_range(1,4)
+    k $in Z
+    0<=k<=3
+    k+1 $in Z
+    k+1>=1
+    k+1<=3+1=4
+    k+1<=4
+    k+1 $in closed_range(1,4)
+
+1+1=2
+
+closed_range(1,1+1)=closed_range(1,2)
+
+finite_seq(C,1+1)=finite_seq(C,2)
+
+linear_coefficients $in finite_seq(C,1+1)
+
+3+1=4
+
+closed_range(1,3+1)=closed_range(1,4)
+
+finite_seq(C,3+1)=finite_seq(C,4)
+
+padded_coefficients $in finite_seq(C,3+1)
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_carrier(1+1,3+1,linear_coefficients)
+
+have padded_for_representation finite_seq(C,3+1)=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<1+1,3+1,linear_coefficients>
+
+claim:
+    ? forall x R+:
+        linear_value(x)=finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) C {padded_for_representation(k+1)*x^k})
+    release thm ComplexSums::coefficients::complex_power_representation_padding(1,3,linear_coefficients,linear_value,x)
+    claim:
+        ? forall k closed_range(0,3):
+            padded_for_representation(k+1)*x^k=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<1+1,3+1,linear_coefficients>(k+1)*x^k
+        k+1 $in closed_range(1,4)
+        padded_for_representation(k+1)=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<1+1,3+1,linear_coefficients>(k+1)
+        padded_for_representation(k+1)*x^k=\ComplexSums::coefficients::complex_finite_sequence_zero_padding<1+1,3+1,linear_coefficients>(k+1)*x^k
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) C {padded_for_representation(k+1)*x^k}),finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) C {\ComplexSums::coefficients::complex_finite_sequence_zero_padding<1+1,3+1,linear_coefficients>(k+1)*x^k}))
+    linear_value(x)=finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) C {\ComplexSums::coefficients::complex_finite_sequence_zero_padding<1+1,3+1,linear_coefficients>(k+1)*x^k})=finite_set_sum(closed_range(0,3),fn(k closed_range(0,3)) C {padded_for_representation(k+1)*x^k})
+
+release thm ComplexSums::coefficients::complex_power_representations_common_coefficients(1,3,linear_coefficients,padded_for_representation,linear_value,2)
+
+release thm ComplexSums::coefficients::complex_power_representation_excess_coefficients_zero(1,3,linear_coefficients,padded_for_representation,linear_value,4)
+
+linear_coefficients(1+1)=linear_coefficients(2)=1
+
+linear_coefficients(1+1)!=0
+
+release thm ComplexSums::growth::complex_power_representation_has_nonzero_value(1,linear_coefficients,linear_value)
+
+have fn empty_coefficients(j closed_range(1,0)) C=0
+
+empty_coefficients $in finite_seq(C,0)
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_carrier(0,0,empty_coefficients)
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_carrier(0,3,empty_coefficients)
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_tail(0,3,empty_coefficients,1)
+
+release thm ComplexSums::coefficients::complex_finite_sequence_zero_padding_tail(0,3,empty_coefficients,3)
+
+have fn zero_value(x R+) C=0
+
+have fn zero_terms(k N) C=0
+
+claim:
+    ? forall k N:
+        k>0
+        =>:
+            zero_terms(k)=0
+    zero_terms(k)=0
+
+template<n N>:
+    have fn zero_coefficients(j closed_range(1,n+1)) C=0
+
+claim:
+    ? forall n N:
+        \zero_coefficients<n> $in finite_seq(C,n+1)
+    \zero_coefficients<n> $in fn(j closed_range(1,n+1)) C
+    \zero_coefficients<n> $in finite_seq(C,n+1)
+
+claim:
+    ? forall n N,x R+:
+        zero_value(x)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {\zero_coefficients<n>(k+1)*x^k})
+    claim:
+        ? forall k closed_range(0,n):
+            \zero_coefficients<n>(k+1)*x^k=zero_terms(k)
+        k $in N
+        k+1 $in closed_range(1,n+1)
+        \zero_coefficients<n>(k+1)=0
+        x^k $in C
+        \zero_coefficients<n>(k+1)*x^k=0*x^k=0=zero_terms(k)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {\zero_coefficients<n>(k+1)*x^k}),finite_set_sum(closed_range(0,n),zero_terms))
+    release thm ComplexSums::main::complex_natural_sum_zero_tail(zero_terms,0,n)
+    sum(0,n,zero_terms)=sum(0,0,zero_terms)=zero_terms(0)=0
+    zero_value(x)=0=sum(0,n,zero_terms)=finite_set_sum(closed_range(0,n),zero_terms)=finite_set_sum(closed_range(0,n),fn(k closed_range(0,n)) C {\zero_coefficients<n>(k+1)*x^k})
+
+claim:
+    ? forall x R+:
+        zero_value(x)=0
+    zero_value(x)=0
+
+release thm ComplexSums::growth::complex_zero_power_representation_coefficients(0,\zero_coefficients<0>,zero_value,1)
+
+release thm ComplexSums::growth::complex_zero_power_representation_coefficients(3,\zero_coefficients<3>,zero_value,4)
+
+release thm ComplexSums::growth::complex_power_representation_coefficients_unique(0,\zero_coefficients<0>,\zero_coefficients<0>,zero_value,1)
+
+release thm ComplexSums::growth::complex_modulus_natural_power(i,0)
+
+release thm ComplexSums::growth::complex_modulus_natural_power(i,3)

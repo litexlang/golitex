@@ -14,6 +14,44 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match proof {
+            ExistShapedFactSearchProofByBuiltinRule::RationalPositiveDenominator(proof) => self
+                .compile_rational_ratio_witness(
+                    fact,
+                    &proof.rational_membership_proof,
+                    true,
+                    position,
+                ),
+            ExistShapedFactSearchProofByBuiltinRule::RationalIntegerRatio(proof) => self
+                .compile_rational_ratio_witness(
+                    fact,
+                    &proof.rational_membership_proof,
+                    false,
+                    position,
+                ),
+            ExistShapedFactSearchProofByBuiltinRule::IntegerMultipleFromZeroRemainder(proof) => {
+                self.compile_integer_multiple_witness(
+                    fact,
+                    &proof.requirement_facts,
+                    &proof.proof_of_requirement_facts,
+                    position,
+                )
+            }
+            ExistShapedFactSearchProofByBuiltinRule::ArchimedeanReciprocal(proof) => {
+                self.compile_exist_reciprocal_witness(fact, &proof.positive_bound_proof, position)
+            }
+            ExistShapedFactSearchProofByBuiltinRule::RealDensityMidpoint(proof) => self
+                .compile_exist_midpoint_witness(
+                    fact,
+                    &proof.requirement_facts,
+                    &proof.proof_of_requirement_facts,
+                    position,
+                ),
+            ExistShapedFactSearchProofByBuiltinRule::EqualityWitnessFromMembership(proof) => {
+                self.compile_exist_member_witness(fact, &proof.membership_proof, true, position)
+            }
+            ExistShapedFactSearchProofByBuiltinRule::NonemptySetMemberWitness(proof) => {
+                self.compile_exist_member_witness(fact, &proof.nonempty_proof, false, position)
+            }
             ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness(proof) => self
                 .compile_exist_real_comparison_witness(
                     fact,

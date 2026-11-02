@@ -407,6 +407,31 @@ pub enum TemplateDefEnum {
     HaveFnByForallExistUniqueStmt(HaveFnByForallExistUniqueStmt),
 }
 
+impl TemplateDefEnum {
+    /// All names produced by this one checked body, in declaration order.
+    pub fn defined_bindings(&self) -> Vec<&crate::ast::names::BoundName> {
+        match self {
+            Self::HaveObjInNonemptySetStmt(s) => {
+                s.param_def.groups.iter().flat_map(|g| &g.params).collect()
+            }
+            Self::HaveObjEqualStmt(s) => {
+                s.param_def.groups.iter().flat_map(|g| &g.params).collect()
+            }
+            Self::HaveObjByExistFactsStmt(s) => {
+                s.param_def.groups.iter().flat_map(|g| &g.params).collect()
+            }
+            Self::TrustHaveStmt(s) => s.param_def.groups.iter().flat_map(|g| &g.params).collect(),
+            Self::ObtainObjFromExistFact(s) => s.equal_tos.iter().collect(),
+            Self::ObtainObjFromAtomicFact(s) => s.equal_tos.iter().collect(),
+            Self::HaveByReplacementAxiomStmt(s) => vec![&s.name],
+            Self::HaveFnEqualStmt(s) => vec![&s.name],
+            Self::HaveFnEqualCaseByCaseStmt(s) => vec![&s.name],
+            Self::HaveFnByInducStmt(s) => vec![&s.name],
+            Self::HaveFnByForallExistUniqueStmt(s) => vec![&s.name],
+        }
+    }
+}
+
 // What: parameterized counterpart of an ordinary definition statement.
 // Surface: `template<A set>: have name …` / `template<A set>: have fn f …`
 // Stores: a definition family; `\name<args>` fills the template args.

@@ -87,17 +87,30 @@ fn known_quotient_mut(result: &mut RunLitexCodeResult) -> &mut SearchProofByKnow
 #[test]
 fn atomic_known_forall_replays_original_instantiation_requirements() {
     let (mut result, compiler) = super::execute(KNOWN_QUOTIENT);
-    assert_eq!(
-        known_quotient_mut(&mut result)
-            .detailed_ref()
-            .instantiation_requirements
-            .detailed_ref()
-            .proof_of_dom_facts
-            .len(),
-        1
-    );
+    let requirements = known_quotient_mut(&mut result)
+        .detailed_ref()
+        .instantiation_requirements
+        .detailed_ref();
+    assert_eq!(requirements.proof_of_dom_facts.len(), 1);
+    let original_ids = requirements
+        .param_type_requirements
+        .iter()
+        .map(|requirement| requirement.type_fact.fact_id())
+        .chain(requirements.dom_facts.iter().map(|fact| fact.fact_id()))
+        .collect::<Vec<_>>();
     let output = super::compile_run(&result, &compiler, "known_quotient").unwrap();
-    assert!(output.contains("Litex.notSameOfSame"));
+    for id in original_ids {
+        let name = format!("h_{}", id.value());
+        assert!(output.contains(&format!("have {name} :")));
+        assert!(
+            output
+                .split(|c: char| !c.is_ascii_alphanumeric() && c != '_')
+                .filter(|token| *token == name)
+                .count()
+                >= 2,
+            "original requirement must be defined and used: {name}"
+        );
+    }
 }
 
 #[test]

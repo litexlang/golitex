@@ -1,0 +1,15 @@
+# Tracer: quantified conditions are checked for formation before an instance proof.
+# Before: the denominator had no nonzero guard; the nested check stopped here.
+# prop quotients_are_real(a R):
+#     forall x R:
+#         x / a $in R
+#
+# Now: the earlier condition supplies the guard in the nested parameter scope.
+prop quotients_are_real(a R):
+    a != 0
+    forall x R:
+        x / a $in R
+
+by def $quotients_are_real(2)
+# Boundary: formation of a quantified clause is not a proof of that clause.
+# Run: target/release/litex -strict -f examples/stmt_nodes/definition/quantified_condition_formation.lit

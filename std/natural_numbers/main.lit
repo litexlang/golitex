@@ -1,0 +1,128 @@
+# Natural recursion and discrete existence laws.
+# Reuses native N, arithmetic, induction, quot and remainder.
+
+template<S set,start S,step fn(k N,x S) S>:
+    have fn natural_recursion(n N) S by induc n from 0:
+        case n = 0: start
+        case n >= 1: step(n - 1, natural_recursion(n - 1))
+
+thm natural_recursion_equations:
+    ? forall S set,start S,step fn(k N,x S) S,n N:
+        \natural_recursion<S,start,step>(0) = start
+        \natural_recursion<S,start,step>(n + 1) = step(n,\natural_recursion<S,start,step>(n))
+    n + 1 $in N
+    n + 1 >= 1
+    n + 1 - 1 = n
+    \natural_recursion<S,start,step>(0) = start
+    \natural_recursion<S,start,step>(n + 1) = step(n,\natural_recursion<S,start,step>(n))
+
+prop is_natural_recursion(S set,start S,step fn(k N,x S) S,a fn(k N) S):
+    a(0) = start
+    forall n N:
+        a(n + 1) = step(n,a(n))
+
+thm natural_recursion_unique:
+    ? forall S set,start S,step fn(k N,x S) S,a fn(k N) S,n N:
+        $is_natural_recursion(S,start,step,a)
+        =>:
+            a(n) = \natural_recursion<S,start,step>(n)
+    by induc n from 0:
+        ? a(n) = \natural_recursion<S,start,step>(n)
+        ? from n = 0:
+            a(0) = start = \natural_recursion<S,start,step>(0)
+        ? induc:
+            n + 1 $in N
+            release thm natural_recursion_equations(S,start,step,n)
+            a(n + 1) = step(n,a(n)) = step(n,\natural_recursion<S,start,step>(n)) = \natural_recursion<S,start,step>(n + 1)
+
+thm natural_recursion_satisfies:
+    ? forall S set,start S,step fn(k N,x S) S:
+        $is_natural_recursion(S,start,step,\natural_recursion<S,start,step>)
+    \natural_recursion<S,start,step> $in fn(k N) S
+    \natural_recursion<S,start,step>(0) = start
+    claim:
+        ? forall n N:
+            \natural_recursion<S,start,step>(n + 1) = step(n,\natural_recursion<S,start,step>(n))
+        release thm natural_recursion_equations(S,start,step,n)
+    by def $is_natural_recursion(S,start,step,\natural_recursion<S,start,step>)
+
+thm natural_recursion_exists_unique:
+    ? forall S set,start S,step fn(k N,x S) S:
+        exist! a fn(k N) S st {$is_natural_recursion(S,start,step,a)}
+    release thm natural_recursion_satisfies(S,start,step)
+    claim:
+        ? forall a,b fn(k N) S:
+            $is_natural_recursion(S,start,step,a)
+            $is_natural_recursion(S,start,step,b)
+            =>:
+                a = b
+        claim:
+            ? forall n N:
+                a(n) = b(n)
+            release thm natural_recursion_unique(S,start,step,a,n)
+            release thm natural_recursion_unique(S,start,step,b,n)
+            a(n) = \natural_recursion<S,start,step>(n) = b(n)
+        by fn_extension a = b
+    witness exist! a fn(k N) S st {$is_natural_recursion(S,start,step,a)} from \natural_recursion<S,start,step>:
+        $is_natural_recursion(S,start,step,\natural_recursion<S,start,step>)
+
+thm natural_predecessor_unique:
+    ? forall a N+:
+        exist! b N st {b + 1 = a}
+    claim:
+        ? forall b,c N:
+            b + 1 = a
+            c + 1 = a
+            =>:
+                b = c
+        b = (b + 1) - 1 = a - 1 = (c + 1) - 1 = c
+    witness exist! b N st {b + 1 = a} from a - 1
+
+thm natural_division_exists:
+    ? forall n N,q N+:
+        exist m,r N st {r < q,n = m*q + r}
+    0 <= n % q < q
+    n = q*quot(n,q) + n % q
+    quot(n,q) $in Z
+    claim:
+        ? quot(n,q) >= 0
+        by contra:
+            ? quot(n,q) >= 0
+            quot(n,q) < 0
+            quot(n,q) <= -1
+            q*quot(n,q) <= q*(-1) = -q
+            -q + n % q = n % q - q < q - q = 0
+            n = q*quot(n,q) + n % q <= -q + n % q < 0
+            impossible n >= 0
+    quot(n,q) $in N
+    n % q $in N
+    witness exist m,r N st {r < q,n = m*q + r} from quot(n,q),n % q
+
+thm natural_division_unique:
+    ? forall n N,q N+,m,r,u,v N:
+        r < q
+        v < q
+        n = m*q + r
+        n = u*q + v
+        =>:
+            m = u
+            r = v
+    claim:
+        ? m >= u
+        by contra:
+            ? m >= u
+            m < u
+            m + 1 <= u
+            m*q + r < m*q + q = (m + 1)*q <= u*q <= u*q + v = n
+            impossible n = m*q + r
+    claim:
+        ? u >= m
+        by contra:
+            ? u >= m
+            u < m
+            u + 1 <= m
+            u*q + v < u*q + q = (u + 1)*q <= m*q <= m*q + r = n
+            impossible n = u*q + v
+    m = u
+    r = n - m*q = n - u*q = v
+

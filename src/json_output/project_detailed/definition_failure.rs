@@ -5,6 +5,34 @@ pub(in crate::json_output) fn project_have_equal_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecHaveObjEqualStmtFailed::Context(context) => {
+            project_have_equal_failure(&context.failure, rt)
+        }
+        ExecHaveObjEqualStmtFailed::Preflight(context) => match &context.failure {
+            crate::execute::IntroduceTypedParametersFailed::ParamType(failed)
+            | crate::execute::IntroduceTypedParametersFailed::ParamTypeWithPrefix {
+                failed, ..
+            } => super::helper::obj_wd_failure(rt, "parameter_type", failed),
+            crate::execute::IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                failed, ..
+            } => project_struct_layer_failure(failed, rt),
+        },
+        ExecHaveObjEqualStmtFailed::AfterPreflight(context) => match &context.failure {
+            crate::execute::HaveObjEqualAfterPreflightFailed::ValueWd { failed, .. } => {
+                super::helper::obj_wd_failure(rt, "value_well_defined", failed)
+            }
+            crate::execute::HaveObjEqualAfterPreflightFailed::Membership { failed, .. } => {
+                super::helper::verification_failure(
+                    rt,
+                    "membership",
+                    failed,
+                    super::super::failure_kind::FailureKind::Membership,
+                )
+            }
+            crate::execute::HaveObjEqualAfterPreflightFailed::AutoOpen { failed, .. } => {
+                project_struct_layer_failure(failed, rt)
+            }
+        },
         ExecHaveObjEqualStmtFailed::ParamCountMismatch => super::helper::failure_message(
             rt,
             "parameter_count",
@@ -34,6 +62,32 @@ pub(in crate::json_output) fn project_struct_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecDefStructStmtFailed::Local(context) => match &context.failure {
+            crate::execute::DefStructLocalFailed::Parameters(failed) => match failed {
+                crate::execute::IntroduceTypedParametersFailed::ParamType(wd)
+                | crate::execute::IntroduceTypedParametersFailed::ParamTypeWithPrefix {
+                    failed: wd,
+                    ..
+                } => super::helper::obj_wd_failure(rt, "parameter_type", wd),
+                crate::execute::IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                    failed,
+                    ..
+                } => project_struct_layer_failure(failed, rt),
+            },
+            crate::execute::DefStructLocalFailed::Domain { failed, .. } => {
+                super::helper::fact_wd_failure(rt, "structure_domain", failed)
+            }
+            crate::execute::DefStructLocalFailed::Fields { field_failure, .. } => {
+                match &field_failure.failure {
+                    crate::execute::DefStructFieldLocalFailed::Field { failed, .. } => {
+                        super::helper::obj_wd_failure(rt, "field_type", failed)
+                    }
+                    crate::execute::DefStructFieldLocalFailed::Condition { failed, .. } => {
+                        super::helper::fact_wd_failure(rt, "equivalent_fact", failed)
+                    }
+                }
+            }
+        },
         ExecDefStructStmtFailed::NameClash(message) => super::helper::failure_message(
             rt,
             "name_clash",
@@ -93,6 +147,9 @@ pub(in crate::json_output) fn project_have_exist_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecHaveObjByExistFactsStmtFailed::Context(context) => {
+            super::verify::project_exist_failed("exist", &context.failed, rt)
+        }
         ExecHaveObjByExistFactsStmtFailed::Exist(failed) => {
             super::verify::project_exist_failed("exist", failed, rt)
         }
@@ -104,6 +161,12 @@ pub(in crate::json_output) fn project_obtain_exist_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecObtainObjFromExistFactStmtFailed::Context(context) => {
+            project_obtain_exist_failure(&context.failure, rt)
+        }
+        ExecObtainObjFromExistFactStmtFailed::SourceVerified(context) => {
+            project_obtain_exist_failure(&context.failure, rt)
+        }
         ExecObtainObjFromExistFactStmtFailed::ArityMismatch { expected, got } => {
             let result = super::super::helper::object_for(
                 rt,
@@ -137,6 +200,18 @@ pub(in crate::json_output) fn project_obtain_atomic_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecObtainObjFromAtomicFactStmtFailed::Context(context) => {
+            project_obtain_atomic_failure(&context.failure, rt)
+        }
+        ExecObtainObjFromAtomicFactStmtFailed::DefinitionResolved(context) => {
+            project_obtain_atomic_failure(&context.failure, rt)
+        }
+        ExecObtainObjFromAtomicFactStmtFailed::Projected(context) => {
+            project_obtain_atomic_failure(&context.failure, rt)
+        }
+        ExecObtainObjFromAtomicFactStmtFailed::SourceVerified(context) => {
+            project_obtain_atomic_failure(&context.failure, rt)
+        }
         ExecObtainObjFromAtomicFactStmtFailed::AbstractProp => super::helper::failure_message(
             rt,
             "abstract_prop",

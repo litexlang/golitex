@@ -1,0 +1,23 @@
+# First-class evaluation of actual real/complex functions and generic linearity.
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+release thm Algebra::vector_space::function_evaluation_spec(R,R,3,fn(t R) R {t^2})
+
+\Algebra::vector_space::function_evaluation<R,R,3>(fn(t R) R {t^2})=fn(t R) R {t^2}(3)=9
+
+release thm Algebra::vector_space::function_evaluation_spec(C,C,i,fn(t C) C {t^2})
+
+\Algebra::vector_space::function_evaluation<C,C,i>(fn(t C) C {t^2})=fn(t C) C {t^2}(i)=-1
+
+release thm Algebra::vector_space::function_evaluation_is_linear(C,Algebra::field::complex_field,C,i)
+
+release thm Algebra::vector_space::function_evaluation_is_linear(R,Algebra::field::real_field,R,3)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,X set,point X:
+        $Algebra::vector_space::is_linear_map(K,F,fn(t X) K,\Algebra::vector_space::function_space<K,F,X>,K,\Algebra::vector_space::scalar_space<K,F>,\Algebra::vector_space::function_evaluation<X,K,point>)
+    release thm Algebra::vector_space::function_evaluation_is_linear(K,F,X,point)
+

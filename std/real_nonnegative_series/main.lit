@@ -1,0 +1,791 @@
+claim:
+    ? forall start Z,n {j Z:j>=start}:
+        n+1 $in {j Z:j>=start}
+    n $in Z
+    n>=start
+    n+1 $in Z
+    n+1>=n>=start
+    n+1 $in {j Z:j>=start}
+
+claim:
+    ? forall start,first,last Z:
+        first>=start
+        =>:
+            closed_range(first,last) $subset {j Z:j>=start}
+    claim:
+        ? forall n closed_range(first,last):
+            n $in {j Z:j>=start}
+        n $in Z
+        n>=first>=start
+        n $in {j Z:j>=start}
+    by def closed_range(first,last) $subset {j Z:j>=start}
+
+claim:
+    ? forall start Z,k N+:
+        start+k-1 $in {j Z:j>=start}
+    release thm rs::real_tail_positive_index(start,k)
+
+claim:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        \rs::real_tail_reindex<start,a> $in seq(R)
+    release thm fn_set_member(\rs::real_tail_reindex<start,a>,seq(R))
+
+thm nonnegative_real_tail_series_has_increasing_partial_sums:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)>=0
+        =>:
+            $sext::is_increasing_real_tail(start,\ts::real_tail_partial_sums<start,a>)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \ts::real_tail_partial_sums<start,a>(n)<=\ts::real_tail_partial_sums<start,a>(n+1)
+        n $in Z
+        n>=start
+        n+1 $in {j Z:j>=start}
+        n+1>=n>=start
+        n+1>n>=start
+        a(n+1) $in R
+        a(n+1)>=0
+        closed_range(n+1,n+1)={n+1}
+        finite_set_sum({n+1},a)=a(n+1)
+        finite_set_sum(closed_range(n+1,n+1),a)=finite_set_sum({n+1},a)=a(n+1)
+        (n+1)-1=n
+        (n+1)-1 $in {j Z:j>=start}
+        release thm ts::real_tail_series_block_from_partial_sums(start,a,n+1,n+1)
+        (n+1)-1=n
+        \ts::real_tail_partial_sums<start,a>((n+1)-1)=\ts::real_tail_partial_sums<start,a>(n)
+        \ts::real_tail_partial_sums<start,a>(n) $in R
+        \ts::real_tail_partial_sums<start,a>(n+1) $in R
+        \ts::real_tail_partial_sums<start,a>(n+1)-\ts::real_tail_partial_sums<start,a>(n)=\ts::real_tail_partial_sums<start,a>(n+1)-\ts::real_tail_partial_sums<start,a>((n+1)-1)=finite_set_sum(closed_range(n+1,n+1),a)=a(n+1)>=0
+        \ts::real_tail_partial_sums<start,a>(n)<=\ts::real_tail_partial_sums<start,a>(n+1)
+    by def $sext::is_increasing_real_tail(start,\ts::real_tail_partial_sums<start,a>)
+
+thm upper_bounded_nonnegative_real_tail_series_converges:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,M R:
+        forall n {j Z:j>=start}:
+            a(n)>=0
+        $sext::is_real_tail_upper_bound(start,\ts::real_tail_partial_sums<start,a>,M)
+        =>:
+            $ts::is_convergent_real_tail_series(start,a)
+    release thm nonnegative_real_tail_series_has_increasing_partial_sums(start,a)
+    release thm sext::increasing_upper_bounded_real_tail_converges(start,\ts::real_tail_partial_sums<start,a>,M)
+    obtain L from $rs::is_convergent_real_tail(start,\ts::real_tail_partial_sums<start,a>)
+    $rs::has_real_tail_limit(start,\ts::real_tail_partial_sums<start,a>,L)
+    by def $ts::has_real_tail_series_sum(start,a,L)
+    release thm ts::real_tail_series_sum_implies_convergent(start,a,L)
+
+thm convergent_real_tail_series_has_upper_bounded_partial_sums:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $ts::is_convergent_real_tail_series(start,a)
+        =>:
+            exist M R st {$sext::is_real_tail_upper_bound(start,\ts::real_tail_partial_sums<start,a>,M)}
+    release thm ts::convergent_real_tail_series_has_convergent_partial_sums(start,a)
+    release thm rs::convergent_real_tail_is_bounded(start,\ts::real_tail_partial_sums<start,a>)
+    obtain M from $rs::is_bounded_real_tail(start,\ts::real_tail_partial_sums<start,a>)
+    M $in R
+    M>=0
+    release thm sext::real_tail_absolute_bound_gives_one_sided_bounds(start,\ts::real_tail_partial_sums<start,a>,M)
+    witness exist bound R st {$sext::is_real_tail_upper_bound(start,\ts::real_tail_partial_sums<start,a>,bound)} from M
+
+release obj def series::partial_sum
+
+release obj def series::partial_sums
+
+release obj def series::absolute_terms
+
+thm real_tail_series_absolute_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            abs(a(n))<=b(n)
+        $ts::is_convergent_real_tail_series(start,b)
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(start,a)
+            $ts::is_convergent_real_tail_series(start,a)
+    release thm ts::convergent_real_tail_series_is_native_convergent(start,b)
+    claim:
+        ? forall k N+:
+            abs(\rs::real_tail_reindex<start,a>(k))<=\rs::real_tail_reindex<start,b>(k)
+        start+k-1 $in {j Z:j>=start}
+        release thm rs::real_tail_reindex_at(start,a,k)
+        release thm rs::real_tail_reindex_at(start,b,k)
+        abs(a(start+k-1))<=b(start+k-1)
+        abs(\rs::real_tail_reindex<start,a>(k))=abs(a(start+k-1))<=b(start+k-1)=\rs::real_tail_reindex<start,b>(k)
+    release thm series::absolute_series_comparison(\rs::real_tail_reindex<start,a>,\rs::real_tail_reindex<start,b>)
+    $series::is_convergent_series(series::absolute_terms(\rs::real_tail_reindex<start,a>))
+    release thm ts::real_tail_series_absolute_reindex(start,a)
+    $series::is_convergent_series(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>)
+    release thm ts::native_convergent_series_is_real_tail_convergent(start,\limits::real_tail_absolute_values<start,a>)
+    by def $ts::is_absolutely_convergent_real_tail_series(start,a)
+    release thm ts::absolutely_convergent_real_tail_series_converges(start,a)
+
+thm real_tail_series_absolute_comparison_sum_bounds:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,L,A,B R:
+        forall n {j Z:j>=start}:
+            abs(a(n))<=b(n)
+        $ts::has_real_tail_series_sum(start,a,L)
+        $ts::has_real_tail_series_sum(start,\limits::real_tail_absolute_values<start,a>,A)
+        $ts::has_real_tail_series_sum(start,b,B)
+        =>:
+            abs(L)<=A
+            A<=B
+    release thm ts::real_tail_series_absolute_sum_bound(start,a,L,A)
+    release thm ts::real_tail_series_sum_is_native_series_sum(start,\limits::real_tail_absolute_values<start,a>,A)
+    release thm ts::real_tail_series_sum_is_native_series_sum(start,b,B)
+    $has_seq_limit(series::partial_sums(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>),A)
+    $has_seq_limit(series::partial_sums(\rs::real_tail_reindex<start,b>),B)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>(k)<=\rs::real_tail_reindex<start,b>(k)
+        start+k-1 $in {j Z:j>=start}
+        release thm rs::real_tail_reindex_at(start,\limits::real_tail_absolute_values<start,a>,k)
+        release thm rs::real_tail_reindex_at(start,b,k)
+        \limits::real_tail_absolute_values<start,a>(start+k-1)=abs(a(start+k-1))
+        abs(a(start+k-1))<=b(start+k-1)
+        \rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>(k)=\limits::real_tail_absolute_values<start,a>(start+k-1)=abs(a(start+k-1))<=b(start+k-1)=\rs::real_tail_reindex<start,b>(k)
+    claim:
+        ? forall k N+:
+            k>=1
+            =>:
+                series::partial_sums(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>)(k)<=series::partial_sums(\rs::real_tail_reindex<start,b>)(k)
+        release thm series::partial_sum_le(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>,\rs::real_tail_reindex<start,b>,k)
+        release thm series::partial_sums_at(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>,k)
+        release thm series::partial_sums_at(\rs::real_tail_reindex<start,b>,k)
+        series::partial_sums(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>)(k)=series::partial_sum(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>,k)<=series::partial_sum(\rs::real_tail_reindex<start,b>,k)=series::partial_sums(\rs::real_tail_reindex<start,b>)(k)
+    release thm seq_limit_compare(series::partial_sums(\rs::real_tail_reindex<start,\limits::real_tail_absolute_values<start,a>>),series::partial_sums(\rs::real_tail_reindex<start,b>),A,B,1)
+
+thm nonabsolute_real_tail_series_has_divergent_majorants:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            abs(a(n))<=b(n)
+        not $ts::is_absolutely_convergent_real_tail_series(start,a)
+        =>:
+            not $ts::is_convergent_real_tail_series(start,b)
+    by contra:
+        ? not $ts::is_convergent_real_tail_series(start,b)
+        release thm real_tail_series_absolute_comparison(start,a,b)
+        impossible $ts::is_absolutely_convergent_real_tail_series(start,a)
+
+claim:
+    ? forall n {j Z:j>=0}:
+        n $in N
+    n $in Z
+    n>=0
+    n $in N
+
+template<base R>:
+    have fn real_geometric_tail_from_zero(n {j Z:j>=0}) R=base^n
+
+thm zero_start_real_geometric_first_term:
+    ? forall base R:
+        \real_geometric_tail_from_zero<base>(0)=1
+    \real_geometric_tail_from_zero<base>(0)=base^0=1
+
+claim:
+    ? forall base R:
+        abs(base)<1
+        =>:
+            1-base $in R*
+            1-base!=0
+    release thm series::unit_abs_upper_bound(base)
+    1-base!=0
+    1-base $in R
+    1-base>0
+    1-base $in R*
+
+thm zero_start_real_geometric_tail_native_values:
+    ? forall base R,k N+:
+        \rs::real_tail_reindex<0+1,\limits::real_tail_restriction<0,\real_geometric_tail_from_zero<base>,0+1>>(k)=base^k
+    release thm rs::real_tail_positive_index(0+1,k)
+    (0+1)+k-1=k
+    k $in Z
+    k>=1>=0
+    k $in {j Z:j>=0}
+    (0+1)+k-1 $in {j Z:j>=0}
+    (0+1)+k-1 $in {j Z:j>=0+1}
+    release thm rs::real_tail_reindex_at(0+1,\limits::real_tail_restriction<0,\real_geometric_tail_from_zero<base>,0+1>,k)
+    \rs::real_tail_reindex<0+1,\limits::real_tail_restriction<0,\real_geometric_tail_from_zero<base>,0+1>>(k)=\limits::real_tail_restriction<0,\real_geometric_tail_from_zero<base>,0+1>((0+1)+k-1)=\real_geometric_tail_from_zero<base>((0+1)+k-1)=base^((0+1)+k-1)=base^k
+
+thm zero_start_real_geometric_series_sum:
+    ? forall base R:
+        abs(base)<1
+        =>:
+            $ts::has_real_tail_series_sum(0,\real_geometric_tail_from_zero<base>,1/(1-base))
+    release thm series::unit_abs_upper_bound(base)
+    claim:
+        ? forall k N+:
+            \rs::real_tail_reindex<0+1,\limits::real_tail_restriction<0,\real_geometric_tail_from_zero<base>,0+1>>(k)=base^k
+        release thm zero_start_real_geometric_tail_native_values(base,k)
+    release thm series::series_sum_geometric(\rs::real_tail_reindex<0+1,\limits::real_tail_restriction<0,\real_geometric_tail_from_zero<base>,0+1>>,base)
+    release thm ts::native_series_sum_is_real_tail_series_sum(0+1,\limits::real_tail_restriction<0,\real_geometric_tail_from_zero<base>,0+1>,base/(1-base))
+    release thm fn_set_member(\real_geometric_tail_from_zero<base>,fn(n {j Z:j>=0}) R)
+    closed_range(0,0+1-1) $subset {j Z:j>=0}
+    0+1-1=0
+    closed_range(0,0+1-1)=closed_range(0,0)={0}
+    release thm zero_start_real_geometric_first_term(base)
+    \real_geometric_tail_from_zero<base>(0) $in R
+    {0} $subset {j Z:j>=0}
+    finite_set_sum({0},fn(n {0}) R {1})=1
+    release thm finite_set_sum_substitution(finite_set_sum({0},\real_geometric_tail_from_zero<base>),finite_set_sum({0},fn(n {0}) R {1}))
+    finite_set_sum({0},\real_geometric_tail_from_zero<base>)=\real_geometric_tail_from_zero<base>(0)=1
+    finite_set_sum(closed_range(0,0+1-1),\real_geometric_tail_from_zero<base>)=finite_set_sum({0},\real_geometric_tail_from_zero<base>)=1
+    release thm ts::real_tail_series_sum_restore_finite_prefix(0,\real_geometric_tail_from_zero<base>,base/(1-base),1)
+    base/(1-base)+finite_set_sum(closed_range(0,0+1-1),\real_geometric_tail_from_zero<base>)=base/(1-base)+1=1/(1-base)
+    $ts::has_real_tail_series_sum(0,\real_geometric_tail_from_zero<base>,1/(1-base))
+
+thm zero_start_real_geometric_absolute_data:
+    ? forall base R:
+        \limits::real_tail_absolute_values<0,\real_geometric_tail_from_zero<base>> = \real_geometric_tail_from_zero<abs(base)>
+    release thm fn_set_member(\limits::real_tail_absolute_values<0,\real_geometric_tail_from_zero<base>>,fn(n {j Z:j>=0}) R)
+    release thm fn_set_member(\real_geometric_tail_from_zero<abs(base)>,fn(n {j Z:j>=0}) R)
+    claim:
+        ? forall n {j Z:j>=0}:
+            \limits::real_tail_absolute_values<0,\real_geometric_tail_from_zero<base>>(n)=\real_geometric_tail_from_zero<abs(base)>(n)
+        n $in N
+        release thm approx::absolute_value_natural_power(base,n)
+        \real_geometric_tail_from_zero<base>(n)=base^n
+        \real_geometric_tail_from_zero<abs(base)>(n)=abs(base)^n
+        \limits::real_tail_absolute_values<0,\real_geometric_tail_from_zero<base>>(n)=abs(\real_geometric_tail_from_zero<base>(n))=abs(base^n)=abs(base)^n=\real_geometric_tail_from_zero<abs(base)>(n)
+    by fn_extension \limits::real_tail_absolute_values<0,\real_geometric_tail_from_zero<base>> = \real_geometric_tail_from_zero<abs(base)>
+
+thm zero_start_real_geometric_series_absolutely_converges:
+    ? forall base R:
+        abs(base)<1
+        =>:
+            $ts::is_absolutely_convergent_real_tail_series(0,\real_geometric_tail_from_zero<base>)
+            $ts::is_convergent_real_tail_series(0,\real_geometric_tail_from_zero<base>)
+    abs(base)>=0
+    abs(abs(base))=abs(base)<1
+    release thm zero_start_real_geometric_series_sum(abs(base))
+    release thm zero_start_real_geometric_absolute_data(base)
+    $ts::has_real_tail_series_sum(0,\limits::real_tail_absolute_values<0,\real_geometric_tail_from_zero<base>>,1/(1-abs(base)))
+    release thm ts::real_tail_series_sum_implies_convergent(0,\limits::real_tail_absolute_values<0,\real_geometric_tail_from_zero<base>>,1/(1-abs(base)))
+    by def $ts::is_absolutely_convergent_real_tail_series(0,\real_geometric_tail_from_zero<base>)
+    release thm ts::absolutely_convergent_real_tail_series_converges(0,\real_geometric_tail_from_zero<base>)
+
+thm zero_start_real_geometric_series_diverges:
+    ? forall base R:
+        abs(base)>=1
+        =>:
+            not $ts::is_convergent_real_tail_series(0,\real_geometric_tail_from_zero<base>)
+    by contra:
+        ? not $ts::is_convergent_real_tail_series(0,\real_geometric_tail_from_zero<base>)
+        release thm ts::convergent_real_tail_series_terms_tend_to_zero(0,\real_geometric_tail_from_zero<base>)
+        $rs::is_eventually_real_tail_close(0,\real_geometric_tail_from_zero<base>,0,1/2)
+        obtain cutoff from exist c Z st {$rs::is_real_tail_close_after(0,\real_geometric_tail_from_zero<base>,0,1/2,c)}
+        cutoff>=0
+        cutoff $in N
+        cutoff $in {j Z:j>=0}
+        $approx::is_epsilon_close(\real_geometric_tail_from_zero<base>(cutoff),0,1/2)
+        abs(\real_geometric_tail_from_zero<base>(cutoff)-0)<=1/2
+        release thm approx::absolute_value_natural_power(base,cutoff)
+        release thm series::natural_power_at_least_one(abs(base),cutoff)
+        \real_geometric_tail_from_zero<base>(cutoff)=base^cutoff
+        abs(\real_geometric_tail_from_zero<base>(cutoff)-0)=abs(\real_geometric_tail_from_zero<base>(cutoff))=abs(base^cutoff)=abs(base)^cutoff>=1>1/2
+        impossible abs(\real_geometric_tail_from_zero<base>(cutoff)-0)<=1/2
+
+claim:
+    ? forall k N:
+        2^k $in N+
+        2^k $in {j Z:j>=1}
+        2^k>=1
+    2^k $in Z
+    2^k>0
+    2^k $in N+
+    2^k>=1
+    2^k $in {j Z:j>=1}
+
+claim:
+    ? forall k {j Z:j>=0}:
+        2^k $in {j Z:j>=1}
+        2^k $in N+
+        2^k>=1
+    k $in N
+    2^k $in N+
+    2^k>=1
+    2^k $in Z
+    2^k $in {j Z:j>=1}
+
+template<a fn(n {j Z:j>=1}) R>:
+    have fn dyadic_real_tail_condensation(k {j Z:j>=0}) R=2^k*a(2^k)
+
+thm dyadic_condensation_preserves_nonnegative_terms:
+    ? forall a fn(n {j Z:j>=1}) R,k {j Z:j>=0}:
+        forall n {j Z:j>=1}:
+            a(n)>=0
+        =>:
+            \dyadic_real_tail_condensation<a>(k)>=0
+    2^k $in {j Z:j>=1}
+    2^k>=1>0
+    a(2^k)>=0
+    a(2^k) $in R
+    \dyadic_real_tail_condensation<a>(k)=2^k*a(2^k)>=0
+
+thm dyadic_indices_dominate_natural_indices:
+    ? forall k N:
+        2^k>=k+1
+        2^(k+1)-1>=k+1
+    release thm series::bernoulli_nonnegative(1,k)
+    1+1=2
+    2^k=(1+1)^k>=1+k*1=k+1
+    release thm series::bernoulli_nonnegative(1,k+1)
+    2^(k+1)=(1+1)^(k+1)>=1+(k+1)*1
+    2^(k+1)-1>=(1+(k+1)*1)-1=k+1
+
+claim:
+    ? forall k N:
+        k $in {j Z:j>=0}
+        k+1 $in {j Z:j>=0}
+        2^(k+1)-1 $in {j Z:j>=1}
+        2^(k+2)-1 $in {j Z:j>=1}
+        2^k+1 $in {j Z:j>=1}
+    k $in Z
+    k>=0
+    k $in {j Z:j>=0}
+    k+1>=0
+    k+1 $in {j Z:j>=0}
+    release thm dyadic_indices_dominate_natural_indices(k)
+    2^(k+1)-1>=k+1>=1
+    release thm dyadic_indices_dominate_natural_indices(k+1)
+    k+2=(k+1)+1
+    2^(k+2)-1=2^((k+1)+1)-1>=(k+1)+1>=1
+    2^k>=1
+    2^k+1>=1
+    2^(k+1)-1 $in Z
+    2^(k+2)-1 $in Z
+    2^k+1 $in Z
+    2^(k+1)-1 $in {j Z:j>=1}
+    2^(k+2)-1 $in {j Z:j>=1}
+    2^k+1 $in {j Z:j>=1}
+
+thm real_tail_series_initial_partial_sum:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        \ts::real_tail_partial_sums<start,a>(start)=a(start)
+    start $in {j Z:j>=start}
+    a(start) $in R
+    sum(start,start,a)=a(start)
+    \ts::real_tail_partial_sums<start,a>(start)=sum(start,start,a)=a(start)
+
+thm real_tail_series_partial_sum_successor:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,n {j Z:j>=start}:
+        \ts::real_tail_partial_sums<start,a>(n+1)=\ts::real_tail_partial_sums<start,a>(n)+a(n+1)
+    n $in Z
+    n>=start
+    n+1 $in {j Z:j>=start}
+    a(n+1) $in R
+    sum(start,n+1,a)=sum(start,n,a)+sum(n+1,n+1,a)
+    sum(n+1,n+1,a)=a(n+1)
+    \ts::real_tail_partial_sums<start,a>(n)=sum(start,n,a)
+    \ts::real_tail_partial_sums<start,a>(n+1)=sum(start,n+1,a)=sum(start,n,a)+a(n+1)=\ts::real_tail_partial_sums<start,a>(n)+a(n+1)
+
+thm real_difference_upper_bound_gives_additive_bound:
+    ? forall x,y,z R:
+        x-y<=z
+        =>:
+            x<=y+z
+    (x-y)+y<=z+y
+    x=(x-y)+y<=z+y=y+z
+
+thm real_difference_lower_bound_gives_additive_bound:
+    ? forall x,y,z R:
+        z<=x-y
+        =>:
+            y+z<=x
+    y+z<=y+(x-y)=x
+
+thm dyadic_condensation_partial_sum_lower_bound:
+    ? forall a fn(n {j Z:j>=1}) R,k N:
+        $sext::is_decreasing_real_tail(1,a)
+        =>:
+            \ts::real_tail_partial_sums<1,a>(2^(k+1)-1)<=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)
+    release thm fn_set_member(a,fn(n {j Z:j>=1}) R)
+    release thm fn_set_member(\dyadic_real_tail_condensation<a>,fn(n {j Z:j>=0}) R)
+    by induc k from 0:
+        ? \ts::real_tail_partial_sums<1,a>(2^(k+1)-1)<=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)
+        ? from k=0:
+            2^(0+1)-1=1
+            a(1) $in R
+            2^0=1
+            a(2^0)=a(1)
+            \dyadic_real_tail_condensation<a>(0)=2^0*a(2^0)=1*a(1)=a(1)
+            release thm real_tail_series_initial_partial_sum(1,a)
+            release thm real_tail_series_initial_partial_sum(0,\dyadic_real_tail_condensation<a>)
+            \ts::real_tail_partial_sums<1,a>(2^(0+1)-1)=\ts::real_tail_partial_sums<1,a>(1)=a(1)
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(0)=\dyadic_real_tail_condensation<a>(0)=a(1)
+        ? induc:
+            k $in Z
+            k>=0
+            k+1 $in N
+            k+2=(k+1)+1
+            2^(k+2)=2^((k+1)+1)=2^(k+1)*2^1=2*2^(k+1)
+            2^(k+1) $in {j Z:j>=1}
+            2^(k+2)-1 $in {j Z:j>=1}
+            2^(k+1)-1 $in {j Z:j>=1}
+            2^(k+1) $in R
+            2^(k+2) $in R
+            2^(k+1)>=1
+            2^(k+1)-1>=0
+            (2*2^(k+1)-1)-2^(k+1)=2^(k+1)-1>=0
+            2*2^(k+1)-1>=2^(k+1)
+            2^(k+2)-1=2*2^(k+1)-1>=2^(k+1)
+            2^(k+1)<=2^(k+2)-1
+            closed_range(2^(k+1),2^(k+2)-1) $subset {j Z:j>=1}
+            a(2^(k+1)) $in R
+            claim:
+                ? forall n closed_range(2^(k+1),2^(k+2)-1):
+                    a(n)<=a(2^(k+1))
+                n $in Z
+                n>=2^(k+1)>=1
+                n $in {j Z:j>=1}
+                release thm sext::decreasing_real_tail_pairwise_order(1,a,2^(k+1),n)
+            release thm finite_set_sum_le_from_pointwise(finite_set_sum(closed_range(2^(k+1),2^(k+2)-1),a),finite_set_sum(closed_range(2^(k+1),2^(k+2)-1),fn(n Z) R {a(2^(k+1))}))
+            finite_set_sum(closed_range(2^(k+1),2^(k+2)-1),a)=sum(2^(k+1),2^(k+2)-1,a)
+            finite_set_sum(closed_range(2^(k+1),2^(k+2)-1),fn(n Z) R {a(2^(k+1))})=sum(2^(k+1),2^(k+2)-1,fn(n Z) R {a(2^(k+1))})
+            sum(2^(k+1),2^(k+2)-1,fn(n Z) R {a(2^(k+1))})=((2^(k+2)-1)-2^(k+1)+1)*a(2^(k+1))
+            (2^(k+2)-1)-2^(k+1)+1=(2*2^(k+1)-1)-2^(k+1)+1=2^(k+1)
+            sum(2^(k+1),2^(k+2)-1,a) $in R
+            sum(2^(k+1),2^(k+2)-1,a)=finite_set_sum(closed_range(2^(k+1),2^(k+2)-1),a)<=finite_set_sum(closed_range(2^(k+1),2^(k+2)-1),fn(n Z) R {a(2^(k+1))})=sum(2^(k+1),2^(k+2)-1,fn(n Z) R {a(2^(k+1))})=((2^(k+2)-1)-2^(k+1)+1)*a(2^(k+1))=2^(k+1)*a(2^(k+1))
+            2^(k+1)>1
+            release thm ts::real_tail_series_block_from_partial_sums(1,a,2^(k+1),2^(k+2)-1)
+            \ts::real_tail_partial_sums<1,a>(2^(k+2)-1) $in R
+            \ts::real_tail_partial_sums<1,a>(2^(k+1)-1) $in R
+            \ts::real_tail_partial_sums<1,a>(2^(k+2)-1)-\ts::real_tail_partial_sums<1,a>(2^(k+1)-1)=finite_set_sum(closed_range(2^(k+1),2^(k+2)-1),a)=sum(2^(k+1),2^(k+2)-1,a)<=2^(k+1)*a(2^(k+1))
+            release thm real_difference_upper_bound_gives_additive_bound(\ts::real_tail_partial_sums<1,a>(2^(k+2)-1),\ts::real_tail_partial_sums<1,a>(2^(k+1)-1),2^(k+1)*a(2^(k+1)))
+            k+1 $in {j Z:j>=0}
+            \dyadic_real_tail_condensation<a>(k+1)=2^(k+1)*a(2^(k+1))
+            release thm real_tail_series_partial_sum_successor(0,\dyadic_real_tail_condensation<a>,k)
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k+1)=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)+\dyadic_real_tail_condensation<a>(k+1)=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)+2^(k+1)*a(2^(k+1))
+            \ts::real_tail_partial_sums<1,a>(2^(k+1)-1) $in R
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k) $in R
+            \ts::real_tail_partial_sums<1,a>(2^(k+2)-1)<=\ts::real_tail_partial_sums<1,a>(2^(k+1)-1)+2^(k+1)*a(2^(k+1))<=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)+2^(k+1)*a(2^(k+1))=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k+1)
+            2^((k+1)+1)-1=2^(k+2)-1
+            \ts::real_tail_partial_sums<1,a>(2^((k+1)+1)-1)=\ts::real_tail_partial_sums<1,a>(2^(k+2)-1)<=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k+1)
+
+thm dyadic_condensation_partial_sum_upper_bound:
+    ? forall a fn(n {j Z:j>=1}) R,k N:
+        forall n {j Z:j>=1}:
+            a(n)>=0
+        $sext::is_decreasing_real_tail(1,a)
+        =>:
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)<=2*\ts::real_tail_partial_sums<1,a>(2^k)
+    release thm fn_set_member(a,fn(n {j Z:j>=1}) R)
+    release thm fn_set_member(\dyadic_real_tail_condensation<a>,fn(n {j Z:j>=0}) R)
+    by induc k from 0:
+        ? \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)<=2*\ts::real_tail_partial_sums<1,a>(2^k)
+        ? from k=0:
+            2^0=1
+            a(1) $in R
+            a(1)>=0
+            a(2^0)=a(1)
+            \dyadic_real_tail_condensation<a>(0)=2^0*a(2^0)=1*a(1)=a(1)
+            release thm real_tail_series_initial_partial_sum(1,a)
+            release thm real_tail_series_initial_partial_sum(0,\dyadic_real_tail_condensation<a>)
+            \ts::real_tail_partial_sums<1,a>(2^0)=\ts::real_tail_partial_sums<1,a>(1)=a(1)
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(0)=\dyadic_real_tail_condensation<a>(0)=a(1)
+            2*a(1)-a(1)=a(1)>=0
+            a(1)<=2*a(1)
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(0)=a(1)<=2*a(1)=2*\ts::real_tail_partial_sums<1,a>(2^0)
+        ? induc:
+            k $in Z
+            k>=0
+            k+1 $in N
+            2^k $in {j Z:j>=1}
+            2^(k+1) $in {j Z:j>=1}
+            2^k+1 $in {j Z:j>=1}
+            2^k $in R
+            2^(k+1) $in R
+            2^(k+1)=2^k*2^1=2*2^k
+            2^k>=1
+            2^k-1>=0
+            2^(k+1)-(2^k+1)=(2*2^k)-(2^k+1)=2^k-1>=0
+            2^k+1<=2^(k+1)
+            2^k+1>1
+            closed_range(2^k+1,2^(k+1)) $subset {j Z:j>=1}
+            a(2^(k+1)) $in R
+            claim:
+                ? forall n closed_range(2^k+1,2^(k+1)):
+                    a(2^(k+1))<=a(n)
+                n $in Z
+                n>=2^k+1>=1
+                n<=2^(k+1)
+                n $in {j Z:j>=1}
+                release thm sext::decreasing_real_tail_pairwise_order(1,a,n,2^(k+1))
+            release thm finite_set_sum_le_from_pointwise(finite_set_sum(closed_range(2^k+1,2^(k+1)),fn(n Z) R {a(2^(k+1))}),finite_set_sum(closed_range(2^k+1,2^(k+1)),a))
+            finite_set_sum(closed_range(2^k+1,2^(k+1)),fn(n Z) R {a(2^(k+1))})=sum(2^k+1,2^(k+1),fn(n Z) R {a(2^(k+1))})=(2^(k+1)-(2^k+1)+1)*a(2^(k+1))
+            2^(k+1)-(2^k+1)+1=2*2^k-(2^k+1)+1=2^k
+            2^k*a(2^(k+1))=(2^(k+1)-(2^k+1)+1)*a(2^(k+1))=sum(2^k+1,2^(k+1),fn(n Z) R {a(2^(k+1))})=finite_set_sum(closed_range(2^k+1,2^(k+1)),fn(n Z) R {a(2^(k+1))})<=finite_set_sum(closed_range(2^k+1,2^(k+1)),a)
+            (2^k+1)-1=2^k
+            (2^k+1)-1 $in {j Z:j>=1}
+            release thm ts::real_tail_series_block_from_partial_sums(1,a,2^k+1,2^(k+1))
+            \ts::real_tail_partial_sums<1,a>((2^k+1)-1)=\ts::real_tail_partial_sums<1,a>(2^k)
+            \ts::real_tail_partial_sums<1,a>(2^k) $in R
+            \ts::real_tail_partial_sums<1,a>(2^(k+1)) $in R
+            2^k*a(2^(k+1)) $in R
+            2^k*a(2^(k+1))<=finite_set_sum(closed_range(2^k+1,2^(k+1)),a)=\ts::real_tail_partial_sums<1,a>(2^(k+1))-\ts::real_tail_partial_sums<1,a>((2^k+1)-1)=\ts::real_tail_partial_sums<1,a>(2^(k+1))-\ts::real_tail_partial_sums<1,a>(2^k)
+            release thm real_difference_lower_bound_gives_additive_bound(\ts::real_tail_partial_sums<1,a>(2^(k+1)),\ts::real_tail_partial_sums<1,a>(2^k),2^k*a(2^(k+1)))
+            \ts::real_tail_partial_sums<1,a>(2^k)+2^k*a(2^(k+1)) $in R
+            2*(\ts::real_tail_partial_sums<1,a>(2^k)+2^k*a(2^(k+1)))<=2*\ts::real_tail_partial_sums<1,a>(2^(k+1))
+            2*\ts::real_tail_partial_sums<1,a>(2^k)+2^(k+1)*a(2^(k+1))=2*\ts::real_tail_partial_sums<1,a>(2^k)+(2*2^k)*a(2^(k+1))=2*(\ts::real_tail_partial_sums<1,a>(2^k)+2^k*a(2^(k+1)))<=2*\ts::real_tail_partial_sums<1,a>(2^(k+1))
+            k+1 $in {j Z:j>=0}
+            \dyadic_real_tail_condensation<a>(k+1)=2^(k+1)*a(2^(k+1))
+            release thm real_tail_series_partial_sum_successor(0,\dyadic_real_tail_condensation<a>,k)
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k) $in R
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k+1)=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)+\dyadic_real_tail_condensation<a>(k+1)=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)+2^(k+1)*a(2^(k+1))<=2*\ts::real_tail_partial_sums<1,a>(2^k)+2^(k+1)*a(2^(k+1))<=2*\ts::real_tail_partial_sums<1,a>(2^(k+1))
+
+thm dyadic_condensation_partial_sum_bounds:
+    ? forall a fn(n {j Z:j>=1}) R,k N:
+        forall n {j Z:j>=1}:
+            a(n)>=0
+        $sext::is_decreasing_real_tail(1,a)
+        =>:
+            \ts::real_tail_partial_sums<1,a>(2^(k+1)-1)<=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)<=2*\ts::real_tail_partial_sums<1,a>(2^k)
+    release thm dyadic_condensation_partial_sum_lower_bound(a,k)
+    release thm dyadic_condensation_partial_sum_upper_bound(a,k)
+
+thm convergent_nonnegative_decreasing_series_has_convergent_condensation:
+    ? forall a fn(n {j Z:j>=1}) R:
+        forall n {j Z:j>=1}:
+            a(n)>=0
+        $sext::is_decreasing_real_tail(1,a)
+        $ts::is_convergent_real_tail_series(1,a)
+        =>:
+            $ts::is_convergent_real_tail_series(0,\dyadic_real_tail_condensation<a>)
+    release thm convergent_real_tail_series_has_upper_bounded_partial_sums(1,a)
+    obtain M from exist bound R st {$sext::is_real_tail_upper_bound(1,\ts::real_tail_partial_sums<1,a>,bound)}
+    claim:
+        ? forall k {j Z:j>=0}:
+            \dyadic_real_tail_condensation<a>(k)>=0
+        release thm dyadic_condensation_preserves_nonnegative_terms(a,k)
+    claim:
+        ? $sext::is_real_tail_upper_bound(0,\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>,2*M)
+        claim:
+            ? forall k {j Z:j>=0}:
+                \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)<=2*M
+            k $in N
+            release thm dyadic_condensation_partial_sum_upper_bound(a,k)
+            2^k $in {j Z:j>=1}
+            \ts::real_tail_partial_sums<1,a>(2^k) $in R
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k) $in R
+            \ts::real_tail_partial_sums<1,a>(2^k)<=M
+            2*\ts::real_tail_partial_sums<1,a>(2^k)<=2*M
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(k)<=2*\ts::real_tail_partial_sums<1,a>(2^k)<=2*M
+        by def $sext::is_real_tail_upper_bound(0,\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>,2*M)
+    release thm upper_bounded_nonnegative_real_tail_series_converges(0,\dyadic_real_tail_condensation<a>,2*M)
+
+thm convergent_condensation_gives_nonnegative_decreasing_series_convergence:
+    ? forall a fn(n {j Z:j>=1}) R:
+        forall n {j Z:j>=1}:
+            a(n)>=0
+        $sext::is_decreasing_real_tail(1,a)
+        $ts::is_convergent_real_tail_series(0,\dyadic_real_tail_condensation<a>)
+        =>:
+            $ts::is_convergent_real_tail_series(1,a)
+    release thm convergent_real_tail_series_has_upper_bounded_partial_sums(0,\dyadic_real_tail_condensation<a>)
+    obtain M from exist bound R st {$sext::is_real_tail_upper_bound(0,\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>,bound)}
+    release thm nonnegative_real_tail_series_has_increasing_partial_sums(1,a)
+    release thm fn_set_member(\ts::real_tail_partial_sums<1,a>,fn(n {j Z:j>=1}) R)
+    claim:
+        ? $sext::is_real_tail_upper_bound(1,\ts::real_tail_partial_sums<1,a>,M)
+        claim:
+            ? forall n {j Z:j>=1}:
+                \ts::real_tail_partial_sums<1,a>(n)<=M
+            n $in Z
+            n>=1
+            n $in N+
+            n $in N
+            n $in {j Z:j>=0}
+            release thm dyadic_indices_dominate_natural_indices(n)
+            2^(n+1)-1>=n+1>=n>=1
+            2^(n+1)-1 $in {j Z:j>=1}
+            release thm sext::increasing_real_tail_pairwise_order(1,\ts::real_tail_partial_sums<1,a>,n,2^(n+1)-1)
+            release thm dyadic_condensation_partial_sum_lower_bound(a,n)
+            \ts::real_tail_partial_sums<1,a>(n) $in R
+            \ts::real_tail_partial_sums<1,a>(2^(n+1)-1) $in R
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(n) $in R
+            \ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(n)<=M
+            \ts::real_tail_partial_sums<1,a>(n)<=\ts::real_tail_partial_sums<1,a>(2^(n+1)-1)<=\ts::real_tail_partial_sums<0,\dyadic_real_tail_condensation<a>>(n)<=M
+        by def $sext::is_real_tail_upper_bound(1,\ts::real_tail_partial_sums<1,a>,M)
+    release thm upper_bounded_nonnegative_real_tail_series_converges(1,a,M)
+
+claim:
+    ? forall n {j Z:j>=1}:
+        n $in R+
+        n $in R
+    n $in Z
+    n>=1>0
+    n $in R
+    n $in R+
+
+claim:
+    ? forall exponent R,n {j Z:j>=1}:
+        n^exponent $in R
+    n $in R+
+    release thm power::positive_real_power_is_positive(n,exponent)
+    n^exponent $in R
+
+claim:
+    ? forall q R,n {j Z:j>=1}:
+        n^q $in R+
+        n^q!=0
+    n $in Z
+    n>=1>0
+    n $in R+
+    release thm power::positive_real_power_is_positive(n,q)
+    n^q>0
+    n^q!=0
+    n^q $in R+
+
+claim:
+    ? forall exponent R,n {j Z:j>=1}:
+        n^exponent $in R*
+    n $in R+
+    release thm power::positive_real_power_is_positive(n,exponent)
+    n^exponent $in R
+    n^exponent>0
+    n^exponent!=0
+    n^exponent $in R*
+
+claim:
+    ? forall exponent R,n {j Z:j>=1}:
+        1/n^exponent $in R
+    n $in R+
+    release thm power::positive_real_power_negative_exponent(n,exponent)
+    n^exponent $in R
+    n^exponent!=0
+    n^(-exponent) $in R
+    1/n^exponent=n^(-exponent)
+    1/n^exponent $in R
+
+template<exponent R>:
+    have fn positive_real_reciprocal_power_tail(n {j Z:j>=1}) R=n^(-exponent)
+
+thm positive_real_reciprocal_power_value:
+    ? forall exponent R,n {j Z:j>=1}:
+        \positive_real_reciprocal_power_tail<exponent>(n)=1/n^exponent
+    n $in R+
+    release thm power::positive_real_power_negative_exponent(n,exponent)
+    \positive_real_reciprocal_power_tail<exponent>(n)=n^(-exponent)=1/n^exponent
+
+thm positive_real_reciprocal_power_terms_are_positive:
+    ? forall exponent R,n {j Z:j>=1}:
+        \positive_real_reciprocal_power_tail<exponent>(n)>0
+    n $in R+
+    release thm power::positive_real_power_is_positive(n,-exponent)
+    \positive_real_reciprocal_power_tail<exponent>(n)=n^(-exponent)>0
+
+thm positive_exponent_reciprocal_power_tail_is_decreasing:
+    ? forall exponent R+:
+        $sext::is_decreasing_real_tail(1,\positive_real_reciprocal_power_tail<exponent>)
+    claim:
+        ? forall n {j Z:j>=1}:
+            \positive_real_reciprocal_power_tail<exponent>(n+1)<=\positive_real_reciprocal_power_tail<exponent>(n)
+        n $in Z
+        n>=1
+        n+1 $in {j Z:j>=1}
+        n $in R+
+        n+1 $in R+
+        n<n+1
+        release thm ex::positive_real_exponent_power_preserves_strict_base_order(n,n+1,exponent)
+        release thm power::positive_real_power_is_positive(n,exponent)
+        release thm power::positive_real_power_is_positive(n+1,exponent)
+        n^exponent $in R
+        (n+1)^exponent $in R
+        1/(n+1)^exponent<1/n^exponent
+        release thm positive_real_reciprocal_power_value(exponent,n)
+        release thm positive_real_reciprocal_power_value(exponent,n+1)
+        \positive_real_reciprocal_power_tail<exponent>(n+1)=1/(n+1)^exponent<1/n^exponent=\positive_real_reciprocal_power_tail<exponent>(n)
+    by def $sext::is_decreasing_real_tail(1,\positive_real_reciprocal_power_tail<exponent>)
+
+thm reciprocal_power_condensation_is_geometric:
+    ? forall exponent R:
+        \dyadic_real_tail_condensation<\positive_real_reciprocal_power_tail<exponent>> = \real_geometric_tail_from_zero<2^(1-exponent)>
+    release thm fn_set_member(\dyadic_real_tail_condensation<\positive_real_reciprocal_power_tail<exponent>>,fn(k {j Z:j>=0}) R)
+    release thm fn_set_member(\real_geometric_tail_from_zero<2^(1-exponent)>,fn(k {j Z:j>=0}) R)
+    claim:
+        ? forall k {j Z:j>=0}:
+            \dyadic_real_tail_condensation<\positive_real_reciprocal_power_tail<exponent>>(k)=\real_geometric_tail_from_zero<2^(1-exponent)>(k)
+        k $in N
+        k $in R
+        2^k $in {j Z:j>=1}
+        2^k $in R+
+        release thm power::positive_real_power_iteration(2,k,-exponent)
+        release thm power::positive_real_power_addition(2,k,k*(-exponent))
+        release thm power::positive_real_power_iteration(2,1-exponent,k)
+        k+k*(-exponent)=(1-exponent)*k
+        \positive_real_reciprocal_power_tail<exponent>(2^k)=(2^k)^(-exponent)=2^(k*(-exponent))
+        \dyadic_real_tail_condensation<\positive_real_reciprocal_power_tail<exponent>>(k)=2^k*\positive_real_reciprocal_power_tail<exponent>(2^k)=2^k*2^(k*(-exponent))=2^(k+k*(-exponent))=2^((1-exponent)*k)=(2^(1-exponent))^k=\real_geometric_tail_from_zero<2^(1-exponent)>(k)
+    by fn_extension \dyadic_real_tail_condensation<\positive_real_reciprocal_power_tail<exponent>> = \real_geometric_tail_from_zero<2^(1-exponent)>
+
+thm reciprocal_power_condensation_base_is_positive:
+    ? forall exponent R:
+        2^(1-exponent)>0
+        abs(2^(1-exponent))=2^(1-exponent)
+    release thm power::positive_real_power_is_positive(2,1-exponent)
+    2^(1-exponent)>0
+    abs(2^(1-exponent))=2^(1-exponent)
+
+thm reciprocal_power_condensation_base_is_inside_unit_interval:
+    ? forall exponent R:
+        exponent>1
+        =>:
+            abs(2^(1-exponent))<1
+    1-exponent<0
+    release thm reciprocal_power_condensation_base_is_positive(exponent)
+    release thm ex::real_exponents_order_above_one(2,1-exponent,0)
+    2^(1-exponent)<2^0=1
+    abs(2^(1-exponent))=2^(1-exponent)<1
+
+thm reciprocal_power_condensation_base_is_at_least_one:
+    ? forall exponent R:
+        exponent<=1
+        =>:
+            abs(2^(1-exponent))>=1
+    release thm reciprocal_power_condensation_base_is_positive(exponent)
+    by cases:
+        ? abs(2^(1-exponent))>=1
+        case exponent=1:
+            1-exponent=0
+            2^(1-exponent)=2^0=1
+            abs(2^(1-exponent))=abs(1)=1
+        case exponent<1:
+            0<1-exponent
+            release thm ex::real_exponents_order_above_one(2,0,1-exponent)
+            1=2^0<2^(1-exponent)
+            abs(2^(1-exponent))=2^(1-exponent)>=1
+
+thm real_reciprocal_power_series_converges_above_one:
+    ? forall exponent R:
+        exponent>1
+        =>:
+            $ts::is_convergent_real_tail_series(1,\positive_real_reciprocal_power_tail<exponent>)
+    exponent>1>0
+    exponent $in R+
+    claim:
+        ? forall n {j Z:j>=1}:
+            \positive_real_reciprocal_power_tail<exponent>(n)>=0
+        release thm positive_real_reciprocal_power_terms_are_positive(exponent,n)
+    release thm positive_exponent_reciprocal_power_tail_is_decreasing(exponent)
+    release thm reciprocal_power_condensation_base_is_inside_unit_interval(exponent)
+    release thm zero_start_real_geometric_series_absolutely_converges(2^(1-exponent))
+    release thm reciprocal_power_condensation_is_geometric(exponent)
+    $ts::is_convergent_real_tail_series(0,\dyadic_real_tail_condensation<\positive_real_reciprocal_power_tail<exponent>>)
+    release thm convergent_condensation_gives_nonnegative_decreasing_series_convergence(\positive_real_reciprocal_power_tail<exponent>)
+
+thm positive_real_reciprocal_power_series_diverges_at_most_one:
+    ? forall exponent R+:
+        exponent<=1
+        =>:
+            not $ts::is_convergent_real_tail_series(1,\positive_real_reciprocal_power_tail<exponent>)
+    claim:
+        ? forall n {j Z:j>=1}:
+            \positive_real_reciprocal_power_tail<exponent>(n)>=0
+        release thm positive_real_reciprocal_power_terms_are_positive(exponent,n)
+    release thm positive_exponent_reciprocal_power_tail_is_decreasing(exponent)
+    release thm reciprocal_power_condensation_base_is_at_least_one(exponent)
+    release thm zero_start_real_geometric_series_diverges(2^(1-exponent))
+    release thm reciprocal_power_condensation_is_geometric(exponent)
+    by contra:
+        ? not $ts::is_convergent_real_tail_series(1,\positive_real_reciprocal_power_tail<exponent>)
+        release thm convergent_nonnegative_decreasing_series_has_convergent_condensation(\positive_real_reciprocal_power_tail<exponent>)
+        $ts::is_convergent_real_tail_series(0,\real_geometric_tail_from_zero<2^(1-exponent)>)
+        impossible $ts::is_convergent_real_tail_series(0,\real_geometric_tail_from_zero<2^(1-exponent)>)

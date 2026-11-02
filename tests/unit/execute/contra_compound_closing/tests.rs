@@ -1,8 +1,6 @@
 use crate::ast::fact::Fact;
 use crate::ast::stmt::{ByStmt, Stmt};
-use crate::execute::execute_by_stmt::result::{
-    ByContradictionClosingFailed, ExecByContraStmtFailed,
-};
+use crate::execute::execute_by_stmt::result::ByContradictionClosingFailed;
 use crate::execute::execute_by_stmt::{ExecByContraStmtResult, ExecByStmtResult};
 use crate::execute::ExecStmtResult;
 use crate::knowledge_base::JsonValue;
@@ -59,18 +57,27 @@ fn partial_conjunction_and_unproved_opposite_cannot_close() {
         let mut rt = runtime();
         let run = rt.run_litex_code(source).unwrap();
         assert!(!run.success && run.session_error.is_none(), "{source}");
-        let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(
-            ExecByContraStmtFailed::Closing(failure),
-        ))) = &run.statement_results[0]
+        let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(failed))) =
+            &run.statement_results[0]
         else {
             panic!("expected closing failure: {source}");
         };
-        match failure {
+        match failed.closing_failure().expect("retained closing failure") {
             ByContradictionClosingFailed::Impossible(proof) if missing_positive => {
                 assert!(proof.is_failed())
             }
-            ByContradictionClosingFailed::NegatedImpossible(proof) if !missing_positive => {
-                assert!(proof.is_failed())
+            ByContradictionClosingFailed::AfterImpossible(context) if !missing_positive => {
+                assert!(
+                    !context.impossible.is_failed(),
+                    "retain the proved positive side"
+                );
+                let crate::execute::execute_by_stmt::ByContradictionOppositeFailed::Verification(
+                    proof,
+                ) = &context.failure
+                else {
+                    panic!("expected failed opposite")
+                };
+                assert!(proof.is_failed());
             }
             _ => panic!("wrong missing side: {source}"),
         }
@@ -93,11 +100,13 @@ fn quantifier_closing_uses_the_complete_body_and_keeps_wd_obligations() {
         let mut rt = runtime();
         let run = rt.run_litex_code(source).unwrap();
         assert!(!run.success && run.session_error.is_none(), "{source}");
-        let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(
-            ExecByContraStmtFailed::Closing(ByContradictionClosingFailed::Impossible(proof)),
-        ))) = &run.statement_results[0]
+        let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(failed))) =
+            &run.statement_results[0]
         else {
             panic!("complete closing or WD must fail: {source}");
+        };
+        let Some(ByContradictionClosingFailed::Impossible(proof)) = failed.closing_failure() else {
+            panic!("actual first closing-side failure")
         };
         assert!(proof.is_failed());
     }
@@ -110,16 +119,24 @@ fn unsupported_nested_quantifier_closing_fails_without_publishing_the_goal() {
     let run = rt.run_litex_code(source).unwrap();
     assert!(!run.success && run.session_error.is_none());
     assert!(!run.statement_results[0].is_failed());
-    let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(
-        ExecByContraStmtFailed::Closing(ByContradictionClosingFailed::NegateImpossibleUnsupported(
-            message,
-        )),
-    ))) = &run.statement_results[1]
+    let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(failed))) =
+        &run.statement_results[1]
     else {
         panic!(
             "{}",
             crate::json_output::emit_run_detailed(&run, &rt, "eval", None)
         );
+    };
+    let Some(ByContradictionClosingFailed::AfterImpossible(context)) = failed.closing_failure()
+    else {
+        panic!("retain positive-side proof before unsupported negation")
+    };
+    assert!(!context.impossible.is_failed());
+    let crate::execute::execute_by_stmt::ByContradictionOppositeFailed::NegationUnsupported(
+        message,
+    ) = &context.failure
+    else {
+        panic!("expected unsupported opposite")
     };
     assert!(message.contains("existential conclusion"));
     let json = crate::json_output::emit_run_detailed(&run, &rt, "eval", None);
@@ -328,11 +345,14 @@ fn false_existence_uniqueness_and_equivalence_cannot_close() {
         let mut rt = runtime();
         let run = rt.run_litex_code(&source).unwrap();
         assert!(!run.success && run.session_error.is_none(), "{source}");
+        let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(failed))) =
+            &run.statement_results[0]
+        else {
+            panic!("expected contradiction failure")
+        };
         assert!(matches!(
-            &run.statement_results[0],
-            ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Failed(
-                ExecByContraStmtFailed::Closing(ByContradictionClosingFailed::Impossible(_))
-            )))
+            failed.closing_failure(),
+            Some(ByContradictionClosingFailed::Impossible(_))
         ));
         assert!(!rt.run_litex_code("1 = 2").unwrap().success);
     }

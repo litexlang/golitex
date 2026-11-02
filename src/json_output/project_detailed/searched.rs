@@ -523,6 +523,46 @@ fn project_equality_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     let (name, requirements, proofs) = match proof {
+        EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(p) => (
+            "FunctionApplicationCongruence",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        EqualitySearchProofByBuiltinStrategy::AbsProductFromFactors(p) => (
+            "AbsProductFromFactors",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
+        EqualitySearchProofByBuiltinStrategy::CartesianCoordinateEquality(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("CartesianCoordinateEquality")),
+                    (
+                        "left_shape",
+                        super::known_tuple::project_shape(&p.left_shape, runtime),
+                    ),
+                    (
+                        "right_shape",
+                        super::known_tuple::project_shape(&p.right_shape, runtime),
+                    ),
+                    (
+                        "requirement_facts",
+                        JsonValue::Array(
+                            p.requirement_facts
+                                .iter()
+                                .map(|f| string(f.readable_string()))
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "proof_of_requirement_facts",
+                        super::store::project_verify_facts(&p.proof_of_requirement_facts, runtime),
+                    ),
+                ],
+            );
+        }
         EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(p) => (
             "CosZeroIntegerOffset",
             &p.requirement_facts,

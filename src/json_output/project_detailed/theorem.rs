@@ -18,6 +18,9 @@ pub(in crate::json_output) fn project_release_thm_failure(
     let projected = {
         use ExecReleaseThmStmtFailed::*;
         match failed {
+            Preparation(context) => project_release_thm_failure(&context.failure, rt),
+            Local(context) => project_theorem_local_failure(context, rt),
+            Closing(context) => project_theorem_closing_failure(context, rt),
             ThmNotFound(name) => object_for(
                 rt,
                 vec![
@@ -146,6 +149,9 @@ pub(in crate::json_output) fn project_by_thm_failure(
 ) -> JsonValue {
     let projected = {
         match failed {
+        ExecByThmStmtFailed::Preparation(context) => project_release_thm_failure(&context.failure, rt),
+        ExecByThmStmtFailed::Local(context) => project_theorem_local_failure(context, rt),
+        ExecByThmStmtFailed::Closing(context) => project_theorem_closing_failure(context, rt),
         ExecByThmStmtFailed::Release(failed) => project_release_thm_failure(failed, rt),
         ExecByThmStmtFailed::NotReturned { theorem, fact, conclusions } => object_for(rt, vec![
             ("phase", string("selected_fact")), ("reason", string("not_returned")),
@@ -160,6 +166,162 @@ pub(in crate::json_output) fn project_by_thm_failure(
     let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
     let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
     projected
+}
+fn project_theorem_local_failure(
+    context: &crate::execute::execute_by_stmt::TheoremInvocationLocalFailure,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::{
+        TheoremInvocationFailed, TheoremInvocationLocalFailed, TheoremSelectionFailed,
+    };
+    let theorem = context.origin.call().name.local_name().to_string();
+    let (mut projected, types, premises) = match &context.failure {
+        TheoremInvocationLocalFailed::Invocation(stage) => match stage {
+            TheoremInvocationFailed::Type {
+                type_checks,
+                failure,
+            } => (
+                project_release_thm_failure(failure, rt),
+                type_checks.as_slice(),
+                &[][..],
+            ),
+            TheoremInvocationFailed::FunctionDomain {
+                type_checks,
+                result,
+            } => (
+                project_release_thm_failure(&result.failure, rt),
+                type_checks.as_slice(),
+                &[][..],
+            ),
+            TheoremInvocationFailed::Premise {
+                type_checks,
+                premise_checks,
+                failure,
+                ..
+            }
+            | TheoremInvocationFailed::Derivation {
+                type_checks,
+                premise_checks,
+                failure,
+                ..
+            }
+            | TheoremInvocationFailed::ConclusionWd {
+                type_checks,
+                premise_checks,
+                failure,
+                ..
+            } => (
+                project_release_thm_failure(failure, rt),
+                type_checks.as_slice(),
+                premise_checks.as_slice(),
+            ),
+        },
+        TheoremInvocationLocalFailed::Selection {
+            verified, failure, ..
+        } => {
+            let value = match failure {
+                TheoremSelectionFailed::NotReturned { fact } => object_for(rt, vec![
+                    ("phase", string("selected_fact")), ("reason", string("not_returned")),
+                    ("thm_name", string(theorem)), ("goal", string(fact.readable_string())),
+                    ("returned_conclusions", JsonValue::Array(context.prepared.conclusions.iter().map(|f| string(f.readable_string())).collect())),
+                    ("message", string("Selected fact must match a directly returned atomic conclusion; independent verification and combining conclusions are not allowed")),
+                ]),
+                TheoremSelectionFailed::Selected { fact, result } => object_for(rt, vec![
+                    ("phase", string("selected_fact")), ("thm_name", string(theorem)),
+                    ("goal", string(fact.readable_string())), ("result", project_verify_fact(result, rt)),
+                ]),
+            };
+            (
+                value,
+                verified.type_checks.as_slice(),
+                verified.premise_checks.as_slice(),
+            )
+        }
+    };
+    if let JsonValue::Object(fields) = &mut projected {
+        fields.insert(
+            "invocation".into(),
+            object_for(
+                rt,
+                vec![
+                    ("call", project_theorem_call(context.origin.call(), rt)),
+                    (
+                        "callee",
+                        project_resolved_theorem_callee(&context.callee, rt),
+                    ),
+                    (
+                        "completed_argument_checks",
+                        project_theorem_checks(types, rt),
+                    ),
+                    (
+                        "completed_premise_checks",
+                        project_theorem_checks(premises, rt),
+                    ),
+                ],
+            ),
+        );
+    }
+    projected
+}
+
+fn project_theorem_checks(
+    checks: &[crate::execute::execute_by_stmt::TheoremRequirementChecked],
+    rt: &Runtime,
+) -> JsonValue {
+    JsonValue::Array(
+        checks
+            .iter()
+            .map(|check| {
+                object_for(
+                    rt,
+                    vec![
+                        ("proof", project_verify_fact(&check.proof, rt)),
+                        ("stored", project_store_and_infer(&check.stored, rt)),
+                    ],
+                )
+            })
+            .collect(),
+    )
+}
+
+fn project_theorem_closing_failure(
+    context: &crate::execute::execute_by_stmt::TheoremInvocationClosingFailure,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_by_stmt::TheoremInvocationClosingFailed;
+    let theorem = context.origin.call().name.local_name().to_string();
+    let (mut value, result) = match &context.failure {
+        TheoremInvocationClosingFailed::Release { index, result, .. } => (
+            object_for(
+                rt,
+                vec![
+                    ("phase", string("store")),
+                    ("thm_name", string(theorem)),
+                    ("index", JsonValue::Number(*index as f64)),
+                    ("message", string("goal well-definedness failed at store")),
+                ],
+            ),
+            result,
+        ),
+        TheoremInvocationClosingFailed::ByThm { result } => (
+            object_for(
+                rt,
+                vec![
+                    ("phase", string("store")),
+                    ("thm_name", string(theorem)),
+                    ("message", string("goal well-definedness failed at store")),
+                ],
+            ),
+            result,
+        ),
+    };
+    if let JsonValue::Object(fields) = &mut value {
+        fields.insert(
+            "store_well_defined_result".into(),
+            project_verify_fact_wd_result(result, rt),
+        );
+    }
+    value
 }
 pub(super) fn project_resolved_theorem_callee(
     callee: &ResolvedTheoremCallee,
@@ -391,17 +553,10 @@ pub(in crate::json_output) fn project_def_thm_failure(
                     ("message", string(text.clone())),
                 ],
             ),
-            NameClash(text) | Introduce(text) | Store(text) => object_for(
+            NameClash(text) => object_for(
                 rt,
                 vec![
-                    (
-                        "phase",
-                        string(match failed {
-                            NameClash(_) => "name_clash",
-                            Introduce(_) => "introduce",
-                            _ => "store",
-                        }),
-                    ),
+                    ("phase", string("name_clash")),
                     ("message", string(text.clone())),
                 ],
             ),
@@ -412,25 +567,12 @@ pub(in crate::json_output) fn project_def_thm_failure(
                     ("result", project_verify_fact_wd_result(result, rt)),
                 ],
             ),
-            ProofBody(f) => object_for(
+            Local(context) => project_def_thm_body_failure(&context.body, rt),
+            Store { message, .. } => object_for(
                 rt,
                 vec![
-                    ("phase", string("proof_body")),
-                    ("index", JsonValue::Number(f.step_index as f64)),
-                    ("statement", string(f.statement.readable_string())),
-                    (
-                        "source_location",
-                        crate::json_output::source::project_statement_source(&f.statement, rt),
-                    ),
-                    ("result", super::stmt::project_stmt_detailed(&f.result, rt)),
-                ],
-            ),
-            Conclusion { index, result } => object_for(
-                rt,
-                vec![
-                    ("phase", string("conclusion")),
-                    ("index", JsonValue::Number(*index as f64)),
-                    ("result", project_verify_fact(result, rt)),
+                    ("phase", string("store")),
+                    ("message", string(message.clone())),
                 ],
             ),
         }
@@ -438,6 +580,80 @@ pub(in crate::json_output) fn project_def_thm_failure(
     let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "result");
     let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
     projected
+}
+
+fn project_def_thm_body_failure(
+    failed: &crate::execute::execute_def_thm_stmt::ExecDefThmBodyFailed,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_def_thm_stmt::{
+        ExecDefThmBodyFailed, ExecDefThmForallEnteredFailed, ExecDefThmForallFailed,
+        ExecDefThmNonForallFailed,
+    };
+    let stage = match failed {
+        ExecDefThmBodyFailed::NonForall(failed) => match failed {
+            ExecDefThmNonForallFailed::ProofBody(failed) => Err(failed),
+            ExecDefThmNonForallFailed::Conclusion { result, .. } => Ok((0, result)),
+        },
+        ExecDefThmBodyFailed::Forall(failed) => match failed {
+            ExecDefThmForallFailed::Introduce(_) => {
+                return object_for(
+                    rt,
+                    vec![
+                        ("phase", string("introduce")),
+                        (
+                            "message",
+                            string("thm: failed to introduce forall parameters"),
+                        ),
+                    ],
+                )
+            }
+            ExecDefThmForallFailed::Entered { failure, .. } => match failure {
+                ExecDefThmForallEnteredFailed::PremiseWd { .. } => {
+                    return object_for(
+                        rt,
+                        vec![
+                            ("phase", string("introduce")),
+                            (
+                                "message",
+                                string("thm: forall domain fact is not well-defined"),
+                            ),
+                        ],
+                    )
+                }
+                ExecDefThmForallEnteredFailed::ProofBody(failed) => Err(failed),
+                ExecDefThmForallEnteredFailed::Conclusion { index, result, .. } => {
+                    Ok((*index, result))
+                }
+            },
+        },
+    };
+    match stage {
+        Err(failed) => object_for(
+            rt,
+            vec![
+                ("phase", string("proof_body")),
+                ("index", JsonValue::Number(failed.step_index as f64)),
+                ("statement", string(failed.statement.readable_string())),
+                (
+                    "source_location",
+                    crate::json_output::source::project_statement_source(&failed.statement, rt),
+                ),
+                (
+                    "result",
+                    super::stmt::project_stmt_detailed(&failed.result, rt),
+                ),
+            ],
+        ),
+        Ok((index, result)) => object_for(
+            rt,
+            vec![
+                ("phase", string("conclusion")),
+                ("index", JsonValue::Number(index as f64)),
+                ("result", project_verify_fact(result, rt)),
+            ],
+        ),
+    }
 }
 
 pub(super) fn project_builtin_function_domain(

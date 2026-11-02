@@ -1,5 +1,5 @@
 use crate::compile_to_lean::compile_by_stmt_result::compile_classified_negation::quantifier_free_terms;
-use crate::compile_to_lean::helper::{conjunction_proposition, instantiated_fact_matches, instantiated_object_matches};
+use crate::compile_to_lean::helper::{conjunction_proposition, instantiated_fact_matches, instantiated_object_matches, set_kind_predicate};
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::plain_exist_facts_alpha_equal;
@@ -97,7 +97,9 @@ impl LitexToLeanCompiler {
                     (ParamType::Obj(a), ParamType::Obj(b)) => {
                         instantiated_object_matches(a, b, &substitution)
                     }
-                    (ParamType::Set(_), ParamType::Set(_)) => true,
+                    (ParamType::Set(_), ParamType::Set(_))
+                    | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+                    | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
                     _ => false,
                 }
             {
@@ -121,10 +123,8 @@ impl LitexToLeanCompiler {
                         self.compile_function_raw_expression_bound(carrier, position, &bindings)?
                     ),
                     ParamType::Set(_) => format!("M.isSet {denotation}"),
-                    _ => {
-                        return Err(LeanCompileError::unsupported(
-                            "NotExist/InferenceParameterKind",
-                        ))
+                    kind @ (ParamType::NonemptySet(_) | ParamType::FiniteSet(_)) => {
+                        format!("{} {name}", set_kind_predicate(kind).unwrap())
                     }
                 };
                 binders.push(format!("{{_Host_i{id} : Type _}} [_rep_i{id} : Litex.Representation M _Host_i{id}] ({name} : Litex.Obj (M := M) _Host_i{id})"));

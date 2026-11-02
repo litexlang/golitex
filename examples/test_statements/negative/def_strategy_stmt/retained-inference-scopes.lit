@@ -1,0 +1,27 @@
+# Tracer: separate temporary checking consequences from actual proof consequences.
+# Before: both inference batches inherited the shared seed's body scope,
+# although the temporary batch's stored facts belonged to the checking scope.
+# Original failing mathematical source, unchanged below:
+# prop nonnegative(x R):
+#     x >= 0
+# strategy nonnegative_is_negative:
+#     ? forall x R:
+#         $nonnegative(x)
+#         =>:
+#             x >= 0
+#             x < 0
+#     have guarded R = x
+# Now: after snapshot indexing, each batch uses its stored conclusions' scope.
+# The false final conclusion still fails; no strategy is registered.
+# Expected: exit 1, run_result failure, session_terminated false.
+# Run: target/release/litex -reading -strict -json -f examples/test_statements/negative/def_strategy_stmt/retained-inference-scopes.lit
+
+prop nonnegative(x R):
+    x >= 0
+strategy nonnegative_is_negative:
+    ? forall x R:
+        $nonnegative(x)
+        =>:
+            x >= 0
+            x < 0
+    have guarded R = x

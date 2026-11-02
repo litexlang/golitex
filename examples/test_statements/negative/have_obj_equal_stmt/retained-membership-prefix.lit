@@ -1,0 +1,14 @@
+# Tracer: a value declaration that fails after one successful domain check.
+#
+# Before: the same statement rejected at -1 $in N, but retained only that
+# final verification result. The earlier check and type-preflight scope were lost.
+# have first, second, third N = 1, -1, 2
+#
+# Now: the same source retains all three value-formation checks, the proved
+# 1 $in N, the failed -1 $in N, and the unchecked final membership.
+# The whole declaration fails: no object or defining equality is published.
+# Evidence: python3 examples/test_statements/run.py --leaf HaveObjEqualStmt
+# Producer/consumer: tests/reading_failed_object_introductions.rs and
+# src/reading/web/tests/failed-object-introductions.cjs.
+
+have first, second, third N = 1, -1, 2

@@ -1,0 +1,55 @@
+# Entry laws for the actual native finite-coordinate VectorSpace record.
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        \finite_span::coordinate_space<K,F,n> $in &vector_space::VectorSpace<K,F,finite_seq(K,n)>
+    release thm finite_span::coordinate_space_carrier(K,F,n)
+
+thm coordinate_space_add_entry:
+    ? forall K nonempty_set,F &field::Field<K>,n N,u,v finite_seq(K,n),j closed_range(1,n):
+        \finite_span::coordinate_space<K,F,n>.add(u,v)(j)=F.add(u(j),v(j))
+    \finite_span::coordinate_space<K,F,n> =(\finite_span::zero_coefficients<K,F,n>,\finite_span::add_coefficients<K,F,n>,\finite_span::smul_coefficients<K,F,n>)
+    release struct def \finite_span::coordinate_space<K,F,n>
+    \finite_span::coordinate_space<K,F,n>.add=\finite_span::add_coefficients<K,F,n>
+    have result finite_seq(K,n)=\finite_span::coordinate_space<K,F,n>.add(u,v)
+    result=\finite_span::add_coefficients<K,F,n>(u,v)
+    release thm finite_span::add_coefficients_entry(K,F,n,u,v,result,j)
+    \finite_span::coordinate_space<K,F,n>.add(u,v)(j)=result(j)=F.add(u(j),v(j))
+
+thm coordinate_space_smul_entry:
+    ? forall K nonempty_set,F &field::Field<K>,n N,a K,v finite_seq(K,n),j closed_range(1,n):
+        \finite_span::coordinate_space<K,F,n>.smul(a,v)(j)=F.mul(a,v(j))
+    \finite_span::coordinate_space<K,F,n> =(\finite_span::zero_coefficients<K,F,n>,\finite_span::add_coefficients<K,F,n>,\finite_span::smul_coefficients<K,F,n>)
+    release struct def \finite_span::coordinate_space<K,F,n>
+    \finite_span::coordinate_space<K,F,n>.smul=\finite_span::smul_coefficients<K,F,n>
+    have result finite_seq(K,n)=\finite_span::coordinate_space<K,F,n>.smul(a,v)
+    result=\finite_span::smul_coefficients<K,F,n>(a,v)
+    release thm finite_span::smul_coefficients_entry(K,F,n,a,v,result,j)
+    \finite_span::coordinate_space<K,F,n>.smul(a,v)(j)=result(j)=F.mul(a,v(j))
+
+thm coordinate_space_zero_entry:
+    ? forall K nonempty_set,F &field::Field<K>,n N,j closed_range(1,n):
+        \finite_span::coordinate_space<K,F,n>.zero(j)=F.zero
+    \finite_span::coordinate_space<K,F,n> =(\finite_span::zero_coefficients<K,F,n>,\finite_span::add_coefficients<K,F,n>,\finite_span::smul_coefficients<K,F,n>)
+    release struct def \finite_span::coordinate_space<K,F,n>
+    \finite_span::coordinate_space<K,F,n>.zero=\finite_span::zero_coefficients<K,F,n>
+    release thm finite_span::zero_coefficients_entry(K,F,n,\finite_span::coordinate_space<K,F,n>.zero,j)
+
+thm coordinate_vector_neg_entry:
+    ? forall K nonempty_set,F &field::Field<K>,n N,vector finite_seq(K,n),j closed_range(1,n):
+        \vector_space::vector_neg<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>>(vector)(j)=F.neg(vector(j))
+    \finite_span::coordinate_space<K,F,n> =(\finite_span::zero_coefficients<K,F,n>,\finite_span::add_coefficients<K,F,n>,\finite_span::smul_coefficients<K,F,n>)
+    release struct def \finite_span::coordinate_space<K,F,n>
+    \finite_span::coordinate_space<K,F,n>.smul=\finite_span::smul_coefficients<K,F,n>
+    release thm vector_space::minus_one_times_vector(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,vector)
+    have negative finite_seq(K,n)=\vector_space::vector_neg<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>>(vector)
+    negative=\finite_span::coordinate_space<K,F,n>.smul(F.neg(F.one),vector)=\finite_span::smul_coefficients<K,F,n>(F.neg(F.one),vector)
+    release thm finite_span::smul_coefficients_entry(K,F,n,F.neg(F.one),vector,negative,j)
+    vector(j) $in K
+    release thm field::neg_mul(K,F,F.one,vector(j))
+    F.mul(F.one,vector(j))=vector(j)
+    F.mul(F.one,vector(j)) $in K
+    F.neg(F.mul(F.one,vector(j)))=F.neg(vector(j))
+    negative(j)=F.mul(F.neg(F.one),vector(j))=F.neg(F.mul(F.one,vector(j)))=F.neg(vector(j))
+    \vector_space::vector_neg<K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>>(vector)(j)=negative(j)=F.neg(vector(j))
+

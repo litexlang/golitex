@@ -20,15 +20,29 @@ use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
-fn first_exist_function_signature(family: &ExistShapedFact) -> Option<FnSet> {
+fn existential_template_function_signature(
+    family: &ExistShapedFact,
+    index: usize,
+    outputs: &[&crate::ast::names::BoundName],
+    substitution: &mut HashMap<IdentifierId, Obj>,
+) -> Option<FnSet> {
     if matches!(family, ExistShapedFact::NotExist(_)) {
         return None;
     }
-    let group = family.plain().typed_parameters.groups.first()?;
-    if group.params.is_empty() {
+    let parameters = family
+        .plain()
+        .typed_parameters
+        .groups
+        .iter()
+        .flat_map(|g| g.params.iter().map(move |p| (p, &g.param_type)))
+        .collect::<Vec<_>>();
+    if parameters.len() != outputs.len() {
         return None;
     }
-    match &group.param_type {
+    for ((parameter, _), output) in parameters.iter().zip(outputs) {
+        substitution.insert(parameter.id, substitution.get(&output.id)?.clone());
+    }
+    match parameters.get(index)?.1 {
         ParamType::Obj(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) => {
             Some(signature.clone())
         }
@@ -37,6 +51,38 @@ fn first_exist_function_signature(family: &ExistShapedFact) -> Option<FnSet> {
 }
 
 impl Runtime {
+    /// Header arguments and every output refer to one template body instance.
+    /// Preserve the caller's file/module qualification for sibling outputs.
+    pub(in crate::execute) fn template_instance_substitution(
+        &self,
+        definition: &crate::ast::stmt::DefTemplateStmt,
+        instance: &InstantiatedTemplateObj,
+    ) -> Option<HashMap<IdentifierId, Obj>> {
+        let ids = definition.template_arg_def.ordered_param_ids();
+        let outputs = definition.template_def_stmt.defined_bindings();
+        if ids.len() != instance.args.len()
+            || !outputs
+                .iter()
+                .any(|p| p.name == instance.template_name.local_name())
+        {
+            return None;
+        }
+        let mut substitution: HashMap<_, _> =
+            ids.into_iter().zip(instance.args.iter().cloned()).collect();
+        for output in outputs {
+            let mut sibling = instance.clone();
+            match &mut sibling.template_name {
+                crate::ast::names::AtomicName::Plain { name }
+                | crate::ast::names::AtomicName::WithExportFileId { name, .. }
+                | crate::ast::names::AtomicName::WithModAndExportFileId { name, .. } => {
+                    *name = output.name.clone()
+                }
+            }
+            substitution.insert(output.id, Obj::InstantiatedTemplateObj(sibling));
+        }
+        Some(substitution)
+    }
+
     // `&Name` / `&Name<args>`: definition, arity, argument WD and declared types.
     // Does not prove membership `$in &Struct`.
     // Example: after `struct Point: x R; y R`, WD of `&Point` succeeds.
@@ -232,6 +278,7 @@ impl Runtime {
         }
 
         let mut receiver = value.obj.as_ref().clone();
+        let mut projection_steps = Vec::new();
         for (index, field_name) in value.fields.iter().enumerate() {
             let plain = carrier.name.local_name().to_string();
             let Some(def) = self.def_struct_visible(&carrier.name) else {
@@ -240,11 +287,21 @@ impl Runtime {
                     format!("struct `{plain}` is not defined"),
                 ));
             };
-            if !def.fields.iter().any(|f| f.binding.name == *field_name) {
+            let Some(field_index) = def
+                .fields
+                .iter()
+                .position(|f| f.binding.name == *field_name)
+            else {
                 return Ok(field_access_fail(
                     root,
                     format!("struct `{plain}` has no field `{field_name}`"),
                 ));
+            };
+            if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
+                projection_steps.push(super::FieldAccessProjectionProof {
+                    carrier: carrier.clone(),
+                    field_index,
+                });
             }
             let is_last = index + 1 == value.fields.len();
             if is_last {
@@ -283,6 +340,7 @@ impl Runtime {
                 )) = by_def.by_def_mut()
                 {
                     proof.argument_scope = argument_scope;
+                    proof.projection_steps = projection_steps;
                 }
                 Ok(VerifyObjWellDefinedResult::Success(by_def))
             }
@@ -475,10 +533,11 @@ impl Runtime {
         value: &InstantiatedTemplateObj,
     ) -> Option<FnSet> {
         let def = self.def_template_visible(&value.template_name)?.clone();
-        let ids = def.template_arg_def.ordered_param_ids();
-        if ids.len() != value.args.len() {
-            return None;
-        }
+        let mut subst = self.template_instance_substitution(&def, value)?;
+        let outputs = def.template_def_stmt.defined_bindings();
+        let index = outputs
+            .iter()
+            .position(|p| p.name == value.template_name.local_name())?;
         let signature = match &def.template_def_stmt {
             TemplateDefEnum::HaveFnEqualStmt(stmt) => stmt.equal_to_anonymous_fn.body.clone(),
             TemplateDefEnum::HaveFnEqualCaseByCaseStmt(stmt) => FnSet {
@@ -494,16 +553,16 @@ impl Runtime {
             TemplateDefEnum::HaveFnByForallExistUniqueStmt(stmt) => {
                 self.have_fn_by_exist_signature(stmt)?
             }
-            // `obtain` exports its first witness as the template object. Its
-            // checked existential binder supplies the same callable carrier as
-            // `have fn`; instance WD remains the caller's responsibility.
+            // The selected witness supplies its own callable carrier, retaining
+            // dependencies on the other outputs of this same template instance.
             TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
-                first_exist_function_signature(&stmt.fact)?
+                existential_template_function_signature(&stmt.fact, index, &outputs, &mut subst)?
             }
             TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
                 let definition = self.def_prop_visible(&stmt.fact.predicate)?.clone();
                 let family = project_sole_positive_exist_clause(&definition.iff_facts).ok()?;
-                let signature = first_exist_function_signature(&family)?;
+                let signature =
+                    existential_template_function_signature(&family, index, &outputs, &mut subst)?;
                 let param_ids = definition.typed_parameters.ordered_param_ids();
                 if param_ids.len() != stmt.fact.body.len() {
                     return None;
@@ -525,7 +584,6 @@ impl Runtime {
             }
             _ => return None,
         };
-        let subst = ids.into_iter().zip(value.args.iter().cloned()).collect();
         match self
             .inst_obj(&Obj::FunctionSpace(FunctionSpace::FnSet(signature)), &subst)
             .ok()?

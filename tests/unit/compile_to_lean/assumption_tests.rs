@@ -357,15 +357,9 @@ fn template_instance_rejects_missing_nonzero_obligation() {
 }
 
 #[test]
-fn template_function_body_remains_an_explicit_boundary() {
+fn template_function_body_uses_ordinary_definition_dispatch() {
     let (run, compiler) = super::execute("template<S set>:\n    have fn f(x R) R = x\n");
-    assert_eq!(
-        compiler
-            .compile_run(&run, "template_function")
-            .unwrap_err()
-            .route,
-        "Template/Body"
-    );
+    compiler.compile_run(&run, "template_function").unwrap();
 }
 
 #[test]

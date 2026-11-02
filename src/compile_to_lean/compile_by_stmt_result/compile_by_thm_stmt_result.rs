@@ -67,7 +67,7 @@ impl LitexToLeanCompiler {
                 return Err(LeanCompileError::unsupported("ByThm/Callee"));
             }
             let (registered, reference) =
-                position.user_callee_reference(&proof.call.name, &proof.callee)?;
+                position.user_callee_reference(&proof.call.name, &proof.callee, &self.runtime)?;
             let reference =
                 self.compile_local_forall_citation(registered.fact_id(), reference, position)?;
             let (definitions, application, returned_facts) = self.compile_user_theorem_instance(

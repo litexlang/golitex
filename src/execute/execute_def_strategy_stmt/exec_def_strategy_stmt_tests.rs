@@ -1,6 +1,7 @@
 use crate::execute::exec_stmt_result::{ExecDefinitionStmtResult, ExecStmtResult};
 use crate::execute::execute_def_strategy_stmt::{
-    ExecDefStrategyStmtFailed, ExecDefStrategyStmtResult,
+    ExecDefStrategyEnteredFailed, ExecDefStrategyForallFailed, ExecDefStrategyStmtFailed,
+    ExecDefStrategyStmtResult,
 };
 use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
@@ -44,11 +45,18 @@ fn def_strategy_forall_refl_succeeds() {
             let kind = match f {
                 ExecDefStrategyStmtFailed::NameClash(msg) => format!("NameClash:{msg}"),
                 ExecDefStrategyStmtFailed::GoalWd(_) => "GoalWd".to_string(),
-                ExecDefStrategyStmtFailed::Introduce(msg) => format!("Introduce:{msg}"),
-                ExecDefStrategyStmtFailed::ProofBody(_) => "ProofBody".to_string(),
-                ExecDefStrategyStmtFailed::Conclusion { index, .. } => {
-                    format!("Conclusion:{index}")
-                }
+                ExecDefStrategyStmtFailed::Local(local) => match &local.body {
+                    ExecDefStrategyForallFailed::Introduce(_) => "Introduce".to_string(),
+                    ExecDefStrategyForallFailed::Entered { failure, .. } => match failure {
+                        ExecDefStrategyEnteredFailed::PremiseWd { index, .. } => {
+                            format!("PremiseWd:{index}")
+                        }
+                        ExecDefStrategyEnteredFailed::ProofBody(_) => "ProofBody".to_string(),
+                        ExecDefStrategyEnteredFailed::Conclusion { index, .. } => {
+                            format!("Conclusion:{index}")
+                        }
+                    },
+                },
             };
             panic!("strategy failed: {kind}")
         }
@@ -72,7 +80,7 @@ fn strategy_executes_proof_statements_and_keeps_helpers_local() {
     else {
         panic!("strategy did not succeed")
     };
-    assert_eq!(success.proof_steps.len(), 5);
+    assert_eq!(success.body.proof_steps.len(), 5);
     let detailed = format!(
         "{:?}",
         crate::json_output::project_stmt_detailed(&run.statement_results[1], &runtime,)
@@ -104,8 +112,8 @@ fn strategy_nested_failure_rolls_back_and_name_can_be_reused() {
     assert!(run.session_error.is_none());
     assert!(matches!(&run.statement_results[0],
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
-            ExecDefStrategyStmtResult::Failed(ExecDefStrategyStmtFailed::ProofBody(f))
-        )) if f.step_index == 1));
+            ExecDefStrategyStmtResult::Failed(ExecDefStrategyStmtFailed::Local(local))
+        )) if matches!(&local.body, ExecDefStrategyForallFailed::Entered { failure: ExecDefStrategyEnteredFailed::ProofBody(f), .. } if f.step_index == 1)));
     assert!(runtime.def_strategy_visible_in_stack("use_same").is_none());
     assert_eq!(runtime.execution_environments_stack.len(), 1);
     assert!(runtime.run_litex_code("have helper R = 1\nstrategy use_same:\n    ? forall x R:\n        x = 0\n        =>:\n            $same(x)\n    by def $same(x)\n").unwrap().success);
@@ -136,11 +144,66 @@ fn strategy_goal_wd_precedes_local_definition_and_checks_final_goal() {
     assert!(matches!(
         &run.statement_results[0],
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
-            ExecDefStrategyStmtResult::Failed(ExecDefStrategyStmtFailed::Conclusion { .. })
-        ))
+            ExecDefStrategyStmtResult::Failed(ExecDefStrategyStmtFailed::Local(local))
+        )) if matches!(&local.body, ExecDefStrategyForallFailed::Entered { failure: ExecDefStrategyEnteredFailed::Conclusion { .. }, .. })
     ));
     assert_eq!(runtime.execution_environments_stack.len(), 1);
     assert!(runtime
         .def_strategy_visible_in_stack("impossible")
         .is_none());
+}
+
+#[test]
+fn failed_strategy_retains_actual_parameter_body_and_conclusion_prefix() {
+    let mut runtime = runtime_with_file_env();
+    assert!(
+        runtime
+            .run_litex_code("prop P(x R):\n    x = 0\n")
+            .unwrap()
+            .success
+    );
+    let run = runtime.run_litex_code("strategy fail_final:\n    ? forall x R:\n        x = 0\n        =>:\n            x = x\n            $P(x + 1)\n            x + 0 = x\n    have helper R = x\n    helper = x\n").unwrap();
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+        ExecDefStrategyStmtResult::Failed(ExecDefStrategyStmtFailed::Local(local)),
+    )) = &run.statement_results[0]
+    else {
+        panic!("expected retained local failure")
+    };
+    assert!(!local.goal_wd.is_failed());
+    let ExecDefStrategyForallFailed::Entered {
+        assumed_dom_facts,
+        failure,
+        ..
+    } = &local.body
+    else {
+        panic!("body was entered")
+    };
+    assert_eq!(assumed_dom_facts.len(), 1);
+    let ExecDefStrategyEnteredFailed::Conclusion {
+        proof_steps,
+        conclusion_proofs,
+        index,
+        result,
+    } = failure
+    else {
+        panic!("final conclusion failed")
+    };
+    assert_eq!(*index, 1);
+    assert_eq!(proof_steps.len(), 2);
+    assert!(proof_steps.iter().all(|step| !step.is_failed()));
+    assert_eq!(conclusion_proofs.len(), 1);
+    assert!(conclusion_proofs.iter().all(|proof| !proof.is_failed()));
+    assert!(result.is_failed());
+    assert!(runtime
+        .def_strategy_visible_in_stack("fail_final")
+        .is_none());
+    assert_eq!(runtime.execution_environments_stack.len(), 1);
+    assert!(
+        runtime
+            .run_litex_code("have helper R = 1\n")
+            .unwrap()
+            .success
+    );
+    assert!(!runtime.run_litex_code("$P(1)\n").unwrap().success);
+    assert!(runtime.run_litex_code("helper = 1\n").unwrap().success);
 }

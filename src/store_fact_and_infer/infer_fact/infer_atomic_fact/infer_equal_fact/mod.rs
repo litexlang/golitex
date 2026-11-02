@@ -6,4 +6,5 @@ mod infer_equal_fact_additive_cancellation;
 mod infer_equal_fact_division_cancellation;
 mod infer_equal_fact_nonzero_factor_cancellation;
 mod infer_equal_fact_subtractive_cancellation;
+mod infer_equal_fact_tuple_coordinates;
 pub mod positive_real_power;

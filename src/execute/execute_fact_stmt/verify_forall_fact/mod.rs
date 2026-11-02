@@ -11,7 +11,9 @@ pub use result::{
 pub use well_defined_result::{
     CompactForallFactWellDefinedProof, DetailedForallFactWellDefinedProof,
     FailToVerifyForallFactWellDefinedResult, ForallFactWellDefinedProof,
-    NormalForallFactWellDefinedProof, VerifyForallFactWellDefinedResult,
+    ForallIntroductionFormationFailed, ForallIntroductionFormationFailure,
+    ForallWellDefinedLocalFailed, ForallWellDefinedLocalFailure, NormalForallFactWellDefinedProof,
+    VerifyForallFactWellDefinedResult,
 };
 
 mod source_fact_alpha;

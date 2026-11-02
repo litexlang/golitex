@@ -28,6 +28,7 @@ pub(super) struct Capture {
     pub sources: Vec<JsonValue>,
     pub statements: Vec<JsonValue>,
     pub facts: BTreeMap<String, JsonValue>,
+    environment_facts: BTreeSet<String>,
     pub symbols: BTreeMap<String, JsonValue>,
     pub occurrences: Vec<JsonValue>,
     pub rules: BTreeMap<String, JsonValue>,
@@ -78,6 +79,7 @@ impl Capture {
             sources: Vec::new(),
             statements: Vec::new(),
             facts: BTreeMap::new(),
+            environment_facts: BTreeSet::new(),
             symbols: BTreeMap::new(),
             occurrences: Vec::new(),
             rules,
@@ -116,6 +118,7 @@ impl Capture {
 
     pub fn finish(mut self, success: bool, error: Option<String>, strict: bool) -> JsonValue {
         let language = self.language;
+        self.annotate_inference_scopes();
         self.annotate_inferred_facts();
         self.annotate_wd_coverage();
         let trust = self.annotate_trust_origins();
@@ -271,8 +274,17 @@ impl Capture {
         let mut facts = environment.facts.facts_by_id.iter().collect::<Vec<_>>();
         facts.sort_by_key(|(id, _)| id.value());
         for (_, fact) in facts {
-            if !self.facts.contains_key(&fact.fact_id().to_string()) {
+            let id = fact.fact_id().to_string();
+            if !self.facts.contains_key(&id) {
                 self.subject(fact, runtime);
+            }
+            // A proof can mention a subject before its actual environment is
+            // indexed. The first environment snapshot owns its scope; source
+            // mentions do not. Outer snapshots are indexed before children.
+            if self.environment_facts.insert(id.clone()) {
+                if let Some(JsonValue::Object(fields)) = self.facts.get_mut(&id) {
+                    fields.insert("scope_id".into(), text(&self.current_scope));
+                }
             }
         }
     }

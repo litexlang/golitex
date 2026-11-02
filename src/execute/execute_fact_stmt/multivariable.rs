@@ -96,19 +96,28 @@ impl Runtime {
         &mut self,
         fact: &MultivariableAnalysisFact,
         state: VerifyState,
-    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::StoreInferredFactResult>> {
-        let mut result = Vec::new();
-        for clause in self
-            .multivariable_defining_clauses(&fact.relation, state)?
-            .unwrap_or_default()
-        {
-            result.push(self.store_inferred_fact(&clause)?);
+    ) -> RuntimeResult<crate::store_fact_and_infer::InferMultivariableAnalysisDefinitionResult>
+    {
+        let (function_domain, clauses) =
+            match self.captured_multivariable_defining_clauses(&fact.relation, state)? {
+                Some((domain, clauses)) => (Some(domain), clauses),
+                None => (None, Vec::new()),
+            };
+        let mut derived = Vec::new();
+        for clause in clauses {
+            derived.push(self.store_inferred_fact(&clause)?);
         }
         if value(&fact.relation).is_some() {
             let existence = self.multivariable_candidate_existence(&fact.relation);
-            result.push(self.store_inferred_fact(&existence)?);
+            derived.push(self.store_inferred_fact(&existence)?);
         }
-        Ok(result)
+        Ok(
+            crate::store_fact_and_infer::InferMultivariableAnalysisDefinitionResult {
+                source_fact_id: fact.fact_id,
+                function_domain,
+                derived,
+            },
+        )
     }
     pub(crate) fn multivariable_candidate_existence(
         &mut self,

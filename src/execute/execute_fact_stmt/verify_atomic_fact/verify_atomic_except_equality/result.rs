@@ -362,6 +362,8 @@ pub struct BuiltinFunctionDifferentiableAtDefinitionProof {
 }
 
 pub struct BuiltinHasRiemannIntegralDefinitionProof {
+    pub function_domain:
+        crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }

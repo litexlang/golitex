@@ -1,0 +1,76 @@
+# Imported zero evaluation, constant-coefficient uniqueness, and nonconstant linear roots.
+
+claim:
+    ? forall n N:
+        1 $in closed_range(1,n+1)
+    n>=0
+    1<=n+1
+    1 $in closed_range(1,n+1)
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n+1):
+        \Algebra::polynomial::complex_polynomial_value<n>(coefficients,0)=coefficients(1)
+    release thm Algebra::polynomial::complex_polynomial_value_at_zero(n,coefficients)
+
+claim:
+    ? forall n N,coefficients finite_seq(R,n+1):
+        \Algebra::polynomial::real_polynomial_value<n>(coefficients,0)=coefficients(1)
+    release thm Algebra::polynomial::real_polynomial_value_at_zero(n,coefficients)
+
+claim:
+    ? forall n,m N,left_coefficients finite_seq(C,n+1),right_coefficients finite_seq(C,m+1):
+        \Algebra::polynomial::complex_polynomial_from_coefficients<n>(left_coefficients)=\Algebra::polynomial::complex_polynomial_from_coefficients<m>(right_coefficients)
+        =>:
+            left_coefficients(1)=right_coefficients(1)
+    release thm Algebra::polynomial::complex_polynomial_first_coefficient_unique(n,m,left_coefficients,right_coefficients)
+
+claim:
+    ? forall n,m N,left_coefficients finite_seq(R,n+1),right_coefficients finite_seq(R,m+1):
+        \Algebra::polynomial::real_polynomial_from_coefficients<n>(left_coefficients)=\Algebra::polynomial::real_polynomial_from_coefficients<m>(right_coefficients)
+        =>:
+            left_coefficients(1)=right_coefficients(1)
+    release thm Algebra::polynomial::real_polynomial_first_coefficient_unique(n,m,left_coefficients,right_coefficients)
+
+claim:
+    ? forall coefficients finite_seq(C,1+1):
+        coefficients(2)!=0
+        =>:
+            exist z C st {\Algebra::polynomial::complex_polynomial_from_coefficients<1>(coefficients)(z)=0}
+    release thm Algebra::polynomial::complex_linear_polynomial_has_root(coefficients)
+
+claim:
+    ? forall coefficients finite_seq(R,1+1):
+        coefficients(2)!=0
+        =>:
+            exist z R st {\Algebra::polynomial::real_polynomial_from_coefficients<1>(coefficients)(z)=0}
+    release thm Algebra::polynomial::real_linear_polynomial_has_root(coefficients)
+
+have zero_check_complex_coefficients finite_seq(C,1+1)=fn(j closed_range(1,1+1)) C {j+i}
+
+zero_check_complex_coefficients(2)!=0
+
+release thm Algebra::polynomial::complex_linear_polynomial_has_root(zero_check_complex_coefficients)
+
+obtain zero_check_complex_root from exist z C st {\Algebra::polynomial::complex_polynomial_from_coefficients<1>(zero_check_complex_coefficients)(z)=0}
+
+\Algebra::polynomial::complex_polynomial_from_coefficients<1>(zero_check_complex_coefficients)(zero_check_complex_root)=0
+
+release thm Algebra::polynomial::complex_polynomial_value_at_zero(1,zero_check_complex_coefficients)
+
+\Algebra::polynomial::complex_polynomial_value<1>(zero_check_complex_coefficients,0)=1+i
+
+have zero_check_real_coefficients finite_seq(R,1+1)=fn(j closed_range(1,1+1)) R {j}
+
+zero_check_real_coefficients(2)!=0
+
+release thm Algebra::polynomial::real_linear_polynomial_has_root(zero_check_real_coefficients)
+
+obtain zero_check_real_root from exist z R st {\Algebra::polynomial::real_polynomial_from_coefficients<1>(zero_check_real_coefficients)(z)=0}
+
+\Algebra::polynomial::real_polynomial_from_coefficients<1>(zero_check_real_coefficients)(zero_check_real_root)=0
+
+have zero_check_constant_coefficients finite_seq(C,1+1)=fn(j closed_range(1,1+1)) C {(2-j)*i}
+
+zero_check_constant_coefficients(2)=0
+
+have zero_check_other_coefficients finite_seq(R,1+1)=fn(j closed_range(1,1+1)) R {2*j-1}

@@ -71,6 +71,13 @@ pub(super) enum OrderBoundInference<'a> {
 #[derive(Clone, Copy)]
 pub(super) enum SourceOwner<'a> {
     Run(&'a RunLitexCodeResult),
+    /// One original file, with a borrowed execution closure for qualified names.
+    /// The run is a reference to closure.files[file].run, never a merged scope.
+    ModuleFile {
+        closure: &'a crate::run_module::LeanSourceClosure,
+        file: usize,
+        run: &'a RunLitexCodeResult,
+    },
     /// A transient Lean lambda; it introduces no source evidence.
     Term,
     Statement(&'a ExecStmtResult),
@@ -86,6 +93,8 @@ pub(super) enum SourceOwner<'a> {
     // This constructor's first `usize` child/requirement stages have already
     // been emitted as lexical lets/haves. Source order still controls visibility.
     WDLocals(&'a ObjWellDefinedProof, usize),
+    /// One constructor already emitted as a lexical let. Adds no source facts.
+    ObjectLocal(&'a ObjWellDefinedProof),
     FormedSubjects(&'a VerifyFactResult, &'a StoreFactAndInferResult),
     /// Lexical endpoint constructors already emitted while replaying this chain.
     ChainObjects(&'a crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult, usize),
@@ -96,6 +105,7 @@ pub(super) enum SourceOwner<'a> {
     Completion(&'a SourcePosition<'a>),
     SetBuilder(&'a SetBuilder, &'a SetBuilderObjWellDefinedProof),
     Named(&'a ExecDefThmStmtSuccess),
+    Strategy(&'a crate::execute::ExecDefStrategyStmtSuccess),
     Template(&'a crate::execute::ExecDefTemplateStmtSuccessResult),
     Claim(&'a ExecClaimStmtSuccess),
     Sketch(&'a ExecSketchStmtSuccess),
@@ -119,9 +129,11 @@ pub(super) enum SourceOwner<'a> {
     FnExtension(&'a crate::execute::execute_by_stmt::ExecByFnExtensionStmtSuccess),
     EnumerationAssignment(&'a ForallFact, &'a crate::execute::execute_by_stmt::EnumerateAssignmentSuccess),
     OrSelected(&'a crate::execute::execute_fact_stmt::verify_or_fact::OrFactSearchProofBySelectedBranch),
+    OrClassicalImplication(&'a crate::execute::execute_fact_stmt::verify_or_fact::OrBuiltinClassicalImplication),
     CasesBranch(&'a ByCasesBranchSuccess),
     KnownForall(&'a VerifyKnownForallFactProof),
     KnownApplication(&'a SearchProofByKnownForallFact),
+    StrategyApplication(&'a crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::DetailedSearchProofByKnownStrategy),
     CalleeInstance(&'a SearchProofByKnownForallFact),
     Call(&'a ExecByThmStmtSuccess),
     ThmRelease(&'a ExecReleaseThmStmtSuccess),
@@ -177,9 +189,20 @@ pub(super) enum SourceOwner<'a> {
 // Constructor evidence comes from a checked source expression or a named infer
 // rule's actual conclusion store. The latter does not invent a Verify WD result.
 #[derive(Clone, Copy)]
-enum SourceConstructor<'a> {
+pub(super) enum SourceConstructor<'a> {
     Checked(&'a ObjWellDefinedProof),
     Inferred(&'a StoreFactResult),
+    /// An actual explicit release; its original declaration owns constructor WD.
+    Released(&'a crate::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtSuccess),
+}
+
+impl<'a> SourceOwner<'a> {
+    fn run(self) -> Option<&'a RunLitexCodeResult> {
+        match self {
+            Self::Run(run) | Self::ModuleFile { run, .. } => Some(run),
+            _ => None,
+        }
+    }
 }
 
 impl<'a> SourcePosition<'a> {
@@ -253,9 +276,41 @@ impl<'a> SourcePosition<'a> {
         self.bound_child(|child| std::ptr::eq(child, proof))
     }
 
+    pub fn object_local_name(&self) -> String {
+        let mut depth = 0;
+        let mut cursor = Some(self);
+        while let Some(position) = cursor {
+            if matches!(position.owner, SourceOwner::ObjectLocal(_)) {
+                depth += 1;
+            }
+            cursor = position.parent;
+        }
+        format!("_object_local_{depth}")
+    }
+
     pub fn bound_object_child(&self, object: &Obj) -> Option<String> {
         // Equal denotations alone do not identify the same source construction.
         self.bound_child(|child| child.obj() == object)
+    }
+
+    /// The active named inference already owns the exact objects in its
+    /// conclusion. Inspect only borrowed ancestors, without reopening an
+    /// earlier statement, sibling proof or completed local scope.
+    pub fn has_bound_inferred_subject(&self, object: &Obj) -> bool {
+        let mut cursor = Some(self);
+        while let Some(position) = cursor {
+            if let SourceOwner::InferredStore(store) = position.owner {
+                if store
+                    .atomic_components()
+                    .iter()
+                    .any(|(_, fact)| atomic_fact_args_ref(fact).iter().any(|arg| *arg == object))
+                {
+                    return true;
+                }
+            }
+            cursor = position.parent;
+        }
+        false
     }
 
     /// Finite enumeration constructs its recorded literal before assuming the
@@ -479,6 +534,13 @@ impl<'a> SourcePosition<'a> {
     ) -> Option<(&'a ObjWellDefinedProof, String)> {
         let mut cursor = Some(self);
         while let Some(position) = cursor {
+            if let SourceOwner::ObjectLocal(proof) = position.owner {
+                if let Some(term) =
+                    projected_wd_child(proof, position.object_local_name(), &matches)
+                {
+                    return Some(term);
+                }
+            }
             if let SourceOwner::ChainObjects(chain, emitted) = position.owner {
                 let crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(chain) = chain else { return None; };
                 for stage in (0..emitted).rev() {
@@ -572,7 +634,7 @@ impl<'a> SourcePosition<'a> {
                 }
             }
             if let SourceOwner::WDLocals(proof, emitted) = position.owner {
-                if let Some((children, _)) = arithmetic_stages(proof) {
+                if let Some(children) = wd_local_children(proof) {
                     for (index, child) in children.iter().take(emitted).enumerate().rev() {
                         if let Some(term) =
                             projected_wd_child(child, position.wd_child_name(index), &matches)
@@ -656,6 +718,77 @@ impl<'a> SourcePosition<'a> {
         self.atomic_search_prior(index)
     }
 
+    /// Borrow an original verification child after this search's earlier stages.
+    pub fn search_verify_prior(&self, target: &VerifyFactResult) -> Result<Self, LeanCompileError> {
+        if let SourceOwner::Verify(VerifyFactResult::Equality(result)) = self.owner {
+            if let VerifyEqualityResult::Success(proof) = result.as_ref() {
+                let index = equality_searched_stages(&proof.searched_proof).iter()
+                    .position(|stage| matches!(stage, AtomicSearchStage::Verify(child) if std::ptr::eq(*child, target)))
+                    .ok_or_else(|| LeanCompileError::unsupported("Equality/NonemptyDomainVerifyChild"))?;
+                return Ok(Self {
+                    before: 2 + index,
+                    ..*self
+                });
+            }
+            return Err(LeanCompileError::unsupported(
+                "Equality/FailedNonemptyDomainOwner",
+            ));
+        }
+        self.atomic_search_verify_prior(target)
+    }
+
+    /// Empty-domain evidence in a literal predates its parameters and guards.
+    /// Space-existence strategies retain their usual atomic-search child order.
+    pub fn function_domain_empty_verify_prior(
+        &self,
+        target: &VerifyFactResult,
+    ) -> Result<Self, LeanCompileError> {
+        if let SourceOwner::Verify(VerifyFactResult::Equality(result)) = self.owner {
+            if let VerifyEqualityResult::Success(proof) = result.as_ref() {
+                let index = equality_searched_stages(&proof.searched_proof).iter()
+                    .position(|stage| matches!(stage, AtomicSearchStage::Verify(child) if std::ptr::eq(*child, target)))
+                    .ok_or_else(|| LeanCompileError::unsupported("Equality/EmptyDomainVerifyChild"))?;
+                return Ok(Self {
+                    before: 2 + index,
+                    ..*self
+                });
+            }
+            return Err(LeanCompileError::unsupported(
+                "Equality/FailedEmptyDomainOwner",
+            ));
+        }
+        if let SourceOwner::WD(proof) | SourceOwner::WDLocals(proof, _) = self.owner {
+            if let DetailedObjWellDefinedProof::ByDef {
+                proof:
+                    ObjWellDefinedProofByDef::FunctionSpace(
+                        FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(function),
+                    ),
+                ..
+            } = proof.detailed_ref()
+            {
+                if let AnonymousFnBodyInReturnSetProof::EmptyCompleteDomain(empty) =
+                    &function.body_in_ret_set
+                {
+                    let mut stages = Vec::new();
+                    function_space_empty_search_stages(empty, &mut stages);
+                    if stages.iter().any(|stage| {
+                        matches!(stage,
+                        AtomicSearchStage::Verify(child) if std::ptr::eq(*child, target))
+                    }) {
+                        return Ok(Self {
+                            before: function.param_type_well_defined.len(),
+                            ..*self
+                        });
+                    }
+                }
+                return Err(LeanCompileError::unsupported(
+                    "Function/EmptyDomainVerifyChild",
+                ));
+            }
+        }
+        self.atomic_search_verify_prior(target)
+    }
+
     pub fn atomic_search_wd_prior(
         &self,
         target: &ObjWellDefinedProof,
@@ -708,11 +841,11 @@ impl<'a> SourcePosition<'a> {
     }
 
     /// Only already completed top-level ordinary-have introductions are arguments.
-    pub fn context_parameters(&self) -> Vec<(&'a BoundName, Option<&'a Obj>, FactId)> {
+    pub fn context_parameters(&self) -> Vec<(&'a BoundName, &'a ParamType, FactId)> {
         let mut parameters = Vec::new();
         let mut position = Some(self);
         while let Some(current) = position {
-            if let SourceOwner::Run(run) = current.owner {
+            if let Some(run) = current.owner.run() {
                 for statement in run.statement_results.iter().take(current.before) {
                     if context_parameter_parts(statement).is_some() {
                         append_have_parameters(statement, usize::MAX, &mut parameters);
@@ -735,7 +868,12 @@ impl<'a> SourcePosition<'a> {
                         break;
                     }
                 }
-                if enclosing.is_some_and(|p| matches!(p.owner, SourceOwner::Run(_))) {
+                if enclosing.is_some_and(|p| {
+                    matches!(
+                        p.owner,
+                        SourceOwner::Run(_) | SourceOwner::ModuleFile { .. }
+                    )
+                }) {
                     if context_parameter_parts(statement).is_some() {
                         append_have_parameters(statement, current.before, &mut parameters);
                     }
@@ -747,29 +885,40 @@ impl<'a> SourcePosition<'a> {
     }
 
     /// Original top-level statements and the visible stage of an active declaration.
-    pub fn context_statements(
-        &self,
-    ) -> Vec<(&'a RunLitexCodeResult, usize, &'a ExecStmtResult, usize)> {
+    pub fn context_statements(&self) -> Vec<(Self, usize, &'a ExecStmtResult, usize)> {
         let mut cursor = Some(self);
         let mut active = None;
         while let Some(p) = cursor {
             if let SourceOwner::Statement(statement) = p.owner {
-                if p.parent
-                    .is_some_and(|q| matches!(q.owner, SourceOwner::Run(_)))
-                {
+                if p.parent.is_some_and(|q| {
+                    matches!(
+                        q.owner,
+                        SourceOwner::Run(_) | SourceOwner::ModuleFile { .. }
+                    )
+                }) {
                     active = Some((statement, p.before));
                 }
             }
-            if let SourceOwner::Run(run) = p.owner {
+            if let Some(run) = p.owner.run() {
                 let mut result = run
                     .statement_results
                     .iter()
                     .take(p.before)
                     .enumerate()
-                    .map(|(index, statement)| (run, index, statement, usize::MAX))
+                    .map(|(index, statement)| {
+                        (
+                            Self {
+                                before: index,
+                                ..*p
+                            },
+                            index,
+                            statement,
+                            usize::MAX,
+                        )
+                    })
                     .collect::<Vec<_>>();
                 if let Some((statement, before)) = active {
-                    result.push((run, p.before, statement, before));
+                    result.push((*p, p.before, statement, before));
                 }
                 return result;
             }
@@ -799,7 +948,7 @@ impl<'a> SourcePosition<'a> {
     pub fn context_abstract_props(&self) -> Vec<(&'a DefAbstractPropStmt, usize)> {
         let mut position = Some(self);
         while let Some(current) = position {
-            if let SourceOwner::Run(run) = current.owner {
+            if let Some(run) = current.owner.run() {
                 return abstract_props_before(run, current.before);
             }
             position = current.parent;
@@ -855,6 +1004,7 @@ impl<'a> SourcePosition<'a> {
                 )) if current.before < crate::compile_to_lean::compile_release_tuple_def_result::tuple_release_publication_start(proof) => return true,
                 SourceOwner::Term
                 | SourceOwner::Named(_)
+                | SourceOwner::Strategy(_)
                 | SourceOwner::Claim(_)
                 | SourceOwner::Forall(_)
                 | SourceOwner::FiniteProductPointwise(_)
@@ -873,6 +1023,7 @@ impl<'a> SourcePosition<'a> {
                 | SourceOwner::FunctionDomainWD(_)
                 | SourceOwner::CompleteDomainSource(_)
                 | SourceOwner::OrSelected(_)
+                | SourceOwner::OrClassicalImplication(_)
                 | SourceOwner::EnumerationAssignment(..)
                 | SourceOwner::CasesBranch(_)
                 | SourceOwner::ForallWD(_, _)
@@ -902,28 +1053,87 @@ impl<'a> SourcePosition<'a> {
         false
     }
 
+    /// Apply a source declaration from its original file context. Foreign
+    /// source parameters still need an explicit contract; ordinary facts never
+    /// become shared assumptions merely because the file was executed earlier.
+    pub fn declaration_reference(
+        &self,
+        name: &str,
+        producer: &Self,
+    ) -> Result<String, LeanCompileError> {
+        if producer.is_local() {
+            return Ok(name.to_owned());
+        }
+        self.validate_declaration_context(producer)?;
+        // A declaration's namespace belongs to its producer, including when
+        // an original definition clause is rendered inside another file.
+        let reference = match producer.module_file_number() {
+            Some(file) => format!("source_{file}.{name}"),
+            None => name.to_owned(),
+        };
+        Ok(producer.context_application(&reference))
+    }
+
+    pub fn validate_declaration_context(&self, producer: &Self) -> Result<(), LeanCompileError> {
+        let foreign = self.module_file_number() != producer.module_file_number();
+        if foreign
+            && (!producer.context_parameters().is_empty()
+                || !producer.context_abstract_props().is_empty()
+                || !producer.context_hypotheses().is_empty())
+        {
+            return Err(LeanCompileError::unsupported(
+                "Module/DeclarationContextArguments",
+            ));
+        }
+        Ok(())
+    }
+
     pub fn user_callee_reference(
         &self,
         name: &AtomicName,
         callee: &ResolvedTheoremCallee,
+        runtime: &Runtime,
     ) -> Result<(Fact, String), LeanCompileError> {
-        let AtomicName::Plain { name } = name else {
-            return Err(LeanCompileError::unsupported("ByThm/QualifiedCallee"));
+        let scope = match name {
+            AtomicName::Plain { .. } => *self,
+            _ => self.qualified_file_scope(name, runtime)?,
         };
+        let name = match name {
+            AtomicName::Plain { name }
+            | AtomicName::WithExportFileId { name, .. }
+            | AtomicName::WithModAndExportFileId { name, .. } => name,
+        };
+        let foreign = scope.module_file_number() != self.module_file_number();
         match callee {
             ResolvedTheoremCallee::UserTheorem(declaration) => {
-                let (registered, site, _) = self.visible_theorem(name)?;
+                let (registered, site, _) = scope.visible_theorem(name)?;
                 if registered != declaration || &declaration.name != name {
                     return Err(LeanCompileError::unsupported("ByThm/Callee"));
                 }
-                let reference = format!("h_{}", registered.fact.fact_id().value());
+                if foreign {
+                    if let Some(run) = site.owner.run() {
+                        if !super::compile_local_assumptions::local_assumption_ids(
+                            &run.statement_results[site.before],
+                        )
+                        .is_empty()
+                        {
+                            return Err(LeanCompileError::unsupported(
+                                "Module/CalleeLocalAssumptions",
+                            ));
+                        }
+                    }
+                }
+                let reference = self.declaration_reference(
+                    &format!("h_{}", registered.fact.fact_id().value()),
+                    &site,
+                )?;
                 Ok((
                     registered.fact.clone(),
                     if site.is_local() {
                         reference
                     } else {
-                        let mut reference = site.context_application(&reference);
-                        if let SourceOwner::Run(run) = site.owner {
+                        let mut reference = reference;
+                        if let Some(run) = site.owner.run() {
                             let ids = super::compile_local_assumptions::local_assumption_ids(
                                 &run.statement_results[site.before],
                             );
@@ -942,7 +1152,10 @@ impl<'a> SourcePosition<'a> {
                 ))
             }
             ResolvedTheoremCallee::UserAxiom(declaration) => {
-                for (_, _, statement, before) in self.context_statements().into_iter().rev() {
+                if foreign {
+                    return Err(LeanCompileError::unsupported("Module/AxiomContext"));
+                }
+                for (_, _, statement, before) in scope.context_statements().into_iter().rev() {
                     if let ExecStmtResult::Definition(ExecDefinitionStmtResult::Axiom(
                         crate::execute::ExecAxiomStmtResult::Success(p),
                     )) = statement
@@ -964,6 +1177,56 @@ impl<'a> SourcePosition<'a> {
         }
     }
 
+    pub fn visible_strategy(
+        &self,
+        name: &str,
+    ) -> Result<(&'a crate::execute::ExecDefStrategyStmtSuccess, Self), LeanCompileError> {
+        let mut position = Some(self);
+        while let Some(current) = position {
+            let steps = match current.owner {
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run.statement_results.as_slice(), 0))
+                }
+                SourceOwner::Named(proof) => Some(named_steps(proof)),
+                SourceOwner::Claim(proof) => Some(claim_steps(proof)),
+                owner => local_steps(owner),
+            };
+            if let Some((steps, head)) = steps {
+                for (index, statement) in steps
+                    .iter()
+                    .take(current.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+                        crate::execute::ExecDefStrategyStmtResult::Success(proof),
+                    )) = statement
+                    {
+                        let completed = Self {
+                            before: head + index + 1,
+                            ..*current
+                        };
+                        if proof.statement.name == name
+                            && obeys_active_stage_ceilings(self, &completed)
+                        {
+                            return Ok((
+                                proof,
+                                Self {
+                                    before: head + index,
+                                    ..*current
+                                },
+                            ));
+                        }
+                    }
+                }
+            }
+            position = current.parent;
+        }
+        Err(LeanCompileError::unsupported(
+            "Strategy/DeclarationProducer",
+        ))
+    }
+
     pub fn visible_theorem(
         &self,
         name: &str,
@@ -971,7 +1234,9 @@ impl<'a> SourcePosition<'a> {
         let mut position = Some(self);
         while let Some(current) = position {
             let steps = match current.owner {
-                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run.statement_results.as_slice(), 0))
+                }
                 SourceOwner::Named(proof) => Some(named_steps(proof)),
                 SourceOwner::Claim(proof) => Some(claim_steps(proof)),
                 owner => local_steps(owner),
@@ -1029,7 +1294,9 @@ impl<'a> SourcePosition<'a> {
         let mut scope = Some(self);
         while let Some(current) = scope {
             let steps = match current.owner {
-                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run.statement_results.as_slice(), 0))
+                }
                 SourceOwner::Named(proof) => Some(named_steps(proof)),
                 SourceOwner::Claim(proof) => Some(claim_steps(proof)),
                 owner => local_steps(owner),
@@ -1088,19 +1355,15 @@ impl<'a> SourcePosition<'a> {
                 {
                     if &p.statement.name == name {
                         if let Some(parent) = current.parent {
-                            if let SourceOwner::Run(run) = parent.owner {
-                                return Ok((
-                                    p,
-                                    Self::new(None, SourceOwner::Run(run), parent.before),
-                                    parent.before,
-                                ));
+                            if parent.owner.run().is_some() {
+                                return Ok((p, *parent, parent.before));
                             }
                         }
                     }
                 }
             }
 
-            if let SourceOwner::Run(run) = current.owner {
+            if let Some(run) = current.owner.run() {
                 for (index, statement) in run
                     .statement_results
                     .iter()
@@ -1115,7 +1378,10 @@ impl<'a> SourcePosition<'a> {
                         if &proof.statement.name == name {
                             return Ok((
                                 proof,
-                                Self::new(None, SourceOwner::Run(run), index),
+                                Self {
+                                    before: index,
+                                    ..*current
+                                },
                                 index,
                             ));
                         }
@@ -1145,7 +1411,7 @@ impl<'a> SourcePosition<'a> {
         };
         let mut cursor = Some(self);
         while let Some(scope) = cursor {
-            if let SourceOwner::Run(run) = scope.owner {
+            if let Some(run) = scope.owner.run() {
                 for (index, statement) in run
                     .statement_results
                     .iter()
@@ -1157,8 +1423,20 @@ impl<'a> SourcePosition<'a> {
                         crate::execute::ExecDefTemplateStmtResult::Success(p),
                     )) = statement
                     {
-                        if &p.statement.template_name == name {
-                            return Ok((p, Self::new(None, SourceOwner::Run(run), index), index));
+                        if p.statement
+                            .template_def_stmt
+                            .defined_bindings()
+                            .iter()
+                            .any(|p| &p.name == name)
+                        {
+                            return Ok((
+                                p,
+                                Self {
+                                    before: index,
+                                    ..*scope
+                                },
+                                index,
+                            ));
                         }
                     }
                 }
@@ -1168,16 +1446,64 @@ impl<'a> SourcePosition<'a> {
         Err(LeanCompileError::unsupported("Template/Producer"))
     }
 
+    pub(super) fn visible_template_publication(
+        &self,
+        id: FactId,
+    ) -> Option<(
+        &'a crate::execute::ExecDefTemplateStmtSuccessResult,
+        usize,
+        Self,
+    )> {
+        let mut cursor = Some(self);
+        while let Some(scope) = cursor {
+            if let Some(run) = scope.owner.run() {
+                for (index, statement) in run
+                    .statement_results
+                    .iter()
+                    .take(scope.before)
+                    .enumerate()
+                    .rev()
+                {
+                    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+                        crate::execute::ExecDefTemplateStmtResult::Success(p),
+                    )) = statement
+                    else {
+                        continue;
+                    };
+                    if let Some(publication) = p
+                        .definition_facts
+                        .iter()
+                        .position(|fact| fact.store_and_infer.primary_fact_id() == id)
+                    {
+                        return Some((
+                            p,
+                            publication,
+                            Self {
+                                before: index,
+                                ..*scope
+                            },
+                        ));
+                    }
+                }
+            }
+            cursor = scope.parent;
+        }
+        None
+    }
+
     pub fn visible_prop(
         &self,
         predicate: &AtomicName,
+        runtime: &Runtime,
     ) -> Result<(&'a ExecDefPropStmtSuccessResult, Self, usize), LeanCompileError> {
-        let AtomicName::Plain { name } = predicate else {
-            return Err(LeanCompileError::unsupported("Prop/QualifiedDeclaration"));
+        let scope = match predicate {
+            AtomicName::Plain { .. } => *self,
+            _ => self.qualified_file_scope(predicate, runtime)?,
         };
-        let mut position = Some(self);
+        let name = predicate.local_name();
+        let mut position = Some(&scope);
         while let Some(current) = position {
-            if let SourceOwner::Run(run) = current.owner {
+            if let Some(run) = current.owner.run() {
                 for (index, statement) in run
                     .statement_results
                     .iter()
@@ -1189,10 +1515,13 @@ impl<'a> SourcePosition<'a> {
                         ExecDefPropStmtResult::Success(proof),
                     )) = statement
                     {
-                        if &proof.statement.name == name {
+                        if proof.statement.name == name {
                             return Ok((
                                 proof,
-                                Self::new(None, SourceOwner::Run(run), index),
+                                Self {
+                                    before: index,
+                                    ..*current
+                                },
                                 index,
                             ));
                         }
@@ -1212,11 +1541,13 @@ impl<'a> SourcePosition<'a> {
     pub fn visible_object_definition(
         &self,
         matches: impl Fn(&ExecDefinitionStmtResult) -> bool,
-    ) -> Result<&'a ExecDefinitionStmtResult, LeanCompileError> {
+    ) -> Result<(&'a ExecDefinitionStmtResult, Self, &'a ExecStmtResult), LeanCompileError> {
         let mut scope = Some(self);
         while let Some(current) = scope {
             let steps = match current.owner {
-                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run.statement_results.as_slice(), 0))
+                }
                 SourceOwner::Named(proof) => Some(named_steps(proof)),
                 SourceOwner::Claim(proof) => Some(claim_steps(proof)),
                 owner => local_steps(owner),
@@ -1234,7 +1565,14 @@ impl<'a> SourcePosition<'a> {
                             ..*current
                         };
                         if matches(definition) && obeys_active_stage_ceilings(self, &completed) {
-                            return Ok(definition);
+                            return Ok((
+                                definition,
+                                Self {
+                                    before: head + index,
+                                    ..*current
+                                },
+                                statement,
+                            ));
                         }
                     }
                 }
@@ -1253,7 +1591,28 @@ impl<'a> SourcePosition<'a> {
         let mut position = Some(self);
         while let Some(current) = position {
             match current.owner {
-                SourceOwner::Run(run) => {
+                SourceOwner::Template(p) => {
+                    let head = p.statement.template_arg_def.ordered_param_ids().len()
+                        + p.assumed_dom_facts.len();
+                    if current.before > head {
+                        if let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+                            ExecHaveFnEqualStmtResult::Success(proof),
+                        )) = p.body.as_ref()
+                        {
+                            if &proof.statement.name.id == id {
+                                return Ok((
+                                    proof,
+                                    Self {
+                                        before: head,
+                                        ..*current
+                                    },
+                                    head,
+                                ));
+                            }
+                        }
+                    }
+                }
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
                     for (index, statement) in run
                         .statement_results
                         .iter()
@@ -1268,7 +1627,10 @@ impl<'a> SourcePosition<'a> {
                             if &proof.statement.name.id == id {
                                 return Ok((
                                     proof,
-                                    Self::new(None, SourceOwner::Run(run), index),
+                                    Self {
+                                        before: index,
+                                        ..*current
+                                    },
                                     index,
                                 ));
                             }
@@ -1305,7 +1667,34 @@ impl<'a> SourcePosition<'a> {
     )> {
         let mut cursor = Some(self);
         while let Some(current) = cursor {
-            if let SourceOwner::Run(run) = current.owner {
+            let steps = match current.owner {
+                SourceOwner::Named(p) => Some(named_steps(p)),
+                SourceOwner::Claim(p) => Some(claim_steps(p)),
+                _ => local_steps(current.owner),
+            };
+            if let Some((steps, head)) = steps {
+                for (index, statement) in steps
+                    .iter()
+                    .take(current.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    if let Some(p) =
+                        super::compile_replacement_result::replacement_statement(statement)
+                    {
+                        if p.statement.name.id == id {
+                            return Some((
+                                p,
+                                Self {
+                                    before: head + index,
+                                    ..*current
+                                },
+                            ));
+                        }
+                    }
+                }
+            }
+            if let Some(run) = current.owner.run() {
                 for (index, statement) in run
                     .statement_results
                     .iter()
@@ -1355,7 +1744,33 @@ impl<'a> SourcePosition<'a> {
         let mut cursor = Some(self);
         while let Some(current) = cursor {
             match current.owner {
-                SourceOwner::Run(run) => {
+                SourceOwner::Template(template) => {
+                    let head = template
+                        .statement
+                        .template_arg_def
+                        .ordered_param_ids()
+                        .len()
+                        + template.assumed_dom_facts.len();
+                    if current.before > head {
+                        if let ExecStmtResult::Definition(
+                            ExecDefinitionStmtResult::HaveFnByForallExistUnique(Selected::Success(
+                                p,
+                            )),
+                        ) = template.body.as_ref()
+                        {
+                            if p.statement.name.id == *id {
+                                return Ok((
+                                    p,
+                                    Self {
+                                        before: head,
+                                        ..*current
+                                    },
+                                ));
+                            }
+                        }
+                    }
+                }
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
                     for (index, statement) in run
                         .statement_results
                         .iter()
@@ -1424,7 +1839,34 @@ impl<'a> SourcePosition<'a> {
         let mut cursor = Some(self);
         while let Some(position) = cursor {
             match position.owner {
-                SourceOwner::Run(run) => {
+                SourceOwner::Template(template) => {
+                    let head = template
+                        .statement
+                        .template_arg_def
+                        .ordered_param_ids()
+                        .len()
+                        + template.assumed_dom_facts.len();
+                    if position.before > head {
+                        if let ExecStmtResult::Definition(
+                            ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+                                ExecHaveFnEqualCaseByCaseStmtResult::Success(p),
+                            ),
+                        ) = template.body.as_ref()
+                        {
+                            if p.statement.name.id == *id {
+                                return Ok((
+                                    p,
+                                    Self {
+                                        before: head,
+                                        ..*position
+                                    },
+                                ));
+                            }
+                        }
+                    }
+                }
+
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
                     for (index, statement) in run
                         .statement_results
                         .iter()
@@ -1439,7 +1881,13 @@ impl<'a> SourcePosition<'a> {
                         ) = statement
                         {
                             if p.statement.name.id == *id {
-                                return Ok((p, Self::new(None, SourceOwner::Run(run), index)));
+                                return Ok((
+                                    p,
+                                    Self {
+                                        before: index,
+                                        ..*position
+                                    },
+                                ));
                             }
                         }
                     }
@@ -1465,7 +1913,30 @@ impl<'a> SourcePosition<'a> {
         let mut current = Some(self);
         while let Some(position) = current {
             match position.owner {
-                SourceOwner::Run(run) => {
+                SourceOwner::Template(p) => {
+                    let head = p.statement.template_arg_def.ordered_param_ids().len()
+                        + p.assumed_dom_facts.len();
+                    if position.before > head {
+                        if let ExecStmtResult::Definition(
+                            ExecDefinitionStmtResult::HaveFnByInduc(
+                                ExecHaveFnByInducStmtResult::Success(proof),
+                            ),
+                        ) = p.body.as_ref()
+                        {
+                            if &proof.statement.name.id == id {
+                                return Ok((
+                                    proof,
+                                    Self {
+                                        before: head,
+                                        ..*position
+                                    },
+                                    head,
+                                ));
+                            }
+                        }
+                    }
+                }
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
                     for (index, statement) in run
                         .statement_results
                         .iter()
@@ -1482,7 +1953,10 @@ impl<'a> SourcePosition<'a> {
                             if &proof.statement.name.id == id {
                                 return Ok((
                                     proof,
-                                    Self::new(None, SourceOwner::Run(run), index),
+                                    Self {
+                                        before: index,
+                                        ..*position
+                                    },
                                     index,
                                 ));
                             }
@@ -1542,6 +2016,14 @@ impl<'a> SourcePosition<'a> {
         let mut position = Some(self);
         let mut captured = None;
         while let Some(current) = position {
+            if let SourceOwner::StrategyApplication(proof) = current.owner {
+                if let Some(fact) = strategy_application_requirements(proof)
+                    .into_iter()
+                    .find_map(|(fact, _)| (fact.fact_id() == id).then_some(fact))
+                {
+                    captured = Some(fact);
+                }
+            }
             if let SourceOwner::KnownApplication(proof) = current.owner {
                 if let Some(fact) = known_application_requirements(proof)
                     .into_iter()
@@ -1568,6 +2050,7 @@ impl<'a> SourcePosition<'a> {
             }
             let env = match current.owner {
                 SourceOwner::Named(p) => Some(p.local_env.as_ref()),
+                SourceOwner::Strategy(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Template(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Claim(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Sketch(p) => Some(p.local_env.as_ref()),
@@ -1588,6 +2071,7 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::Extension(p) => Some(p.local_env.as_ref()),
                 SourceOwner::FnExtension(p) => Some(p.local_env.as_ref()),
                 SourceOwner::OrSelected(p) => Some(p.local_env.as_ref()),
+                SourceOwner::OrClassicalImplication(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EnumerationAssignment(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::CasesBranch(p) => Some(p.local_env.as_ref()),
                 SourceOwner::KnownForall(p) => {
@@ -1620,12 +2104,19 @@ impl<'a> SourcePosition<'a> {
             }
             position = current.parent;
         }
-        runtime.fact_by_id_in_stack(id).or(captured).ok_or_else(|| {
-            LeanCompileError::new(
-                "FactId/Resolution",
-                "The cited fact is absent from the live scope context.",
-            )
-        })
+        runtime
+            .fact_by_id_in_stack(id)
+            .or_else(|| {
+                self.module_env(runtime)
+                    .and_then(|env| env.facts.facts_by_id.get(&id))
+            })
+            .or(captured)
+            .ok_or_else(|| {
+                LeanCompileError::new(
+                    "FactId/Resolution",
+                    "The cited fact is absent from the live scope context.",
+                )
+            })
     }
 
     pub fn source_wd(
@@ -1637,6 +2128,7 @@ impl<'a> SourcePosition<'a> {
         while let Some(current) = position {
             let env = match current.owner {
                 SourceOwner::Named(p) => Some(p.local_env.as_ref()),
+                SourceOwner::Strategy(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Template(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Claim(p) => Some(p.local_env.as_ref()),
                 SourceOwner::Sketch(p) => Some(p.local_env.as_ref()),
@@ -1657,6 +2149,7 @@ impl<'a> SourcePosition<'a> {
                 SourceOwner::Extension(p) => Some(p.local_env.as_ref()),
                 SourceOwner::FnExtension(p) => Some(p.local_env.as_ref()),
                 SourceOwner::OrSelected(p) => Some(p.local_env.as_ref()),
+                SourceOwner::OrClassicalImplication(p) => Some(p.local_env.as_ref()),
                 SourceOwner::EnumerationAssignment(_, p) => Some(p.local_env.as_ref()),
                 SourceOwner::CasesBranch(p) => Some(p.local_env.as_ref()),
                 SourceOwner::KnownForall(p) => {
@@ -1695,6 +2188,12 @@ impl<'a> SourcePosition<'a> {
             if let Some(object) = env.well_defined_objects.wd_id_to_object.get(&id) {
                 return Ok(object);
             }
+        }
+        if let Some(object) = self
+            .module_env(runtime)
+            .and_then(|env| env.well_defined_objects.wd_id_to_object.get(&id))
+        {
+            return Ok(object);
         }
         Err(LeanCompileError::new(
             "WdId/Resolution",
@@ -1739,6 +2238,7 @@ impl<'a> SourcePosition<'a> {
                     | SourceOwner::FnExtension(_)
                     | SourceOwner::FiniteProductPointwise(_)
                     | SourceOwner::OrSelected(_)
+                    | SourceOwner::OrClassicalImplication(_)
                     | SourceOwner::EnumerationAssignment(..)
                     | SourceOwner::CasesBranch(_)
             ) {
@@ -1769,6 +2269,7 @@ impl<'a> SourcePosition<'a> {
                             "finite-product pointwise binder"
                         }
                         SourceOwner::OrSelected(..) => "selected disjunction branch",
+                        SourceOwner::OrClassicalImplication(..) => "builtin classical implication",
                         SourceOwner::EnumerationAssignment(..) => "finite assignment",
                         SourceOwner::CasesBranch(..) => "case branch",
                         _ => unreachable!("local producer boundary checked above"),
@@ -2055,6 +2556,16 @@ impl<'a> SourcePosition<'a> {
                     return Err(LeanCompileError::unsupported("ReleaseObj/FutureReturn"));
                 }
             }
+            if let SourceOwner::StrategyApplication(proof) = current.owner {
+                let completed = current.before.saturating_sub(proof.arg_match_proofs.len());
+                if strategy_application_requirements(proof)
+                    .into_iter()
+                    .skip(completed)
+                    .any(|(fact, _)| fact.fact_id() == id)
+                {
+                    return Err(LeanCompileError::unsupported("Strategy/FutureRequirement"));
+                }
+            }
             if let SourceOwner::KnownApplication(proof) = current.owner {
                 let completed = current
                     .before
@@ -2259,6 +2770,7 @@ impl<'a> SourcePosition<'a> {
                     | SourceOwner::FnExtension(_)
                     | SourceOwner::FiniteProductPointwise(_)
                     | SourceOwner::OrSelected(_)
+                    | SourceOwner::OrClassicalImplication(_)
                     | SourceOwner::EnumerationAssignment(..)
                     | SourceOwner::CasesBranch(_)
             ) {
@@ -2332,7 +2844,10 @@ impl<'a> SourcePosition<'a> {
                     .is_some_and(|(names, _)| names.iter().any(|n| n.id == id))
                 {
                     if let Some(parent) = current.parent {
-                        if matches!(parent.owner, SourceOwner::Run(_)) {
+                        if matches!(
+                            parent.owner,
+                            SourceOwner::Run(_) | SourceOwner::ModuleFile { .. }
+                        ) {
                             return Some(*parent);
                         }
                     }
@@ -2342,12 +2857,14 @@ impl<'a> SourcePosition<'a> {
             // A nearer lexical binder owns this occurrence. Have-by-existence
             // retains the same IDs inside its existential and in its exported
             // choices; the bound occurrences must not acquire global arguments.
-            if !matches!(current.owner, SourceOwner::Run(_))
-                && parameter_in_owner(current, id).is_some()
+            if !matches!(
+                current.owner,
+                SourceOwner::Run(_) | SourceOwner::ModuleFile { .. }
+            ) && parameter_in_owner(current, id).is_some()
             {
                 return None;
             }
-            if let SourceOwner::Run(run) = current.owner {
+            if let Some(run) = current.owner.run() {
                 for (index, statement) in run
                     .statement_results
                     .iter()
@@ -2369,6 +2886,70 @@ impl<'a> SourcePosition<'a> {
         None
     }
 
+    /// An explicit release can publish a definition's RHS without a second
+    /// verifier WD run. Borrow only that original declaration's actual WD.
+    pub fn with_released_definition_wd<T>(
+        &self,
+        object: &Obj,
+        runtime: &'a Runtime,
+        callback: &mut impl FnMut(
+            &ObjWellDefinedProof,
+            &SourcePosition<'_>,
+        ) -> Result<T, LeanCompileError>,
+    ) -> Result<Option<T>, LeanCompileError> {
+        visit_visible(
+            self,
+            object,
+            false,
+            &|evidence, _| matches!(evidence, SourceConstructor::Released(_)),
+            &mut |evidence, release_site| {
+                let SourceConstructor::Released(release) = evidence else {
+                    return Ok(None);
+                };
+                if matches!(release.statement.name, IdentifierObj::Plain { .. }) {
+                    return Ok(None);
+                }
+                let (_, scope, captured) =
+                    release_site.qualified_identifier_scope(&release.statement.name, runtime)?;
+                if captured != &release.looked_up {
+                    return Err(LeanCompileError::unsupported(
+                        "ReleaseObj/DeclarationCapture",
+                    ));
+                }
+                let (_, declaration, statement) =
+                    scope.visible_object_definition(|definition| {
+                        super::helper::captured_identifier_definition_matches(
+                            captured,
+                            definition,
+                            match &release.statement.name {
+                                IdentifierObj::Plain { name, .. }
+                                | IdentifierObj::WithExportFileId { name, .. }
+                                | IdentifierObj::WithModAndExportFileId { name, .. } => name,
+                            },
+                        )
+                    })?;
+                visit_statement(
+                    statement,
+                    usize::MAX,
+                    &declaration,
+                    &mut |constructor, producer| {
+                        let SourceConstructor::Checked(wd) = constructor else {
+                            return Ok(None);
+                        };
+                        if matches!(wd.detailed_ref(), DetailedObjWellDefinedProof::ByDef { obj, .. } if same_wd_subject(obj, object))
+                        {
+                            callback(wd, producer).map(Some)
+                        } else {
+                            Ok(None)
+                        }
+                    },
+                    &mut |_, _| Ok(None),
+                )
+            },
+            &mut |_, _| Ok(None),
+        )
+    }
+
     pub fn with_visible_wd<T>(
         &self,
         object: &Obj,
@@ -2385,20 +2966,68 @@ impl<'a> SourcePosition<'a> {
         }) {
             return callback(proof, self).map(Some);
         }
+        let object_ir = object.ir();
         visit_visible(
             self,
             object,
             closed_leaf(object),
+            &|evidence, _| {
+                matches!(evidence, SourceConstructor::Checked(proof)
+                if matches!(proof.detailed_ref(), DetailedObjWellDefinedProof::ByDef { .. })
+                    && same_wd_subject_ir(proof.obj(), object, &object_ir))
+            },
             &mut |evidence, position| {
                 let SourceConstructor::Checked(proof) = evidence else {
                     return Ok(None);
                 };
-                if matches!((proof).detailed_ref(), DetailedObjWellDefinedProof::ByDef { obj, .. } if same_wd_subject(obj, object))
-                {
-                    callback(proof, position).map(Some)
-                } else {
-                    Ok(None)
+                callback(proof, position).map(Some)
+            },
+            &mut |_, _| Ok(None),
+        )
+    }
+
+    /// Borrow a completed original call that contains this exact proper prefix.
+    /// The callback must replay that whole constructor before projecting it.
+    pub fn with_visible_call_prefix<T>(
+        &self,
+        object: &Obj,
+        callback: &mut impl FnMut(
+            &ObjWellDefinedProof,
+            &SourcePosition<'_>,
+        ) -> Result<T, LeanCompileError>,
+    ) -> Result<Option<T>, LeanCompileError> {
+        visit_visible(
+            self,
+            object,
+            false,
+            &|evidence, _| {
+                let SourceConstructor::Checked(proof) = evidence else {
+                    return false;
+                };
+                let (Obj::FnObj(prefix), Obj::FnObj(whole)) = (object, proof.obj()) else {
+                    return false;
+                };
+                if prefix.body.is_empty() || prefix.body.len() >= whole.body.len() {
+                    return false;
                 }
+                let mut retained = whole.clone();
+                retained.body.truncate(prefix.body.len());
+                Obj::FnObj(retained).ir() == object.ir()
+            },
+            &mut |evidence, producer| {
+                if let SourceConstructor::Checked(proof) = evidence {
+                    if matches!(
+                        proof.detailed_ref(),
+                        DetailedObjWellDefinedProof::ByDef {
+                            obj: Obj::FnObj(_),
+                            proof: ObjWellDefinedProofByDef::FnObj(_),
+                            ..
+                        }
+                    ) {
+                        return callback(proof, producer).map(Some);
+                    }
+                }
+                Ok(None)
             },
             &mut |_, _| Ok(None),
         )
@@ -2587,8 +3216,10 @@ impl<'a> SourcePosition<'a> {
                             return Ok(Some(term));
                         }
                     } else if let Some((_, term)) = projected_wd_child(proof, term, &|child| {
-                        child.obj() == object
-                            && expected.is_none_or(|expected| same_wd_constructor(child, expected))
+                        expected.map_or_else(
+                            || child.obj() == object,
+                            |expected| same_wd_constructor(child, expected),
+                        )
                     }) {
                         return Ok(Some(term));
                     }
@@ -2701,7 +3332,9 @@ impl<'a> SourcePosition<'a> {
                 }
             }
             let statements = match position.owner {
-                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run.statement_results.as_slice(), 0))
+                }
                 SourceOwner::Named(proof) => Some(named_steps(proof)),
                 SourceOwner::Claim(proof) => Some(claim_steps(proof)),
                 owner => local_steps(owner),
@@ -2789,22 +3422,93 @@ impl<'a> SourcePosition<'a> {
             self,
             object,
             true,
+            &|evidence, producer| {
+                matches!(evidence, SourceConstructor::Inferred(store)
+                if stored_subject_matches(store, object, &object_ir, producer))
+            },
             &mut |evidence, position| {
                 let SourceConstructor::Inferred(store) = evidence else {
                     return Ok(None);
                 };
-                if store.atomic_components().iter().any(|(_, fact)| {
-                    atomic_fact_args_ref(fact)
-                        .iter()
-                        .any(|arg| arg.ir() == object_ir)
-                }) {
-                    callback(store, position)
-                } else {
-                    Ok(None)
-                }
+                callback(store, position)
             },
             &mut |_, _| Ok(None),
         )
+    }
+
+    // A prime definition owns the range in its original stored trial-divisor
+    // universal. Return that borrowed carrier only at its published stage.
+    pub fn prime_trial_carrier(&self, store: &StoreFactResult) -> Option<&'a Obj> {
+        let SourceOwner::AtomicInference(
+            Fact::AtomicFact(AtomicFact::PrimeFact(seed)),
+            InferAtomicFactResult::PrimeFact(rules),
+        ) = self.owner
+        else {
+            return None;
+        };
+        for (index, rule) in rules.iter().enumerate() {
+            let crate::store_fact_and_infer::InferPrimeFactResult::Definition(proof) = rule;
+            if self.before < 2 * index + 2
+                || proof.source_fact_id != seed.fact_id
+                || !std::ptr::eq(&proof.trial_divisors.store, store)
+            {
+                continue;
+            }
+            let StoreFactResult::ForallFact(stored) = &proof.trial_divisors.store else {
+                continue;
+            };
+            let [group] = stored.fact.typed_parameters.groups.as_slice() else {
+                continue;
+            };
+            if let ParamType::Obj(carrier) = &group.param_type {
+                return Some(carrier);
+            }
+        }
+        None
+    }
+
+    // Borrow only the modulo constructor actually published by this rule.
+    pub fn dvd_remainder_subject(&self, store: &StoreFactResult) -> Option<&'a Obj> {
+        let (seed, rules) = match self.owner {
+            SourceOwner::AtomicInference(
+                Fact::AtomicFact(AtomicFact::DvdFact(seed)),
+                InferAtomicFactResult::DvdFact(rules),
+            ) => (seed, rules),
+            SourceOwner::PropInference(source) => {
+                let (
+                    StoreFactResult::AtomicFact(stored),
+                    Some(InferResult::AtomicFact(InferAtomicFactResult::DvdFact(rules))),
+                ) = (&source.store, &source.infer)
+                else {
+                    return None;
+                };
+                let AtomicFact::DvdFact(seed) = &stored.fact else {
+                    return None;
+                };
+                (seed, rules)
+            }
+            _ => return None,
+        };
+        for (index, rule) in rules.iter().enumerate() {
+            let crate::store_fact_and_infer::InferDvdFactResult::Definition(p) = rule;
+            if self.before < 2 * index + 1
+                || p.source_fact_id != seed.fact_id
+                || !std::ptr::eq(&p.remainder_zero.store, store)
+            {
+                continue;
+            }
+            let StoreFactResult::AtomicFact(stored) = &p.remainder_zero.store else {
+                continue;
+            };
+            if let AtomicFact::EqualFact(f) = &stored.fact {
+                if matches!(&f.left, Obj::IntegerOperator(IntegerOperator::Mod(m)) if m.left.ir()==seed.left.ir() && m.right.ir()==seed.right.ir())
+                    && matches!(&f.right,Obj::Literal(Literal::Number(n)) if n.normalized_value=="0")
+                {
+                    return Some(&f.left);
+                }
+            }
+        }
+        None
     }
 
     pub fn membership_inference_groups(&self) -> Vec<(&'a InFact, &'a [InferInFactResult])> {
@@ -2996,6 +3700,10 @@ impl<'a> SourcePosition<'a> {
             self,
             object,
             true,
+            &|evidence, producer| {
+                matches!(evidence, SourceConstructor::Inferred(store)
+                if stored_subject_matches(store, object, &object_ir, producer))
+            },
             &mut |evidence, producer| {
                 let SourceConstructor::Inferred(store) = evidence else {
                     return Ok(None);
@@ -3018,6 +3726,7 @@ impl<'a> SourcePosition<'a> {
             self,
             object,
             false,
+            &|_, _| false,
             &mut |_, _| Ok(None),
             &mut |proof, producer| {
                 if let Some(Fact::AtomicFact(AtomicFact::NotEqualFact(fact))) =
@@ -3044,6 +3753,7 @@ impl<'a> SourcePosition<'a> {
             self,
             object,
             false,
+            &|_, _| false,
             &mut |_, _| Ok(None),
             &mut |proof, position| match verified_subject(proof) {
                 Some(Fact::AtomicFact(AtomicFact::InFact(f)))
@@ -3059,6 +3769,55 @@ impl<'a> SourcePosition<'a> {
     pub fn with_visible_alias<T>(
         &self,
         object: &Obj,
+        runtime: &'a Runtime,
+        callback: &mut impl FnMut(
+            &BoundName,
+            &Obj,
+            &VerifyObjWellDefinedResult,
+            &SourcePosition<'_>,
+        ) -> Result<T, LeanCompileError>,
+    ) -> Result<Option<T>, LeanCompileError> {
+        if let Obj::Identifier(
+            identifier @ (IdentifierObj::WithExportFileId { .. }
+            | IdentifierObj::WithModAndExportFileId { .. }),
+        ) = object
+        {
+            let (bound, scope, captured) = self.qualified_identifier_scope(identifier, runtime)?;
+            // This is a subject view of the original binding, not a new result,
+            // registration or substituted object stored back into the AST.
+            let original = Obj::Identifier(IdentifierObj::from_bound_name(bound));
+            return scope.with_visible_alias_binding(
+                &original,
+                &mut |parameter, value, wd, producer| {
+                    let SourceOwner::Statement(ExecStmtResult::Definition(definition)) =
+                        producer.owner
+                    else {
+                        return Err(LeanCompileError::unsupported(
+                            "Identifier/DefinitionProducer",
+                        ));
+                    };
+                    if !super::helper::captured_identifier_definition_matches(
+                        captured,
+                        definition,
+                        &bound.name,
+                    ) {
+                        return Err(LeanCompileError::unsupported(
+                            "Identifier/DeclarationCapture",
+                        ));
+                    }
+                    callback(parameter, value, wd, producer)
+                },
+            );
+        }
+        self.with_visible_alias_binding(object, callback)
+    }
+
+    // Source-order constructor lookup after qualification has resolved the
+    // original ID. Keeping this visitor separate avoids recursively changing
+    // callback types while preserving the original stage/ceiling mechanism.
+    fn with_visible_alias_binding<T>(
+        &self,
+        object: &Obj,
         callback: &mut impl FnMut(
             &BoundName,
             &Obj,
@@ -3069,7 +3828,9 @@ impl<'a> SourcePosition<'a> {
         let mut cursor = Some(self);
         while let Some(current) = cursor {
             let steps = match current.owner {
-                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run.statement_results.as_slice(), 0))
+                }
                 SourceOwner::Named(proof) => Some(named_steps(proof)),
                 SourceOwner::Claim(proof) => Some(claim_steps(proof)),
                 SourceOwner::InductionCase(_, proof) => {
@@ -3133,7 +3894,9 @@ impl<'a> SourcePosition<'a> {
         let mut cursor = Some(self);
         while let Some(current) = cursor {
             let steps = match current.owner {
-                SourceOwner::Run(run) => Some((run.statement_results.as_slice(), 0)),
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run.statement_results.as_slice(), 0))
+                }
                 SourceOwner::Named(proof) => Some(named_steps(proof)),
                 SourceOwner::Claim(proof) => Some(claim_steps(proof)),
                 SourceOwner::InductionCase(_, proof) => {
@@ -3317,7 +4080,7 @@ impl<'a> SourcePosition<'a> {
                         }
                     }
                 }
-                SourceOwner::Run(run) => {
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
                     for (index, statement) in run
                         .statement_results
                         .iter()
@@ -3326,7 +4089,10 @@ impl<'a> SourcePosition<'a> {
                         .rev()
                     {
                         if let Some(proof) = statement_known_application(statement) {
-                            let prior = SourcePosition::new(None, SourceOwner::Run(run), index);
+                            let prior = SourcePosition {
+                                before: index,
+                                ..*current
+                            };
                             let caller = SourcePosition::new(
                                 Some(&prior),
                                 SourceOwner::Statement(statement),
@@ -3409,6 +4175,51 @@ impl<'a> SourcePosition<'a> {
     ) -> Result<Option<T>, LeanCompileError> {
         let mut position = Some(self);
         while let Some(current) = position {
+            // An assumed universal owns its original formation just as an
+            // executed universal does. Resolve only the exact visible ID;
+            // never open its hypothetical truth into the caller scope.
+            let assumed = match current.owner {
+                SourceOwner::Forall(p) => Some((
+                    parameter_count(&p.fact.typed_parameters.groups),
+                    p.assumed_dom_facts.as_slice(),
+                )),
+                SourceOwner::ForallWD(fact, p) => Some((
+                    parameter_count(&fact.typed_parameters.groups),
+                    p.detailed_ref().assumed_dom_facts.as_slice(),
+                )),
+                _ => None,
+            };
+            if let Some((head, assumptions)) = assumed {
+                for (index, assumption) in assumptions
+                    .iter()
+                    .take(current.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
+                    if assumption.store_and_infer.primary_fact_id() != id {
+                        continue;
+                    }
+                    let (StoreFactResult::ForallFact(stored), FactWellDefinedProof::ForallFact(wd)) =
+                        (&assumption.store_and_infer.store, &assumption.well_defined)
+                    else {
+                        return Err(LeanCompileError::unsupported("WD/CalleeAssumptionCapture"));
+                    };
+                    if stored.fact_id != id || stored.fact.fact_id != id {
+                        return Err(LeanCompileError::unsupported("WD/CalleeAssumptionIdentity"));
+                    }
+                    let prior = SourcePosition {
+                        before: head + index,
+                        ..*current
+                    };
+                    return visit_forall_constructor(
+                        SourceOwner::ForallWD(&stored.fact, wd),
+                        then_index,
+                        pattern,
+                        &prior,
+                        callback,
+                    );
+                }
+            }
             if let Some((steps, head)) = local_steps(current.owner) {
                 for (index, statement) in steps
                     .iter()
@@ -3470,7 +4281,7 @@ impl<'a> SourcePosition<'a> {
                         }
                     }
                 }
-                SourceOwner::Run(run) => {
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
                     for (index, statement) in run
                         .statement_results
                         .iter()
@@ -3479,7 +4290,10 @@ impl<'a> SourcePosition<'a> {
                         .rev()
                     {
                         if let Some(owner) = statement_forall_constructor_owner(statement, id) {
-                            let prior = SourcePosition::new(None, SourceOwner::Run(run), index);
+                            let prior = SourcePosition {
+                                before: index,
+                                ..*current
+                            };
                             let declaration = SourcePosition::new(
                                 Some(&prior),
                                 SourceOwner::Statement(statement),
@@ -3577,7 +4391,7 @@ pub(super) fn context_parameter_parts(
 pub(super) fn append_have_parameters<'a>(
     statement: &'a ExecStmtResult,
     before: usize,
-    out: &mut Vec<(&'a BoundName, Option<&'a Obj>, FactId)>,
+    out: &mut Vec<(&'a BoundName, &'a ParamType, FactId)>,
 ) {
     let Some((groups, stores)) = context_parameter_parts(statement) else {
         return;
@@ -3588,16 +4402,8 @@ pub(super) fn append_have_parameters<'a>(
             if index >= before {
                 return;
             }
-            let carrier = match &group.param_type {
-                ParamType::Obj(carrier) => Some(carrier),
-                ParamType::Set(_) => None,
-                _ => {
-                    index += 1;
-                    continue;
-                }
-            };
             if let Some(store) = stores.store_and_infer_results.get(index) {
-                out.push((parameter, carrier, store.primary_fact_id()));
+                out.push((parameter, &group.param_type, store.primary_fact_id()));
             }
             index += 1;
         }
@@ -3735,6 +4541,11 @@ fn nonempty_witness_statement(
 
 fn local_steps(owner: SourceOwner<'_>) -> Option<(&[ExecStmtResult], usize)> {
     match owner {
+        SourceOwner::Strategy(p) => Some((
+            &p.body.proof_steps,
+            parameter_count(&p.statement.forall_fact.typed_parameters.groups)
+                + p.body.assumed_dom_facts.len(),
+        )),
         SourceOwner::Template(p) => Some((
             std::slice::from_ref(p.body.as_ref()),
             p.statement.template_arg_def.ordered_param_ids().len() + p.assumed_dom_facts.len(),
@@ -3899,7 +4710,9 @@ fn parameter_in_statement(
     let carrier = match &store.store {
         StoreFactResult::AtomicFact(p) => match &p.fact {
             AtomicFact::InFact(f) => Some(&f.set),
-            AtomicFact::IsSetFact(_) => None,
+            AtomicFact::IsSetFact(_)
+            | AtomicFact::IsNonemptySetFact(_)
+            | AtomicFact::IsFiniteSetFact(_) => None,
             _ => return None,
         },
         _ => return None,
@@ -4128,6 +4941,27 @@ fn parameter_in_owner<'a>(
             }
             None
         }
+        SourceOwner::Strategy(p) => {
+            let (steps, head) = local_steps(position.owner)?;
+            for step in steps
+                .iter()
+                .take(position.before.saturating_sub(head))
+                .rev()
+            {
+                if let Some(parameter) = parameter_in_statement(step, usize::MAX, id) {
+                    return Some(parameter);
+                }
+            }
+            parameter_from_groups(
+                &p.statement.forall_fact.typed_parameters.groups,
+                &p.body
+                    .introduced_params
+                    .defined_params
+                    .store_and_infer_results,
+                position.before,
+                id,
+            )
+        }
         SourceOwner::Named(p) => {
             let (steps, head) = named_steps(p);
             for step in steps
@@ -4181,7 +5015,7 @@ fn parameter_in_owner<'a>(
             }
         }
         SourceOwner::Statement(statement) => parameter_in_statement(statement, position.before, id),
-        SourceOwner::Run(run) => run
+        SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => run
             .statement_results
             .iter()
             .take(position.before)
@@ -4414,6 +5248,17 @@ fn membership_inference_groups<'a>(
 
 fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredFactResult> {
     match infer {
+        InferAtomicFactResult::PrimeFact(rules) => rules
+            .iter()
+            .flat_map(|rule| rule.stored_conclusions())
+            .collect(),
+        InferAtomicFactResult::DvdFact(rules) => rules
+            .iter()
+            .flat_map(|rule| rule.stored_conclusions())
+            .collect(),
+        InferAtomicFactResult::SubsetFact(rules) => {
+            rules.iter().flat_map(|r| r.stored_conclusions()).collect()
+        }
         InferAtomicFactResult::MultivariableAnalysisFact(rules) => {
             rules.iter().flat_map(|r| r.stored_conclusions()).collect()
         }
@@ -4536,11 +5381,8 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
         InferAtomicFactResult::IsSetFact(_)
         | InferAtomicFactResult::IsNonemptySetFact(_)
         | InferAtomicFactResult::IsFiniteSetFact(_)
-        | InferAtomicFactResult::SubsetFact(_)
         | InferAtomicFactResult::SupersetFact(_)
-        | InferAtomicFactResult::PrimeFact(_)
         | InferAtomicFactResult::CoprimeFact(_)
-        | InferAtomicFactResult::DvdFact(_)
         | InferAtomicFactResult::IsChoiceFunctionForFact(_)
         | InferAtomicFactResult::NotNormalAtomicFact(_)
         | InferAtomicFactResult::NotEqualFact(_)
@@ -4671,13 +5513,19 @@ fn statement_reference(
     statement: &ExecStmtResult,
     id: FactId,
     actual: &Fact,
-    top: Option<(&RunLitexCodeResult, usize)>,
+    top: Option<(&RunLitexCodeResult, usize, Option<usize>)>,
     before: usize,
 ) -> Result<Option<String>, LeanCompileError> {
     let internal = || format!("h_{}", id.value());
+    // Global proof names stay in the producer file, including when its WD is
+    // consumed through an explicit declaration/release in another file.
+    let qualified = |name: &str| match top.and_then(|(_, _, file)| file) {
+        Some(file) => format!("source_{file}.{name}"),
+        None => name.to_owned(),
+    };
     let global_reference = |name: String| match top {
-        Some((run, index)) => application(
-            &name,
+        Some((run, index, _)) => application(
+            &qualified(&name),
             &context_arguments_before(run, index),
             &abstract_arguments_before(run, index),
             &hypotheses_before(run, index)
@@ -4758,7 +5606,7 @@ fn statement_reference(
                     return Ok(Some(reference));
                 }
                 return Ok(Some(match top {
-                    Some((run, index)) => {
+                    Some((run, index, _)) => {
                         let mut arguments = context_arguments_before(run, index);
                         let mut parameters = Vec::new();
                         append_have_parameters(statement, i + 1, &mut parameters);
@@ -4772,7 +5620,7 @@ fn statement_reference(
                             ]);
                         }
                         application(
-                            &reference,
+                            &qualified(&reference),
                             &arguments,
                             &abstract_arguments_before(run, index),
                             &hypotheses_before(run, index),
@@ -4787,8 +5635,8 @@ fn statement_reference(
                 for store in &layer.store_and_infer {
                     if let Some(reference) = stored_reference(store, id, actual)? {
                         return Ok(Some(match top {
-                            Some((run, index)) => application(
-                                &reference,
+                            Some((run, index, _)) => application(
+                                &qualified(&reference),
                                 &context_arguments_before(run, index + 1),
                                 &abstract_arguments_before(run, index),
                                 &hypotheses_before(run, index),
@@ -4811,7 +5659,7 @@ fn statement_reference(
                 return Ok(Some(reference));
             }
             let reference = match top {
-                Some((run, index)) => {
+                Some((run, index, _)) => {
                     let mut hypotheses = hypotheses_before(run, index);
                     hypotheses.extend(
                         assumptions
@@ -4820,7 +5668,7 @@ fn statement_reference(
                             .map(|(fact, _, _)| fact.fact_id()),
                     );
                     application(
-                        &reference,
+                        &qualified(&reference),
                         &context_arguments_before(
                             run,
                             index + usize::from(trust_have(statement).is_some()),
@@ -5229,7 +6077,14 @@ fn statement_reference(
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(p)),
         )) if before > 0 && p.stored_fact_ids.contains(&id) => {
-            Ok(Some(global_reference(internal())))
+            if p.store_and_infer_result.primary_fact_id() == id {
+                check_store_subject(&p.store_and_infer_result.store, actual)?;
+                return Ok(Some(global_reference(internal())));
+            }
+            if infer_has_fact(&p.store_and_infer_result, id, actual)? {
+                return Ok(Some(global_reference(internal())));
+            }
+            Ok(None)
         }
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(p)),
@@ -5272,8 +6127,8 @@ fn statement_reference(
                         for store in &layer.store_and_infer {
                             if let Some(reference) = stored_reference(store, id, actual)? {
                                 return Ok(Some(match top {
-                                    Some((run, index)) => application(
-                                        &reference,
+                                    Some((run, index, _)) => application(
+                                        &qualified(&reference),
                                         &context_arguments_before(run, index + 1),
                                         &abstract_arguments_before(run, index),
                                         &hypotheses_before(run, index),
@@ -5294,7 +6149,7 @@ fn statement_reference(
                     {
                         return Ok(Some(reference));
                     }
-                    if let Some((run, statement_index)) = top {
+                    if let Some((run, statement_index, _)) = top {
                         let mut arguments = context_arguments_before(run, statement_index);
                         let mut prefix = 0;
                         for (index, store) in p
@@ -5320,7 +6175,7 @@ fn statement_reference(
                             ]);
                         }
                         return Ok(Some(application(
-                            &reference,
+                            &qualified(&reference),
                             &arguments,
                             &abstract_arguments_before(run, statement_index),
                             &hypotheses_before(run, statement_index),
@@ -5401,6 +6256,13 @@ fn fact_reference_in_owner(
         );
     }
     match position.owner {
+        SourceOwner::OrClassicalImplication(p) => {
+            if position.before >= 2 {
+                stored_reference(&p.assumed_store_and_infer, id, actual)
+            } else {
+                Ok(None)
+            }
+        }
         SourceOwner::OrSelected(p) => {
             for assumed in p.assumed_negated_branches.iter().take(position.before / 2) {
                 if let Some(value) = stored_reference(&assumed.store_and_infer, id, actual)? {
@@ -5624,7 +6486,7 @@ fn fact_reference_in_owner(
         | SourceOwner::PiecewiseUnfold(_)
         | SourceOwner::Piecewise(_) => Ok(None),
         SourceOwner::InferredStore(_) => Ok(None),
-        SourceOwner::Run(run) => {
+        SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
             for (index, statement) in run
                 .statement_results
                 .iter()
@@ -5632,9 +6494,13 @@ fn fact_reference_in_owner(
                 .enumerate()
                 .rev()
             {
-                if let Some(reference) =
-                    statement_reference(statement, id, actual, Some((run, index)), usize::MAX)?
-                {
+                if let Some(reference) = statement_reference(
+                    statement,
+                    id,
+                    actual,
+                    Some((run, index, position.module_file_number())),
+                    usize::MAX,
+                )? {
                     return Ok(Some(reference));
                 }
             }
@@ -5642,7 +6508,9 @@ fn fact_reference_in_owner(
         }
         SourceOwner::Statement(statement) => {
             let top = position.parent.and_then(|parent| match parent.owner {
-                SourceOwner::Run(run) => Some((run, parent.before)),
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run, parent.before, parent.module_file_number()))
+                }
                 _ => None,
             });
             statement_reference(statement, id, actual, top, position.before)
@@ -5722,6 +6590,31 @@ fn fact_reference_in_owner(
             id,
             actual,
         ),
+        SourceOwner::Strategy(p) => {
+            if let Some(reference) = header_reference(
+                &p.statement.forall_fact.typed_parameters.groups,
+                &p.body.introduced_params,
+                &p.body.assumed_dom_facts,
+                position.before,
+                id,
+                actual,
+            )? {
+                return Ok(Some(reference));
+            }
+            let (steps, head) = local_steps(position.owner).expect("strategy body");
+            for statement in steps
+                .iter()
+                .take(position.before.saturating_sub(head))
+                .rev()
+            {
+                if let Some(reference) =
+                    statement_reference(statement, id, actual, None, usize::MAX)?
+                {
+                    return Ok(Some(reference));
+                }
+            }
+            Ok(None)
+        }
         SourceOwner::Named(p) => {
             let (steps, head) = match (&p.statement.fact, &p.body) {
                 (Fact::ForallFact(fact), ExecDefThmBodyProof::Forall(body)) => {
@@ -6066,6 +6959,18 @@ fn fact_reference_in_owner(
             }
             Ok(None)
         }
+        SourceOwner::StrategyApplication(proof) => {
+            for (fact, _) in strategy_application_requirements(proof)
+                .into_iter()
+                .take(position.before.saturating_sub(proof.arg_match_proofs.len()))
+            {
+                if fact.fact_id() == id {
+                    check_subject(fact, actual)?;
+                    return Ok(Some(format!("h_{}", id.value())));
+                }
+            }
+            Ok(None)
+        }
         SourceOwner::KnownApplication(proof) => {
             for (fact, _) in known_application_requirements(proof).into_iter().take(
                 position
@@ -6222,6 +7127,7 @@ fn fact_reference_in_owner(
         | SourceOwner::ChainObjects(..)
         | SourceOwner::PropObjects(..)
         | SourceOwner::Term
+        | SourceOwner::ObjectLocal(_)
         | SourceOwner::Completion(_)
         | SourceOwner::FunctionDomainWD(_)
         | SourceOwner::CompleteDomainSource(_) => Ok(None),
@@ -6292,6 +7198,27 @@ fn alias_in_statement<T>(
         return Ok(None);
     };
     match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+            ExecHaveFnEqualStmtResult::Success(proof),
+        )) if before >= 2 && proof.statement.name.id == *id => {
+            let completed = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 2);
+            if !obeys_active_stage_ceilings(active, &completed) {
+                return Ok(None);
+            }
+            let anonymous = Obj::FunctionSpace(FunctionSpace::AnonymousFn(
+                proof.statement.equal_to_anonymous_fn.clone(),
+            ));
+            let original =
+                super::helper::success_object_wd(&proof.anonymous_fn_well_defined, &anonymous)?;
+            let producer = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
+            callback(
+                &proof.statement.name,
+                original.obj(),
+                &proof.anonymous_fn_well_defined,
+                &producer,
+            )
+            .map(Some)
+        }
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(p)),
         )) if before > 0 && p.statement.name.id == *id => {
@@ -6350,6 +7277,7 @@ fn alias_in_statement<T>(
 
 fn constructor_has_closed_leaf(evidence: SourceConstructor<'_>) -> bool {
     match evidence {
+        SourceConstructor::Released(_) => false,
         SourceConstructor::Checked(proof) => closed_leaf(proof.obj()),
         SourceConstructor::Inferred(store) => store.atomic_components().iter().any(|(_, fact)| {
             atomic_fact_args_ref(fact)
@@ -6362,7 +7290,19 @@ fn constructor_has_closed_leaf(evidence: SourceConstructor<'_>) -> bool {
 /// Reuse original construction evidence across local binder renaming only.
 /// The matcher checks free IDs and carriers; stage/scope checks remain below.
 fn same_wd_subject(source: &Obj, requested: &Obj) -> bool {
-    source.ir() == requested.ir()
+    same_wd_subject_ir(source, requested, &requested.ir())
+}
+
+fn same_wd_subject_ir(source: &Obj, requested: &Obj, requested_ir: &ObjIR) -> bool {
+    // A function-space value has its own source constructor. An alias needs
+    // its recorded equality/definition route; it cannot have this literal IR.
+    // Avoid rendering unrelated proof-tree objects for each FnSet lookup.
+    let source_fn_set = matches!(source, Obj::FunctionSpace(FunctionSpace::FnSet(_)));
+    let requested_fn_set = matches!(requested, Obj::FunctionSpace(FunctionSpace::FnSet(_)));
+    if source_fn_set != requested_fn_set {
+        return false;
+    }
+    source.ir() == *requested_ir
         || super::helper::instantiated_object_matches(
             source,
             requested,
@@ -6370,10 +7310,32 @@ fn same_wd_subject(source: &Obj, requested: &Obj) -> bool {
         )
 }
 
+// Inference lookup consumes stored subjects only. Checked WD and explicit
+// releases have separate consumers and need no subject rendering here.
+fn stored_subject_matches(
+    store: &StoreFactResult,
+    object: &Obj,
+    object_ir: &ObjIR,
+    producer: &SourcePosition<'_>,
+) -> bool {
+    store.atomic_components().iter().any(|(_, fact)| {
+        atomic_fact_args_ref(fact).iter().any(|arg| {
+            if matches!(object, Obj::FunctionSpace(FunctionSpace::FnSet(_))) {
+                same_wd_subject_ir(arg, object, object_ir)
+            } else {
+                arg.ir() == *object_ir
+            }
+        })
+    }) || producer
+        .prime_trial_carrier(store)
+        .is_some_and(|carrier| carrier.ir() == *object_ir)
+}
+
 fn visit_visible<T>(
     start: &SourcePosition<'_>,
     object: &Obj,
     visit_closed_statements: bool,
+    matches_constructor: &dyn Fn(SourceConstructor<'_>, &SourcePosition<'_>) -> bool,
     wd: &mut dyn FnMut(
         SourceConstructor<'_>,
         &SourcePosition<'_>,
@@ -6387,16 +7349,7 @@ fn visit_visible<T>(
     // this shared visitor so every caller retains the same scope boundary.
     let object_ir = object.ir();
     let mut bounded_wd = |proof: SourceConstructor<'_>, producer: &SourcePosition<'_>| {
-        let relevant = match proof {
-            SourceConstructor::Checked(proof) => same_wd_subject(proof.obj(), object),
-            SourceConstructor::Inferred(store) => {
-                store.atomic_components().iter().any(|(_, fact)| {
-                    atomic_fact_args_ref(fact)
-                        .iter()
-                        .any(|arg| arg.ir() == object_ir)
-                })
-            }
-        };
+        let relevant = matches_constructor(proof, producer);
         if relevant && obeys_active_stage_ceilings(start, producer) {
             wd(proof, producer)
         } else {
@@ -6426,7 +7379,10 @@ fn visit_visible<T>(
     let mut position = Some(start);
     let mut requires_local_producer = false;
     while let Some(current) = position {
-        if matches!(current.owner, SourceOwner::Run(_)) {
+        if matches!(
+            current.owner,
+            SourceOwner::Run(_) | SourceOwner::ModuleFile { .. }
+        ) {
             break;
         }
         if free_ids
@@ -6443,11 +7399,16 @@ fn visit_visible<T>(
         // A source-owned local IdentifierId cannot occur in any earlier global
         // statement. Retain all local ancestors, but do not search beyond its
         // introduction for an object that depends on that binder.
-        if requires_local_producer && matches!(current.owner, SourceOwner::Run(_)) {
+        if requires_local_producer
+            && matches!(
+                current.owner,
+                SourceOwner::Run(_) | SourceOwner::ModuleFile { .. }
+            )
+        {
             return Ok(None);
         }
         if !visit_closed_statements {
-            if let SourceOwner::Run(run) = current.owner {
+            if let Some(run) = current.owner.run() {
                 // A completed named theorem exports only closed primitive WD
                 // leaves through this visitor, and no internal truth proofs.
                 // Queries for other checked constructors or verified membership
@@ -6465,7 +7426,10 @@ fn visit_visible<T>(
                     ) {
                         continue;
                     }
-                    let prior = SourcePosition::new(None, SourceOwner::Run(run), index);
+                    let prior = SourcePosition {
+                        before: index,
+                        ..*current
+                    };
                     if let Some(value) = visit_statement(
                         statement,
                         usize::MAX,
@@ -6522,6 +7486,18 @@ fn obeys_active_stage_ceilings(start: &SourcePosition<'_>, producer: &SourcePosi
 fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
     match (left, right) {
         (SourceOwner::Run(a), SourceOwner::Run(b)) => std::ptr::eq(a, b),
+        (
+            SourceOwner::ModuleFile {
+                closure: a,
+                file: ai,
+                ..
+            },
+            SourceOwner::ModuleFile {
+                closure: b,
+                file: bi,
+                ..
+            },
+        ) => std::ptr::eq(a, b) && ai == bi,
         (SourceOwner::Statement(a), SourceOwner::Statement(b)) => std::ptr::eq(a, b),
         (SourceOwner::Verify(a), SourceOwner::Verify(b)) => std::ptr::eq(a, b),
         (SourceOwner::AtomicVerify(a), SourceOwner::AtomicVerify(b)) => std::ptr::eq(a, b),
@@ -6544,6 +7520,7 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
             std::ptr::eq(a, b) && std::ptr::eq(pa, pb)
         }
         (SourceOwner::Named(a), SourceOwner::Named(b)) => std::ptr::eq(a, b),
+        (SourceOwner::Strategy(a), SourceOwner::Strategy(b)) => std::ptr::eq(a, b),
         (SourceOwner::Template(a), SourceOwner::Template(b)) => std::ptr::eq(a, b),
         (SourceOwner::Claim(a), SourceOwner::Claim(b)) => std::ptr::eq(a, b),
         (SourceOwner::Sketch(a), SourceOwner::Sketch(b)) => std::ptr::eq(a, b),
@@ -6566,12 +7543,18 @@ fn same_source_owner(left: SourceOwner<'_>, right: SourceOwner<'_>) -> bool {
         (SourceOwner::Extension(a), SourceOwner::Extension(b)) => std::ptr::eq(a, b),
         (SourceOwner::FnExtension(a), SourceOwner::FnExtension(b)) => std::ptr::eq(a, b),
         (SourceOwner::OrSelected(a), SourceOwner::OrSelected(b)) => std::ptr::eq(a, b),
+        (SourceOwner::OrClassicalImplication(a), SourceOwner::OrClassicalImplication(b)) => {
+            std::ptr::eq(a, b)
+        }
         (SourceOwner::EnumerationAssignment(a, pa), SourceOwner::EnumerationAssignment(b, pb)) => {
             std::ptr::eq(a, b) && std::ptr::eq(pa, pb)
         }
         (SourceOwner::CasesBranch(a), SourceOwner::CasesBranch(b)) => std::ptr::eq(a, b),
         (SourceOwner::KnownForall(a), SourceOwner::KnownForall(b)) => std::ptr::eq(a, b),
         (SourceOwner::KnownApplication(a), SourceOwner::KnownApplication(b)) => std::ptr::eq(a, b),
+        (SourceOwner::StrategyApplication(a), SourceOwner::StrategyApplication(b)) => {
+            std::ptr::eq(a, b)
+        }
         (SourceOwner::CalleeInstance(a), SourceOwner::CalleeInstance(b)) => std::ptr::eq(a, b),
         (SourceOwner::Call(a), SourceOwner::Call(b)) => std::ptr::eq(a, b),
         (SourceOwner::ThmRelease(a), SourceOwner::ThmRelease(b)) => std::ptr::eq(a, b),
@@ -6965,6 +7948,7 @@ fn visit_closed_scope<T>(
 ) -> Result<Option<T>, LeanCompileError> {
     let mut closed = |evidence: SourceConstructor<'_>, cursor: &SourcePosition<'_>| {
         let closed = match evidence {
+            SourceConstructor::Released(_) => false,
             SourceConstructor::Checked(proof) => closed_leaf(proof.obj()),
             SourceConstructor::Inferred(store) => {
                 store.atomic_components().iter().all(|(_, fact)| {
@@ -7137,6 +8121,7 @@ fn visit_local_scope<T>(
             | SourceOwner::Extension(_)
             | SourceOwner::FnExtension(_)
             | SourceOwner::OrSelected(_)
+            | SourceOwner::OrClassicalImplication(_)
             | SourceOwner::EnumerationAssignment(..)
     ) {
         return Ok(None);
@@ -7327,6 +8312,17 @@ fn visit_owner<T>(
         SourceOwner::RangeExpansion(p) => {
             return visit_verify_stage(&p.membership, 0, position, wd, verify)
         }
+        SourceOwner::OrClassicalImplication(p) => {
+            if let Some(value) = visit_verify_stage(&p.conclusion_proof, 2, position, wd, verify)? {
+                return Ok(Some(value));
+            }
+            if let Some(value) =
+                visit_store_stage(&p.assumed_store_and_infer, 1, position, wd, verify)?
+            {
+                return Ok(Some(value));
+            }
+            return visit_fact_stage(&p.assumed_well_defined, 0, position, wd, verify);
+        }
         SourceOwner::OrSelected(p) => {
             if let Some(value) = visit_verify_stage(
                 &p.selected_branch,
@@ -7430,6 +8426,7 @@ fn visit_owner<T>(
         | SourceOwner::ChainObjects(..)
         | SourceOwner::PropObjects(..)
         | SourceOwner::Term
+        | SourceOwner::ObjectLocal(_)
         | SourceOwner::Completion(_) => {}
         SourceOwner::ExistWD(fact, proof) => {
             return visit_header(
@@ -7693,6 +8690,19 @@ fn visit_owner<T>(
             }
         }
         SourceOwner::RecursiveFunction(proof) => {
+            // Coverage is checked before disjointness and branch bodies.
+            // Its original formation can supply constants in those guards.
+            if position.before > 7 {
+                let prior = SourcePosition {
+                    before: 7,
+                    ..*position
+                };
+                if let Some(value) =
+                    visit_complete_verify(&proof.case_checks.coverage, &prior, wd, verify)?
+                {
+                    return Ok(Some(value));
+                }
+            }
             for (stage, checked) in [
                 (3, &proof.measure_in_z),
                 (4, &proof.lower_in_z),
@@ -7855,7 +8865,7 @@ fn visit_owner<T>(
             return wd(SourceConstructor::Inferred(store), position)
         }
 
-        SourceOwner::Run(run) => {
+        SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
             for (index, statement) in run
                 .statement_results
                 .iter()
@@ -7863,7 +8873,10 @@ fn visit_owner<T>(
                 .enumerate()
                 .rev()
             {
-                let prior = SourcePosition::new(None, SourceOwner::Run(run), index);
+                let prior = SourcePosition {
+                    before: index,
+                    ..*position
+                };
                 if let Some(value) = visit_statement(statement, usize::MAX, &prior, wd, verify)? {
                     return Ok(Some(value));
                 }
@@ -8059,6 +9072,11 @@ fn visit_owner<T>(
                 ..
             } = (proof).detailed_ref()
             {
+                if let Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::MultivariableSelector(c))=&p.domain_fn_set {
+                    if let crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::MultivariableSelector(source)=&c.source {
+                        if let Some(parent)=position.parent {if let Some(value)=visit_complete_wd(&source.well_defined,parent,wd,verify)?{return Ok(Some(value));}}
+                    }
+                }
                 if let Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::Matrix(c)) = &p.domain_fn_set {
                     if let crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof::Checked(root) = &c.well_defined {
                         if let Some(parent) = position.parent {
@@ -8268,6 +9286,31 @@ fn visit_owner<T>(
                 &proof.fact.typed_parameters.groups,
                 &proof.well_defined.detailed_ref().introduced_params,
                 &proof.well_defined.detailed_ref().assumed_dom_facts,
+                position,
+                wd,
+                verify,
+            );
+        }
+        SourceOwner::Strategy(proof) => {
+            let (steps, head) = local_steps(position.owner).expect("strategy body");
+            for (index, statement) in steps
+                .iter()
+                .take(position.before.saturating_sub(head))
+                .enumerate()
+                .rev()
+            {
+                let prior = SourcePosition {
+                    before: head + index,
+                    ..*position
+                };
+                if let Some(value) = visit_statement(statement, usize::MAX, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+            return visit_header(
+                &proof.statement.forall_fact.typed_parameters.groups,
+                &proof.body.introduced_params,
+                &proof.body.assumed_dom_facts,
                 position,
                 wd,
                 verify,
@@ -8898,6 +9941,29 @@ fn visit_owner<T>(
                 if let Some(value) = wd(SourceConstructor::Inferred(&captured.store), &prior)? {
                     return Ok(Some(value));
                 }
+                if let InferAtomicFactResult::SubsetFact(rules) = infer {
+                    if let Some(
+                        crate::store_fact_and_infer::InferSubsetFactResult::FiniteUpperBound(rule),
+                    ) = rules.get(index)
+                    {
+                        let preceding = SourcePosition {
+                            before: index,
+                            ..*position
+                        };
+                        let child = SourcePosition::new(
+                            Some(&preceding),
+                            SourceOwner::EqualityRequirements(std::slice::from_ref(
+                                &rule.upper_finite_proof,
+                            )),
+                            0,
+                        );
+                        if let Some(value) =
+                            visit_complete_verify(&rule.upper_finite_proof, &child, wd, verify)?
+                        {
+                            return Ok(Some(value));
+                        }
+                    }
+                }
             }
         }
         SourceOwner::TemplateInference(proof) => {
@@ -9000,6 +10066,20 @@ fn visit_owner<T>(
         }
         SourceOwner::EqualityInferences(rules) => {
             for (index, rule) in rules.iter().take(position.before).enumerate().rev() {
+                if let InferEqualFactResult::TupleCoordinates(rule) = rule {
+                    let prior = SourcePosition {
+                        before: index + 1,
+                        ..*position
+                    };
+                    for captured in rule.coordinates.iter().rev() {
+                        if let Some(value) =
+                            wd(SourceConstructor::Inferred(&captured.store), &prior)?
+                        {
+                            return Ok(Some(value));
+                        }
+                    }
+                    continue;
+                }
                 if let InferEqualFactResult::PositiveRealPower(rule) = rule {
                     let prior = SourcePosition {
                         before: index + 1,
@@ -9138,6 +10218,34 @@ fn visit_owner<T>(
                     ..*position
                 };
                 if let Some(value) = visit_complete_verify(checked, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+        }
+        SourceOwner::StrategyApplication(proof) => {
+            let requirements = strategy_application_requirements(proof);
+            let completed = position.before.saturating_sub(proof.arg_match_proofs.len());
+            for (index, (_, checked)) in requirements.iter().take(completed).enumerate().rev() {
+                let prior = SourcePosition {
+                    before: proof.arg_match_proofs.len() + index,
+                    ..*position
+                };
+                if let Some(value) = visit_complete_verify(checked, &prior, wd, verify)? {
+                    return Ok(Some(value));
+                }
+            }
+            // Matching has no constructor capture of its own. These are only
+            // the formation certificates already returned by the selected
+            // application's original type/domain checks; no pending truth
+            // producer or replacement verification is exposed here.
+            for (_, checked) in requirements.into_iter().rev() {
+                let formation =
+                    SourcePosition::new(Some(position), SourceOwner::Verify(checked), usize::MAX);
+                if let Some(value) =
+                    visit_verify_formation(checked, usize::MAX, &formation, wd, &mut |_, _| {
+                        Ok(None)
+                    })?
+                {
                     return Ok(Some(value));
                 }
             }
@@ -9431,6 +10539,16 @@ fn visit_statement<T>(
     };
     let position = SourcePosition::new(Some(parent), SourceOwner::Statement(statement), 0);
     let completed = SourcePosition { before, ..position };
+    if let ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::ObjDef(
+        crate::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult::Success(release),
+    )) = statement
+    {
+        if !release.store_and_infer.is_empty() && before >= release.store_and_infer.len() {
+            if let Some(value) = wd(SourceConstructor::Released(release), &position)? {
+                return Ok(Some(value));
+            }
+        }
+    }
     if let Some(p) = super::compile_eval_stmt_result::eval_statement(statement) {
         if let Some(v) = visit_store_stage(&p.store_and_infer_result, 3, &completed, wd, verify)? {
             return Ok(Some(v));
@@ -10326,6 +11444,11 @@ fn visit_statement<T>(
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(proof)),
         )) if before > 0 => {
+            if let Some(value) =
+                visit_store_stage(&proof.store_and_infer_result, 0, &completed, wd, verify)?
+            {
+                return Ok(Some(value));
+            }
             if let VerifyObjWellDefinedResult::Success(proof) = &proof.value_well_defined {
                 visit_complete_wd(proof, &position, wd, verify)
             } else {
@@ -10348,20 +11471,23 @@ fn visit_statement<T>(
                 }
             }
             let count = proof.equal_to_well_defined.len();
-            // A typed alias replays its membership inferences when published.
-            // Their original stores can form primitive operands (such as zero
-            // from positive membership) needed by later WD. Equality-store
-            // inferences are not emitted by this declaration consumer.
+            // Each alias publishes its membership and equality inferences.
+            // Both original store families can supply later constructors.
             for (index, store) in proof
                 .store_and_infer_result
                 .store_and_infer_results
                 .iter()
-                .take(count)
                 .enumerate()
                 .rev()
             {
+                // Equality inferences are emitted after the membership phase.
+                // Expose them to consumers of the completed declaration only.
+                if index >= count && before <= 3 * count {
+                    continue;
+                }
+                let alias = if index < count { index } else { index - count };
                 if let Some(value) =
-                    visit_store_stage(store, 2 * count + index, &completed, wd, verify)?
+                    visit_store_stage(store, 2 * count + alias, &completed, wd, verify)?
                 {
                     return Ok(Some(value));
                 }
@@ -10464,7 +11590,7 @@ fn visit_statement<T>(
     }
 }
 
-fn visit_complete_wd<T>(
+pub(super) fn visit_complete_wd<T>(
     proof: &ObjWellDefinedProof,
     parent: &SourcePosition<'_>,
     wd: &mut dyn FnMut(
@@ -10597,6 +11723,20 @@ fn visit_verify_formation<T>(
         }
         VerifyFactResult::Equality(proof) => match proof.as_ref() {
             VerifyEqualityResult::Success(proof) => {
+                // Original cardinality certificates can own size constructors
+                // absent from the enclosing set-equality endpoints.
+                let children = equality_searched_stages(&proof.searched_proof);
+                for (index, child) in children.into_iter().take(before.saturating_sub(2)).enumerate().rev() {
+                    let prior = SourcePosition { before: 2 + index, ..*position };
+                    let found = match child {
+                        AtomicSearchStage::WD(child) => visit_complete_wd(child, &prior, wd, verify)?,
+                        AtomicSearchStage::Verify(child) => visit_complete_verify(child, &prior, wd, verify)?,
+                        _ => unreachable!("equality certificate stages"),
+                    };
+                    if let Some(value) = found {
+                        return Ok(Some(value));
+                    }
+                }
                 if before == usize::MAX {
                     let known = match &proof.searched_proof {
                         EqualFactSearchedProof::ByKnownForallFact(known) => Some(known.as_ref()),
@@ -10668,6 +11808,7 @@ fn visit_verify_formation<T>(
         VerifyFactResult::ChainFact(result) => {
             if let crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(proof) = result.as_ref() {
                 if let Some(known)=&proof.known_forall {
+                    let known = &known.application;
                     let scope=SourcePosition::new(Some(position),SourceOwner::KnownApplication(known),known.detailed_ref().arg_match_proofs.len()+known_application_requirements(known).len());
                     if let Some(value)=visit_owner(&scope,wd,verify)? { return Ok(Some(value)); }
                 }
@@ -10691,6 +11832,11 @@ fn visit_verify_formation<T>(
                     }
                 }
                 let split_members = match &proof.searched_proof {
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::IntegerDiscreteSplit(p)) => Some([&p.subject_in_z, &p.base_in_z]),
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::RealLineTrichotomyEqLessGreater(p)) => Some([&p.left_in_r, &p.right_in_r]),
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::RealLineTrichotomyLessEqGreater(p)) => Some([&p.left_in_r, &p.right_in_r]),
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::RealLineTrichotomyGreaterEqLess(p)) => Some([&p.left_in_r, &p.right_in_r]),
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::WeakOrderLeOrGe(p)) => Some([&p.left_in_r, &p.right_in_r]),
                     OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::LessOrGreaterEqual(p)) => Some([&p.left_in_r, &p.right_in_r]),
                     OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::GreaterOrLessEqual(p)) => Some([&p.left_in_r, &p.right_in_r]),
                     _ => None,
@@ -10698,6 +11844,17 @@ fn visit_verify_formation<T>(
                 if let Some(children) = split_members {
                     for (i, child) in children.into_iter().take(before.saturating_sub(proof.fact.facts.len())).enumerate().rev() {
                         let prior = SourcePosition { before: proof.fact.facts.len() + i, ..*position };
+                        if let Some(value) = visit_complete_verify(child, &prior, wd, verify)? { return Ok(Some(value)); }
+                    }
+                }
+                let single_child = match &proof.searched_proof {
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::NaturalZeroOrAtLeastOne(p)) => Some(&p.n_in_n),
+                    OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::EqualityPlusStrictCoversWeak(p)) => Some(&p.weak_bound),
+                    _ => None,
+                };
+                if before > proof.fact.facts.len() {
+                    if let Some(child) = single_child {
+                        let prior = SourcePosition { before: proof.fact.facts.len(), ..*position };
                         if let Some(value) = visit_complete_verify(child, &prior, wd, verify)? { return Ok(Some(value)); }
                     }
                 }
@@ -10820,12 +11977,17 @@ fn visit_atomic_searched_formation<T>(
     Ok(None)
 }
 
+fn atomic_domain_requirements(proof: &AtomicFactWellDefinedProof) -> Option<&[crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof]>{
+    match &proof.detailed_ref().predicate_domain {
+        PredicateDomainProof::ByRequirements(p) => Some(p),
+        PredicateDomainProof::FunctionAnalysis(p) => Some(&p.requirements),
+        PredicateDomainProof::MultivariableAnalysis(p) => Some(&p.requirements),
+        _ => None,
+    }
+}
 fn atomic_formation_stage_count(proof: &AtomicFactWellDefinedProof) -> usize {
     proof.detailed_ref().well_defined_of_each_parameter.len()
-        + match &proof.detailed_ref().predicate_domain {
-            PredicateDomainProof::ByRequirements(requirements) => requirements.len(),
-            _ => 0,
-        }
+        + atomic_domain_requirements(proof).map_or(0, |p| p.len())
 }
 
 enum AtomicSearchStage<'a> {
@@ -10860,6 +12022,9 @@ fn complete_domain_source_stages<'a>(
 ) {
     use crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof;
     match &proof.source {
+        CompleteFunctionDomainSourceProof::MultivariableSelector(source) => {
+            stages.push(AtomicSearchStage::WD(&source.well_defined))
+        }
         CompleteFunctionDomainSourceProof::TemplateDefinition { instance_wd, .. } => {
             stages.push(AtomicSearchStage::WD(instance_wd))
         }
@@ -11033,6 +12198,167 @@ fn derivative_interior_search_stages<'a>(
     }
 }
 
+fn function_space_nonempty_search_stages<'a>(
+    proof: &'a crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof as P;
+    match proof {
+        P::BaseSet(proof) => stages.push(AtomicSearchStage::Verify(proof)),
+        P::EmptyDomain(proof) => function_space_empty_search_stages(proof, stages),
+        P::CarrierTransport { nonempty, .. } => {
+            function_space_nonempty_search_stages(nonempty, stages)
+        }
+        P::FiniteCartesianProduct {
+            factors_nonempty, ..
+        } => {
+            for proof in factors_nonempty {
+                function_space_nonempty_search_stages(proof, stages);
+            }
+        }
+        P::ConstantFunction {
+            return_nonempty, ..
+        } => function_space_nonempty_search_stages(return_nonempty, stages),
+    }
+}
+
+fn equality_searched_stages(proof: &EqualFactSearchedProof) -> Vec<AtomicSearchStage<'_>> {
+    let mut stages = Vec::new();
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::{
+        EqualitySearchProofByObjectDefinition, by_template::result::EqualitySearchProofByTemplateObjectDefinition,
+    };
+    match proof {
+        EqualFactSearchedProof::ByObjectDefinition(
+            EqualitySearchProofByObjectDefinition::ByTemplate(
+                EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualCaseByCaseApplication(p),
+            ),
+        ) => {
+            stages.push(AtomicSearchStage::Verify(&p.guard));
+            stages.push(AtomicSearchStage::Verify(&p.residual_equal));
+        }
+        EqualFactSearchedProof::ByObjectDefinition(
+            EqualitySearchProofByObjectDefinition::ByTemplate(
+                EqualitySearchProofByTemplateObjectDefinition::HaveFnByInducApplication(p),
+            ),
+        ) => {
+            stages.extend(
+                p.selected_case_path
+                    .iter()
+                    .map(|case| AtomicSearchStage::Verify(&case.guard)),
+            );
+            stages.push(AtomicSearchStage::Verify(&p.residual_equal));
+        }
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(p),
+        ) => stages.extend(
+            p.proof_of_requirement_facts
+                .iter()
+                .map(AtomicSearchStage::Verify),
+        ),
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::AbsProductFromFactors(p),
+        ) => stages.extend(
+            p.proof_of_requirement_facts
+                .iter()
+                .map(AtomicSearchStage::Verify),
+        ),
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::CartesianCoordinateEquality(p),
+        ) => stages.extend(
+            p.proof_of_requirement_facts
+                .iter()
+                .map(AtomicSearchStage::Verify),
+        ),
+        EqualFactSearchedProof::ByBuiltinRule(
+            EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(p),
+        ) => {
+            complete_domain_source_stages(&p.source, &mut stages);
+            function_domain_nonempty_search_stages(&p.domain_nonempty, &mut stages);
+        }
+        EqualFactSearchedProof::ByBuiltinRule(
+            EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(p),
+        ) => {
+            complete_domain_source_stages(&p.source, &mut stages);
+            function_space_empty_search_stages(&p.domain_empty, &mut stages);
+        }
+        EqualFactSearchedProof::ByBuiltinRule(
+            EqualitySearchProofByBuiltinRule::EmptyFunctionGraph(p),
+        ) => {
+            complete_domain_source_stages(&p.source, &mut stages);
+            function_space_empty_search_stages(&p.domain_empty, &mut stages);
+        }
+        EqualFactSearchedProof::ByBuiltinRule(
+            EqualitySearchProofByBuiltinRule::EmptyDomainFunctionSpaceSingleton(p),
+        ) => {
+            function_space_empty_search_stages(&p.domain_empty, &mut stages);
+        }
+        EqualFactSearchedProof::ByBuiltinRule(
+            EqualitySearchProofByBuiltinRule::EmptySetFromSizeZero(p),
+        ) => stages.extend(
+            p.proof_of_requirement_facts
+                .iter()
+                .map(AtomicSearchStage::Verify),
+        ),
+        EqualFactSearchedProof::ByBuiltinRule(
+            EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(p),
+        ) => {
+            stages.push(AtomicSearchStage::Verify(&p.size_equal_proof));
+            stages.push(AtomicSearchStage::Verify(&p.subset_proof));
+        }
+        _ => {}
+    }
+    stages
+}
+
+fn function_space_empty_search_stages<'a>(
+    proof: &'a crate::execute::execute_fact_stmt::function_domain::FunctionDomainEmptyProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::function_domain::{
+        FunctionDomainEmptyCarrierEvidence as E, FunctionDomainEmptyProof as P,
+    };
+    match proof {
+        P::ParameterCarrier(p) => {
+            if let E::CheckedEquality(proof) = &p.evidence {
+                stages.push(AtomicSearchStage::Verify(proof));
+            }
+        }
+        P::GuardExclusion(p) => stages.push(AtomicSearchStage::Verify(&p.exclusion)),
+    }
+}
+
+fn function_domain_nonempty_search_stages<'a>(
+    proof: &'a crate::execute::execute_fact_stmt::function_domain::FunctionDomainNonemptyProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::function_domain::{
+        FunctionDomainArgumentMembershipProof as A, FunctionDomainNonemptyEvidence as E,
+    };
+    match &proof.evidence {
+        E::ParameterCarriers(proofs) => stages.extend(proofs.iter().map(AtomicSearchStage::Verify)),
+        E::ArgumentWitness {
+            memberships,
+            guards,
+            ..
+        } => {
+            for member in memberships {
+                match member {
+                    A::Verified(proof) => stages.push(AtomicSearchStage::Verify(proof)),
+                    A::IntegerRangeStart {
+                        integer,
+                        endpoint_order,
+                    } => {
+                        stages.push(AtomicSearchStage::Verify(integer));
+                        stages.push(AtomicSearchStage::Verify(endpoint_order));
+                    }
+                }
+            }
+            stages.extend(guards.iter().map(AtomicSearchStage::Verify));
+        }
+        E::ExistingWitness(proof) => stages.push(AtomicSearchStage::Verify(proof)),
+    }
+}
+
 fn atomic_search_stages(
     proof: &VerifyAtomicExceptEqualityFactSuccess,
 ) -> Vec<AtomicSearchStage<'_>> {
@@ -11042,6 +12368,16 @@ fn atomic_search_stages(
 fn atomic_searched_stages(
     proof: &AtomicExceptEqualityFactSearchedProof,
 ) -> Vec<AtomicSearchStage<'_>> {
+    if let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(rule) = proof {
+        if let Some((_, _, _, sign, order)) =
+            super::LitexToLeanCompiler::negative_factor_evidence(rule)
+        {
+            return vec![
+                AtomicSearchStage::Verify(sign),
+                AtomicSearchStage::Verify(order),
+            ];
+        }
+    }
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::{InFactSearchProofByBuiltinRule, PowerSetMembershipSubsetProof};
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule;
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{
@@ -11052,6 +12388,41 @@ fn atomic_searched_stages(
     };
     let mut stages = Vec::new();
     match proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(
+            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::FunctionRangeInCodomain(p),
+        )) => {
+            complete_domain_source_stages(&p.source, &mut stages);
+            if let crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::FunctionRangeCodomainContainment::Subset(child) = &p.containment {
+                stages.push(AtomicSearchStage::Verify(child));
+            }
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionGraphNonemptyFromDomain(p)) => {
+            complete_domain_source_stages(&p.source, &mut stages);
+            function_domain_nonempty_search_stages(&p.domain_nonempty, &mut stages);
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FnSetNonemptyFromCodomain(p)) => function_space_nonempty_search_stages(&p.codomain_nonempty, &mut stages),
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSeqSetNonemptyFromCodomain(p)) => function_space_nonempty_search_stages(&p.codomain_nonempty, &mut stages),
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SeqSetNonemptyFromCodomain(p)) => function_space_nonempty_search_stages(&p.codomain_nonempty, &mut stages),
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSpaceNonemptyFromEmptyDomain(p)) => function_space_empty_search_stages(&p.domain_empty, &mut stages),
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionFiniteFromBoth(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusFiniteFromLeft(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(LessEqualFactSearchProofByBuiltinRule::FiniteSetSizeSubsetLe(p))) => {
+            stages.push(AtomicSearchStage::Verify(&p.subset_proof));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::FiniteSetSizeProperSubsetLt(p))) => {
+            use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::FiniteProperInclusionProof;
+            match &p.inclusion_proof {
+                FiniteProperInclusionProof::ByProperSubset { proper_subset_proof } => stages.push(AtomicSearchStage::Verify(proper_subset_proof)),
+                FiniteProperInclusionProof::BySubsetAndNotEqual { subset_proof, not_equal_proof } => {
+                    stages.push(AtomicSearchStage::Verify(subset_proof));
+                    stages.push(AtomicSearchStage::Verify(not_equal_proof));
+                }
+            }
+        }
         AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(proof) => {
             stages.push(AtomicSearchStage::Searched(&proof.residual));
         }
@@ -11122,11 +12493,25 @@ fn atomic_searched_stages(
                 BuiltinPropDefinitionProof::RealSetBounded(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::SequenceAnalysis(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::SequenceLimit(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarLimit(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::HessianAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::TotalDerivativeAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarDifferentialAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::LaplacianAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::GradientAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::DivergenceAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::CurlAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::SecondPartialDerivativeAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::JacobianAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::PartialDerivativeAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::VectorLimit(p)) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::SequenceLimsup(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::SequenceLiminf(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::FunctionLimit(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::FunctionContinuousAt(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::HasDerivativeAt(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::FunctionRiemannIntegrable(p) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::HasRiemannIntegral(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::FunctionDifferentiableAt(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::RealAccumulation(p) => &p.proof_of_requirement_facts,
                 _ => return stages,
@@ -11134,6 +12519,10 @@ fn atomic_searched_stages(
             stages.extend(children.iter().map(AtomicSearchStage::Verify));
         }
 
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::ProductPositiveNegativeStrict(p))) => {
+            stages.push(AtomicSearchStage::Verify(&p.positive_factor));
+            stages.push(AtomicSearchStage::Verify(&p.negative_factor));
+        }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(LessFactSearchProofByBuiltinRule::AddLeftCongruenceStrict(p))) => {
             stages.push(AtomicSearchStage::Verify(&p.premise_proof));
         }
@@ -11261,6 +12650,14 @@ fn atomic_searched_stages(
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
             AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(rule),
         ) => match rule {
+            LessEqualFactSearchProofByBuiltinRule::ProductNonnegativeNegativeWeak(p) => {
+                stages.push(AtomicSearchStage::Verify(&p.nonnegative_factor));
+                stages.push(AtomicSearchStage::Verify(&p.negative_factor));
+            }
+            LessEqualFactSearchProofByBuiltinRule::AbsLeFromSymmetricBounds(proof) => {
+                stages.push(AtomicSearchStage::Verify(&proof.upper_proof));
+                stages.push(AtomicSearchStage::Verify(&proof.neg_upper_proof));
+            }
             LessEqualFactSearchProofByBuiltinRule::FromKnownOrderComplement(proof) => {
                 stages.extend(proof.real_carrier_proofs.iter().map(AtomicSearchStage::Verify));
             }
@@ -11451,9 +12848,7 @@ fn visit_atomic_formation<T>(
     ) -> Result<Option<T>, LeanCompileError>,
 ) -> Result<Option<T>, LeanCompileError> {
     let children = &proof.detailed_ref().well_defined_of_each_parameter;
-    if let PredicateDomainProof::ByRequirements(requirements) =
-        &proof.detailed_ref().predicate_domain
-    {
+    if let Some(requirements) = atomic_domain_requirements(proof) {
         for (index, requirement) in requirements
             .iter()
             .take(before.saturating_sub(children.len()))
@@ -11580,6 +12975,23 @@ fn visit_fact_formation<T>(
 /// A completed constructor already owns these certified children. Follow only
 /// fields which preserve the original host object, never denotation equality or
 /// a searched proof tree. Tuples, for example, retain values but not child hosts.
+fn multivariable_limit_wd_stages(proof: &ObjWellDefinedProof) -> Option<&crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages>{
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::LimitOperatorObjWellDefinedProofByDef as L;
+    match proof.detailed_ref() {
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::LimitOperator(L::MultivariableScalar(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::LimitOperator(L::MultivariableVector(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Partial(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Hessian(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::ScalarDifferential(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Laplacian(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Gradient(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Divergence(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Curl(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::TotalDifferential(p)),..}=>Some(&p.stages),
+        DetailedObjWellDefinedProof::ByDef {proof:ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Jacobian(p)),..}=>Some(&p.stages),
+        _=>None,
+    }
+}
 fn projected_wd_child<'a>(
     proof: &'a ObjWellDefinedProof,
     term: String,
@@ -11587,6 +12999,39 @@ fn projected_wd_child<'a>(
 ) -> Option<(&'a ObjWellDefinedProof, String)> {
     if matches(proof) {
         return Some((proof, term));
+    }
+    if let Some(stages) = multivariable_limit_wd_stages(proof) {
+        let fields: &[&str] = match proof.obj() {
+            Obj::LimitOperator(LimitOperator::MultivariableScalar(_)) => {
+                &["function", "point", "dimension"]
+            }
+            Obj::LimitOperator(LimitOperator::MultivariableVector(_))
+            | Obj::DerivativeOperator(
+                DerivativeOperator::Jacobian(_) | DerivativeOperator::TotalDifferential(_),
+            ) => &["function", "point", "inputDimension", "outputDimension"],
+            Obj::DerivativeOperator(DerivativeOperator::Partial(_)) => {
+                &["function", "point", "dimension", "coordinate"]
+            }
+            Obj::DerivativeOperator(
+                DerivativeOperator::Gradient(_)
+                | DerivativeOperator::Divergence(_)
+                | DerivativeOperator::Hessian(_)
+                | DerivativeOperator::ScalarDifferential(_)
+                | DerivativeOperator::Laplacian(_),
+            ) => &["function", "point", "dimension"],
+            Obj::DerivativeOperator(DerivativeOperator::Curl(_)) => &["function", "point"],
+            _ => return None,
+        };
+        if stages.argument_well_defined.len() != fields.len() {
+            return None;
+        }
+        for (child, field) in stages.argument_well_defined.iter().zip(fields) {
+            if let Some(found) = projected_wd_child(child, format!("({term}).val.{field}"), matches)
+            {
+                return Some(found);
+            }
+        }
+        return None;
     }
     if let DetailedObjWellDefinedProof::ByDef {
         proof:
@@ -11619,6 +13064,13 @@ fn projected_wd_child<'a>(
             proof: ObjWellDefinedProofByDef::FnObj(call),
         } => {
             use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence;
+            if let Some(FnObjDomainFnSetEvidence::MultivariableSelector(p)) = &call.domain_fn_set {
+                if let crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof::MultivariableSelector(source)=&p.source {
+                    let mut head=term.clone();
+                    for _ in &application.body {head=format!("({head}).val.function");}
+                    if let Some(found)=projected_wd_child(&source.well_defined,head,matches){return Some(found);}
+                }
+            }
             if let Some(FnObjDomainFnSetEvidence::Matrix(p)) = &call.domain_fn_set {
                 if p.function_equal.path.is_empty() {
                     if let crate::execute::execute_fact_stmt::native_matrix::MatrixCallableWellDefinedProof::Checked(root) = &p.well_defined {
@@ -11799,6 +13251,17 @@ fn projected_wd_child<'a>(
     None
 }
 
+/// Original children emitted before the constructor's remaining checks.
+/// Function input carriers precede their binders; return carriers and bodies
+/// stay inside the function's own parameter/guard scope.
+pub(super) fn wd_local_children(
+    proof: &ObjWellDefinedProof,
+) -> Option<&[Box<ObjWellDefinedProof>]> {
+    arithmetic_stages(proof)
+        .map(|(children, _)| children)
+        .or_else(|| function_binder(proof).map(|(_, carriers, _, _, _)| carriers))
+}
+
 pub(super) fn arithmetic_stages(
     proof: &ObjWellDefinedProof,
 ) -> Option<(&[Box<ObjWellDefinedProof>], &[VerifyFactResult])> {
@@ -11871,6 +13334,14 @@ pub(super) fn arithmetic_stages(
         proof: ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(p)),
         ..
     } = (proof).detailed_ref()
+    {
+        return Some((&p.child_obj_well_defined, &p.requirement_fact_verified));
+    }
+    if let DetailedObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(p)),
+        ..
+    } = proof.detailed_ref()
     {
         return Some((&p.child_obj_well_defined, &p.requirement_fact_verified));
     }
@@ -12417,6 +13888,12 @@ pub(super) fn arithmetic_stages(
             SetOperatorObjWellDefinedProofByDef::PowerSet(p) => {
                 Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
             }
+            SetOperatorObjWellDefinedProofByDef::FamilyUnion(p) => {
+                Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
+            SetOperatorObjWellDefinedProofByDef::SymmetricDifference(p) => {
+                Some((&p.child_obj_well_defined, &p.requirement_fact_verified))
+            }
             _ => None,
         };
     }
@@ -12484,7 +13961,9 @@ fn equality_cancellation_owner(rule: &InferEqualFactResult) -> Option<SourceOwne
         InferEqualFactResult::NonzeroNumeratorCancellation(rule) => {
             Some(SourceOwner::NonzeroNumeratorInference(rule))
         }
-        InferEqualFactResult::PositiveRealPower(_) => None,
+        InferEqualFactResult::PositiveRealPower(_) | InferEqualFactResult::TupleCoordinates(_) => {
+            None
+        }
     }
 }
 
@@ -12770,7 +14249,7 @@ fn statement_known_application(
             _ => None,
         },
         VerifyFactResult::ChainFact(proof)=>match proof.as_ref() {
-            crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(proof)=>proof.known_forall.as_ref(),
+            crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(proof)=>proof.known_forall.as_ref().map(|known| &known.application),
             _=>None,
         },
         VerifyFactResult::AndFact(proof)=>match proof.as_ref() {
@@ -12882,7 +14361,7 @@ fn statement_forall_constructor_owner(
     }
 }
 
-fn visit_forall_constructor<T>(
+pub(super) fn visit_forall_constructor<T>(
     owner: SourceOwner<'_>,
     then_index: usize,
     pattern: &Obj,
@@ -12994,7 +14473,7 @@ fn visit_forall_constructor<T>(
             }
             let inner_application=match result {
                 VerifyFactResult::ChainFact(result)=>match result.as_ref() {
-                    crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(proof)=>proof.known_forall.as_ref(),
+                    crate::execute::execute_fact_stmt::verify_chain_fact::VerifyChainFactResult::Success(proof)=>proof.known_forall.as_ref().map(|known| &known.application),
                     _=>None,
                 },
                 VerifyFactResult::AndFact(result)=>match result.as_ref() {
@@ -13138,7 +14617,46 @@ fn same_call_constructor(
 // This is host-constructor compatibility, not a new mathematical proof rule.
 // Distinct WD proofs may certify the same representation; selected function
 // signatures and every compound child's representation must still agree.
-fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) -> bool {
+pub(super) fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) -> bool {
+    // Function signatures and formulas retain raw values independent of their
+    // local binder names. Check carriers, guards, free captures and formula
+    // bodies before reusing a previously completed host constructor. The new
+    // occurrence's own WD must already have been replayed by the caller.
+    let same_function_kind = matches!(
+        (left.detailed_ref(), right.detailed_ref()),
+        (
+            DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::FunctionSpace(
+                    FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(_)
+                ),
+                ..
+            },
+            DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::FunctionSpace(
+                    FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(_)
+                ),
+                ..
+            }
+        ) | (
+            DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::FunctionSpace(
+                    FunctionSpaceObjWellDefinedProofByDef::FnSet(_)
+                ),
+                ..
+            },
+            DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::FunctionSpace(
+                    FunctionSpaceObjWellDefinedProofByDef::FnSet(_)
+                ),
+                ..
+            }
+        )
+    );
+    if same_function_kind
+        && super::helper::instantiated_object_matches(left.obj(), right.obj(), &Default::default())
+    {
+        return true;
+    }
     if left.obj() != right.obj() {
         return false;
     }
@@ -13155,6 +14673,18 @@ fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) 
         super::compile_real_extrema::bound_stages(right),
     ) {
         return same_wd_constructor(a, b);
+    }
+    if let (Some(a), Some(b)) = (
+        multivariable_limit_wd_stages(left),
+        multivariable_limit_wd_stages(right),
+    ) {
+        return std::mem::discriminant(left.obj()) == std::mem::discriminant(right.obj())
+            && a.argument_well_defined.len() == b.argument_well_defined.len()
+            && matches!(a.argument_well_defined.len(), 2 | 3 | 4)
+            && a.argument_well_defined
+                .iter()
+                .zip(&b.argument_well_defined)
+                .all(|(a, b)| same_wd_constructor(a, b));
     }
     match (left.detailed_ref(), right.detailed_ref()) {
         (
@@ -13232,6 +14762,45 @@ fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDefinedProof) 
         }
         (
             DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::MatrixOperator(a),
+                ..
+            },
+            DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::MatrixOperator(b),
+                ..
+            },
+        ) if std::mem::discriminant(a) == std::mem::discriminant(b) => {
+            let (Some((a, _)), Some((b, _))) = (arithmetic_stages(left), arithmetic_stages(right))
+            else {
+                return false;
+            };
+            // Matrix wrappers retain their ordered child objects. Membership
+            // and dimension proofs certify those values; they do not choose
+            // a different host representation. Both WD occurrences have been
+            // checked before the caller asks to reuse the earlier constructor.
+            a.len() == b.len() && a.iter().zip(b).all(|(a, b)| same_wd_constructor(a, b))
+        }
+        (
+            DetailedObjWellDefinedProof::ByDef {
+                proof:
+                    ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::MatrixSet(a)),
+                ..
+            },
+            DetailedObjWellDefinedProof::ByDef {
+                proof:
+                    ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::MatrixSet(b)),
+                ..
+            },
+        ) => {
+            a.child_obj_well_defined.len() == 3
+                && b.child_obj_well_defined.len() == 3
+                && a.child_obj_well_defined
+                    .iter()
+                    .zip(&b.child_obj_well_defined)
+                    .all(|(a, b)| same_wd_constructor(a, b))
+        }
+        (
+            DetailedObjWellDefinedProof::ByDef {
                 proof: ObjWellDefinedProofByDef::ArithmeticOperator(a),
                 ..
             },
@@ -13290,4 +14859,21 @@ pub(in crate::compile_to_lean) fn enumeration_statement(
         }
         _ => None,
     }
+}
+
+fn strategy_application_requirements(
+    proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::DetailedSearchProofByKnownStrategy,
+) -> Vec<(&Fact, &VerifyFactResult)> {
+    let requirements = proof.instantiation_requirements.detailed_ref();
+    requirements
+        .param_type_requirements
+        .iter()
+        .map(|item| (&item.type_fact, &item.proof))
+        .chain(
+            requirements
+                .dom_facts
+                .iter()
+                .zip(&requirements.proof_of_dom_facts),
+        )
+        .collect()
 }

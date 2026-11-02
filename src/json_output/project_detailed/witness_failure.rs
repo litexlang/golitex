@@ -213,6 +213,30 @@ fn project_introduce_failure(
                         ("result", project_verify_obj_wd(result, rt)),
                     ],
                 ),
+                ParamTypeWithPrefix {
+                    param_type_well_defined,
+                    defined_params,
+                    failed,
+                } => object_for(
+                    rt,
+                    vec![
+                        ("phase", string("param_type")),
+                        ("result", project_verify_obj_wd(failed, rt)),
+                        (
+                            "param_type_well_defined",
+                            JsonValue::Array(
+                                param_type_well_defined
+                                    .iter()
+                                    .map(|proof| project_param_type_wd(proof, rt))
+                                    .collect(),
+                            ),
+                        ),
+                        (
+                            "defined_params",
+                            super::store::project_have_store_and_infer(defined_params, rt),
+                        ),
+                    ],
+                ),
                 AutoOpenStructLayer {
                     param_type_well_defined,
                     defined_params,
@@ -282,7 +306,7 @@ fn project_introduce_failure(
     let projected = crate::json_output::helper::inherit_failure_field(rt, projected, "failure");
     use crate::execute::IntroduceTypedParametersFailed::*;
     let kind = match failure {
-        ParamType(_) => None,
+        ParamType(_) | ParamTypeWithPrefix { .. } => None,
         AutoOpenStructLayer { .. } => Some(FailureKind::StructExpansion),
     };
     match kind {

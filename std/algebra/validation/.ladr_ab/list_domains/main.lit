@@ -1,0 +1,16 @@
+# Positive control: equality on one complete finite input domain.
+claim:
+    ? forall S set,n N,left_list,right_list finite_seq(S,n):
+        forall j closed_range(1,n):
+            left_list(j)=right_list(j)
+        =>:
+            left_list=right_list
+    by fn_extension left_list=right_list
+
+# Missing reverse bridge: equal complete functions have equal domains.
+claim:
+    ? forall InputA,InputB,OutputA,OutputB set,first_map fn(x InputA) OutputA,second_map fn(x InputB) OutputB:
+        first_map=second_map
+        =>:
+            InputA=InputB
+    InputA=InputB

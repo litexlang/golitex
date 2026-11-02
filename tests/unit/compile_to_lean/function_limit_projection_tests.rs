@@ -104,7 +104,8 @@ fn function_limit_control_rejects_a_changed_domain_threshold_or_preimage() {
 fn released_accumulation_instantiates_a_generic_source_radius_by_its_denotation() {
     let (run, compiler) = super::execute(ACCUMULATION);
     let lean = compiler.compile_run(&run, "generic_limit_radius").unwrap();
-    assert!(
-        lean.contains("(Litex.semanticObject (Litex.denote _value_i5) (Litex.isSet _value_i5))")
-    );
+    assert!(lean.contains("let _known_argument_0 := _value_i5"));
+    assert!(lean.contains(
+        "(Litex.semanticObject (Litex.denote _known_argument_0) (Litex.isSet _known_argument_0))"
+    ));
 }

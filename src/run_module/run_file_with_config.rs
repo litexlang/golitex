@@ -13,6 +13,144 @@ use std::collections::HashSet;
 use std::fs;
 use std::path::{Path, PathBuf};
 
+/// Retain the exact source prefix which project-aware `-f` executes. This path
+/// shares the normal import/export executors, with source evidence required.
+pub(crate) fn load_file_for_lean(
+    command: LaunchCommand,
+) -> RuntimeResult<super::LoadLeanSourceResult> {
+    use super::{
+        LeanSourceClosure, LeanSourceFile, LoadLeanSourceFailure, LoadLeanSourceResult,
+        LoadedLeanSource,
+    };
+    let LaunchCommand::CompileToLean { path, .. } = &command else {
+        return Err(RuntimeError::InvalidArguments(
+            "Lean source loading expects CompileToLean".into(),
+        ));
+    };
+    let path = path.clone();
+    if !path.is_file() {
+        return Err(RuntimeError::Io {
+            path,
+            message: "source file not found".into(),
+        });
+    }
+    let module_dir = module_dir_of(&path);
+    let std_root = resolve_std_root(Some(&module_dir));
+    let config = load_config_or_empty(&module_dir, &std_root)?;
+    let export_index = find_export_index(&config.exports, &path);
+    let mut runtime =
+        Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
+    runtime.abort_source();
+    runtime
+        .global_module_manager
+        .set_root_config(config.clone());
+    let mut observer = LeanSourceObserver::default();
+    let mut files = Vec::new();
+    let mut done = HashSet::new();
+    let mut running = HashSet::new();
+    for import in &config.imports {
+        match run_import_module_observed(
+            &mut runtime,
+            &import.path,
+            &import.alias,
+            &std_root,
+            &mut done,
+            &mut running,
+            &mut files,
+            &mut observer,
+        )? {
+            RunImportModuleOutcome::Done => {}
+            RunImportModuleOutcome::SessionError(mut error) => {
+                if let RunSessionError::FailToImport(failure) = &mut error {
+                    failure.prepend(&module_dir);
+                }
+                return Ok(LoadLeanSourceResult::Failed(
+                    LoadLeanSourceFailure::Import { path, error },
+                ));
+            }
+        }
+    }
+    runtime
+        .global_module_manager
+        .validate_alias_targets(&config)
+        .map_err(RuntimeError::InvalidArguments)?;
+    let export_limit = export_index
+        .map(|index| index + 1)
+        .unwrap_or(config.exports.len());
+    for (export_file_id, export) in config.exports.iter().enumerate().take(export_limit) {
+        let result = run_export_file_observed(
+            &mut runtime,
+            &export.name,
+            crate::runtime::CodeSource::RootExport {
+                path: export.path.clone(),
+                export_file_id,
+            },
+            false,
+            &mut observer,
+        )?;
+        if !result.run.success {
+            return Ok(LoadLeanSourceResult::Failed(LoadLeanSourceFailure::File(
+                result,
+            )));
+        }
+        files.push(result);
+    }
+    if export_index.is_none() {
+        let result = run_export_file_observed(
+            &mut runtime,
+            &export_name_for_path(&path),
+            crate::runtime::CodeSource::Real(path.clone()),
+            false,
+            &mut observer,
+        )?;
+        if !result.run.success {
+            return Ok(LoadLeanSourceResult::Failed(LoadLeanSourceFailure::File(
+                result,
+            )));
+        }
+        files.push(result);
+    }
+    if files.len() != observer.sources.len() || files.is_empty() {
+        return Err(RuntimeError::InternalBug(
+            "Lean source execution/provenance arity differs".into(),
+        ));
+    }
+    let mut captured = Vec::with_capacity(files.len());
+    for (source, file) in observer.sources.into_iter().zip(files) {
+        if source.display_path() != file.path {
+            return Err(RuntimeError::InternalBug(
+                "Lean source execution/provenance paths differ".into(),
+            ));
+        }
+        captured.push(LeanSourceFile {
+            source,
+            run: file.run,
+        });
+    }
+    let target_file = captured.len() - 1;
+    Ok(LoadLeanSourceResult::Success(LoadedLeanSource {
+        closure: LeanSourceClosure {
+            files: captured,
+            target_file,
+        },
+        runtime,
+    }))
+}
+
+#[derive(Default)]
+struct LeanSourceObserver {
+    sources: Vec<crate::runtime::CodeSource>,
+}
+
+impl SourceObserver for LeanSourceObserver {
+    fn requires_source_evidence(&self) -> bool {
+        true
+    }
+    fn source(&mut self, runtime: &Runtime, _code: &str) {
+        self.sources.push(runtime.current_file.clone());
+    }
+}
+
 /// `-f <file>` with directory-local `litex.config` (no parent search).
 ///
 /// - no config → isolated run (same as bare `-f`)

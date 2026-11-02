@@ -201,6 +201,42 @@ impl LitexToLeanCompiler {
                 format!("(Litex.matrixEntrywiseInRealFnSet {root} {a} {b})"),
             ));
         }
+        if let MatrixOperator::Apply(m) = &proof.operator {
+            if proof.real_operands.len() != 2 {
+                return Err(LeanCompileError::unsupported(
+                    "Matrix/RealApplyOperandArity",
+                ));
+            }
+            Self::validate_finite_seq_signature(
+                &FiniteSeqSet {
+                    set: Box::new(Obj::StandardSet(StandardSet::R)),
+                    n: m.rows.clone(),
+                },
+                &proof.signature,
+            )?;
+            let matrix = self.compile_declared_real_matrix_operand(
+                &proof.real_operands[0],
+                &m.matrix,
+                &m.rows,
+                &m.cols,
+                position,
+            )?;
+            let vector_carrier = Obj::SetFormer(SetFormer::FiniteSeqSet(FiniteSeqSet {
+                set: Box::new(Obj::StandardSet(StandardSet::R)),
+                n: m.cols.clone(),
+            }));
+            let vector = self.compile_declared_real_array_operand(
+                &proof.real_operands[1],
+                &m.vector,
+                &vector_carrier,
+                position,
+            )?;
+            let rows = self.compile_object_reference(&m.rows, position)?;
+            return Ok((
+                format!("(Litex.matrixApplySignature {rows} .real)"),
+                format!("(Litex.matrixApplyInRealFnSet {root} {matrix} {vector})"),
+            ));
+        }
         let (rows, cols, input) = match &proof.operator {
             MatrixOperator::ZeroMatrix(m) if proof.real_operands.is_empty() => {
                 (&m.rows, &m.cols, None)
@@ -263,12 +299,22 @@ impl LitexToLeanCompiler {
         input_cols: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource;
         let expected = Obj::SetFormer(SetFormer::MatrixSet(MatrixSet {
             set: Box::new(Obj::StandardSet(StandardSet::R)),
             rows: Box::new(input_rows.clone()),
             cols: Box::new(input_cols.clone()),
         }));
+        self.compile_declared_real_array_operand(operand, matrix, &expected, position)
+    }
+
+    fn compile_declared_real_array_operand(
+        &self,
+        operand: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandProof,
+        matrix: &Obj,
+        expected: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::known_real_array_return::DeclaredRealOperandSource;
         if operand.requirement.element.ir() != matrix.ir()
             || operand.requirement.set.ir() != expected.ir()
         {
@@ -297,6 +343,9 @@ impl LitexToLeanCompiler {
                     let root = self.compile_object_reference(matrix, position)?;
                     self.compile_real_matrix_array_member(p, &root, position)?.1
                 }
+            }
+            DeclaredRealOperandSource::Special(p) => {
+                self.compile_fn_return_rule(&operand.requirement, p, position)?
             }
             _ => return Err(LeanCompileError::unsupported("Matrix/RealOperandRule")),
         };

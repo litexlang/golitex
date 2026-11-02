@@ -153,7 +153,9 @@ impl LitexToLeanCompiler {
                 self.compile_verify(proof, position)?.1
             }
         };
-        Ok(format!("(let _derivative_function := {function}; let _derivative_point := {point}; by\n{view}\n  have _derivative_real : Litex.RealFunctionValue M (Litex.denote _derivative_function) := {real}\n  have _derivative_member : {point_ty} := {point_member}\n  exact Litex.derivative _derivative_function _derivative_point _derivative_real ({equal} ▸ _derivative_member) {existence}\n)"))
+        // Keep the value's payload transparent to beta congruence. Only its
+        // original domain and existence evidence belongs in the proof field.
+        Ok(format!("(let _derivative_function := {function}; let _derivative_point := {point}; @Litex.Obj.mk M _ (Litex.derivativeRepresentation (M := M)) (Litex.DerivativeObj.mk _derivative_function _derivative_point) (by\n{view}\n  have _derivative_real : Litex.RealFunctionValue M (Litex.denote _derivative_function) := {real}\n  have _derivative_member : {point_ty} := {point_member}\n  exact ⟨_derivative_real, ({equal} ▸ _derivative_member), {existence}⟩\n))"))
     }
 }
 

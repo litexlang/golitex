@@ -43,6 +43,13 @@ predicate without an invented definition. Inspect a statement on demand;
 hover its keyword for syntax help, or Ctrl/Cmd-click to keep that explanation
 open while editing. Ordinary clicks keep their usual caret behavior.
 
+[`strategy_body_steps.lit`](strategy_body_steps.lit) follows a strategy through
+a local object, a nested claim, an existential witness, witness extraction and
+proof by definition. Each executed source step retains its own proof and scope;
+the strategy's arbitrary parameter and premise remain local. The later outer
+`helper` is a separate definition. Open the file with
+`target/release/litex -reading -strict -f examples/reading/strategy_body_steps.lit`.
+
 The implementation and its current acceptance status are documented in
 [`src/reading/README.md`](../../src/reading/README.md).
 
@@ -103,3 +110,25 @@ Restoring and checking brings back fresh results without leaving the IDE.
 The six authored source lines remain six display rows. Both static-site
 integration tests pass; release-embedded viewer assets match maintained source.
 This changes the view, not the proof records or verifier.
+
+A failed-strategy reading tracer is available at
+[`retained-final-prefix.lit`](../test_statements/negative/def_strategy_stmt/retained-final-prefix.lit).
+It deliberately fails after a checked body and one checked conclusion. Local
+parameters, the premise and completed steps remain inspectable; the strategy
+is not registered and the following conclusion is unchecked. Its expected
+strict CLI result is failure.
+
+The companion
+[`retained-inference-scopes.lit`](../test_statements/negative/def_strategy_stmt/retained-inference-scopes.lit)
+separates inference during temporary goal formation from inference under the
+actual local premise. Both can share a seed FactId; the stored conclusions and
+typed store/infer reference identify each occurrence. Temporary consequences
+must not be presented as published proof results.
+
+
+Rejected theorem histories can be inspected with
+[`retained-final-prefix.lit`](../test_statements/negative/def_thm_stmt/retained-final-prefix.lit)
+and [`retained-compound-goal.lit`](../test_statements/negative/def_thm_stmt/retained-compound-goal.lit).
+Both deliberately fail. The reader distinguishes actual local parameters,
+adopted premises and checked steps from an unproved conclusion. A checked
+component does not prove a conjunction or register its enclosing theorem.

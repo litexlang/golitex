@@ -47,7 +47,7 @@ fn every_locale_runs_through_the_real_binary() {
 }
 
 #[test]
-fn function_preimages_render_distinct_operator_names_without_double_escaping() {
+fn function_preimages_render_singletons_and_sets_without_double_escaping() {
     for lang in ["en", "zh"] {
         let (ok, json) = convert(&[
             "-latex",
@@ -60,10 +60,28 @@ fn function_preimages_render_distinct_operator_names_without_double_escaping() {
         let map = json.as_object().unwrap();
         assert_eq!(map.get("verified"), Some(&JsonValue::Bool(false)));
         let content = map.get("content").unwrap().as_str().unwrap();
-        // `operator()` renders plain parentheses; underscores stay escaped once.
-        assert!(content.contains(r"\operatorname{preimage}("));
-        assert!(content.contains(r"\operatorname{preimage\_set}("));
+        // A fibre is an inverse image of a singleton, distinct from the image
+        // of the supplied target set itself.
+        assert!(content.contains(r"^{-1}\!\left[\left\{"));
+        assert!(content.contains(r"^{-1}\!\left[\left\{3, 4\right\}\right]"));
         assert!(!content.contains(r"\textbackslash{}"));
+        let (ok, paired) = convert(&[
+            "-latex",
+            "-lang",
+            lang,
+            "-e",
+            "have f,S set\nlet fibre = preimage(f,S)\nlet inverse = preimage_set(f,S)",
+        ]);
+        assert!(ok, "{paired:?}");
+        let paired = paired
+            .as_object()
+            .unwrap()
+            .get("content")
+            .unwrap()
+            .as_str()
+            .unwrap();
+        assert!(paired.contains(r"f^{-1}\!\left[\left\{S\right\}\right]"));
+        assert!(paired.contains(r"f^{-1}\!\left[S\right]"));
     }
 }
 #[test]

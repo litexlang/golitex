@@ -1,0 +1,98 @@
+# Pair directness for a proper sum: two zero subspaces of a nonzero plane.
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def main::plane
+
+release struct def main::plane
+
+release thm Algebra::subspace::zero_is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane)
+
+have zero_pair finite_seq(power_set(finite_seq(R,2)),2)=fn(j closed_range(1,2)) power_set(finite_seq(R,2)) {{main::plane.zero}}
+
+claim:
+    ? $Algebra::subspace_sums::is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,2,zero_pair)
+    claim:
+        ? forall j closed_range(1,2):
+            $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,zero_pair(j))
+        zero_pair(j)={main::plane.zero}
+        $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,{main::plane.zero})
+    by def $Algebra::subspace_sums::is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,2,zero_pair)
+
+zero_pair(1)={main::plane.zero}
+
+zero_pair(2)={main::plane.zero}
+
+intersect(zero_pair(1),zero_pair(2))=intersect({main::plane.zero},{main::plane.zero})={main::plane.zero}
+
+release thm Algebra::subspace_sums::trivial_pair_intersection_implies_direct(R,Algebra::field::real_field,finite_seq(R,2),main::plane,zero_pair)
+
+release thm Algebra::subspace_sums::direct_pair_family_intersection(R,Algebra::field::real_field,finite_seq(R,2),main::plane,zero_pair)
+
+release thm Algebra::subspace_sums::finite_subspace_sum_carrier(R,Algebra::field::real_field,finite_seq(R,2),main::plane,2,zero_pair)
+
+have proper_sum power_set(finite_seq(R,2))=\Algebra::subspace_sums::finite_subspace_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,2,zero_pair>
+
+claim:
+    ? forall j closed_range(1,2):
+        zero_pair(j) $subset {main::plane.zero}
+    zero_pair(j)={main::plane.zero}
+    {main::plane.zero} $subset {main::plane.zero}
+
+release thm Algebra::subspace_sums::finite_subspace_sum_is_least(R,Algebra::field::real_field,finite_seq(R,2),main::plane,2,zero_pair,{main::plane.zero})
+
+proper_sum $subset {main::plane.zero}
+
+release thm Algebra::subspace_sums::finite_subspace_sum_zero(R,Algebra::field::real_field,finite_seq(R,2),main::plane,2,zero_pair)
+
+main::plane.zero $in proper_sum
+
+by def {main::plane.zero} $subset proper_sum
+
+by extension proper_sum={main::plane.zero}
+
+claim:
+    ? proper_sum!=finite_seq(R,2)
+    by contra:
+        ? proper_sum!=finite_seq(R,2)
+        release obj def main::u
+        main::u $in finite_seq(R,2)
+        main::u $in proper_sum
+        main::u $in {main::plane.zero}
+        main::u=main::plane.zero
+        \Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2> = (\Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>)
+        main::plane = (\Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>)
+        main::plane.zero = \Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>
+        release thm Algebra::finite_span::zero_coefficients_entry(R,Algebra::field::real_field,2,main::plane.zero,2)
+        Algebra::field::real_field.zero=0
+        main::plane.zero(2)=Algebra::field::real_field.zero=0
+        main::u(2)=2
+        2=main::u(2)=main::plane.zero(2)=0
+        impossible 2=0
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,members finite_seq(power_set(V),2):
+        $Algebra::subspace_sums::is_direct_subspace_family(K,F,V,space,2,members)
+        =>:
+            intersect(members(1),members(2))={space.zero}
+    release thm Algebra::subspace_sums::direct_pair_family_intersection(K,F,V,space,members)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,members finite_seq(power_set(V),2):
+        $Algebra::subspace_sums::is_subspace_family(K,F,V,space,2,members)
+        intersect(members(1),members(2))={space.zero}
+        =>:
+            $Algebra::subspace_sums::is_direct_subspace_family(K,F,V,space,2,members)
+    release thm Algebra::subspace_sums::trivial_pair_intersection_implies_direct(K,F,V,space,members)
+
+release thm Algebra::subspace_sums::finite_subspace_sum_is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,2,zero_pair)
+
+$Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,proper_sum)
+
+release thm Algebra::subspace::subspace_is_nonempty(R,Algebra::field::real_field,finite_seq(R,2),main::plane,proper_sum)
+
+release thm Algebra::subspace::restricted_space_is_vector_space(R,Algebra::field::real_field,finite_seq(R,2),main::plane,proper_sum)
+
+have inherited_zero_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,proper_sum> =\Algebra::subspace::restricted_space<R,Algebra::field::real_field,finite_seq(R,2),main::plane,proper_sum>

@@ -1,0 +1,16 @@
+# Tracer: retained existential formation prefix in a rejected definition.
+# Before (same source; rejected, but the local prefix was discarded):
+# prop bounded_pair(t R):
+#     exist a R, b {1 / 0} st {a = a}
+# Only the terminal denominator formation error was exported.
+#
+# Now: still rejected. Reading retains the actual local a in R check/store,
+# stops at b's invalid domain, and marks the body as unentered.
+prop bounded_pair(t R):
+    exist a R, b {1 / 0} st {a = a}
+#
+# Boundary: a local formation assumption proves neither this predicate nor
+# existence of its witnesses; the rejected definition publishes no facts.
+# Evidence: target/release/litex -strict -lang en -f examples/test_statements/negative/def_prop_stmt/quantified-peer-formation-prefix.lit
+# Expected: exit 1; Normal failure during formation, not a session termination.
+# Producer/rollback: cargo test --release --test reading_peer_quantifier_formation

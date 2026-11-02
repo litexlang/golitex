@@ -130,6 +130,7 @@ impl Capture {
                 };
                 node = child;
             }
+            self.record_builtin_theorem_declaration(node);
             let declared = declaration_symbol_ids(node, &path);
             let rendered = self
                 .current_statement
@@ -144,6 +145,27 @@ impl Capture {
                 &self.current_source,
                 &rendered,
             );
+            let anchors =
+                self.source_statements
+                    .hints
+                    .block_anchors(node, self.current_line, &rendered);
+            let cases = self
+                .current_statement
+                .strip_prefix("statement")
+                .and_then(|id| id.parse::<usize>().ok())
+                .and_then(|index| self.source_statements.nodes.get(&index))
+                .and_then(|statement| match statement {
+                    Stmt::By(ByStmt::ByCasesStmt(original)) => {
+                        Some(self.source_statements.hints.case_contexts(
+                            original,
+                            node,
+                            &self.current_source,
+                            &self.source_statements.spans,
+                        ))
+                    }
+                    _ => None,
+                })
+                .unwrap_or_default();
             if let Some(JsonValue::Object(fields)) = self
                 .current_statement
                 .strip_prefix("statement")
@@ -154,12 +176,70 @@ impl Capture {
                 if !hints.is_empty() {
                     fields.insert("expression_hints".into(), JsonValue::Array(hints));
                 }
+                if !anchors.is_empty() {
+                    fields.insert("block_anchors".into(), JsonValue::Array(anchors));
+                }
+                if !cases.is_empty() {
+                    fields.insert("case_contexts".into(), JsonValue::Array(cases));
+                }
                 if !declared.is_empty() {
                     fields.insert("declaration_symbol_ids".into(), strings(&declared));
                 }
             }
             self.current_statement = statement;
             self.current_line = line;
+        }
+    }
+
+    /// A reserved theorem's declaration exists even when this call fails.
+    /// Resolve the original typed call with the native resolver; source text
+    /// and failed proof diagnostics are not semantic identity authorities.
+    fn record_builtin_theorem_declaration(&mut self, syntax: &JsonValue) {
+        let original = self
+            .current_statement
+            .strip_prefix("statement")
+            .and_then(|id| id.parse::<usize>().ok())
+            .and_then(|index| self.source_statements.nodes.get(&index));
+        let call = match original {
+            Some(Stmt::By(ByStmt::ByThmStmt(statement))) => &statement.call,
+            Some(Stmt::ReleaseAndExpand(ReleaseAndExpandStmt::ReleaseThmStmt(statement))) => {
+                &statement.call
+            }
+            _ => return,
+        };
+        let AtomicName::Plain { name } = &call.name else {
+            return;
+        };
+        let Some(theorem) = crate::builtin_theorem::BuiltinTheoremId::from_name(name) else {
+            return;
+        };
+        let reference = syntax
+            .as_object()
+            .ok()
+            .and_then(|fields| fields.get("fields"))
+            .and_then(|fields| fields.as_object().ok())
+            .and_then(|fields| fields.get("call"))
+            .and_then(|call| call.as_object().ok())
+            .and_then(|fields| fields.get("fields"))
+            .and_then(|fields| fields.as_object().ok())
+            .and_then(|fields| fields.get("name"));
+        let Some(reference) = reference else {
+            return;
+        };
+        if field_text(reference, "kind") != "symbol_reference" {
+            return;
+        }
+        let id = field_text(reference, "symbol_id");
+        if let Some(JsonValue::Object(fields)) = self.symbols.get_mut(&id) {
+            fields.insert("kind".into(), text("builtin_theorem"));
+            fields.insert(
+                "builtin_theorem".into(),
+                object(vec![
+                    ("type", text("BuiltinTheoremId")),
+                    ("name", text(theorem.as_str())),
+                    ("arity", JsonValue::Number(theorem.arity() as f64)),
+                ]),
+            );
         }
     }
 
@@ -469,6 +549,40 @@ impl Capture {
         ])
     }
 
+    /// Give the actual failed child its own verdict. The checked prefix is
+    /// projected separately; the unchecked suffix receives no outcome.
+    pub fn failed_body_result(
+        &mut self,
+        statement: &Stmt,
+        result: &ExecStmtResult,
+        runtime: &Runtime,
+    ) -> JsonValue {
+        let parent = self
+            .source_statements
+            .current
+            .and_then(|index| self.statements.get(index))
+            .map(|record| field_text(record, "source_statement_id"));
+        let candidates = self
+            .source_statements
+            .nodes
+            .iter()
+            .filter(|(index, original)| {
+                *original == statement
+                    && parent.as_ref().is_some_and(|parent| {
+                        field_text(&self.statements[**index], "parent_statement_id") == *parent
+                    })
+            })
+            .map(|(index, _)| *index)
+            .collect::<Vec<_>>();
+        if result.is_failed() && candidates.len() == 1 {
+            return self.capture_source_result(candidates[0], result, runtime);
+        }
+        self.source_statements
+            .gaps
+            .insert("ProofBlockBodyFailed".into());
+        capture_execute__exec_stmt_result__ExecStmtResult(result, self, runtime)
+    }
+
     pub fn proof_steps(
         &mut self,
         owner: &str,
@@ -483,6 +597,56 @@ impl Capture {
                 statement.reading_proof_body(owner, self.proof_branch, &self.proof_part)
             })
             .map(<[Stmt]>::to_vec);
+        self.capture_body_steps(owner, steps, body, runtime)
+    }
+
+    pub fn failed_body_prefix(
+        &mut self,
+        failed: &crate::execute::execute_proof_block_stmt::ProofBlockBodyFailed,
+        runtime: &Runtime,
+    ) -> JsonValue {
+        let body = self
+            .source_statements
+            .current
+            .and_then(|index| self.source_statements.nodes.get(&index))
+            .and_then(|statement| {
+                statement.reading_proof_body(
+                    "ProofBlockBodyFailed",
+                    self.proof_branch,
+                    &self.proof_part,
+                )
+            })
+            .filter(|body| {
+                failed.prior_steps.len() == failed.step_index
+                    && body.get(failed.step_index) == Some(&failed.statement)
+            })
+            .map(|body| body[..failed.step_index].to_vec());
+        self.capture_body_steps("ProofBlockBodyFailed", &failed.prior_steps, body, runtime)
+    }
+
+    /// A failed body's prefix stays local even when its caller did not retain
+    /// an environment snapshot. An already retained case scope owns its body.
+    pub fn enter_failed_body_scope(&mut self) -> Option<String> {
+        if self.scopes.iter().any(|scope| {
+            field_text(scope, "id") == self.current_scope
+                && field_text(scope, "statement_id") == self.current_statement
+        }) {
+            return None;
+        }
+        let previous = self.enter_scope();
+        if let Some(JsonValue::Object(fields)) = self.scopes.last_mut() {
+            fields.insert("origin".into(), text("proof_body_failure"));
+        }
+        Some(previous)
+    }
+
+    fn capture_body_steps(
+        &mut self,
+        owner: &str,
+        steps: &[ExecStmtResult],
+        body: Option<Vec<Stmt>>,
+        runtime: &Runtime,
+    ) -> JsonValue {
         if let Some(body) = body.filter(|body| body.len() == steps.len()) {
             let mut output = Vec::with_capacity(steps.len());
             for (statement, result) in body.iter().zip(steps) {
@@ -781,62 +945,81 @@ impl Stmt {
         branch: Option<usize>,
         part: &str,
     ) -> Option<&[Stmt]> {
+        let failed_body = owner == "ProofBlockBodyFailed";
         match self {
             Stmt::ProofBlock(ProofBlockStmt::ClaimStmt(value))
-                if owner.starts_with("ExecClaim") =>
+                if failed_body || owner.starts_with("ExecClaim") =>
             {
                 Some(&value.proof)
             }
             Stmt::ProofBlock(ProofBlockStmt::SketchStmt(value))
-                if owner == "ExecSketchStmtSuccess" =>
+                if failed_body || owner == "ExecSketchStmtSuccess" =>
             {
                 Some(&value.proof)
             }
             Stmt::Definition(DefinitionStmt::DefThmStmt(value))
-                if owner.starts_with("ExecDefThm") =>
+                if failed_body || owner.starts_with("ExecDefThm") =>
             {
                 Some(&value.prove_process)
             }
             Stmt::Definition(DefinitionStmt::DefStrategyStmt(value))
-                if owner == "ExecDefStrategyStmtSuccess" =>
+                if failed_body
+                    || owner == "ExecDefStrategyStmtSuccess"
+                    || owner == "ExecDefStrategyForallProof"
+                    || owner == "ExecDefStrategyEnteredFailed" =>
             {
                 Some(&value.prove_process)
             }
             Stmt::Witness(WitnessStmt::WitnessExistFact(value))
-                if owner == "ExecWitnessExistFactStmtSuccessResult" =>
+                if failed_body || owner == "ExecWitnessExistFactStmtSuccessResult" =>
             {
                 Some(&value.proof)
             }
             Stmt::Witness(WitnessStmt::WitnessAtomicFact(value))
-                if owner == "ExecWitnessAtomicFactStmtSuccessResult" =>
+                if failed_body || owner == "ExecWitnessAtomicFactStmtSuccessResult" =>
             {
                 Some(&value.proof)
             }
             Stmt::Witness(WitnessStmt::WitnessNonemptySet(value))
-                if owner == "ExecWitnessNonemptySetStmtSuccessResult" =>
+                if failed_body || owner == "ExecWitnessNonemptySetStmtSuccessResult" =>
             {
                 Some(&value.proof)
             }
-            Stmt::By(ByStmt::ByContraStmt(value)) if owner == "ExecByContraStmtSuccess" => {
+            Stmt::By(ByStmt::ByContraStmt(value))
+                if failed_body
+                    || matches!(
+                        owner,
+                        "ExecByContraStmtSuccess"
+                            | "ExecByContraEnteredFailed"
+                            | "ExecByContraLocalProof"
+                    ) =>
+            {
                 Some(&value.proof)
             }
-            Stmt::By(ByStmt::ByExtensionStmt(value)) if owner == "ExecByExtensionStmtSuccess" => {
+            Stmt::By(ByStmt::ByExtensionStmt(value))
+                if failed_body || owner == "ExecByExtensionStmtSuccess" =>
+            {
                 Some(&value.proof)
             }
             Stmt::By(ByStmt::ByFnExtensionStmt(value))
-                if owner == "ExecByFnExtensionStmtSuccess" =>
+                if failed_body || owner == "ExecByFnExtensionStmtSuccess" =>
             {
                 Some(&value.proof)
             }
-            Stmt::By(ByStmt::ByCasesStmt(value)) if owner == "ByCasesBranchSuccess" => {
+            Stmt::By(ByStmt::ByCasesStmt(value))
+                if failed_body
+                    || matches!(owner, "ByCasesBranchSuccess" | "ByCasesEnteredBranchFailed") =>
+            {
                 branch.and_then(|index| value.proofs.get(index).map(Vec::as_slice))
             }
             Stmt::By(ByStmt::ByEnumerateFiniteSetStmt(value))
-                if owner == "EnumerateAssignmentOutcome" =>
+                if failed_body || owner == "EnumerateAssignmentOutcome" =>
             {
                 Some(&value.proof)
             }
-            Stmt::By(ByStmt::ByForStmt(value)) if owner == "EnumerateAssignmentOutcome" => {
+            Stmt::By(ByStmt::ByForStmt(value))
+                if failed_body || owner == "EnumerateAssignmentOutcome" =>
+            {
                 Some(&value.proof)
             }
             Stmt::By(ByStmt::ByInducStmt(value)) if owner == "ByInducCaseSuccess" => match part {

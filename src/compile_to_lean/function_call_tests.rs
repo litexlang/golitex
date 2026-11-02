@@ -495,3 +495,158 @@ fn function_call_cannot_recover_a_removed_definition_from_final_runtime() {
         .expect_err("the final Runtime still knows the function but the original producer is gone");
     assert!(error.route.ends_with("/Producer"), "{error:?}");
 }
+
+#[test]
+fn function_arity_replays_ordered_inputs_guards_and_nested_calls() {
+    for source in [
+        include_str!("../../lean/examples/four_variable_weighted_sum/statement.lit"),
+        include_str!("../../lean/examples/four_argument_guarded_quotient/statement.lit"),
+        include_str!("../../lean/examples/four_argument_callback/statement.lit"),
+        include_str!("../../lean/examples/captured_four_argument_function/statement.lit"),
+        include_str!("../../lean/examples/four_set_coordinate_function/statement.lit"),
+        include_str!("../../lean/examples/integral_offset_function/statement.lit"),
+    ] {
+        let (run, compiler) = checked(source);
+        compiler.compile_run(&run, "function_arity").expect(source);
+    }
+}
+
+#[test]
+fn analysis_selector_beta_replays_original_existence_guards_in_function_bodies() {
+    for source in [
+        include_str!("../../lean/examples/derivative_offset_function/statement.lit"),
+        include_str!("../../lean/examples/sequence_limit_offset_functions/statement.lit"),
+        include_str!("../../lean/examples/function_limit_offset_functions/statement.lit"),
+    ] {
+        let (run, compiler) = checked(source);
+        compiler
+            .compile_run(&run, "analysis_selector_beta")
+            .expect(source);
+    }
+}
+
+#[test]
+fn multivariable_selector_beta_replays_original_existence_guards_in_function_bodies() {
+    for source in [
+        include_str!("../../lean/examples/partial_derivative_offset_function/statement.lit"),
+        include_str!("../../lean/examples/multivariable_scalar_offset_functions/statement.lit"),
+        include_str!("../../lean/examples/multivariable_matrix_value_functions/statement.lit"),
+        include_str!("../../lean/examples/multivariable_vector_value_functions/statement.lit"),
+    ] {
+        let (run, compiler) = checked(source);
+        compiler
+            .compile_run(&run, "multivariable_selector_beta")
+            .expect(source);
+    }
+}
+
+#[test]
+fn function_input_carrier_locals_keep_original_stage_visibility() {
+    use crate::execute::ExecHaveFnEqualStmtResult;
+    let (run, _) = checked(include_str!(
+        "../../lean/examples/partial_derivative_offset_function/statement.lit"
+    ));
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+        ExecHaveFnEqualStmtResult::Success(declaration),
+    )) = &run.statement_results[0]
+    else {
+        panic!("formula declaration")
+    };
+    let VerifyObjWellDefinedResult::Success(original) = &declaration.anonymous_fn_well_defined
+    else {
+        panic!("formula formation")
+    };
+    let DetailedObjWellDefinedProof::ByDef {
+        proof:
+            ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(
+                wd,
+            )),
+        ..
+    } = original.detailed_ref()
+    else {
+        panic!("formula WD")
+    };
+    for emitted in 0..=wd.param_type_well_defined.len() {
+        let at = SourcePosition::new(None, SourceOwner::WDLocals(original, emitted), 0);
+        for (index, child) in wd.param_type_well_defined.iter().enumerate() {
+            assert_eq!(at.bound_wd_child(child).is_some(), index < emitted);
+        }
+        assert!(at.bound_wd_child(&wd.ret_set_well_defined).is_none());
+        assert!(at.bound_wd_child(&wd.body_well_defined).is_none());
+    }
+}
+
+#[test]
+fn function_input_carrier_locals_reject_missing_reordered_and_changed_evidence() {
+    use crate::execute::ExecHaveFnEqualStmtResult;
+    for mutation in 0..3 {
+        let (mut run, compiler) = checked(include_str!(
+            "../../lean/examples/partial_derivative_offset_function/statement.lit"
+        ));
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+            ExecHaveFnEqualStmtResult::Success(declaration),
+        )) = &mut run.statement_results[0]
+        else {
+            panic!("formula declaration")
+        };
+        let Some(DetailedObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::FunctionSpace(
+                    FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(wd),
+                ),
+            ..
+        }) = declaration
+            .anonymous_fn_well_defined
+            .as_detailed_success_mut()
+            .unwrap()
+        else {
+            panic!("formula WD")
+        };
+        match mutation {
+            0 => {
+                wd.param_type_well_defined.pop();
+            }
+            1 => wd.param_type_well_defined.swap(0, 1),
+            _ => std::mem::swap(
+                &mut wd.param_type_well_defined[0],
+                &mut wd.ret_set_well_defined,
+            ),
+        }
+        compiler
+            .compile_run(&run, "changed_function_input_carriers")
+            .expect_err("carrier bindings cannot replace validation of the original capture");
+    }
+}
+
+#[test]
+fn function_arity_preserves_every_original_child_requirement_and_signature() {
+    let source =
+        "have fn average(a, b, c, d R: d != 0) R = (a + b + c) / d\n$is_set(average(1, 2, 3, 2))\n";
+    for mutation in 0..5 {
+        let (mut run, compiler) = checked(source);
+        let evidence = call_evidence_mut(&mut run, 1);
+        assert_eq!(evidence.child_obj_well_defined.len(), 4);
+        assert_eq!(evidence.requirement_fact_verified.len(), 5);
+        match mutation {
+            0 => {
+                evidence.child_obj_well_defined.pop();
+            }
+            1 => evidence.child_obj_well_defined.swap(0, 3),
+            2 => {
+                evidence.requirement_fact_verified.pop();
+            }
+            3 => evidence.requirement_fact_verified.swap(0, 4),
+            _ => {
+                let Some(FnObjDomainFnSetEvidence::InFunctionSet { fact_id, .. }) =
+                    evidence.domain_fn_set.as_mut()
+                else {
+                    panic!("original function-set citation");
+                };
+                *fact_id = FactId::new(u64::MAX);
+            }
+        }
+        compiler
+            .compile_run(&run, "changed_function_arity")
+            .expect_err("every original argument and domain certificate remains necessary");
+    }
+}

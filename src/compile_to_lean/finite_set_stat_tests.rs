@@ -51,6 +51,13 @@ fn finite_extrema_literal_selection() {
 }
 
 #[test]
+fn finite_extrema_function_bodies_retain_original_domain_and_beta_evidence() {
+    compile(include_str!(
+        "../../lean/examples/finite_extremum_functions/statement.lit"
+    ));
+}
+
+#[test]
 fn finite_set_parameter_kind() {
     compile("forall S finite_set => finite_set_size(S) >= 0\n");
 }

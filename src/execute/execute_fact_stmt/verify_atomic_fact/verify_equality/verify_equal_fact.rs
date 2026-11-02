@@ -96,6 +96,21 @@ impl Runtime {
                 proof,
             )));
         }
+        if let Some(proof) = self.search_cartesian_coordinate_equality(fact, ctx)? {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::CartesianCoordinateEquality(proof),
+            ));
+        }
+        if let Some(proof) = self.search_abs_product_from_factors(fact, ctx)? {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::AbsProductFromFactors(proof),
+            ));
+        }
+        if let Some(proof) = self.search_function_application_congruence(fact, ctx)? {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(proof),
+            ));
+        }
         Ok(None)
     }
 

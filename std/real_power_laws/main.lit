@@ -1,0 +1,603 @@
+# Native real powers, their source root supremum, and rational exponent laws.
+# Source proofs using existing log identities, field arithmetic and induction.
+
+thm natural_log_is_injective:
+    ? forall x,y R+:
+        log(e,x) = log(e,y)
+        =>:
+            x = y
+    e > 1
+    e > 0
+    e != 1
+    x = e^log(e,x) = e^log(e,y) = y
+
+thm natural_log_of_real_power:
+    ? forall x R+,q R:
+        log(e,x^q) = q*log(e,x)
+    e > 1
+    e > 0
+    e != 1
+    x^q $in R+
+    log(e,x^q) = q*log(e,x)
+
+thm natural_log_of_positive_product:
+    ? forall x,y R+:
+        log(e,x*y) = log(e,x)+log(e,y)
+    e > 1
+    e > 0
+    e != 1
+    x*y $in R+
+    log(e,x*y) = log(e,x)+log(e,y)
+
+thm positive_real_power_is_positive:
+    ? forall x R+,q R:
+        x^q $in R+
+        x^q > 0
+
+thm positive_real_power_addition:
+    ? forall x R+,q,r R:
+        x^(q+r) = x^q*x^r
+    x^(q+r) $in R+
+    x^q $in R+
+    x^r $in R+
+    x^q*x^r $in R+
+    release thm natural_log_of_real_power(x,q+r)
+    release thm natural_log_of_real_power(x,q)
+    release thm natural_log_of_real_power(x,r)
+    release thm natural_log_of_positive_product(x^q,x^r)
+    log(e,x^(q+r)) = (q+r)*log(e,x) = q*log(e,x)+r*log(e,x) = log(e,x^q)+log(e,x^r) = log(e,x^q*x^r)
+    release thm natural_log_is_injective(x^(q+r),x^q*x^r)
+
+thm positive_real_power_iteration:
+    ? forall x R+,q,r R:
+        (x^q)^r = x^(q*r)
+    x^q $in R+
+    (x^q)^r $in R+
+    x^(q*r) $in R+
+    release thm natural_log_of_real_power(x^q,r)
+    release thm natural_log_of_real_power(x,q)
+    release thm natural_log_of_real_power(x,q*r)
+    log(e,(x^q)^r) = r*log(e,x^q) = r*(q*log(e,x)) = (q*r)*log(e,x) = log(e,x^(q*r))
+    release thm natural_log_is_injective((x^q)^r,x^(q*r))
+
+thm positive_real_power_negative_exponent:
+    ? forall x R+,q R:
+        x^(-q) = 1/(x^q)
+    x^q $in R+
+    x^q > 0
+    x^q != 0
+    x^q $in R*
+    release thm positive_real_power_addition(x,q,-q)
+    x^q*x^(-q) = x^(q+(-q)) = x^0 = 1
+    x^(-q) = (x^q*x^(-q))/(x^q) = 1/(x^q)
+
+thm positive_real_product_power:
+    ? forall x,y R+,q R:
+        (x*y)^q = x^q*y^q
+    x*y $in R+
+    (x*y)^q $in R+
+    x^q $in R+
+    y^q $in R+
+    x^q*y^q $in R+
+    release thm natural_log_of_real_power(x*y,q)
+    release thm natural_log_of_positive_product(x,y)
+    release thm natural_log_of_real_power(x,q)
+    release thm natural_log_of_real_power(y,q)
+    release thm natural_log_of_positive_product(x^q,y^q)
+    log(e,(x*y)^q) = q*log(e,x*y) = q*(log(e,x)+log(e,y)) = q*log(e,x)+q*log(e,y) = log(e,x^q)+log(e,y^q) = log(e,x^q*y^q)
+    release thm natural_log_is_injective((x*y)^q,x^q*y^q)
+
+thm positive_real_nonzero_power_is_injective:
+    ? forall x,y R+,q R*:
+        x^q = y^q
+        =>:
+            x = y
+    q != 0
+    1/q $in R
+    release thm positive_real_power_is_positive(x,q)
+    release thm positive_real_power_is_positive(y,q)
+    release thm positive_real_power_iteration(x,q,1/q)
+    release thm positive_real_power_iteration(y,q,1/q)
+    q*(1/q) = 1
+    x = x^1 = x^(q*(1/q)) = (x^q)^(1/q) = (y^q)^(1/q) = y^(q*(1/q)) = y^1 = y
+
+thm nonnegative_real_natural_power_is_nonnegative:
+    ? forall x R,n N:
+        x >= 0
+        =>:
+            x^n >= 0
+    release thm approx::absolute_value_natural_power(x,n)
+    abs(x) = x
+    abs(x)^n = x^n
+    abs(x^n) = abs(x)^n = x^n
+    abs(x^n) >= 0
+    x^n = abs(x^n) >= 0
+
+thm nonnegative_real_natural_power_preserves_order:
+    ? forall x,y R,n N:
+        x >= 0
+        x <= y
+        =>:
+            x^n <= y^n
+    y >= x >= 0
+    y >= 0
+    by induc n from 0:
+        ? x^n <= y^n
+        ? from n = 0:
+            x^0 = 1 = y^0
+        ? induc:
+            release thm nonnegative_real_natural_power_is_nonnegative(y,n)
+            x^n <= y^n
+            x^(n+1) = x^n*x <= y^n*x <= y^n*y = y^(n+1)
+
+thm nonnegative_real_positive_natural_power_preserves_strict_order:
+    ? forall x,y R,n N+:
+        x >= 0
+        x < y
+        =>:
+            x^n < y^n
+    x <= y
+    y > x >= 0
+    y > 0
+    y $in R+
+    n >= 1
+    n-1 $in N
+    n-1 $in R
+    release thm nonnegative_real_natural_power_preserves_order(x,y,n-1)
+    y^(n-1) $in R+
+    y^(n-1) > 0
+    n = (n-1)+1
+    x^n = x^((n-1)+1) = x^(n-1)*x <= y^(n-1)*x < y^(n-1)*y = y^((n-1)+1) = y^n
+
+thm nonnegative_real_positive_natural_power_reflects_strict_order:
+    ? forall x,y R,n N+:
+        x >= 0
+        y >= 0
+        x^n < y^n
+        =>:
+            x < y
+    by contra:
+        ? x < y
+        x >= y
+        release thm nonnegative_real_natural_power_preserves_order(y,x,n)
+        y^n <= x^n
+        impossible x^n < y^n
+
+thm nonnegative_real_root_is_real:
+    ? forall x R,n N+:
+        x >= 0
+        =>:
+            x^(1/n) $in R
+    n > 0
+    1/n > 0
+    1/n $in R+
+    x^(1/n) $in R
+
+thm nonnegative_real_root_properties:
+    ? forall x R,n N+:
+        x >= 0
+        =>:
+            x^(1/n) >= 0
+            (x^(1/n))^n = x
+    n > 0
+    n $in R+
+    1/n > 0
+    1/n $in R+
+    by cases:
+        ? x^(1/n) >= 0
+        case x = 0:
+            x^(1/n) = 0^(1/n) = 0
+        case x > 0:
+            x $in R+
+            x^(1/n) $in R+
+            x^(1/n) > 0
+    by cases:
+        ? (x^(1/n))^n = x
+        case x = 0:
+            x^(1/n) = 0^(1/n) = 0
+            (x^(1/n))^n = 0^n = 0 = x
+        case x > 0:
+            x $in R+
+            release thm positive_real_power_iteration(x,1/n,n)
+            (1/n)*n = 1
+            (x^(1/n))^n = x^((1/n)*n) = x^1 = x
+
+thm nonnegative_real_root_unique:
+    ? forall x,y R,n N+:
+        x >= 0
+        y >= 0
+        y^n = x
+        =>:
+            y = x^(1/n)
+    n > 0
+    1/n > 0
+    1/n $in R+
+    by cases:
+        ? y = x^(1/n)
+        case y = 0:
+            x = y^n = 0^n = 0
+            x^(1/n) = 0^(1/n) = 0 = y
+        case y > 0:
+            y $in R+
+            y^n $in R+
+            release thm positive_real_power_iteration(y,n,1/n)
+            n*(1/n) = 1
+            x = y^n
+            x^(1/n) = (y^n)^(1/n) = y^(n*(1/n)) = y^1 = y
+
+thm positive_real_root_is_positive:
+    ? forall x R+,n N+:
+        x^(1/n) $in R+
+        x^(1/n) > 0
+
+thm nonnegative_real_root_reflects_positivity:
+    ? forall x R,n N+:
+        x >= 0
+        x^(1/n) > 0
+        =>:
+            x > 0
+    release thm nonnegative_real_root_properties(x,n)
+    x^(1/n) $in R+
+    (x^(1/n))^n > 0
+    x = (x^(1/n))^n > 0
+
+template<x {t R:t >= 0},n N+>:
+    have nonnegative_root_sublevel_set power_set(R) = {y R:y >= 0 and y^n <= x}
+
+thm nonnegative_root_sublevel_member_properties:
+    ? forall x {t R:t >= 0},n N+,y R:
+        y $in \nonnegative_root_sublevel_set<x,n>
+        =>:
+            y >= 0
+            y^n <= x
+    \nonnegative_root_sublevel_set<x,n> = {t R:t >= 0 and t^n <= x}
+    y $in {t R:t >= 0 and t^n <= x}
+    y >= 0
+    y^n <= x
+
+thm nonnegative_root_sublevel_contains:
+    ? forall x {t R:t >= 0},n N+,y R:
+        y >= 0
+        y^n <= x
+        =>:
+            y $in \nonnegative_root_sublevel_set<x,n>
+    y $in {t R:t >= 0 and t^n <= x}
+    \nonnegative_root_sublevel_set<x,n> = {t R:t >= 0 and t^n <= x}
+    y $in \nonnegative_root_sublevel_set<x,n>
+
+thm nonnegative_root_sublevel_has_maximum:
+    ? forall x {t R:t >= 0},n N+:
+        x^(1/n) $in \nonnegative_root_sublevel_set<x,n>
+        $xreal::is_real_set_upper_bound(\nonnegative_root_sublevel_set<x,n>,x^(1/n))
+    x $in R
+    x >= 0
+    release thm nonnegative_real_root_properties(x,n)
+    x^(1/n) $in R
+    x^(1/n) >= 0
+    (x^(1/n))^n = x
+    release thm nonnegative_root_sublevel_contains(x,n,x^(1/n))
+    \nonnegative_root_sublevel_set<x,n> $in power_set(R)
+    \nonnegative_root_sublevel_set<x,n> $subset R
+    claim:
+        ? forall y \nonnegative_root_sublevel_set<x,n>:
+            y <= x^(1/n)
+        y $in R
+        release thm nonnegative_root_sublevel_member_properties(x,n,y)
+        y >= 0
+        y^n <= x
+        by contra:
+            ? y <= x^(1/n)
+            y > x^(1/n)
+            release thm nonnegative_real_positive_natural_power_preserves_strict_order(x^(1/n),y,n)
+            x = (x^(1/n))^n < y^n
+            impossible y^n <= x
+    by def $xreal::is_real_set_upper_bound(\nonnegative_root_sublevel_set<x,n>,x^(1/n))
+
+thm nonnegative_root_sublevel_is_nonempty_and_bounded:
+    ? forall x {t R:t >= 0},n N+:
+        $is_nonempty_set(\nonnegative_root_sublevel_set<x,n>)
+        $xreal::is_real_set_bounded_above(\nonnegative_root_sublevel_set<x,n>)
+    release thm nonnegative_root_sublevel_has_maximum(x,n)
+    witness $is_nonempty_set(\nonnegative_root_sublevel_set<x,n>) from x^(1/n)
+    witness $xreal::is_real_set_bounded_above(\nonnegative_root_sublevel_set<x,n>) from x^(1/n)
+
+thm nonnegative_real_root_is_least_upper_bound:
+    ? forall x {t R:t >= 0},n N+:
+        $is_real_least_upper_bound(\nonnegative_root_sublevel_set<x,n>,x^(1/n))
+    release thm nonnegative_root_sublevel_has_maximum(x,n)
+    claim:
+        ? forall M R:
+            $xreal::is_real_set_upper_bound(\nonnegative_root_sublevel_set<x,n>,M)
+            =>:
+                x^(1/n) <= M
+        x^(1/n) <= M
+    release thm xreal::real_least_upper_bound_from_source_properties(\nonnegative_root_sublevel_set<x,n>,x^(1/n))
+
+thm nonnegative_root_sublevel_has_real_supremum:
+    ? forall x {t R:t >= 0},n N+:
+        exist L R st {$is_real_least_upper_bound(\nonnegative_root_sublevel_set<x,n>,L)}
+    release thm nonnegative_real_root_is_least_upper_bound(x,n)
+    witness exist L R st {$is_real_least_upper_bound(\nonnegative_root_sublevel_set<x,n>,L)} from x^(1/n)
+
+thm nonnegative_real_root_equals_supremum:
+    ? forall x {t R:t >= 0},n N+:
+        sup(\nonnegative_root_sublevel_set<x,n>) = x^(1/n)
+    \nonnegative_root_sublevel_set<x,n> $subset R
+    release thm nonnegative_real_root_is_least_upper_bound(x,n)
+    release thm real_supremum_selected(\nonnegative_root_sublevel_set<x,n>)
+    release thm real_least_upper_bound_unique(\nonnegative_root_sublevel_set<x,n>,sup(\nonnegative_root_sublevel_set<x,n>),x^(1/n))
+
+thm nonnegative_real_root_preserves_strict_order:
+    ? forall x,y R,n N+:
+        x >= 0
+        y >= 0
+        x < y
+        =>:
+            x^(1/n) < y^(1/n)
+    release thm nonnegative_real_root_properties(x,n)
+    release thm nonnegative_real_root_properties(y,n)
+    (x^(1/n))^n = x < y = (y^(1/n))^n
+    release thm nonnegative_real_positive_natural_power_reflects_strict_order(x^(1/n),y^(1/n),n)
+
+thm nonnegative_real_root_reflects_strict_order:
+    ? forall x,y R,n N+:
+        x >= 0
+        y >= 0
+        x^(1/n) < y^(1/n)
+        =>:
+            x < y
+    release thm nonnegative_real_root_properties(x,n)
+    release thm nonnegative_real_root_properties(y,n)
+    release thm nonnegative_real_positive_natural_power_preserves_strict_order(x^(1/n),y^(1/n),n)
+    x = (x^(1/n))^n < (y^(1/n))^n = y
+
+thm nonnegative_real_root_product:
+    ? forall x,y R,n N+:
+        x >= 0
+        y >= 0
+        =>:
+            (x*y)^(1/n) = x^(1/n)*y^(1/n)
+    x*y >= 0
+    release thm nonnegative_real_root_is_real(x,n)
+    release thm nonnegative_real_root_is_real(y,n)
+    x^(1/n) $in R
+    y^(1/n) $in R
+    x^(1/n)*y^(1/n) $in R
+    release thm nonnegative_real_root_properties(x,n)
+    release thm nonnegative_real_root_properties(y,n)
+    x^(1/n)*y^(1/n) >= 0
+    (x^(1/n)*y^(1/n))^n = (x^(1/n))^n*(y^(1/n))^n = x*y
+    release thm nonnegative_real_root_unique(x*y,x^(1/n)*y^(1/n),n)
+
+thm nonnegative_real_root_composition:
+    ? forall x R,n,m N+:
+        x >= 0
+        =>:
+            (x^(1/n))^(1/m) = x^(1/(n*m))
+    n*m $in N+
+    m > 0
+    1/m > 0
+    1/m $in R+
+    release thm nonnegative_real_root_is_real(x,n)
+    x^(1/n) $in R
+    release thm nonnegative_real_root_properties(x,n)
+    release thm nonnegative_real_root_is_real(x^(1/n),m)
+    (x^(1/n))^(1/m) $in R
+    release thm nonnegative_real_root_properties(x^(1/n),m)
+    ((x^(1/n))^(1/m))^(n*m) = ((x^(1/n))^(1/m))^(m*n) = (((x^(1/n))^(1/m))^m)^n = (x^(1/n))^n = x
+    release thm nonnegative_real_root_unique(x,(x^(1/n))^(1/m),n*m)
+
+thm real_integer_exponents_order_above_one:
+    ? forall x R+,m,n Z:
+        x > 1
+        m < n
+        =>:
+            x^m < x^n
+    n-m $in Z
+    n-m > 0
+    n-m $in N+
+    release thm nonnegative_real_positive_natural_power_preserves_strict_order(1,x,n-m)
+    1 = 1^(n-m) < x^(n-m)
+    release thm positive_real_power_is_positive(x,m)
+    x^m = x^m*1 < x^m*x^(n-m) = x^(m+(n-m)) = x^n
+
+thm real_integer_exponents_order_below_one:
+    ? forall x R+,m,n Z:
+        x < 1
+        m < n
+        =>:
+            x^n < x^m
+    x >= 0
+    n-m $in Z
+    n-m > 0
+    n-m $in N+
+    release thm nonnegative_real_positive_natural_power_preserves_strict_order(x,1,n-m)
+    x^(n-m) < 1^(n-m) = 1
+    release thm positive_real_power_is_positive(x,m)
+    x^n = x^(m+(n-m)) = x^m*x^(n-m) < x^m*1 = x^m
+
+thm real_root_of_one:
+    ? forall n N+:
+        1^(1/n) = 1
+
+thm real_root_of_zero:
+    ? forall n N+:
+        0^(1/n) = 0
+    n > 0
+    1/n > 0
+    1/n $in R+
+    0^(1/n) = 0
+
+thm real_roots_decrease_with_index_above_one:
+    ? forall x R+,m,n N+:
+        x > 1
+        m < n
+        =>:
+            x^(1/n) < x^(1/m)
+    release thm nonnegative_real_root_properties(x,n)
+    release thm nonnegative_real_root_properties(x,m)
+    release thm positive_real_root_is_positive(x,n)
+    release thm nonnegative_real_root_preserves_strict_order(1,x,n)
+    release thm real_root_of_one(n)
+    1 = 1^(1/n) < x^(1/n)
+    release thm real_integer_exponents_order_above_one(x^(1/n),m,n)
+    (x^(1/n))^m < (x^(1/n))^n = x = (x^(1/m))^m
+    release thm nonnegative_real_positive_natural_power_reflects_strict_order(x^(1/n),x^(1/m),m)
+
+thm real_roots_increase_with_index_below_one:
+    ? forall x R+,m,n N+:
+        x < 1
+        m < n
+        =>:
+            x^(1/m) < x^(1/n)
+    release thm nonnegative_real_root_properties(x,n)
+    release thm nonnegative_real_root_properties(x,m)
+    release thm positive_real_root_is_positive(x,n)
+    release thm nonnegative_real_root_preserves_strict_order(x,1,n)
+    release thm real_root_of_one(n)
+    x^(1/n) < 1^(1/n) = 1
+    release thm real_integer_exponents_order_below_one(x^(1/n),m,n)
+    (x^(1/m))^m = x = (x^(1/n))^n < (x^(1/n))^m
+    release thm nonnegative_real_positive_natural_power_reflects_strict_order(x^(1/m),x^(1/n),m)
+
+thm positive_real_power_fraction_formula:
+    ? forall x R+,a Z,b N+:
+        x^(a/b) = (x^(1/b))^a
+    b > 0
+    1/b $in R
+    a $in R
+    release thm positive_real_power_iteration(x,1/b,a)
+    (1/b)*a = a/b
+    (x^(1/b))^a = x^((1/b)*a) = x^(a/b)
+
+thm positive_real_rational_power_from_fraction:
+    ? forall x R+,q Q,a Z,b N+:
+        q = a/b
+        =>:
+            x^q = (x^(1/b))^a
+    release thm positive_real_power_fraction_formula(x,a,b)
+    x^q = x^(a/b) = (x^(1/b))^a
+
+thm positive_real_rational_power_fraction_independent:
+    ? forall x R+,a,c Z,b,d N+:
+        a/b = c/d
+        =>:
+            (x^(1/b))^a = (x^(1/d))^c
+    release thm positive_real_power_fraction_formula(x,a,b)
+    release thm positive_real_power_fraction_formula(x,c,d)
+    (x^(1/b))^a = x^(a/b) = x^(c/d) = (x^(1/d))^c
+
+thm positive_real_rational_power_preserves_strict_order:
+    ? forall x,y R+,q Q+:
+        x < y
+        =>:
+            x^q < y^q
+    q $in Q
+    q > 0
+    release thm rational_has_unique_reduced_fraction(q)
+    obtain a,b from exist! a Z,b N+ st {q = a/b,gcd(a,b) = 1}
+    b > 0
+    q*b > 0
+    q*b = (a/b)*b = a
+    a = q*b > 0
+    a $in N+
+    release thm nonnegative_real_positive_natural_power_preserves_strict_order(x,y,a)
+    release thm positive_real_power_is_positive(x,q)
+    release thm positive_real_power_is_positive(y,q)
+    release thm positive_real_power_iteration(x,q,b)
+    release thm positive_real_power_iteration(y,q,b)
+    (x^q)^b = x^(q*b) = x^a
+    (y^q)^b = y^(q*b) = y^a
+    by contra:
+        ? x^q < y^q
+        x^q >= y^q
+        release thm nonnegative_real_natural_power_preserves_order(y^q,x^q,b)
+        y^a = (y^q)^b <= (x^q)^b = x^a
+        impossible x^a < y^a
+
+thm positive_real_rational_power_reflects_strict_order:
+    ? forall x,y R+,q Q+:
+        x^q < y^q
+        =>:
+            x < y
+    q > 0
+    1/q $in Q+
+    release thm positive_real_power_is_positive(x,q)
+    release thm positive_real_power_is_positive(y,q)
+    release thm positive_real_rational_power_preserves_strict_order(x^q,y^q,1/q)
+    release thm positive_real_power_iteration(x,q,1/q)
+    release thm positive_real_power_iteration(y,q,1/q)
+    q*(1/q) = 1
+    x = x^1 = x^(q*(1/q)) = (x^q)^(1/q) < (y^q)^(1/q) = y^(q*(1/q)) = y^1 = y
+
+thm real_rational_exponents_order_above_one:
+    ? forall x R+,q,r Q:
+        x > 1
+        q < r
+        =>:
+            x^q < x^r
+    r-q $in Q
+    r-q > 0
+    r-q $in Q+
+    release thm positive_real_rational_power_preserves_strict_order(1,x,r-q)
+    1 = 1^(r-q) < x^(r-q)
+    release thm positive_real_power_is_positive(x,q)
+    release thm positive_real_power_addition(x,q,r-q)
+    x^q = x^q*1 < x^q*x^(r-q) = x^(q+(r-q)) = x^r
+
+thm real_rational_exponents_order_below_one:
+    ? forall x R+,q,r Q:
+        x < 1
+        q < r
+        =>:
+            x^r < x^q
+    r-q $in Q
+    r-q > 0
+    r-q $in Q+
+    release thm positive_real_rational_power_preserves_strict_order(x,1,r-q)
+    x^(r-q) < 1^(r-q) = 1
+    release thm positive_real_power_is_positive(x,q)
+    release thm positive_real_power_addition(x,q,r-q)
+    x^r = x^(q+(r-q)) = x^q*x^(r-q) < x^q*1 = x^q
+
+thm real_rational_power_reflects_exponents_above_one:
+    ? forall x R+,q,r Q:
+        x > 1
+        x^q < x^r
+        =>:
+            q < r
+    by contra:
+        ? q < r
+        q >= r
+        by cases:
+            ? q < r
+            case q = r:
+                x^q = x^r
+                x^q >= x^r
+                impossible x^q < x^r
+            case q > r:
+                release thm real_rational_exponents_order_above_one(x,r,q)
+                x^r < x^q
+                impossible x^q < x^r
+        impossible q < r
+
+thm real_rational_power_reflects_exponents_below_one:
+    ? forall x R+,q,r Q:
+        x < 1
+        x^r < x^q
+        =>:
+            q < r
+    by contra:
+        ? q < r
+        q >= r
+        by cases:
+            ? q < r
+            case q = r:
+                x^r = x^q
+                x^r >= x^q
+                impossible x^r < x^q
+            case q > r:
+                release thm real_rational_exponents_order_below_one(x,r,q)
+                x^q < x^r
+                impossible x^r < x^q
+        impossible q < r

@@ -10,6 +10,7 @@ impl LitexToLeanCompiler {
         goal: &InFact,
         natural: &AtomicExceptEqualityFactKnownProof,
         positive: &AtomicExceptEqualityFactKnownProof,
+        strict_zero: bool,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) = &goal.element else {
@@ -32,10 +33,15 @@ impl LitexToLeanCompiler {
             ));
         }
         let (zero, value, strict) = source_order_oriented(&positive.fact)?;
-        if !strict || !is_exact_zero(zero) || value.ir() != sub.left.ir() {
+        let expected_bound = if strict_zero {
+            is_exact_zero(zero)
+        } else {
+            matches!(zero, Obj::Literal(Literal::Number(_))) && closed_integer(zero) == Some(1)
+        };
+        if strict != strict_zero || !expected_bound || value.ir() != sub.left.ir() {
             return Err(LeanCompileError::new(
                 "NaturalPredecessor/PositiveChild",
-                "The original positive citation changes its minuend or strict zero bound.",
+                "The original order citation changes its minuend or the selected zero/one bound.",
             ));
         }
         let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(citation) =
@@ -48,6 +54,14 @@ impl LitexToLeanCompiler {
         let hn = self.compile_known_atomic(citation, &natural.fact, position)?;
         let hpos = self.compile_order_known_premise(positive, position)?.1;
         let hone = self.compile_literal_one_identity(&sub.right, position)?;
+        let hpos = if strict_zero {
+            hpos
+        } else {
+            let bound = self.compile_object_reference(zero, position)?;
+            let value = self.compile_object_reference(value, position)?;
+            let bound_one = self.compile_literal_one_identity(zero, position)?;
+            format!("(Litex.ltLeTrans (Litex.number (M := M) 0) {bound} {value} (Litex.NativeBridge.ltOfDenoteReal (Litex.number (M := M) 0) {bound} 0 1 rfl {bound_one} (by norm_num)) {hpos})")
+        };
         Ok(format!(
             "(Litex.predecessorInN {} {hn} {hpos} {hone})",
             self.compile_object_reference(&goal.element, position)?

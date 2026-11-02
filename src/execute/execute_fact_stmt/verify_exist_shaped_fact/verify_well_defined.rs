@@ -1,14 +1,14 @@
-use super::DetailedExistShapedFactWellDefinedProof;
+use super::{
+    DetailedExistShapedFactWellDefinedProof, ExistShapedWellDefinedLocalFailed,
+    ExistShapedWellDefinedLocalFailure,
+};
 use crate::ast::fact::{ExistShapedFact, PlainExistFact, QuantifierFreeFact};
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::well_defined_result::{
     ExistShapedFactWellDefinedProof, FailToVerifyExistShapedFactWellDefinedResult,
     VerifyExistShapedFactWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::verify_forall_fact::AssumeDomFactResult;
-use crate::execute::execute_fact_stmt::well_defined_results::{
-    fail_to_verify_obj_well_defined_others, FailToVerifyObjWellDefinedResult,
-    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
-};
+use crate::execute::execute_fact_stmt::well_defined_results::VerifyFactWellDefinedResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::execute::IntroduceTypedParametersResult;
 use crate::instantiate::quantifier_free_fact_to_fact;
@@ -37,7 +37,11 @@ impl Runtime {
                     }),
                 ))
             }
-            Err(reason) => Ok(VerifyExistShapedFactWellDefinedResult::Failed(reason)),
+            Err(reason) => Ok(VerifyExistShapedFactWellDefinedResult::Failed(
+                FailToVerifyExistShapedFactWellDefinedResult::Local(Box::new(
+                    ExistShapedWellDefinedLocalFailure::new(fact.clone(), reason, local_env),
+                )),
+            )),
         }
     }
 
@@ -48,7 +52,7 @@ impl Runtime {
     ) -> RuntimeResult<
         Result<
             (IntroduceTypedParametersResult, Vec<AssumeDomFactResult>),
-            FailToVerifyExistShapedFactWellDefinedResult,
+            ExistShapedWellDefinedLocalFailed,
         >,
     > {
         let plain = plain_exist_body(fact);
@@ -57,12 +61,7 @@ impl Runtime {
         {
             Ok(introduced) => introduced,
             Err(failed) => {
-                return Ok(Err(
-                    FailToVerifyExistShapedFactWellDefinedResult::ParamType {
-                        fact: fact.clone(),
-                        reason: extract_obj_wd_fail(failed),
-                    },
-                ));
+                return Ok(Err(ExistShapedWellDefinedLocalFailed::Parameters(failed)));
             }
         };
 
@@ -87,24 +86,12 @@ impl Runtime {
                     }
                 }
                 VerifyFactWellDefinedResult::Failed(failed_body) => {
-                    return Ok(Err(
-                        FailToVerifyExistShapedFactWellDefinedResult::BodyFact {
-                            fact: fact.clone(),
-                            failed_index,
-                            param_type_well_defined: if self.result_detail()
-                                == OutputDetail::Detailed
-                            {
-                                introduced_params.param_type_well_defined
-                            } else {
-                                Vec::new()
-                            },
-                            succeeded_body: assumed_body_facts
-                                .into_iter()
-                                .map(|a| a.well_defined)
-                                .collect(),
-                            failed_body: Box::new(failed_body),
-                        },
-                    ));
+                    return Ok(Err(ExistShapedWellDefinedLocalFailed::Body {
+                        introduced_params,
+                        assumed_body_facts,
+                        failed_index,
+                        failed_body: Box::new(failed_body),
+                    }));
                 }
             }
         }
@@ -135,13 +122,4 @@ impl Runtime {
 
 fn plain_exist_body(fact: &ExistShapedFact) -> &PlainExistFact {
     fact.plain()
-}
-
-fn extract_obj_wd_fail(failed: VerifyObjWellDefinedResult) -> FailToVerifyObjWellDefinedResult {
-    match failed {
-        VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
-        _ => {
-            fail_to_verify_obj_well_defined_others("param type well-definedness failed".to_string())
-        }
-    }
 }

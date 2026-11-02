@@ -32,15 +32,16 @@ pub fn exec_by_def_stmt(
             proof_verify_state(),
         )? {
             Ok(proof) => proof,
-            Err(failed) => return Ok(Err(ExecByDefStmtFailed::Definition(failed))),
+            Err(failed) => return Ok(Err(super::ExecByDefEnteredFailed::Definition(failed))),
         };
         let well_defined =
             match rt.verify_atomic_fact_well_definedness(&stmt.fact, proof_verify_state())? {
                 VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
                 VerifyAtomicFactWellDefinedResult::Failed(reason) => {
-                    return Ok(Err(ExecByDefStmtFailed::Proof(
-                        atomic_except_equality_fact_result_from_wd_fail(reason),
-                    )));
+                    return Ok(Err(super::ExecByDefEnteredFailed::Proof {
+                        definition,
+                        result: atomic_except_equality_fact_result_from_wd_fail(reason),
+                    }));
                 }
             };
         let proof = atomic_except_equality_fact_result_from_success(
@@ -54,7 +55,14 @@ pub fn exec_by_def_stmt(
     let proof = match proof_outcome {
         Ok(p) => p,
         Err(failed) => {
-            return Ok(ExecByStmtResult::Def(ExecByDefStmtResult::Failed(failed)));
+            return Ok(ExecByStmtResult::Def(ExecByDefStmtResult::Failed(
+                ExecByDefStmtFailed::Local(Box::new(super::ExecByDefLocalFailure::new(
+                    stmt.clone(),
+                    goal_wd,
+                    failed,
+                    local_env,
+                ))),
+            )));
         }
     };
 
@@ -62,7 +70,13 @@ pub fn exec_by_def_stmt(
         Ok(s) => s,
         Err(msg) => {
             return Ok(ExecByStmtResult::Def(ExecByDefStmtResult::Failed(
-                ExecByDefStmtFailed::Store(msg),
+                ExecByDefStmtFailed::StoreAfterProof(Box::new(super::ExecByDefStoreFailure::new(
+                    stmt.clone(),
+                    goal_wd,
+                    proof,
+                    local_env,
+                    msg,
+                ))),
             )));
         }
     };

@@ -1,4 +1,4 @@
-use super::helper::{store_goal_fact_with_wd, verify_goal_fact};
+use super::helper::verify_goal_fact;
 use super::result::{
     ExecByStmtResult, ExecByThmStmtFailed, ExecByThmStmtResult, ExecByThmStmtSuccess,
     ExecReleaseThmStmtFailed, ExecReleaseThmStmtResult, ExecReleaseThmStmtSuccess,
@@ -18,95 +18,86 @@ pub fn exec_release_thm_stmt(
     runtime: &mut Runtime,
     stmt: &ReleaseThmStmt,
 ) -> RuntimeResult<ExecReleaseThmStmtResult> {
+    let origin = super::TheoremInvocationOrigin::ReleaseThm(stmt.clone());
     let thm_name = stmt.call.name.local_name().to_string();
     let (prepared, callee) = match prepare_release_conclusions(runtime, &stmt.call)? {
-        Ok(p) => p,
-        Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
-    };
-
-    let (dom_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let (type_proofs, type_stores) =
-            match verify_prepared_type_facts(rt, &thm_name, &prepared.type_facts)? {
-                Ok(proofs) => proofs,
-                Err(failed) => return Ok(Err(failed)),
-            };
-        let function_domain =
-            match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
-                Ok(proof) => proof,
-                Err(failed) => return Ok(Err(failed)),
-            };
-        let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
-        let mut dom_stores = Vec::with_capacity(prepared.dom_facts.len());
-        for (index, dom) in prepared.dom_facts.iter().enumerate() {
-            let proof = verify_goal_fact(rt, dom)?;
-            if proof.is_failed() {
-                return Ok(Err(ExecReleaseThmStmtFailed::Dom {
-                    theorem: thm_name.clone(),
-                    fact: dom.clone(),
-                    index,
-                    result: proof,
-                }));
-            }
-            let stored = rt.store_fact_and_infer(
-                dom,
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?;
-            dom_proofs.push(proof);
-            dom_stores.push(stored);
+        Ok(value) => value,
+        Err(failed) => {
+            return Ok(ExecReleaseThmStmtResult::Failed(
+                ExecReleaseThmStmtFailed::Preparation(Box::new(
+                    super::TheoremInvocationPreparationFailure::new(origin, failed),
+                )),
+            ))
         }
-        let theorem_derivation = match super::builtin_thm::derive_sequence_extrema_bounded::derive_sequence_extrema_bounded(rt,&prepared.builtin,&stmt.line_file)? {
-            Ok(proof)=>proof,
-            Err(failed)=>return Ok(Err(failed)),
-        };
-        let conclusions_wd =
-            match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
-                Ok(proofs) => proofs,
-                Err(failed) => return Ok(Err(failed)),
-            };
-        Ok(Ok((
-            type_proofs,
-            type_stores,
-            function_domain,
-            dom_proofs,
-            dom_stores,
-            theorem_derivation,
-            conclusions_wd,
-        )))
-    })?;
-
-    let (
-        type_proofs,
-        type_stores,
-        function_domain,
-        dom_proofs,
-        dom_stores,
-        theorem_derivation,
-        conclusions_wd,
-    ) = match dom_outcome {
-        Ok(p) => p,
-        Err(failed) => return Ok(ExecReleaseThmStmtResult::Failed(failed)),
     };
-
+    let (outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
+        verify_prepared_theorem(rt, &thm_name, &prepared, &stmt.line_file)
+    })?;
+    let verified = match outcome {
+        Ok(value) => value,
+        Err(failed) => {
+            return Ok(ExecReleaseThmStmtResult::Failed(
+                ExecReleaseThmStmtFailed::Local(Box::new(
+                    super::TheoremInvocationLocalFailure::new(
+                        origin,
+                        callee,
+                        prepared,
+                        super::TheoremInvocationLocalFailed::Invocation(failed),
+                        local_env,
+                    ),
+                )),
+            ))
+        }
+    };
     let mut stored = Vec::with_capacity(prepared.conclusions.len());
     let mut stored_wd = Vec::with_capacity(prepared.conclusions.len());
     for (index, conclusion) in prepared.conclusions.iter().enumerate() {
-        match store_goal_fact_with_wd(runtime, conclusion)? {
-            Ok((wd, s)) => {
-                stored_wd.push(wd);
-                stored.push(s);
-            }
-            Err(message) => {
-                return Ok(ExecReleaseThmStmtResult::Failed(
-                    ExecReleaseThmStmtFailed::Store {
-                        theorem: thm_name.clone(),
-                        index,
-                        message,
-                    },
-                ));
-            }
-        }
+        // Same verify/store stages as store_goal_fact_with_wd; retain its actual
+        // failed WD certificate rather than reducing it to a storage message.
+        let result = runtime
+            .verify_fact_well_definedness(conclusion, super::helper::proof_verify_state())?;
+        let crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Success(wd) = result
+        else {
+            return Ok(ExecReleaseThmStmtResult::Failed(
+                ExecReleaseThmStmtFailed::Closing(Box::new(
+                    super::TheoremInvocationClosingFailure::new(
+                        origin,
+                        callee,
+                        prepared,
+                        super::TheoremInvocationCheckedLocal::Release(verified),
+                        local_env,
+                        super::TheoremInvocationClosingFailed::Release {
+                            stored_wd,
+                            stored,
+                            index,
+                            result,
+                        },
+                    ),
+                )),
+            ));
+        };
+        let result = runtime.store_fact_and_infer(
+            conclusion,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
+        stored_wd.push(wd);
+        stored.push(result);
     }
-
+    let super::VerifiedTheoremInvocation {
+        type_checks,
+        function_domain,
+        premise_checks,
+        theorem_derivation,
+        conclusions_wd,
+    } = verified;
+    let (type_proofs, type_stores) = type_checks
+        .into_iter()
+        .map(|check| (check.proof, check.stored))
+        .unzip();
+    let (dom_proofs, dom_stores) = premise_checks
+        .into_iter()
+        .map(|check| (check.proof, check.stored))
+        .unzip();
     Ok(ExecReleaseThmStmtResult::Success(
         ExecReleaseThmStmtSuccess {
             call: stmt.call.clone(),
@@ -130,58 +121,24 @@ pub fn exec_by_thm_stmt(
     runtime: &mut Runtime,
     stmt: &ByThmStmt,
 ) -> RuntimeResult<ExecByStmtResult> {
+    let origin = super::TheoremInvocationOrigin::ByThm(stmt.clone());
     let thm_name = stmt.call.name.local_name().to_string();
     let (prepared, callee) = match prepare_release_conclusions(runtime, &stmt.call)? {
-        Ok(p) => p,
+        Ok(value) => value,
         Err(failed) => {
             return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(
-                ExecByThmStmtFailed::Release(failed),
-            )));
+                ExecByThmStmtFailed::Preparation(Box::new(
+                    super::TheoremInvocationPreparationFailure::new(origin, failed),
+                )),
+            )))
         }
     };
-
     let selected: Fact = stmt.selected_fact.clone().into();
-    let (local_outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
-        let (type_proofs, type_stores) =
-            match verify_prepared_type_facts(rt, &thm_name, &prepared.type_facts)? {
-                Ok(proofs) => proofs,
-                Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
-            };
-        let function_domain =
-            match verify_prepared_function_domain(rt, &thm_name, &prepared.builtin)? {
-                Ok(proof) => proof,
-                Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
-            };
-        let mut dom_proofs = Vec::with_capacity(prepared.dom_facts.len());
-        let mut dom_stores = Vec::with_capacity(prepared.dom_facts.len());
-        for (index, dom) in prepared.dom_facts.iter().enumerate() {
-            let proof = verify_goal_fact(rt, dom)?;
-            if proof.is_failed() {
-                return Ok(Err(ExecByThmStmtFailed::Release(
-                    ExecReleaseThmStmtFailed::Dom {
-                        theorem: thm_name.clone(),
-                        fact: dom.clone(),
-                        index,
-                        result: proof,
-                    },
-                )));
-            }
-            let stored = rt.store_fact_and_infer(
-                dom,
-                crate::execute::execute_fact_stmt::VerifyState::top_level(),
-            )?;
-            dom_proofs.push(proof);
-            dom_stores.push(stored);
-        }
-        let theorem_derivation = match super::builtin_thm::derive_sequence_extrema_bounded::derive_sequence_extrema_bounded(rt,&prepared.builtin,&stmt.line_file)? {
-            Ok(proof)=>proof,
-            Err(failed)=>return Ok(Err(ExecByThmStmtFailed::Release(failed))),
+    let (outcome, local_env) = runtime.run_in_local_env_and_take_env(|rt| {
+        let verified = match verify_prepared_theorem(rt, &thm_name, &prepared, &stmt.line_file)? {
+            Ok(value) => value,
+            Err(failed) => return Ok(Err(super::TheoremInvocationLocalFailed::Invocation(failed))),
         };
-        let conclusions_wd =
-            match verify_prepared_conclusions_wd(rt, &thm_name, &prepared.conclusions)? {
-                Ok(proofs) => proofs,
-                Err(failed) => return Ok(Err(ExecByThmStmtFailed::Release(failed))),
-            };
         let mut direct_conclusions = Vec::new();
         let mut returned_conclusions = Vec::with_capacity(prepared.conclusions.len());
         for conclusion in &prepared.conclusions {
@@ -189,8 +146,7 @@ pub fn exec_by_thm_stmt(
                 conclusion,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )?;
-            // Only the returned atoms and explicit package components are selectable.
-            // Inferred facts and ambient facts must not supply a selected target.
+            // Only returned atoms and explicit package components are selectable.
             for (_, atomic) in stored.atomic_components() {
                 direct_conclusions.push(atomic);
             }
@@ -199,69 +155,80 @@ pub fn exec_by_thm_stmt(
         let Some(selected_proof) =
             verify_selected_theorem_conclusion(rt, &stmt.selected_fact, &direct_conclusions)?
         else {
-            return Ok(Err(ExecByThmStmtFailed::NotReturned {
-                theorem: thm_name.clone(),
-                fact: selected.clone(),
-                conclusions: prepared.conclusions.clone(),
+            return Ok(Err(super::TheoremInvocationLocalFailed::Selection {
+                verified,
+                returned_conclusions,
+                failure: super::TheoremSelectionFailed::NotReturned {
+                    fact: selected.clone(),
+                },
             }));
         };
         if selected_proof.is_failed() {
-            return Ok(Err(ExecByThmStmtFailed::Selected {
-                theorem: thm_name.clone(),
-                fact: selected.clone(),
-                result: selected_proof,
+            return Ok(Err(super::TheoremInvocationLocalFailed::Selection {
+                verified,
+                returned_conclusions,
+                failure: super::TheoremSelectionFailed::Selected {
+                    fact: selected.clone(),
+                    result: selected_proof,
+                },
             }));
         }
-        Ok(Ok((
-            type_proofs,
-            type_stores,
-            function_domain,
-            dom_proofs,
-            dom_stores,
-            theorem_derivation,
-            conclusions_wd,
+        Ok(Ok(super::SelectedTheoremInvocationVerified::new(
+            verified,
             returned_conclusions,
             selected_proof,
         )))
     })?;
-
-    let (
-        type_proofs,
-        type_stores,
-        function_domain,
-        dom_proofs,
-        dom_stores,
-        theorem_derivation,
-        conclusions_wd,
-        returned_conclusions,
-        selected_proof,
-    ) = match local_outcome {
-        Ok(v) => v,
+    let checked = match outcome {
+        Ok(value) => value,
         Err(failed) => {
-            return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(failed)));
+            return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(
+                ExecByThmStmtFailed::Local(Box::new(super::TheoremInvocationLocalFailure::new(
+                    origin, callee, prepared, failed, local_env,
+                ))),
+            )))
         }
     };
-
-    // This check belongs to the caller after the invocation scope has closed.
-    // Preserve its construction evidence rather than exporting call-local WD.
-    let selected_wd = match runtime
-        .verify_fact_well_definedness(&selected, super::helper::proof_verify_state())?
-    {
-        crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Success(proof) => proof,
-        crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Failed(_) => {
-            return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(
-                ExecByThmStmtFailed::Store {
-                    theorem: thm_name.clone(),
-                    message: "goal well-definedness failed at store".to_string(),
-                },
-            )));
-        }
+    let result =
+        runtime.verify_fact_well_definedness(&selected, super::helper::proof_verify_state())?;
+    let crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Success(selected_wd) =
+        result
+    else {
+        return Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Failed(
+            ExecByThmStmtFailed::Closing(Box::new(super::TheoremInvocationClosingFailure::new(
+                origin,
+                callee,
+                prepared,
+                super::TheoremInvocationCheckedLocal::ByThm(checked),
+                local_env,
+                super::TheoremInvocationClosingFailed::ByThm { result },
+            ))),
+        )));
     };
     let stored = runtime.store_fact_and_infer(
         &selected,
         crate::execute::execute_fact_stmt::VerifyState::top_level(),
     )?;
-
+    let super::SelectedTheoremInvocationVerified {
+        invocation,
+        returned_conclusions,
+        selected_proof,
+    } = checked;
+    let super::VerifiedTheoremInvocation {
+        type_checks,
+        function_domain,
+        premise_checks,
+        theorem_derivation,
+        conclusions_wd,
+    } = invocation;
+    let (type_proofs, type_stores) = type_checks
+        .into_iter()
+        .map(|check| (check.proof, check.stored))
+        .unzip();
+    let (dom_proofs, dom_stores) = premise_checks
+        .into_iter()
+        .map(|check| (check.proof, check.stored))
+        .unzip();
     Ok(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(
         ExecByThmStmtSuccess {
             call: stmt.call.clone(),
@@ -288,7 +255,7 @@ fn verify_prepared_function_domain(
     theorem: &str,
     builtin: &Option<super::result::BuiltinThmApplication>,
 ) -> RuntimeResult<
-    Result<Option<super::result::BuiltinFunctionDomainProof>, ExecReleaseThmStmtFailed>,
+    Result<Option<super::result::BuiltinFunctionDomainProof>, super::TheoremFunctionDomainFailure>,
 > {
     let Some(application) = builtin else {
         return Ok(Ok(None));
@@ -298,12 +265,15 @@ fn verify_prepared_function_domain(
         let target = match runtime
             .tuple_equality_domain(&application.arguments[0], &application.arguments[1])?
         {
-            Ok(target) => target,
+            Ok(value) => value,
             Err(message) => {
-                return Ok(Err(ExecReleaseThmStmtFailed::BuiltinShape {
-                    theorem: application.theorem,
-                    message,
-                }))
+                return Ok(Err(super::TheoremFunctionDomainFailure::new(
+                    Vec::new(),
+                    ExecReleaseThmStmtFailed::BuiltinShape {
+                        theorem: application.theorem,
+                        message,
+                    },
+                )))
             }
         };
         let left = match runtime.verify_complete_function_domain(
@@ -311,12 +281,15 @@ fn verify_prepared_function_domain(
             &target,
             super::helper::proof_verify_state(),
         )? {
-            Ok(proof) => proof,
+            Ok(value) => value,
             Err(result) => {
-                return Ok(Err(ExecReleaseThmStmtFailed::FunctionDomain {
-                    theorem: theorem.to_string(),
-                    result,
-                }))
+                return Ok(Err(super::TheoremFunctionDomainFailure::new(
+                    Vec::new(),
+                    ExecReleaseThmStmtFailed::FunctionDomain {
+                        theorem: theorem.to_string(),
+                        result,
+                    },
+                )))
             }
         };
         let right = match runtime.verify_complete_function_domain(
@@ -324,12 +297,15 @@ fn verify_prepared_function_domain(
             &target,
             super::helper::proof_verify_state(),
         )? {
-            Ok(proof) => proof,
+            Ok(value) => value,
             Err(result) => {
-                return Ok(Err(ExecReleaseThmStmtFailed::FunctionDomain {
-                    theorem: theorem.to_string(),
-                    result,
-                }))
+                return Ok(Err(super::TheoremFunctionDomainFailure::new(
+                    vec![left],
+                    ExecReleaseThmStmtFailed::FunctionDomain {
+                        theorem: theorem.to_string(),
+                        result,
+                    },
+                )))
             }
         };
         return Ok(Ok(Some(
@@ -350,13 +326,14 @@ fn verify_prepared_function_domain(
         runtime.function_space_signature(&application.arguments[1])
     };
     let Some(target) = target else {
-        return Ok(Err(ExecReleaseThmStmtFailed::BuiltinShape {
-            theorem: application.theorem,
-            message: "second argument must be a function or sequence set".to_string(),
-        }));
+        return Ok(Err(super::TheoremFunctionDomainFailure::new(
+            Vec::new(),
+            ExecReleaseThmStmtFailed::BuiltinShape {
+                theorem: application.theorem,
+                message: "second argument must be a function or sequence set".to_string(),
+            },
+        )));
     };
-    // Check before pointwise premises or the conclusion are stored. In
-    // particular, an empty forall cannot supply an exact empty-domain proof.
     Ok(
         match runtime.verify_complete_function_domain(
             &application.arguments[0],
@@ -366,10 +343,13 @@ fn verify_prepared_function_domain(
             Ok(proof) => Ok(Some(super::result::BuiltinFunctionDomainProof::Membership(
                 proof,
             ))),
-            Err(result) => Err(ExecReleaseThmStmtFailed::FunctionDomain {
-                theorem: theorem.to_string(),
-                result,
-            }),
+            Err(result) => Err(super::TheoremFunctionDomainFailure::new(
+                Vec::new(),
+                ExecReleaseThmStmtFailed::FunctionDomain {
+                    theorem: theorem.to_string(),
+                    result,
+                },
+            )),
         },
     )
 }
@@ -478,66 +458,112 @@ fn prepare_forall_release(
     }))
 }
 
-fn verify_prepared_type_facts(
+fn verify_prepared_theorem(
     runtime: &mut Runtime,
-    thm_name: &str,
-    type_facts: &[Fact],
-) -> RuntimeResult<
-    Result<
-        (
-            Vec<crate::execute::execute_fact_stmt::VerifyFactResult>,
-            Vec<crate::store_fact_and_infer::StoreFactAndInferResult>,
-        ),
-        ExecReleaseThmStmtFailed,
-    >,
-> {
-    let mut proofs = Vec::with_capacity(type_facts.len());
-    let mut stores = Vec::with_capacity(type_facts.len());
-    for (index, fact) in type_facts.iter().enumerate() {
+    theorem: &str,
+    prepared: &PreparedRelease,
+    line: &crate::ast::line_file::SourceLine,
+) -> RuntimeResult<Result<super::VerifiedTheoremInvocation, super::TheoremInvocationFailed>> {
+    let mut type_checks = Vec::with_capacity(prepared.type_facts.len());
+    for (index, fact) in prepared.type_facts.iter().enumerate() {
         let proof = verify_goal_fact(runtime, fact)?;
         if proof.is_failed() {
-            return Ok(Err(ExecReleaseThmStmtFailed::Type {
-                theorem: thm_name.to_string(),
-                fact: fact.clone(),
-                index,
-                result: proof,
+            return Ok(Err(super::TheoremInvocationFailed::Type {
+                type_checks,
+                failure: ExecReleaseThmStmtFailed::Type {
+                    theorem: theorem.to_string(),
+                    fact: fact.clone(),
+                    index,
+                    result: proof,
+                },
             }));
         }
         let stored = runtime.store_fact_and_infer(
             fact,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )?;
-        proofs.push(proof);
-        stores.push(stored);
+        type_checks.push(super::TheoremRequirementChecked::new(proof, stored));
     }
-    Ok(Ok((proofs, stores)))
-}
-
-fn verify_prepared_conclusions_wd(
-    runtime: &mut Runtime,
-    thm_name: &str,
-    conclusions: &[Fact],
-) -> RuntimeResult<
-    Result<Vec<crate::execute::execute_fact_stmt::FactWellDefinedProof>, ExecReleaseThmStmtFailed>,
-> {
-    use crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult;
-    let mut proofs = Vec::with_capacity(conclusions.len());
-    for (index, fact) in conclusions.iter().enumerate() {
+    let function_domain =
+        match verify_prepared_function_domain(runtime, theorem, &prepared.builtin)? {
+            Ok(value) => value,
+            Err(result) => {
+                return Ok(Err(super::TheoremInvocationFailed::FunctionDomain {
+                    type_checks,
+                    result,
+                }))
+            }
+        };
+    let mut premise_checks = Vec::with_capacity(prepared.dom_facts.len());
+    for (index, fact) in prepared.dom_facts.iter().enumerate() {
+        let proof = verify_goal_fact(runtime, fact)?;
+        if proof.is_failed() {
+            return Ok(Err(super::TheoremInvocationFailed::Premise {
+                type_checks,
+                function_domain,
+                premise_checks,
+                failure: ExecReleaseThmStmtFailed::Dom {
+                    theorem: theorem.to_string(),
+                    fact: fact.clone(),
+                    index,
+                    result: proof,
+                },
+            }));
+        }
+        let stored = runtime.store_fact_and_infer(
+            fact,
+            crate::execute::execute_fact_stmt::VerifyState::top_level(),
+        )?;
+        premise_checks.push(super::TheoremRequirementChecked::new(proof, stored));
+    }
+    let theorem_derivation =
+        match super::builtin_thm::derive_sequence_extrema_bounded::derive_sequence_extrema_bounded(
+            runtime,
+            &prepared.builtin,
+            line,
+        )? {
+            Ok(value) => value,
+            Err(failure) => {
+                return Ok(Err(super::TheoremInvocationFailed::Derivation {
+                    type_checks,
+                    function_domain,
+                    premise_checks,
+                    failure,
+                }))
+            }
+        };
+    let mut conclusions_wd = Vec::with_capacity(prepared.conclusions.len());
+    for (index, fact) in prepared.conclusions.iter().enumerate() {
         let result =
             runtime.verify_fact_well_definedness(fact, super::helper::proof_verify_state())?;
         match result {
-            VerifyFactWellDefinedResult::Success(proof) => proofs.push(proof),
+            crate::execute::execute_fact_stmt::VerifyFactWellDefinedResult::Success(proof) => {
+                conclusions_wd.push(proof)
+            }
             failed => {
-                return Ok(Err(ExecReleaseThmStmtFailed::ConclusionWd {
-                    theorem: thm_name.to_string(),
-                    fact: fact.clone(),
-                    index,
-                    result: failed,
+                return Ok(Err(super::TheoremInvocationFailed::ConclusionWd {
+                    type_checks,
+                    function_domain,
+                    premise_checks,
+                    theorem_derivation,
+                    conclusions_wd,
+                    failure: ExecReleaseThmStmtFailed::ConclusionWd {
+                        theorem: theorem.to_string(),
+                        fact: fact.clone(),
+                        index,
+                        result: failed,
+                    },
                 }))
             }
         }
     }
-    Ok(Ok(proofs))
+    Ok(Ok(super::VerifiedTheoremInvocation::new(
+        type_checks,
+        function_domain,
+        premise_checks,
+        theorem_derivation,
+        conclusions_wd,
+    )))
 }
 
 fn verify_selected_theorem_conclusion(

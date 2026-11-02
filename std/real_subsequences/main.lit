@@ -1,0 +1,611 @@
+claim:
+    ? forall start Z,n {j Z:j>=start}:
+        n+1 $in {j Z:j>=start}
+    n $in Z
+    n>=start
+    n+1 $in Z
+    n+1>=start
+    n+1 $in {j Z:j>=start}
+
+prop is_increasing_integer_tail_index_map(start,substart Z,f fn(n {j Z:j>=substart}) Z):
+    forall n {j Z:j>=substart}:
+        f(n)>=start
+        f(n+1)>f(n)
+
+thm increasing_integer_tail_index_map_range:
+    ? forall start,substart Z,f fn(n {j Z:j>=substart}) Z,n {j Z:j>=substart}:
+        $is_increasing_integer_tail_index_map(start,substart,f)
+        =>:
+            f(n) $in {j Z:j>=start}
+    f(n)>=start
+    f(n) $in Z
+    f(n) $in {j Z:j>=start}
+
+prop is_real_tail_subsequence_indexing(start Z,a fn(n {j Z:j>=start}) R,substart Z,b fn(n {j Z:j>=substart}) R,f fn(n {j Z:j>=substart}) Z):
+    $is_increasing_integer_tail_index_map(start,substart,f)
+    forall n {j Z:j>=substart}:
+        b(n)=a(f(n))
+
+prop is_real_tail_subsequence(start Z,a fn(n {j Z:j>=start}) R,substart Z,b fn(n {j Z:j>=substart}) R):
+    exist f fn(n {j Z:j>=substart}) Z st {$is_real_tail_subsequence_indexing(start,a,substart,b,f)}
+
+claim:
+    ? forall start Z,n {j Z:j>=start},offset N:
+        n+offset $in {j Z:j>=start}
+    release thm sext::real_tail_natural_offset_member(start,n,offset)
+
+template<start Z,a fn(n {j Z:j>=start}) R,substart Z,f {g fn(n {j Z:j>=substart}) Z:$is_increasing_integer_tail_index_map(start,substart,g)}>:
+    have fn real_tail_index_pullback(n {j Z:j>=substart}) R=a(f(n))
+
+thm increasing_integer_tail_index_map_offset_growth:
+    ? forall start,substart Z,f fn(n {j Z:j>=substart}) Z,n {j Z:j>=substart},offset N:
+        $is_increasing_integer_tail_index_map(start,substart,f)
+        =>:
+            f(n+offset)>=f(n)+offset
+    by induc offset from 0:
+        ? f(n+offset)>=f(n)+offset
+        ? from offset=0:
+            n+0=n
+            f(n+0)=f(n)=f(n)+0
+        ? induc:
+            release thm sext::real_tail_natural_offset_member(substart,n,offset)
+            release thm sext::real_tail_natural_offset_member(substart,n+offset,1)
+            f(n+offset) $in Z
+            f(n+offset+1) $in Z
+            f(n+offset+1)>f(n+offset)
+            f(n+offset+1)>=f(n+offset)+1>=f(n)+offset+1
+            n+(offset+1)=n+offset+1
+            f(n+(offset+1))=f(n+offset+1)>=f(n)+offset+1=f(n)+(offset+1)
+
+thm increasing_integer_tail_index_map_pairwise_growth:
+    ? forall start,substart Z,f fn(n {j Z:j>=substart}) Z,n,k {j Z:j>=substart}:
+        $is_increasing_integer_tail_index_map(start,substart,f)
+        n<=k
+        =>:
+            f(k)>=f(n)+(k-n)
+    k-n $in N
+    release thm increasing_integer_tail_index_map_offset_growth(start,substart,f,n,k-n)
+    n+(k-n)=k
+    f(k)=f(n+(k-n))>=f(n)+(k-n)
+
+template<start Z>:
+    have fn integer_tail_identity(n {j Z:j>=start}) Z=n
+
+thm real_tail_subsequence_reflexive:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $is_real_tail_subsequence(start,a,start,a)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \integer_tail_identity<start>(n)>=start
+            \integer_tail_identity<start>(n+1)>\integer_tail_identity<start>(n)
+        \integer_tail_identity<start>(n)=n>=start
+        \integer_tail_identity<start>(n+1)=n+1>n=\integer_tail_identity<start>(n)
+    by def $is_increasing_integer_tail_index_map(start,start,\integer_tail_identity<start>)
+    claim:
+        ? forall n {j Z:j>=start}:
+            a(n)=a(\integer_tail_identity<start>(n))
+        \integer_tail_identity<start>(n)=n
+        a(n)=a(\integer_tail_identity<start>(n))
+    by def $is_real_tail_subsequence_indexing(start,a,start,a,\integer_tail_identity<start>)
+    witness $is_real_tail_subsequence(start,a,start,a) from \integer_tail_identity<start>
+
+template<start,midstart,substart Z,f {h fn(n {j Z:j>=midstart}) Z:$is_increasing_integer_tail_index_map(start,midstart,h)},g {h fn(n {j Z:j>=substart}) Z:$is_increasing_integer_tail_index_map(midstart,substart,h)}>:
+    have fn integer_tail_index_composition(n {j Z:j>=substart}) Z=f(g(n))
+
+thm increasing_integer_tail_index_map_composition:
+    ? forall start,midstart,substart Z,f fn(n {j Z:j>=midstart}) Z,g fn(n {j Z:j>=substart}) Z:
+        $is_increasing_integer_tail_index_map(start,midstart,f)
+        $is_increasing_integer_tail_index_map(midstart,substart,g)
+        =>:
+            $is_increasing_integer_tail_index_map(start,substart,\integer_tail_index_composition<start,midstart,substart,f,g>)
+    claim:
+        ? forall n {j Z:j>=substart}:
+            \integer_tail_index_composition<start,midstart,substart,f,g>(n)>=start
+            \integer_tail_index_composition<start,midstart,substart,f,g>(n+1)>\integer_tail_index_composition<start,midstart,substart,f,g>(n)
+        release thm increasing_integer_tail_index_map_range(midstart,substart,g,n)
+        release thm increasing_integer_tail_index_map_range(midstart,substart,g,n+1)
+        g(n+1)>g(n)
+        release thm increasing_integer_tail_index_map_pairwise_growth(start,midstart,f,g(n),g(n+1))
+        f(g(n+1))>=f(g(n))+(g(n+1)-g(n))>f(g(n))
+        f(g(n))>=start
+        \integer_tail_index_composition<start,midstart,substart,f,g>(n)=f(g(n))>=start
+        \integer_tail_index_composition<start,midstart,substart,f,g>(n+1)=f(g(n+1))>f(g(n))=\integer_tail_index_composition<start,midstart,substart,f,g>(n)
+    by def $is_increasing_integer_tail_index_map(start,substart,\integer_tail_index_composition<start,midstart,substart,f,g>)
+
+thm real_tail_subsequence_transitive:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,midstart Z,b fn(n {j Z:j>=midstart}) R,substart Z,c fn(n {j Z:j>=substart}) R:
+        $is_real_tail_subsequence(start,a,midstart,b)
+        $is_real_tail_subsequence(midstart,b,substart,c)
+        =>:
+            $is_real_tail_subsequence(start,a,substart,c)
+    obtain f from $is_real_tail_subsequence(start,a,midstart,b)
+    obtain g from $is_real_tail_subsequence(midstart,b,substart,c)
+    $is_increasing_integer_tail_index_map(start,midstart,f)
+    $is_increasing_integer_tail_index_map(midstart,substart,g)
+    release thm increasing_integer_tail_index_map_composition(start,midstart,substart,f,g)
+    claim:
+        ? forall n {j Z:j>=substart}:
+            c(n)=a(\integer_tail_index_composition<start,midstart,substart,f,g>(n))
+        release thm increasing_integer_tail_index_map_range(midstart,substart,g,n)
+        release thm increasing_integer_tail_index_map_range(start,midstart,f,g(n))
+        c(n)=b(g(n))=a(f(g(n)))
+        \integer_tail_index_composition<start,midstart,substart,f,g>(n)=f(g(n))
+        a(\integer_tail_index_composition<start,midstart,substart,f,g>(n))=a(f(g(n)))=c(n)
+    by def $is_real_tail_subsequence_indexing(start,a,substart,c,\integer_tail_index_composition<start,midstart,substart,f,g>)
+    witness $is_real_tail_subsequence(start,a,substart,c) from \integer_tail_index_composition<start,midstart,substart,f,g>
+
+thm real_tail_subsequence_indexing_preserves_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,substart Z,b fn(n {j Z:j>=substart}) R,f fn(n {j Z:j>=substart}) Z,L R:
+        $is_real_tail_subsequence_indexing(start,a,substart,b,f)
+        $rs::has_real_tail_limit(start,a,L)
+        =>:
+            $rs::has_real_tail_limit(substart,b,L)
+    $is_increasing_integer_tail_index_map(start,substart,f)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(substart,b,L,epsilon)
+        $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        obtain old from $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        old>=start
+        old-start $in N
+        have cutoff Z=substart+old-start
+        old-start>=0
+        cutoff=substart+(old-start)>=substart+0=substart
+        cutoff $in {j Z:j>=substart}
+        claim:
+            ? forall n Z:
+                n>=substart
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(b(n),L,epsilon)
+            n $in {j Z:j>=substart}
+            substart $in {j Z:j>=substart}
+            release thm increasing_integer_tail_index_map_pairwise_growth(start,substart,f,substart,n)
+            f(substart)>=start
+            n-substart>=cutoff-substart=old-start
+            f(n)>=f(substart)+(n-substart)>=start+(old-start)=old
+            release thm increasing_integer_tail_index_map_range(start,substart,f,n)
+            $approx::is_epsilon_close(a(f(n)),L,epsilon)
+            b(n)=a(f(n))
+            $approx::is_epsilon_close(b(n),L,epsilon)
+        by def $rs::is_real_tail_close_after(substart,b,L,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(substart,b,L,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(substart,b,L)
+
+thm real_tail_subsequence_preserves_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,substart Z,b fn(n {j Z:j>=substart}) R,L R:
+        $is_real_tail_subsequence(start,a,substart,b)
+        $rs::has_real_tail_limit(start,a,L)
+        =>:
+            $rs::has_real_tail_limit(substart,b,L)
+    obtain f from $is_real_tail_subsequence(start,a,substart,b)
+    release thm real_tail_subsequence_indexing_preserves_limit(start,a,substart,b,f,L)
+
+prop all_real_tail_subsequences_have_limit(start Z,a fn(n {j Z:j>=start}) R,L R):
+    forall substart Z,b fn(n {j Z:j>=substart}) R:
+        $is_real_tail_subsequence(start,a,substart,b)
+        =>:
+            $rs::has_real_tail_limit(substart,b,L)
+
+thm real_tail_limit_gives_all_subsequence_limits:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $rs::has_real_tail_limit(start,a,L)
+        =>:
+            $all_real_tail_subsequences_have_limit(start,a,L)
+    claim:
+        ? forall substart Z,b fn(n {j Z:j>=substart}) R:
+            $is_real_tail_subsequence(start,a,substart,b)
+            =>:
+                $rs::has_real_tail_limit(substart,b,L)
+        release thm real_tail_subsequence_preserves_limit(start,a,substart,b,L)
+    by def $all_real_tail_subsequences_have_limit(start,a,L)
+
+thm all_real_tail_subsequence_limits_give_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $all_real_tail_subsequences_have_limit(start,a,L)
+        =>:
+            $rs::has_real_tail_limit(start,a,L)
+    release thm real_tail_subsequence_reflexive(start,a)
+    $rs::has_real_tail_limit(start,a,L)
+
+thm real_tail_index_pullback_is_subsequence:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,substart Z,f fn(n {j Z:j>=substart}) Z:
+        $is_increasing_integer_tail_index_map(start,substart,f)
+        =>:
+            $is_real_tail_subsequence(start,a,substart,\real_tail_index_pullback<start,a,substart,f>)
+    claim:
+        ? forall n {j Z:j>=substart}:
+            \real_tail_index_pullback<start,a,substart,f>(n)=a(f(n))
+        \real_tail_index_pullback<start,a,substart,f>(n)=a(f(n))
+    by def $is_real_tail_subsequence_indexing(start,a,substart,\real_tail_index_pullback<start,a,substart,f>,f)
+    witness $is_real_tail_subsequence(start,a,substart,\real_tail_index_pullback<start,a,substart,f>) from f
+
+thm real_tail_subsequence_limit_is_limit_point:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,substart Z,b fn(n {j Z:j>=substart}) R,L R:
+        $is_real_tail_subsequence(start,a,substart,b)
+        $rs::has_real_tail_limit(substart,b,L)
+        =>:
+            $rsl::is_real_tail_limit_point(start,a,L)
+    obtain f from $is_real_tail_subsequence(start,a,substart,b)
+    $is_increasing_integer_tail_index_map(start,substart,f)
+    claim:
+        ? forall epsilon R+,cutoff {j Z:j>=start}:
+            exist index {j Z:j>=start} st {index>=cutoff and $approx::is_epsilon_close(a(index),L,epsilon)}
+        $rs::is_eventually_real_tail_close(substart,b,L,epsilon)
+        obtain old from $rs::is_eventually_real_tail_close(substart,b,L,epsilon)
+        old>=substart
+        cutoff>=start
+        old-substart $in N
+        old-substart>=0
+        cutoff-start $in N
+        cutoff-start>=0
+        have n Z=substart+(old-substart)+(cutoff-start)
+        n=old+(cutoff-start)>=old+0=old
+        n>=old>=substart
+        n $in {j Z:j>=substart}
+        substart $in {j Z:j>=substart}
+        release thm increasing_integer_tail_index_map_pairwise_growth(start,substart,f,substart,n)
+        f(substart)>=start
+        n=substart+(old-substart)+(cutoff-start)
+        n-substart=(substart+(old-substart)+(cutoff-start))-substart=(old-substart)+(cutoff-start)
+        (old-substart)+(cutoff-start)>=0+(cutoff-start)=cutoff-start
+        n-substart>=cutoff-start
+        f(n)>=f(substart)+(n-substart)>=start+(cutoff-start)=cutoff
+        release thm increasing_integer_tail_index_map_range(start,substart,f,n)
+        $approx::is_epsilon_close(b(n),L,epsilon)
+        b(n)=a(f(n))
+        $approx::is_epsilon_close(a(f(n)),L,epsilon)
+        witness exist index {j Z:j>=start} st {index>=cutoff and $approx::is_epsilon_close(a(index),L,epsilon)} from f(n)
+    release thm rsl::real_tail_arbitrarily_late_close_is_limit_point(start,a,L)
+
+prop is_least_natural_member(X power_set(N),n N):
+    n $in X
+    forall k N:
+        k $in X
+        =>:
+            n<=k
+
+prop natural_subset_is_above(X power_set(N),bound N):
+    forall k N:
+        k $in X
+        =>:
+            k>bound
+
+thm least_natural_member_exists:
+    ? forall X power_set(N):
+        $is_nonempty_set(X)
+        =>:
+            exist n N st {$is_least_natural_member(X,n)}
+    by contra:
+        ? exist n N st {$is_least_natural_member(X,n)}
+        claim:
+            ? forall bound N:
+                $natural_subset_is_above(X,bound)
+            by induc bound from 0:
+                ? $natural_subset_is_above(X,bound)
+                ? from bound=0:
+                    claim:
+                        ? forall k N:
+                            k $in X
+                            =>:
+                                k>0
+                        by contra:
+                            ? k>0
+                            k<=0
+                            k>=0
+                            k=0
+                            0 $in X
+                            claim:
+                                ? forall j N:
+                                    j $in X
+                                    =>:
+                                        0<=j
+                                j>=0
+                                0<=j
+                            by def $is_least_natural_member(X,0)
+                            witness exist n N st {$is_least_natural_member(X,n)} from 0
+                            impossible exist n N st {$is_least_natural_member(X,n)}
+                    by def $natural_subset_is_above(X,0)
+                ? induc:
+                    claim:
+                        ? forall k N:
+                            k $in X
+                            =>:
+                                k>bound+1
+                        by contra:
+                            ? k>bound+1
+                            k>bound
+                            k<=bound+1
+                            k=bound+1
+                            claim:
+                                ? forall j N:
+                                    j $in X
+                                    =>:
+                                        k<=j
+                                j>bound
+                                j>=bound+1=k
+                            by def $is_least_natural_member(X,k)
+                            witness exist n N st {$is_least_natural_member(X,n)} from k
+                            impossible exist n N st {$is_least_natural_member(X,n)}
+                    by def $natural_subset_is_above(X,bound+1)
+        obtain member from exist member X st {member $in X}
+        member $in X
+        member $in N
+        $natural_subset_is_above(X,member)
+        member>member
+        impossible member>member
+
+thm least_natural_member_exists_unique:
+    ? forall X power_set(N):
+        $is_nonempty_set(X)
+        =>:
+            exist! n N st {$is_least_natural_member(X,n)}
+    release thm least_natural_member_exists(X)
+    obtain n from exist n N st {$is_least_natural_member(X,n)}
+    claim:
+        ? forall m,k N:
+            $is_least_natural_member(X,m)
+            $is_least_natural_member(X,k)
+            =>:
+                m=k
+        m $in X
+        k $in X
+        m<=k
+        k<=m
+        m=k
+    witness exist! m N st {$is_least_natural_member(X,m)} from n
+
+have fn least_natural_member by exist!:
+    ? forall X {S power_set(N):$is_nonempty_set(S)}:
+        exist! n N st {$is_least_natural_member(X,n)}
+
+claim:
+    ? forall start Z,k N:
+        start+k $in {j Z:j>=start}
+    k>=0
+    start+k $in Z
+    start+k>=start+0=start
+    start+k $in {j Z:j>=start}
+
+claim:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,epsilon R+,lower N:
+        {k N:k>=lower and $approx::is_epsilon_close(a(start+k),L,epsilon)} $in power_set(N)
+    {k N:k>=lower and $approx::is_epsilon_close(a(start+k),L,epsilon)} $subset N
+    {k N:k>=lower and $approx::is_epsilon_close(a(start+k),L,epsilon)} $in power_set(N)
+
+template<start Z,a fn(n {j Z:j>=start}) R,L R>:
+    have fn real_tail_close_natural_offsets(epsilon R+,lower N) power_set(N)={k N:k>=lower and $approx::is_epsilon_close(a(start+k),L,epsilon)}
+
+thm limit_point_close_natural_offsets_nonempty:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,epsilon R+,lower N:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            $is_nonempty_set(\real_tail_close_natural_offsets<start,a,L>(epsilon,lower))
+    start+lower $in {j Z:j>=start}
+    release thm rsl::real_tail_limit_point_witness(start,a,L,epsilon,start+lower)
+    obtain index from exist n {j Z:j>=start} st {n>=start+lower and $approx::is_epsilon_close(a(n),L,epsilon)}
+    index>=start
+    index-start $in N
+    have offset N=index-start
+    offset=index-start>=start+lower-start=lower
+    start+offset=start+(index-start)=index
+    a(start+offset)=a(index)
+    $approx::is_epsilon_close(a(start+offset),L,epsilon)
+    offset>=lower
+    offset $in {k N:k>=lower and $approx::is_epsilon_close(a(start+k),L,epsilon)}
+    \real_tail_close_natural_offsets<start,a,L>(epsilon,lower)={k N:k>=lower and $approx::is_epsilon_close(a(start+k),L,epsilon)}
+    offset $in \real_tail_close_natural_offsets<start,a,L>(epsilon,lower)
+    witness $is_nonempty_set(\real_tail_close_natural_offsets<start,a,L>(epsilon,lower)) from offset
+
+claim:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,epsilon R+,lower N:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            \real_tail_close_natural_offsets<start,a,L>(epsilon,lower) $in {S power_set(N):$is_nonempty_set(S)}
+    release thm limit_point_close_natural_offsets_nonempty(start,a,L,epsilon,lower)
+    \real_tail_close_natural_offsets<start,a,L>(epsilon,lower) $in power_set(N)
+    \real_tail_close_natural_offsets<start,a,L>(epsilon,lower) $in {S power_set(N):$is_nonempty_set(S)}
+
+template<start Z,a fn(n {j Z:j>=start}) R,L {c R:$rsl::is_real_tail_limit_point(start,a,c)}>:
+    have fn real_tail_least_close_offset(epsilon R+,lower N) N=least_natural_member(\real_tail_close_natural_offsets<start,a,L>(epsilon,lower))
+
+thm real_tail_least_close_offset_properties:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,epsilon R+,lower N:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            \real_tail_least_close_offset<start,a,L>(epsilon,lower)>=lower
+            $approx::is_epsilon_close(a(start+\real_tail_least_close_offset<start,a,L>(epsilon,lower)),L,epsilon)
+    release thm limit_point_close_natural_offsets_nonempty(start,a,L,epsilon,lower)
+    \real_tail_close_natural_offsets<start,a,L>(epsilon,lower) $in {S power_set(N):$is_nonempty_set(S)}
+    $is_least_natural_member(\real_tail_close_natural_offsets<start,a,L>(epsilon,lower),least_natural_member(\real_tail_close_natural_offsets<start,a,L>(epsilon,lower)))
+    least_natural_member(\real_tail_close_natural_offsets<start,a,L>(epsilon,lower)) $in \real_tail_close_natural_offsets<start,a,L>(epsilon,lower)
+    \real_tail_least_close_offset<start,a,L>(epsilon,lower)=least_natural_member(\real_tail_close_natural_offsets<start,a,L>(epsilon,lower))
+    \real_tail_least_close_offset<start,a,L>(epsilon,lower) $in \real_tail_close_natural_offsets<start,a,L>(epsilon,lower)
+    \real_tail_close_natural_offsets<start,a,L>(epsilon,lower)={k N:k>=lower and $approx::is_epsilon_close(a(start+k),L,epsilon)}
+    have E power_set(N)={k N:k>=lower and $approx::is_epsilon_close(a(start+k),L,epsilon)}
+    \real_tail_close_natural_offsets<start,a,L>(epsilon,lower)=E
+    \real_tail_least_close_offset<start,a,L>(epsilon,lower) $in E
+    \real_tail_least_close_offset<start,a,L>(epsilon,lower)>=lower
+    $approx::is_epsilon_close(a(start+\real_tail_least_close_offset<start,a,L>(epsilon,lower)),L,epsilon)
+
+template<start Z,a fn(n {j Z:j>=start}) R,L {c R:$rsl::is_real_tail_limit_point(start,a,c)}>:
+    have fn real_tail_close_offset_step(k N,previous N) N=\real_tail_least_close_offset<start,a,L>(1/(k+2),previous+1)
+
+template<start Z,a fn(n {j Z:j>=start}) R,L {c R:$rsl::is_real_tail_limit_point(start,a,c)}>:
+    have fn real_tail_limit_point_offsets(k N) N=\nat::natural_recursion<N,\real_tail_least_close_offset<start,a,L>(1,0),\real_tail_close_offset_step<start,a,L>>(k)
+
+thm real_tail_limit_point_offsets_equations:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,k N:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            \real_tail_limit_point_offsets<start,a,L>(0)=\real_tail_least_close_offset<start,a,L>(1,0)
+            \real_tail_limit_point_offsets<start,a,L>(k+1)=\real_tail_close_offset_step<start,a,L>(k,\real_tail_limit_point_offsets<start,a,L>(k))
+    release thm nat::natural_recursion_equations(N,\real_tail_least_close_offset<start,a,L>(1,0),\real_tail_close_offset_step<start,a,L>,k)
+    \real_tail_limit_point_offsets<start,a,L>(0)=\nat::natural_recursion<N,\real_tail_least_close_offset<start,a,L>(1,0),\real_tail_close_offset_step<start,a,L>>(0)=\real_tail_least_close_offset<start,a,L>(1,0)
+    \real_tail_limit_point_offsets<start,a,L>(k)=\nat::natural_recursion<N,\real_tail_least_close_offset<start,a,L>(1,0),\real_tail_close_offset_step<start,a,L>>(k)
+    \real_tail_limit_point_offsets<start,a,L>(k+1)=\nat::natural_recursion<N,\real_tail_least_close_offset<start,a,L>(1,0),\real_tail_close_offset_step<start,a,L>>(k+1)
+    \real_tail_close_offset_step<start,a,L>(k,\real_tail_limit_point_offsets<start,a,L>(k))=\real_tail_close_offset_step<start,a,L>(k,\nat::natural_recursion<N,\real_tail_least_close_offset<start,a,L>(1,0),\real_tail_close_offset_step<start,a,L>>(k))
+    \nat::natural_recursion<N,\real_tail_least_close_offset<start,a,L>(1,0),\real_tail_close_offset_step<start,a,L>>(k+1)=\real_tail_close_offset_step<start,a,L>(k,\nat::natural_recursion<N,\real_tail_least_close_offset<start,a,L>(1,0),\real_tail_close_offset_step<start,a,L>>(k))
+    \real_tail_limit_point_offsets<start,a,L>(k+1)=\real_tail_close_offset_step<start,a,L>(k,\real_tail_limit_point_offsets<start,a,L>(k))
+
+thm real_tail_limit_point_offsets_increase:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,k N:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            \real_tail_limit_point_offsets<start,a,L>(k+1)>\real_tail_limit_point_offsets<start,a,L>(k)
+    release thm real_tail_limit_point_offsets_equations(start,a,L,k)
+    \real_tail_limit_point_offsets<start,a,L>(k) $in N
+    \real_tail_limit_point_offsets<start,a,L>(k)+1 $in N
+    release thm real_tail_least_close_offset_properties(start,a,L,1/(k+2),\real_tail_limit_point_offsets<start,a,L>(k)+1)
+    \real_tail_close_offset_step<start,a,L>(k,\real_tail_limit_point_offsets<start,a,L>(k))=\real_tail_least_close_offset<start,a,L>(1/(k+2),\real_tail_limit_point_offsets<start,a,L>(k)+1)
+    \real_tail_limit_point_offsets<start,a,L>(k+1)=\real_tail_least_close_offset<start,a,L>(1/(k+2),\real_tail_limit_point_offsets<start,a,L>(k)+1)>=\real_tail_limit_point_offsets<start,a,L>(k)+1>\real_tail_limit_point_offsets<start,a,L>(k)
+
+thm real_tail_limit_point_offsets_close:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,k N:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            $approx::is_epsilon_close(a(start+\real_tail_limit_point_offsets<start,a,L>(k)),L,1/(k+1))
+    by induc k from 0:
+        ? $approx::is_epsilon_close(a(start+\real_tail_limit_point_offsets<start,a,L>(k)),L,1/(k+1))
+        ? from k=0:
+            release thm real_tail_limit_point_offsets_equations(start,a,L,0)
+            release thm real_tail_least_close_offset_properties(start,a,L,1,0)
+            start+\real_tail_limit_point_offsets<start,a,L>(0)=start+\real_tail_least_close_offset<start,a,L>(1,0)
+            a(start+\real_tail_limit_point_offsets<start,a,L>(0))=a(start+\real_tail_least_close_offset<start,a,L>(1,0))
+            1/(0+1)=1
+            $approx::is_epsilon_close(a(start+\real_tail_limit_point_offsets<start,a,L>(0)),L,1/(0+1))
+        ? induc:
+            release thm real_tail_limit_point_offsets_equations(start,a,L,k)
+            release thm real_tail_least_close_offset_properties(start,a,L,1/(k+2),\real_tail_limit_point_offsets<start,a,L>(k)+1)
+            \real_tail_close_offset_step<start,a,L>(k,\real_tail_limit_point_offsets<start,a,L>(k))=\real_tail_least_close_offset<start,a,L>(1/(k+2),\real_tail_limit_point_offsets<start,a,L>(k)+1)
+            \real_tail_limit_point_offsets<start,a,L>(k+1)=\real_tail_least_close_offset<start,a,L>(1/(k+2),\real_tail_limit_point_offsets<start,a,L>(k)+1)
+            start+\real_tail_limit_point_offsets<start,a,L>(k+1)=start+\real_tail_least_close_offset<start,a,L>(1/(k+2),\real_tail_limit_point_offsets<start,a,L>(k)+1)
+            a(start+\real_tail_limit_point_offsets<start,a,L>(k+1))=a(start+\real_tail_least_close_offset<start,a,L>(1/(k+2),\real_tail_limit_point_offsets<start,a,L>(k)+1))
+            (k+1)+1=k+2
+            1/((k+1)+1)=1/(k+2)
+            $approx::is_epsilon_close(a(start+\real_tail_limit_point_offsets<start,a,L>(k+1)),L,1/((k+1)+1))
+
+claim:
+    ? forall start Z,n {j Z:j>=start}:
+        n-start $in N
+    n $in Z
+    n>=start
+    n-start $in Z
+    n-start>=0
+    n-start $in N
+
+template<start Z,a fn(n {j Z:j>=start}) R,L {c R:$rsl::is_real_tail_limit_point(start,a,c)},substart Z>:
+    have fn real_tail_limit_point_indices(n {j Z:j>=substart}) Z=start+\real_tail_limit_point_offsets<start,a,L>(n-substart)
+
+thm real_tail_limit_point_indices_are_increasing:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,substart Z:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            $is_increasing_integer_tail_index_map(start,substart,\real_tail_limit_point_indices<start,a,L,substart>)
+    claim:
+        ? forall n {j Z:j>=substart}:
+            \real_tail_limit_point_indices<start,a,L,substart>(n)>=start
+            \real_tail_limit_point_indices<start,a,L,substart>(n+1)>\real_tail_limit_point_indices<start,a,L,substart>(n)
+        n-substart $in N
+        \real_tail_limit_point_offsets<start,a,L>(n-substart) $in N
+        \real_tail_limit_point_offsets<start,a,L>(n-substart)>=0
+        \real_tail_limit_point_indices<start,a,L,substart>(n)=start+\real_tail_limit_point_offsets<start,a,L>(n-substart)>=start+0=start
+        release thm real_tail_limit_point_offsets_increase(start,a,L,n-substart)
+        (n+1)-substart=(n-substart)+1
+        \real_tail_limit_point_offsets<start,a,L>((n+1)-substart)=\real_tail_limit_point_offsets<start,a,L>((n-substart)+1)
+        \real_tail_limit_point_indices<start,a,L,substart>(n+1)=start+\real_tail_limit_point_offsets<start,a,L>((n+1)-substart)=start+\real_tail_limit_point_offsets<start,a,L>((n-substart)+1)>start+\real_tail_limit_point_offsets<start,a,L>(n-substart)=\real_tail_limit_point_indices<start,a,L,substart>(n)
+    by def $is_increasing_integer_tail_index_map(start,substart,\real_tail_limit_point_indices<start,a,L,substart>)
+
+claim:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,substart Z:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            \real_tail_limit_point_indices<start,a,L,substart> $in {g fn(n {j Z:j>=substart}) Z:$is_increasing_integer_tail_index_map(start,substart,g)}
+    release thm real_tail_limit_point_indices_are_increasing(start,a,L,substart)
+    release thm fn_set_member(\real_tail_limit_point_indices<start,a,L,substart>,fn(n {j Z:j>=substart}) Z)
+    \real_tail_limit_point_indices<start,a,L,substart> $in {g fn(n {j Z:j>=substart}) Z:$is_increasing_integer_tail_index_map(start,substart,g)}
+
+template<start Z,a fn(n {j Z:j>=start}) R,L {c R:$rsl::is_real_tail_limit_point(start,a,c)},substart Z>:
+    have fn real_tail_limit_point_subsequence(n {j Z:j>=substart}) R=\real_tail_index_pullback<start,a,substart,\real_tail_limit_point_indices<start,a,L,substart>>(n)
+
+thm real_tail_limit_point_selected_subsequence_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,substart Z:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            $rs::has_real_tail_limit(substart,\real_tail_limit_point_subsequence<start,a,L,substart>,L)
+    release thm real_tail_limit_point_indices_are_increasing(start,a,L,substart)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(substart,\real_tail_limit_point_subsequence<start,a,L,substart>,L,epsilon)
+        release thm real_archimedean_natural_upper_bound(1/epsilon)
+        obtain large from exist k N+ st {1/epsilon<k}
+        large>=1
+        large-1 $in N
+        large-1>=0
+        have cutoff Z=substart+large-1
+        cutoff=substart+(large-1)>=substart+0=substart
+        claim:
+            ? forall n Z:
+                n>=substart
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\real_tail_limit_point_subsequence<start,a,L,substart>(n),L,epsilon)
+            n $in {j Z:j>=substart}
+            n-substart $in N
+            cutoff=substart+large-1
+            cutoff-substart+1=(substart+large-1)-substart+1=large
+            n-substart>=cutoff-substart
+            (n-substart)+1>=(cutoff-substart)+1
+            n-substart+1>=large>1/epsilon
+            n-substart+1 $in N+
+            1=(1/epsilon)*epsilon<(n-substart+1)*epsilon
+            1/(n-substart+1)<((n-substart+1)*epsilon)/(n-substart+1)=epsilon
+            release thm real_tail_limit_point_offsets_close(start,a,L,n-substart)
+            \real_tail_limit_point_indices<start,a,L,substart>(n)=start+\real_tail_limit_point_offsets<start,a,L>(n-substart)
+            release thm increasing_integer_tail_index_map_range(start,substart,\real_tail_limit_point_indices<start,a,L,substart>,n)
+            \real_tail_index_pullback<start,a,substart,\real_tail_limit_point_indices<start,a,L,substart>>(n)=a(\real_tail_limit_point_indices<start,a,L,substart>(n))
+            \real_tail_limit_point_subsequence<start,a,L,substart>(n)=\real_tail_index_pullback<start,a,substart,\real_tail_limit_point_indices<start,a,L,substart>>(n)=a(\real_tail_limit_point_indices<start,a,L,substart>(n))
+            a(\real_tail_limit_point_indices<start,a,L,substart>(n))=a(start+\real_tail_limit_point_offsets<start,a,L>(n-substart))
+            abs(a(start+\real_tail_limit_point_offsets<start,a,L>(n-substart))-L)<=1/(n-substart+1)
+            abs(\real_tail_limit_point_subsequence<start,a,L,substart>(n)-L)=abs(a(start+\real_tail_limit_point_offsets<start,a,L>(n-substart))-L)<=1/(n-substart+1)<epsilon
+            by def $approx::is_epsilon_close(\real_tail_limit_point_subsequence<start,a,L,substart>(n),L,epsilon)
+        by def $rs::is_real_tail_close_after(substart,\real_tail_limit_point_subsequence<start,a,L,substart>,L,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(substart,\real_tail_limit_point_subsequence<start,a,L,substart>,L,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(substart,\real_tail_limit_point_subsequence<start,a,L,substart>,L)
+
+thm real_tail_limit_point_selected_is_subsequence:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,substart Z:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            $is_real_tail_subsequence(start,a,substart,\real_tail_limit_point_subsequence<start,a,L,substart>)
+    release thm real_tail_limit_point_indices_are_increasing(start,a,L,substart)
+    claim:
+        ? forall n {j Z:j>=substart}:
+            \real_tail_limit_point_subsequence<start,a,L,substart>(n)=a(\real_tail_limit_point_indices<start,a,L,substart>(n))
+        release thm increasing_integer_tail_index_map_range(start,substart,\real_tail_limit_point_indices<start,a,L,substart>,n)
+        \real_tail_index_pullback<start,a,substart,\real_tail_limit_point_indices<start,a,L,substart>>(n)=a(\real_tail_limit_point_indices<start,a,L,substart>(n))
+        \real_tail_limit_point_subsequence<start,a,L,substart>(n)=\real_tail_index_pullback<start,a,substart,\real_tail_limit_point_indices<start,a,L,substart>>(n)=a(\real_tail_limit_point_indices<start,a,L,substart>(n))
+    by def $is_real_tail_subsequence_indexing(start,a,substart,\real_tail_limit_point_subsequence<start,a,L,substart>,\real_tail_limit_point_indices<start,a,L,substart>)
+    witness $is_real_tail_subsequence(start,a,substart,\real_tail_limit_point_subsequence<start,a,L,substart>) from \real_tail_limit_point_indices<start,a,L,substart>
+
+thm real_tail_limit_point_has_convergent_subsequence:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R,substart Z:
+        $rsl::is_real_tail_limit_point(start,a,L)
+        =>:
+            exist b fn(n {j Z:j>=substart}) R st {$is_real_tail_subsequence(start,a,substart,b) and $rs::has_real_tail_limit(substart,b,L)}
+    release thm real_tail_limit_point_selected_is_subsequence(start,a,L,substart)
+    release thm real_tail_limit_point_selected_subsequence_limit(start,a,L,substart)
+    witness exist b fn(n {j Z:j>=substart}) R st {$is_real_tail_subsequence(start,a,substart,b) and $rs::has_real_tail_limit(substart,b,L)} from \real_tail_limit_point_subsequence<start,a,L,substart>
+
+thm bounded_real_tail_has_convergent_subsequence:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,substart Z:
+        $rs::is_bounded_real_tail(start,a)
+        =>:
+            exist L R,b fn(n {j Z:j>=substart}) R st {L=\rsl::real_tail_limsup<start>(a) and $is_real_tail_subsequence(start,a,substart,b) and $rs::has_real_tail_limit(substart,b,L)}
+    release thm rsl::bounded_real_tail_extremal_limits_are_real(start,a)
+    have L R=\rsl::real_tail_limsup<start>(a)
+    release thm rsl::finite_real_tail_limsup_is_limit_point(start,a)
+    $rsl::is_real_tail_limit_point(start,a,L)
+    release thm real_tail_limit_point_has_convergent_subsequence(start,a,L,substart)
+    obtain b from exist b fn(n {j Z:j>=substart}) R st {$is_real_tail_subsequence(start,a,substart,b) and $rs::has_real_tail_limit(substart,b,L)}
+    witness exist c R,beta fn(n {j Z:j>=substart}) R st {c=\rsl::real_tail_limsup<start>(a) and $is_real_tail_subsequence(start,a,substart,beta) and $rs::has_real_tail_limit(substart,beta,c)} from L,b

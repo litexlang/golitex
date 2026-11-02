@@ -21,10 +21,40 @@ use crate::prelude::*;
 use crate::runtime::{Runtime, RuntimeResult};
 
 pub enum ExecDefPropStmtFailed {
+    Local(Box<ExecDefPropLocalFailure>),
     NameClash(String),
     ParamType(VerifyObjWellDefinedResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     IffFactWellDefined(FailToVerifyFactWellDefinedResult),
+}
+
+pub struct ExecDefPropLocalFailure {
+    pub statement: DefPropStmt,
+    pub failure: DefPropLocalFailed,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum DefPropLocalFailed {
+    Parameters(IntroduceTypedParametersFailed),
+    Condition {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_iff_facts: Vec<AssumeDomFactResult>,
+        failed: FailToVerifyFactWellDefinedResult,
+    },
+}
+
+impl ExecDefPropLocalFailure {
+    pub fn new(
+        statement: DefPropStmt,
+        failure: DefPropLocalFailed,
+        local_env: Box<ExecEnv>,
+    ) -> Self {
+        Self {
+            statement,
+            failure,
+            local_env,
+        }
+    }
 }
 
 /// `prop name(...): body` pipeline success payload.
@@ -73,7 +103,15 @@ impl Runtime {
 
         let (introduced, assumed_iff_facts) = match local_outcome {
             Ok(parts) => parts,
-            Err(failed) => return Ok(ExecDefPropStmtResult::Failed(failed)),
+            Err(failed) => {
+                return Ok(ExecDefPropStmtResult::Failed(ExecDefPropStmtFailed::Local(
+                    Box::new(ExecDefPropLocalFailure::new(
+                        def_prop.clone(),
+                        failed,
+                        local_env,
+                    )),
+                )))
+            }
         };
 
         self.top_exec_env_mut().store_def_prop(def_prop.clone());
@@ -107,7 +145,7 @@ impl Runtime {
         &mut self,
         def_prop: &DefPropStmt,
     ) -> RuntimeResult<
-        Result<(IntroduceTypedParametersResult, Vec<AssumeDomFactResult>), ExecDefPropStmtFailed>,
+        Result<(IntroduceTypedParametersResult, Vec<AssumeDomFactResult>), DefPropLocalFailed>,
     > {
         let verify_state = VerifyState::top_level();
 
@@ -115,12 +153,7 @@ impl Runtime {
             .introduce_typed_parameters(&def_prop.typed_parameters, verify_state.clone())?
         {
             Ok(result) => result,
-            Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
-                return Ok(Err(ExecDefPropStmtFailed::ParamType(failed)));
-            }
-            Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
-                return Ok(Err(ExecDefPropStmtFailed::AutoOpenStructLayer(failed)));
-            }
+            Err(failed) => return Ok(Err(DefPropLocalFailed::Parameters(failed))),
         };
 
         let mut assumed_iff_facts = Vec::with_capacity(def_prop.iff_facts.len());
@@ -140,7 +173,11 @@ impl Runtime {
                     });
                 }
                 VerifyFactWellDefinedResult::Failed(reason) => {
-                    return Ok(Err(ExecDefPropStmtFailed::IffFactWellDefined(reason)));
+                    return Ok(Err(DefPropLocalFailed::Condition {
+                        introduced_params: introduced,
+                        assumed_iff_facts,
+                        failed: reason,
+                    }));
                 }
             }
         }

@@ -1,0 +1,89 @@
+# Native finite coordinates: real, complex and zero-dimensional imported use.
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_mul
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def Algebra::field::complex_add
+
+release obj def Algebra::field::complex_mul
+
+release obj def Algebra::field::complex_field
+
+release struct def Algebra::field::complex_field
+
+release thm Algebra::finite_span::coordinate_space_carrier(R,Algebra::field::real_field,2)
+
+have plane &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,finite_seq(R,2)> = \Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>
+
+\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2> = (\Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>)
+
+plane = (\Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>)
+
+plane.add = \Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>
+
+plane.smul = \Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>
+
+have u finite_seq(R,2) = fn(k closed_range(1,2)) R {k}
+
+have doubled finite_seq(R,2) = plane.smul(2,u)
+
+release thm Algebra::finite_span::smul_coefficients_entry(R,Algebra::field::real_field,2,2,u,doubled,2)
+
+u(2)=2
+
+doubled(2) = Algebra::field::real_field.mul(2,u(2)) = Algebra::field::real_mul(2,2) = 4
+
+have added finite_seq(R,2) = plane.add(u,doubled)
+
+release thm Algebra::finite_span::add_coefficients_entry(R,Algebra::field::real_field,2,u,doubled,added,2)
+
+added(2) = Algebra::field::real_field.add(u(2),doubled(2)) = Algebra::field::real_add(2,4) = 6
+
+release thm matrix_apply_identity(doubled,2)
+
+matrix_apply(identity_matrix(2),doubled,2,2)=doubled
+
+release thm Algebra::finite_span::coordinate_space_carrier(C,Algebra::field::complex_field,2)
+
+have complex_plane &Algebra::vector_space::VectorSpace<C,Algebra::field::complex_field,finite_seq(C,2)> = \Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,2>
+
+\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,2> = (\Algebra::finite_span::zero_coefficients<C,Algebra::field::complex_field,2>,\Algebra::finite_span::add_coefficients<C,Algebra::field::complex_field,2>,\Algebra::finite_span::smul_coefficients<C,Algebra::field::complex_field,2>)
+
+complex_plane = (\Algebra::finite_span::zero_coefficients<C,Algebra::field::complex_field,2>,\Algebra::finite_span::add_coefficients<C,Algebra::field::complex_field,2>,\Algebra::finite_span::smul_coefficients<C,Algebra::field::complex_field,2>)
+
+complex_plane.smul = \Algebra::finite_span::smul_coefficients<C,Algebra::field::complex_field,2>
+
+have z finite_seq(C,2) = fn(k closed_range(1,2)) C {k+i}
+
+have rotated finite_seq(C,2) = complex_plane.smul(i,z)
+
+release thm Algebra::finite_span::smul_coefficients_entry(C,Algebra::field::complex_field,2,i,z,rotated,2)
+
+z(2)=2+i
+
+rotated(2) = Algebra::field::complex_field.mul(i,z(2)) = Algebra::field::complex_mul(i,2+i) = -1+2*i
+
+release thm Algebra::finite_span::coordinate_space_carrier(R,Algebra::field::real_field,0)
+
+have empty_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,finite_seq(R,0)> = \Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>
+
+have empty_vector finite_seq(R,0) = fn(k closed_range(1,0)) R {0}
+
+release thm Algebra::vector_space::zero_scalar_times_vector(R,Algebra::field::real_field,finite_seq(R,0),empty_space,empty_vector)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N,f finite_seq(K,n):
+        \Algebra::finite_span::smul_coefficients<K,F,n>(F.zero,f) = \Algebra::finite_span::zero_coefficients<K,F,n>
+    release thm Algebra::finite_span::coordinate_space_carrier(K,F,n)
+    have space &Algebra::vector_space::VectorSpace<K,F,finite_seq(K,n)> = \Algebra::finite_span::coordinate_space<K,F,n>
+    \Algebra::finite_span::coordinate_space<K,F,n> = (\Algebra::finite_span::zero_coefficients<K,F,n>,\Algebra::finite_span::add_coefficients<K,F,n>,\Algebra::finite_span::smul_coefficients<K,F,n>)
+    space = (\Algebra::finite_span::zero_coefficients<K,F,n>,\Algebra::finite_span::add_coefficients<K,F,n>,\Algebra::finite_span::smul_coefficients<K,F,n>)
+    space.smul = \Algebra::finite_span::smul_coefficients<K,F,n>
+    space.zero = \Algebra::finite_span::zero_coefficients<K,F,n>
+    by thm Algebra::vector_space::zero_scalar_times_vector(K,F,finite_seq(K,n),space,f) => space.smul(F.zero,f)=space.zero
+    \Algebra::finite_span::smul_coefficients<K,F,n>(F.zero,f) = space.smul(F.zero,f) = space.zero = \Algebra::finite_span::zero_coefficients<K,F,n>

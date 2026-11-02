@@ -74,8 +74,11 @@ impl LitexToLeanCompiler {
                 if proof.builtin.is_some() || proof.function_domain.is_some() {
                     return Err(LeanCompileError::unsupported("ReleaseThm/CalleeCapture"));
                 }
-                let (registered, reference) =
-                    position.user_callee_reference(&proof.call.name, &proof.callee)?;
+                let (registered, reference) = position.user_callee_reference(
+                    &proof.call.name,
+                    &proof.callee,
+                    &self.runtime,
+                )?;
                 let reference =
                     self.compile_local_forall_citation(registered.fact_id(), reference, position)?;
                 if proof.stored_wd.len() != proof.stored.len() {

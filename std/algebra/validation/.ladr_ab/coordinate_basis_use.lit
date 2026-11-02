@@ -1,0 +1,91 @@
+# Independent imported standard-coordinate-basis use.
+# Publish the existing carrier and finite-dimension theorems before selector WD.
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>:
+        \Algebra::vector_space::scalar_space<K,F> $in &Algebra::vector_space::VectorSpace<K,F,K>
+    release thm Algebra::vector_space::scalar_space_carrier(K,F)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        \Algebra::finite_span::coordinate_space<K,F,n> $in &Algebra::vector_space::VectorSpace<K,F,finite_seq(K,n)>
+    release thm Algebra::finite_span::coordinate_space_carrier(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        $Algebra::basis::is_finite_dimensional(K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>)
+    release thm Algebra::coordinate_basis::coordinate_space_is_finite_dimensional(K,F,n)
+
+release obj def Algebra::field::real_field
+
+release obj def Algebra::field::complex_field
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        $Algebra::basis::is_basis(K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>,n,\Algebra::coordinate_basis::coordinate_basis<K,F,n>)
+    release thm Algebra::coordinate_basis::coordinate_basis_is_basis(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N,coefficients finite_seq(K,n):
+        \Algebra::finite_span::linear_combination<K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>,n>(coefficients,\Algebra::coordinate_basis::coordinate_basis<K,F,n>)=coefficients
+    release thm Algebra::coordinate_basis::coordinate_basis_linear_combination(K,F,n,coefficients)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N:
+        $Algebra::basis::is_finite_dimensional(K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>)
+        \Algebra::dimension::finite_dimension<K,F,finite_seq(K,n)>(\Algebra::finite_span::coordinate_space<K,F,n>)=n
+    release thm Algebra::coordinate_basis::coordinate_space_dimension(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,n N,j closed_range(1,n):
+        $Algebra::vector_space::is_linear_map(K,F,finite_seq(K,n),\Algebra::finite_span::coordinate_space<K,F,n>,K,\Algebra::vector_space::scalar_space<K,F>,\Algebra::coordinate_basis::coordinate_projection<K,n,j>)
+    release thm Algebra::coordinate_basis::coordinate_projection_is_linear(K,F,n,j)
+
+have coordinate_check_complex finite_seq(C,2)=fn(j closed_range(1,2)) C {j+i}
+
+coordinate_check_complex(1)=1+i
+
+coordinate_check_complex(2)=2+i
+
+release thm Algebra::coordinate_basis::coordinate_basis_entry(R,Algebra::field::real_field,2,1)
+
+release struct def Algebra::field::real_field
+
+release struct def Algebra::field::complex_field
+
+\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,2,1>(1)=Algebra::field::real_field.one
+
+\Algebra::coordinate_basis::coordinate_basis<R,Algebra::field::real_field,2>(1)(1)=\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,2,1>(1)=Algebra::field::real_field.one=1
+
+\Algebra::coordinate_basis::coordinate_basis<R,Algebra::field::real_field,2>(1)(2)=\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,2,1>(2)=Algebra::field::real_field.zero=0
+
+release thm Algebra::coordinate_basis::coordinate_basis_entry(R,Algebra::field::real_field,2,2)
+
+\Algebra::coordinate_basis::coordinate_basis<R,Algebra::field::real_field,2>(2)(1)=\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,2,2>(1)=Algebra::field::real_field.zero=0
+
+\Algebra::coordinate_basis::coordinate_basis<R,Algebra::field::real_field,2>(2)(2)=\Algebra::coordinate_maps::unit_coefficients<R,Algebra::field::real_field,2,2>(2)=Algebra::field::real_field.one=1
+
+release thm Algebra::coordinate_basis::coordinate_basis_linear_combination(C,Algebra::field::complex_field,2,coordinate_check_complex)
+
+\Algebra::finite_span::linear_combination<C,Algebra::field::complex_field,finite_seq(C,2),\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,2>,2>(coordinate_check_complex,\Algebra::coordinate_basis::coordinate_basis<C,Algebra::field::complex_field,2>)=coordinate_check_complex
+
+release thm Algebra::coordinate_basis::coordinate_projection_spec(C,2,2,coordinate_check_complex)
+
+\Algebra::coordinate_basis::coordinate_projection<C,2,2>(coordinate_check_complex)=2+i
+
+release thm Algebra::coordinate_basis::coordinate_space_dimension(R,Algebra::field::real_field,0)
+
+\Algebra::dimension::finite_dimension<R,Algebra::field::real_field,finite_seq(R,0)>(\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,0>)=0
+
+release thm Algebra::coordinate_basis::coordinate_space_dimension(C,Algebra::field::complex_field,0)
+
+\Algebra::dimension::finite_dimension<C,Algebra::field::complex_field,finite_seq(C,0)>(\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,0>)=0
+
+release thm Algebra::coordinate_basis::coordinate_space_dimension(R,Algebra::field::real_field,2)
+
+\Algebra::dimension::finite_dimension<R,Algebra::field::real_field,finite_seq(R,2)>(\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>)=2
+
+release thm Algebra::coordinate_basis::coordinate_space_dimension(C,Algebra::field::complex_field,2)
+
+\Algebra::dimension::finite_dimension<C,Algebra::field::complex_field,finite_seq(C,2)>(\Algebra::finite_span::coordinate_space<C,Algebra::field::complex_field,2>)=2
+

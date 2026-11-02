@@ -1,0 +1,111 @@
+# Complement existence from basis extension; no canonical complement is selected.
+
+thm independent_concatenation_has_trivial_span_intersection:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,m,n N,left finite_seq(V,m),right finite_seq(V,n):
+        $basis::is_linearly_independent(K,F,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>)
+        =>:
+            intersect(\finite_span::span<K,F,V,space,m,left>,\finite_span::span<K,F,V,space,n,right>)={space.zero}
+    release thm finite_span::zero_coefficients_carrier(K,F,m)
+    release thm finite_span::zero_coefficients_carrier(K,F,n)
+    have zeros_left finite_seq(K,m)=\finite_span::zero_coefficients<K,F,m>
+    have zeros_right finite_seq(K,n)=\finite_span::zero_coefficients<K,F,n>
+    \finite_span::span<K,F,V,space,m,left> ={value V: $finite_span::is_linear_combination(K,F,V,space,m,value,left)}
+    \finite_span::span<K,F,V,space,n,right> ={value V: $finite_span::is_linear_combination(K,F,V,space,n,value,right)}
+    release thm finite_span::linear_combination_zero_coefficients(K,F,V,space,m,left)
+    release thm finite_span::linear_combination_zero_coefficients(K,F,V,space,n,right)
+    claim:
+        ? forall x intersect(\finite_span::span<K,F,V,space,m,left>,\finite_span::span<K,F,V,space,n,right>):
+            x $in {space.zero}
+        x $in \finite_span::span<K,F,V,space,m,left>
+        x $in \finite_span::span<K,F,V,space,n,right>
+        $finite_span::is_linear_combination(K,F,V,space,m,x,left)
+        $finite_span::is_linear_combination(K,F,V,space,n,x,right)
+        obtain a from $finite_span::is_linear_combination(K,F,V,space,m,x,left)
+        obtain b from $finite_span::is_linear_combination(K,F,V,space,n,x,right)
+        obtain a_sums from $finite_span::has_linear_combination_value(K,F,V,space,m,a,left,x)
+        obtain b_sums from $finite_span::has_linear_combination_value(K,F,V,space,n,b,right,x)
+        release thm finite_span::partial_sum_determines_combination(K,F,V,space,m,a,left,a_sums)
+        release thm finite_span::partial_sum_determines_combination(K,F,V,space,n,b,right,b_sums)
+        \finite_span::linear_combination<K,F,V,space,m>(a,left)=a_sums(m)=x
+        \finite_span::linear_combination<K,F,V,space,n>(b,right)=b_sums(n)=x
+        \finite_span::linear_combination<K,F,V,space,m>(zeros_left,left)=\finite_span::linear_combination<K,F,V,space,m>(\finite_span::zero_coefficients<K,F,m>,left)=space.zero
+        \finite_span::linear_combination<K,F,V,space,n>(zeros_right,right)=\finite_span::linear_combination<K,F,V,space,n>(\finite_span::zero_coefficients<K,F,n>,right)=space.zero
+        x $in V
+        \finite_span::linear_combination<K,F,V,space,m>(a,left) $in V
+        \finite_span::linear_combination<K,F,V,space,n>(b,right) $in V
+        \finite_span::linear_combination<K,F,V,space,m>(zeros_left,left) $in V
+        \finite_span::linear_combination<K,F,V,space,n>(zeros_right,right) $in V
+        space.add(x,space.zero)=space.add(space.zero,x)=x
+        have first finite_seq(K,m+n)=\finite_decomposition::concatenate_lists<K,m,n,a,zeros_right>
+        have second finite_seq(K,m+n)=\finite_decomposition::concatenate_lists<K,m,n,zeros_left,b>
+        release thm finite_decomposition::concatenated_linear_combination(K,F,V,space,m,n,a,zeros_right,left,right)
+        release thm finite_decomposition::concatenated_linear_combination(K,F,V,space,m,n,zeros_left,b,left,right)
+        \finite_span::linear_combination<K,F,V,space,m+n>(first,\finite_decomposition::concatenate_lists<V,m,n,left,right>)=space.add(\finite_span::linear_combination<K,F,V,space,m>(a,left),\finite_span::linear_combination<K,F,V,space,n>(zeros_right,right))=space.add(x,space.zero)=x
+        \finite_span::linear_combination<K,F,V,space,m+n>(second,\finite_decomposition::concatenate_lists<V,m,n,left,right>)=space.add(\finite_span::linear_combination<K,F,V,space,m>(zeros_left,left),\finite_span::linear_combination<K,F,V,space,n>(b,right))=space.add(space.zero,x)=x
+        release thm basis::independent_combination_coefficients_unique(K,F,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,left,right>,first,second)
+        first=second
+        claim:
+            ? forall j closed_range(1,m):
+                a(j)=zeros_left(j)
+            j<=m<=m+n
+            j $in Z
+            1<=j
+            j $in closed_range(1,m+n)
+            first(j)=\finite_decomposition::concatenate_lists<K,m,n,a,zeros_right>(j)=a(j)
+            second(j)=\finite_decomposition::concatenate_lists<K,m,n,zeros_left,b>(j)=zeros_left(j)
+            a(j)=first(j)=second(j)=zeros_left(j)
+        by fn_extension a=zeros_left
+        x=\finite_span::linear_combination<K,F,V,space,m>(a,left)=\finite_span::linear_combination<K,F,V,space,m>(zeros_left,left)=\finite_span::linear_combination<K,F,V,space,m>(\finite_span::zero_coefficients<K,F,m>,left)=space.zero
+        x $in {space.zero}
+    release thm finite_span::span_zero_member(K,F,V,space,m,left)
+    release thm finite_span::span_zero_member(K,F,V,space,n,right)
+    space.zero $in intersect(\finite_span::span<K,F,V,space,m,left>,\finite_span::span<K,F,V,space,n,right>)
+    by extension intersect(\finite_span::span<K,F,V,space,m,left>,\finite_span::span<K,F,V,space,n,right>)={space.zero}
+
+thm finite_dimensional_subspace_has_complement:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,U power_set(V):
+        $vector_space::is_subspace(K,F,V,space,U)
+        $basis::is_finite_dimensional(K,F,V,space)
+        =>:
+            exist W power_set(V) st {$direct_sum::is_internal_direct_sum(K,F,V,space,U,W)}
+    release thm subspace::subspace_is_nonempty(K,F,V,space,U)
+    release thm subspace::restricted_space_is_vector_space(K,F,V,space,U)
+    release thm subspace::finite_dimensional_subspace_is_finite_dimensional(K,F,V,space,U)
+    release thm basis_existence::finite_dimensional_has_basis(K,F,U,\subspace::restricted_space<K,F,V,space,U>)
+    obtain m,original from exist length N,selected finite_seq(U,length) st {$basis::is_basis(K,F,U,\subspace::restricted_space<K,F,V,space,U>,length,selected)}
+    release thm subspace::sequence_in_ambient(V,U,m,original)
+    release thm subspace::subspace_independent_is_ambient_independent(K,F,V,space,U,m,original)
+    release thm subspace::subspace_span_equals_ambient(K,F,V,space,U,m,original)
+    $finite_span::spans(K,F,U,\subspace::restricted_space<K,F,V,space,U>,m,original)
+    \finite_span::span<K,F,U,\subspace::restricted_space<K,F,V,space,U>,m,original> =U
+    \finite_span::span<K,F,V,space,m,original> =U
+    release thm basis_extension::independent_list_extends_to_basis(K,F,V,space,m,original)
+    obtain r,extended from exist length N,selected finite_seq(V,length) st {$basis::is_basis(K,F,V,space,length,selected),$basis::is_prefix_of_length(V,length,m,selected,original)}
+    m<=r
+    have n N=r-m
+    n=r-m
+    r=m+(r-m)=m+n
+    finite_seq(V,r)=finite_seq(V,m+n)
+    extended $in finite_seq(V,m+n)
+    $basis::is_prefix_of_length(V,m+n,m,extended,original)
+    release thm finite_decomposition::prefix_has_concatenation_decomposition(V,m,n,extended,original)
+    obtain tail from exist suffix finite_seq(V,n) st {extended=\finite_decomposition::concatenate_lists<V,m,n,original,suffix>}
+    \finite_span::span<K,F,V,space,n,tail> ={value V: $finite_span::is_linear_combination(K,F,V,space,n,value,tail)}
+    \finite_span::span<K,F,V,space,n,tail> $subset V
+    \finite_span::span<K,F,V,space,n,tail> $in power_set(V)
+    have W power_set(V)=\finite_span::span<K,F,V,space,n,tail>
+    release thm finite_span::span_is_subspace(K,F,V,space,n,tail)
+    $vector_space::is_subspace(K,F,V,space,W)
+    $basis::is_linearly_independent(K,F,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,original,tail>)
+    release thm independent_concatenation_has_trivial_span_intersection(K,F,V,space,m,n,original,tail)
+    intersect(U,W)={space.zero}
+    release thm subspace_sums::generators_span_subspace_sum(K,F,V,space,U,W,m,n,original,tail)
+    $finite_span::spans(K,F,V,space,r,extended)
+    \finite_span::span<K,F,V,space,r,extended> =V
+    $basis::is_basis(K,F,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,original,tail>)
+    $finite_span::spans(K,F,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,original,tail>)
+    \finite_span::span<K,F,V,space,m+n,\finite_decomposition::concatenate_lists<V,m,n,original,tail>> =V
+    \direct_sum::subspace_sum<K,F,V,space,U,W> =V
+    by def $direct_sum::is_internal_direct_sum(K,F,V,space,U,W)
+    witness exist complement power_set(V) st {$direct_sum::is_internal_direct_sum(K,F,V,space,U,complement)} from W
+

@@ -204,6 +204,20 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match &proof.source {
+            CompleteFunctionDomainSourceProof::FiniteFunction(finite) => {
+                if proof.signature != finite.signature {
+                    return Err(LeanCompileError::unsupported(
+                        "FiniteDomain/SourceSignature",
+                    ));
+                }
+                self.compile_finite_complete_member(subject, finite, position)
+            }
+            CompleteFunctionDomainSourceProof::MultivariableSelector(source) => {
+                self.validate_multivariable_selector_domain(subject, proof)?;
+                let object = self.compile_wd(&source.well_defined, position)?;
+                let(_,law)=crate::compile_to_lean::compile_multivariable_vector_limit::multivariable_selector_carrier(subject)?;
+                Ok(format!("(Litex.{law} {object})"))
+            }
             CompleteFunctionDomainSourceProof::ApplicationReturn { .. } => {
                 self.compile_application_return_member(subject, proof, position)
             }

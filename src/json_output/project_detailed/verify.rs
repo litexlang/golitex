@@ -316,7 +316,19 @@ fn project_chain(result: &VerifyChainFactResult, runtime: &Runtime) -> JsonValue
                     "searched_proof",
                     s.known_forall
                         .as_ref()
-                        .map(|proof| project_known_forall(proof, runtime))
+                        .map(|proof| {
+                            let mut application = project_known_forall(&proof.application, runtime);
+                            if let JsonValue::Object(fields) = &mut application {
+                                fields.insert(
+                                    "well_defined_proof".into(),
+                                    super::wd::project_chain_wd_proof(
+                                        &proof.well_defined_proof,
+                                        runtime,
+                                    ),
+                                );
+                            }
+                            application
+                        })
                         .unwrap_or(JsonValue::Null),
                 ),
             ],

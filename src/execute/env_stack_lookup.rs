@@ -65,6 +65,13 @@ impl Runtime {
         self.lookup_named_definition(name, |env, plain| env.lookup_def_thm(plain))
     }
 
+    pub(crate) fn def_algo_visible(
+        &self,
+        name: &AtomicName,
+    ) -> Option<&crate::exec_env::StoredDefAlgo> {
+        self.lookup_named_definition(name, |env, plain| env.lookup_def_algo(plain))
+    }
+
     pub(crate) fn def_prop_visible(&self, name: &AtomicName) -> Option<&DefPropStmt> {
         self.lookup_named_definition(name, |env, plain| env.lookup_def_prop(plain))
     }

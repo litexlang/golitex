@@ -1,0 +1,237 @@
+template<start Z,a fn(n {j Z:j>=start}) R,f fn(x R) R>:
+    have fn real_tail_function_image(n {j Z:j>=start}) R=f(a(n))
+
+thm continuous_real_image_preserves_tail_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,f fn(x R) R,L R:
+        $rs::has_real_tail_limit(start,a,L)
+        $is_continuous_at(f,L)
+        =>:
+            $rs::has_real_tail_limit(start,\real_tail_function_image<start,a,f>,f(L))
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(start,\real_tail_function_image<start,a,f>,f(L),epsilon)
+        release thm fn_continuous_at_control(f,L,epsilon)
+        obtain delta from exist delta R+ st {{x R:abs(x-L)<delta} $subset preimage_set(f,{v R:abs(v-f(L))<epsilon})}
+        delta/2 $in R+
+        $rs::is_eventually_real_tail_close(start,a,L,delta/2)
+        obtain cutoff from $rs::is_eventually_real_tail_close(start,a,L,delta/2)
+        cutoff>=start
+        claim:
+            ? forall n Z:
+                n>=start
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\real_tail_function_image<start,a,f>(n),f(L),epsilon)
+            n $in {j Z:j>=start}
+            a(n) $in R
+            $approx::is_epsilon_close(a(n),L,delta/2)
+            abs(a(n)-L)<=delta/2<delta
+            a(n) $in {x R:abs(x-L)<delta}
+            a(n) $in preimage_set(f,{v R:abs(v-f(L))<epsilon})
+            f(a(n)) $in {v R:abs(v-f(L))<epsilon}
+            abs(f(a(n))-f(L))<epsilon
+            \real_tail_function_image<start,a,f>(n)=f(a(n))
+            abs(\real_tail_function_image<start,a,f>(n)-f(L))=abs(f(a(n))-f(L))<epsilon
+            by def $approx::is_epsilon_close(\real_tail_function_image<start,a,f>(n),f(L),epsilon)
+        by def $rs::is_real_tail_close_after(start,\real_tail_function_image<start,a,f>,f(L),epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(start,\real_tail_function_image<start,a,f>,f(L),epsilon) from cutoff
+    by def $rs::has_real_tail_limit(start,\real_tail_function_image<start,a,f>,f(L))
+
+thm positive_real_power_exponential_form:
+    ? forall base R+,t R:
+        base^t=exp(t*log(e,base))
+    e>1
+    e>0
+    e!=1
+    base^t $in R+
+    exp(t*log(e,base)) $in R+
+    log(e,exp(t*log(e,base)))=ln(exp(t*log(e,base)))=t*log(e,base)
+    release thm power::natural_log_of_real_power(base,t)
+    log(e,base^t)=t*log(e,base)=log(e,exp(t*log(e,base)))
+    release thm power::natural_log_is_injective(base^t,exp(t*log(e,base)))
+
+template<base R+>:
+    have fn positive_base_real_power_function(t R) R+=base^t
+
+thm positive_base_real_power_function_continuous:
+    ? forall base R+,alpha R:
+        $is_continuous_at(\positive_base_real_power_function<base>,alpha)
+    have fn exponential(t R) R=exp(t)
+    have fn scaled(t R) R=t*log(e,base)
+    release thm fn_continuous_exp(exponential)
+    $is_continuous_at(exponential,scaled(alpha))
+    $is_continuous_at(scaled,alpha)
+    claim:
+        ? forall t R:
+            \positive_base_real_power_function<base>(t)=exponential(scaled(t))
+        release thm positive_real_power_exponential_form(base,t)
+        scaled(t)=t*log(e,base)
+        exponential(scaled(t))=exp(scaled(t))=exp(t*log(e,base))
+        \positive_base_real_power_function<base>(t)=base^t=exp(t*log(e,base))=exponential(scaled(t))
+    release thm fn_continuous_at_compose(scaled,exponential,\positive_base_real_power_function<base>,alpha)
+
+template<start Z,a fn(n {j Z:j>=start}) R,base R+>:
+    have fn real_tail_fixed_base_power(n {j Z:j>=start}) R+=base^a(n)
+
+thm real_tail_fixed_base_power_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,base R+,alpha R:
+        $rs::has_real_tail_limit(start,a,alpha)
+        =>:
+            $rs::has_real_tail_limit(start,\real_tail_fixed_base_power<start,a,base>,base^alpha)
+    release thm positive_base_real_power_function_continuous(base,alpha)
+    release thm continuous_real_image_preserves_tail_limit(start,a,\positive_base_real_power_function<base>,alpha)
+    \positive_base_real_power_function<base>(alpha)=base^alpha
+    claim:
+        ? forall n {j Z:j>=start}:
+            \real_tail_function_image<start,a,\positive_base_real_power_function<base>>(n)=\real_tail_fixed_base_power<start,a,base>(n)
+        \real_tail_function_image<start,a,\positive_base_real_power_function<base>>(n)=\positive_base_real_power_function<base>(a(n))=base^a(n)=\real_tail_fixed_base_power<start,a,base>(n)
+    by fn_extension \real_tail_function_image<start,a,\positive_base_real_power_function<base>> = \real_tail_fixed_base_power<start,a,base>
+    $rs::has_real_tail_limit(start,\real_tail_fixed_base_power<start,a,base>,base^alpha)
+
+thm real_tail_rational_power_limit:
+    ? forall start Z,q fn(n \rseq::integer_index_tail<start>) Q,base R+,alpha R:
+        $rs::has_real_tail_limit(start,\rql::rational_tail_as_real<start,q>,alpha)
+        =>:
+            $rs::has_real_tail_limit(start,\real_tail_fixed_base_power<start,\rql::rational_tail_as_real<start,q>,base>,base^alpha)
+    release thm real_tail_fixed_base_power_limit(start,\rql::rational_tail_as_real<start,q>,base,alpha)
+
+thm native_rational_exponent_tail_power_limit:
+    ? forall start Z,q fn(n \rseq::integer_index_tail<start>) Q,base R+,alpha R:
+        $has_seq_limit(\rseq::rational_real_reindex<start,q>,alpha)
+        =>:
+            $rs::has_real_tail_limit(start,\real_tail_fixed_base_power<start,\rql::rational_tail_as_real<start,q>,base>,base^alpha)
+    release thm rql::rational_native_limit_is_genuine(start,q,alpha)
+    release thm real_tail_rational_power_limit(start,q,base,alpha)
+
+thm every_real_exponent_has_rational_power_approximants:
+    ? forall base R+,alpha R:
+        exist q fn(n \rseq::integer_index_tail<1>) Q st {$rs::has_real_tail_limit(1,\rql::rational_tail_as_real<1,q>,alpha) and $rs::has_real_tail_limit(1,\real_tail_fixed_base_power<1,\rql::rational_tail_as_real<1,q>,base>,base^alpha)}
+    release thm rseq::rational_floor_sequence_real_limit(alpha)
+    release thm rql::rational_native_limit_is_genuine(1,\rseq::rational_floor_sequence<alpha>,alpha)
+    release thm real_tail_rational_power_limit(1,\rseq::rational_floor_sequence<alpha>,base,alpha)
+    witness exist q fn(n \rseq::integer_index_tail<1>) Q st {$rs::has_real_tail_limit(1,\rql::rational_tail_as_real<1,q>,alpha) and $rs::has_real_tail_limit(1,\real_tail_fixed_base_power<1,\rql::rational_tail_as_real<1,q>,base>,base^alpha)} from \rseq::rational_floor_sequence<alpha>
+
+thm rational_exponent_tail_power_limit_is_native:
+    ? forall start Z,q fn(n \rseq::integer_index_tail<start>) Q,base R+,alpha,L R:
+        $rs::has_real_tail_limit(start,\rql::rational_tail_as_real<start,q>,alpha)
+        $rs::has_real_tail_limit(start,\real_tail_fixed_base_power<start,\rql::rational_tail_as_real<start,q>,base>,L)
+        =>:
+            L=base^alpha
+    release thm real_tail_rational_power_limit(start,q,base,alpha)
+    release thm rs::real_tail_limit_unique(start,\real_tail_fixed_base_power<start,\rql::rational_tail_as_real<start,q>,base>,L,base^alpha)
+
+thm rational_exponent_tail_power_limits_independent:
+    ? forall start Z,q fn(n \rseq::integer_index_tail<start>) Q,otherstart Z,r fn(n \rseq::integer_index_tail<otherstart>) Q,base R+,alpha,L,M R:
+        $rs::has_real_tail_limit(start,\rql::rational_tail_as_real<start,q>,alpha)
+        $rs::has_real_tail_limit(otherstart,\rql::rational_tail_as_real<otherstart,r>,alpha)
+        $rs::has_real_tail_limit(start,\real_tail_fixed_base_power<start,\rql::rational_tail_as_real<start,q>,base>,L)
+        $rs::has_real_tail_limit(otherstart,\real_tail_fixed_base_power<otherstart,\rql::rational_tail_as_real<otherstart,r>,base>,M)
+        =>:
+            L=M
+    release thm rational_exponent_tail_power_limit_is_native(start,q,base,alpha,L)
+    release thm rational_exponent_tail_power_limit_is_native(otherstart,r,base,alpha,M)
+    L=base^alpha=M
+
+thm positive_real_exponent_power_preserves_strict_base_order:
+    ? forall x,y,q R+:
+        x<y
+        =>:
+            x^q<y^q
+    1<e
+    e>1
+    e>0
+    e!=1
+    log(e,x)<log(e,y)
+    q>0
+    q*log(e,x)<q*log(e,y)
+    exp(q*log(e,x))<exp(q*log(e,y))
+    release thm positive_real_power_exponential_form(x,q)
+    release thm positive_real_power_exponential_form(y,q)
+    x^q=exp(q*log(e,x))<exp(q*log(e,y))=y^q
+
+thm positive_real_exponent_power_reflects_strict_base_order:
+    ? forall x,y,q R+:
+        x^q<y^q
+        =>:
+            x<y
+    q>0
+    1/q $in R+
+    release thm power::positive_real_power_is_positive(x,q)
+    release thm power::positive_real_power_is_positive(y,q)
+    release thm positive_real_exponent_power_preserves_strict_base_order(x^q,y^q,1/q)
+    release thm power::positive_real_power_iteration(x,q,1/q)
+    release thm power::positive_real_power_iteration(y,q,1/q)
+    q*(1/q)=1
+    x=x^1=x^(q*(1/q))=(x^q)^(1/q)<(y^q)^(1/q)=y^(q*(1/q))=y^1=y
+
+thm real_exponents_order_above_one:
+    ? forall x R+,q,r R:
+        x > 1
+        q < r
+        =>:
+            x^q < x^r
+    r-q $in R
+    r-q > 0
+    r-q $in R+
+    release thm positive_real_exponent_power_preserves_strict_base_order(1,x,r-q)
+    1 = 1^(r-q) < x^(r-q)
+    release thm power::positive_real_power_is_positive(x,q)
+    release thm power::positive_real_power_addition(x,q,r-q)
+    x^q = x^q*1 < x^q*x^(r-q) = x^(q+(r-q)) = x^r
+
+thm real_exponents_order_below_one:
+    ? forall x R+,q,r R:
+        x < 1
+        q < r
+        =>:
+            x^r < x^q
+    r-q $in R
+    r-q > 0
+    r-q $in R+
+    release thm positive_real_exponent_power_preserves_strict_base_order(x,1,r-q)
+    x^(r-q) < 1^(r-q) = 1
+    release thm power::positive_real_power_is_positive(x,q)
+    release thm power::positive_real_power_addition(x,q,r-q)
+    x^r = x^(q+(r-q)) = x^q*x^(r-q) < x^q*1 = x^q
+
+thm real_power_reflects_exponents_above_one:
+    ? forall x R+,q,r R:
+        x > 1
+        x^q < x^r
+        =>:
+            q < r
+    by contra:
+        ? q < r
+        q >= r
+        by cases:
+            ? q < r
+            case q = r:
+                x^q = x^r
+                x^q >= x^r
+                impossible x^q < x^r
+            case q > r:
+                release thm real_exponents_order_above_one(x,r,q)
+                x^r < x^q
+                impossible x^q < x^r
+        impossible q < r
+
+thm real_power_reflects_exponents_below_one:
+    ? forall x R+,q,r R:
+        x < 1
+        x^r < x^q
+        =>:
+            q < r
+    by contra:
+        ? q < r
+        q >= r
+        by cases:
+            ? q < r
+            case q = r:
+                x^r = x^q
+                x^r >= x^q
+                impossible x^r < x^q
+            case q > r:
+                release thm real_exponents_order_below_one(x,r,q)
+                x^q < x^r
+                impossible x^r < x^q
+        impossible q < r

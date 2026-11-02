@@ -7,6 +7,158 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{FnRang
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_function_range_empty(
+        &self,
+        goal: &EqualFact,
+        proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_function_domain_image::FnRangeOfEmptyDomainBuiltinRuleProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::function_domain::FunctionDomainEmptyProof as E;
+        let (range, reverse) = match (&goal.left, &goal.right) {
+            (
+                Obj::FunctionSpace(FunctionSpace::FnRange(range)),
+                Obj::SetFormer(SetFormer::ListSet(empty)),
+            ) if empty.list.is_empty() => (range, false),
+            (
+                Obj::SetFormer(SetFormer::ListSet(empty)),
+                Obj::FunctionSpace(FunctionSpace::FnRange(range)),
+            ) if empty.list.is_empty() => (range, true),
+            _ => return Err(LeanCompileError::unsupported("FnRangeEmpty/Endpoints")),
+        };
+        let signature = match &proof.domain_empty {
+            E::ParameterCarrier(p) => &p.signature,
+            E::GuardExclusion(p) => &p.signature,
+        };
+        if signature != &proof.source.signature {
+            return Err(LeanCompileError::unsupported(
+                "FnRangeEmpty/OriginalSignature",
+            ));
+        }
+        let member =
+            self.compile_complete_domain_member(&range.function, &proof.source, position)?;
+        let formed = SourcePosition::new(
+            Some(position),
+            SourceOwner::CompleteDomainSource(&proof.source),
+            usize::MAX,
+        );
+        let compiled = self.compile_complete_domain_signature(&proof.source, &formed)?;
+        let function = self.compile_object_reference(&range.function, &formed)?;
+        let excluded = self.compile_complete_function_empty_domain(
+            &proof.source,
+            &proof.domain_empty,
+            &compiled,
+            position,
+            &formed,
+        )?;
+        let term =
+            format!("(Litex.fnRangeEmptyOfDomainEmpty {function} {compiled} {member} {excluded})");
+        Ok(if reverse {
+            format!("({term}).symm")
+        } else {
+            term
+        })
+    }
+
+    pub(in crate::compile_to_lean) fn compile_complete_function_empty_domain(
+        &self,
+        source: &crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
+        absence: &crate::execute::execute_fact_stmt::function_domain::FunctionDomainEmptyProof,
+        compiled: &str,
+        position: &SourcePosition<'_>,
+        formed: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof as S;
+        let signature = &source.signature;
+        let carrier = match &source.source {
+            S::Membership {
+                membership,
+                carrier_equal,
+                ..
+            } => Some(
+                carrier_equal
+                    .path
+                    .last()
+                    .map(|(_, to, _)| to)
+                    .unwrap_or(&membership.set),
+            ),
+            S::ApplicationReturn {
+                return_space,
+                carrier_equal,
+                ..
+            } => Some(
+                carrier_equal
+                    .path
+                    .last()
+                    .map(|(_, to, _)| to)
+                    .unwrap_or(return_space),
+            ),
+            _ => None,
+        };
+        let (base, guard) = if let Some(carrier) = carrier {
+            self.checked_space_signature(carrier, signature, formed)?;
+            let (base, _, guard) = self.space_domain_components(carrier, signature, formed)?;
+            (base, guard)
+        } else if matches!(&source.source, S::FiniteFunction(_) | S::Matrix(_)) {
+            // These validated complete signatures own their one-based integer
+            // inputs. Compile the original endpoints, not a synthetic range WD.
+            if !signature.dom_facts.is_empty() {
+                return Err(LeanCompileError::unsupported("FnRangeEmpty/IntervalGuards"));
+            }
+            let mut inputs = Vec::new();
+            for group in &signature.set_bound_parameters.groups {
+                let Obj::SetFormer(SetFormer::ClosedRange(interval)) = group.param_type.as_ref()
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "FnRangeEmpty/IntervalSubject",
+                    ));
+                };
+                // Literal bounds are part of the certified implicit signature;
+                // they have no separate source WD registration to cite.
+                let endpoint = |value: &Obj| match value {
+                    Obj::Literal(Literal::Number(n)) => {
+                        Ok(format!("(Litex.number {})", number_literal(n, "ℂ")?))
+                    }
+                    value => self.compile_object_reference(value, formed),
+                };
+                let start = endpoint(&interval.start)?;
+                let end = endpoint(&interval.end)?;
+                let input = format!("(Litex.SetSemantics.sepValue (M.standard .integer) (Litex.ClosedRangeObj.condition ⟨{start}, {end}⟩))");
+                inputs.extend(group.params.iter().map(|_| input.clone()));
+            }
+            let base = if inputs.len() == 1 {
+                inputs.remove(0)
+            } else {
+                format!(
+                    "(Litex.FiniteFunction.cartValue (M := M) ![{}])",
+                    inputs.join(", ")
+                )
+            };
+            (base, "(fun _ => True)".into())
+        } else {
+            (
+                self.compile_function_semantic_base_domain(signature, formed)?
+                    .0,
+                self.compile_function_packed_guard_template(signature, formed)?,
+            )
+        };
+        // Only the complete finite signature embeds its arity as a Nat cast.
+        // Other sources retain their original reducible domain membership.
+        let input_membership = if matches!(&source.source, S::FiniteFunction(_)) {
+            "(by simpa only [Litex.cartCompleteSignature, Litex.FunctionSignature.ofDomain, Litex.finiteSeqDomain, Nat.cast_zero] using _space_domain)"
+        } else {
+            "_space_domain"
+        };
+        let excluded = self.compile_empty_signature_domain(
+            absence,
+            compiled,
+            &base,
+            &guard,
+            input_membership,
+            position,
+        )?;
+        Ok(excluded)
+    }
+
     pub(super) fn compile_function_range_subset(
         &self,
         goal: &SubsetFact,
@@ -40,8 +192,18 @@ impl LitexToLeanCompiler {
                 let same = self.compile_equality_search(&obligation, equal, &formed)?;
                 format!("Litex.subsetOfSame {range} {output} {range} {target} (Litex.sameRefl {range}) {same} _range_subset")
             }
-            FunctionRangeCodomainContainment::Subset(_) => {
-                return Err(LeanCompileError::unsupported("FnRange/CodomainWidening"));
+            FunctionRangeCodomainContainment::Subset(child) => {
+                if !matches!(source_subject(child)?, Fact::AtomicFact(AtomicFact::SubsetFact(f))
+                    if f.left.ir() == proof.source.signature.ret_set.ir()
+                        && f.right.ir() == goal.right.ir())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "FnRange/CodomainSubsetSubject",
+                    ));
+                }
+                let child_position = position.atomic_search_verify_prior(child)?;
+                let subset = self.compile_verify(child, &child_position)?.1;
+                format!("(by\n  have _codomain_subset : Litex.Subset {output} {target} := {subset}\n  exact fun _x _hx => _codomain_subset _ (_range_subset _ _hx))")
             }
         };
         Ok(format!("(by\n  have _range_function : Litex.In {function} (Litex.fnSet {signature}) := {member}\n  have _range_subset : Litex.Subset {range} {output} := fun _x _hx => Litex.FunctionSemantics.range_subset ({signature}).output_isSet _range_function _hx\n  exact {step})"))

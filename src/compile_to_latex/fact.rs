@@ -1,5 +1,5 @@
 use super::helper::{
-    call_parens, group_if_compound, ident, join_land, join_lor, name, operator,
+    call_parens, chain_relation, group_if_compound, ident, join_land, join_lor, name, operator,
     predicate_or_fn_call,
 };
 use super::language::{phrase, Phrase};
@@ -274,23 +274,7 @@ fn chain(
     for (i, prop) in value.prop_names.iter().enumerate() {
         let left = obj(&value.objs[i], modules, lang)?;
         let right = obj(&value.objs[i + 1], modules, lang)?;
-        let symbol = match prop {
-            crate::ast::names::AtomicName::Plain { name } => match name.as_str() {
-                "=" => Some("="),
-                "!=" => Some(r"\ne"),
-                "<" => Some("<"),
-                ">" => Some(">"),
-                "<=" => Some(r"\leq"),
-                ">=" => Some(r"\geq"),
-                "in" => Some(r"\in"),
-                "subset" => Some(r"\subseteq"),
-                "superset" => Some(r"\supseteq"),
-                "proper_subset" => Some(r"\subsetneq"),
-                "proper_superset" => Some(r"\supsetneq"),
-                _ => None,
-            },
-            _ => None,
-        };
+        let symbol = chain_relation(prop);
         if let Some(s) = symbol {
             joined.push_str(&format!(" {s} {right}"));
         } else {
@@ -311,6 +295,48 @@ fn chain(
     }
     Ok(join_land(items))
 }
+
+pub(super) fn calculation_layout(
+    value: &ChainFact,
+    modules: &GlobalModuleManager,
+    lang: OutputLanguage,
+) -> RuntimeResult<String> {
+    if value.prop_names.is_empty() || value.objs.len() != value.prop_names.len() + 1 {
+        return Err(RuntimeError::Unsupported(
+            "LaTeX: malformed chain AST".into(),
+        ));
+    }
+    if value
+        .prop_names
+        .iter()
+        .any(|relation| chain_relation(relation).is_none())
+    {
+        return chain(value, modules, lang);
+    }
+    let equality_only = value
+        .prop_names
+        .iter()
+        .all(|relation| chain_relation(relation) == Some("="));
+    let mut rows = Vec::new();
+    for (index, relation) in value.prop_names.iter().enumerate() {
+        // A mixed chain states adjacent relations, not a transitive shortcut.
+        let left = if index == 0 || !equality_only {
+            obj(&value.objs[index], modules, lang)?
+        } else {
+            String::new()
+        };
+        rows.push(format!(
+            "{left} &{} {}",
+            chain_relation(relation).unwrap(),
+            obj(&value.objs[index + 1], modules, lang)?
+        ));
+    }
+    Ok(format!(
+        "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+        rows.join(" \\\\[0.2em]\n")
+    ))
+}
+
 fn implication(dom: &str, then: &str) -> String {
     if dom.is_empty() {
         then.into()

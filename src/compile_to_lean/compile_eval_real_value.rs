@@ -17,6 +17,8 @@ impl LitexToLeanCompiler {
         remaining: &mut usize,
         aggregates: &[AggregateEvaluationResult],
         remaining_aggregates: &mut usize,
+        matrices: &[crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult],
+        remaining_matrices: &mut usize,
         position: &SourcePosition<'_>,
     ) -> Result<(EvalRational, String, Vec<FactId>), LeanCompileError> {
         let (operation, children) = arithmetic_constructor_pairs(object, object)
@@ -29,6 +31,8 @@ impl LitexToLeanCompiler {
                 remaining,
                 aggregates,
                 remaining_aggregates,
+                matrices,
+                remaining_matrices,
                 position,
             )?);
         }

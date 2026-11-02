@@ -255,7 +255,7 @@ impl LitexToLeanCompiler {
         })
     }
 
-    fn compile_known_tuple_beta(
+    pub(in crate::compile_to_lean) fn compile_known_tuple_beta(
         &self,
         application: &Obj,
         checked_application: &Obj,
@@ -263,6 +263,51 @@ impl LitexToLeanCompiler {
         value: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        position
+            .with_visible_wd(checked_application, &mut |wd, producer| {
+                self.compile_checked_tuple_beta(
+                    application,
+                    checked_application,
+                    proof,
+                    value,
+                    wd,
+                    producer,
+                    position,
+                )
+            })?
+            .ok_or_else(|| {
+                LeanCompileError::new(
+                    "Equality/FnTupleWDProducer",
+                    "The recorded application has no preceding original WD constructor.",
+                )
+            })
+    }
+
+    /// Consume an original intermediate call directly when the result owns it.
+    pub(in crate::compile_to_lean) fn compile_checked_tuple_beta(
+        &self,
+        application: &Obj,
+        checked_application: &Obj,
+        proof: &KnownFunctionTupleValueProof,
+        value: &Obj,
+        wd: &ObjWellDefinedProof,
+        producer: &SourcePosition<'_>,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if matches!(
+            proof.applicability,
+            KnownFunctionTupleApplicability::TemplateDefinition { .. }
+        ) {
+            return self.compile_template_tuple_beta(
+                application,
+                checked_application,
+                proof,
+                value,
+                wd,
+                producer,
+                position,
+            );
+        }
         let Obj::FnObj(call) = application else {
             return Err(LeanCompileError::new(
                 "Equality/FnTupleApplication",
@@ -309,10 +354,7 @@ impl LitexToLeanCompiler {
             .iter()
             .flat_map(|group| &group.params)
             .collect::<Vec<_>>();
-        if call.body.len() != 1
-            || !(1..=3).contains(&parameters.len())
-            || call.body[0].len() != parameters.len()
-        {
+        if call.body.len() != 1 || parameters.is_empty() || call.body[0].len() != parameters.len() {
             return Err(LeanCompileError::new(
                 "Equality/FnTupleArguments",
                 "The recorded tuple body needs one complete ordered argument group.",
@@ -337,86 +379,72 @@ impl LitexToLeanCompiler {
             ));
         }
 
-        // Read the constructor that actually established this call's WD. Its
-        // producer position controls its own citations; the known-property
-        // evidence below is consumed at the later equality-search position.
-        position
-            .with_visible_wd(checked_application, &mut |wd, producer| {
-                let DetailedObjWellDefinedProof::ByDef {
-                    obj: Obj::FnObj(original_call),
-                    proof: ObjWellDefinedProofByDef::FnObj(call_wd),
-                } = (wd).detailed_ref()
-                else {
-                    return Err(LeanCompileError::new(
-                        "Equality/FnTupleWD",
-                        "The selected WD producer is not a function application.",
-                    ));
-                };
-                if Obj::FnObj(original_call.clone()).ir() != checked_application.ir() {
-                    return Err(LeanCompileError::new(
-                        "Equality/FnTupleWD",
-                        "The original WD constructor certifies another application.",
-                    ));
-                }
-                let selected = call_wd.domain_fn_set.as_ref().ok_or_else(|| {
-                    LeanCompileError::new(
-                        "Equality/FnTupleSignature",
-                        "The original call has no selected signature evidence.",
-                    )
-                })?;
-                let selected_signature = match selected {
-                    FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
-                    | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => fn_set,
-                    _ => {
-                        return Err(LeanCompileError::unsupported(
-                            "Equality/FnTupleSelectedSignature",
-                        ))
-                    }
-                };
-                if !function_domains_alpha_equal(selected_signature, &function.body)
-                    || Self::function_uses_numeric_interface(selected_signature)
-                    || Self::function_uses_numeric_interface(&function.body)
-                {
-                    return Err(LeanCompileError::unsupported("Equality/FnTupleDomain"));
-                }
-                let signatures = self.compile_known_tuple_applicability(
-                    &head,
-                    function,
-                    selected,
-                    &proof.applicability,
-                    position,
-                )?;
-                let actual = if continued {
-                    let constructor = SourcePosition {
-                        parent: Some(producer),
-                        owner: SourceOwner::WD(wd),
-                        before: 0,
-                    };
-                    self.compile_fn_first_call_with_member(original_call, call_wd, &constructor)?
-                        .0
-                } else {
-                    self.compile_wd(wd, producer)?
-                };
-                let formula = self.compile_object_reference(literal, position)?;
-                let application_value = self.compile_normalization_value(application, position)?;
-                let value = self.compile_normalization_value(value, position)?;
-                let packed_body =
-                    self.compile_function_packed_body_template(function, position)?;
-                let body = self.compile_function_body_template(function, position)?;
-                let arguments = call.body[0]
-                    .iter()
-                    .map(|argument| self.compile_normalization_value(argument, position))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let body_equal =
-                    self.compile_function_packed_application_equality(&body, &arguments)?;
-                Ok(format!("(show {application_value} = {value} from by\n  let _litex_original := {actual}\n  let _litex_formula := {formula}\n{signatures}  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f (Litex.denote _litex_original.val.argument)) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd (Litex.denote _litex_original.val.argument) _litex_original.wd.2\n  have _litex_body_eq : _litex_formula.val.bodyValue (Litex.denote _litex_original.val.argument) = {value} := by\n    change {packed_body} (Litex.denote _litex_original.val.argument) = {value}\n    exact {body_equal}\n  exact _litex_call_eq.trans (_litex_beta.trans _litex_body_eq)\n)"))
-            })?
-            .ok_or_else(|| {
-                LeanCompileError::new(
-                    "Equality/FnTupleWDProducer",
-                    "The recorded application has no preceding original WD constructor.",
-                )
-            })
+        let DetailedObjWellDefinedProof::ByDef {
+            obj: Obj::FnObj(original_call),
+            proof: ObjWellDefinedProofByDef::FnObj(call_wd),
+        } = (wd).detailed_ref()
+        else {
+            return Err(LeanCompileError::new(
+                "Equality/FnTupleWD",
+                "The selected WD producer is not a function application.",
+            ));
+        };
+        if Obj::FnObj(original_call.clone()).ir() != checked_application.ir() {
+            return Err(LeanCompileError::new(
+                "Equality/FnTupleWD",
+                "The original WD constructor certifies another application.",
+            ));
+        }
+        let selected = call_wd.domain_fn_set.as_ref().ok_or_else(|| {
+            LeanCompileError::new(
+                "Equality/FnTupleSignature",
+                "The original call has no selected signature evidence.",
+            )
+        })?;
+        let selected_signature = match selected {
+            FnObjDomainFnSetEvidence::InFunctionSet { fn_set, .. }
+            | FnObjDomainFnSetEvidence::AnonymousLiteral { fn_set } => fn_set,
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "Equality/FnTupleSelectedSignature",
+                ))
+            }
+        };
+        if !function_domains_alpha_equal(selected_signature, &function.body)
+            || Self::function_uses_numeric_interface(selected_signature)
+            || Self::function_uses_numeric_interface(&function.body)
+        {
+            return Err(LeanCompileError::unsupported("Equality/FnTupleDomain"));
+        }
+        let signatures = self.compile_known_tuple_applicability(
+            &head,
+            function,
+            selected,
+            &proof.applicability,
+            position,
+        )?;
+        let actual = if continued {
+            let constructor = SourcePosition {
+                parent: Some(producer),
+                owner: SourceOwner::WD(wd),
+                before: 0,
+            };
+            self.compile_fn_first_call_with_member(original_call, call_wd, &constructor)?
+                .0
+        } else {
+            self.compile_wd(wd, producer)?
+        };
+        let formula = self.compile_object_reference(literal, position)?;
+        let application_value = self.compile_normalization_value(application, position)?;
+        let value = self.compile_normalization_value(value, position)?;
+        let packed_body = self.compile_function_packed_body_template(function, position)?;
+        let body = self.compile_function_body_template(function, position)?;
+        let arguments = call.body[0]
+            .iter()
+            .map(|argument| self.compile_normalization_value(argument, position))
+            .collect::<Result<Vec<_>, _>>()?;
+        let body_equal = self.compile_function_packed_application_equality(&body, &arguments)?;
+        Ok(format!("(show {application_value} = {value} from by\n  let _litex_original := {actual}\n  let _litex_formula := {formula}\n{signatures}  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f (Litex.denote _litex_original.val.argument)) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd (Litex.denote _litex_original.val.argument) _litex_original.wd.2\n  have _litex_body_eq : _litex_formula.val.bodyValue (Litex.denote _litex_original.val.argument) = {value} := by\n    change {packed_body} (Litex.denote _litex_original.val.argument) = {value}\n    exact {body_equal}\n  exact _litex_call_eq.trans (_litex_beta.trans _litex_body_eq)\n)"))
     }
 
     fn compile_known_tuple_applicability(
@@ -545,7 +573,7 @@ impl LitexToLeanCompiler {
 
     // These payloads record only identity/alpha comparison or an ordered known
     // equality path. Consume that exact leaf without constructing a new result.
-    fn compile_known_tuple_match(
+    pub(in crate::compile_to_lean) fn compile_known_tuple_match(
         &self,
         source: &Obj,
         target: &Obj,

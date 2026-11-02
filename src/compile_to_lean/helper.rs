@@ -1,7 +1,9 @@
 use super::LeanCompileError;
 use crate::ast::stmt::{ProofBlockStmt, ReleaseAndExpandStmt, WitnessStmt};
+use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_by_stmt::ExecByDefStmtResult;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistFactResult;
+use crate::execute::{ExecHaveFnEqualStmtResult, ExecHaveObjByExistFactsStmtResult};
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
@@ -42,6 +44,21 @@ pub(super) fn finite_vector_proof(proofs: &[String]) -> String {
         });
     bindings.push(format!("exact {cases}"));
     format!("(by\n  {}\n)", bindings.join("\n  "))
+}
+
+/// Compose a closed equality of finite semantic-value vectors. Unlike a
+/// pointwise proof, this carries its endpoints without an expected goal.
+pub(super) fn finite_vector_equality(proofs: &[String]) -> String {
+    let mut tail = "(rfl : (fun i : Fin 0 => (Fin.elim0 i : M.Value)) = (fun i : Fin 0 => (Fin.elim0 i : M.Value)))".to_owned();
+    for (index, proof) in proofs.iter().enumerate().rev() {
+        let n = proofs.len() - index - 1;
+        tail = format!(
+            "(congrArg₂ (fun (head : M.Value) (tail : Fin {n} → M.Value) => (Fin.cases (motive := fun _ : Fin {} => M.Value) head tail : Fin {} → M.Value)) {proof} {tail})",
+            n + 1,
+            n + 1,
+        );
+    }
+    tail
 }
 
 #[derive(Clone, Copy)]
@@ -112,10 +129,13 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             // supply the scalar observation; the field stays an opaque leaf.
             Ok(())
         }
-        Obj::DerivativeOperator(DerivativeOperator::AtPoint(_)) => Ok(()),
+        Obj::DerivativeOperator(DerivativeOperator::AtPoint(_) | DerivativeOperator::Partial(_) | DerivativeOperator::Divergence(_)) => Ok(()),
         Obj::BoundOperator(_) | Obj::LimitOperator(LimitOperator::Sequence(_)
-            | LimitOperator::SequenceLimsup(_) | LimitOperator::SequenceLiminf(_) | LimitOperator::Function(_)) => Ok(()),
+            | LimitOperator::SequenceLimsup(_) | LimitOperator::SequenceLiminf(_) | LimitOperator::Function(_) | LimitOperator::MultivariableScalar(_)) => Ok(()),
         Obj::ComplexOperator(_) => Ok(()),
+        // Square-matrix scalar constructors are opaque polynomial atoms.
+        // Numeric observation must still replay their exact original WD.
+        Obj::MatrixOperator(MatrixOperator::Trace(_) | MatrixOperator::Determinant(_)) => Ok(()),
         Obj::TrigOperator(_) | Obj::HyperbolicOperator(_) => Ok(()),
         Obj::ExpLogOperator(ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Log(_)) => Ok(()),
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(_)) => {
@@ -343,12 +363,317 @@ pub(super) fn source_order_oriented(
     }
 }
 
+pub(super) fn finite_size_set(object: &Obj) -> Option<&Obj> {
+    match object {
+        Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(p)) => Some(&p.set),
+        _ => None,
+    }
+}
+
 pub(super) fn arithmetic_constructor_pairs<'a>(
     left: &'a Obj,
     right: &'a Obj,
 ) -> Option<(&'static str, Vec<(&'a Obj, &'a Obj)>)> {
     use ArithmeticOperator::*;
     match (left, right) {
+        (
+            Obj::MatrixOperator(MatrixOperator::Trace(a)),
+            Obj::MatrixOperator(MatrixOperator::Trace(b)),
+        ) => Some((
+            "matrixTraceScalarValue",
+            vec![(&a.matrix, &b.matrix), (&a.order, &b.order)],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Determinant(a)),
+            Obj::MatrixOperator(MatrixOperator::Determinant(b)),
+        ) => Some((
+            "matrixDeterminantScalarValue",
+            vec![(&a.matrix, &b.matrix), (&a.order, &b.order)],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Adjugate(a)),
+            Obj::MatrixOperator(MatrixOperator::Adjugate(b)),
+        ) => Some((
+            "matrixAdjugateGraphValue",
+            vec![(&a.matrix, &b.matrix), (&a.order, &b.order)],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Inverse(a)),
+            Obj::MatrixOperator(MatrixOperator::Inverse(b)),
+        ) => Some((
+            "matrixInverseGraphValue",
+            vec![(&a.matrix, &b.matrix), (&a.order, &b.order)],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Power(a)),
+            Obj::MatrixOperator(MatrixOperator::Power(b)),
+        ) => Some((
+            "matrixPowerGraphValue",
+            vec![
+                (&a.matrix, &b.matrix),
+                (&a.order, &b.order),
+                (&a.exponent, &b.exponent),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Rank(a)),
+            Obj::MatrixOperator(MatrixOperator::Rank(b)),
+        ) => Some((
+            "matrixRankValue",
+            vec![
+                (&a.matrix, &b.matrix),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::FrobeniusNorm(a)),
+            Obj::MatrixOperator(MatrixOperator::FrobeniusNorm(b)),
+        ) => Some((
+            "frobeniusNormScalarValue",
+            vec![
+                (&a.matrix, &b.matrix),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Apply(a)),
+            Obj::MatrixOperator(MatrixOperator::Apply(b)),
+        ) => Some((
+            "matrixApplyGraphValue",
+            vec![
+                (&a.matrix, &b.matrix),
+                (&a.vector, &b.vector),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Minor(a)),
+            Obj::MatrixOperator(MatrixOperator::Minor(b)),
+        ) => Some((
+            "matrixMinorGraphValue",
+            vec![
+                (&a.matrix, &b.matrix),
+                (&a.order, &b.order),
+                (&a.row, &b.row),
+                (&a.col, &b.col),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Cofactor(a)),
+            Obj::MatrixOperator(MatrixOperator::Cofactor(b)),
+        ) => Some((
+            "matrixCofactorRawValue",
+            vec![
+                (&a.matrix, &b.matrix),
+                (&a.order, &b.order),
+                (&a.row, &b.row),
+                (&a.col, &b.col),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::InnerProduct(a)),
+            Obj::MatrixOperator(MatrixOperator::InnerProduct(b)),
+        ) => Some((
+            "finiteInnerProductScalarValue",
+            vec![
+                (&a.left, &b.left),
+                (&a.right, &b.right),
+                (&a.dimension, &b.dimension),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(a)),
+            Obj::MatrixOperator(MatrixOperator::EuclideanNorm(b)),
+        ) => Some((
+            "euclideanNormScalarValue",
+            vec![(&a.vector, &b.vector), (&a.dimension, &b.dimension)],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::ZeroMatrix(a)),
+            Obj::MatrixOperator(MatrixOperator::ZeroMatrix(b)),
+        ) => Some((
+            "zeroMatrixGraphValue",
+            vec![(&a.rows, &b.rows), (&a.cols, &b.cols)],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::IdentityMatrix(a)),
+            Obj::MatrixOperator(MatrixOperator::IdentityMatrix(b)),
+        ) => Some(("identityMatrixGraphValue", vec![(&a.order, &b.order)])),
+        (
+            Obj::MatrixOperator(MatrixOperator::ConjugateTranspose(a)),
+            Obj::MatrixOperator(MatrixOperator::ConjugateTranspose(b)),
+        ) => Some((
+            "conjugateTransposeGraphValue",
+            vec![
+                (&a.matrix, &b.matrix),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::OuterProduct(a)),
+            Obj::MatrixOperator(MatrixOperator::OuterProduct(b)),
+        ) => Some((
+            "matrixOuterGraphValue",
+            vec![
+                (&a.left, &b.left),
+                (&a.right, &b.right),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Diagonal(a)),
+            Obj::MatrixOperator(MatrixOperator::Diagonal(b)),
+        ) => Some((
+            "matrixDiagonalGraphValue",
+            vec![(&a.vector, &b.vector), (&a.order, &b.order)],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Multiply(a)),
+            Obj::MatrixOperator(MatrixOperator::Multiply(b)),
+        ) => Some((
+            "matrixMultiplyGraphValue",
+            vec![
+                (&a.left, &b.left),
+                (&a.right, &b.right),
+                (&a.rows, &b.rows),
+                (&a.inner, &b.inner),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Subtract(a)),
+            Obj::MatrixOperator(MatrixOperator::Subtract(b)),
+        ) => Some((
+            "matrixSubGraphValue",
+            vec![
+                (&a.left, &b.left),
+                (&a.right, &b.right),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Scale(a)),
+            Obj::MatrixOperator(MatrixOperator::Scale(b)),
+        ) => Some((
+            "matrixScaleGraphValue",
+            vec![
+                (&a.scalar, &b.scalar),
+                (&a.matrix, &b.matrix),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Add(a)),
+            Obj::MatrixOperator(MatrixOperator::Add(b)),
+        ) => Some((
+            "matrixAddGraphValue",
+            vec![
+                (&a.left, &b.left),
+                (&a.right, &b.right),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (
+            Obj::MatrixOperator(MatrixOperator::Transpose(a)),
+            Obj::MatrixOperator(MatrixOperator::Transpose(b)),
+        ) => Some((
+            "transposeGraphValue",
+            vec![
+                (&a.matrix, &b.matrix),
+                (&a.rows, &b.rows),
+                (&a.cols, &b.cols),
+            ],
+        )),
+        (Obj::TrigOperator(TrigOperator::Sin(a)), Obj::TrigOperator(TrigOperator::Sin(b))) => {
+            Some(("sinValue", vec![(&a.arg, &b.arg)]))
+        }
+        (Obj::TrigOperator(TrigOperator::Cos(a)), Obj::TrigOperator(TrigOperator::Cos(b))) => {
+            Some(("cosValue", vec![(&a.arg, &b.arg)]))
+        }
+        (Obj::TrigOperator(TrigOperator::Tan(a)), Obj::TrigOperator(TrigOperator::Tan(b))) => {
+            Some(("tanValue", vec![(&a.arg, &b.arg)]))
+        }
+        (Obj::TrigOperator(TrigOperator::Cot(a)), Obj::TrigOperator(TrigOperator::Cot(b))) => {
+            Some(("cotValue", vec![(&a.arg, &b.arg)]))
+        }
+        (Obj::TrigOperator(TrigOperator::Sec(a)), Obj::TrigOperator(TrigOperator::Sec(b))) => {
+            Some(("secValue", vec![(&a.arg, &b.arg)]))
+        }
+        (Obj::TrigOperator(TrigOperator::Csc(a)), Obj::TrigOperator(TrigOperator::Csc(b))) => {
+            Some(("cscValue", vec![(&a.arg, &b.arg)]))
+        }
+        (
+            Obj::TrigOperator(TrigOperator::Arcsin(a)),
+            Obj::TrigOperator(TrigOperator::Arcsin(b)),
+        ) => Some(("arcsinValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::TrigOperator(TrigOperator::Arccos(a)),
+            Obj::TrigOperator(TrigOperator::Arccos(b)),
+        ) => Some(("arccosValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::TrigOperator(TrigOperator::Arctan(a)),
+            Obj::TrigOperator(TrigOperator::Arctan(b)),
+        ) => Some(("arctanValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::TrigOperator(TrigOperator::Arccot(a)),
+            Obj::TrigOperator(TrigOperator::Arccot(b)),
+        ) => Some(("arccotValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(b)),
+        ) => Some(("sinhValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(b)),
+        ) => Some(("coshValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(b)),
+        ) => Some(("tanhValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Coth(b)),
+        ) => Some(("cothValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(b)),
+        ) => Some(("sechValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(a)),
+            Obj::HyperbolicOperator(HyperbolicOperator::Csch(b)),
+        ) => Some(("cschValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::ExpLogOperator(ExpLogOperator::Exp(a)),
+            Obj::ExpLogOperator(ExpLogOperator::Exp(b)),
+        ) => Some(("expValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::ExpLogOperator(ExpLogOperator::Ln(a)),
+            Obj::ExpLogOperator(ExpLogOperator::Ln(b)),
+        ) => Some(("lnValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::ComplexOperator(ComplexOperator::Conjugate(a)),
+            Obj::ComplexOperator(ComplexOperator::Conjugate(b)),
+        ) => Some(("conjValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::ComplexOperator(ComplexOperator::RealPart(a)),
+            Obj::ComplexOperator(ComplexOperator::RealPart(b)),
+        ) => Some(("reValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(a)),
+            Obj::ComplexOperator(ComplexOperator::ImaginaryPart(b)),
+        ) => Some(("imgValue", vec![(&a.arg, &b.arg)])),
+        (
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(a)),
+            Obj::ComplexOperator(ComplexOperator::ComplexAbs(b)),
+        ) => Some(("complexAbsValue", vec![(&a.arg, &b.arg)])),
         (
             Obj::IntegerOperator(IntegerOperator::Factorial(a)),
             Obj::IntegerOperator(IntegerOperator::Factorial(b)),
@@ -420,6 +745,28 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
 
 pub(super) fn arithmetic_operation_term(operation: &str) -> String {
     match operation {
+        "matrixTraceScalarValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order : M.Value) => (M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _order) (fun _index => Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue _matrix (Litex.FiniteFunction.pack2 (M := M) _index _index))))))".into(),
+        "matrixDeterminantScalarValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order : M.Value) => (M.number (Litex.matrixComplexOn (M := M) _matrix (Litex.NativeBridge.naturalValue (M := M) _order) (Litex.NativeBridge.naturalValue (M := M) _order)).det))".into(),
+        "matrixAdjugateGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order : M.Value) => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .complex) (fun _point => Litex.matrixCofactorRawValue (M := M) _matrix _order (Litex.FiniteFunction.unpack2 (M := M) _point).2 (Litex.FiniteFunction.unpack2 (M := M) _point).1)))".into(),
+        "matrixInverseGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order : M.Value) => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .complex) (fun _point => M.divValue (Litex.matrixCofactorRawValue (M := M) _matrix _order (Litex.FiniteFunction.unpack2 (M := M) _point).2 (Litex.FiniteFunction.unpack2 (M := M) _point).1) (M.number (Litex.matrixComplexOn (M := M) _matrix (Litex.NativeBridge.naturalValue (M := M) _order) (Litex.NativeBridge.naturalValue (M := M) _order)).det))))".into(),
+        "matrixPowerGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order _exponent : M.Value) => (Nat.brecOn (motive := fun _ => M.Value) (Litex.NativeBridge.naturalValue (M := M) _exponent) (fun _k _below => (match (motive := (k : ℕ) → Nat.below (motive := fun _ => M.Value) k → M.Value) _k with | 0 => fun _ => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .real) (Litex.matrixIdentityBody (M := M))) | Nat.succ _j => fun _prior => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .complex) (fun _point => M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _order) (fun _index => Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue (_matrix_semantics.graphValue (_matrix_semantics.sepValue (Litex.closedRangeValue (M := M) (M.number 1) _order) (fun _ => True)) (M.standard .complex) (Litex.matrixMultiplyTerm (M := M) _prior.1 _matrix _point)) _index)))))) _below)))".into(),
+        "matrixRankValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _rows _cols : M.Value) => (Litex.matrixRankValue (M := M) _matrix _rows _cols))".into(),
+        "frobeniusNormScalarValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _rows _cols : M.Value) => (Litex.sqrtValue (M := M) (M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _rows) (fun _r => (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _cols) (fun _c => ((‖Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue _matrix (Litex.FiniteFunction.pack2 (M := M) _r _c))‖ ^ 2 : ℝ) : ℂ))))))))".into(),
+        "matrixApplyGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _vector _rows _cols : M.Value) => (_matrix_semantics.graphValue (_matrix_semantics.sepValue (Litex.closedRangeValue (M := M) (M.number 1) _rows) (fun _ => True)) (M.standard .complex) (fun _point => M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _cols) (fun _index => Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue (_matrix_semantics.graphValue (_matrix_semantics.sepValue (Litex.closedRangeValue (M := M) (M.number 1) _cols) (fun _ => True)) (M.standard .complex) (Litex.matrixApplyTerm (M := M) _matrix _vector _point)) _index))))))".into(),
+        "matrixMinorGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order _row _col : M.Value) => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) (M.subValue _order (M.number 1)) (M.subValue _order (M.number 1))) (M.standard .complex) (Litex.matrixMinorBody (M := M) _matrix _order _row _col)))".into(),
+        "matrixCofactorRawValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order _row _col : M.Value) => (Litex.matrixCofactorRawValue (M := M) _matrix _order _row _col))".into(),
+        "finiteInnerProductScalarValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_left _right _dimension : M.Value) => (M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _dimension) (fun _index => Litex.NativeBridge.complexValue (M := M) (Litex.finiteInnerProductTerm (M := M) _left _right _index)))))".into(),
+        "euclideanNormScalarValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_vector _dimension : M.Value) => (Litex.sqrtValue (M := M) (M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _dimension) (fun _index => ((‖Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue _vector _index)‖ ^ 2 : ℝ) : ℂ))))))".into(),
+        "zeroMatrixGraphValue" => "(fun (_rows _cols : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _rows _cols) (M.standard .real) (fun _ => M.number 0))".into(),
+        "identityMatrixGraphValue" => "(fun (_order : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .real) (Litex.matrixIdentityBody (M := M)))".into(),
+        "conjugateTransposeGraphValue" => "(fun (_matrix _rows _cols : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _cols _rows) (M.standard .complex) (Litex.matrixConjugateTransposeBody (M := M) _matrix))".into(),
+        "matrixOuterGraphValue" => "(fun (_left _right _rows _cols : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _rows _cols) (M.standard .complex) (Litex.matrixOuterBody (M := M) _left _right))".into(),
+        "matrixDiagonalGraphValue" => "(fun (_vector _order : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .complex) (Litex.matrixDiagonalBody (M := M) _vector))".into(),
+        "matrixMultiplyGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_left _right _rows _inner _cols : M.Value) => _matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _rows _cols) (M.standard .complex) (fun _matrix_index => M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _inner) (fun _sum_index => Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue (_matrix_semantics.graphValue (_matrix_semantics.sepValue (Litex.closedRangeValue (M := M) (M.number 1) _inner) (fun _ => True)) (M.standard .complex) (Litex.matrixMultiplyTerm (M := M) _left _right _matrix_index)) _sum_index)))))".into(),
+        "matrixSubGraphValue" => "(fun (_left _right _rows _cols : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _rows _cols) (M.standard .complex) (Litex.matrixEntrywiseBody (M := M) .sub _left _right))".into(),
+        "matrixScaleGraphValue" => "(fun (_scalar _matrix _rows _cols : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _rows _cols) (M.standard .complex) (Litex.matrixScaleBody (M := M) _scalar _matrix))".into(),
+        "matrixAddGraphValue" => "(fun (_left _right _rows _cols : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _rows _cols) (M.standard .complex) (Litex.matrixEntrywiseBody (M := M) .add _left _right))".into(),
+        "transposeGraphValue" => "(fun (_matrix _rows _cols : M.Value) => Litex.FunctionSemantics.graphValue (M := M) (Litex.realMatrixDomainValue (M := M) _cols _rows) (M.standard .complex) (Litex.matrixTransposeBody (M := M) _matrix))".into(),
         "conjValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => star z))".into(),
         "reValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.re : ℂ)))".into(),
         "imgValue" => "(Litex.complexUnaryValue (M := M) (fun z : ℂ => (z.im : ℂ)))".into(),
@@ -766,19 +1113,56 @@ pub(super) fn success_object_wd<'a>(
     }
 }
 
+pub(super) fn captured_identifier_definition_matches(
+    captured: &StoredIdentifierDefinition,
+    source: &ExecDefinitionStmtResult,
+    name: &str,
+) -> bool {
+    match (captured, source) {
+        (
+            StoredIdentifierDefinition::LetObj((key, a)),
+            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::LetObj(
+                ExecLetObjStmtResult::Success(b),
+            )),
+        ) => key == name && a.as_ref() == &b.statement,
+        (
+            StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((key, a)),
+            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                ExecHaveObjInNonemptySetStmtResult::Success(b),
+            )),
+        ) => key == name && a.as_ref() == &b.statement,
+        (
+            StoredIdentifierDefinition::HaveObjEqual((key, a)),
+            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjEqual(
+                ExecHaveObjEqualStmtResult::Success(b),
+            )),
+        ) => key == name && a.as_ref() == &b.statement,
+        (
+            StoredIdentifierDefinition::HaveObjByExistFacts((key, a)),
+            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjByExistFacts(
+                ExecHaveObjByExistFactsStmtResult::Success(b),
+            )),
+        ) => key == name && a.as_ref() == &b.statement,
+        (
+            StoredIdentifierDefinition::HaveFnEqual((key, a)),
+            ExecDefinitionStmtResult::HaveFnEqual(ExecHaveFnEqualStmtResult::Success(b)),
+        ) => key == name && a.as_ref() == &b.statement,
+        _ => false,
+    }
+}
+
 pub(super) fn alias_equality_subject<'a>(
     fact: &'a Fact,
     parameter: &BoundName,
     value: &Obj,
+    position: &super::source_position::SourcePosition<'_>,
+    runtime: &Runtime,
 ) -> Result<&'a Obj, LeanCompileError> {
+    let expected = position.defining_identifier(parameter, runtime)?;
     match fact {
         Fact::AtomicFact(AtomicFact::EqualFact(equal)) if equal.right.ir() == value.ir() => {
             match &equal.left {
-                Obj::Identifier(IdentifierObj::Plain { id, name })
-                    if *id == parameter.id && name == &parameter.name =>
-                {
-                    Ok(&equal.left)
-                }
+                Obj::Identifier(identifier) if identifier == &expected => Ok(&equal.left),
                 _ => Err(LeanCompileError::new(
                     "Declaration/StoreSubject",
                     "The stored equality names another declaration.",
@@ -889,6 +1273,15 @@ pub(super) fn validate_statement_capture(
         return Ok(());
     }
     let matches = match (source, result) {
+        (
+            Stmt::Definition(DefinitionStmt::DefineObj(DefineObjStmt::HaveByReplacementAxiomStmt(source))),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::HaveByReplacementAxiom(
+                    crate::execute::ExecHaveByReplacementAxiomStmtResult::Success(proof)))),
+        ) => source == &proof.statement,
+        (Stmt::Definition(DefinitionStmt::DefStrategyStmt(source)),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+                crate::execute::ExecDefStrategyStmtResult::Success(proof)))) => source == &proof.statement,
         (Stmt::Trust(crate::ast::stmt::TrustBoundaryStmt::TrustStmt(s)), ExecStmtResult::Trust(crate::execute::ExecTrustBoundaryStmtResult::TrustStmt(crate::execute::ExecTrustStmtResult::Success(p)))) => s == &p.statement,
         (Stmt::By(ByStmt::ByFnExtensionStmt(stmt)), ExecStmtResult::By(ExecByStmtResult::FnExtension(
             crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(proof)))) => {
@@ -1310,8 +1703,46 @@ fn stored_capture_matches(store: &StoreFactResult, expected: &Fact) -> bool {
     fact == *expected && store.primary_fact_id() == expected.fact_id()
 }
 
+/// Set kinds are predicates on objects, not source collection objects.
+pub(super) fn set_kind_predicate(kind: &ParamType) -> Option<&'static str> {
+    match kind {
+        ParamType::Set(_) => Some("Litex.IsSet"),
+        ParamType::NonemptySet(_) => Some("Litex.IsNonempty"),
+        ParamType::FiniteSet(_) => Some("Litex.IsFiniteSet"),
+        ParamType::Obj(_) => None,
+    }
+}
+
+/// Validate an original parameter obligation without constructing a fact or
+/// proof. Set kinds retain their exact predicates; Obj domains use the actual
+/// declaration substitution, including dependencies on earlier parameters.
+pub(super) fn parameter_type_fact_matches(
+    kind: &ParamType,
+    argument: &Obj,
+    fact: &Fact,
+    substitution: &HashMap<IdentifierId, Obj>,
+) -> bool {
+    match (kind, fact) {
+        (ParamType::Obj(set), Fact::AtomicFact(AtomicFact::InFact(f))) => {
+            f.element.ir() == argument.ir()
+                && instantiated_object_matches(set, &f.set, substitution)
+        }
+        (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f))) => {
+            f.set.ir() == argument.ir()
+        }
+        (ParamType::NonemptySet(_), Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f))) => {
+            f.set.ir() == argument.ir()
+        }
+        (ParamType::FiniteSet(_), Fact::AtomicFact(AtomicFact::IsFiniteSetFact(f))) => {
+            f.set.ir() == argument.ir()
+        }
+        _ => false,
+    }
+}
+
 // Validate substitution against captured objects only. This neither creates
 // fresh source IDs nor invokes Runtime instantiation or verification.
+
 pub(super) fn instantiated_object_matches(
     expected: &Obj,
     actual: &Obj,
@@ -1323,17 +1754,223 @@ pub(super) fn instantiated_object_matches(
         }
     }
     match (expected, actual) {
+        (Obj::InstantiatedTemplateObj(expected), Obj::InstantiatedTemplateObj(actual)) => {
+            expected.template_name == actual.template_name
+                && expected.args.len() == actual.args.len()
+                && expected
+                    .args
+                    .iter()
+                    .zip(&actual.args)
+                    .all(|(a, b)| instantiated_object_matches(a, b, substitution))
+        }
         (
-            Obj::FunctionSpace(FunctionSpace::FnSet(expected)),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(expected)),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(actual)),
+        ) => {
+            expected.name == actual.name
+                && expected.params.len() == actual.params.len()
+                && expected
+                    .params
+                    .iter()
+                    .zip(&actual.params)
+                    .all(|(a, b)| instantiated_object_matches(a, b, substitution))
+        }
+        (
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(expected)),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(actual)),
+        ) => {
+            if expected.fields.is_empty() || actual.fields.len() < expected.fields.len() {
+                return false;
+            }
+            let prefix = actual.fields.len() - expected.fields.len();
+            expected.fields == actual.fields[prefix..]
+                && instantiated_object_matches(
+                    &expected.obj,
+                    &crate::compile_to_lean::compile_struct_projection::field_receiver(
+                        actual, prefix,
+                    ),
+                    substitution,
+                )
+        }
+        (
+            Obj::DerivativeOperator(DerivativeOperator::Partial(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::Partial(actual)),
+        ) => [
+            &expected.function,
+            &expected.point,
+            &expected.dimension,
+            &expected.coordinate,
+        ]
+        .into_iter()
+        .zip([
+            &actual.function,
+            &actual.point,
+            &actual.dimension,
+            &actual.coordinate,
+        ])
+        .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(actual)),
+        ) => [&expected.function, &expected.point, &expected.dimension]
+            .into_iter()
+            .zip([&actual.function, &actual.point, &actual.dimension])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(actual)),
+        ) => [
+            &expected.function,
+            &expected.point,
+            &expected.input_dimension,
+            &expected.output_dimension,
+        ]
+        .into_iter()
+        .zip([
+            &actual.function,
+            &actual.point,
+            &actual.input_dimension,
+            &actual.output_dimension,
+        ])
+        .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::Gradient(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::Gradient(actual)),
+        ) => [&expected.function, &expected.point, &expected.dimension]
+            .into_iter()
+            .zip([&actual.function, &actual.point, &actual.dimension])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::Jacobian(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::Jacobian(actual)),
+        ) => [
+            &expected.function,
+            &expected.point,
+            &expected.input_dimension,
+            &expected.output_dimension,
+        ]
+        .into_iter()
+        .zip([
+            &actual.function,
+            &actual.point,
+            &actual.input_dimension,
+            &actual.output_dimension,
+        ])
+        .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::Hessian(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::Hessian(actual)),
+        ) => [&expected.function, &expected.point, &expected.dimension]
+            .into_iter()
+            .zip([&actual.function, &actual.point, &actual.dimension])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::Divergence(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::Divergence(actual)),
+        ) => [&expected.function, &expected.point, &expected.dimension]
+            .into_iter()
+            .zip([&actual.function, &actual.point, &actual.dimension])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::Curl(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::Curl(actual)),
+        ) => [&expected.function, &expected.point]
+            .into_iter()
+            .zip([&actual.function, &actual.point])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::Laplacian(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::Laplacian(actual)),
+        ) => [&expected.function, &expected.point, &expected.dimension]
+            .into_iter()
+            .zip([&actual.function, &actual.point, &actual.dimension])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::LimitOperator(LimitOperator::MultivariableScalar(expected)),
+            Obj::LimitOperator(LimitOperator::MultivariableScalar(actual)),
+        ) => [&expected.function, &expected.point, &expected.dimension]
+            .into_iter()
+            .zip([&actual.function, &actual.point, &actual.dimension])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::LimitOperator(LimitOperator::MultivariableVector(expected)),
+            Obj::LimitOperator(LimitOperator::MultivariableVector(actual)),
+        ) => [
+            &expected.function,
+            &expected.point,
+            &expected.input_dimension,
+            &expected.output_dimension,
+        ]
+        .into_iter()
+        .zip([
+            &actual.function,
+            &actual.point,
+            &actual.input_dimension,
+            &actual.output_dimension,
+        ])
+        .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::AtPoint(expected)),
+            Obj::DerivativeOperator(DerivativeOperator::AtPoint(actual)),
+        ) => {
+            instantiated_object_matches(&expected.function, &actual.function, substitution)
+                && instantiated_object_matches(&expected.point, &actual.point, substitution)
+        }
+        (
+            Obj::LimitOperator(LimitOperator::Sequence(expected)),
+            Obj::LimitOperator(LimitOperator::Sequence(actual)),
+        ) => instantiated_object_matches(&expected.sequence, &actual.sequence, substitution),
+        (
+            Obj::LimitOperator(LimitOperator::SequenceLimsup(expected)),
+            Obj::LimitOperator(LimitOperator::SequenceLimsup(actual)),
+        ) => instantiated_object_matches(&expected.sequence, &actual.sequence, substitution),
+        (
+            Obj::LimitOperator(LimitOperator::SequenceLiminf(expected)),
+            Obj::LimitOperator(LimitOperator::SequenceLiminf(actual)),
+        ) => instantiated_object_matches(&expected.sequence, &actual.sequence, substitution),
+        (
+            Obj::LimitOperator(LimitOperator::Function(expected)),
+            Obj::LimitOperator(LimitOperator::Function(actual)),
+        ) => {
+            instantiated_object_matches(&expected.function, &actual.function, substitution)
+                && match (&expected.approach, &actual.approach) {
+                    (LimitApproach::AtPoint(a), LimitApproach::AtPoint(b))
+                    | (LimitApproach::FromLeft(a), LimitApproach::FromLeft(b))
+                    | (LimitApproach::FromRight(a), LimitApproach::FromRight(b)) => {
+                        instantiated_object_matches(a, b, substitution)
+                    }
+                    (LimitApproach::AtPositiveInfinity, LimitApproach::AtPositiveInfinity)
+                    | (LimitApproach::AtNegativeInfinity, LimitApproach::AtNegativeInfinity) => {
+                        true
+                    }
+                    _ => false,
+                }
+        }
+        (
+            Obj::IntegralOperator(IntegralOperator::Riemann(expected)),
+            Obj::IntegralOperator(IntegralOperator::Riemann(actual)),
+        ) => [&expected.function, &expected.lower, &expected.upper]
+            .into_iter()
+            .zip([&actual.function, &actual.lower, &actual.upper])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            whole @ Obj::FunctionSpace(FunctionSpace::FnSet(expected)),
             Obj::FunctionSpace(FunctionSpace::FnSet(actual)),
-        ) => instantiated_function_signature(expected, actual, substitution).is_some(),
+        ) => instantiated_function_signature(expected, actual, substitution, whole).is_some(),
         (
-            Obj::FunctionSpace(FunctionSpace::AnonymousFn(expected)),
+            whole @ Obj::FunctionSpace(FunctionSpace::AnonymousFn(expected)),
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(actual)),
-        ) => instantiated_function_signature(&expected.body, &actual.body, substitution)
+        ) => instantiated_function_signature(&expected.body, &actual.body, substitution, whole)
             .is_some_and(|scoped| {
                 instantiated_object_matches(&expected.equal_to, &actual.equal_to, &scoped)
             }),
+        (
+            Obj::FunctionSpace(FunctionSpace::Preimage(expected)),
+            Obj::FunctionSpace(FunctionSpace::Preimage(actual)),
+        ) => {
+            instantiated_object_matches(&expected.function, &actual.function, substitution)
+                && instantiated_object_matches(&expected.value, &actual.value, substitution)
+        }
         (
             Obj::FunctionSpace(FunctionSpace::PreimageSet(expected)),
             Obj::FunctionSpace(FunctionSpace::PreimageSet(actual)),
@@ -1351,6 +1988,24 @@ pub(super) fn instantiated_object_matches(
                     .iter()
                     .zip(&b.list)
                     .all(|(a, b)| instantiated_object_matches(a, b, substitution))
+        }
+        (Obj::SetFormer(SetFormer::IntervalObj(a)), Obj::SetFormer(SetFormer::IntervalObj(b))) => {
+            let (al, ar, alc, arc) = real_interval_parts(a);
+            let (bl, br, blc, brc) = real_interval_parts(b);
+            alc == blc
+                && arc == brc
+                && instantiated_object_matches(al, bl, substitution)
+                && instantiated_object_matches(ar, br, substitution)
+        }
+        (
+            Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(a)),
+            Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(b)),
+        ) => {
+            let (a, a_lower, a_closed) = real_ray_parts(a);
+            let (b, b_lower, b_closed) = real_ray_parts(b);
+            a_lower == b_lower
+                && a_closed == b_closed
+                && instantiated_object_matches(a, b, substitution)
         }
         (
             Obj::MatrixOperator(MatrixOperator::Add(a)),
@@ -1554,6 +2209,9 @@ pub(super) fn instantiated_object_matches(
             instantiated_object_matches(&a.set, &b.set, substitution)
                 && instantiated_object_matches(&a.n, &b.n, substitution)
         }
+        (Obj::SetFormer(SetFormer::SeqSet(a)), Obj::SetFormer(SetFormer::SeqSet(b))) => {
+            instantiated_object_matches(&a.set, &b.set, substitution)
+        }
         (
             Obj::SetOperator(SetOperator::SetMinus(a)),
             Obj::SetOperator(SetOperator::SetMinus(b)),
@@ -1594,6 +2252,20 @@ pub(super) fn instantiated_object_matches(
             instantiated_object_matches(&a.set, &b.set, substitution)
                 && instantiated_object_matches(&a.func, &b.func, substitution)
         }
+        (
+            Obj::IteratedOperator(IteratedOperator::Sum(a)),
+            Obj::IteratedOperator(IteratedOperator::Sum(b)),
+        ) => [&a.start, &a.end, &a.func]
+            .into_iter()
+            .zip([&b.start, &b.end, &b.func])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
+        (
+            Obj::IteratedOperator(IteratedOperator::Product(a)),
+            Obj::IteratedOperator(IteratedOperator::Product(b)),
+        ) => [&a.start, &a.end, &a.func]
+            .into_iter()
+            .zip([&b.start, &b.end, &b.func])
+            .all(|(a, b)| instantiated_object_matches(a, b, substitution)),
         (
             Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(a)),
             Obj::IteratedOperator(IteratedOperator::ProductOfFiniteSet(b)),
@@ -1741,8 +2413,8 @@ pub(super) fn instantiated_object_matches(
                         })
             } else {
                 instantiated_object_matches(
-                    &function_head_object_for_match(&expected.head),
-                    &function_head_object_for_match(&actual.head),
+                    &function_head_obj(&expected.head),
+                    &function_head_obj(&actual.head),
                     substitution,
                 )
             };
@@ -1969,36 +2641,57 @@ pub(super) fn instantiated_object_matches(
     }
 }
 
-/// Runtime::inst_fn_set preserves local binder IDs and shadows them in every
-/// carrier, guard and body. Only the free outer IDs are substituted.
+/// Compare the recorded outer substitution and local alpha renaming. A target
+/// binder cannot capture any free reference in the signature or formula body.
 fn instantiated_function_signature(
     expected: &FnSet,
     actual: &FnSet,
     substitution: &HashMap<IdentifierId, Obj>,
+    whole: &Obj,
 ) -> Option<HashMap<IdentifierId, Obj>> {
     let old = &expected.set_bound_parameters.groups;
     let new = &actual.set_bound_parameters.groups;
     if old.len() != new.len() || expected.dom_facts.len() != actual.dom_facts.len() {
         return None;
     }
-    let mut scoped = substitution.clone();
     let mut local = HashSet::new();
-    for (old, new) in old.iter().zip(new) {
-        if old.params.len() != new.params.len() {
+    let mut target = HashSet::new();
+    for (a, b) in old.iter().zip(new) {
+        if a.params.len() != b.params.len() {
             return None;
         }
-        for (old, new) in old.params.iter().zip(&new.params) {
-            if old.id != new.id || !local.insert(old.id) {
+        for (a, b) in a.params.iter().zip(&b.params) {
+            if !local.insert(a.id) || !target.insert(b.id) {
                 return None;
             }
-            scoped.remove(&old.id);
         }
     }
-    if !old
-        .iter()
-        .zip(new)
-        .all(|(a, b)| instantiated_object_matches(&a.param_type, &b.param_type, &scoped))
-        || !instantiated_object_matches(&expected.ret_set, &actual.ret_set, &scoped)
+    let mut free = HashSet::new();
+    crate::instantiate::collect_free_plain_ids(whole, &HashSet::new(), &mut free);
+    for id in free {
+        if let Some(value) = substitution.get(&id) {
+            let mut targets = HashSet::new();
+            crate::instantiate::collect_free_plain_ids(value, &HashSet::new(), &mut targets);
+            if !targets.is_disjoint(&target) {
+                return None;
+            }
+        } else if target.contains(&id) {
+            return None;
+        }
+    }
+    let mut scoped = substitution.clone();
+    for id in &local {
+        scoped.remove(id);
+    }
+    for (a, b) in old.iter().zip(new) {
+        if !instantiated_object_matches(&a.param_type, &b.param_type, &scoped) {
+            return None;
+        }
+        for (a, b) in a.params.iter().zip(&b.params) {
+            scoped.insert(a.id, Obj::Identifier(IdentifierObj::from_bound_name(b)));
+        }
+    }
+    if !instantiated_object_matches(&expected.ret_set, &actual.ret_set, &scoped)
         || !expected
             .dom_facts
             .iter()
@@ -2016,7 +2709,7 @@ fn instantiated_function_signature(
     Some(scoped)
 }
 
-fn function_head_object_for_match(head: &FnObjHead) -> Obj {
+pub(super) fn function_head_obj(head: &FnObjHead) -> Obj {
     match head {
         FnObjHead::Identifier(value) => Obj::Identifier(value.clone()),
         FnObjHead::Object(value) => value.as_ref().clone(),
@@ -2054,7 +2747,8 @@ pub(super) fn quantified_parameter_substitution(
                     instantiated_object_matches(a, b, &scoped)
                 }
                 (ParamType::Set(_), ParamType::Set(_))
-                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_)) => true,
+                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+                | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
                 _ => false,
             }
         {
@@ -2302,6 +2996,247 @@ mod function_substitution_tests {
     }
 
     #[test]
+    fn ray_and_sequence_beta_preserve_constructor_and_original_parameter_id() {
+        fn ray(kind: usize, endpoint: Obj) -> Obj {
+            let data = OneSideInfinityIntervalObjStruct {
+                start: Box::new(endpoint),
+            };
+            Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(match kind {
+                0 => OneSideInfinityIntervalObj::LowerOpen(data),
+                1 => OneSideInfinityIntervalObj::LowerClosed(data),
+                2 => OneSideInfinityIntervalObj::UpperOpen(data),
+                3 => OneSideInfinityIntervalObj::UpperClosed(data),
+                _ => unreachable!(),
+            }))
+        }
+        let mut runtime = runtime();
+        let (parameter_id, parameter) = name(&mut runtime, "a");
+        let (_, argument) = name(&mut runtime, "a");
+        let (_, unrelated) = name(&mut runtime, "a");
+        let substitution = HashMap::from([(parameter_id, argument.clone())]);
+        for kind in 0..4 {
+            let original = ray(kind, parameter.clone());
+            for other_kind in 0..4 {
+                assert_eq!(
+                    instantiated_object_matches(
+                        &original,
+                        &ray(other_kind, argument.clone()),
+                        &substitution,
+                    ),
+                    kind == other_kind
+                );
+            }
+            assert!(!instantiated_object_matches(
+                &original,
+                &ray(kind, unrelated.clone()),
+                &substitution,
+            ));
+        }
+        let seq = |set: Obj| Obj::SetFormer(SetFormer::SeqSet(SeqSet { set: Box::new(set) }));
+        assert!(instantiated_object_matches(
+            &seq(parameter.clone()),
+            &seq(argument),
+            &substitution,
+        ));
+        assert!(!instantiated_object_matches(
+            &seq(parameter),
+            &seq(unrelated),
+            &substitution,
+        ));
+    }
+
+    #[test]
+    fn fiber_beta_preserves_the_function_and_target_ids() {
+        let mut runtime = runtime();
+        let (function_id, function) = name(&mut runtime, "f");
+        let (target_id, target) = name(&mut runtime, "y");
+        let (_, actual_function) = name(&mut runtime, "f");
+        let (_, actual_target) = name(&mut runtime, "y");
+        let (_, other_function) = name(&mut runtime, "f");
+        let (_, other_target) = name(&mut runtime, "y");
+        let fiber = |f, y| Obj::FunctionSpace(FunctionSpace::Preimage(Preimage::new(f, y)));
+        let original = fiber(function, target);
+        let substitution = HashMap::from([
+            (function_id, actual_function.clone()),
+            (target_id, actual_target.clone()),
+        ]);
+        assert!(instantiated_object_matches(
+            &original,
+            &fiber(actual_function.clone(), actual_target.clone()),
+            &substitution,
+        ));
+        for changed in [
+            fiber(other_function, actual_target),
+            fiber(actual_function, other_target),
+        ] {
+            assert!(!instantiated_object_matches(
+                &original,
+                &changed,
+                &substitution
+            ));
+        }
+    }
+
+    #[test]
+    fn analysis_selector_beta_preserves_kind_approach_function_and_point_ids() {
+        fn selector(kind: usize, function: Obj, point: Obj) -> Obj {
+            match kind {
+                0 => Obj::DerivativeOperator(DerivativeOperator::AtPoint(DerivativeAt::new(
+                    function, point,
+                ))),
+                1 => Obj::LimitOperator(LimitOperator::Sequence(SequenceLimit::new(function))),
+                2 => {
+                    Obj::LimitOperator(LimitOperator::SequenceLimsup(SequenceLimsup::new(function)))
+                }
+                3 => {
+                    Obj::LimitOperator(LimitOperator::SequenceLiminf(SequenceLiminf::new(function)))
+                }
+                _ => Obj::LimitOperator(LimitOperator::Function(FunctionLimit {
+                    function: Box::new(function),
+                    approach: match kind {
+                        4 => LimitApproach::AtPoint(Box::new(point)),
+                        5 => LimitApproach::FromLeft(Box::new(point)),
+                        6 => LimitApproach::FromRight(Box::new(point)),
+                        7 => LimitApproach::AtPositiveInfinity,
+                        8 => LimitApproach::AtNegativeInfinity,
+                        _ => unreachable!(),
+                    },
+                })),
+            }
+        }
+        let mut runtime = runtime();
+        let (f_id, f) = name(&mut runtime, "f");
+        let (p_id, p) = name(&mut runtime, "p");
+        let (_, actual_f) = name(&mut runtime, "f");
+        let (_, actual_p) = name(&mut runtime, "p");
+        let (_, other_f) = name(&mut runtime, "f");
+        let (_, other_p) = name(&mut runtime, "p");
+        let substitution = HashMap::from([(f_id, actual_f.clone()), (p_id, actual_p.clone())]);
+        for kind in 0..9 {
+            let original = selector(kind, f.clone(), p.clone());
+            for other_kind in 0..9 {
+                assert_eq!(
+                    instantiated_object_matches(
+                        &original,
+                        &selector(other_kind, actual_f.clone(), actual_p.clone()),
+                        &substitution,
+                    ),
+                    kind == other_kind,
+                    "different selector kinds or limit approaches cannot be substituted",
+                );
+            }
+            assert!(!instantiated_object_matches(
+                &original,
+                &selector(kind, other_f.clone(), actual_p.clone()),
+                &substitution,
+            ));
+            if matches!(kind, 0 | 4..=6) {
+                assert!(!instantiated_object_matches(
+                    &original,
+                    &selector(kind, actual_f.clone(), other_p.clone()),
+                    &substitution,
+                ));
+            }
+        }
+    }
+
+    #[test]
+    fn multivariable_selector_beta_preserves_family_point_and_ordered_dimensions() {
+        fn selector(kind: usize, args: &[Obj]) -> Obj {
+            let (f, p, n, m) = (
+                args[0].clone(),
+                args[1].clone(),
+                args[2].clone(),
+                args[3].clone(),
+            );
+            match kind {
+                0 => Obj::DerivativeOperator(DerivativeOperator::Partial(
+                    PartialDerivativeAt::new(f, p, n, m),
+                )),
+                1 => Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(
+                    ScalarDifferentialAt::new(f, p, n),
+                )),
+                2 => Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(
+                    TotalDifferentialAt::new(f, p, n, m),
+                )),
+                3 => {
+                    Obj::DerivativeOperator(DerivativeOperator::Gradient(GradientAt::new(f, p, n)))
+                }
+                4 => Obj::DerivativeOperator(DerivativeOperator::Jacobian(JacobianAt::new(
+                    f, p, n, m,
+                ))),
+                5 => Obj::DerivativeOperator(DerivativeOperator::Hessian(HessianAt::new(f, p, n))),
+                6 => Obj::DerivativeOperator(DerivativeOperator::Divergence(DivergenceAt::new(
+                    f, p, n,
+                ))),
+                7 => Obj::DerivativeOperator(DerivativeOperator::Curl(CurlAt::new(f, p))),
+                8 => Obj::DerivativeOperator(DerivativeOperator::Laplacian(LaplacianAt::new(
+                    f, p, n,
+                ))),
+                9 => Obj::LimitOperator(LimitOperator::MultivariableScalar(
+                    MultivariableScalarLimit::new(f, p, n),
+                )),
+                10 => Obj::LimitOperator(LimitOperator::MultivariableVector(
+                    MultivariableVectorLimit::new(f, p, n, m),
+                )),
+                _ => unreachable!(),
+            }
+        }
+        let mut runtime = runtime();
+        let original: Vec<_> = (0..4)
+            .map(|_| name(&mut runtime, "same_spelling"))
+            .collect();
+        let actual: Vec<_> = (0..4)
+            .map(|_| name(&mut runtime, "same_spelling").1)
+            .collect();
+        let substitution = original
+            .iter()
+            .zip(&actual)
+            .map(|((id, _), value)| (*id, value.clone()))
+            .collect();
+        let parameters: Vec<_> = original.into_iter().map(|(_, object)| object).collect();
+        for kind in 0..11 {
+            let expected = selector(kind, &parameters);
+            for other in 0..11 {
+                assert_eq!(
+                    instantiated_object_matches(
+                        &expected,
+                        &selector(other, &actual),
+                        &substitution
+                    ),
+                    kind == other,
+                    "the operation family is part of the original certificate",
+                );
+            }
+            let used = if kind == 7 {
+                2
+            } else if matches!(kind, 0 | 2 | 4 | 10) {
+                4
+            } else {
+                3
+            };
+            for field in 0..used {
+                let mut changed = actual.clone();
+                changed[field] = name(&mut runtime, "same_spelling").1;
+                assert!(!instantiated_object_matches(&expected, &selector(kind, &changed), &substitution),
+                    "same spelling cannot replace an original function, point, dimension or coordinate ID");
+            }
+            if used == 4 {
+                let mut swapped = actual.clone();
+                swapped.swap(2, 3);
+                assert!(
+                    !instantiated_object_matches(
+                        &expected,
+                        &selector(kind, &swapped),
+                        &substitution
+                    ),
+                    "input/output dimensions and dimension/coordinate have distinct roles"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn source_function_parameter_substitutes_in_coordinate_head_by_id() {
         let mut runtime = runtime();
         let (p_id, p) = name(&mut runtime, "u");
@@ -2347,6 +3282,47 @@ mod function_substitution_tests {
             &Obj::FnObj(actual),
             &substitution
         ));
+    }
+
+    #[test]
+    fn function_arity_integral_substitution_keeps_function_and_endpoint_identities() {
+        let mut runtime = runtime();
+        let (f_id, f) = name(&mut runtime, "f");
+        let (a_id, a) = name(&mut runtime, "a");
+        let (b_id, b) = name(&mut runtime, "b");
+        let (_, actual_f) = name(&mut runtime, "f");
+        let (_, wrong_f) = name(&mut runtime, "f");
+        let one = Obj::Literal(Literal::Number(Number::new("1".into())));
+        let two = Obj::Literal(Literal::Number(Number::new("2".into())));
+        let integral = |function: Obj, lower: Obj, upper: Obj| {
+            Obj::IntegralOperator(IntegralOperator::Riemann(RiemannIntegral {
+                function: Box::new(function),
+                lower: Box::new(lower),
+                upper: Box::new(upper),
+            }))
+        };
+        let expected = integral(f, a, b);
+        let substitution = HashMap::from([
+            (f_id, actual_f.clone()),
+            (a_id, one.clone()),
+            (b_id, two.clone()),
+        ]);
+        assert!(instantiated_object_matches(
+            &expected,
+            &integral(actual_f.clone(), one.clone(), two.clone()),
+            &substitution,
+        ));
+        for wrong in [
+            integral(wrong_f, one.clone(), two.clone()),
+            integral(actual_f.clone(), two.clone(), two.clone()),
+            integral(actual_f, one.clone(), one),
+        ] {
+            assert!(!instantiated_object_matches(
+                &expected,
+                &wrong,
+                &substitution
+            ));
+        }
     }
 }
 
@@ -2454,4 +3430,39 @@ pub(super) fn finite_product_parameter(
         ));
     }
     Ok((parameter, carrier, store))
+}
+
+/// Compose already checked value equalities in their original operand order.
+/// Residual function types fix each application head during elaboration.
+/// Callers retain subject,arity,citation,formation and source-scope checks.
+pub(super) fn curried_value_congruence(
+    operation: &str,
+    proofs: &[String],
+) -> Result<String, LeanCompileError> {
+    let Some(first) = proofs.first() else {
+        return Err(LeanCompileError::unsupported(
+            "ConstructorCongruence/EmptyArguments",
+        ));
+    };
+    if proofs.len() == 1 {
+        return Ok(format!("(congrArg {operation} {first})"));
+    }
+    if proofs.len() == 2 {
+        return Ok(format!(
+            "(congrArg₂ {operation} {} {})",
+            proofs[0], proofs[1]
+        ));
+    }
+    let mut proof = format!("(congrArg {operation} {first})");
+    for (index, argument) in proofs.iter().enumerate().skip(1) {
+        let function_type = std::iter::repeat("M.Value")
+            .take(proofs.len() - index + 1)
+            .collect::<Vec<_>>()
+            .join(" → ");
+        let apply = format!(
+            "(fun (_constructor : {function_type}) (_operand : M.Value) => _constructor _operand)"
+        );
+        proof = format!("(congrArg₂ {apply} {proof} {argument})");
+    }
+    Ok(proof)
 }

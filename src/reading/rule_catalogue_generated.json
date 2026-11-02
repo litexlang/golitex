@@ -32191,6 +32191,13 @@
     "labels": {}
   },
   {
+    "id": "infer.InferEqualFactResult::TupleCoordinates",
+    "category": "infer",
+    "family": "InferEqualFactResult",
+    "variant": "TupleCoordinates",
+    "labels": {}
+  },
+  {
     "id": "infer.InferExistUniqueFactResult::NoInfer",
     "category": "infer",
     "family": "InferExistUniqueFactResult",

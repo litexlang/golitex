@@ -1,0 +1,12 @@
+# Direct triangle-composition composition.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/absolute_sum_triangle.lit
+# Historical explicit proof:
+# claim:
+#     ? forall x,y,z R:
+#         abs((x+y)+z)<=(abs(x)+abs(y))+abs(z)
+#     abs(x+y)<=abs(x)+abs(y)
+#     abs((x+y)+z)<=abs(x+y)+abs(z)<=(abs(x)+abs(y))+abs(z)
+#     abs((x+y)+z)<=(abs(x)+abs(y))+abs(z)
+# Boundary: all original domains and premises are required.
+forall x,y,z R:
+    abs((x+y)+z)<=(abs(x)+abs(y))+abs(z)

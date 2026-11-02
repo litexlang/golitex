@@ -5,40 +5,46 @@ use crate::prelude::*;
 const SOURCE: &str =
     "forall coordinate_point cart(R, R):\n    coordinate_point(1) = coordinate_point(1)\n";
 
-// Keep this fixture on the tuple-equality constructor. A declared Cartesian
-// membership now publishes coordinate constructors before the queried call.
+// Direct tuple equalities now own their coordinate constructors. Inspect the
+// original inference instead of assuming a later call must build fresh WD.
 const VALUE_SOURCE: &str = "have p set = (1, 2)\np(1) = 1\n";
 
-fn value_shape(
+fn value_projection(
     result: &mut RunLitexCodeResult,
-) -> &mut crate::execute::execute_fact_stmt::known_tuple::KnownTupleValueProof {
-    let ExecStmtResult::Fact(ExecFactStmtResult::Success(fact)) = &mut result.statement_results[1]
+) -> &mut crate::store_fact_and_infer::InferEqualFactTupleCoordinatesResult {
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+        ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(proof)),
+    )) = &mut result.statement_results[0]
     else {
-        panic!("coordinate fact")
+        panic!("original tuple declaration")
     };
-    let equality = super::equality_proof_mut(&mut fact.verify_result);
-    let DetailedObjWellDefinedProof::ByDef {
-        proof: ObjWellDefinedProofByDef::FnObj(proof),
-        ..
-    } = (&mut equality.well_defined_proof.as_detailed_mut().unwrap().left)
-        .as_detailed_mut()
-        .unwrap()
+    let seed = std::rc::Rc::get_mut(
+        proof
+            .store_and_infer_result
+            .store_and_infer_results
+            .last_mut()
+            .unwrap(),
+    )
+    .unwrap();
+    let Some(crate::store_fact_and_infer::InferResult::AtomicFact(
+        crate::store_fact_and_infer::InferAtomicFactResult::EqualFact(rules),
+    )) = &mut seed.infer
     else {
-        panic!("coordinate call WD")
+        panic!("original equality inference")
     };
-    let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &mut proof.domain_fn_set else {
-        panic!("finite call")
-    };
-    let KnownTupleShapeProof::TupleEquality(shape) = &mut finite.source else {
-        panic!("retained tuple value")
-    };
-    shape
+    rules
+        .iter_mut()
+        .find_map(|rule| match rule {
+            crate::store_fact_and_infer::InferEqualFactResult::TupleCoordinates(rule) => Some(rule),
+            _ => None,
+        })
+        .expect("original tuple coordinate producer")
 }
 
 #[test]
 fn finite_tuple_value_uses_its_singleton_contract_and_original_equality() {
     let (mut result, compiler) = super::execute(VALUE_SOURCE);
-    assert_eq!(value_shape(&mut result).value.args.len(), 2);
+    assert_eq!(value_projection(&mut result).coordinates.len(), 2);
     assert!(compiler
         .compile_run(&result, "tuple_value_call")
         .unwrap()
@@ -48,7 +54,7 @@ fn finite_tuple_value_uses_its_singleton_contract_and_original_equality() {
 #[test]
 fn finite_tuple_value_rejects_a_changed_equality_citation() {
     let (mut result, compiler) = super::execute(VALUE_SOURCE);
-    value_shape(&mut result).tuple_equal.path[0].2 = FactId::new(u64::MAX);
+    value_projection(&mut result).source_fact_id = FactId::new(u64::MAX);
     compiler
         .compile_run(&result, "forged_tuple_value")
         .expect_err("the singleton contract must use the original tuple equality");

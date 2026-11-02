@@ -1,0 +1,423 @@
+thm integer_closed_interval_empty:
+    ? forall m,n Z:
+        n<m
+        =>:
+            closed_range(m,n)={}
+    claim:
+        ? forall x closed_range(m,n):
+            x $in {}
+        by contra:
+            ? x $in {}
+            x>=m
+            x<=n
+            m<=x<=n
+            impossible m>n
+    claim:
+        ? forall x {}:
+            x $in closed_range(m,n)
+        by contra:
+            ? x $in closed_range(m,n)
+            impossible x $in {}
+    by extension closed_range(m,n)={}
+
+thm finite_real_interval_sum_empty:
+    ? forall m,n Z,a fn(k closed_range(m,n)) R:
+        n<m
+        =>:
+            finite_set_sum(closed_range(m,n),a)=0
+    release thm integer_closed_interval_empty(m,n)
+    finite_set_sum({},a)=0
+    finite_set_sum(closed_range(m,n),a)=finite_set_sum({},a)
+    finite_set_sum(closed_range(m,n),a)=0
+
+thm integer_closed_interval_nested_subset:
+    ? forall first,last,outerfirst,outerlast Z:
+        outerfirst<=first
+        last<=outerlast
+        =>:
+            closed_range(first,last) $subset closed_range(outerfirst,outerlast)
+    claim:
+        ? forall x closed_range(first,last):
+            x $in closed_range(outerfirst,outerlast)
+        x $in Z
+        x>=first>=outerfirst
+        x<=last<=outerlast
+        x $in closed_range(outerfirst,outerlast)
+    by def closed_range(first,last) $subset closed_range(outerfirst,outerlast)
+
+thm integer_closed_interval_adjacent_partition:
+    ? forall m,n,p Z:
+        m<=n+1
+        n<=p
+        =>:
+            closed_range(m,p)=union(closed_range(m,n),closed_range(n+1,p))
+            intersect(closed_range(m,n),closed_range(n+1,p))={}
+    claim:
+        ? forall x closed_range(m,p):
+            x $in union(closed_range(m,n),closed_range(n+1,p))
+        x $in Z
+        x>=m
+        x<=p
+        x<=n or x>n
+        by cases:
+            ? x $in union(closed_range(m,n),closed_range(n+1,p))
+            case x<=n:
+                x $in closed_range(m,n)
+                x $in union(closed_range(m,n),closed_range(n+1,p))
+            case x>n:
+                x-n $in Z
+                x-n>0
+                x-n $in N+
+                x-n>=1
+                x>=n+1
+                x $in closed_range(n+1,p)
+                x $in union(closed_range(m,n),closed_range(n+1,p))
+    claim:
+        ? forall x union(closed_range(m,n),closed_range(n+1,p)):
+            x $in closed_range(m,p)
+        x $in closed_range(m,n) or x $in closed_range(n+1,p)
+        by cases:
+            ? x $in closed_range(m,p)
+            case x $in closed_range(m,n):
+                x $in Z
+                x>=m
+                x<=n<=p
+                x $in closed_range(m,p)
+            case x $in closed_range(n+1,p):
+                x $in Z
+                x>=n+1>=m
+                x<=p
+                x $in closed_range(m,p)
+    by extension closed_range(m,p)=union(closed_range(m,n),closed_range(n+1,p))
+    claim:
+        ? forall x intersect(closed_range(m,n),closed_range(n+1,p)):
+            x $in {}
+        by contra:
+            ? x $in {}
+            x $in closed_range(m,n)
+            x $in closed_range(n+1,p)
+            x<=n
+            x>=n+1
+            x>=n+1>n
+            impossible x<=n
+    by def intersect(closed_range(m,n),closed_range(n+1,p)) $subset {}
+    by extension intersect(closed_range(m,n),closed_range(n+1,p))={}
+
+thm finite_real_interval_sum_nonempty_native:
+    ? forall m,n Z,a fn(k closed_range(m,n)) R:
+        m<=n
+        =>:
+            finite_set_sum(closed_range(m,n),a)=sum(m,n,a)
+    finite_set_sum(closed_range(m,n),a)=sum(m,n,a)
+
+thm finite_real_interval_sum_singleton:
+    ? forall m Z,a fn(k closed_range(m,m)) R:
+        finite_set_sum(closed_range(m,m),a)=a(m)
+    m $in closed_range(m,m)
+    a(m) $in R
+    closed_range(m,m)={m}
+    finite_set_sum({m},a)=a(m)
+    finite_set_sum(closed_range(m,m),a)=finite_set_sum({m},a)=a(m)
+
+claim:
+    ? forall m,n Z:
+        n>=m-1
+        =>:
+            n+1 $in closed_range(m,n+1)
+    n+1>=(m-1)+1
+    (m-1)+1=m
+    n+1>=m
+    m<=n+1
+    n+1 $in Z
+    n+1 $in closed_range(m,n+1)
+
+claim:
+    ? forall m,n Z:
+        closed_range(m,n) $subset closed_range(m,n+1)
+    release thm integer_closed_interval_nested_subset(m,n,m,n+1)
+
+thm finite_real_interval_sum_successor:
+    ? forall m,n Z,a fn(k closed_range(m,n+1)) R:
+        n>=m-1
+        =>:
+            finite_set_sum(closed_range(m,n+1),a)=finite_set_sum(closed_range(m,n),a)+a(n+1)
+    n+1 $in closed_range(m,n+1)
+    n+1>=m
+    m<=n+1
+    a(n+1) $in R
+    release thm integer_closed_interval_adjacent_partition(m,n,n+1)
+    release thm integer_closed_interval_nested_subset(m,n,m,n+1)
+    release thm integer_closed_interval_nested_subset(n+1,n+1,m,n+1)
+    finite_set_sum(closed_range(m,n+1),a)=finite_set_sum(union(closed_range(m,n),closed_range(n+1,n+1)),a)
+    finite_set_sum(union(closed_range(m,n),closed_range(n+1,n+1)),a)=finite_set_sum(closed_range(m,n),a)+finite_set_sum(closed_range(n+1,n+1),a)
+    closed_range(n+1,n+1)={n+1}
+    finite_set_sum(closed_range(n+1,n+1),a)=finite_set_sum({n+1},a)=a(n+1)
+    finite_set_sum(closed_range(m,n),a)+finite_set_sum(closed_range(n+1,n+1),a)=finite_set_sum(closed_range(m,n),a)+a(n+1)
+    finite_set_sum(closed_range(m,n+1),a)=finite_set_sum(closed_range(m,n),a)+a(n+1)
+
+thm finite_real_interval_sum_split:
+    ? forall m,n,p Z,a fn(k closed_range(m,p)) R:
+        m<=n+1
+        n<=p
+        =>:
+            finite_set_sum(closed_range(m,n),a)+finite_set_sum(closed_range(n+1,p),a)=finite_set_sum(closed_range(m,p),a)
+    release thm integer_closed_interval_adjacent_partition(m,n,p)
+    release thm integer_closed_interval_nested_subset(m,n,m,p)
+    release thm integer_closed_interval_nested_subset(n+1,p,m,p)
+    finite_set_sum(closed_range(m,p),a)=finite_set_sum(union(closed_range(m,n),closed_range(n+1,p)),a)
+    finite_set_sum(union(closed_range(m,n),closed_range(n+1,p)),a)=finite_set_sum(closed_range(m,n),a)+finite_set_sum(closed_range(n+1,p),a)
+    finite_set_sum(closed_range(m,n),a)+finite_set_sum(closed_range(n+1,p),a)=finite_set_sum(closed_range(m,p),a)
+
+thm finite_real_interval_sum_add:
+    ? forall m,n Z,a,b fn(k closed_range(m,n)) R:
+        finite_set_sum(closed_range(m,n),fn(k closed_range(m,n)) R {a(k)+b(k)})=finite_set_sum(closed_range(m,n),a)+finite_set_sum(closed_range(m,n),b)
+    finite_set_sum(closed_range(m,n),fn(k closed_range(m,n)) R {a(k)+b(k)})=finite_set_sum(closed_range(m,n),a)+finite_set_sum(closed_range(m,n),b)
+
+thm finite_real_interval_sum_scale:
+    ? forall m,n Z,a fn(k closed_range(m,n)) R,c R:
+        finite_set_sum(closed_range(m,n),fn(k closed_range(m,n)) R {c*a(k)})=c*finite_set_sum(closed_range(m,n),a)
+    finite_set_sum(closed_range(m,n),fn(k closed_range(m,n)) R {c*a(k)})=c*finite_set_sum(closed_range(m,n),a)
+
+thm finite_real_interval_sum_triangle:
+    ? forall m,n Z,a fn(k closed_range(m,n)) R:
+        abs(finite_set_sum(closed_range(m,n),a))<=finite_set_sum(closed_range(m,n),fn(k closed_range(m,n)) R {abs(a(k))})
+    abs(finite_set_sum(closed_range(m,n),a))<=finite_set_sum(closed_range(m,n),fn(k closed_range(m,n)) R {abs(a(k))})
+
+thm finite_real_interval_sum_comparison:
+    ? forall m,n Z,a,b fn(k closed_range(m,n)) R:
+        forall k closed_range(m,n):
+            a(k)<=b(k)
+        =>:
+            finite_set_sum(closed_range(m,n),a)<=finite_set_sum(closed_range(m,n),b)
+    release thm finite_set_sum_le_from_pointwise(finite_set_sum(closed_range(m,n),a),finite_set_sum(closed_range(m,n),b))
+
+claim:
+    ? forall m,n,k Z,x closed_range(m+k,n+k):
+        x-k $in closed_range(m,n)
+    x $in Z
+    x>=m+k
+    x<=n+k
+    x-k>=(m+k)-k=m
+    x-k<=(n+k)-k=n
+    x-k $in Z
+    x-k $in closed_range(m,n)
+
+claim:
+    ? forall m,n,k Z,x closed_range(m,n):
+        x+k $in closed_range(m+k,n+k)
+    x $in Z
+    x>=m
+    x<=n
+    x+k>=m+k
+    x+k<=n+k
+    x+k $in Z
+    x+k $in closed_range(m+k,n+k)
+
+template<m,n,k Z>:
+    have fn integer_interval_unshift_index(x closed_range(m+k,n+k)) closed_range(m,n)=x-k
+
+thm integer_interval_unshift_bijective:
+    ? forall m,n,k Z:
+        $bijective(closed_range(m+k,n+k),closed_range(m,n),\integer_interval_unshift_index<m,n,k>)
+    claim:
+        ? forall x,y closed_range(m+k,n+k):
+            \integer_interval_unshift_index<m,n,k>(x)=\integer_interval_unshift_index<m,n,k>(y)
+            =>:
+                x=y
+        \integer_interval_unshift_index<m,n,k>(x) $in closed_range(m,n)
+        \integer_interval_unshift_index<m,n,k>(y) $in closed_range(m,n)
+        \integer_interval_unshift_index<m,n,k>(x) $in Z
+        \integer_interval_unshift_index<m,n,k>(y) $in Z
+        \integer_interval_unshift_index<m,n,k>(x)=x-k
+        \integer_interval_unshift_index<m,n,k>(y)=y-k
+        x=(x-k)+k=\integer_interval_unshift_index<m,n,k>(x)+k=\integer_interval_unshift_index<m,n,k>(y)+k=(y-k)+k=y
+    by def $injective(closed_range(m+k,n+k),closed_range(m,n),\integer_interval_unshift_index<m,n,k>)
+    claim:
+        ? forall y closed_range(m,n):
+            exist x closed_range(m+k,n+k) st {y=\integer_interval_unshift_index<m,n,k>(x)}
+        y+k $in closed_range(m+k,n+k)
+        \integer_interval_unshift_index<m,n,k>(y+k)=(y+k)-k=y
+        witness exist x closed_range(m+k,n+k) st {y=\integer_interval_unshift_index<m,n,k>(x)} from y+k
+    by def $surjective(closed_range(m+k,n+k),closed_range(m,n),\integer_interval_unshift_index<m,n,k>)
+    by def $bijective(closed_range(m+k,n+k),closed_range(m,n),\integer_interval_unshift_index<m,n,k>)
+
+thm finite_real_interval_sum_shift:
+    ? forall m,n,k Z,a fn(j closed_range(m,n)) R:
+        finite_set_sum(closed_range(m,n),a)=finite_set_sum(closed_range(m+k,n+k),fn(j closed_range(m+k,n+k)) R {a(j-k)})
+    release thm integer_interval_unshift_bijective(m,n,k)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(m,n),a),finite_set_sum(closed_range(m+k,n+k),fn(j closed_range(m+k,n+k)) R {a(\integer_interval_unshift_index<m,n,k>(j))}))
+    claim:
+        ? forall j closed_range(m+k,n+k):
+            a(\integer_interval_unshift_index<m,n,k>(j))=a(j-k)
+        j-k $in closed_range(m,n)
+        \integer_interval_unshift_index<m,n,k>(j)=j-k
+        a(\integer_interval_unshift_index<m,n,k>(j))=a(j-k)
+    release thm finite_set_sum_substitution(finite_set_sum(closed_range(m+k,n+k),fn(j closed_range(m+k,n+k)) R {a(\integer_interval_unshift_index<m,n,k>(j))}),finite_set_sum(closed_range(m+k,n+k),fn(j closed_range(m+k,n+k)) R {a(j-k)}))
+    finite_set_sum(closed_range(m,n),a)=finite_set_sum(closed_range(m+k,n+k),fn(j closed_range(m+k,n+k)) R {a(\integer_interval_unshift_index<m,n,k>(j))})=finite_set_sum(closed_range(m+k,n+k),fn(j closed_range(m+k,n+k)) R {a(j-k)})
+
+thm finite_real_set_sum_substitution:
+    ? forall X,Y finite_set,f fn(x X) R,g fn(y Y) X:
+        $bijective(Y,X,g)
+        =>:
+            finite_set_sum(X,f)=finite_set_sum(Y,fn(y Y) R {f(g(y))})
+    release thm finite_set_sum_substitution(finite_set_sum(X,f),finite_set_sum(Y,fn(y Y) R {f(g(y))}))
+
+thm finite_real_set_sum_enumeration:
+    ? forall X finite_set,f fn(x X) R,n N,g fn(k closed_range(1,n)) X:
+        $bijective(closed_range(1,n),X,g)
+        =>:
+            finite_set_sum(X,f)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {f(g(k))})
+    release thm finite_real_set_sum_substitution(X,closed_range(1,n),f,g)
+
+thm finite_set_bijective_enumeration_exists:
+    ? forall X finite_set:
+        exist g fn(k closed_range(1,finite_set_size(X))) X st {$bijective(closed_range(1,finite_set_size(X)),X,g)}
+    release thm finite_set_has_bijective_index(X)
+    obtain g from exist g finite_seq(X,finite_set_size(X)) st {$bijective(closed_range(1,finite_set_size(X)),X,g)}
+    release thm fn_set_member(g,fn(k closed_range(1,finite_set_size(X))) X)
+    witness exist h fn(k closed_range(1,finite_set_size(X))) X st {$bijective(closed_range(1,finite_set_size(X)),X,h)} from g
+
+thm finite_real_set_sum_enumeration_independent:
+    ? forall X finite_set,f fn(x X) R,n N,g,h fn(k closed_range(1,n)) X:
+        $bijective(closed_range(1,n),X,g)
+        $bijective(closed_range(1,n),X,h)
+        =>:
+            finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {f(g(k))})=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {f(h(k))})
+    release thm finite_real_set_sum_enumeration(X,f,n,g)
+    release thm finite_real_set_sum_enumeration(X,f,n,h)
+    finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {f(g(k))})=finite_set_sum(X,f)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {f(h(k))})
+
+thm finite_real_set_sum_empty:
+    ? forall X finite_set,f fn(x X) R:
+        X={}
+        =>:
+            finite_set_sum(X,f)=0
+    finite_set_sum({},f)=0
+    finite_set_sum(X,f)=finite_set_sum({},f)=0
+
+thm finite_real_set_sum_singleton:
+    ? forall X finite_set,point X,f fn(x X) R:
+        X={point}
+        =>:
+            finite_set_sum(X,f)=f(point)
+    f(point) $in R
+    finite_set_sum({point},f)=f(point)
+    finite_set_sum(X,f)=finite_set_sum({point},f)=f(point)
+
+thm finite_real_set_sum_disjoint_union:
+    ? forall X,Y finite_set,f fn(x union(X,Y)) R:
+        intersect(X,Y)={}
+        =>:
+            finite_set_sum(union(X,Y),f)=finite_set_sum(X,f)+finite_set_sum(Y,f)
+    finite_set_sum(union(X,Y),f)=finite_set_sum(X,f)+finite_set_sum(Y,f)
+
+thm finite_real_set_sum_add:
+    ? forall X finite_set,f,g fn(x X) R:
+        finite_set_sum(X,fn(x X) R {f(x)+g(x)})=finite_set_sum(X,f)+finite_set_sum(X,g)
+    finite_set_sum(X,fn(x X) R {f(x)+g(x)})=finite_set_sum(X,f)+finite_set_sum(X,g)
+
+thm finite_real_set_sum_scale:
+    ? forall X finite_set,f fn(x X) R,c R:
+        finite_set_sum(X,fn(x X) R {c*f(x)})=c*finite_set_sum(X,f)
+    finite_set_sum(X,fn(x X) R {c*f(x)})=c*finite_set_sum(X,f)
+
+thm finite_real_set_sum_comparison:
+    ? forall X finite_set,f,g fn(x X) R:
+        forall x X:
+            f(x)<=g(x)
+        =>:
+            finite_set_sum(X,f)<=finite_set_sum(X,g)
+    release thm finite_set_sum_le_from_pointwise(finite_set_sum(X,f),finite_set_sum(X,g))
+
+thm finite_real_set_sum_triangle:
+    ? forall X finite_set,f fn(x X) R:
+        abs(finite_set_sum(X,f))<=finite_set_sum(X,fn(x X) R {abs(f(x))})
+    abs(finite_set_sum(X,f))<=finite_set_sum(X,fn(x X) R {abs(f(x))})
+
+thm finite_real_set_sum_substitution_on_superset:
+    ? forall U set,X,Y finite_set,f fn(x U) R,g fn(y Y) X:
+        X $subset U
+        $bijective(Y,X,g)
+        =>:
+            finite_set_sum(X,f)=finite_set_sum(Y,fn(y Y) R {f(g(y))})
+    release thm finite_set_sum_substitution(finite_set_sum(X,f),finite_set_sum(Y,fn(y Y) R {f(g(y))}))
+
+thm finite_real_set_sum_enumeration_on_superset:
+    ? forall U set,X finite_set,f fn(x U) R,n N,g fn(k closed_range(1,n)) X:
+        X $subset U
+        $bijective(closed_range(1,n),X,g)
+        =>:
+            finite_set_sum(X,f)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {f(g(k))})
+    release thm finite_real_set_sum_substitution_on_superset(U,X,closed_range(1,n),f,g)
+
+claim:
+    ? forall X,Y set,p cart(X,Y):
+        (p(2),p(1)) $in cart(Y,X)
+    p(1) $in X
+    p(2) $in Y
+    (p(2),p(1)) $in cart(Y,X)
+
+template<X,Y set>:
+    have fn cartesian_pair_swap_map(p cart(X,Y)) cart(Y,X)=(p(2),p(1))
+
+thm cartesian_pair_swap_bijective:
+    ? forall X,Y set:
+        $bijective(cart(X,Y),cart(Y,X),\cartesian_pair_swap_map<X,Y>)
+    claim:
+        ? forall p,q cart(X,Y):
+            \cartesian_pair_swap_map<X,Y>(p)=\cartesian_pair_swap_map<X,Y>(q)
+            =>:
+                p=q
+        \cartesian_pair_swap_map<X,Y>(p)=(p(2),p(1))
+        \cartesian_pair_swap_map<X,Y>(q)=(q(2),q(1))
+        (p(2),p(1))=(q(2),q(1))
+        p(2)=(p(2),p(1))(1)=(q(2),q(1))(1)=q(2)
+        p(1)=(p(2),p(1))(2)=(q(2),q(1))(2)=q(1)
+        claim:
+            ? forall coord closed_range(1,2):
+                p(coord)=q(coord)
+            expand: coord $in closed_range(1,2)
+            by cases:
+                ? p(coord)=q(coord)
+                case coord=1:
+                    p(coord)=p(1)=q(1)=q(coord)
+                case coord=2:
+                    p(coord)=p(2)=q(2)=q(coord)
+        release thm tuple_equal_from_coordinates(p,q)
+    by def $injective(cart(X,Y),cart(Y,X),\cartesian_pair_swap_map<X,Y>)
+    claim:
+        ? forall q cart(Y,X):
+            exist p cart(X,Y) st {q=\cartesian_pair_swap_map<X,Y>(p)}
+        (q(2),q(1)) $in cart(X,Y)
+        \cartesian_pair_swap_map<X,Y>((q(2),q(1)))=((q(2),q(1))(2),(q(2),q(1))(1))=(q(1),q(2))=q
+        witness exist p cart(X,Y) st {q=\cartesian_pair_swap_map<X,Y>(p)} from (q(2),q(1))
+    by def $surjective(cart(X,Y),cart(Y,X),\cartesian_pair_swap_map<X,Y>)
+    by def $bijective(cart(X,Y),cart(Y,X),\cartesian_pair_swap_map<X,Y>)
+
+thm finite_real_cartesian_sum_flatten:
+    ? forall X,Y finite_set,f fn(p cart(X,Y)) R:
+        finite_set_sum(X,fn(x X) R {finite_set_sum(Y,fn(y Y) R {f((x,y))})})=finite_set_sum(cart(X,Y),f)
+    finite_set_sum(X,fn(x X) R {finite_set_sum(Y,fn(y Y) R {f((x,y))})})=finite_set_sum(cart(X,Y),f)
+
+thm finite_real_cartesian_sum_swap:
+    ? forall X,Y finite_set,f fn(p cart(X,Y)) R:
+        finite_set_sum(cart(X,Y),f)=finite_set_sum(cart(Y,X),fn(q cart(Y,X)) R {f((q(2),q(1)))})
+    release thm cartesian_pair_swap_bijective(Y,X)
+    release thm finite_real_set_sum_substitution(cart(X,Y),cart(Y,X),f,\cartesian_pair_swap_map<Y,X>)
+    claim:
+        ? forall q cart(Y,X):
+            f(\cartesian_pair_swap_map<Y,X>(q))=f((q(2),q(1)))
+        \cartesian_pair_swap_map<Y,X>(q)=(q(2),q(1))
+        f(\cartesian_pair_swap_map<Y,X>(q))=f((q(2),q(1)))
+    release thm finite_set_sum_substitution(finite_set_sum(cart(Y,X),fn(q cart(Y,X)) R {f(\cartesian_pair_swap_map<Y,X>(q))}),finite_set_sum(cart(Y,X),fn(q cart(Y,X)) R {f((q(2),q(1)))}))
+    finite_set_sum(cart(X,Y),f)=finite_set_sum(cart(Y,X),fn(q cart(Y,X)) R {f(\cartesian_pair_swap_map<Y,X>(q))})=finite_set_sum(cart(Y,X),fn(q cart(Y,X)) R {f((q(2),q(1)))})
+
+thm finite_real_sum_fubini:
+    ? forall X,Y finite_set,f fn(p cart(X,Y)) R:
+        finite_set_sum(X,fn(x X) R {finite_set_sum(Y,fn(y Y) R {f((x,y))})})=finite_set_sum(cart(X,Y),f)
+        finite_set_sum(cart(X,Y),f)=finite_set_sum(cart(Y,X),fn(q cart(Y,X)) R {f((q(2),q(1)))})
+        finite_set_sum(cart(Y,X),fn(q cart(Y,X)) R {f((q(2),q(1)))})=finite_set_sum(Y,fn(y Y) R {finite_set_sum(X,fn(x X) R {f((x,y))})})
+    release thm finite_real_cartesian_sum_flatten(X,Y,f)
+    release thm finite_real_cartesian_sum_swap(X,Y,f)
+    finite_set_sum(X,fn(x X) R {finite_set_sum(Y,fn(y Y) R {f((x,y))})})=finite_set_sum(Y,fn(y Y) R {finite_set_sum(X,fn(x X) R {f((x,y))})})
+    finite_set_sum(cart(Y,X),fn(q cart(Y,X)) R {f((q(2),q(1)))})=finite_set_sum(cart(X,Y),f)=finite_set_sum(X,fn(x X) R {finite_set_sum(Y,fn(y Y) R {f((x,y))})})=finite_set_sum(Y,fn(y Y) R {finite_set_sum(X,fn(x X) R {f((x,y))})})

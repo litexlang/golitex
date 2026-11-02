@@ -1,0 +1,141 @@
+{
+  "date": "2026-11-01",
+  "scope": "R1 LaTeX presentation redesign; no AST, Runtime, verifier or public artifact-schema changes",
+  "source_sha256": {
+    "src/compile_to_latex/stmt.rs": "e951a7388921732bbf9708dc7c3fb612ac86ae93ee4e539ad4dd9f9d55d2a342",
+    "src/compile_to_latex/fact.rs": "b6b59ad14d0c135ecfa67ceed869cc276b8794dff0b67bdb4d1157bd76a020a7",
+    "src/compile_to_latex/source.rs": "2e8b64b6ea073508704102c10fa09232c9a616be7a9031f2d22cbec4a68a3ec3",
+    "src/compile_to_latex/mod.rs": "89d26a9feeaa57d4087504656ba46d8cffa681ba36f7c0a4ce3b9904ecd971a6",
+    "src/compile_to_latex/tests.rs": "25adff1b00c17606aa5e16733628649e084251eed0acf2e34db0dc49e3988ae8",
+    "src/compile_to_latex/language.rs": "999fb9e5cdc54e4a8adfa68566879e9c8bfd10894540cb94938ce93e87aa9ec2",
+    "src/compile_to_latex/helper.rs": "9df7861315e0a9df3059b417c3e4518aa8b24cf0bfe559140dd47d9a52a42be9",
+    "src/compile_to_latex/compile.rs": "5595b9c2fad68bb94e386344d47e546c4f9a545c1e853487a154d7466fd0e5a6",
+    "src/compile_to_latex/obj.rs": "d256b6d46548112cd8718c8f319e8322ff442dfd3bf70fb9c2db6bc1cad5be70",
+    "src/compile_to_latex/math_display.rs": "38f0765af6ff7bc2598c2b54ae5bd874ce3b6910b649a61676b7a3a2cbf3673c"
+  },
+  "cli_release_tests": {
+    "command": "cargo test --release --test compile_to_latex_cli --target-dir tmp/2026-11-01/latex-layout-redesign/target -- --nocapture",
+    "passed": 7,
+    "failed": 0
+  },
+  "final_module_tests": {
+    "method": "Optimized rustc test harness imports the actual src/compile_to_latex/mod.rs and its tests; unchanged runtime/parser types come from the retained release library. This is not a successful whole-crate Cargo unit gate.",
+    "passed": 18,
+    "failed": 0
+  },
+  "whole_crate_cargo_checks": {
+    "status": "blocked by unrelated concurrent Lean changes",
+    "error": "E0061: compile_unary_function_domain_certificates expects five arguments; compile_range_aggregate.rs supplies four",
+    "out_of_scope_files_edited": false
+  },
+  "native_typography": {
+    "actual_cli": true,
+    "statement_fixtures_per_locale": 52,
+    "object_fixtures_per_locale": 106,
+    "conversions": 1580,
+    "locales": {
+      "ar": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 39
+      },
+      "en": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 46
+      },
+      "es": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 61
+      },
+      "fr": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 60
+      },
+      "ja": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 37
+      },
+      "ko": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 38
+      },
+      "ru": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 58
+      },
+      "vi": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 50
+      },
+      "zh-hant": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 38
+      },
+      "zh": {
+        "native_compilation": "passed",
+        "missing_glyphs": 0,
+        "overfull_warnings": 38
+      }
+    },
+    "boundary": "TeX errors and missing glyphs are gates. Very long formulas/arrays still produce overfull warnings; automatic formula breaking and book pagination are not implemented."
+  },
+  "tracer": {
+    "path": "examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit",
+    "strict_run_result": "success",
+    "session_terminated": false,
+    "termination": null,
+    "source_sha256": "b80a07e9a070a8b7a29bccb3317ca7ac01f6b1b37bc44d4b6bde1006d99992e2",
+    "case_items": 2,
+    "outer_proof_captions": 1,
+    "native_pdf_languages": [
+      "zh",
+      "en"
+    ],
+    "pdf_overfull_warnings": 0,
+    "representative_definition_calculation_induction_preview_equals_actual_cli": true
+  },
+  "local_hover_preview": {
+    "mapped_statements": 7,
+    "latex_equals_compiler_ast": true,
+    "rejected_controls": [
+      {
+        "control": "source-mismatch",
+        "rejected": true,
+        "reason": "Source snapshot mismatch"
+      },
+      {
+        "control": "missing-evidence",
+        "rejected": true,
+        "reason": "Missing native proof evidence"
+      },
+      {
+        "control": "ambiguous-fragment",
+        "rejected": true,
+        "reason": "LaTeX association is ambiguous or absent"
+      },
+      {
+        "control": "compiler-mismatch",
+        "rejected": true,
+        "reason": "CLI/library LaTeX mismatch"
+      }
+    ],
+    "browser_recapture_byte_identical": true,
+    "hover_source": "n <= 1",
+    "native_fact_navigation_round_trip": true,
+    "pin_and_escape": true,
+    "narrow_viewport_width": 390,
+    "narrow_scroll_width": 390,
+    "binary_sha256": "dadceb6892e932fb1424b444b19555ce85601cd0f5459f4b3db8b397f1ee7f00",
+    "source_map_library_sha256": "c5b248c4518329d71c99a710e910d2ef4123bdf1adfcd11fd019df310c57566c",
+    "library_boundary": "The prior successful release rlib is retained after a concurrent unrelated Lean compilation failure removed the newest dependency rlib. The source-hover capture must still establish byte-exact CLI/library output and checked source/parent identity for every supported input. The final native typography corpus uses the latest actual CLI.",
+    "supported_boundary": "Self-contained arithmetic facts and claim/cases/contra. Unsupported or ambiguous source associations fail explicitly."
+  }
+}

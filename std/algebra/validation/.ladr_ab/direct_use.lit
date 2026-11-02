@@ -1,0 +1,168 @@
+# Direct finite families with zero summands and the empty family.
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def main::plane
+
+release struct def main::plane
+
+release thm Algebra::subspace::ambient_is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane)
+
+release thm Algebra::subspace::zero_is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane)
+
+have fn separated_family(j closed_range(1,3)) power_set(finite_seq(R,2)) by cases:
+    case j=1: finite_seq(R,2)
+    case j!=1: {main::plane.zero}
+
+claim:
+    ? $Algebra::subspace_sums::is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family)
+    claim:
+        ? forall j closed_range(1,3):
+            $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,separated_family(j))
+        by cases:
+            ? $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,separated_family(j))
+            case j=1:
+                separated_family(j)=finite_seq(R,2)
+                $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,finite_seq(R,2))
+            case j!=1:
+                separated_family(j)={main::plane.zero}
+                $Algebra::vector_space::is_subspace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,{main::plane.zero})
+    by def $Algebra::subspace_sums::is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family)
+
+claim:
+    ? $Algebra::subspace_sums::is_direct_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family)
+    claim:
+        ? forall terms finite_seq(finite_seq(R,2),3),index closed_range(1,3):
+            $Algebra::subspace_sums::is_family_decomposition(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family,terms)
+            \Algebra::finite_span::vector_list_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,3>(terms)=main::plane.zero
+            =>:
+                terms(index)=main::plane.zero
+        claim:
+            ? forall j N+:
+                j<=3
+                j!=1
+                =>:
+                    terms(j)=main::plane.zero
+            j $in closed_range(1,3)
+            terms(j) $in separated_family(j)
+            separated_family(j)={main::plane.zero}
+            terms(j) $in {main::plane.zero}
+            terms(j)=main::plane.zero
+        release thm Algebra::subspace_sums::single_vector_list_sum(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,1,terms)
+        terms(1)=\Algebra::finite_span::vector_list_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,3>(terms)=main::plane.zero
+        by cases:
+            ? terms(index)=main::plane.zero
+            case index=1:
+                terms(index)=terms(1)=main::plane.zero
+            case index!=1:
+                terms(index) $in separated_family(index)
+                separated_family(index)={main::plane.zero}
+                terms(index)=main::plane.zero
+    release thm Algebra::subspace_sums::trivial_zero_decompositions_imply_direct(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family)
+
+release thm Algebra::subspace_sums::finite_subspace_sum_contains_summand(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family,1)
+
+separated_family(1)=finite_seq(R,2)
+
+finite_seq(R,2) $subset \Algebra::subspace_sums::finite_subspace_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family>
+
+release obj def main::u
+
+main::u $in finite_seq(R,2)
+
+main::u $in \Algebra::subspace_sums::finite_subspace_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family>
+
+release thm Algebra::subspace_sums::direct_subspace_family_unique_decomposition(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,separated_family,main::u)
+
+release obj def family_use::empty_family
+
+release thm Algebra::subspace_sums::empty_is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,family_use::empty_family)
+
+claim:
+    ? $Algebra::subspace_sums::is_direct_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,0,family_use::empty_family)
+    claim:
+        ? forall left_terms,right_terms finite_seq(finite_seq(R,2),0):
+            $Algebra::subspace_sums::is_family_decomposition(R,Algebra::field::real_field,finite_seq(R,2),main::plane,0,family_use::empty_family,left_terms)
+            $Algebra::subspace_sums::is_family_decomposition(R,Algebra::field::real_field,finite_seq(R,2),main::plane,0,family_use::empty_family,right_terms)
+            \Algebra::finite_span::vector_list_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,0>(left_terms)=\Algebra::finite_span::vector_list_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,0>(right_terms)
+            =>:
+                left_terms=right_terms
+        by fn_extension left_terms=right_terms
+    by def $Algebra::subspace_sums::is_direct_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,0,family_use::empty_family)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n),terms finite_seq(V,n),index closed_range(1,n):
+        $Algebra::subspace_sums::is_direct_subspace_family(K,F,V,space,n,members)
+        $Algebra::subspace_sums::is_family_decomposition(K,F,V,space,n,members,terms)
+        \Algebra::finite_span::vector_list_sum<K,F,V,space,n>(terms)=space.zero
+        =>:
+            terms(index)=space.zero
+    release thm Algebra::subspace_sums::direct_subspace_family_zero_decomposition(K,F,V,space,n,members,terms,index)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,n N,members finite_seq(power_set(V),n):
+        $Algebra::subspace_sums::is_subspace_family(K,F,V,space,n,members)
+        forall terms finite_seq(V,n),index closed_range(1,n):
+            $Algebra::subspace_sums::is_family_decomposition(K,F,V,space,n,members,terms)
+            \Algebra::finite_span::vector_list_sum<K,F,V,space,n>(terms)=space.zero
+            =>:
+                terms(index)=space.zero
+        =>:
+            $Algebra::subspace_sums::is_direct_subspace_family(K,F,V,space,n,members)
+    release thm Algebra::subspace_sums::trivial_zero_decompositions_imply_direct(K,F,V,space,n,members)
+
+claim:
+    ? not $Algebra::subspace_sums::is_direct_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,family_use::whole_family)
+    by contra:
+        ? not $Algebra::subspace_sums::is_direct_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,family_use::whole_family)
+        $Algebra::subspace_sums::is_subspace_family(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,family_use::whole_family)
+        release obj def family_use::whole_family
+        have fn first_terms(j closed_range(1,3)) finite_seq(R,2) by cases:
+            case j=1: main::u
+            case j!=1: main::plane.zero
+        have fn second_terms(j closed_range(1,3)) finite_seq(R,2) by cases:
+            case j=2: main::u
+            case j!=2: main::plane.zero
+        claim:
+            ? forall j closed_range(1,3):
+                first_terms(j) $in family_use::whole_family(j)
+                second_terms(j) $in family_use::whole_family(j)
+            family_use::whole_family(j)=finite_seq(R,2)
+            first_terms(j) $in finite_seq(R,2)
+            second_terms(j) $in finite_seq(R,2)
+        by def $Algebra::subspace_sums::is_family_decomposition(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,family_use::whole_family,first_terms)
+        by def $Algebra::subspace_sums::is_family_decomposition(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,family_use::whole_family,second_terms)
+        claim:
+            ? forall j N+:
+                j<=3
+                j!=1
+                =>:
+                    first_terms(j)=main::plane.zero
+            j $in closed_range(1,3)
+            first_terms(j)=main::plane.zero
+        claim:
+            ? forall j N+:
+                j<=3
+                j!=2
+                =>:
+                    second_terms(j)=main::plane.zero
+            j $in closed_range(1,3)
+            second_terms(j)=main::plane.zero
+        release thm Algebra::subspace_sums::single_vector_list_sum(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,1,first_terms)
+        release thm Algebra::subspace_sums::single_vector_list_sum(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,2,second_terms)
+        first_terms(1)=main::u
+        second_terms(2)=main::u
+        \Algebra::finite_span::vector_list_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,3>(first_terms)=main::u=\Algebra::finite_span::vector_list_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,3>(second_terms)
+        first_terms=second_terms
+        main::u=first_terms(1)=second_terms(1)=main::plane.zero
+        \Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2> = (\Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>)
+        main::plane = (\Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>)
+        main::plane.zero = \Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>
+        release thm Algebra::finite_span::zero_coefficients_entry(R,Algebra::field::real_field,2,main::plane.zero,2)
+        Algebra::field::real_field.zero=0
+        main::plane.zero(2)=Algebra::field::real_field.zero=0
+        main::u(2)=2
+        2=main::u(2)=main::plane.zero(2)=0
+        impossible 2=0

@@ -1,5 +1,5 @@
-use crate::compile_to_lean::helper::{instantiated_fact_matches, instantiated_object_matches, source_subject};
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::helper::{instantiated_fact_matches, instantiated_object_matches, source_subject, set_kind_predicate};
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::plain_exist_facts_alpha_equal;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
@@ -15,6 +15,25 @@ impl LitexToLeanCompiler {
         source: &PlainExistFact,
         position: &SourcePosition<'_>,
     ) -> Result<(String, Vec<String>), LeanCompileError> {
+        // Rebind the candidates in the original existential formation scope.
+        // Its hypothetical body facts stay local; only their original WD is
+        // used to interpret constructors such as a record field.
+        let formation = self.exist_formation_evidence(source, position);
+        let formation_scope = formation.map(|proof| {
+            SourcePosition::new(Some(position), SourceOwner::ExistWD(source, proof), 0)
+        });
+        if let Some(proof) = formation {
+            if proof
+                .detailed_ref()
+                .introduced_params
+                .param_type_well_defined
+                .len()
+                != source.typed_parameters.groups.len()
+                || proof.detailed_ref().assumed_body_facts.len() != source.facts.len()
+            {
+                return Err(LeanCompileError::unsupported("ExistUnique/FormationStages"));
+            }
+        }
         let mut binders = Vec::new();
         let mut arguments = Vec::new();
         let mut copies = Vec::new();
@@ -22,7 +41,24 @@ impl LitexToLeanCompiler {
         for side in ["left", "right"] {
             let mut bindings = HashMap::new();
             let mut denotations = Vec::new();
-            for group in &source.typed_parameters.groups {
+            let mut offset = 0;
+            for (index, group) in source.typed_parameters.groups.iter().enumerate() {
+                let prior = formation_scope.as_ref().map(|scope| SourcePosition {
+                    before: offset,
+                    ..*scope
+                });
+                let formed = formation.zip(prior.as_ref()).map(|(proof, prior)| {
+                    SourcePosition::new(
+                        Some(prior),
+                        SourceOwner::ParamTypeWD(
+                            &proof
+                                .detailed_ref()
+                                .introduced_params
+                                .param_type_well_defined[index],
+                        ),
+                        1,
+                    )
+                });
                 for parameter in &group.params {
                     let id = parameter.id.value();
                     let name = format!("_unique_{side}_i{id}");
@@ -30,12 +66,14 @@ impl LitexToLeanCompiler {
                         ParamType::Obj(carrier) => format!(
                             "M.mem (Litex.denote {name}) {}",
                             self.compile_function_raw_expression_bound(
-                                carrier, position, &bindings
+                                carrier,
+                                formed.as_ref().unwrap_or(position),
+                                &bindings
                             )?
                         ),
                         ParamType::Set(_) => format!("M.isSet (Litex.denote {name})"),
-                        _ => {
-                            return Err(LeanCompileError::unsupported("ExistUnique/ParameterKind"))
+                        kind @ (ParamType::NonemptySet(_) | ParamType::FiniteSet(_)) => {
+                            format!("{} {name}", set_kind_predicate(kind).unwrap())
                         }
                     };
                     binders.push(format!(
@@ -50,6 +88,7 @@ impl LitexToLeanCompiler {
                     }
                     denotations.push(denote);
                 }
+                offset += group.params.len();
             }
             copies.push(bindings);
             values.push(denotations);
@@ -59,9 +98,26 @@ impl LitexToLeanCompiler {
         }
         for (index, clause) in source.facts.iter().enumerate() {
             let fact = crate::instantiate::quantifier_free_fact_to_fact(clause.clone());
+            let prior = formation_scope.as_ref().map(|scope| SourcePosition {
+                before: source.typed_parameters.ordered_param_ids().len() + index,
+                ..*scope
+            });
+            let formed = formation.zip(prior.as_ref()).map(|(proof, prior)| {
+                SourcePosition::new(
+                    Some(prior),
+                    SourceOwner::FactWD(
+                        &proof.detailed_ref().assumed_body_facts[index].well_defined,
+                    ),
+                    usize::MAX,
+                )
+            });
             for (side, bindings) in ["left", "right"].into_iter().zip(&copies) {
                 let name = format!("_body_{side}_{index}");
-                let predicate = self.compile_function_raw_predicate(&fact, position, bindings)?;
+                let predicate = self.compile_function_raw_predicate(
+                    &fact,
+                    formed.as_ref().unwrap_or(position),
+                    bindings,
+                )?;
                 binders.push(format!("({name} : {predicate})"));
                 arguments.push(name);
             }
@@ -180,25 +236,56 @@ impl LitexToLeanCompiler {
         let target = &stored.fact;
         validate_unique_forall(source, target, componentwise)?;
         self.validate_store(store, &Fact::ForallFact(target.clone()))?;
+        // The inference creates new candidate IDs, but its mathematical body
+        // is exactly two validated substitutions of the source existential.
+        // Interpret fields using that source's original formation evidence;
+        // inferred IDs have no separate parameter-introduction result.
+        let formation = self.exist_formation_evidence(source, position);
+        let formation_scope = formation.map(|proof| {
+            SourcePosition::new(Some(position), SourceOwner::ExistWD(source, proof), 0)
+        });
+        let mut copies = [HashMap::new(), HashMap::new()];
         let mut bindings = HashMap::new();
         let mut binders = Vec::new();
         let mut introductions = Vec::new();
         let mut arguments = Vec::new();
-        for group in &target.typed_parameters.groups {
-            for parameter in &group.params {
+        let group_count = source.typed_parameters.groups.len();
+        for (group_index, group) in target.typed_parameters.groups.iter().enumerate() {
+            let side = group_index / group_count;
+            let source_index = group_index % group_count;
+            let original = &source.typed_parameters.groups[source_index];
+            let offset = source.typed_parameters.groups[..source_index]
+                .iter()
+                .map(|g| g.params.len())
+                .sum();
+            let prior = formation_scope.as_ref().map(|scope| SourcePosition {
+                before: offset,
+                ..*scope
+            });
+            let formed = formation.zip(prior.as_ref()).and_then(|(proof, prior)| {
+                proof
+                    .detailed_ref()
+                    .introduced_params
+                    .param_type_well_defined
+                    .get(source_index)
+                    .map(|wd| SourcePosition::new(Some(prior), SourceOwner::ParamTypeWD(wd), 1))
+            });
+            for (parameter, original_parameter) in group.params.iter().zip(&original.params) {
                 let id = parameter.id.value();
                 let name = format!("_value_i{id}");
                 let denotation = format!("(Litex.denote {name})");
-                let member = match &group.param_type {
+                let member = match &original.param_type {
                     ParamType::Obj(carrier) => format!(
                         "M.mem {denotation} {}",
-                        self.compile_function_raw_expression_bound(carrier, position, &bindings)?
+                        self.compile_function_raw_expression_bound(
+                            carrier,
+                            formed.as_ref().unwrap_or(position),
+                            &copies[side]
+                        )?
                     ),
                     ParamType::Set(_) => format!("M.isSet {denotation}"),
-                    _ => {
-                        return Err(LeanCompileError::unsupported(
-                            "ExistUnique/StoredParameterKind",
-                        ))
+                    kind @ (ParamType::NonemptySet(_) | ParamType::FiniteSet(_)) => {
+                        format!("{} {name}", set_kind_predicate(kind).unwrap())
                     }
                 };
                 binders.push(format!("{{_Host_i{id} : Type _}} [_rep_i{id} : Litex.Representation M _Host_i{id}] ({name} : Litex.Obj (M := M) _Host_i{id}) (_membership_i{id} : {member})"));
@@ -212,14 +299,39 @@ impl LitexToLeanCompiler {
                     format!("(Litex.semanticObject {denotation} (Litex.isSet {name}))"),
                     format!("_membership_i{id}"),
                 ]);
+                copies[side].insert(original_parameter.id, denotation.clone());
                 bindings.insert(parameter.id, denotation);
             }
         }
-        for domain in &target.dom_facts {
+        for (index, domain) in target.dom_facts.iter().enumerate() {
+            let clause = index / 2;
+            let original =
+                crate::instantiate::quantifier_free_fact_to_fact(source.facts[clause].clone());
+            let prior = formation_scope.as_ref().map(|scope| SourcePosition {
+                before: source.typed_parameters.ordered_param_ids().len() + clause,
+                ..*scope
+            });
+            let formed = formation.zip(prior.as_ref()).and_then(|(proof, prior)| {
+                proof
+                    .detailed_ref()
+                    .assumed_body_facts
+                    .get(clause)
+                    .map(|body| {
+                        SourcePosition::new(
+                            Some(prior),
+                            SourceOwner::FactWD(&body.well_defined),
+                            usize::MAX,
+                        )
+                    })
+            });
             let name = format!("h_{}", domain.fact_id().value());
             binders.push(format!(
                 "({name} : {})",
-                self.compile_function_raw_predicate(domain, position, &bindings)?
+                self.compile_function_raw_predicate(
+                    &original,
+                    formed.as_ref().unwrap_or(position),
+                    &copies[index % 2]
+                )?
             ));
             introductions.push(name.clone());
             arguments.push(name);
@@ -297,7 +409,9 @@ fn validate_unique_forall(
                 (ParamType::Obj(a), ParamType::Obj(b)) => {
                     instantiated_object_matches(a, b, &substitution)
                 }
-                (ParamType::Set(_), ParamType::Set(_)) => true,
+                (ParamType::Set(_), ParamType::Set(_))
+                | (ParamType::NonemptySet(_), ParamType::NonemptySet(_))
+                | (ParamType::FiniteSet(_), ParamType::FiniteSet(_)) => true,
                 _ => false,
             };
             if !carrier_matches || old.params.len() != new.params.len() {

@@ -62,7 +62,7 @@ impl LitexToLeanCompiler {
                 ExecObtainObjFromAtomicFactStmtResult::Success(obtain),
             ) => {
                 let (declaration, parent, _) =
-                    current.visible_prop(&obtain.statement.fact.predicate)?;
+                    current.visible_prop(&obtain.statement.fact.predicate, &self.runtime)?;
                 let (source, formation) = match (
                     declaration.statement.iff_facts.as_slice(),
                     declaration.assumed_iff_facts.as_slice(),
@@ -372,7 +372,9 @@ impl LitexToLeanCompiler {
                     ensure_object(carrier, checked)?;
                     self.compile_wd(checked, &prior)?;
                 }
-                (ParamType::Set(_), ParamTypeWellDefinedProof::Set) => {}
+                (ParamType::Set(_), ParamTypeWellDefinedProof::Set)
+                | (ParamType::NonemptySet(_), ParamTypeWellDefinedProof::NonemptySet)
+                | (ParamType::FiniteSet(_), ParamTypeWellDefinedProof::FiniteSet) => {}
                 _ => {
                     return Err(LeanCompileError::unsupported(
                         "Obtain/ConstructorParameterKind",
@@ -398,6 +400,13 @@ impl LitexToLeanCompiler {
                     .defined_params
                     .store_and_infer_results[index];
                 let fact = self.resolve_fact(store.primary_fact_id(), &introduced)?;
+                let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+                if !parameter_type_fact_matches(&group.param_type, &object, &fact, &HashMap::new())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "Obtain/ConstructorParameterSubject",
+                    ));
+                }
                 self.validate_store(&store.store, &fact)?;
                 let proposition = self.fact_proposition(&fact, &formed)?;
                 let name = format!("h_{}", fact.fact_id().value());

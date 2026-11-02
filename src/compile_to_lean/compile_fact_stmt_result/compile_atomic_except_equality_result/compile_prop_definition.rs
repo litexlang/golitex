@@ -207,6 +207,126 @@ impl LitexToLeanCompiler {
                 position,
             ),
             (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarLimit(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::ScalarLimit(r)=&f.relation else{return Err(LeanCompileError::unsupported("MultivariableScalarLimit/DefinitionSubject"));};
+                self.compile_multivariable_scalar_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::VectorLimit(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::VectorLimit(r)=&f.relation else{return Err(LeanCompileError::unsupported("MultivariableVectorLimit/DefinitionSubject"));};
+                self.compile_multivariable_vector_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::PartialDerivativeAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::PartialDerivativeAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("PartialDerivativeAt/DefinitionSubject"));};
+                self.compile_partial_derivative_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::JacobianAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::JacobianAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("JacobianAt/DefinitionSubject"));};
+                self.compile_jacobian_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::SecondPartialDerivativeAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::SecondPartialDerivativeAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("SecondPartialDerivativeAt/DefinitionSubject"));};
+                self.compile_second_partial_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::CurlAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::CurlAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("CurlAt/DefinitionSubject"));};
+                self.compile_curl_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::DivergenceAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::DivergenceAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("DivergenceAt/DefinitionSubject"));};
+                self.compile_divergence_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::HessianAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::HessianAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("HessianAt/DefinitionSubject"));};
+                self.compile_hessian_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarDifferentialAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::ScalarDifferentialAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("ScalarDifferentialAt/DefinitionSubject"));};
+                self.compile_scalar_differential_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::TotalDerivativeAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::TotalDerivativeAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("TotalDerivativeAt/DefinitionSubject"));};
+                self.compile_total_differential_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::LaplacianAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::LaplacianAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("LaplacianAt/DefinitionSubject"));};
+                self.compile_laplacian_definition(r,p,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::GradientAt(p)),
+                ),
+            ) => {
+                let MultivariableAnalysisRelation::GradientAt(r)=&f.relation else{return Err(LeanCompileError::unsupported("GradientAt/DefinitionSubject"));};
+                self.compile_gradient_definition(r,p,position)
+            },
+            (
                 AtomicFact::HasDerivativeAtFact(f),
                 AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
                     BuiltinPropDefinitionProof::HasDerivativeAt(p),
@@ -218,6 +338,18 @@ impl LitexToLeanCompiler {
                     BuiltinPropDefinitionProof::FunctionDifferentiableAt(p),
                 ),
             ) => self.compile_differentiability_definition(f, p, position),
+            (
+                AtomicFact::DvdFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(BuiltinPropDefinitionProof::Dvd(p)),
+            ) => self.compile_dvd_definition(f, &p.requirement_facts, &p.proof_of_requirement_facts, position),
+            (
+                AtomicFact::FunctionRiemannIntegrableFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(BuiltinPropDefinitionProof::FunctionRiemannIntegrable(p)),
+            ) => self.compile_riemann_integrability_definition(f,p,position),
+            (
+                AtomicFact::HasRiemannIntegralFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(BuiltinPropDefinitionProof::HasRiemannIntegral(p)),
+            ) => self.compile_riemann_definition(f, wd, p, position),
             (_, AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(_)) => {
                 Err(LeanCompileError::unsupported("Prop/BuiltinDefinition"))
             }
@@ -230,7 +362,7 @@ impl LitexToLeanCompiler {
         proof: &UserDefinedPropDefinitionProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, _, _) = position.visible_prop(&normal.predicate)?;
+        let (declaration, _, _) = position.visible_prop(&normal.predicate, &self.runtime)?;
         let substitution = self.prop_argument_substitution(declaration, normal)?;
         let parameters = declaration
             .statement
@@ -263,25 +395,16 @@ impl LitexToLeanCompiler {
         {
             if index < parameters.len() {
                 let (_, param_type) = parameters[index];
-                let set = match param_type {
-                    ParamType::Obj(set) => Some(set),
-                    ParamType::Set(_) => None,
-                    _ => return Err(LeanCompileError::unsupported("Prop/FoldParameterKind")),
-                };
-                match requirement {
-                    Fact::AtomicFact(AtomicFact::InFact(member))
-                        if member.element.ir() == normal.body[index].ir()
-                            && set.is_some_and(|set| {
-                                instantiated_object_matches(set, &member.set, &substitution)
-                            }) => {}
-                    Fact::AtomicFact(AtomicFact::IsSetFact(member))
-                        if set.is_none() && member.set.ir() == normal.body[index].ir() => {}
-                    _ => {
-                        return Err(LeanCompileError::new(
-                            "Prop/FoldDomain",
-                            "A selected definition requirement proves another argument or carrier.",
-                        ))
-                    }
+                if !parameter_type_fact_matches(
+                    param_type,
+                    &normal.body[index],
+                    requirement,
+                    &substitution,
+                ) {
+                    return Err(LeanCompileError::new(
+                        "Prop/FoldDomain",
+                        "A selected definition requirement proves another argument, carrier or exact set kind.",
+                    ));
                 }
             } else if !instantiated_fact_matches(
                 &declaration.statement.iff_facts[index - parameters.len()],
@@ -298,7 +421,61 @@ impl LitexToLeanCompiler {
                 owner: SourceOwner::PropRequirements(proof),
                 before: index,
             };
-            witnesses.push(self.compile_verify(checked, &prior)?.1);
+            let term_scope = SourcePosition::new(Some(&prior), SourceOwner::Term, 0);
+            let replay = if matches!(requirement, Fact::ForallFact(_)) {
+                &term_scope
+            } else {
+                &prior
+            };
+            let (proposition, term) = self.compile_verify(checked, replay)?;
+            // Defining forall clauses use semantic objects. Apply the exact
+            // checked polymorphic proof to those objects and their hypotheses.
+            witnesses.push(
+                if let (Fact::ForallFact(fact), VerifyFactResult::ForallFact(result)) =
+                    (requirement, checked)
+                {
+                    let introduced = match result.as_ref() {
+                        VerifyForallFactResult::Success(
+                            VerifyForallFactProof::ByLocalIntroduction(p),
+                        ) => &p.introduced_params,
+                        VerifyForallFactResult::Success(
+                            VerifyForallFactProof::ByKnownForallFact(p),
+                        ) => &p.well_defined.detailed_ref().introduced_params,
+                        VerifyForallFactResult::Success(
+                            VerifyForallFactProof::ByEmptyParameterDomain(p),
+                        ) => &p.well_defined.detailed_ref().introduced_params,
+                        _ => return Err(LeanCompileError::unsupported("Prop/FoldForallProof")),
+                    };
+                    let mut arguments = Vec::new();
+                    for (id, store) in fact
+                        .typed_parameters
+                        .ordered_param_ids()
+                        .iter()
+                        .zip(&introduced.defined_params.store_and_infer_results)
+                    {
+                        arguments.extend([
+                            format!("_value_i{}", id.value()),
+                            format!("h_{}", store.primary_fact_id().value()),
+                        ]);
+                    }
+                    arguments.extend(
+                        fact.dom_facts
+                            .iter()
+                            .map(|f| format!("h_{}", f.fact_id().value())),
+                    );
+                    let intro = if arguments.is_empty() {
+                        String::new()
+                    } else {
+                        format!("intro {}\n  ", arguments.join(" "))
+                    };
+                    format!(
+                        "(by\n  {intro}exact (show {proposition} from {term}) {})",
+                        arguments.join(" ")
+                    )
+                } else {
+                    term
+                },
+            );
         }
         let mut proof = witnesses
             .pop()
@@ -314,6 +491,22 @@ impl LitexToLeanCompiler {
         normal: &NormalAtomicFact,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if crate::compile_to_lean::compile_riemann_integral::is_enclosure(&normal.predicate) {
+            if normal.body.len() != 7 {
+                return Err(LeanCompileError::unsupported(
+                    "RiemannIntegral/EnclosureArity",
+                ));
+            }
+            let args = normal
+                .body
+                .iter()
+                .map(|x| {
+                    self.compile_object_reference(x, position)
+                        .map(|s| format!("(Litex.denote {s})"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            return Ok(format!("Litex.DarbouxEnclosureValue {}", args.join(" ")));
+        }
         if let Some(name) =
             crate::compile_to_lean::compile_real_extrema::certificate_name(&normal.predicate)
         {
@@ -342,14 +535,14 @@ impl LitexToLeanCompiler {
                 .ok_or_else(|| LeanCompileError::unsupported("AbstractProp/Producer"));
         }
         let (declaration, declaration_position, index) =
-            position.visible_prop(&normal.predicate)?;
+            position.visible_prop(&normal.predicate, &self.runtime)?;
         self.prop_argument_substitution(declaration, normal)?;
         let mut arguments = Vec::new();
         for object in &normal.body {
             arguments.push(self.compile_object_reference(object, position)?);
         }
-        let predicate =
-            self.context_application(&format!("prop_{}", index + 1), &declaration_position);
+        let predicate = position
+            .declaration_reference(&format!("prop_{}", index + 1), &declaration_position)?;
         Ok(if arguments.is_empty() {
             predicate
         } else {
@@ -394,7 +587,7 @@ impl LitexToLeanCompiler {
                 "The recorded predicate identity or arity differs from its occurrence.",
             ));
         }
-        let (declaration, _, _) = position.visible_prop(predicate)?;
+        let (declaration, _, _) = position.visible_prop(predicate, &self.runtime)?;
         self.prop_argument_substitution(declaration, normal)?;
         Ok(())
     }
@@ -404,8 +597,9 @@ impl LitexToLeanCompiler {
         declaration: &ExecDefPropStmtSuccessResult,
         normal: &NormalAtomicFact,
     ) -> Result<HashMap<IdentifierId, Obj>, LeanCompileError> {
-        if !matches!(&normal.predicate, AtomicName::Plain { name } if name == &declaration.statement.name)
-        {
+        // Namespace identity has already been resolved by visible_prop. This
+        // helper validates the declaration's local signature and substitution.
+        if normal.predicate.local_name() != declaration.statement.name {
             return Err(LeanCompileError::new(
                 "Prop/Identity",
                 "The predicate occurrence does not name this prior concrete declaration.",
@@ -478,6 +672,15 @@ impl LitexToLeanCompiler {
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal)) => normal,
             _ => return Ok(Vec::new()),
         };
+        if crate::compile_to_lean::compile_riemann_integral::is_enclosure(&normal.predicate) {
+            return if normal.body.len() == 7 && rules.is_empty() {
+                Ok(Vec::new())
+            } else {
+                Err(crate::compile_to_lean::compile_riemann_integral::invalid(
+                    "EnclosureInference",
+                ))
+            };
+        }
         if crate::compile_to_lean::compile_real_extrema::certificate_name(&normal.predicate)
             .is_some()
         {
@@ -498,7 +701,7 @@ impl LitexToLeanCompiler {
                 ))
             };
         }
-        let (declaration, _, _) = position.visible_prop(&normal.predicate)?;
+        let (declaration, _, _) = position.visible_prop(&normal.predicate, &self.runtime)?;
         let substitution = self.prop_argument_substitution(declaration, normal)?;
         let parameters = declaration
             .statement
@@ -569,18 +772,16 @@ impl LitexToLeanCompiler {
                         return Err(LeanCompileError::new("Prop/InferBodySubject", "An inferred predicate body differs from its exact instantiated defining clause."));
                     }
                 } else {
-                    let set = match parameters[index].1 {
-                        ParamType::Obj(set) => Some(set),
-                        ParamType::Set(_) => None,
-                        _ => return Err(LeanCompileError::unsupported("Prop/InferParameterKind")),
-                    };
-                    match &fact {
-                        Fact::AtomicFact(AtomicFact::InFact(member))
-                            if member.element.ir() == normal.body[index].ir()
-                                && set.is_some_and(|set| instantiated_object_matches(set, &member.set, &substitution)) => {}
-                        Fact::AtomicFact(AtomicFact::IsSetFact(member))
-                            if set.is_none() && member.set.ir() == normal.body[index].ir() => {}
-                        _ => return Err(LeanCompileError::new("Prop/InferDomainSubject", "An inferred predicate domain differs from its actual argument or carrier.")),
+                    if !parameter_type_fact_matches(
+                        parameters[index].1,
+                        &normal.body[index],
+                        &fact,
+                        &substitution,
+                    ) {
+                        return Err(LeanCompileError::new(
+                            "Prop/InferDomainSubject",
+                            "An inferred predicate domain differs from its actual argument, carrier or exact set kind.",
+                        ));
                     }
                 }
                 let prior = SourcePosition {
@@ -637,7 +838,7 @@ impl LitexToLeanCompiler {
                         names[witness_index]
                     )
                 };
-                let proposition = if matches!(fact, Fact::ExistFact(_)) {
+                let proposition = if matches!(fact, Fact::ExistFact(_) | Fact::ForallFact(_)) {
                     self.compile_prop_clause_instance(normal, index, &compiled.1, &formed)?
                 } else {
                     self.fact_proposition(&fact, &formed)?

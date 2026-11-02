@@ -12,17 +12,51 @@ use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 impl LitexToLeanCompiler {
+    /// Rebind the existing selected-function denotation, not its proof of WD.
+    /// The original constructor/call consumers still check those proofs.
+    pub(super) fn compile_selected_function_raw_value(
+        &self,
+        p: &ExecHaveFnByForallExistUniqueStmtSuccessResult,
+        position: &SourcePosition<'_>,
+        outer: &HashMap<IdentifierId, String>,
+    ) -> Result<String, LeanCompileError> {
+        let (signature, existential) = selected_shape(p)?;
+        let (domain, output, _) =
+            self.compile_function_signature_value_parts(signature, position, outer)?;
+        let values = self.compile_function_packed_values(signature, "_selected_input")?;
+        let mut bindings = outer.clone();
+        for (parameter, value) in signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|group| &group.params)
+            .zip(values)
+        {
+            if bindings.insert(parameter.id, value).is_some() {
+                return Err(LeanCompileError::unsupported(
+                    "SelectedFunction/CaptureIdentity",
+                ));
+            }
+        }
+        let witness = &existential.typed_parameters.groups[0].params[0];
+        if bindings
+            .insert(witness.id, "_selected_output".into())
+            .is_some()
+        {
+            return Err(LeanCompileError::unsupported(
+                "SelectedFunction/CaptureIdentity",
+            ));
+        }
+        let body = self.selected_body(existential, &bindings, position)?;
+        Ok(format!("(Litex.FunctionSemantics.graphValue (M := M) {domain} {output} (Litex.selectedValue (M := M) {output} (fun (_selected_input _selected_output : M.Value) => {body})))"))
+    }
+
     pub(in crate::compile_to_lean) fn compile_have_fn_by_exist_statement(
         &self,
         result: &ExecHaveFnByForallExistUniqueStmtResult,
         position: &SourcePosition<'_>,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if local {
-            return Err(LeanCompileError::unsupported(
-                "SelectedFunction/LocalDeclaration",
-            ));
-        }
         let ExecHaveFnByForallExistUniqueStmtResult::Success(p) = result else {
             return Err(LeanCompileError::unsupported("SelectedFunction/Failed"));
         };
@@ -36,10 +70,27 @@ impl LitexToLeanCompiler {
         let mut source = self.compile_verify(&p.source_forall, position)?;
         // This local application uses canonical semantic objects. The source
         // theorem remains polymorphic; only its local copy is specialized.
-        for parameter in p.statement.forall.typed_parameters.ordered_param_ids() {
-            let level = format!("Type v{}}}", parameter.value());
-            source.0 = source.0.replace(&level, "Type u}");
-            source.1 = source.1.replace(&level, "Type u}");
+        for text in [&mut source.0, &mut source.1] {
+            *text = text.replace(": Type _}", ": Type u}");
+            // This closed local application also contains inferred uniqueness
+            // universals. Their candidates are used only as semantic objects.
+            // Captured outer hosts are free references, not binders here.
+            let mut offset = 0;
+            while let Some(index) = text[offset..].find("Type v") {
+                let start = offset + index;
+                let end = start
+                    + 6
+                    + text[start + 6..]
+                        .bytes()
+                        .take_while(u8::is_ascii_digit)
+                        .count();
+                if end > start + 6 {
+                    text.replace_range(start..end, "Type u");
+                    offset = start + 6;
+                } else {
+                    offset = start + 6;
+                }
+            }
         }
         let checked = success_object_wd(
             &p.fn_set_well_defined,
@@ -109,11 +160,13 @@ impl LitexToLeanCompiler {
             raw_unique.0, raw_unique.1.replace('\n', "\n  "), values.join(" "));
         let object = Obj::Identifier(IdentifierObj::from_bound_name(&p.statement.name));
         let mut declarations =
-            vec![self.bind_alias(&p.statement.name, &object, &object, &value, false, position)?];
-        let name = self.context_application(
-            &format!("_object_i{}", p.statement.name.id.value()),
-            position,
-        );
+            vec![self.bind_alias(&p.statement.name, &object, &object, &value, local, position)?];
+        let name = format!("_object_i{}", p.statement.name.id.value());
+        let name = if local {
+            name
+        } else {
+            self.context_application(&name, position)
+        };
         let member_position = SourcePosition {
             before: 3,
             ..*position
@@ -130,7 +183,14 @@ impl LitexToLeanCompiler {
             &membership,
             &(
                 member.0,
-                self.context_application(&format!("h_{}", p.membership_fact_id.value()), position),
+                if local {
+                    format!("h_{}", p.membership_fact_id.value())
+                } else {
+                    self.context_application(
+                        &format!("h_{}", p.membership_fact_id.value()),
+                        position,
+                    )
+                },
             ),
             &member_position,
         )?);
@@ -174,7 +234,11 @@ impl LitexToLeanCompiler {
                 &Fact::ForallFact(fact.clone()),
                 &(
                     compiled.0,
-                    self.context_application(&format!("h_{}", fact.fact_id.value()), position),
+                    if local {
+                        format!("h_{}", fact.fact_id.value())
+                    } else {
+                        self.context_application(&format!("h_{}", fact.fact_id.value()), position)
+                    },
                 ),
                 &cursor,
             )?);

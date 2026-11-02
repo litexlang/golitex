@@ -17,8 +17,6 @@ impl LitexToLeanCompiler {
         if proof.rewritten_left != fact.left
             || proof.rewritten_right != fact.right
             || !proof.cited_equal_fact_ids.is_empty()
-            || !proof.matrix_scalar_evaluations.is_empty()
-            || !proof.function_evaluations.is_empty()
             || !proof.algo_evaluations.is_empty()
         {
             return Err(LeanCompileError::unsupported(
@@ -28,23 +26,31 @@ impl LitexToLeanCompiler {
         // The evaluator visits left then right, recording completed aggregates.
         // Consume that original postorder backwards, as for command evaluation.
         let mut remaining = proof.aggregate_evaluations.len();
+        let mut functions = proof.function_evaluations.len();
+        let mut matrices = proof.matrix_scalar_evaluations.len();
         let (right_value, right, right_cites) = self.compile_eval_value(
             &proof.rewritten_right,
-            &[],
-            &mut 0,
+            &proof.function_evaluations,
+            &mut functions,
             &proof.aggregate_evaluations,
             &mut remaining,
+            &proof.matrix_scalar_evaluations,
+            &mut matrices,
             position,
         )?;
         let (left_value, left, left_cites) = self.compile_eval_value(
             &proof.rewritten_left,
-            &[],
-            &mut 0,
+            &proof.function_evaluations,
+            &mut functions,
             &proof.aggregate_evaluations,
             &mut remaining,
+            &proof.matrix_scalar_evaluations,
+            &mut matrices,
             position,
         )?;
         if remaining != 0
+            || functions != 0
+            || matrices != 0
             || !left_cites.is_empty()
             || !right_cites.is_empty()
             || left_value != right_value
@@ -95,6 +101,7 @@ impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_range_aggregate_value(
         &self,
         evaluation: &AggregateEvaluationResult,
+        term_values: &[String],
         position: &SourcePosition<'_>,
     ) -> Result<(EvalRational, String), LeanCompileError> {
         let (source, bounds, terms, value, product) = match evaluation {
@@ -121,7 +128,8 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
-        if bounds.start.ir() != first.ir()
+        if term_values.len() != terms.len()
+            || bounds.start.ir() != first.ir()
             || bounds.end.ir() != last.ir()
             || !bounds.cited_equal_fact_ids.is_empty()
         {
@@ -158,7 +166,6 @@ impl LitexToLeanCompiler {
             })?;
             if EvalRational::from_obj(&term.argument).and_then(|n| n.to_i128_if_integer())
                 != Some(index)
-                || !term.nested_aggregate_evidence.is_empty()
             {
                 return Err(LeanCompileError::unsupported(
                     "AggregateCalculation/TermIndex",
@@ -177,7 +184,13 @@ impl LitexToLeanCompiler {
                     "AggregateCalculation/Accumulation",
                 ));
             }
-            let beta = self.compile_aggregate_term(term, function, &term_value, position)?;
+            let beta = self.compile_aggregate_term(
+                term,
+                function,
+                &term_value,
+                &term_values[i],
+                position,
+            )?;
             let number = exact_rational_literal(&term_value, "ℂ")?;
             let name = format!("_aggregate_term_{i}");
             lines.push(format!("have {name} : Litex.NativeBridge.complexValue (Litex.FunctionSemantics.callValue (Litex.denote _aggregate.val.function) (M.number ({index} : ℂ))) = {number} := (congrArg (Litex.NativeBridge.complexValue (M := M)) {beta}).trans (Litex.NativeBridge.complexValue_number {number})"));
@@ -210,6 +223,7 @@ impl LitexToLeanCompiler {
         term: &AggregateTermEvaluationResult,
         function: &Obj,
         value: &EvalRational,
+        calculated: &str,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let AggregateTermExpansion::Function(expansion) = &term.expansion else {
@@ -260,12 +274,7 @@ impl LitexToLeanCompiler {
             &anonymous.equal_to,
             &expansion.expanded_body,
             &substitution,
-        ) || crate::rational_expression::ClosedNumericExpr::try_from_obj(
-            &expansion.expanded_body,
-        )
-        .is_none()
-            || EvalRational::from_obj(&expansion.expanded_body).as_ref() != Some(value)
-        {
+        ) {
             return Err(LeanCompileError::unsupported(
                 "AggregateCalculation/ExpandedValue",
             ));
@@ -301,13 +310,6 @@ impl LitexToLeanCompiler {
         let argument_number = exact_rational_literal(&argument_value, "ℂ")?;
         let argument_denote = argument.1;
         let argument_expr = argument.0;
-        let (calculated_value, calculated) =
-            self.compile_eval_closed_value(&expansion.expanded_body, &cursor)?;
-        if &calculated_value != value {
-            return Err(LeanCompileError::unsupported(
-                "AggregateCalculation/ExpandedValue",
-            ));
-        }
         Ok(format!("(by\n  let _call := {call_term}\n  let _literal := {literal_term}\n  have _head : Litex.Same _call.val.function _literal := {equality}\n  have _head_call := congrArg (fun f => Litex.FunctionSemantics.callValue (M := M) f (Litex.denote _call.val.argument)) _head\n  have _beta := Litex.FunctionSemantics.call_graphValue _ _ _ _literal.wd (Litex.denote _call.val.argument) {domain_proof}\n  have _body : _literal.val.bodyValue (Litex.denote _call.val.argument) = {raw} := rfl\n  have _calculated : {raw} = M.number {number} := {calculated}\n  have _argument : Litex.denote _call.val.argument = M.number {argument_number} := ({argument_denote}).trans (congrArg M.number (by norm_num : {argument_expr} = {argument_number}))\n  exact (congrArg (fun x => Litex.FunctionSemantics.callValue (Litex.denote _call.val.function) x) _argument).symm.trans (_head_call.trans (_beta.trans (_body.trans _calculated))))"))
     }
 }

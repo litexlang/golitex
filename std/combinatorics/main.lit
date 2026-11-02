@@ -116,7 +116,7 @@ thm surjection_collision_strict_size:
     finite_set_size(remaining) = finite_set_size(X) - 1
     finite_set_size(Y) <= finite_set_size(X) - 1
     finite_set_size(X) - 1 < finite_set_size(X)
-    finite_set_size(Y) < finite_set_size(X)
+    finite_set_size(Y) <= finite_set_size(X) - 1 < finite_set_size(X)
 
 thm equal_size_surjection_is_bijective:
     ? forall X, Y finite_set, f fn(x X) Y:

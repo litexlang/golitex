@@ -11,6 +11,16 @@ pub(super) fn project_sign(proof: &StructuralRealSignProof, rt: &Runtime) -> Jso
         ("sign", string(format!("{:?}", proof.sign))),
     ];
     let kind = match &proof.reason {
+        DifferenceFromOrder {
+            left_real,
+            right_real,
+            source,
+        } => {
+            fields.push(("left_real", project_structural_membership(left_real, rt)));
+            fields.push(("right_real", project_structural_membership(right_real, rt)));
+            fields.push(("source", project_known_premise(source, rt)));
+            "difference_from_order"
+        }
         Known { real, source } => {
             fields.push(("real", project_structural_membership(real, rt)));
             fields.push(("source", project_known_premise(source, rt)));

@@ -218,43 +218,7 @@ impl LitexToLeanCompiler {
         };
         match (&proof.statement.fact, goal_wd) {
             (Fact::ForallFact(fact), FactWellDefinedProof::ForallFact(wd)) => {
-                let header =
-                    SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, wd), 0);
-                let (binders, introductions, definitions) = self.compile_forall_head(
-                    fact,
-                    &wd.detailed_ref().introduced_params,
-                    &wd.detailed_ref().assumed_dom_facts,
-                    &header,
-                )?;
-                if wd.detailed_ref().then.len() != fact.then_facts.len() {
-                    return Err(LeanCompileError::new(
-                        "WD/ForallThenArity",
-                        "The original goal has a different ordered WD arity.",
-                    ));
-                }
-                let complete = SourcePosition {
-                    before: fact
-                        .typed_parameters
-                        .groups
-                        .iter()
-                        .map(|group| group.params.len())
-                        .sum::<usize>()
-                        + fact.dom_facts.len(),
-                    ..header
-                };
-                let mut propositions = Vec::new();
-                for (source, formation) in fact.then_facts.iter().zip(&wd.detailed_ref().then) {
-                    let source = named_goal_component(source)?;
-                    propositions
-                        .push(self.compile_formed_fact_proposition(formation, &source, &complete)?);
-                }
-                let meaning =
-                    self.scope_proposition(conjunction_proposition(propositions)?, &definitions);
-                Ok((
-                    format!("∀ {}, {meaning}", binders.join(" ")),
-                    introductions,
-                    definitions,
-                ))
+                self.compile_forall_goal_capture(fact, wd, position)
             }
             (
                 Fact::AtomicFact(_)
@@ -274,6 +238,48 @@ impl LitexToLeanCompiler {
         }
     }
 
+    pub(in crate::compile_to_lean) fn compile_forall_goal_capture(
+        &self,
+        fact: &ForallFact,
+        wd: &crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefinedProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, Vec<String>, Vec<String>), LeanCompileError> {
+        let header = SourcePosition::new(Some(position), SourceOwner::ForallWD(fact, wd), 0);
+        let (binders, introductions, definitions) = self.compile_forall_head(
+            fact,
+            &wd.detailed_ref().introduced_params,
+            &wd.detailed_ref().assumed_dom_facts,
+            &header,
+        )?;
+        if wd.detailed_ref().then.len() != fact.then_facts.len() {
+            return Err(LeanCompileError::new(
+                "WD/ForallThenArity",
+                "The original goal has a different ordered WD arity.",
+            ));
+        }
+        let complete = SourcePosition {
+            before: fact
+                .typed_parameters
+                .groups
+                .iter()
+                .map(|group| group.params.len())
+                .sum::<usize>()
+                + fact.dom_facts.len(),
+            ..header
+        };
+        let mut propositions = Vec::new();
+        for (source, formation) in fact.then_facts.iter().zip(&wd.detailed_ref().then) {
+            let source = named_goal_component(source)?;
+            propositions.push(self.compile_formed_fact_proposition(formation, &source, &complete)?);
+        }
+        let meaning = self.scope_proposition(conjunction_proposition(propositions)?, &definitions);
+        Ok((
+            format!("∀ {}, {meaning}", binders.join(" ")),
+            introductions,
+            definitions,
+        ))
+    }
+
     // The goal WD scope and the truth body introduced the same source parameters
     // in separate executions. Bind their actual body FactIds to the corresponding
     // original hypotheses, preserving both captures without adding premises.
@@ -291,17 +297,33 @@ impl LitexToLeanCompiler {
         else {
             return Ok(Vec::new());
         };
+        self.compile_forall_header_aliases(
+            fact,
+            goal,
+            &body.introduced_params,
+            &body.assumed_dom_facts,
+            original,
+            body_position,
+        )
+    }
+
+    pub(in crate::compile_to_lean) fn compile_forall_header_aliases(
+        &self,
+        fact: &ForallFact,
+        goal: &crate::execute::execute_fact_stmt::verify_forall_fact::ForallFactWellDefinedProof,
+        introduced_params: &IntroduceTypedParametersResult,
+        assumed_dom_facts: &[AssumeDomFactResult],
+        original: &SourcePosition<'_>,
+        body_position: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
         let goal_stores = &goal
             .detailed_ref()
             .introduced_params
             .defined_params
             .store_and_infer_results;
-        let body_stores = &body
-            .introduced_params
-            .defined_params
-            .store_and_infer_results;
+        let body_stores = &introduced_params.defined_params.store_and_infer_results;
         if goal_stores.len() != body_stores.len()
-            || goal.detailed_ref().assumed_dom_facts.len() != body.assumed_dom_facts.len()
+            || goal.detailed_ref().assumed_dom_facts.len() != assumed_dom_facts.len()
         {
             return Err(LeanCompileError::new(
                 "Theorem/HeaderArity",
@@ -330,7 +352,7 @@ impl LitexToLeanCompiler {
             .detailed_ref()
             .assumed_dom_facts
             .iter()
-            .zip(&body.assumed_dom_facts)
+            .zip(assumed_dom_facts)
             .enumerate()
         {
             let before = goal_stores.len() + index + 1;

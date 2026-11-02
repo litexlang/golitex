@@ -234,3 +234,232 @@ thm zero_kernel_is_injective:
         source.add(inverse_v, v) = source.add(v, inverse_v) = source.zero
         u = source.add(source.zero, u) = source.add(u, source.zero) = source.add(u, source.add(inverse_v, v)) = source.add(source.add(u, inverse_v), v) = source.add(source.zero, v) = v
     by def $injective(V, W, T)
+
+# Scalar-valued functions with pointwise operations over a supplied field.
+
+template<K nonempty_set,F &field::Field<K>,X set>:
+    have fn function_zero(x X) K = F.zero
+
+template<K nonempty_set,F &field::Field<K>,X set>:
+    have fn function_add(f,g fn(x X) K) fn(x X) K = fn(x X) K {F.add(f(x),g(x))}
+
+template<K nonempty_set,F &field::Field<K>,X set>:
+    have fn function_smul(a K,f fn(x X) K) fn(x X) K = fn(x X) K {F.mul(a,f(x))}
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>,X set:
+        (\function_zero<K,F,X>,\function_add<K,F,X>,\function_smul<K,F,X>) $in &VectorSpace<K,F,fn(x X) K>
+    claim:
+        ? forall f,g,h fn(x X) K:
+            \function_add<K,F,X>(\function_add<K,F,X>(f,g),h)=\function_add<K,F,X>(f,\function_add<K,F,X>(g,h))
+        claim:
+            ? forall p X:
+                \function_add<K,F,X>(\function_add<K,F,X>(f,g),h)(p)=\function_add<K,F,X>(f,\function_add<K,F,X>(g,h))(p)
+            \function_add<K,F,X>(f,g)(p)=F.add(f(p),g(p))
+            \function_add<K,F,X>(g,h)(p)=F.add(g(p),h(p))
+            \function_add<K,F,X>(\function_add<K,F,X>(f,g),h)(p)=F.add(F.add(f(p),g(p)),h(p))=F.add(f(p),F.add(g(p),h(p)))=\function_add<K,F,X>(f,\function_add<K,F,X>(g,h))(p)
+        by fn_extension \function_add<K,F,X>(\function_add<K,F,X>(f,g),h)=\function_add<K,F,X>(f,\function_add<K,F,X>(g,h))
+    claim:
+        ? forall f,g fn(x X) K:
+            \function_add<K,F,X>(f,g)=\function_add<K,F,X>(g,f)
+        claim:
+            ? forall p X:
+                \function_add<K,F,X>(f,g)(p)=\function_add<K,F,X>(g,f)(p)
+            \function_add<K,F,X>(f,g)(p)=F.add(f(p),g(p))=F.add(g(p),f(p))=\function_add<K,F,X>(g,f)(p)
+        by fn_extension \function_add<K,F,X>(f,g)=\function_add<K,F,X>(g,f)
+    claim:
+        ? forall f fn(x X) K:
+            \function_add<K,F,X>(\function_zero<K,F,X>,f)=f
+            exist g fn(x X) K st {\function_add<K,F,X>(f,g)=\function_zero<K,F,X>}
+        claim:
+            ? forall p X:
+                \function_add<K,F,X>(\function_zero<K,F,X>,f)(p)=f(p)
+            \function_zero<K,F,X>(p)=F.zero
+            \function_add<K,F,X>(\function_zero<K,F,X>,f)(p)=F.add(F.zero,f(p))=f(p)
+        by fn_extension \function_add<K,F,X>(\function_zero<K,F,X>,f)=f
+        have fn inverse(p X) K = F.neg(f(p))
+        claim:
+            ? forall p X:
+                \function_add<K,F,X>(f,inverse)(p)=\function_zero<K,F,X>(p)
+            inverse(p)=F.neg(f(p))
+            \function_add<K,F,X>(f,inverse)(p)=F.add(f(p),F.neg(f(p)))=F.zero=\function_zero<K,F,X>(p)
+        by fn_extension \function_add<K,F,X>(f,inverse)=\function_zero<K,F,X>
+        witness exist g fn(x X) K st {\function_add<K,F,X>(f,g)=\function_zero<K,F,X>} from inverse
+    claim:
+        ? forall a,b K,f fn(x X) K:
+            \function_smul<K,F,X>(F.mul(a,b),f)=\function_smul<K,F,X>(a,\function_smul<K,F,X>(b,f))
+            \function_smul<K,F,X>(F.add(a,b),f)=\function_add<K,F,X>(\function_smul<K,F,X>(a,f),\function_smul<K,F,X>(b,f))
+        claim:
+            ? forall p X:
+                \function_smul<K,F,X>(F.mul(a,b),f)(p)=\function_smul<K,F,X>(a,\function_smul<K,F,X>(b,f))(p)
+            \function_smul<K,F,X>(b,f)(p)=F.mul(b,f(p))
+            \function_smul<K,F,X>(F.mul(a,b),f)(p)=F.mul(F.mul(a,b),f(p))=F.mul(a,F.mul(b,f(p)))=\function_smul<K,F,X>(a,\function_smul<K,F,X>(b,f))(p)
+        by fn_extension \function_smul<K,F,X>(F.mul(a,b),f)=\function_smul<K,F,X>(a,\function_smul<K,F,X>(b,f))
+        claim:
+            ? forall p X:
+                \function_smul<K,F,X>(F.add(a,b),f)(p)=\function_add<K,F,X>(\function_smul<K,F,X>(a,f),\function_smul<K,F,X>(b,f))(p)
+            by thm field::add_mul(K,F,a,b,f(p)) => F.mul(F.add(a,b),f(p))=F.add(F.mul(a,f(p)),F.mul(b,f(p)))
+            \function_smul<K,F,X>(a,f)(p)=F.mul(a,f(p))
+            \function_smul<K,F,X>(b,f)(p)=F.mul(b,f(p))
+            \function_smul<K,F,X>(F.add(a,b),f)(p)=F.mul(F.add(a,b),f(p))=F.add(F.mul(a,f(p)),F.mul(b,f(p)))=\function_add<K,F,X>(\function_smul<K,F,X>(a,f),\function_smul<K,F,X>(b,f))(p)
+        by fn_extension \function_smul<K,F,X>(F.add(a,b),f)=\function_add<K,F,X>(\function_smul<K,F,X>(a,f),\function_smul<K,F,X>(b,f))
+    claim:
+        ? forall a K,f,g fn(x X) K:
+            \function_smul<K,F,X>(a,\function_add<K,F,X>(f,g))=\function_add<K,F,X>(\function_smul<K,F,X>(a,f),\function_smul<K,F,X>(a,g))
+        claim:
+            ? forall p X:
+                \function_smul<K,F,X>(a,\function_add<K,F,X>(f,g))(p)=\function_add<K,F,X>(\function_smul<K,F,X>(a,f),\function_smul<K,F,X>(a,g))(p)
+            \function_add<K,F,X>(f,g)(p)=F.add(f(p),g(p))
+            \function_smul<K,F,X>(a,f)(p)=F.mul(a,f(p))
+            \function_smul<K,F,X>(a,g)(p)=F.mul(a,g(p))
+            \function_smul<K,F,X>(a,\function_add<K,F,X>(f,g))(p)=F.mul(a,F.add(f(p),g(p)))=F.add(F.mul(a,f(p)),F.mul(a,g(p)))=\function_add<K,F,X>(\function_smul<K,F,X>(a,f),\function_smul<K,F,X>(a,g))(p)
+        by fn_extension \function_smul<K,F,X>(a,\function_add<K,F,X>(f,g))=\function_add<K,F,X>(\function_smul<K,F,X>(a,f),\function_smul<K,F,X>(a,g))
+    claim:
+        ? forall f fn(x X) K:
+            \function_smul<K,F,X>(F.one,f)=f
+        claim:
+            ? forall p X:
+                \function_smul<K,F,X>(F.one,f)(p)=f(p)
+            \function_smul<K,F,X>(F.one,f)(p)=F.mul(F.one,f(p))=f(p)
+        by fn_extension \function_smul<K,F,X>(F.one,f)=f
+    release thm struct_member((\function_zero<K,F,X>,\function_add<K,F,X>,\function_smul<K,F,X>),&VectorSpace<K,F,fn(x X) K>)
+
+template<K nonempty_set,F &field::Field<K>,X set>:
+    have function_space &VectorSpace<K,F,fn(x X) K> = (\function_zero<K,F,X>,\function_add<K,F,X>,\function_smul<K,F,X>)
+
+thm function_space_carrier:
+    ? forall K nonempty_set,F &field::Field<K>,X set:
+        \function_space<K,F,X> $in &VectorSpace<K,F,fn(x X) K>
+
+# Selected additive inverses and subtraction (LADR 1.28 and 1.32).
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &VectorSpace<K,F,V>,x V:
+        exist! y V st {space.add(x,y)=space.zero}
+    release thm additive_inverse_exists_unique(K,F,V,space,x)
+
+template<K nonempty_set,F &field::Field<K>,V nonempty_set,space &VectorSpace<K,F,V>>:
+    have fn vector_neg by exist!:
+        ? forall x V:
+            exist! y V st {space.add(x,y)=space.zero}
+
+thm vector_neg_spec:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &VectorSpace<K,F,V>,x V:
+        space.add(x,\vector_neg<K,F,V,space>(x))=space.zero
+
+thm vector_neg_characterization:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &VectorSpace<K,F,V>,x,y V:
+        space.add(x,y)=space.zero
+        =>:
+            y=\vector_neg<K,F,V,space>(x)
+
+template<K nonempty_set,F &field::Field<K>,V nonempty_set,space &VectorSpace<K,F,V>>:
+    have fn vector_difference(u,v V) V=space.add(u,\vector_neg<K,F,V,space>(v))
+
+thm minus_one_times_vector:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &VectorSpace<K,F,V>,x V:
+        space.smul(F.neg(F.one),x)=\vector_neg<K,F,V,space>(x)
+    have inverse V=space.smul(F.neg(F.one),x)
+    release thm zero_scalar_times_vector(K,F,V,space,x)
+    F.add(F.one,F.neg(F.one))=F.zero
+    space.smul(F.one,x)=x
+    space.smul(F.add(F.one,F.neg(F.one)),x)=space.add(space.smul(F.one,x),inverse)
+    space.smul(F.add(F.one,F.neg(F.one)),x)=space.smul(F.zero,x)=space.zero
+    space.add(space.smul(F.one,x),inverse)=space.add(x,inverse)
+    space.add(x,inverse)=space.zero
+    release thm vector_neg_characterization(K,F,V,space,x,inverse)
+
+# The supplied field is a vector space over itself.
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>:
+        (F.zero,F.add,F.mul) $in &VectorSpace<K,F,K>
+    F.zero $in K
+    F.add $in fn(x,y K) K
+    F.mul $in fn(a,x K) K
+    claim:
+        ? forall x,y,z K:
+            F.add(F.add(x,y),z)=F.add(x,F.add(y,z))
+        F.add(F.add(x,y),z)=F.add(x,F.add(y,z))
+    claim:
+        ? forall x,y K:
+            F.add(x,y)=F.add(y,x)
+        F.add(x,y)=F.add(y,x)
+    claim:
+        ? forall x K:
+            F.add(F.zero,x)=x
+            exist y K st {F.add(x,y)=F.zero}
+        F.add(F.zero,x)=x
+        F.add(x,F.neg(x))=F.zero
+        witness exist y K st {F.add(x,y)=F.zero} from F.neg(x)
+    claim:
+        ? forall a,b,x K:
+            F.mul(F.mul(a,b),x)=F.mul(a,F.mul(b,x))
+            F.mul(F.add(a,b),x)=F.add(F.mul(a,x),F.mul(b,x))
+        F.mul(F.mul(a,b),x)=F.mul(a,F.mul(b,x))
+        release thm field::add_mul(K,F,a,b,x)
+    claim:
+        ? forall a K,x,y K:
+            F.mul(a,F.add(x,y))=F.add(F.mul(a,x),F.mul(a,y))
+        F.mul(a,F.add(x,y))=F.add(F.mul(a,x),F.mul(a,y))
+    claim:
+        ? forall x K:
+            F.mul(F.one,x)=x
+        F.mul(F.one,x)=x
+    release thm struct_member((F.zero,F.add,F.mul),&VectorSpace<K,F,K>)
+
+template<K nonempty_set,F &field::Field<K>>:
+    have scalar_space &VectorSpace<K,F,K> =(F.zero,F.add,F.mul)
+
+thm scalar_space_carrier:
+    ? forall K nonempty_set,F &field::Field<K>:
+        \scalar_space<K,F> $in &VectorSpace<K,F,K>
+
+# First-class evaluation of ordinary unary functions.
+
+template<X,Y set,point X>:
+    have fn function_evaluation(f fn(x X) Y) Y=f(point)
+
+thm function_evaluation_carrier:
+    ? forall X,Y set,point X:
+        \function_evaluation<X,Y,point> $in fn(f fn(x X) Y) Y
+
+thm function_evaluation_spec:
+    ? forall X,Y set,point X,f fn(x X) Y:
+        \function_evaluation<X,Y,point>(f)=f(point)
+
+thm function_evaluation_is_linear:
+    ? forall K nonempty_set,F &field::Field<K>,X set,point X:
+        $is_linear_map(K,F,fn(t X) K,\function_space<K,F,X>,K,\scalar_space<K,F>,\function_evaluation<X,K,point>)
+    release thm function_space_carrier(K,F,X)
+    release thm scalar_space_carrier(K,F)
+    have source_space &VectorSpace<K,F,fn(t X) K> =\function_space<K,F,X>
+    have target_space &VectorSpace<K,F,K> =\scalar_space<K,F>
+    \function_space<K,F,X> =(\function_zero<K,F,X>,\function_add<K,F,X>,\function_smul<K,F,X>)
+    source_space=(\function_zero<K,F,X>,\function_add<K,F,X>,\function_smul<K,F,X>)
+    source_space.add=\function_add<K,F,X>
+    source_space.smul=\function_smul<K,F,X>
+    \scalar_space<K,F> =(F.zero,F.add,F.mul)
+    target_space=(F.zero,F.add,F.mul)
+    target_space.add=F.add
+    target_space.smul=F.mul
+    claim:
+        ? forall f,g fn(t X) K:
+            \function_evaluation<X,K,point>(source_space.add(f,g))=target_space.add(\function_evaluation<X,K,point>(f),\function_evaluation<X,K,point>(g))
+        have sum_function fn(t X) K=source_space.add(f,g)
+        sum_function=\function_add<K,F,X>(f,g)
+        sum_function(point)=\function_add<K,F,X>(f,g)(point)=F.add(f(point),g(point))
+        \function_evaluation<X,K,point>(source_space.add(f,g))=\function_evaluation<X,K,point>(sum_function)=sum_function(point)
+        release thm function_evaluation_spec(X,K,point,f)
+        release thm function_evaluation_spec(X,K,point,g)
+        target_space.add(\function_evaluation<X,K,point>(f),\function_evaluation<X,K,point>(g))=F.add(f(point),g(point))
+    claim:
+        ? forall a K,f fn(t X) K:
+            \function_evaluation<X,K,point>(source_space.smul(a,f))=target_space.smul(a,\function_evaluation<X,K,point>(f))
+        have scaled_function fn(t X) K=source_space.smul(a,f)
+        scaled_function=\function_smul<K,F,X>(a,f)
+        scaled_function(point)=\function_smul<K,F,X>(a,f)(point)=F.mul(a,f(point))
+        \function_evaluation<X,K,point>(source_space.smul(a,f))=\function_evaluation<X,K,point>(scaled_function)=scaled_function(point)
+        release thm function_evaluation_spec(X,K,point,f)
+        target_space.smul(a,\function_evaluation<X,K,point>(f))=F.mul(a,f(point))
+    by def $is_linear_map(K,F,fn(t X) K,source_space,K,target_space,\function_evaluation<X,K,point>)

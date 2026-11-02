@@ -66,6 +66,7 @@ command/       Eval (exact evaluation, checked algorithm equations, result equal
 | [definition/strict_abstract_prop.lit](definition/strict_abstract_prop.lit) | Abstract signature in strict mode | declaration and `P(x) => P(x)` pass; unproved instances and user trust do not |
 | `definition/def_struct*.lit` | Struct carrier | `struct Point:` fields |
 | `definition/def_template*.lit` | Parameterized def | `template<A set>:` one body |
+| [definition/template_square_brackets.lit](definition/template_square_brackets.lit) | Square-bracket template syntax | `template[A set]:` and `identity[R](2)` reuse existing template checks; angle syntax remains supported |
 | [definition/template_definition_facts.lit](definition/template_definition_facts.lit) | Publish template definition facts | `forall` over template arguments, with body and header premises retained |
 | [definition/template_alias_struct_tuple.lit](definition/template_alias_struct_tuple.lit) | Template aliases and named tuple results | Checked callable signatures and stored value paths reach struct fields |
 | `definition/def_thm.lit` | Named theorem | `thm name: ? fact` + proof |

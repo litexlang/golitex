@@ -201,6 +201,10 @@ pub(super) fn project_store_and_infer(
             JsonValue::Array(positive_power_rules),
         ));
     }
+    let tuple_rules = project_tuple_coordinate_infer(infer, runtime);
+    if !tuple_rules.is_empty() {
+        entries.push(("tuple_coordinate_rules", JsonValue::Array(tuple_rules)));
+    }
     let order_rules = project_conditional_order_infer(infer, runtime);
     if !order_rules.is_empty() {
         entries.push(("conditional_order_rules", JsonValue::Array(order_rules)));
@@ -625,10 +629,53 @@ fn project_cancellation_atomic(infer: &InferAtomicFactResult, runtime: &Runtime)
                     ("derived", project_inferred_store(&r.derived, runtime)),
                 ],
             )),
-            InferEqualFactResult::PositiveRealPower(_) => {}
+            InferEqualFactResult::PositiveRealPower(_)
+            | InferEqualFactResult::TupleCoordinates(_) => {}
         }
     }
     rules
+}
+
+fn project_tuple_coordinate_infer(infer: &InferResult, runtime: &Runtime) -> Vec<JsonValue> {
+    let groups: Vec<&InferAtomicFactResult> = match infer {
+        InferResult::AtomicFact(atomic) => vec![atomic],
+        InferResult::AndFact(and) => and.components.iter().collect(),
+        InferResult::ChainFact(chain) => chain
+            .adjacent_infers
+            .iter()
+            .map(|edge| &edge.infer)
+            .collect(),
+        _ => Vec::new(),
+    };
+    let mut output = Vec::new();
+    for group in groups {
+        let InferAtomicFactResult::EqualFact(rules) = group else {
+            continue;
+        };
+        for rule in rules {
+            let InferEqualFactResult::TupleCoordinates(rule) = rule else {
+                continue;
+            };
+            output.push(object_for(
+                runtime,
+                vec![
+                    ("rule", string("TupleCoordinates")),
+                    ("source", fact_id_entry(runtime, rule.source_fact_id)),
+                    ("reversed", JsonValue::Bool(rule.reversed)),
+                    (
+                        "coordinates",
+                        JsonValue::Array(
+                            rule.coordinates
+                                .iter()
+                                .map(|coordinate| project_inferred_store(coordinate, runtime))
+                                .collect(),
+                        ),
+                    ),
+                ],
+            ));
+        }
+    }
+    output
 }
 
 fn project_positive_power_infer(infer: &InferResult, runtime: &Runtime) -> Vec<JsonValue> {

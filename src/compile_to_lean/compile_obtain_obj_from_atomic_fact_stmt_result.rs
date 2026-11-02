@@ -18,7 +18,8 @@ impl LitexToLeanCompiler {
         if verified_subject(&proof.verify_atomic).as_ref() != Some(&expected) {
             return Err(LeanCompileError::unsupported("ObtainAtomic/SourceSubject"));
         }
-        let (declaration, parent, _) = position.visible_prop(&proof.statement.fact.predicate)?;
+        let (declaration, parent, _) =
+            position.visible_prop(&proof.statement.fact.predicate, &self.runtime)?;
         let (source, formation) = match (
             declaration.statement.iff_facts.as_slice(),
             declaration.assumed_iff_facts.as_slice(),

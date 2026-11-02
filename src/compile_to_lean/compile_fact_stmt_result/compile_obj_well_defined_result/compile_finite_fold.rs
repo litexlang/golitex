@@ -1,4 +1,3 @@
-use crate::compile_to_lean::compile_function_template::function_guard_fact;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
@@ -48,19 +47,8 @@ impl LitexToLeanCompiler {
                 "FiniteFold/SignatureContract",
             ));
         }
-        // Positive-real numeric signatures encode their input predicates in
-        // the signature itself; they need a separate domain-equality bridge.
-        if op_signature.ret_set.as_ref() == &Obj::StandardSet(StandardSet::RPos)
-            || (Self::function_uses_numeric_interface(signature)
-                && matches!(input, Obj::StandardSet(StandardSet::RPos)))
-        {
-            return Err(LeanCompileError::unsupported(
-                "FiniteFold/PositiveNumericSignature",
-            ));
-        }
         let children = &proof.child_obj_well_defined;
         let requirements = &proof.requirement_fact_verified;
-        let guarded = !signature.dom_facts.is_empty();
         if children.len() != 4 || requirements.len() < 5 {
             return Err(LeanCompileError::unsupported("FiniteFold/Stages"));
         }
@@ -70,56 +58,11 @@ impl LitexToLeanCompiler {
         {
             return Err(LeanCompileError::unsupported("FiniteFold/Requirements"));
         }
-        let literal = match value.set.as_ref() {
-            Obj::SetFormer(SetFormer::ListSet(list)) if guarded => Some(list),
-            _ => None,
-        };
-        if let Some(list) = literal {
-            if list.list.len().checked_mul(signature.dom_facts.len())
-                != Some(requirements.len() - 5)
-            {
-                return Err(LeanCompileError::unsupported("FiniteFold/GuardCount"));
-            }
-            let original = signature
-                .set_bound_parameters
-                .groups
-                .iter()
-                .flat_map(|g| &g.params)
-                .next()
-                .unwrap();
-            for (argument, row) in list
-                .list
-                .iter()
-                .zip(requirements[5..].chunks(signature.dom_facts.len()))
-            {
-                let substitution =
-                    std::collections::HashMap::from([(original.id, argument.as_ref().clone())]);
-                for (condition, proof) in signature.dom_facts.iter().zip(row) {
-                    if !instantiated_fact_matches(
-                        &function_guard_fact(condition)?,
-                        &source_subject(proof)?,
-                        &substitution,
-                    ) {
-                        return Err(LeanCompileError::unsupported("FiniteFold/GuardSubject"));
-                    }
-                }
-            }
-        } else if guarded {
-            if requirements.len() != 6 {
-                return Err(LeanCompileError::unsupported(
-                    "FiniteFold/UniversalGuardCount",
-                ));
-            }
-            validate_fold_universal_guard(
-                signature,
-                &value.set,
-                &source_subject(&requirements[5])?,
-            )?;
-        } else if requirements.len() != 5 {
-            return Err(LeanCompileError::unsupported(
-                "FiniteFold/ExtraRequirements",
-            ));
-        }
+        super::compile_finite_guard::validate_finite_guards(
+            signature,
+            &value.set,
+            &requirements[5..],
+        )?;
         let mut objects = Vec::new();
         for (index, subject) in [&value.set, &value.func, &value.op, &value.seed]
             .into_iter()
@@ -140,6 +83,11 @@ impl LitexToLeanCompiler {
         };
         let hf = self.compile_selected_signature(&value.func, iterand, &formed)?;
         let hop = self.compile_selected_signature(&value.op, operation, &formed)?;
+        let hop = if op_signature.ret_set.as_ref() == &Obj::StandardSet(StandardSet::RPos) {
+            format!("(Litex.positiveFoldOperation {} {hop})", objects[2])
+        } else {
+            hop
+        };
         let signature_term = self.compile_fn_signature(signature, &formed)?;
         let carrier = self.compile_object_reference(&signature.ret_set, &formed)?;
         let mut proofs = Vec::new();
@@ -174,38 +122,25 @@ impl LitexToLeanCompiler {
         let (domain, domain_set) =
             self.compile_function_semantic_base_domain(signature, &formed)?;
         let guard = self.compile_function_guard_template(signature, &formed)?;
-        let guard_proof = if let Some(list) = literal {
-            bindings.push_str(&format!("let _fold_tail_0 := {};\n", objects[0]));
-            for i in 0..list.list.len() {
-                bindings.push_str(&format!(
-                    "let _fold_tail_{} := _fold_tail_{i}.val.tail;\n",
-                    i + 1
-                ));
-            }
-            let mut term = format!("Litex.finiteGuardEmpty {guard}");
-            for i in (0..list.list.len()).rev() {
-                let row = &proofs
-                    [5 + i * signature.dom_facts.len()..5 + (i + 1) * signature.dom_facts.len()];
-                let head = row
-                    .iter()
-                    .cloned()
-                    .rev()
-                    .reduce(|tail, head| format!("⟨{head}, {tail}⟩"))
-                    .unwrap();
-                term = format!("Litex.finiteGuardInsert _fold_tail_{i} {guard} ({head}) ({term})");
-            }
-            bindings.push_str(&format!(
-                "let _fold_guard : ∀ i, M.mem i (Litex.denote {}) → {guard} i := {term};\n",
-                objects[0]
-            ));
-            "_fold_guard i hi"
-        } else if guarded {
-            bindings.push_str(&format!("let _fold_guard : ∀ i, M.mem i (Litex.denote {}) → {guard} i := Litex.forallMembersOfRepresentations.{{u, _, 0}} {} (fun _fold_index _fold_member => {} _fold_index _fold_member);\n", objects[0], objects[0], proofs[5]));
-            "_fold_guard i hi"
-        } else {
-            "True.intro"
-        };
-        let cover = format!("(fun i hi => (Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote {carrier}) {domain_set} (Litex.isSet {carrier}) {guard} i).mpr ⟨{} i hi, {guard_proof}⟩)", proofs[4]);
+        let guard_proof = self.compile_finite_guard(
+            signature,
+            &value.set,
+            &objects[0],
+            &proofs[5..],
+            &formed,
+            &mut bindings,
+        )?;
+        let argument = "(Litex.semanticObject (M := M) i (M.member_isSet hi))";
+        let (membership, guard_proof) = self.compile_unary_function_domain_certificates(
+            signature,
+            argument,
+            format!("({} i hi)", proofs[4]),
+            &guard_proof,
+            &formed,
+        )?;
+        let cover = format!(
+            "(fun i hi => (Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote {carrier}) {domain_set} (Litex.isSet {carrier}) {guard} i).mpr ⟨{membership}, {guard_proof}⟩)"
+        );
         Ok(format!(
             "({bindings}Litex.finiteFold {} {} {} {} {signature_term} {} {hf} {hop} {} {cover} {} {})",
             objects[0],
@@ -218,52 +153,6 @@ impl LitexToLeanCompiler {
             proofs[3]
         ))
     }
-}
-
-fn validate_fold_universal_guard(
-    signature: &FnSet,
-    set: &Obj,
-    fact: &Fact,
-) -> Result<(), LeanCompileError> {
-    let Fact::ForallFact(all) = fact else {
-        return Err(LeanCompileError::unsupported("FiniteFold/GuardCoverage"));
-    };
-    let parameters = all
-        .typed_parameters
-        .groups
-        .iter()
-        .flat_map(|g| g.params.iter().map(move |p| (p, &g.param_type)))
-        .collect::<Vec<_>>();
-    let [(parameter, ParamType::Obj(domain))] = parameters.as_slice() else {
-        return Err(LeanCompileError::unsupported("FiniteFold/GuardParameter"));
-    };
-    if domain.ir() != set.ir()
-        || !all.dom_facts.is_empty()
-        || all.then_facts.len() != signature.dom_facts.len()
-    {
-        return Err(LeanCompileError::unsupported("FiniteFold/GuardDomain"));
-    }
-    let original = signature
-        .set_bound_parameters
-        .groups
-        .iter()
-        .flat_map(|g| &g.params)
-        .next()
-        .unwrap();
-    let substitution = std::collections::HashMap::from([(
-        original.id,
-        Obj::Identifier(IdentifierObj::from_bound_name(parameter)),
-    )]);
-    for (expected, actual) in signature.dom_facts.iter().zip(&all.then_facts) {
-        if !instantiated_fact_matches(
-            &function_guard_fact(expected)?,
-            &actual.clone().into(),
-            &substitution,
-        ) {
-            return Err(LeanCompileError::unsupported("FiniteFold/GuardSubject"));
-        }
-    }
-    Ok(())
 }
 
 /// Replay the selected universal law, then project its final equation. Earlier
@@ -329,7 +218,9 @@ fn compile_fold_law(
         // suffices even for a large M.Value. Pin this proof-only level: it
         // does not occur in the enclosing object's type and cannot be
         // generalized when that object is emitted as a noncomputable def.
-        term = format!("(Litex.forallMembersOfRepresentations.{{u, _, 0}} {carrier_term} (fun _fold_x{i} _fold_h{i} => {term}))");
+        term = format!(
+            "(Litex.forallMembersOfRepresentations.{{u, _, 0}} {carrier_term} (fun _fold_x{i} _fold_h{i} => {term}))"
+        );
     }
     Ok(term)
 }

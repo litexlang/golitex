@@ -1,0 +1,33 @@
+# The predecessor span and span-preserving removal use the same index.
+
+thm dependent_list_has_redundant_predecessor:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,n N,vectors finite_seq(V,n):
+        $basis::is_linearly_dependent(K,F,V,space,n,vectors)
+        =>:
+            exist k N+,m,r N,prefix finite_seq(V,m),reduced finite_seq(V,r) st {k<=n,m=k-1,r+1=n,$basis::is_prefix_of_length(V,n,m,vectors,prefix),vectors(k) $in \finite_span::span<K,F,V,space,m,prefix>,$basis::is_list_with_index_removed(V,n,vectors,k,reduced),\finite_span::span<K,F,V,space,n,vectors> =\finite_span::span<K,F,V,space,r,reduced>}
+    release thm dependence::dependence_lemma(K,F,V,space,n,vectors)
+    obtain k,m,prefix from exist selected_k N+,selected_m N,selected_prefix finite_seq(V,selected_m) st {selected_k<=n,selected_m=selected_k-1,$basis::is_prefix_of_length(V,n,selected_m,vectors,selected_prefix),vectors(selected_k) $in \finite_span::span<K,F,V,space,selected_m,selected_prefix>}
+    n>=k>=1
+    n>0
+    n $in N+
+    have r N=n-1
+    r=n-1
+    r+1=(n-1)+1=n
+    release thm basis::remove_index_exists(V,n,vectors,k)
+    obtain reduced from exist selected finite_seq(V,n-1) st {$basis::is_list_with_index_removed(V,n,vectors,k,selected)}
+    claim:
+        ? forall j N+:
+            j<=m
+            =>:
+                prefix(j) $in \finite_span::span<K,F,V,space,n-1,reduced>
+        j<=m=k-1<k
+        j<k
+        j<k<=n
+        j<n
+        j<=n-1
+        prefix(j)=vectors(j)=reduced(j)
+        release thm span_reduction::span_contains_generator(K,F,V,space,n-1,reduced,j)
+    release thm span_reduction::span_inclusion_from_generators(K,F,V,space,m,prefix,n-1,reduced)
+    vectors(k) $in \finite_span::span<K,F,V,space,n-1,reduced>
+    release thm span_reduction::remove_redundant_vector_preserves_span(K,F,V,space,n,vectors,k,reduced)
+    witness exist selected_k N+,selected_m,selected_r N,selected_prefix finite_seq(V,selected_m),selected_reduced finite_seq(V,selected_r) st {selected_k<=n,selected_m=selected_k-1,selected_r+1=n,$basis::is_prefix_of_length(V,n,selected_m,vectors,selected_prefix),vectors(selected_k) $in \finite_span::span<K,F,V,space,selected_m,selected_prefix>,$basis::is_list_with_index_removed(V,n,vectors,selected_k,selected_reduced),\finite_span::span<K,F,V,space,n,vectors> =\finite_span::span<K,F,V,space,selected_r,selected_reduced>} from k,m,n-1,prefix,reduced

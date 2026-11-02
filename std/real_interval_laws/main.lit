@@ -1,0 +1,491 @@
+# Real closed-interval existence theorems from native completeness and continuity.
+# Source proofs; no user axioms, trust or new native rules.
+
+claim:
+    ? forall a,b R+:
+        min(a,b)>0
+        min(a,b)<=a
+        min(a,b)<=b
+    by cases:
+        ? min(a,b)>0
+        case a<=b:
+            min(a,b)=a
+        case a>b:
+            b<=a
+            min(a,b)=b
+
+thm interval_intermediate_value_strict:
+    ? forall a R,b {t R:t>=a},f fn(x '[a,b]) R,level R:
+        forall x '[a,b]:
+            $is_continuous_at(f,x)
+        f(a)<level
+        level<f(b)
+        =>:
+            exist c '[a,b] st {f(c)=level}
+    a<=b
+    a $in '[a,b]
+    b $in '[a,b]
+    have points power_set('[a,b])={x '[a,b]:f(x)<=level}
+    f(a)<=level
+    a $in points
+    witness $is_nonempty_set(points) from a
+    points $subset '[a,b]
+    '[a,b] $subset R
+    points $subset R
+    claim:
+        ? forall x points:
+            x<=b
+        x $in '[a,b]
+    release thm real_least_upper_bound_exists(points,b)
+    obtain c from exist candidate R st {$is_real_least_upper_bound(points,candidate)}
+    release thm real_member_le_least_upper_bound(points,c,a)
+    release thm real_least_upper_bound_le_upper_bound(points,c,b)
+    a<=c
+    c<=b
+    c $in '[a,b]
+    f(c) $in R
+    $is_continuous_at(f,c)
+    claim:
+        ? f(c)>=level
+        by contra:
+            ? f(c)>=level
+            f(c)<level
+            claim:
+                ? c<b
+                by contra:
+                    ? c<b
+                    c>=b
+                    c=b
+                    f(c)=f(b)
+                    impossible f(c)<level
+            have epsilon R+=level-f(c)
+            release thm fn_continuous_at_control(f,c,epsilon)
+            obtain delta from exist radius R+ st {{x '[a,b]:abs(x-c)<radius} $subset preimage_set(f,{v R:abs(v-f(c))<epsilon})}
+            b-c>0
+            have gap R+=b-c
+            have step R+=min(delta,gap)/2
+            min(delta,gap)<=delta
+            min(delta,gap)<=gap
+            step<=delta/2<delta
+            step<=gap/2<gap=b-c
+            have t R=c+step
+            c<c+step=t
+            step<b-c
+            t=c+step<c+(b-c)=b
+            a<=c<t<b
+            t $in '[a,b]
+            f(t) $in R
+            abs(t-c)=abs(step)=step<delta
+            t $in {x '[a,b]:abs(x-c)<delta}
+            t $in preimage_set(f,{v R:abs(v-f(c))<epsilon})
+            f(t) $in {v R:abs(v-f(c))<epsilon}
+            abs(f(t)-f(c))<epsilon
+            f(t)-f(c)<=abs(f(t)-f(c))<epsilon=level-f(c)
+            f(t)-f(c)<epsilon
+            epsilon=level-f(c)
+            f(t)-f(c)<level-f(c)
+            f(t)=(f(t)-f(c))+f(c)
+            level=(level-f(c))+f(c)
+            (f(t)-f(c))+f(c)<(level-f(c))+f(c)
+            f(t)<level
+            f(t)<=level
+            t $in points
+            release thm real_member_le_least_upper_bound(points,c,t)
+            t<=c
+            impossible c<t
+    claim:
+        ? f(c)<=level
+        by contra:
+            ? f(c)<=level
+            f(c)>level
+            have epsilon R+=f(c)-level
+            release thm fn_continuous_at_control(f,c,epsilon)
+            obtain delta from exist radius R+ st {{x '[a,b]:abs(x-c)<radius} $subset preimage_set(f,{v R:abs(v-f(c))<epsilon})}
+            delta/2>0
+            c-(c-delta/2)=delta/2
+            c-(c-delta/2)>0
+            c-delta/2<c
+            release thm real_least_upper_bound_crosses(points,c,c-delta/2)
+            obtain s from exist x points st {c-delta/2<x}
+            s $in '[a,b]
+            f(s) $in R
+            release thm real_member_le_least_upper_bound(points,c,s)
+            c-delta/2<s<=c
+            0<=c-s<delta/2<delta
+            s $in R
+            s-c<=0
+            abs(s-c)=-(s-c)=c-s
+            abs(s-c)<delta
+            s $in {x '[a,b]:abs(x-c)<delta}
+            s $in preimage_set(f,{v R:abs(v-f(c))<epsilon})
+            f(s) $in {v R:abs(v-f(c))<epsilon}
+            abs(f(s)-f(c))<epsilon
+            f(c)-f(s)<=abs(f(c)-f(s))=abs(f(s)-f(c))<epsilon=f(c)-level
+            f(c)-f(s)<epsilon
+            epsilon=f(c)-level
+            f(c)-f(s)<f(c)-level
+            level=f(c)-(f(c)-level)
+            f(s)=f(c)-(f(c)-f(s))
+            f(c)-(f(c)-level)<f(c)-(f(c)-f(s))
+            level<f(s)
+            f(s)>level
+            f(s)<=level
+            impossible f(s)>level
+    f(c)=level
+    witness exist x '[a,b] st {f(x)=level} from c
+
+thm interval_intermediate_value_ordered:
+    ? forall a R,b {t R:t>=a},f fn(x '[a,b]) R,level R:
+        forall x '[a,b]:
+            $is_continuous_at(f,x)
+        f(a)<=level
+        level<=f(b)
+        =>:
+            exist c '[a,b] st {f(c)=level}
+    a<=b
+    a $in '[a,b]
+    b $in '[a,b]
+    by cases:
+        ? exist c '[a,b] st {f(c)=level}
+        case f(a)>=level:
+            f(a)=level
+            witness exist c '[a,b] st {f(c)=level} from a
+        case f(a)<level:
+            by cases:
+                ? exist c '[a,b] st {f(c)=level}
+                case level>=f(b):
+                    f(b)=level
+                    witness exist c '[a,b] st {f(c)=level} from b
+                case level<f(b):
+                    release thm interval_intermediate_value_strict(a,b,f,level)
+
+thm interval_intermediate_value:
+    ? forall a R,b {t R:t>=a},f fn(x '[a,b]) R,level R:
+        forall x '[a,b]:
+            $is_continuous_at(f,x)
+        min(f(a),f(b))<=level
+        level<=max(f(a),f(b))
+        =>:
+            exist c '[a,b] st {f(c)=level}
+    a<=b
+    a $in '[a,b]
+    b $in '[a,b]
+    by cases:
+        ? exist c '[a,b] st {f(c)=level}
+        case f(a)<=f(b):
+            min(f(a),f(b))=f(a)
+            max(f(a),f(b))=f(b)
+            f(a)<=level
+            level<=f(b)
+            release thm interval_intermediate_value_ordered(a,b,f,level)
+        case f(a)>f(b):
+            f(b)<=f(a)
+            min(f(a),f(b))=f(b)
+            max(f(a),f(b))=f(a)
+            f(b)<=level
+            level<=f(a)
+            have fn negative(x '[a,b]) R=-f(x)
+            forall x '[a,b]:
+                negative(x)=-f(x)
+            claim:
+                ? forall x '[a,b]:
+                    $is_continuous_at(negative,x)
+                release thm fn_continuous_at_neg(f,negative,x)
+            negative(a)=-f(a)
+            negative(b)=-f(b)
+            -f(a)<=-level
+            -level<=-f(b)
+            negative(a)<=-level
+            -level<=negative(b)
+            release thm interval_intermediate_value_ordered(a,b,negative,-level)
+            obtain c from exist x '[a,b] st {negative(x)=-level}
+            negative(c)=-f(c)
+            -f(c)=negative(c)
+            -f(c)=-level
+            f(c) $in R
+            f(c)=-(-f(c))
+            -(-f(c))=-(-level)
+            f(c)=-(-level)
+            -(-level)=level
+            f(c)=level
+            witness exist x '[a,b] st {f(x)=level} from c
+
+thm interval_intermediate_value_interior:
+    ? forall a R,b {t R:t>=a},f fn(x '[a,b]) R,level R:
+        forall x '[a,b]:
+            $is_continuous_at(f,x)
+        min(f(a),f(b))<level
+        level<max(f(a),f(b))
+        =>:
+            exist c '[a,b] st {a<c,c<b,f(c)=level}
+    a<=b
+    a $in '[a,b]
+    b $in '[a,b]
+    min(f(a),f(b))<=level
+    level<=max(f(a),f(b))
+    release thm interval_intermediate_value(a,b,f,level)
+    obtain c from exist x '[a,b] st {f(x)=level}
+    claim:
+        ? f(a)!=level
+        by cases:
+            ? f(a)!=level
+            case f(a)<=f(b):
+                min(f(a),f(b))=f(a)
+                f(a)<level
+            case f(a)>f(b):
+                f(b)<=f(a)
+                max(f(a),f(b))=f(a)
+                level<f(a)
+    claim:
+        ? f(b)!=level
+        by cases:
+            ? f(b)!=level
+            case f(a)<=f(b):
+                max(f(a),f(b))=f(b)
+                level<f(b)
+            case f(a)>f(b):
+                f(b)<=f(a)
+                min(f(a),f(b))=f(b)
+                f(b)<level
+    a<=c
+    c<=b
+    claim:
+        ? a<c
+        by contra:
+            ? a<c
+            a>=c
+            a=c
+            f(a)=f(c)=level
+            impossible f(a)!=level
+    claim:
+        ? c<b
+        by contra:
+            ? c<b
+            c>=b
+            c=b
+            f(b)=f(c)=level
+            impossible f(b)!=level
+    witness exist x '[a,b] st {a<x,x<b,f(x)=level} from c
+
+thm continuous_real_function_local_upper_bound:
+    ? forall D power_set(R),f fn(x D) R,p D:
+        $is_continuous_at(f,p)
+        =>:
+            exist radius R+ st {{x D:abs(x-p)<radius} $subset preimage_set(f,{v R:v<f(p)+1})}
+    release thm fn_continuous_at_control(f,p,1)
+    obtain delta from exist radius R+ st {{x D:abs(x-p)<radius} $subset preimage_set(f,{v R:abs(v-f(p))<1})}
+    claim:
+        ? forall x {t D:abs(t-p)<delta}:
+            x $in preimage_set(f,{v R:v<f(p)+1})
+        x $in D
+        x $in preimage_set(f,{v R:abs(v-f(p))<1})
+        f(x) $in {v R:abs(v-f(p))<1}
+        f(x) $in R
+        f(p) $in R
+        f(x)-f(p)<=abs(f(x)-f(p))<1
+        f(x)-f(p)<1
+        f(x)=(f(x)-f(p))+f(p)
+        (f(x)-f(p))+f(p)<1+f(p)
+        f(x)<1+f(p)
+        1+f(p)=f(p)+1
+        f(x)<f(p)+1
+        f(x) $in {v R:v<f(p)+1}
+    by def {x D:abs(x-p)<delta} $subset preimage_set(f,{v R:v<f(p)+1})
+    witness exist radius R+ st {{x D:abs(x-p)<radius} $subset preimage_set(f,{v R:v<f(p)+1})} from delta
+
+thm interval_continuous_image_bounded_above:
+    ? forall a R,b {t R:t>=a},f fn(x '[a,b]) R:
+        forall x '[a,b]:
+            $is_continuous_at(f,x)
+        =>:
+            $is_real_bounded_above(fn_range(f))
+    a<=b
+    a $in '[a,b]
+    b $in '[a,b]
+    prop is_prefix_upper_bound(endpoint '[a,b],upper R):
+        forall t '[a,b]:
+            t<=endpoint
+            =>:
+                f(t)<=upper
+    prop is_bounded_prefix(endpoint '[a,b]):
+        exist upper R st {$is_prefix_upper_bound(endpoint,upper)}
+    claim:
+        ? forall t '[a,b]:
+            t<=a
+            =>:
+                f(t)<=f(a)
+        a<=t
+        t=a
+        f(t)=f(a)
+        f(t)<=f(a)
+    by def $is_prefix_upper_bound(a,f(a))
+    witness $is_bounded_prefix(a) from f(a)
+    have bounded_points power_set('[a,b])={x '[a,b]:$is_bounded_prefix(x)}
+    a $in bounded_points
+    witness $is_nonempty_set(bounded_points) from a
+    bounded_points $subset '[a,b]
+    '[a,b] $subset R
+    bounded_points $subset R
+    claim:
+        ? forall x bounded_points:
+            x<=b
+        x $in '[a,b]
+    release thm real_least_upper_bound_exists(bounded_points,b)
+    obtain c from exist point R st {$is_real_least_upper_bound(bounded_points,point)}
+    release thm real_member_le_least_upper_bound(bounded_points,c,a)
+    release thm real_least_upper_bound_le_upper_bound(bounded_points,c,b)
+    a<=c
+    c<=b
+    c $in '[a,b]
+    f(c) $in R
+    release thm continuous_real_function_local_upper_bound('[a,b],f,c)
+    obtain delta from exist radius R+ st {{x '[a,b]:abs(x-c)<radius} $subset preimage_set(f,{v R:v<f(c)+1})}
+    claim:
+        ? c $in bounded_points
+        delta/2>0
+        c-(c-delta/2)=delta/2
+        c-(c-delta/2)>0
+        c-delta/2<c
+        release thm real_least_upper_bound_crosses(bounded_points,c,c-delta/2)
+        obtain z from exist point bounded_points st {c-delta/2<point}
+        z $in '[a,b]
+        release thm real_member_le_least_upper_bound(bounded_points,c,z)
+        z<=c
+        $is_bounded_prefix(z)
+        obtain B from $is_bounded_prefix(z)
+        claim:
+            ? forall t '[a,b]:
+                t<=c
+                =>:
+                    f(t)<=max(B,f(c)+1)
+            by cases:
+                ? f(t)<=max(B,f(c)+1)
+                case t<=z:
+                    f(t)<=B
+                    B<=max(B,f(c)+1)
+                    f(t)<=max(B,f(c)+1)
+                case t>z:
+                    c-delta/2<z<t<=c
+                    c-delta/2<t
+                    0<=c-t<delta/2<delta
+                    t-c<=0
+                    abs(t-c)=-(t-c)=c-t
+                    abs(t-c)<delta
+                    t $in {x '[a,b]:abs(x-c)<delta}
+                    t $in preimage_set(f,{v R:v<f(c)+1})
+                    f(t) $in {v R:v<f(c)+1}
+                    f(t)<f(c)+1
+                    f(t)<=f(c)+1
+                    f(c)+1<=max(B,f(c)+1)
+                    f(t)<=max(B,f(c)+1)
+        by def $is_prefix_upper_bound(c,max(B,f(c)+1))
+        witness $is_bounded_prefix(c) from max(B,f(c)+1)
+        c $in bounded_points
+    $is_bounded_prefix(c)
+    obtain B from $is_bounded_prefix(c)
+    claim:
+        ? c=b
+        by contra:
+            ? c=b
+            c!=b
+            claim:
+                ? c<b
+                by contra:
+                    ? c<b
+                    c>=b
+                    c=b
+                    impossible c!=b
+            have gap R+=b-c
+            have step R+=min(delta,gap)/2
+            min(delta,gap)<=delta
+            min(delta,gap)<=gap
+            step<=delta/2<delta
+            step<=gap/2<gap=b-c
+            step<b-c
+            have endpoint R=c+step
+            c<c+step=endpoint
+            endpoint=c+step<c+(b-c)=b
+            a<=c<endpoint<b
+            endpoint $in '[a,b]
+            claim:
+                ? forall t '[a,b]:
+                    t<=endpoint
+                    =>:
+                        f(t)<=max(B,f(c)+1)
+                by cases:
+                    ? f(t)<=max(B,f(c)+1)
+                    case t<=c:
+                        f(t)<=B
+                        B<=max(B,f(c)+1)
+                        f(t)<=max(B,f(c)+1)
+                    case t>c:
+                        0<t-c
+                        t-c<=endpoint-c
+                        endpoint-c=step
+                        t-c<=step<delta
+                        t-c<delta
+                        t-c>=0
+                        abs(t-c)=t-c<delta
+                        t $in {x '[a,b]:abs(x-c)<delta}
+                        t $in preimage_set(f,{v R:v<f(c)+1})
+                        f(t) $in {v R:v<f(c)+1}
+                        f(t)<f(c)+1
+                        f(t)<=f(c)+1
+                        f(c)+1<=max(B,f(c)+1)
+                        f(t)<=max(B,f(c)+1)
+            by def $is_prefix_upper_bound(endpoint,max(B,f(c)+1))
+            witness $is_bounded_prefix(endpoint) from max(B,f(c)+1)
+            endpoint $in bounded_points
+            release thm real_member_le_least_upper_bound(bounded_points,c,endpoint)
+            endpoint<=c
+            impossible c<endpoint
+    claim:
+        ? forall y fn_range(f):
+            y<=B
+        have by fn_preimage: t from y $in fn_range(f)
+        t $in '[a,b]
+        t<=b=c
+        t<=c
+        f(t)<=B
+        y=f(t)
+        y<=B
+    by def $is_real_upper_bound(fn_range(f),B)
+    witness exist upper R st {$is_real_upper_bound(fn_range(f),upper)} from B
+    by def $is_real_bounded_above(fn_range(f))
+
+thm interval_continuous_image_bounded:
+    ? forall a R,b {t R:t>=a},f fn(x '[a,b]) R:
+        forall x '[a,b]:
+            $is_continuous_at(f,x)
+        =>:
+            $is_real_bounded(fn_range(f))
+    release thm interval_continuous_image_bounded_above(a,b,f)
+    have fn negative(x '[a,b]) R=-f(x)
+    forall x '[a,b]:
+        negative(x)=-f(x)
+    claim:
+        ? forall x '[a,b]:
+            $is_continuous_at(negative,x)
+        release thm fn_continuous_at_neg(f,negative,x)
+    release thm interval_continuous_image_bounded_above(a,b,negative)
+    obtain B from exist upper R st {$is_real_upper_bound(fn_range(negative),upper)}
+    claim:
+        ? forall y fn_range(f):
+            -B<=y
+        have by fn_preimage: t from y $in fn_range(f)
+        t $in '[a,b]
+        negative(t) $in fn_range(negative)
+        negative(t)<=B
+        -B<=-negative(t)
+        negative(t)=-f(t)
+        f(t) $in R
+        -negative(t)=-(-f(t))
+        -(-f(t))=f(t)
+        -negative(t)=f(t)
+        -B<=f(t)
+        y=f(t)
+        -B<=y
+    by def $is_real_lower_bound(fn_range(f),-B)
+    witness exist lower R st {$is_real_lower_bound(fn_range(f),lower)} from -B
+    by def $is_real_bounded_below(fn_range(f))
+    by def $is_real_bounded(fn_range(f))

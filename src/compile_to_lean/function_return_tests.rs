@@ -12,8 +12,7 @@ const ANONYMOUS: &str = "fn(x R) R {x}(2) $in C\n";
 const WEAKER: &str = "have fn call_weak_return(x R) C = x\n$is_set(call_weak_return(2))\nforall call_unused R:\n    call_weak_return $in fn(y R) R\n    =>:\n        call_weak_return(2) $in R\n";
 
 #[test]
-fn function_return_template_standard_superset_is_explicitly_unsupported() {
-    use super::source_position::{SourceOwner, SourcePosition};
+fn function_return_template_standard_superset_replays_original_local_wd() {
     let (result, compiler) = checked(
         "template<S set>:\n    have fn real_identity(x R) R = x\nforall x R:\n    \\real_identity<R>(x) $in C\n",
     );
@@ -28,21 +27,15 @@ fn function_return_template_standard_superset_is_explicitly_unsupported() {
     let success = atomic(&proof.proved_then_facts[0].verify_result);
     let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
         AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
-            rule
-            @ InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(_),
+            InFactSearchProofByKnownSpecialProperty::TemplateApplicationInStandardSuperset(_),
         ),
     ) = &success.searched_proof
     else {
         panic!("actual template standard-return evidence")
     };
-    let AtomicFact::InFact(goal) = &success.fact else {
-        panic!("actual membership")
-    };
-    let position = SourcePosition::new(None, SourceOwner::Run(&result), 1);
-    let error = compiler
-        .compile_fn_return_rule(goal, rule, &position)
-        .unwrap_err();
-    assert_eq!(error.route, "FunctionReturn/TemplateStandardSuperset");
+    compiler
+        .compile_run(&result, "template_standard_return")
+        .unwrap();
 }
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {

@@ -1,3 +1,4 @@
+use crate::ast::names::AtomicName;
 use crate::ast::obj::{FnObj, FnObjHead, IdentifierObj, Literal, Obj};
 use crate::ast::param::SetBoundParameterList;
 use crate::runtime::runtime_ids::IdentifierId;
@@ -9,9 +10,27 @@ pub fn is_number_literal(obj: &Obj) -> bool {
     matches!(obj, Obj::Literal(Literal::Number(_)))
 }
 
-pub fn fn_obj_plain_name(fn_obj: &FnObj) -> Option<String> {
+pub fn fn_obj_algo_name(fn_obj: &FnObj) -> Option<AtomicName> {
     match fn_obj.head.as_ref() {
-        FnObjHead::Identifier(IdentifierObj::Plain { name, .. }) => Some(name.clone()),
+        FnObjHead::Identifier(IdentifierObj::Plain { name, .. }) => {
+            Some(AtomicName::plain(name.clone()))
+        }
+        FnObjHead::Identifier(IdentifierObj::WithExportFileId {
+            export_file_id,
+            name,
+        }) => Some(AtomicName::WithExportFileId {
+            export_file_id: *export_file_id,
+            name: name.clone(),
+        }),
+        FnObjHead::Identifier(IdentifierObj::WithModAndExportFileId {
+            global_mod_id,
+            export_file_id,
+            name,
+        }) => Some(AtomicName::WithModAndExportFileId {
+            global_mod_id: *global_mod_id,
+            export_file_id: *export_file_id,
+            name: name.clone(),
+        }),
         _ => None,
     }
 }
@@ -26,13 +45,58 @@ pub fn flatten_fn_obj_args(fn_obj: &FnObj) -> Vec<Obj> {
     out
 }
 
-pub fn algo_call_key(fn_name: &str, evaluated_args: &[Obj]) -> Option<String> {
+pub fn algo_call_key(fn_name: &AtomicName, evaluated_args: &[Obj]) -> Option<String> {
     let mut parts = Vec::with_capacity(evaluated_args.len());
     for arg in evaluated_args {
         crate::rational_expression::ClosedNumericExpr::try_from_obj(arg)?;
         parts.push(arg.ir().display_string());
     }
-    Some(format!("{fn_name}({})", parts.join(",")))
+    Some(format!("{}({})", fn_name.display_string(), parts.join(",")))
+}
+
+#[cfg(test)]
+mod qualified_algo_tests {
+    use super::*;
+
+    #[test]
+    fn qualified_algorithm_names_and_cycle_keys_keep_both_id_spaces() {
+        let names = [
+            IdentifierObj::WithExportFileId {
+                export_file_id: 0,
+                name: "flag".into(),
+            },
+            IdentifierObj::WithExportFileId {
+                export_file_id: 1,
+                name: "flag".into(),
+            },
+            IdentifierObj::WithModAndExportFileId {
+                global_mod_id: 0,
+                export_file_id: 0,
+                name: "flag".into(),
+            },
+            IdentifierObj::WithModAndExportFileId {
+                global_mod_id: 1,
+                export_file_id: 0,
+                name: "flag".into(),
+            },
+        ];
+        let mut keys = HashSet::new();
+        for name in names {
+            let expected = name.display_string();
+            let call = FnObj {
+                head: Box::new(FnObjHead::Identifier(name)),
+                body: vec![],
+            };
+            let resolved = fn_obj_algo_name(&call)
+                .expect("a qualified identifier is an algorithm lookup candidate");
+            assert_eq!(resolved.display_string(), expected);
+            assert!(
+                keys.insert(algo_call_key(&resolved, &[]).unwrap()),
+                "different export/module identities cannot share a recursion key"
+            );
+        }
+        assert_eq!(keys.len(), 4);
+    }
 }
 
 pub fn set_bound_parameter_count(list: &SetBoundParameterList) -> usize {

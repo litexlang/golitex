@@ -7,6 +7,7 @@ mod compile_function_call;
 mod compile_function_space;
 pub(in crate::compile_to_lean) mod compile_min_max;
 mod compile_numeric_observation;
+mod compile_template_return;
 pub(in crate::compile_to_lean) use compile_min_max::min_max_arguments;
 pub(in crate::compile_to_lean) mod compile_factorial;
 pub(in crate::compile_to_lean) mod compile_gcd_lcm;
@@ -28,9 +29,12 @@ pub(in crate::compile_to_lean) use compile_finite_function::{
 
 mod compile_finite_aggregate;
 mod compile_finite_fold;
+mod compile_finite_guard;
 mod compile_finite_set_stat;
 mod compile_range_aggregate;
 mod compile_range_fold;
+mod compile_range_guard;
+mod compile_range_input;
 mod compile_real_interval;
 mod compile_seq;
 

@@ -10,6 +10,10 @@ impl LitexToLeanCompiler {
         requirements: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if Self::integer_power_pair_profile(requirements) {
+            return self.compile_integer_binary_power_law(goal, true, requirements, position);
+        }
+
         let (product_object, combined_object, product, combined, reversed) =
             match (&goal.left, &goal.right) {
                 (
@@ -72,6 +76,10 @@ impl LitexToLeanCompiler {
         requirements: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if Self::integer_power_pair_profile(requirements) {
+            return self.compile_integer_binary_power_law(goal, false, requirements, position);
+        }
+
         let (nested_object, combined_object, nested, combined, reversed) =
             match (&goal.left, &goal.right) {
                 (

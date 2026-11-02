@@ -1,0 +1,23 @@
+# Expected rejection: retained-assumption-body
+# Before: this exact input discarded the reversed assumption and detached scope.
+# by contra:
+#     ? not $narrow(2)
+#     2 > 0
+#     7 = 8
+#     have unexecuted R = 9
+#     impossible 2 < 1
+# Now: the assumption narrow(2), its actual consequences and the first checked
+# body statement remain local; the failed equality stops the remaining steps.
+prop narrow(x R):
+    x > 0
+    x < 1
+
+by contra:
+    ? not $narrow(2)
+    2 > 0
+    7 = 8
+    have unexecuted R = 9
+    impossible 2 < 1
+# Evidence: target/release/litex -strict -lang en -f examples/test_statements/negative/by_contra_stmt/retained-assumption-body.lit
+# Expected: exit 1, proof_body at 7 = 8 (step_index 1), no outer target.
+# Producer: tests/reading_failed_contradictions.rs; consumer: failed-contra-context.cjs.

@@ -33,17 +33,29 @@ impl LitexToLeanCompiler {
             .collect();
         let (proposition, evidence) =
             self.compile_verify_plain_exist_success(&proof.verify_exist, position)?;
-        self.compile_obtain_elimination(
+        // Runtime gives this synthesized existential a fresh fact ID. Check it
+        // once before selecting witnesses: re-elaborating its dependent type
+        // inside each choose/choose_spec leaves unrelated proposition metavars.
+        let fact = Fact::ExistFact(source.clone());
+        let declaration = self.emit_internal_fact(&fact, &(proposition, evidence), position)?;
+        let name = format!("h_{}", source.fact_id.value());
+        let reference = if local {
+            name
+        } else {
+            self.context_application(&name, position)
+        };
+        let elimination = self.compile_obtain_elimination(
             source,
             &proof.verify_exist.well_defined_proof,
             &outputs,
             &proof.store_and_infer_result,
             &HashMap::new(),
-            format!("(show {proposition} from {evidence})"),
+            reference,
             None,
             position,
             position,
             local,
-        )
+        )?;
+        Ok(format!("{declaration}\n\n{elimination}"))
     }
 }

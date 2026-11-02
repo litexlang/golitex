@@ -21,7 +21,13 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         observe_numeric: bool,
     ) -> Result<Option<String>, LeanCompileError> {
-        if !matches!(object, Obj::ArithmeticOperator(_) | Obj::FnObj(_)) {
+        if !matches!(
+            object,
+            Obj::ArithmeticOperator(_)
+                | Obj::FnObj(_)
+                | Obj::InstantiatedTemplateObj(_)
+                | Obj::Literal(Literal::Number(_))
+        ) {
             return Ok(None);
         }
         position.with_visible_callee_instance(&mut |application, caller| {
@@ -33,10 +39,12 @@ impl LitexToLeanCompiler {
             if *registered.0 != resolved {
                 return Err(LeanCompileError::unsupported("WD/CalleeIdentity"));
             }
-            let ForallConclusionLocation::DirectThenFact(location) = &application.detailed_ref().cite.location else {
-                return Err(LeanCompileError::unsupported("WD/CalleeLocation"));
+            let (then_index, component) = match &application.detailed_ref().cite.location {
+                ForallConclusionLocation::DirectThenFact(p) => (p.then_fact_index, None),
+                ForallConclusionLocation::AndFactComponent(p) => (p.then_fact_index, Some(p.component_index)),
+                _ => return Err(LeanCompileError::unsupported("WD/CalleeLocation")),
             };
-            let selected = source.then_facts.get(location.then_fact_index)
+            let selected = source.then_facts.get(then_index)
                 .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeLocation"))?;
             let parameters = source.typed_parameters.ordered_param_ids();
             if parameters.len() != application.detailed_ref().forall_parameters_match_what_args.len() {
@@ -44,18 +52,21 @@ impl LitexToLeanCompiler {
             }
             let substitution: HashMap<_,_> = parameters.into_iter()
                 .zip(application.detailed_ref().forall_parameters_match_what_args.iter().cloned()).collect();
-            let roots: Vec<&Obj> = match selected {
-                ExistOrAndChainAtomicFact::AtomicFact(atomic) => atomic_fact_args_ref(atomic),
-                ExistOrAndChainAtomicFact::ChainFact(chain) => chain.objs.iter().collect(),
-                ExistOrAndChainAtomicFact::AndFact(and) => and.facts.iter().flat_map(atomic_fact_args_ref).collect(),
+            let roots: Vec<&Obj> = match (selected, component) {
+                (ExistOrAndChainAtomicFact::AndFact(and), Some(index)) => atomic_fact_args_ref(and.facts.get(index)
+                    .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeLocation"))?),
+                (_, Some(_)) => return Err(LeanCompileError::unsupported("WD/CalleeLocation")),
+                (ExistOrAndChainAtomicFact::AtomicFact(atomic), None) => atomic_fact_args_ref(atomic),
+                (ExistOrAndChainAtomicFact::ChainFact(chain), None) => chain.objs.iter().collect(),
+                (ExistOrAndChainAtomicFact::AndFact(and), None) => and.facts.iter().flat_map(atomic_fact_args_ref).collect(),
                 _=>return Err(LeanCompileError::unsupported("WD/CalleeConclusionFamily")),
             };
-            let Some(pattern) = roots.into_iter().find_map(|root| exact_constructor_pattern(root,object,&substitution)) else {
+            let Some(pattern) = roots.into_iter().find_map(|root| constructor_pattern(root,object,&substitution,true)) else {
                 return Ok(None);
             };
             let found = caller.with_visible_forall_constructor(
                 application.detailed_ref().cite.fact_id,
-                location.then_fact_index,
+                then_index,
                 pattern,
                 &mut |fact, introduced, assumed, wd, site, _declaration| {
                     if fact != source || wd.obj().ir() != pattern.ir() {
@@ -64,7 +75,10 @@ impl LitexToLeanCompiler {
                     self.compile_callee_constructor_factory(fact,introduced,assumed,wd,site,application,caller,observe_numeric)
                 },
             )?;
-            found.map(Some).ok_or_else(|| LeanCompileError::new("WD/CalleeProducer", "The selected prior forall has no original constructor at this exact argument stage."))
+            if let Some(found) = found { return Ok(Some(found)); }
+            self.compile_template_callee_constructor(source, then_index,
+                pattern, application, caller, observe_numeric)?
+                .map(Some).ok_or_else(|| LeanCompileError::new("WD/CalleeProducer", &format!("The selected forall h_{} has no original constructor for `{}` instantiated as `{}` at this exact argument stage.", source.fact_id.value(), pattern.readable_string(), object.readable_string())))
         })
     }
 
@@ -85,7 +99,7 @@ impl LitexToLeanCompiler {
                 .callee_header()
                 .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeHeader"))?
         };
-        let (mut binders, definitions) = match header.owner {
+        let (binders, definitions) = match header.owner {
             SourceOwner::Induction(proof) => {
                 self.compile_induction_constructor_header(source, &proof, &header)?
             }
@@ -95,38 +109,65 @@ impl LitexToLeanCompiler {
                 (binders, definitions)
             }
         };
+        self.apply_callee_constructor(
+            source,
+            wd,
+            site,
+            application,
+            caller,
+            observe_numeric,
+            binders,
+            definitions,
+        )
+    }
+
+    pub(super) fn apply_callee_constructor(
+        &self,
+        source: &ForallFact,
+        wd: &ObjWellDefinedProof,
+        site: &SourcePosition<'_>,
+        application: &SearchProofByKnownForallFact,
+        caller: &SourcePosition<'_>,
+        observe_numeric: bool,
+        binders: Vec<String>,
+        definitions: Vec<String>,
+    ) -> Result<String, LeanCompileError> {
+        // `site` has the original source header and the precise WD subtree.
+        // It never opens the callee's proved then facts as new assumptions.
+        let constructor = self.compile_wd(wd, site)?;
+        let body = self.scope_proposition(constructor, &definitions);
+        let body = if observe_numeric {
+            // Instantiate the original scalar certificate under the same
+            // source binders and checked call arguments as the constructor.
+            let (value, denotation, member, _) = self.numeric_wd(wd, site)?;
+            self.scope_proposition(format!("(let _callee_object := {body};\nshow {{ _z : ℂ // Litex.denote _callee_object = M.number _z ∧ Litex.In _callee_object Litex.C }} from ⟨{value}, {denotation}, {member}⟩)"), &definitions)
+        } else {
+            body
+        };
+        self.apply_callee_body(source, application, caller, binders, body)
+    }
+
+    /// Apply a checked constructor factory in the cited forall's original
+    /// binder order, retaining the recorded argument and domain evidence.
+    pub(super) fn apply_callee_body(
+        &self,
+        source: &ForallFact,
+        application: &SearchProofByKnownForallFact,
+        caller: &SourcePosition<'_>,
+        mut binders: Vec<String>,
+        body: String,
+    ) -> Result<String, LeanCompileError> {
         for parameter in source
             .typed_parameters
             .groups
             .iter()
-            .flat_map(|group| &group.params)
+            .flat_map(|g| &g.params)
         {
             let level = format!("Type v{}}}", parameter.id.value());
             for binder in &mut binders {
                 *binder = binder.replace(&level, "Type _}");
             }
         }
-        // `site` has the original source header and the precise WD subtree.
-        // It never opens the callee's proved then facts as new assumptions.
-        let constructor = self.compile_wd(wd, site)?;
-        let body = if definitions.is_empty() {
-            constructor
-        } else {
-            format!("({};\n{constructor})", definitions.join(";\n"))
-        };
-        let body = if observe_numeric {
-            // Instantiate the original scalar certificate under the same
-            // source binders and checked call arguments as the constructor.
-            let (value, denotation, member, _) = self.numeric_wd(wd, site)?;
-            let definitions = if definitions.is_empty() {
-                String::new()
-            } else {
-                format!("{};\n", definitions.join(";\n"))
-            };
-            format!("(let _callee_object := {body};\n{definitions}show {{ _z : ℂ // Litex.denote _callee_object = M.number _z ∧ Litex.In _callee_object Litex.C }} from ⟨{value}, {denotation}, {member}⟩)")
-        } else {
-            body
-        };
         let factory = if binders.is_empty() {
             body
         } else {
@@ -245,15 +286,40 @@ pub(in crate::compile_to_lean) fn exact_constructor_pattern<'a>(
     object: &Obj,
     substitution: &HashMap<IdentifierId, Obj>,
 ) -> Option<&'a Obj> {
-    if matches!(
+    constructor_pattern(pattern, object, substitution, false)
+}
+
+// Only the callee factory currently consumes numeric leaf constructors.
+// Builder and obtain projections keep their existing constructor boundary.
+fn constructor_pattern<'a>(
+    pattern: &'a Obj,
+    object: &Obj,
+    substitution: &HashMap<IdentifierId, Obj>,
+    numeric_leaves: bool,
+) -> Option<&'a Obj> {
+    if (matches!(
         pattern,
-        Obj::ArithmeticOperator(_) | Obj::FnObj(_) | Obj::SetFormer(SetFormer::ListSet(_))
-    ) && instantiated_object_matches(pattern, object, substitution)
+        Obj::ArithmeticOperator(_)
+            | Obj::FnObj(_)
+            | Obj::InstantiatedTemplateObj(_)
+            | Obj::SetFormer(SetFormer::ListSet(_))
+    ) || numeric_leaves && matches!(pattern, Obj::Literal(Literal::Number(_))))
+        && instantiated_object_matches(pattern, object, substitution)
     {
         return Some(pattern);
     }
     let children: Vec<&Obj> = match pattern {
         Obj::SetFormer(SetFormer::ListSet(set)) => set.list.iter().map(Box::as_ref).collect(),
+        Obj::SetFormer(SetFormer::Range(p)) if numeric_leaves => vec![&p.start, &p.end],
+        Obj::SetFormer(SetFormer::ClosedRange(p)) if numeric_leaves => vec![&p.start, &p.end],
+        Obj::SetFormer(SetFormer::IntervalObj(p)) if numeric_leaves => {
+            let (start, end, _, _) = real_interval_parts(p);
+            vec![start, end]
+        }
+        Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(p)) if numeric_leaves => {
+            vec![real_ray_parts(p).0]
+        }
+        Obj::SetOperator(SetOperator::Union(p)) if numeric_leaves => vec![&p.left, &p.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Add(value)) => vec![&value.left, &value.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(value)) => vec![&value.left, &value.right],
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(value)) => vec![&value.left, &value.right],
@@ -262,6 +328,7 @@ pub(in crate::compile_to_lean) fn exact_constructor_pattern<'a>(
             vec![&value.base, &value.exponent]
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(value)) => vec![&value.arg],
+        Obj::InstantiatedTemplateObj(instance) => instance.args.iter().collect(),
         Obj::FnObj(application) => application
             .body
             .iter()
@@ -272,5 +339,5 @@ pub(in crate::compile_to_lean) fn exact_constructor_pattern<'a>(
     };
     children
         .into_iter()
-        .find_map(|child| exact_constructor_pattern(child, object, substitution))
+        .find_map(|child| constructor_pattern(child, object, substitution, numeric_leaves))
 }

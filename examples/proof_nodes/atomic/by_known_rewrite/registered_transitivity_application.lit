@@ -1,0 +1,53 @@
+# Tracer: actual registered transitivity, with a checked residual relation.
+# Before: the same caller only exposed a flat context list in reading.
+# prop below(x, y set):
+#     x $in R
+#     y $in R
+#     x <= y
+# claim:
+#     ? forall x, y, z set:
+#         $below(x, y)
+#         $below(y, z)
+#         =>:
+#             $below(x, z)
+#     x <= y <= z
+#     by def $below(x, z)
+# register transitive:
+#     ? forall x, y, z set:
+#         $below(x, y)
+#         $below(y, z)
+#         =>:
+#             $below(x, z)
+# forall a, b, c R:
+#     $below(a, b)
+#     b <= c
+#     =>:
+#         $below(a, c)
+# Now: cite below(a,b), verify below(b,c) by definition, then apply transitivity.
+prop below(x, y set):
+    x $in R
+    y $in R
+    x <= y
+claim:
+    ? forall x, y, z set:
+        $below(x, y)
+        $below(y, z)
+        =>:
+            $below(x, z)
+    x <= y <= z
+    by def $below(x, z)
+register transitive:
+    ? forall x, y, z set:
+        $below(x, y)
+        $below(y, z)
+        =>:
+            $below(x, z)
+forall a, b, c R:
+    $below(a, b)
+    b <= c
+    =>:
+        $below(a, c)
+
+# Boundary: removing registration or the right-hand condition keeps the bare goal unproved.
+# Both conditions are local to the forall; no specific registration-source FactId is recorded.
+# Evidence: strict release CLI; src/reading/web/tests/transitivity-applications.cjs.

@@ -692,6 +692,50 @@ fn geo_scope_cursor_cart_coordinate_stores_follow_original_inference_order() {
 }
 
 #[test]
+fn inferred_standard_set_uses_only_its_active_conclusion_subject() {
+    let (run, runtime) = checked("have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)\n");
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+        ExecHaveFnEqualStmtResult::Success(statement),
+    )) = &run.statement_results[0]
+    else {
+        panic!("formula function");
+    };
+    let VerifyObjWellDefinedResult::Success(formation) = &statement.anonymous_fn_well_defined
+    else {
+        panic!("function formation");
+    };
+    let (_, _, parameters, _, _) = function_binder(formation).unwrap();
+    let Some(InferResult::AtomicFact(infer)) = &parameters.store_and_infer_results[0].infer else {
+        panic!("coordinate inference");
+    };
+    let captured = atomic_inference_stages(infer);
+    let store = &captured[0].store;
+    let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(runtime);
+    let outside = SourcePosition::new(None, SourceOwner::Term, 0);
+    let inside = SourcePosition::new(
+        Some(&outside),
+        SourceOwner::InferredStore(store),
+        usize::MAX,
+    );
+    let real = Obj::StandardSet(StandardSet::R);
+
+    // The original inference supplies R directly, even without a separate WD
+    // record. Neither an absent subject nor a sibling/outside scope can do so.
+    assert_eq!(
+        compiler.compile_object_reference(&real, &inside).unwrap(),
+        crate::compile_to_lean::helper::standard_term(&StandardSet::R).unwrap()
+    );
+    assert!(compiler
+        .compile_object_reference(&Obj::StandardSet(StandardSet::Z), &inside)
+        .is_err());
+    assert!(compiler.compile_object_reference(&real, &outside).is_err());
+    // Formation provenance does not publish the fact being constructed.
+    assert!(inside
+        .visible_fact(store.primary_fact_id(), &compiler.runtime)
+        .is_err());
+}
+
+#[test]
 fn geo_scope_cursor_set_constructor_children_respect_original_wd_prefix() {
     for source in [
         "let Interval = closed_range(1 + 0, 2 + 0)\n",
@@ -779,6 +823,8 @@ fn geo_scope_cursor_atomic_success_views_share_exact_search_stage_boundaries() {
         &pending,
         target.obj(),
         true,
+        &|evidence, _| matches!(evidence, SourceConstructor::Checked(candidate)
+            if same_wd_subject(candidate.obj(), target.obj())),
         &mut |evidence, _| {
             match evidence {
                 SourceConstructor::Checked(candidate) if std::ptr::eq(candidate, target) => {
@@ -797,6 +843,10 @@ fn geo_scope_cursor_atomic_success_views_share_exact_search_stage_boundaries() {
         &complete,
         target.obj(),
         true,
+        &|evidence, _| {
+            matches!(evidence, SourceConstructor::Checked(candidate)
+            if same_wd_subject(candidate.obj(), target.obj()))
+        },
         &mut |evidence, site| {
             if let SourceConstructor::Checked(candidate) = evidence {
                 if std::ptr::eq(candidate, target) {
@@ -811,6 +861,10 @@ fn geo_scope_cursor_atomic_success_views_share_exact_search_stage_boundaries() {
                         &replay,
                         child.obj(),
                         true,
+                        &|evidence, _| {
+                            matches!(evidence, SourceConstructor::Checked(candidate)
+                            if same_wd_subject(candidate.obj(), child.obj()))
+                        },
                         &mut |nested, _| match nested {
                             SourceConstructor::Checked(candidate)
                                 if std::ptr::eq(candidate, child) =>
@@ -866,19 +920,19 @@ fn geo_scope_cursor_named_literal_reuse_requires_both_original_formation_stages(
         let pending =
             SourcePosition::new(Some(&complete), SourceOwner::Statement(statement), before);
         assert!(pending
-            .with_visible_alias(&literal, &mut |_, _, _, _| Ok(()))
+            .with_visible_alias(&literal, &runtime, &mut |_, _, _, _| Ok(()))
             .unwrap()
             .is_none());
     }
     let emitted = SourcePosition::new(Some(&complete), SourceOwner::Statement(statement), 2);
     let found = emitted
-        .with_visible_alias(&literal, &mut |name, object, wd, producer| {
+        .with_visible_alias(&literal, &runtime, &mut |name, object, wd, producer| {
             assert_eq!(name, &proof.statement.name);
             assert_eq!(object, &literal);
             assert!(std::ptr::eq(wd, &proof.anonymous_fn_well_defined));
             assert_eq!(producer.before, 0);
             assert!(producer
-                .with_visible_alias(&literal, &mut |_, _, _, _| Ok(()))
+                .with_visible_alias(&literal, &runtime, &mut |_, _, _, _| Ok(()))
                 .unwrap()
                 .is_none());
             Ok(())
@@ -895,23 +949,24 @@ fn geo_scope_cursor_named_literal_reuse_requires_both_original_formation_stages(
 
 #[test]
 fn geo_scope_cursor_named_literal_reuse_rejects_future_and_distinct_binder_identities() {
-    let (run, _) = checked("have fn first(z R) R = z + 1\nhave fn second(w R) R = w + 1\n");
+    let (run, runtime) = checked("have fn first(z R) R = z + 1\nhave fn second(w R) R = w + 1\n");
     let (_, later) = declared_literal(&run.statement_results[1]);
     let full = SourcePosition::new(None, SourceOwner::Run(&run), 2);
     let prefix = SourcePosition::new(Some(&full), SourceOwner::Run(&run), 1);
     assert!(prefix
-        .with_visible_alias(&later, &mut |_, _, _, _| Ok(()))
+        .with_visible_alias(&later, &runtime, &mut |_, _, _, _| Ok(()))
         .unwrap()
         .is_none());
     assert!(full
-        .with_visible_alias(&later, &mut |_, _, _, _| Ok(()))
+        .with_visible_alias(&later, &runtime, &mut |_, _, _, _| Ok(()))
         .unwrap()
         .is_some());
 }
 
 #[test]
 fn geo_scope_cursor_named_literal_reuse_does_not_export_closed_claim_constructor() {
-    let (run, _) = checked("claim:\n    ? 1 = 1\n    have fn hidden(w R) R = w + 1\n    1 = 1\n");
+    let (run, runtime) =
+        checked("claim:\n    ? 1 = 1\n    have fn hidden(w R) R = w + 1\n    1 = 1\n");
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
         claim,
     ))) = &run.statement_results[0]
@@ -923,12 +978,14 @@ fn geo_scope_cursor_named_literal_reuse_does_not_export_closed_claim_constructor
     let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
     let local = SourcePosition::new(Some(&root), SourceOwner::Claim(claim), head + 1);
     assert!(local
-        .with_visible_alias(&literal, &mut |_, _, _, position| Ok(position.is_local()))
+        .with_visible_alias(&literal, &runtime, &mut |_, _, _, position| Ok(
+            position.is_local()
+        ))
         .unwrap()
         .unwrap());
     let outside = SourcePosition::new(None, SourceOwner::Run(&run), 1);
     assert!(outside
-        .with_visible_alias(&literal, &mut |_, _, _, _| Ok(()))
+        .with_visible_alias(&literal, &runtime, &mut |_, _, _, _| Ok(()))
         .unwrap()
         .is_none());
 }

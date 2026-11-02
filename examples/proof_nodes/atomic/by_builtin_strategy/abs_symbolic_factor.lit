@@ -1,0 +1,11 @@
+# Direct abs-symbolic-coefficient composition.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/abs_symbolic_factor.lit
+# Historical explicit proof:
+# claim:
+#     ? forall a R+,x R:
+#         abs(a*x)=a*abs(x)
+#     abs(a)=a
+#     abs(a*x)=abs(a)*abs(x)=a*abs(x)
+# Boundary: all original domains and premises are required.
+forall a R+,x R:
+    abs(a*x)=a*abs(x)

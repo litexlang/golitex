@@ -213,7 +213,8 @@ fn finite_function_coordinates_nested_tuple_call_preserves_coordinate_carriers_a
     );
     let detailed = project_stmt_detailed(run.statement_results.last().unwrap(), &rt).stringify();
     assert!(
-        detailed.contains("returned_finite_function_coordinate"),
+        detailed.contains("\"rule\":\"TupleProjection\"")
+            && detailed.contains("outer(1) = ((1 / 2), 2)"),
         "{detailed}"
     );
     for goal in [

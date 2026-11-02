@@ -234,14 +234,17 @@ fn ordered_fold_last_step_rejects_changed_endpoint_certificate() {
 }
 
 #[test]
-fn ordered_fold_rejects_unbridged_positive_numeric_signature() {
-    let (run, compiler) = super::execute(
-        "forall f fn(k Z) R+, op fn(a,b R+) R+, s R+:\n    reduce(1,2,f,op,s) $in R+\n",
-    );
-    let error = compiler
-        .compile_run(&run, "positive_fold_signature")
-        .unwrap_err();
-    assert!(error.to_string().contains("PositiveNumericSignature"));
+fn aggregate_domain_coverage_folds_replay_positive_inputs_and_outputs() {
+    for source in [
+        include_str!("../../../lean/examples/positive_fold_carrier/statement.lit"),
+        include_str!("../../../lean/examples/positive_finite_fold/statement.lit"),
+    ] {
+        let (run, compiler) = super::execute(source);
+        let lean = compiler
+            .compile_run(&run, "positive_fold_carrier")
+            .expect(source);
+        assert!(lean.contains("Litex.positiveFoldOperation"));
+    }
 }
 
 #[test]
@@ -272,4 +275,54 @@ fn fold_detailed_result_publishes_both_original_signature_selections() {
         op, f,
         "the binary operation and unary iterand retain distinct signatures"
     );
+}
+
+#[test]
+fn range_input_coverage_folds_replay_positive_and_arbitrary_carriers() {
+    for source in [
+        include_str!("../../../lean/examples/positive_range_fold/statement.lit"),
+        include_str!("../../../lean/examples/covered_range_fold/statement.lit"),
+    ] {
+        let (run, compiler) = super::execute(source);
+        compiler
+            .compile_run(&run, "range_input_coverage_fold")
+            .expect(source);
+    }
+}
+
+#[test]
+fn range_input_coverage_fold_rejects_missing_or_changed_start_proof() {
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef as P;
+    for missing in [false, true] {
+        let (mut run, compiler) =
+            super::execute("$is_set(reduce(1,3,fn(k R+) R{k},fn(a,b R) R{a+b},0))");
+        let atom = super::atomic_proof_mut(
+            &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
+        );
+        let DetailedObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::IteratedOperator(P::Reduce(wd)),
+            ..
+        } = atom
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .well_defined_of_each_parameter[0]
+            .as_detailed_mut()
+            .unwrap()
+        else {
+            panic!("fold WD")
+        };
+        if missing {
+            wd.requirement_fact_verified.remove(3);
+        } else {
+            let proof = super::atomic_proof_mut(&mut wd.requirement_fact_verified[3]);
+            let AtomicFact::InFact(f) = &mut proof.fact else {
+                panic!("positive membership")
+            };
+            f.set = Obj::StandardSet(StandardSet::N);
+        }
+        compiler
+            .compile_run(&run, "wrong_fold_range_input")
+            .expect_err("the original positive-start certificate must be retained");
+    }
 }

@@ -1,0 +1,19 @@
+# Expected rejection: retained-invocation-prefix
+# Before: the same call stopped at 0 > 0, but discarded its completed
+# argument and premise checks and detached invocation scope.
+# by thm three_positive_sum(1, 0, 1) => 1 + 0 + 1 > 0
+# Now: retain the three real-argument checks and the proof of 1 > 0;
+# the second premise fails, and the third premise remains unchecked.
+thm three_positive_sum:
+    ? forall x, y, z R:
+        x > 0
+        y > 0
+        z > 0
+        =>:
+            x + y + z > 0
+
+by thm three_positive_sum(1, 0, 1) => 1 + 0 + 1 > 0
+# No theorem conclusion is published, and rejection proves no negation.
+# Evidence: target/release/litex -strict -lang en -f examples/test_statements/negative/by_thm_stmt/retained-invocation-prefix.lit
+# Expected: exit 1, premise at 0 > 0 (index 1), and no stored selected goal.
+# Producer: tests/reading_failed_theorems.rs; consumer: failed-theorem-invocations.cjs.

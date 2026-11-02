@@ -1,0 +1,15 @@
+# Tracer: ordered definition checks remain inspectable after rejection.
+#
+# Before: source rejected, but preceding local checks and scope were dropped.
+# prop guarded(x R):
+#     x > 0
+#     1 / (x - 1) $in R
+#     x = x
+#
+# Now: the same source remains rejected; Native reading retains the real prefix.
+prop guarded(x R):
+    x > 0
+    1 / (x - 1) $in R
+    x = x
+# Boundary: WD-only assumptions establish no predicate instance or public definition.
+# Evidence: cargo test --release --test reading_failed_definition_contexts

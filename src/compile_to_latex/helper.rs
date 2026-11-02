@@ -162,10 +162,58 @@ pub(super) fn inline(text: &str) -> String {
 pub(super) fn display(text: &str) -> String {
     format!("\\[\n{text}\n\\]\n")
 }
+
+pub(super) fn multiline_conjunction(items: Vec<String>) -> String {
+    if items.len() <= 1 {
+        return group_if_compound(&items.into_iter().next().unwrap_or_default());
+    }
+    let mut rows = Vec::new();
+    for (index, item) in items.into_iter().enumerate() {
+        let connective = if index == 0 { "" } else { r"{}\land\ " };
+        rows.push(format!("&{connective}{}", group_if_compound(&item)));
+    }
+    format!(
+        "\\begin{{aligned}}\n{}\n\\end{{aligned}}",
+        rows.join(" \\\\[0.2em]\n")
+    )
+}
+
+pub(super) fn quantified_layout(quantifier: &str, parameters: &str, body: &str) -> String {
+    if parameters.is_empty() {
+        return body.to_string();
+    }
+    format!("\\begin{{gathered}}\n{quantifier} {parameters}:\\\\[0.4em]\n{body}\n\\end{{gathered}}")
+}
+
+pub(super) fn chain_relation(name: &AtomicName) -> Option<&str> {
+    let AtomicName::Plain { name } = name else {
+        return None;
+    };
+    match name.as_str() {
+        "=" => Some("="),
+        "!=" => Some(r"\ne"),
+        "<" => Some("<"),
+        ">" => Some(">"),
+        "<=" => Some(r"\leq"),
+        ">=" => Some(r"\geq"),
+        "in" => Some(r"\in"),
+        "subset" => Some(r"\subseteq"),
+        "superset" => Some(r"\supseteq"),
+        "proper_subset" => Some(r"\subsetneq"),
+        "proper_superset" => Some(r"\supsetneq"),
+        _ => None,
+    }
+}
+
 pub(super) fn operator(operator: &str, args: &[String]) -> String {
     format!(
         r"\operatorname{{{}}}({})",
         escape_text(operator),
         args.join(", ")
     )
+}
+
+// A bracketed subscript records explicit source size parameters, not entry access.
+pub(super) fn dimensioned(text: String, dimensions: &[String]) -> String {
+    format!(r"\left({text}\right)_{{[{}]}}", dimensions.join(","))
 }

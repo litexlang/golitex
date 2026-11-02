@@ -24,6 +24,79 @@ impl LitexToLeanCompiler {
         let fact = Fact::OrFact(proof.fact.clone());
         let term = match &proof.searched_proof {
             OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::ClassicalImplication(p),
+            ) => self.compile_or_classical_implication(&proof.fact, p, position)?,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::CompleteResidues(p),
+            ) => {
+                self.compile_or_complete_residues(&proof.fact, &p.subject, &p.modulus, position)?
+            }
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::IntegerDiscreteSplit(p),
+            ) => self.compile_or_integer_discrete(
+                &proof.fact,
+                &p.subject,
+                &p.base,
+                &p.subject_in_z,
+                &p.base_in_z,
+                position,
+            )?,
+            OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::AbsSignSplit(p)) => {
+                self.compile_or_absolute_sign(&proof.fact, &p.arg, position)?
+            }
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::RealLineTrichotomyEqLessGreater(p),
+            ) => self.compile_or_real_totality(
+                &proof.fact,
+                &p.left,
+                &p.right,
+                &p.left_in_r,
+                &p.right_in_r,
+                0,
+                position,
+            )?,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::RealLineTrichotomyLessEqGreater(p),
+            ) => self.compile_or_real_totality(
+                &proof.fact,
+                &p.left,
+                &p.right,
+                &p.left_in_r,
+                &p.right_in_r,
+                1,
+                position,
+            )?,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::RealLineTrichotomyGreaterEqLess(p),
+            ) => self.compile_or_real_totality(
+                &proof.fact,
+                &p.left,
+                &p.right,
+                &p.left_in_r,
+                &p.right_in_r,
+                2,
+                position,
+            )?,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::WeakOrderLeOrGe(p),
+            ) => self.compile_or_real_totality(
+                &proof.fact,
+                &p.left,
+                &p.right,
+                &p.left_in_r,
+                &p.right_in_r,
+                3,
+                position,
+            )?,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::NaturalZeroOrAtLeastOne(p),
+            ) => self.compile_or_natural_zero(&proof.fact, &p.n, &p.n_in_n, position)?,
+            OrFactSearchedProof::ByBuiltinRule(
+                OrFactSearchProofByBuiltinRule::EqualityPlusStrictCoversWeak(p),
+            ) => {
+                self.compile_or_weak_cover(&proof.fact, &p.left, &p.right, &p.weak_bound, position)?
+            }
+            OrFactSearchedProof::ByBuiltinRule(
                 OrFactSearchProofByBuiltinRule::ClosedIntegerRangeEqualityCover(p),
             ) => self.compile_integer_range_cover(
                 &proof.fact,

@@ -5,6 +5,15 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 // Calculation builtins). Each variant owns its checked premises; scoped
 // pointwise steps also retain their parameter introduction and environment.
 pub enum EqualitySearchProofByBuiltinStrategy {
+    FunctionApplicationCongruence(
+        super::search_equal_fact_by_composed_structure::FunctionApplicationCongruenceProof,
+    ),
+    CartesianCoordinateEquality(
+        super::search_equal_fact_by_composed_structure::CartesianCoordinateEqualityProof,
+    ),
+    AbsProductFromFactors(
+        super::search_equal_fact_by_composed_structure::AbsProductFromFactorsProof,
+    ),
     CosZeroIntegerOffset(CosZeroIntegerOffsetStrategySingleStep),
     TupleComponentEquality(TupleComponentEqualityStrategySingleStep),
     ArithmeticCongruence(ArithmeticCongruenceStrategySingleStep),

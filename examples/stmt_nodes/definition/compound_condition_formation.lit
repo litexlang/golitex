@@ -1,0 +1,15 @@
+# Tracer: separate candidate clauses provide ordered local formation guards.
+# Before (rejected; this behavior is intentionally preserved):
+# prop bounded_reciprocal(t R):
+#     exist x R st {x != 0 and 1 / x > 0}
+# A component's formation check does not assume its assertion inside the and.
+#
+# Current accepted source: the first whole clause is locally adopted before
+# formation of the next clause. Reading observes that existing native order.
+prop bounded_reciprocal(t R):
+    exist x R st {x != 0, 1 / x > 0}
+# This establishes the definition's formation, not a predicate instance or
+# existence of a witness. No proof rule or formation policy was changed.
+# Boundary: the conjunction version remains an executable negative regression
+# in examples/test_statements/negative/def_prop_stmt/compound-formation-order.lit.
+# Evidence: target/release/litex -strict -lang en -f examples/stmt_nodes/definition/compound_condition_formation.lit

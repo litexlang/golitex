@@ -94,7 +94,13 @@ exceptions. Never use `git add -f` to bypass this rule.
 
 Keep `/scripts/` ignored. Remove any accidentally tracked scripts paths from
 parent-repository tracking; preserve local source files unless the user explicitly
-asks to delete them. Preserve existing nested repositories and their histories.
+asks to delete them.
+
+Do not create or retain independent Git repositories or Git history anywhere
+under root `scripts/`. Remove nested `.git` metadata while preserving working
+files. The golitex root `.git` must be retained. This explicit maintainer
+instruction supersedes older rules requiring preservation of nested Git
+history within `scripts/`.
 
 Publish requested deliverables in the appropriate public directories, such as
 `textbooks/`, `examples/`, `docs/`, or `showcases/`; do not expose the local

@@ -22,7 +22,7 @@ async function run(){
     assert.equal(view.root.querySelector(".lr-ide-input").value,view.content);
     if(item.id==="sqrt-two"){
       const row=view.line("p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2"),tokens=row.querySelectorAll(".lr-chain-equality");assert.equal(tokens.length,3);
-      await view.hover(tokens[0]);assert(view.root.querySelector(".lr-proof-grounds").textContent.includes("sqrt (2) = (p / q)"));
+      await view.hover(tokens[0]);assert(view.root.querySelectorAll(".lr-proof-grounds .lr-fact-link").some(link=>bundle.facts.find(f=>f.id===link.dataset.fact)?.text==="sqrt (2) = (p / q)"),"the actual ratio equality is cited even when the contradiction-assumption context precedes it");
       const application=view.line("release thm prime_divides_power(p, 2, 2)");
       assert(application.querySelector(".lr-inference-toggle"),"the divisibility prompt points to actual published grey consequences");
       const theorem=application.querySelectorAll('.lr-token').find(node=>node.textContent==='prime_divides_power');assert(theorem);
@@ -55,7 +55,9 @@ async function run(){
     if(item.expected==="failure"){
       const marker=view.root.querySelector(".lr-inline-failure");assert(marker);await view.hover(marker);
       const card=view.root.querySelector(".lr-proof-popover");assert(card);
-      const obligation={"missing-premise":"is_mortal(socrates)","sqrt-domain":"0 ≤ (-1)","definition-failure":"(-1) ≥ 0"}[item.id];assert(card.textContent.includes(obligation));
+      const obligation={"missing-premise":"is_mortal(socrates)","sqrt-domain":"0 ≤ (-1)","definition-failure":"(-1) ≥ 0"}[item.id];
+      if(item.id==="sqrt-domain"){const formation=card.querySelector('.lr-atomic-wd');assert(formation&&!formation.open,'failed expression formation starts closed');assert.equal(formation.parentNode.children.at(-1),formation);assert(!card.textContent.includes(obligation),'the domain failure is absent from the main proof');await formation.querySelector('summary').click();assert(formation.querySelector('.lr-wd-unproved-conditions').textContent.includes(obligation));}
+      else assert(card.textContent.includes(obligation));
       const repaired=fixture(item.id+"-repair-"+locale),target=repaired.sources[0].content;
       const input=view.root.querySelector(".lr-ide-input");input.value=target;await input.trigger("input");assert(view.root.querySelector(".lr-pending"));
       // Use an independent mounted view with the real repaired CLI result. Its

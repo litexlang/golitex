@@ -6,15 +6,17 @@
 //!   # then `1 / denominator` is well-defined
 
 use super::exec_trust_stmt::trust_verify_state;
-use crate::ast::obj::Obj;
+use crate::ast::fact::Fact;
+use crate::ast::obj::{IdentifierObj, Obj};
 use crate::ast::stmt::TrustHaveStmt;
+use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_fact_stmt::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, ParamTypeWellDefinedProof,
     StoreFactAndInferResult, VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
 };
 use crate::execute::execute_have_obj_in_nonempty_set_stmt::StoreHaveObjAndInferResult;
 use crate::execute::introduce_typed_parameters::SharedHaveDefinition;
-use crate::execute::IntroduceTypedParametersFailed;
+use crate::execute::{IntroduceTypedParametersFailed, IntroduceTypedParametersResult};
 use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
@@ -24,6 +26,38 @@ pub enum ExecTrustHaveStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     BodyFactWellDefined(FailToVerifyFactWellDefinedResult),
+    Retained(Box<ExecTrustHaveFailure>),
+}
+
+// Failure observation only. A top-level/nested statement transaction supplies
+// its already-returned environment; a direct template body shares the
+// template's retained environment and leaves local_env absent.
+pub struct ExecTrustHaveFailure {
+    pub statement: TrustHaveStmt,
+    pub failure: TrustHaveFormationFailed,
+    pub local_env: Option<Box<ExecEnv>>,
+}
+
+pub enum TrustHaveFormationFailed {
+    Parameters(IntroduceTypedParametersFailed),
+    BodyFact {
+        introduced_params: IntroduceTypedParametersResult,
+        body_parameter_bindings: Vec<(Obj, Obj)>,
+        rewritten_body: Vec<Fact>,
+        checked_body: Vec<FactWellDefinedProof>,
+        failed_index: usize,
+        failed: FailToVerifyFactWellDefinedResult,
+    },
+}
+
+impl ExecTrustHaveFailure {
+    pub fn new(statement: TrustHaveStmt, failure: TrustHaveFormationFailed) -> Self {
+        Self {
+            statement,
+            failure,
+            local_env: None,
+        }
+    }
 }
 
 // Pipeline: param-type WD → define → auto-open → body WD → body store.
@@ -64,22 +98,18 @@ impl Runtime {
             Some(SharedHaveDefinition::TrustHave(Rc::new(stmt.clone()))),
         )? {
             Ok(result) => result,
-            Err(IntroduceTypedParametersFailed::ParamType(failed)) => {
+            Err(failed) => {
                 return Ok(ExecTrustHaveStmtResult::Failed(
-                    ExecTrustHaveStmtFailed::ParamType(failed),
-                ));
-            }
-            Err(IntroduceTypedParametersFailed::AutoOpenStructLayer { failed, .. }) => {
-                return Ok(ExecTrustHaveStmtResult::Failed(
-                    ExecTrustHaveStmtFailed::AutoOpenStructLayer(failed),
+                    ExecTrustHaveStmtFailed::Retained(Box::new(ExecTrustHaveFailure::new(
+                        stmt.clone(),
+                        TrustHaveFormationFailed::Parameters(failed),
+                    ))),
                 ));
             }
         };
-        let param_type_well_defined = introduced.param_type_well_defined;
-        let defined_param_store_and_infer = introduced.defined_params;
-        let auto_opened_struct_layers = introduced.auto_opened_struct_layers;
 
-        let subst = file_root_subst_for_trust_have_params(self, &stmt.param_def);
+        let (subst, body_parameter_bindings) =
+            file_root_subst_for_trust_have_params(self, &stmt.param_def);
         let mut rewritten_body = Vec::with_capacity(stmt.facts.len());
         for fact in &stmt.facts {
             match self.inst_fact(fact, &subst) {
@@ -93,14 +123,24 @@ impl Runtime {
         }
 
         let mut body_facts_well_defined = Vec::with_capacity(rewritten_body.len());
-        for fact in &rewritten_body {
+        for (failed_index, fact) in rewritten_body.iter().enumerate() {
             match self.verify_fact_well_definedness(fact, verify_state.clone())? {
                 VerifyFactWellDefinedResult::Success(proof) => {
                     body_facts_well_defined.push(proof);
                 }
                 VerifyFactWellDefinedResult::Failed(reason) => {
                     return Ok(ExecTrustHaveStmtResult::Failed(
-                        ExecTrustHaveStmtFailed::BodyFactWellDefined(reason),
+                        ExecTrustHaveStmtFailed::Retained(Box::new(ExecTrustHaveFailure::new(
+                            stmt.clone(),
+                            TrustHaveFormationFailed::BodyFact {
+                                introduced_params: introduced,
+                                body_parameter_bindings,
+                                rewritten_body,
+                                checked_body: body_facts_well_defined,
+                                failed_index,
+                                failed: reason,
+                            },
+                        ))),
                     ));
                 }
             }
@@ -117,9 +157,9 @@ impl Runtime {
         Ok(ExecTrustHaveStmtResult::Success(
             ExecTrustHaveStmtSuccessResult {
                 statement: stmt.clone(),
-                param_type_well_defined,
-                defined_param_store_and_infer,
-                auto_opened_struct_layers,
+                param_type_well_defined: introduced.param_type_well_defined,
+                defined_param_store_and_infer: introduced.defined_params,
+                auto_opened_struct_layers: introduced.auto_opened_struct_layers,
                 body_facts_well_defined,
                 body_store_and_infer_results,
             },
@@ -130,15 +170,19 @@ impl Runtime {
 fn file_root_subst_for_trust_have_params(
     runtime: &Runtime,
     param_def: &crate::ast::param::TypedParameterList,
-) -> HashMap<IdentifierId, Obj> {
+) -> (HashMap<IdentifierId, Obj>, Vec<(Obj, Obj)>) {
     let mut subst = HashMap::new();
+    let mut bindings = Vec::new();
     for group in &param_def.groups {
         for param in &group.params {
-            subst.insert(
-                param.id,
-                Obj::Identifier(runtime.identifier_obj_for_stored_mention(param)),
-            );
+            let argument = Obj::Identifier(runtime.identifier_obj_for_stored_mention(param));
+            subst.insert(param.id, argument.clone());
+            let source = Obj::Identifier(IdentifierObj::Plain {
+                id: param.id,
+                name: param.name.clone(),
+            });
+            bindings.push((source, argument));
         }
     }
-    subst
+    (subst, bindings)
 }

@@ -3,6 +3,7 @@
 //! Design contract: [`README.md`](README.md).
 
 mod import_kb;
+mod lean_source_closure;
 mod load_config;
 mod mount_cwd_config;
 mod run_export_file;
@@ -25,12 +26,17 @@ mod strict_cache_tests;
 #[path = "../../tests/unit/run_module/qualified_struct_views.rs"]
 mod qualified_struct_view_tests;
 
+pub(crate) use lean_source_closure::{
+    LeanSourceClosure, LeanSourceFile, LoadLeanSourceFailure, LoadLeanSourceResult,
+    LoadedLeanSource,
+};
 pub use load_config::{
     litex_config_path, load_config, load_config_or_empty, normalize_module_dir, resolve_std_root,
     LITEX_CONFIG_FILE_NAME,
 };
 pub use mount_cwd_config::{mount_cwd_config, MountCwdConfigOutcome};
 pub use run_export_file::run_export_file;
+pub(crate) use run_file_with_config::load_file_for_lean;
 pub use run_file_with_config::{run_file_with_config, run_file_with_config_observed};
 pub use run_import_module::{run_import_module, RunImportModuleOutcome};
 pub use run_project::{run_project, run_project_observed};

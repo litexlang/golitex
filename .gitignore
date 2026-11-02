@@ -102,3 +102,5 @@ docs/soundness-audit.md
 /.workbuddy
 
 /experiments
+
+/harness

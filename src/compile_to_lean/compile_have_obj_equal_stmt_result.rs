@@ -28,7 +28,10 @@ impl LitexToLeanCompiler {
         local: bool,
     ) -> Result<String, LeanCompileError> {
         let groups = &proof.statement.param_def.groups;
-        let parameters: Vec<_> = groups.iter().flat_map(|group| &group.params).collect();
+        let parameters: Vec<_> = groups
+            .iter()
+            .flat_map(|group| group.params.iter().map(|p| (p, &group.param_type)))
+            .collect();
         let count = parameters.len();
         if count == 0
             || count != proof.statement.objs_equal_to.len()
@@ -65,7 +68,9 @@ impl LitexToLeanCompiler {
                         ensure_object(set, proof)?;
                         self.compile_wd(proof, position)?;
                     }
-                    (ParamType::Set(_), ParamTypeWellDefinedProof::Set) => {}
+                    (ParamType::Set(_), ParamTypeWellDefinedProof::Set)
+                    | (ParamType::NonemptySet(_), ParamTypeWellDefinedProof::NonemptySet)
+                    | (ParamType::FiniteSet(_), ParamTypeWellDefinedProof::FiniteSet) => {}
                     _ => return Err(LeanCompileError::unsupported("HaveEqual/ParameterKind")),
                 }
             }
@@ -91,11 +96,6 @@ impl LitexToLeanCompiler {
         let mut members = Vec::new();
         let mut offset = 0;
         for group in groups {
-            let set = match &group.param_type {
-                ParamType::Obj(set) => Some(set),
-                ParamType::Set(_) => None,
-                _ => return Err(LeanCompileError::unsupported("HaveEqual/ParameterKind")),
-            };
             for _ in &group.params {
                 let member = self.compile_verify(
                     &proof.membership_checks[offset],
@@ -104,18 +104,16 @@ impl LitexToLeanCompiler {
                         ..*position
                     },
                 )?;
-                match (&source_subject(&proof.membership_checks[offset])?, set) {
-                    (Fact::AtomicFact(AtomicFact::InFact(f)), Some(set))
-                        if f.element.ir() == proof.statement.objs_equal_to[offset].ir()
-                            && f.set.ir() == set.ir() => {}
-                    (Fact::AtomicFact(AtomicFact::IsSetFact(f)), None)
-                        if f.set.ir() == proof.statement.objs_equal_to[offset].ir() => {}
-                    _ => {
-                        return Err(LeanCompileError::new(
-                            "HaveEqual/Membership",
-                            "The value proof does not certify the declared value and carrier.",
-                        ))
-                    }
+                if !parameter_type_fact_matches(
+                    &group.param_type,
+                    &proof.statement.objs_equal_to[offset],
+                    &source_subject(&proof.membership_checks[offset])?,
+                    &std::collections::HashMap::new(),
+                ) {
+                    return Err(LeanCompileError::new(
+                        "HaveEqual/Membership",
+                        "The value proof does not certify the declared value and carrier.",
+                    ));
                 }
                 members.push(member);
                 offset += 1;
@@ -148,7 +146,7 @@ impl LitexToLeanCompiler {
                 introductions.join(" "),
                 checks.join("\n").replace('\n', "\n    ")
             );
-            let name = format!("_have_type_checks_i{}", parameters[0].id.value());
+            let name = format!("_have_type_checks_i{}", parameters[0].0.id.value());
             declarations.push(if local {
                 format!("have {name} : {body}")
             } else {
@@ -158,7 +156,7 @@ impl LitexToLeanCompiler {
                 )
             });
         }
-        for (index, parameter) in parameters.iter().enumerate() {
+        for (index, (parameter, kind)) in parameters.iter().enumerate() {
             let alias_position = SourcePosition {
                 before: 2 * count + index + 1,
                 ..*position
@@ -166,8 +164,13 @@ impl LitexToLeanCompiler {
             let position = &alias_position;
             let equal = self.resolve_fact(stores[count + index].primary_fact_id(), position)?;
             self.validate_store(&stores[count + index].store, &equal)?;
-            let left =
-                alias_equality_subject(&equal, parameter, &proof.statement.objs_equal_to[index])?;
+            let left = alias_equality_subject(
+                &equal,
+                parameter,
+                &proof.statement.objs_equal_to[index],
+                position,
+                &self.runtime,
+            )?;
             for subject in &stores[count + index].formed_subjects {
                 if subject.argument_index != 1
                     || self.resolve_wd(subject.wd_id, position)?.ir()
@@ -188,25 +191,16 @@ impl LitexToLeanCompiler {
                 position,
             )?);
             let member_fact = self.resolve_fact(stores[index].primary_fact_id(), position)?;
-            match (
+            if !parameter_type_fact_matches(
+                kind,
+                left,
                 &member_fact,
-                &source_subject(&proof.membership_checks[index])?,
+                &std::collections::HashMap::new(),
             ) {
-                (
-                    Fact::AtomicFact(AtomicFact::InFact(stored)),
-                    Fact::AtomicFact(AtomicFact::InFact(checked)),
-                ) if stored.element.ir() == left.ir() && stored.set.ir() == checked.set.ir() => {}
-                (
-                    Fact::AtomicFact(AtomicFact::IsSetFact(stored)),
-                    Fact::AtomicFact(AtomicFact::IsSetFact(checked)),
-                ) if stored.set.ir() == left.ir()
-                    && checked.set.ir() == proof.statement.objs_equal_to[index].ir() => {}
-                _ => {
-                    return Err(LeanCompileError::new(
-                        "HaveEqual/Store",
-                        "The stored member does not belong to this declaration.",
-                    ))
-                }
+                return Err(LeanCompileError::new(
+                    "HaveEqual/Store",
+                    "The stored member does not belong to this declaration.",
+                ));
             }
             self.validate_store(&stores[index].store, &member_fact)?;
             let member = (
@@ -232,6 +226,12 @@ impl LitexToLeanCompiler {
                 format!("(Litex.sameRefl {})", values[index]),
             );
             declarations.push(self.emit_internal_fact(&equal, &equal_proof, position)?);
+            declarations.extend(self.compile_stored_inferences(
+                &stores[count + index],
+                &equal,
+                &equal_proof,
+                position,
+            )?);
         }
         let complete = SourcePosition {
             before: 3 * count,

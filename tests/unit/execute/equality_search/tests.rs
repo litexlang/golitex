@@ -682,7 +682,7 @@ fn free_parameter_objects_failed_aliases_do_not_publish_indexes_or_capture_later
             ExecStmtResult::ProofBlock(
                 crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(
                     crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Failed(
-                        crate::execute::execute_proof_block_stmt::ExecClaimStmtFailed::Conclusion { .. }
+                        crate::execute::execute_proof_block_stmt::ExecClaimStmtFailed::Local(crate::execute::execute_proof_block_stmt::ExecClaimLocalFailure { body: crate::execute::execute_proof_block_stmt::ExecClaimBodyFailed::NonForall(crate::execute::execute_proof_block_stmt::ExecClaimNonForallFailed::Conclusion { .. }), .. })
                     )
                 )
             )

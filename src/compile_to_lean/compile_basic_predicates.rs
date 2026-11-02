@@ -1,9 +1,59 @@
 use super::helper::*;
-use super::source_position::SourcePosition;
+use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_dvd_definition(
+        &self,
+        goal: &DvdFact,
+        requirements: &[Fact],
+        proofs: &[VerifyFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (
+            [Fact::AtomicFact(AtomicFact::EqualFact(zero)), Fact::ExistFact(multiple)],
+            [zero_proof, multiple_proof],
+        ) = (requirements, proofs)
+        else {
+            return Err(LeanCompileError::unsupported("Dvd/DefinitionStages"));
+        };
+        if !is_exact_zero(&zero.right)
+            || !matches!(&zero.left,Obj::IntegerOperator(IntegerOperator::Mod(p)) if p.left.ir()==goal.left.ir() && p.right.ir()==goal.right.ir())
+        {
+            return Err(LeanCompileError::unsupported("Dvd/DefinitionRemainder"));
+        }
+        let [group] = multiple.typed_parameters.groups.as_slice() else {
+            return Err(LeanCompileError::unsupported("Dvd/DefinitionBinder"));
+        };
+        let [parameter] = group.params.as_slice() else {
+            return Err(LeanCompileError::unsupported("Dvd/DefinitionBinder"));
+        };
+        let bound = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+        if group.param_type != ParamType::Obj(Obj::StandardSet(StandardSet::Z))
+            || super::compile_real_set_bounds::contains_parameter(&goal.left, parameter.id)
+            || super::compile_real_set_bounds::contains_parameter(&goal.right, parameter.id)
+            || !matches!(multiple.facts.as_slice(),[QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(f))]
+                if f.left.ir()==goal.left.ir() && matches!(&f.right,Obj::ArithmeticOperator(ArithmeticOperator::Mul(p))
+                    if p.left.ir()==bound.ir() && p.right.ir()==goal.right.ir()))
+        {
+            return Err(LeanCompileError::unsupported("Dvd/DefinitionMultiple"));
+        }
+        for (requirement, proof) in requirements.iter().zip(proofs) {
+            if source_subject(proof)? != *requirement {
+                return Err(LeanCompileError::unsupported("Dvd/DefinitionOriginalChild"));
+            }
+        }
+        let zero_term = self.compile_verify(zero_proof, position)?.1;
+        let multiple_term = self.compile_verify(multiple_proof, position)?.1;
+        let scope =
+            SourcePosition::new(Some(position), SourceOwner::Verify(zero_proof), usize::MAX);
+        let remainder = self.compile_object_reference(&zero.left, &scope)?;
+        Ok(format!(
+            "(Litex.dvdFromRemainderAndMultiple {remainder} {zero_term} {multiple_term})"
+        ))
+    }
+
     pub(super) fn compile_proper_inclusion_definition(
         &self,
         goal: &AtomicFact,

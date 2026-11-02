@@ -472,6 +472,9 @@ pub enum InferHasRiemannIntegralFactResult {
 }
 pub struct InferHasRiemannIntegralDefinitionResult {
     pub source_fact_id: FactId,
+    /// The original lookup, including the existing no-definition-clause route.
+    pub function_domain:
+        Option<crate::execute::execute_fact_stmt::function_limit::RealFunctionLimitDomainProof>,
     pub derived: Vec<StoreInferredFactResult>,
 }
 impl InferHasRiemannIntegralFactResult {
@@ -503,6 +506,8 @@ pub enum InferMultivariableAnalysisFactResult {
 }
 pub struct InferMultivariableAnalysisDefinitionResult {
     pub source_fact_id: FactId,
+    pub function_domain:
+        Option<crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof>,
     pub derived: Vec<StoreInferredFactResult>,
 }
 impl InferMultivariableAnalysisFactResult {

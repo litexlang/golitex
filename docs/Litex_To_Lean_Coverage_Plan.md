@@ -5243,7 +5243,7 @@ exports. Core `486e41aa4b60aeaecfbecec064b7ff56d17da659bf7476891d53efc6f5cc0c54`
 only `Classical.choice`, `Quot.sound` and `propext`. All 1,602 compiler Rust tests
 pass, including nine focused extremum tests. Reading capture/catalogue are
 current. Local receipts: `obj-wd-extrema-common-{0,1,2}` and
-`tmp/2026-10-30/obj-wd-completion-ten-hours/extrema-common-checkpoint.json`.
+`scripts/litex_to_lean/.draft/obj-wd-completion-ten-hours-2026-10-30/extrema-common-checkpoint.json`.
 
 The subsequent derivative checkpoint covers candidate/existence selection,
 signed citations, definition folding, captured and nested objects, automatic
@@ -5264,9 +5264,211 @@ require strict slack. Relative-continuity leaves without neighbourhood evidence
 are rejected. Exact source IDs and projected run output are unchanged by the
 localized derivative inference capture.
 
-Explicit differentiation theorem consumers, the other twelve mathematical
-selector entries, and the exhaustive constructor/context/WD-branch audit remain
-open. The common Rust run passed 1,309 tests and exposed two tests selecting a
-new native matrix-law route; that shared consumer is being checked separately.
+Explicit differentiation theorem consumers and exhaustive constructor/context/WD
+coverage remain open. The later common checkpoint below supersedes the transient
+matrix-route failures seen during concurrent compiler work.
 The derivative Lean receipt is
-`tmp/2026-10-30/obj-wd-completion-ten-hours/derivative-automatic-checkpoint.json`.
+`scripts/litex_to_lean/.draft/obj-wd-completion-ten-hours-2026-10-30/derivative-automatic-checkpoint.json`.
+
+
+Scalar and vector Euclidean limit selectors now replay candidates or existence,
+positive dimensions and the complete original function domain. The source
+accumulation and epsilon-delta clauses, signed citations and exact definition
+folding have checked consumers. Vector values retain their finite-function
+representation and remain callable by coordinate; tuple and captured-function
+contexts are included.
+
+The common checkpoint checks eight vector, seven scalar and two derivative
+pairs afresh on Core `eebffe45838c28214dafdeeb3c5d4453b110505a3216823b588e9e5a8e7d7807`
+with Lean/Mathlib 4.31.0. All 21 audited exports use only `Classical.choice`,
+`Quot.sound` and `propext`; all 1,704 compiler Rust tests pass. Local receipt:
+`scripts/litex_to_lean/.draft/obj-wd-completion-ten-hours-2026-10-30/euclidean-common-checkpoint.json`.
+See [scalar selection](../lean/examples/multivariable_scalar_limit_selection/), [vector selection](../lean/examples/multivariable_vector_limit_selection/)
+and [vector coordinates](../lean/examples/multivariable_vector_limit_coordinate_call/). This checkpoint covers those
+result routes. Automatic multivariable strategies, explicit analysis theorem
+consumers, ten further mathematical selectors and the exhaustive legal
+constructor/WD-branch audit remain open.
+
+
+Coordinate partial derivatives and gradient vectors now have checked formation,
+candidate/existence selection, signed citations, generic coordinates/dimensions,
+nested objects and original-definition consumers. See
+[partial derivative selection](../lean/examples/partial_derivative_selection/),
+[the difference-quotient definition](../lean/examples/partial_derivative_from_definition/)
+and [a gradient from its partial derivatives](../lean/examples/gradient_from_partials/).
+The gradient contract is the vector of coordinate partials; exporting Mathlib
+`HasGradientAt` additionally requires total differentiability.
+
+The final common-Core gate passes 31 strict source/generated pairs, deterministic
+regeneration and real Lean/Mathlib 4.31.0 checks. All 54 audited exports use only
+`Classical.choice`, `Quot.sound` and `propext`; all 1,726 compiler Rust tests pass.
+Core: `eb4de89a59c07de704e6e19ce8dd7fc0f6377ed48d6b4629ff0168d53dbb28bd`.
+Receipt: `scripts/litex_to_lean/.draft/calculus-final-2026-10-30/checkpoint.json`.
+
+Anonymous-function constructors now reuse completed alpha-equivalent literals
+after the new occurrence's original WD has been checked. Free captures, domains,
+guards and bodies must still match. The expanded partial-derivative definition
+falls from 1,327,481 to approximately 755,000 bytes. Generated declarations over
+500 KB receive a local, finite one-million-heartbeat elaboration budget; smaller
+declarations and importing files retain their options.
+
+Jacobian and divergence have since gained checked compiler entries: seven
+Jacobian pairs and six divergence pairs pass actual Lean, with three focused
+compiler tests for each family. Their selectors retain the original domains,
+dimensions and candidate/existence evidence; Jacobian means the matrix of
+coordinate partials and does not imply total differentiability.
+
+Curl, ordered second partials, Hessian and Laplacian now have checked replay
+paths. A common checkpoint passes 27 strict source/generated pairs and audits
+37 exports using only `Classical.choice`, `Quot.sound` and `propext`; 1,455 tests
+under the `compile_to_lean::tests` filter pass. The frozen semantic-library hash
+is `2afaee826c44c248731742cddc746a9dd1d3946dbb1a95e9248d5c422c8ab315`.
+Hessian preserves the order of differentiation; symmetry requires a separate
+proof. Laplacian uses the diagonal second-partial sum. Existential clauses reuse
+checked object locals, including the full six-partial curl definition.
+
+Scalar and total differentials now replay their interior and punctured remainder
+definitions, candidate/existence selection, original domains and matrix-coordinate
+calls. Each has six checked source/generated pairs. Total differentials preserve
+independent input/output dimensions and use a vector remainder bound. A shared
+checkpoint checks 16 pairs and audits 21 exports with only the standard three
+axioms; all 1,854 tests selected by `cargo test --release compile_to_lean --lib` pass. The full total-differential definition generates 767 KB of Lean; generation
+with the frozen release compiler took 43 seconds, and Lean checking took 41 seconds.
+
+Riemann integral now replays the source's bounded Darboux approximation,
+original function domain, candidate/existence evidence and oriented endpoints.
+The selector has a proved unique value; reversed and zero-width intervals keep
+their source meaning. Eleven integral pairs and three related pairs pass strict
+source verification, deterministic generation and real Lean checking; all eighteen
+exported declarations use only the standard three axioms. See
+[candidate selection](../lean/examples/riemann_integral_selection/),
+[existence-based WD](../lean/examples/riemann_integral_existence/) and
+[a guarded domain](../lean/examples/riemann_integral_guarded_domain/).
+The typed definition/inference results now retain their already-computed function
+domain; AST, Runtime state and search behavior are unchanged.
+The [combined-object example](../lean/examples/riemann_integral_nested_objects/)
+reuses an integral in addition, a tuple and a captured function body;
+[fractional endpoints](../lean/examples/riemann_integral_rational_endpoints/)
+preserve exact fractions and decimals. Object payloads remain explicit, with WD
+inside the proof field. The batch compiler regression passed 1,968 tests; after
+this final representation fix, all fourteen Riemann tests passed again. Seven
+unchanged outputs reused earlier checks from the same semantic library and toolchain.
+
+The compiler no longer imposes a three-input limit on nonempty, independent
+function parameters. It uses the existing tuple representation, preserving each
+argument's WD and guard evidence and the grouping of successive calls. See
+[a four-input weighted sum](../lean/examples/four_variable_weighted_sum/),
+[a guarded quotient](../lean/examples/four_argument_guarded_quotient/),
+[a function argument](../lean/examples/four_argument_callback/),
+[a returned function](../lean/examples/captured_four_argument_function/),
+[arbitrary-set coordinates](../lean/examples/four_set_coordinate_function/) and
+[an integral-valued function body](../lean/examples/integral_offset_function/).
+These six pairs and three related pairs pass strict source verification,
+deterministic generation and Lean checking; 33 exports use only the standard
+three axioms. Six byte-identical checks reuse the same Core and toolchain.
+Three focused Rust tests check replay and corrupted argument/substitution evidence.
+The batch regression passes all 1,992 tests selected by `cargo test --lib compile_to_lean`.
+No Core, AST, Runtime state/search or result-contract changes were needed.
+Empty complete-domain returns are covered by the examples below.
+Dependent function parameter carriers are rejected by the current source parser;
+they have no successful WD result to replay in this audit.
+
+Definition-body substitution also covers derivatives, sequence limits, limsup,
+liminf and all five real function-limit approaches. It preserves the operation,
+approach, function and point identities, together with the original existence
+premises. See [derivative offsets](../lean/examples/derivative_offset_function/),
+[sequence-limit offsets](../lean/examples/sequence_limit_offset_functions/) and
+[function-limit offsets](../lean/examples/function_limit_offset_functions/).
+These three files contain nine declaration/call scenarios. They and six related
+derivative pairs pass strict source, deterministic generation and actual Lean;
+37 exports use only the standard three axioms. The final batch reuses three
+identical checks against the same Core/toolchain. All 22 focused tests pass
+after the final derivative payload fix; the preceding 1,992-test batch is recorded
+separately. Derivative existence and interior-domain conditions remain mandatory.
+The generated object's value is explicit and its WD occupies only the proof field.
+
+
+Empty complete input domains now support formula functions such as
+`have fn empty_constant(k {}) {} = 0`. The compiler replays the original
+empty-carrier or excluded-guard certificate before introducing the function's
+own parameters and guards. Header, return-carrier and body WD are still checked.
+Examples cover [empty carriers](../lean/examples/empty_domain_formula_functions/),
+[empty ranges](../lean/examples/empty_range_formula_functions/),
+[proved empty carriers](../lean/examples/empty_carrier_formula_functions/),
+[incompatible guards](../lean/examples/excluded_guard_formula_functions/) and
+[captured returned functions](../lean/examples/captured_empty_formula_functions/).
+These five pairs and seven related pairs pass strict source, deterministic
+generation and real Lean; 53 audited exports use only the standard three axioms.
+Undefined bodies, illegal calls and membership in the empty set remain rejected.
+
+Function-body substitution now also covers coordinate partials, scalar and total
+differentials, gradients, Jacobians, Hessians, divergence, curl, Laplacians, and
+scalar/vector multivariable limits. Each call preserves the original function,
+point, dimensions, coordinate order and candidate/existence evidence. See
+[partial-derivative offsets](../lean/examples/partial_derivative_offset_function/),
+[scalar-valued functions](../lean/examples/multivariable_scalar_offset_functions/),
+[matrix-valued functions](../lean/examples/multivariable_matrix_value_functions/) and
+[vector-valued functions](../lean/examples/multivariable_vector_value_functions/).
+These four source/generated pairs contain eleven declaration/call scenarios and
+pass strict source verification, deterministic generation and real Lean checking.
+Missing existence, a candidate at another point and a candidate for another
+coordinate remain rejected. The common batch checks 25 pairs and audits
+74 exports using only the standard three axioms; all 2,047 compiler Rust tests
+and fourteen negative CLI gates pass.
+
+The full total-differential definition now passes strict source verification,
+two independent generations and actual Lean checking. Function input carriers
+reuse their original emitted objects through the existing WD stage cursor;
+return carriers and bodies retain their own scope. Its output decreased from
+772,181 to 520,433 bytes; the whole source/generation/Lean gate took
+86.16 seconds on this run. The related batch checks 26 pairs and 75 exports,
+using only the standard three axioms; two byte-identical checks reuse the same
+Core and toolchain. These are fixture measurements, not complexity bounds.
+
+Riemann endpoint folding now replays the shared exact numeric laws after the
+original endpoint WD. The [closed-endpoint example](../lean/examples/riemann_integral_closed_endpoints/)
+covers absolute values, rounding, integer powers, exact square roots, integer
+operations and the closed special values of exp/log and hyperbolic functions.
+Its eight statements pass strict source, deterministic generation, actual Lean
+and axiom auditing. Reversed and equal endpoints retain the source definition;
+`ln(0)` remains rejected during WD.
+
+The current object inventory has no mathematical constructor without an entry.
+Exhaustive legal WD branches and closure contexts remain under audit. Riemann's
+full definition-folding route and integral builtin-theorem consumers remain
+open, as does exhaustive closed-endpoint evaluation coverage.
+A native adapter equating this Darboux definition with Mathlib's interval integral
+is separate unfinished work.
+
+[Darboux enclosure citations](../lean/examples/darboux_enclosure_citation/)
+retain the interval inclusion, positive partition size and three exact guarded
+function signatures, for both the predicate and its negation.
+[Stored subtraction bounds](../lean/examples/subtract_closed_bound/)
+reuse the original fact ID and exact offset certificate, preserving direction
+and strictness. [Bound-variable renaming](../lean/examples/renamed_range_binders/)
+is supported in function ranges, integer-range sums and products. These pairs
+pass actual Lean checking. The [full Darboux definition fold](../lean/examples/riemann_integral_from_definition/)
+also passes: it replays all six original definition clauses, including the
+quantified partition functions, lower and upper sums, and zero-width condition.
+
+
+Its compilation prerequisites now include guarded integer-range sums and products,
+using the recorded universal coverage proof or explicit argument checks. Natural
+input domains retain the original lower-endpoint membership proof. The same
+coverage adapter serves `reduce`. Captured sums, function spaces and real intervals
+keep their source representations and WD; no Runtime change was needed. See
+[guarded summation](../lean/examples/guarded_symbolic_sum/),
+[a prefix-sum function](../lean/examples/captured_range_sum/),
+[a captured function space](../lean/examples/captured_function_space/) and
+[a set-valued interval function](../lean/examples/captured_real_interval/).
+Six new pairs and three related pairs pass strict source verification, deterministic
+generation and real Lean checking; 17 exports use only the standard three axioms.
+The batch regression passes all 1,950 compiler Rust tests.
+This covers the recorded integer/natural-domain routes, not every aggregate WD branch.
+
+Examples: [curl from partials](../lean/examples/curl_from_partials/),
+[local second derivative](../lean/examples/second_partial_from_definition/),
+[Hessian from ordered partials](../lean/examples/hessian_from_second_partials/) and
+[Laplacian from the diagonal sum](../lean/examples/laplacian_from_second_partials/).
+
+See the remainder-definition examples for [scalar differentials](../lean/examples/scalar_differential_from_definition/) and [total differentials](../lean/examples/total_differential_from_definition/).

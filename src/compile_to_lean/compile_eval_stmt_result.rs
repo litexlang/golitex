@@ -35,7 +35,7 @@ impl LitexToLeanCompiler {
         {
             return Err(LeanCompileError::unsupported("Eval/Endpoints"));
         }
-        if !p.matrix_scalar_evaluations.is_empty() || !p.algo_evaluations.is_empty() {
+        if !p.algo_evaluations.is_empty() {
             return Err(LeanCompileError::unsupported("Eval/EvaluationFamily"));
         }
         ensure_object(&p.source_object, &p.source_well_defined)?;
@@ -67,23 +67,28 @@ impl LitexToLeanCompiler {
         if used != source_ids {
             return Err(LeanCompileError::unsupported("Eval/CitationOrder"));
         }
-        if p.source_object.ir() == p.evaluated_object.ir()
+        if p.matrix_scalar_evaluations.is_empty()
+            && p.source_object.ir() == p.evaluated_object.ir()
             && EvalRational::from_obj(&p.source_object).is_none()
             && crate::rational_expression::exact_radical::ExactRadical::from_obj(&p.source_object)
                 .is_some()
         {
             return self.compile_eval_unchanged_radical(p, position, index, local);
         }
-        if matches!(
-            p.rewritten_object,
-            Obj::ComplexOperator(ComplexOperator::ComplexAbs(_))
-        ) && matches!(
-            p.evaluated_object,
-            Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
-        ) {
+        if p.matrix_scalar_evaluations.is_empty()
+            && matches!(
+                p.rewritten_object,
+                Obj::ComplexOperator(ComplexOperator::ComplexAbs(_))
+            )
+            && matches!(
+                p.evaluated_object,
+                Obj::ExpLogOperator(ExpLogOperator::Sqrt(_))
+            )
+        {
             return self.compile_eval_irrational_modulus(p, position, index, local);
         }
-        if EvalRational::from_obj(&p.rewritten_object).is_none()
+        if p.matrix_scalar_evaluations.is_empty()
+            && EvalRational::from_obj(&p.rewritten_object).is_none()
             && crate::rational_expression::exact_radical::ExactRadical::from_obj(
                 &p.rewritten_object,
             )
@@ -93,16 +98,23 @@ impl LitexToLeanCompiler {
         }
         let mut remaining = p.function_evaluations.len();
         let mut remaining_aggregates = p.aggregate_evaluations.len();
+        let mut remaining_matrices = p.matrix_scalar_evaluations.len();
         let (value, calculation, body_cites) = self.compile_eval_value(
             &p.rewritten_object,
             &p.function_evaluations,
             &mut remaining,
             &p.aggregate_evaluations,
             &mut remaining_aggregates,
+            &p.matrix_scalar_evaluations,
+            &mut remaining_matrices,
             &source_complete,
         )?;
         used.extend(body_cites);
-        if remaining != 0 || remaining_aggregates != 0 || used != p.cited_equal_fact_ids {
+        if remaining != 0
+            || remaining_aggregates != 0
+            || remaining_matrices != 0
+            || used != p.cited_equal_fact_ids
+        {
             return Err(LeanCompileError::unsupported("Eval/EvaluationOrder"));
         }
         let (output, output_value) =
@@ -384,7 +396,8 @@ impl LitexToLeanCompiler {
         match proofs.as_slice() {
             [p] => Ok(format!("(congrArg {op} {p})")),
             [p, q] => Ok(format!("(congrArg₂ {op} {p} {q})")),
-            _ => Err(LeanCompileError::unsupported("Eval/RewriteArity")),
+            [] => Err(LeanCompileError::unsupported("Eval/RewriteArity")),
+            _ => curried_value_congruence(&op, &proofs),
         }
     }
 }

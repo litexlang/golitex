@@ -1,10 +1,15 @@
+use super::{
+    ExecDefStrategyEnteredFailed, ExecDefStrategyForallFailed, ExecDefStrategyLocalFailure,
+};
 use crate::ast::fact::Fact;
 use crate::ast::stmt::DefStrategyStmt;
 use crate::exec_env::exec_env::ExecEnv;
 use crate::execute::execute_by_stmt::{proof_verify_state, verify_goal_fact};
-use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyFactWellDefinedResult};
-use crate::execute::execute_proof_block_stmt::{run_proof_body_stmts, ProofBlockBodyFailed};
-use crate::execute::ExecStmtResult;
+use crate::execute::execute_fact_stmt::{
+    AssumeDomFactResult, VerifyFactResult, VerifyFactWellDefinedResult,
+};
+use crate::execute::execute_proof_block_stmt::run_proof_body_stmts;
+use crate::execute::{ExecStmtResult, IntroduceTypedParametersResult};
 use crate::runtime::{Runtime, RuntimeResult};
 
 // strategy Name: ? forall … — prove the forall in a local body and store the
@@ -29,21 +34,25 @@ pub enum ExecDefStrategyStmtResult {
 }
 
 pub struct ExecDefStrategyStmtSuccess {
+    pub statement: DefStrategyStmt,
     pub goal_wd: VerifyFactWellDefinedResult,
+    pub body: ExecDefStrategyForallProof,
+    pub local_env: Box<ExecEnv>,
+}
+
+// Original local execution stages, in producer order. Goal WD introduces a
+// separate temporary header and cannot replace these actual body FactIds.
+pub struct ExecDefStrategyForallProof {
+    pub introduced_params: IntroduceTypedParametersResult,
+    pub assumed_dom_facts: Vec<AssumeDomFactResult>,
     pub proof_steps: Vec<ExecStmtResult>,
     pub conclusion_proofs: Vec<VerifyFactResult>,
-    pub local_env: Box<ExecEnv>,
 }
 
 pub enum ExecDefStrategyStmtFailed {
     NameClash(String),
     GoalWd(VerifyFactWellDefinedResult),
-    Introduce(String),
-    ProofBody(ProofBlockBodyFailed),
-    Conclusion {
-        index: usize,
-        result: VerifyFactResult,
-    },
+    Local(ExecDefStrategyLocalFailure),
 }
 
 impl ExecDefStrategyStmtResult {
@@ -80,18 +89,27 @@ pub fn exec_def_strategy_stmt(
         exec_def_strategy_forall_body(rt, &stmt.forall_fact, &stmt.prove_process)
     })?;
 
-    let (proof_steps, conclusion_proofs) = match local_outcome {
+    let body = match local_outcome {
         Ok(v) => v,
-        Err(failed) => return Ok(ExecDefStrategyStmtResult::Failed(failed)),
+        Err(body) => {
+            return Ok(ExecDefStrategyStmtResult::Failed(
+                ExecDefStrategyStmtFailed::Local(ExecDefStrategyLocalFailure {
+                    statement: stmt.clone(),
+                    goal_wd,
+                    body,
+                    local_env,
+                }),
+            ))
+        }
     };
 
     runtime.top_exec_env_mut().store_def_strategy(stmt.clone());
 
     Ok(ExecDefStrategyStmtResult::Success(
         ExecDefStrategyStmtSuccess {
+            statement: stmt.clone(),
             goal_wd,
-            proof_steps,
-            conclusion_proofs,
+            body,
             local_env,
         },
     ))
@@ -101,33 +119,47 @@ fn exec_def_strategy_forall_body(
     runtime: &mut Runtime,
     forall: &crate::ast::fact::ForallFact,
     proof: &[crate::ast::stmt::Stmt],
-) -> RuntimeResult<Result<(Vec<ExecStmtResult>, Vec<VerifyFactResult>), ExecDefStrategyStmtFailed>>
-{
-    if runtime
-        .introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())?
-        .is_err()
-    {
-        return Ok(Err(ExecDefStrategyStmtFailed::Introduce(
-            "strategy: failed to introduce forall parameters".to_string(),
-        )));
-    }
+) -> RuntimeResult<Result<ExecDefStrategyForallProof, ExecDefStrategyForallFailed>> {
+    let introduced_params =
+        match runtime.introduce_typed_parameters(&forall.typed_parameters, proof_verify_state())? {
+            Ok(introduced) => introduced,
+            Err(failed) => return Ok(Err(ExecDefStrategyForallFailed::Introduce(failed))),
+        };
 
-    for dom in &forall.dom_facts {
-        let wd = runtime.verify_fact_well_definedness(dom, proof_verify_state())?;
-        if wd.is_failed() {
-            return Ok(Err(ExecDefStrategyStmtFailed::Introduce(
-                "strategy: forall domain fact is not well-defined".to_string(),
-            )));
-        }
-        let _ = runtime.store_fact_and_infer(
+    let mut assumed_dom_facts = Vec::with_capacity(forall.dom_facts.len());
+    for (index, dom) in forall.dom_facts.iter().enumerate() {
+        let well_defined = match runtime.verify_fact_well_definedness(dom, proof_verify_state())? {
+            VerifyFactWellDefinedResult::Success(wd) => wd,
+            failed @ VerifyFactWellDefinedResult::Failed(_) => {
+                return Ok(Err(ExecDefStrategyForallFailed::Entered {
+                    introduced_params,
+                    assumed_dom_facts,
+                    failure: ExecDefStrategyEnteredFailed::PremiseWd {
+                        index,
+                        result: failed,
+                    },
+                }))
+            }
+        };
+        let store_and_infer = runtime.store_fact_and_infer(
             dom,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )?;
+        assumed_dom_facts.push(AssumeDomFactResult {
+            well_defined,
+            store_and_infer,
+        });
     }
 
     let proof_steps = match run_proof_body_stmts(runtime, proof)? {
         Ok(steps) => steps,
-        Err(failed) => return Ok(Err(ExecDefStrategyStmtFailed::ProofBody(failed))),
+        Err(failed) => {
+            return Ok(Err(ExecDefStrategyForallFailed::Entered {
+                introduced_params,
+                assumed_dom_facts,
+                failure: ExecDefStrategyEnteredFailed::ProofBody(failed),
+            }))
+        }
     };
 
     let mut conclusion_proofs = Vec::with_capacity(forall.then_facts.len());
@@ -135,13 +167,24 @@ fn exec_def_strategy_forall_body(
         let then_fact: Fact = then.clone().into();
         let proof = verify_goal_fact(runtime, &then_fact)?;
         if proof.is_failed() {
-            return Ok(Err(ExecDefStrategyStmtFailed::Conclusion {
-                index,
-                result: proof,
+            return Ok(Err(ExecDefStrategyForallFailed::Entered {
+                introduced_params,
+                assumed_dom_facts,
+                failure: ExecDefStrategyEnteredFailed::Conclusion {
+                    proof_steps,
+                    conclusion_proofs,
+                    index,
+                    result: proof,
+                },
             }));
         }
         conclusion_proofs.push(proof);
     }
 
-    Ok(Ok((proof_steps, conclusion_proofs)))
+    Ok(Ok(ExecDefStrategyForallProof {
+        introduced_params,
+        assumed_dom_facts,
+        proof_steps,
+        conclusion_proofs,
+    }))
 }

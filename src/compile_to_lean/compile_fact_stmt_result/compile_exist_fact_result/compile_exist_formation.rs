@@ -1,7 +1,12 @@
-use crate::compile_to_lean::helper::ensure_object;
+use crate::compile_to_lean::helper::{
+    ensure_object, parameter_type_fact_matches, set_kind_predicate,
+};
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactWellDefinedProof;
+use crate::execute::{
+    ExecWitnessAtomicFactStmtResult, ExecWitnessExistFactStmtResult, ExecWitnessStmtResult,
+};
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
@@ -57,7 +62,9 @@ impl LitexToLeanCompiler {
                     ensure_object(carrier, checked)?;
                     self.compile_wd(checked, &prior)?;
                 }
-                (ParamType::Set(_), ParamTypeWellDefinedProof::Set) => {}
+                (ParamType::Set(_), ParamTypeWellDefinedProof::Set)
+                | (ParamType::NonemptySet(_), ParamTypeWellDefinedProof::NonemptySet)
+                | (ParamType::FiniteSet(_), ParamTypeWellDefinedProof::FiniteSet) => {}
                 _ => return Err(LeanCompileError::unsupported("Exist/ParameterKind")),
             }
             for parameter in &group.params {
@@ -76,15 +83,12 @@ impl LitexToLeanCompiler {
                 let store = &stores[offset];
                 let member = self.resolve_fact(store.primary_fact_id(), &introduced)?;
                 let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
-                let matching = match (&group.param_type, &member) {
-                    (ParamType::Obj(carrier), Fact::AtomicFact(AtomicFact::InFact(member))) => {
-                        member.element.ir() == object.ir() && member.set.ir() == carrier.ir()
-                    }
-                    (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(member))) => {
-                        member.set.ir() == object.ir()
-                    }
-                    _ => false,
-                };
+                let matching = parameter_type_fact_matches(
+                    &group.param_type,
+                    &object,
+                    &member,
+                    &std::collections::HashMap::new(),
+                );
                 if !matching {
                     return Err(LeanCompileError::new(
                         "Exist/ParameterSubject",
@@ -114,15 +118,9 @@ impl LitexToLeanCompiler {
                 before: count + index,
                 ..scope
             };
-            self.compile_fact_wd(&captured.well_defined, &source, &prior)?;
             self.validate_store(&captured.store_and_infer.store, &source)?;
-            let formed = SourcePosition::new(
-                Some(&prior),
-                SourceOwner::FactWD(&captured.well_defined),
-                usize::MAX,
-            );
             let compiled = (
-                self.fact_proposition(&source, &formed)?,
+                self.compile_formed_fact_proposition(&captured.well_defined, &source, &prior)?,
                 format!("h_{}", source.fact_id().value()),
             );
             let completed = SourcePosition {
@@ -162,14 +160,54 @@ impl LitexToLeanCompiler {
         fact: &PlainExistFact,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        let proof = self
+            .exist_formation_evidence(fact, position)
+            .ok_or_else(|| {
+                LeanCompileError::new(
+                    "Exist/FormationProducer",
+                    "An existential proposition needs its original ordered formation result.",
+                )
+            })?;
+        self.compile_exist_formation(fact, proof, position)
+    }
+
+    pub(in crate::compile_to_lean) fn exist_formation_evidence<'a>(
+        &self,
+        fact: &PlainExistFact,
+        position: &SourcePosition<'a>,
+    ) -> Option<&'a ExistShapedFactWellDefinedProof> {
         let mut current = Some(position);
         while let Some(cursor) = current {
             match cursor.owner {
                 SourceOwner::FactWD(FactWellDefinedProof::ExistFact(proof)) => {
-                    return self.compile_exist_formation(fact, proof, position);
+                    return Some(proof);
                 }
                 SourceOwner::ExistWD(source, proof) if source == fact => {
-                    return self.compile_exist_formation(fact, proof, position);
+                    return Some(proof);
+                }
+                SourceOwner::WitnessExist(p)
+                | SourceOwner::Statement(ExecStmtResult::Witness(
+                    ExecWitnessStmtResult::WitnessExistFact(
+                        ExecWitnessExistFactStmtResult::Success(p),
+                    ),
+                )) if p.statement.exist_shaped_fact_in_witness.plain() == fact => {
+                    if let FactWellDefinedProof::ExistFact(proof) =
+                        &p.ambient.exist_fact_well_defined
+                    {
+                        return Some(proof);
+                    }
+                }
+                SourceOwner::WitnessAtomic(p)
+                | SourceOwner::Statement(ExecStmtResult::Witness(
+                    ExecWitnessStmtResult::WitnessAtomicFact(
+                        ExecWitnessAtomicFactStmtResult::Success(p),
+                    ),
+                )) if p.projected_exist.plain() == fact => {
+                    if let FactWellDefinedProof::ExistFact(proof) =
+                        &p.ambient.exist_fact_well_defined
+                    {
+                        return Some(proof);
+                    }
                 }
                 SourceOwner::Verify(VerifyFactResult::ExistShapedFact(result)) => {
                     if let VerifyExistShapedFactResult::ExistUniqueFact(
@@ -177,18 +215,14 @@ impl LitexToLeanCompiler {
                     ) = result.as_ref()
                     {
                         if proof.fact.plain() == fact {
-                            return self.compile_exist_formation(
-                                fact,
-                                &proof.well_defined_proof,
-                                position,
-                            );
+                            return Some(&proof.well_defined_proof);
                         }
                     }
                     if let VerifyExistShapedFactResult::NotExistFact(
                         crate::execute::execute_fact_stmt::verify_exist_shaped_fact::VerifyNotExistFactResult::Success(proof),
                     ) = result.as_ref() {
                         if proof.fact.plain() == fact {
-                            return self.compile_exist_formation(fact, &proof.well_defined_proof, position);
+                            return Some(&proof.well_defined_proof);
                         }
                     }
                     if let VerifyExistShapedFactResult::PlainExistFact(
@@ -196,11 +230,7 @@ impl LitexToLeanCompiler {
                     ) = result.as_ref()
                     {
                         if proof.fact.plain() == fact {
-                            return self.compile_exist_formation(
-                                fact,
-                                &proof.well_defined_proof,
-                                position,
-                            );
+                            return Some(&proof.well_defined_proof);
                         }
                     }
                 }
@@ -208,10 +238,7 @@ impl LitexToLeanCompiler {
             }
             current = cursor.parent;
         }
-        Err(LeanCompileError::new(
-            "Exist/FormationProducer",
-            "An existential proposition needs its original ordered formation result.",
-        ))
+        None
     }
 }
 
@@ -223,6 +250,28 @@ impl LitexToLeanCompiler {
         fact: &PlainExistFact,
         position: &SourcePosition<'_>,
         bindings: &std::collections::HashMap<IdentifierId, String>,
+    ) -> Result<String, LeanCompileError> {
+        self.compile_exist_raw_form(fact, position, bindings, false)
+    }
+
+    pub(in crate::compile_to_lean) fn compile_exist_raw_witness_predicate(
+        &self,
+        fact: &PlainExistFact,
+        position: &SourcePosition<'_>,
+        bindings: &std::collections::HashMap<IdentifierId, String>,
+    ) -> Result<String, LeanCompileError> {
+        if fact.typed_parameters.ordered_param_ids().is_empty() {
+            return Err(LeanCompileError::unsupported("Template/RawWitnessArity"));
+        }
+        self.compile_exist_raw_form(fact, position, bindings, true)
+    }
+
+    fn compile_exist_raw_form(
+        &self,
+        fact: &PlainExistFact,
+        position: &SourcePosition<'_>,
+        bindings: &std::collections::HashMap<IdentifierId, String>,
+        witness_predicate: bool,
     ) -> Result<String, LeanCompileError> {
         let mut local = bindings.clone();
         let mut parameters = Vec::new();
@@ -236,7 +285,9 @@ impl LitexToLeanCompiler {
                         self.compile_function_raw_expression_bound(carrier, position, &local)?,
                     ),
                     ParamType::Set(_) => format!("M.isSet {denotation}"),
-                    _ => return Err(LeanCompileError::unsupported("Exist/RawParameterKind")),
+                    kind @ (ParamType::NonemptySet(_) | ParamType::FiniteSet(_)) => {
+                        format!("{} {name}", set_kind_predicate(kind).unwrap())
+                    }
                 };
                 if local.insert(parameter.id, denotation).is_some() {
                     return Err(LeanCompileError::new(
@@ -262,9 +313,12 @@ impl LitexToLeanCompiler {
         for (id, clause) in clauses.into_iter().rev() {
             meaning = format!("∃ (h_{} : {clause}), {meaning}", id.value());
         }
-        for (name, member) in parameters.into_iter().rev() {
-            meaning =
-                format!("∃ ({name} : Litex.Obj (M := M) M.Value), ∃ (_ : {member}), {meaning}");
+        for (index, (name, member)) in parameters.into_iter().enumerate().rev() {
+            meaning = if witness_predicate && index == 0 {
+                format!("fun ({name} : Litex.Obj (M := M) M.Value) => ∃ (_ : {member}), {meaning}")
+            } else {
+                format!("∃ ({name} : Litex.Obj (M := M) M.Value), ∃ (_ : {member}), {meaning}")
+            };
         }
         Ok(format!("({meaning})"))
     }

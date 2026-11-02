@@ -1,0 +1,58 @@
+# Imported monomial values and polynomial/linear-combination correspondence.
+
+release obj def Algebra::field::complex_field
+
+release obj def Algebra::field::real_field
+
+release thm Algebra::vector_space::scalar_space_carrier(C,Algebra::field::complex_field)
+
+release thm Algebra::vector_space::scalar_space_carrier(R,Algebra::field::real_field)
+
+release thm Algebra::vector_space::function_space_carrier(C,Algebra::field::complex_field,C)
+
+release thm Algebra::vector_space::function_space_carrier(R,Algebra::field::real_field,R)
+
+release obj def poly_use::nonreal_coefficients
+
+release obj def poly_laws_use::real_coefficients
+
+release thm Algebra::polynomial::complex_monomials_carrier(0)
+
+release thm Algebra::polynomial::complex_monomials_entry(0,1,0)
+
+\Algebra::polynomial::complex_monomials<0>(1)(0)=0^(1-1)=0^0=1
+
+release thm Algebra::polynomial::complex_monomials_carrier(2)
+
+release thm Algebra::polynomial::complex_monomials_entry(2,3,i)
+
+\Algebra::polynomial::complex_monomials<2>(3)(i)=i^(3-1)=i^2=-1
+
+release thm Algebra::polynomial::complex_polynomial_value_as_combination(1,poly_use::nonreal_coefficients,2)
+
+release thm Algebra::polynomial::complex_polynomial_function_as_combination(1,poly_use::nonreal_coefficients)
+
+release thm Algebra::polynomial::real_polynomial_value_as_combination(1,poly_laws_use::real_coefficients,2)
+
+release thm Algebra::polynomial::real_polynomial_function_as_combination(1,poly_laws_use::real_coefficients)
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n+1),x C:
+        \Algebra::polynomial::complex_polynomial_value<n>(coefficients,x)=\Algebra::finite_span::linear_combination<C,Algebra::field::complex_field,C,\Algebra::vector_space::scalar_space<C,Algebra::field::complex_field>,n+1>(coefficients,\Algebra::polynomial::complex_monomial_values<n>(x))
+    release thm Algebra::polynomial::complex_polynomial_value_as_combination(n,coefficients,x)
+
+claim:
+    ? forall n N,coefficients finite_seq(R,n+1),x R:
+        \Algebra::polynomial::real_polynomial_value<n>(coefficients,x)=\Algebra::finite_span::linear_combination<R,Algebra::field::real_field,R,\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>,n+1>(coefficients,\Algebra::polynomial::real_monomial_values<n>(x))
+    release thm Algebra::polynomial::real_polynomial_value_as_combination(n,coefficients,x)
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n+1):
+        \Algebra::polynomial::complex_polynomial_from_coefficients<n>(coefficients)=\Algebra::finite_span::linear_combination<C,Algebra::field::complex_field,fn(t C) C,\Algebra::vector_space::function_space<C,Algebra::field::complex_field,C>,n+1>(coefficients,\Algebra::polynomial::complex_monomials<n>)
+    release thm Algebra::polynomial::complex_polynomial_function_as_combination(n,coefficients)
+
+claim:
+    ? forall n N,coefficients finite_seq(R,n+1):
+        \Algebra::polynomial::real_polynomial_from_coefficients<n>(coefficients)=\Algebra::finite_span::linear_combination<R,Algebra::field::real_field,fn(t R) R,\Algebra::vector_space::function_space<R,Algebra::field::real_field,R>,n+1>(coefficients,\Algebra::polynomial::real_monomials<n>)
+    release thm Algebra::polynomial::real_polynomial_function_as_combination(n,coefficients)
+

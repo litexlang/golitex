@@ -1,0 +1,17 @@
+# Tracer: a defining condition can justify later expression formation.
+#
+# Before: this failed definition lost its completed condition checks in reading.
+# prop reciprocal_window(x R):
+#     x > 0
+#     1 / (x - 1) > 0
+#     x < 2
+#
+# Now: state the nonzero guard before using the quotient.
+prop reciprocal_window(x R):
+    x > 0
+    x != 1
+    1 / (x - 1) > 0
+    x < 2
+by def $reciprocal_window(3 / 2)
+# Boundary: omitting x != 1 still rejects; no earlier condition is an instance proof.
+# Evidence: litex -strict -f examples/stmt_nodes/definition/checked_definition_conditions.lit

@@ -194,7 +194,9 @@ pub fn run_import_module_observed(
         }
     }
 
-    write_kb_after_cold_import(runtime, &key, &config, std_root, mod_id);
+    if !observer.requires_source_evidence() {
+        write_kb_after_cold_import(runtime, &key, &config, std_root, mod_id);
+    }
 
     running.remove(&key);
     done.insert(key);

@@ -1,0 +1,13 @@
+# Direct denominator-WD composition.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/ordered_difference_nonzero.lit
+# Historical explicit proof:
+# forall x R:
+#     x>1
+#     =>:
+#         x-1>0
+#         1/(x-1)=1/(x-1)
+# Boundary: all original domains and premises are required.
+forall x R:
+    x>1
+    =>:
+        1/(x-1)=1/(x-1)

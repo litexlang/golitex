@@ -12,7 +12,7 @@ impl LitexToLeanCompiler {
     ) -> Result<(), LeanCompileError> {
         match carrier {
             Obj::FunctionSpace(FunctionSpace::FnSet(actual))
-                if crate::execute::execute_fact_stmt::fn_sets_alpha_equal(actual, signature) =>
+                if function_carrier_signatures_alpha_equal(actual, signature) =>
             {
                 Ok(())
             }
@@ -39,6 +39,20 @@ impl LitexToLeanCompiler {
         proof: &crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let CompleteFunctionDomainSourceProof::FiniteFunction(finite) = &proof.source {
+            if proof.signature != finite.signature {
+                return Err(LeanCompileError::unsupported(
+                    "FiniteDomain/SourceSignature",
+                ));
+            }
+            return self.compile_finite_complete_signature(finite, position);
+        }
+        if let CompleteFunctionDomainSourceProof::Matrix(callable) = &proof.source {
+            if proof.signature != callable.function.body {
+                return Err(LeanCompileError::unsupported("Matrix/DomainSignature"));
+            }
+            return self.compile_matrix_callable_signature(callable, position);
+        }
         if let CompleteFunctionDomainSourceProof::Membership {
             membership,
             carrier_equal,
@@ -233,5 +247,45 @@ impl LitexToLeanCompiler {
             position,
         )?;
         Ok(format!("(by\n  let _returned_signature : Litex.FunctionSignature M := {sig}\n  have _returned_source : Litex.In {head_term} (Litex.fnSet _returned_signature) := {member}\n  have _returned_input : M.mem {input} _returned_signature.domain := {domain}\n  have _returned_member : Litex.In {source_term} {carrier} := Litex.FunctionSemantics.call_mem _returned_signature.domain _returned_signature.output (Litex.denote {head_term}) {input} _returned_source _returned_input\n  exact Litex.inOfSame {source_term} {target} {carrier} (Litex.fnSet {result_sig}) ({same}).symm {carrier_same} _returned_member)"))
+    }
+}
+
+// The verifier records singleton parameter groups for exact carrier matches.
+// Compare ordered binders,carriers,guards and codomain without changing either
+// original signature or replaying the selected matching proof.
+pub(in crate::compile_to_lean) fn function_carrier_signatures_alpha_equal(
+    left: &FnSet,
+    right: &FnSet,
+) -> bool {
+    fn expanded(signature: &FnSet) -> Option<FnSet> {
+        let mut seen = std::collections::HashSet::new();
+        if signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .any(|group| group.params.is_empty() || group.params.iter().any(|p| !seen.insert(p.id)))
+        {
+            return None;
+        }
+        let mut result = signature.clone();
+        result.set_bound_parameters.groups = signature
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|group| {
+                group.params.iter().map(move |parameter| {
+                    let mut singleton = group.clone();
+                    singleton.params = vec![parameter.clone()];
+                    singleton
+                })
+            })
+            .collect();
+        Some(result)
+    }
+    match (expanded(left), expanded(right)) {
+        (Some(left), Some(right)) => {
+            crate::execute::execute_fact_stmt::fn_sets_alpha_equal(&left, &right)
+        }
+        _ => false,
     }
 }

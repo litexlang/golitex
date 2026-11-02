@@ -108,7 +108,10 @@ thm concatenated_linear_combination:
         j-m $in closed_range(0,n)
     claim:
         ? forall j closed_range(m,m+n):
-            sums(j)=space.add(prefix_sums(m),suffix_sums(j-m))
+            j $in closed_range(0,m+n)
+            j-m $in closed_range(0,n)
+            =>:
+                sums(j)=space.add(prefix_sums(m),suffix_sums(j-m))
         j-m $in closed_range(0,n)
         by cases:
             ? sums(j)=space.add(prefix_sums(m),suffix_sums(j-m))
@@ -159,6 +162,11 @@ thm concatenated_linear_combination:
                 (j-1)-m=(j-m)-1
                 j-1>=m
                 j-1 $in closed_range(m,m+n)
+                m<=j-1
+                j-1-m $in Z
+                0<=j-1-m
+                j-1-m<=(m+n)-m=n
+                j-1-m $in closed_range(0,n)
                 sums(j-1)=space.add(prefix_sums(m),suffix_sums((j-1)-m))
                 suffix_sums((j-1)-m)=suffix_sums((j-m)-1)
                 \concatenate_lists<K,m,n,left_coefficients,right_coefficients>(j)=right_coefficients(j-m)
@@ -174,6 +182,9 @@ thm concatenated_linear_combination:
     by thm finite_span::partial_sum_determines_combination(K,field,V,space,m+n,\concatenate_lists<K,m,n,left_coefficients,right_coefficients>,\concatenate_lists<V,m,n,left,right>,sums) => \finite_span::linear_combination<K,field,V,space,m+n>(\concatenate_lists<K,m,n,left_coefficients,right_coefficients>,\concatenate_lists<V,m,n,left,right>)=sums(m+n)
     m+n $in closed_range(m,m+n)
     (m+n)-m=n
+    m+n $in closed_range(0,m+n)
+    (m+n)-m=n
+    (m+n)-m $in closed_range(0,n)
     sums(m+n)=space.add(prefix_sums(m),suffix_sums(n))
     prefix_sums(m)=\finite_span::linear_combination<K,field,V,space,m>(left_coefficients,left)
     suffix_sums(n)=\finite_span::linear_combination<K,field,V,space,n>(right_coefficients,right)

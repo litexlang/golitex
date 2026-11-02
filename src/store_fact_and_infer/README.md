@@ -110,6 +110,14 @@ store_fact_and_infer/
   adapter and visible original producer.
 - Cartesian and tuple equalities remain ordinary checked equalities; they do
   not publish shape predicates or construction dimensions.
+- A direct literal-tuple equality `x = (a,b)` (in either orientation) also
+  publishes `x(1)=a` and `x(2)=b`. `TupleCoordinates` retains its seed FactId,
+  orientation and ordered direct stores. It projects one layer through
+  `store_inferred_fact`, without recursively inferring on a tuple-valued
+  coordinate or searching aliases/function bodies. The equality itself
+  certifies the finite domain and coordinate formation. Empty tuples have
+  no coordinate conclusions; singleton tuples have one. Tracer:
+  `examples/infer/equal/tuple_coordinates.lit`.
 - Literal `u − v = 0` → `u = v` is **verify-time**
   `EqualFromKnownDifferenceZero` (not infer)
 - Positive-real power membership transport  

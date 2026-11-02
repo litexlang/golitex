@@ -1,4 +1,7 @@
-use super::DetailedNotForallFactWellDefinedProof;
+use super::{
+    DetailedNotForallFactWellDefinedProof, NotForallWellDefinedLocalFailed,
+    NotForallWellDefinedLocalFailure,
+};
 use crate::ast::fact::{Fact, NotForallFact, QuantifierFreeFact};
 use crate::execute::execute_fact_stmt::verify_forall_fact::AssumeDomFactResult;
 use crate::execute::execute_fact_stmt::verify_not_forall_fact::well_defined_result::{
@@ -6,8 +9,7 @@ use crate::execute::execute_fact_stmt::verify_not_forall_fact::well_defined_resu
     VerifyNotForallFactWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::well_defined_results::{
-    fail_to_verify_obj_well_defined_others, FactWellDefinedProof, FailToVerifyObjWellDefinedResult,
-    VerifyFactWellDefinedResult, VerifyObjWellDefinedResult,
+    FactWellDefinedProof, VerifyFactWellDefinedResult,
 };
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::execute::IntroduceTypedParametersResult;
@@ -38,7 +40,11 @@ impl Runtime {
                     },
                 )),
             ),
-            Err(reason) => Ok(VerifyNotForallFactWellDefinedResult::Failed(reason)),
+            Err(reason) => Ok(VerifyNotForallFactWellDefinedResult::Failed(
+                FailToVerifyNotForallFactWellDefinedResult::Local(Box::new(
+                    NotForallWellDefinedLocalFailure::new(fact.clone(), reason, local_env),
+                )),
+            )),
         }
     }
 
@@ -53,7 +59,7 @@ impl Runtime {
                 Vec<AssumeDomFactResult>,
                 Vec<FactWellDefinedProof>,
             ),
-            FailToVerifyNotForallFactWellDefinedResult,
+            NotForallWellDefinedLocalFailed,
         >,
     > {
         let introduced_params = match self
@@ -61,10 +67,7 @@ impl Runtime {
         {
             Ok(introduced) => introduced,
             Err(failed) => {
-                return Ok(Err(FailToVerifyNotForallFactWellDefinedResult::ParamType {
-                    fact: fact.clone(),
-                    reason: extract_obj_wd_fail(failed),
-                }));
+                return Ok(Err(NotForallWellDefinedLocalFailed::Parameters(failed)));
             }
         };
 
@@ -91,18 +94,10 @@ impl Runtime {
                     }
                 }
                 VerifyFactWellDefinedResult::Failed(failed_dom) => {
-                    return Ok(Err(FailToVerifyNotForallFactWellDefinedResult::DomFact {
-                        fact: fact.clone(),
+                    return Ok(Err(NotForallWellDefinedLocalFailed::Premise {
+                        introduced_params,
+                        assumed_dom_facts,
                         failed_index,
-                        param_type_well_defined: if self.result_detail() == OutputDetail::Detailed {
-                            introduced_params.param_type_well_defined
-                        } else {
-                            Vec::new()
-                        },
-                        succeeded_dom: assumed_dom_facts
-                            .into_iter()
-                            .map(|a| a.well_defined)
-                            .collect(),
                         failed_dom: Box::new(failed_dom),
                     }));
                 }
@@ -123,19 +118,11 @@ impl Runtime {
                     }
                 }
                 VerifyFactWellDefinedResult::Failed(failed_then) => {
-                    return Ok(Err(FailToVerifyNotForallFactWellDefinedResult::ThenFact {
-                        fact: fact.clone(),
+                    return Ok(Err(NotForallWellDefinedLocalFailed::Conclusion {
+                        introduced_params,
+                        assumed_dom_facts,
+                        checked_then: succeeded_then,
                         failed_index,
-                        param_type_well_defined: if self.result_detail() == OutputDetail::Detailed {
-                            introduced_params.param_type_well_defined
-                        } else {
-                            Vec::new()
-                        },
-                        succeeded_dom: assumed_dom_facts
-                            .into_iter()
-                            .map(|a| a.well_defined)
-                            .collect(),
-                        succeeded_then,
                         failed_then: Box::new(failed_then),
                     }));
                 }
@@ -157,14 +144,5 @@ impl Runtime {
             QuantifierFreeFact::OrFact(o) => Fact::OrFact(o.clone()),
         };
         self.verify_fact_well_definedness(&as_fact, verify_state)
-    }
-}
-
-fn extract_obj_wd_fail(failed: VerifyObjWellDefinedResult) -> FailToVerifyObjWellDefinedResult {
-    match failed {
-        VerifyObjWellDefinedResult::Failed { reason, .. } => reason,
-        _ => {
-            fail_to_verify_obj_well_defined_others("param type well-definedness failed".to_string())
-        }
     }
 }

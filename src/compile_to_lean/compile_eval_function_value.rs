@@ -14,6 +14,8 @@ impl LitexToLeanCompiler {
         remaining: &mut usize,
         aggregates: &[crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateEvaluationResult],
         remaining_aggregates: &mut usize,
+        matrices: &[crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult],
+        remaining_matrices: &mut usize,
         position: &SourcePosition<'_>,
     ) -> Result<(EvalRational, String, Vec<FactId>), LeanCompileError> {
         let index = remaining
@@ -78,6 +80,8 @@ impl LitexToLeanCompiler {
             remaining,
             aggregates,
             remaining_aggregates,
+            matrices,
+            remaining_matrices,
             &body_position,
         )?;
         if *remaining != p.nested_function_evidence.start

@@ -27,11 +27,21 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         let wd = success_object_wd(&proof.value_well_defined, &proof.statement.value)?;
         let value = self.compile_wd(wd, position)?;
-        if proof.stored_fact_ids.len() != 1 {
+        let Some(seed_id) = proof.stored_fact_ids.first() else {
+            return Err(LeanCompileError::unsupported("Let/Inference"));
+        };
+        let fact = self.resolve_fact(*seed_id, position)?;
+        let left = alias_equality_subject(
+            &fact,
+            &proof.statement.name,
+            &proof.statement.value,
+            position,
+            &self.runtime,
+        )?;
+        if proof.stored_fact_ids != proof.store_and_infer_result.stored_fact_ids() {
             return Err(LeanCompileError::unsupported("Let/Inference"));
         }
-        let fact = self.resolve_fact(proof.stored_fact_ids[0], position)?;
-        let left = alias_equality_subject(&fact, &proof.statement.name, &proof.statement.value)?;
+        self.validate_store(&proof.store_and_infer_result.store, &fact)?;
         let declaration = self.bind_alias(
             &proof.statement.name,
             left,
@@ -48,10 +58,14 @@ impl LitexToLeanCompiler {
             self.fact_proposition(&fact, &after_alias)?,
             format!("(Litex.sameRefl {value})"),
         );
-        Ok(format!(
-            "{declaration}\n{}",
-            self.emit_internal_fact(&fact, &compiled, &after_alias)?
-        ))
+        let emitted = self.emit_internal_fact(&fact, &compiled, &after_alias)?;
+        let inferred = self.compile_stored_inferences(
+            &proof.store_and_infer_result,
+            &fact,
+            &compiled,
+            &after_alias,
+        )?;
+        Ok(format!("{declaration}\n{emitted}\n{}", inferred.join("\n")))
     }
 
     pub(in crate::compile_to_lean) fn bind_alias(

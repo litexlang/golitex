@@ -1,0 +1,13 @@
+{
+  "kind": "reading_titles",
+  "sources": {
+    "claim_context.lit": {
+      "zh": "局部证明",
+      "en": "Local proofs"
+    },
+    "strategy_body_steps.lit": {
+      "zh": "证明策略",
+      "en": "Proof strategies"
+    }
+  }
+}

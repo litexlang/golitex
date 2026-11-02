@@ -1,0 +1,68 @@
+# Source-shaped use of existing chapter 2 results; no new mathematical interface.
+
+# LADR 2.22
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,independent finite_seq(V,m),n N,generators finite_seq(V,n):
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,independent)
+        $Algebra::finite_span::spans(K,field,V,space,n,generators)
+        =>:
+            m<=n
+    release thm Algebra::basis_comparison::independent_spanning_length_bound(K,field,V,space,m,independent,n,generators)
+
+# LADR 2.31
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>:
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        =>:
+            exist n N,selected finite_seq(V,n) st {$Algebra::basis::is_basis(K,field,V,space,n,selected)}
+    release thm Algebra::basis_existence::finite_dimensional_has_basis(K,field,V,space)
+
+# LADR 2.32
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,vectors finite_seq(V,m):
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        $Algebra::basis::is_linearly_independent(K,field,V,space,m,vectors)
+        =>:
+            exist r N,extended finite_seq(V,r) st {m<=r,$Algebra::basis::is_basis(K,field,V,space,r,extended),$Algebra::basis::is_prefix_of_length(V,r,m,extended,vectors)}
+    release thm Algebra::basis_extension::independent_list_extends_to_basis(K,field,V,space,m,vectors)
+    obtain r,extended from exist length N,selected finite_seq(V,length) st {$Algebra::basis::is_basis(K,field,V,space,length,selected),$Algebra::basis::is_prefix_of_length(V,length,m,selected,vectors)}
+    m<=r
+    witness exist length N,selected finite_seq(V,length) st {m<=length,$Algebra::basis::is_basis(K,field,V,space,length,selected),$Algebra::basis::is_prefix_of_length(V,length,m,selected,vectors)} from r,extended
+
+# LADR 2.34
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,m N,first finite_seq(V,m),n N,second finite_seq(V,n):
+        $Algebra::basis::is_basis(K,field,V,space,m,first)
+        $Algebra::basis::is_basis(K,field,V,space,n,second)
+        =>:
+            m=n
+    release thm Algebra::basis_comparison::finite_bases_have_equal_length(K,field,V,space,m,first,n,second)
+
+# LADR 2.35
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+        =>:
+            \Algebra::dimension::finite_dimension<K,field,V>(space)=n
+    release thm Algebra::dimension::finite_dimension_of_basis(K,field,V,space,n,vectors)
+
+# LADR 2.38
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        $Algebra::basis::is_linearly_independent(K,field,V,space,n,vectors)
+        n=\Algebra::dimension::finite_dimension<K,field,V>(space)
+        =>:
+            $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+    release thm Algebra::dimension::independent_dimension_list_is_basis(K,field,V,space,n,vectors)
+
+# LADR 2.42
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::basis::is_finite_dimensional(K,field,V,space)
+        $Algebra::finite_span::spans(K,field,V,space,n,vectors)
+        n=\Algebra::dimension::finite_dimension<K,field,V>(space)
+        =>:
+            $Algebra::basis::is_basis(K,field,V,space,n,vectors)
+    release thm Algebra::dimension::spanning_dimension_list_is_basis(K,field,V,space,n,vectors)

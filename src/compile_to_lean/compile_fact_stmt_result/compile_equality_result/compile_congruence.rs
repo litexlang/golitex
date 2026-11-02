@@ -40,6 +40,353 @@ impl LitexToLeanCompiler {
         children: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        let integer_operation = |closed| {
+            format!("(fun (a b : M.Value) => Litex.SetSemantics.sepValue (M := M) (M.standard .integer) (fun z => ∃ lower upper k : ℤ, a = M.number (lower : ℂ) ∧ b = M.number (upper : ℂ) ∧ z = M.number (k : ℂ) ∧ lower ≤ k ∧ k {} upper))", if closed { "≤" } else { "<" })
+        };
+        let interval_constructor = match (&fact.left, &fact.right) {
+            (Obj::SetFormer(SetFormer::Range(left)), Obj::SetFormer(SetFormer::Range(right))) => {
+                Some((
+                    vec![
+                        (left.start.as_ref(), right.start.as_ref()),
+                        (left.end.as_ref(), right.end.as_ref()),
+                    ],
+                    integer_operation(false),
+                ))
+            }
+            (
+                Obj::SetFormer(SetFormer::ClosedRange(left)),
+                Obj::SetFormer(SetFormer::ClosedRange(right)),
+            ) => Some((
+                vec![
+                    (left.start.as_ref(), right.start.as_ref()),
+                    (left.end.as_ref(), right.end.as_ref()),
+                ],
+                integer_operation(true),
+            )),
+            (
+                Obj::SetFormer(SetFormer::IntervalObj(left)),
+                Obj::SetFormer(SetFormer::IntervalObj(right)),
+            ) => {
+                let (a, b, lc, rc) = real_interval_parts(left);
+                let (c, d, left_closed, right_closed) = real_interval_parts(right);
+                if (lc, rc) != (left_closed, right_closed) {
+                    return Err(LeanCompileError::unsupported("IntervalCongruence/Kind"));
+                }
+                Some((vec![(a,c),(b,d)],format!("(fun (a b : M.Value) => Litex.SetSemantics.sepValue (M := M) (M.standard .real) (fun z => Litex.realBound {lc} a z ∧ Litex.realBound {rc} z b))")))
+            }
+            (
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(left)),
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(right)),
+            ) => {
+                let (a, lower, closed) = real_ray_parts(left);
+                let (b, right_lower, right_closed) = real_ray_parts(right);
+                if (lower, closed) != (right_lower, right_closed) {
+                    return Err(LeanCompileError::unsupported("IntervalCongruence/Kind"));
+                }
+                Some((vec![(a,b)],format!("(fun (a : M.Value) => Litex.SetSemantics.sepValue (M := M) (M.standard .real) (fun z => if {lower} then Litex.realBound {closed} a z else Litex.realBound {closed} z a))")))
+            }
+            _ => None,
+        };
+        if let Some((pairs, operation)) = interval_constructor {
+            if children.len() != pairs.len() {
+                return Err(LeanCompileError::unsupported("IntervalCongruence/Children"));
+            }
+            let mut equalities = Vec::with_capacity(children.len());
+            for (index, ((left, right), child)) in pairs.into_iter().zip(children).enumerate() {
+                if !matches!(source_subject(child)?,Fact::AtomicFact(AtomicFact::EqualFact(eq))if eq.left.ir()==left.ir()&&eq.right.ir()==right.ir())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "IntervalCongruence/ChildSubject",
+                    ));
+                }
+                let prior = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualityRequirements(children),
+                    index,
+                );
+                let checked = self.compile_verify(child, &prior)?;
+                let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
+                equalities.push(format!(
+                    "(show {} = {} from {})",
+                    self.compile_normalization_value(left, &formed)?,
+                    self.compile_normalization_value(right, &formed)?,
+                    checked.1
+                ));
+            }
+            // The fixed denotations preserve the original endpoint hosts and
+            // interval kind. Both actual parent WD trees remain mandatory.
+            self.compile_object_reference(&fact.left, position)?;
+            self.compile_object_reference(&fact.right, position)?;
+            return Ok(if equalities.len() == 1 {
+                format!("(congrArg {operation} {})", equalities[0])
+            } else {
+                format!(
+                    "(congrArg₂ {operation} {} {})",
+                    equalities[0], equalities[1]
+                )
+            });
+        }
+        let finite_constructor = match (&fact.left, &fact.right) {
+            (
+                Obj::SetFormer(SetFormer::ListSet(left)),
+                Obj::SetFormer(SetFormer::ListSet(right)),
+            ) if left.list.len() == right.list.len() => Some((
+                left.list
+                    .iter()
+                    .zip(&right.list)
+                    .map(|(a, b)| (a.as_ref(), b.as_ref()))
+                    .collect::<Vec<_>>(),
+                "literal",
+            )),
+            (Obj::SetFormer(SetFormer::SeqSet(left)), Obj::SetFormer(SetFormer::SeqSet(right))) => {
+                Some((vec![(left.set.as_ref(), right.set.as_ref())], "sequence"))
+            }
+            (
+                Obj::SetFormer(SetFormer::FiniteSeqSet(left)),
+                Obj::SetFormer(SetFormer::FiniteSeqSet(right)),
+            ) => Some((
+                vec![
+                    (left.set.as_ref(), right.set.as_ref()),
+                    (left.n.as_ref(), right.n.as_ref()),
+                ],
+                "finite_sequence",
+            )),
+            (
+                Obj::ProductShape(ProductShape::Cart(left)),
+                Obj::ProductShape(ProductShape::Cart(right)),
+            ) if left.args.len() == right.args.len() => Some((
+                left.args
+                    .iter()
+                    .zip(&right.args)
+                    .map(|(a, b)| (a.as_ref(), b.as_ref()))
+                    .collect::<Vec<_>>(),
+                "cartesian",
+            )),
+            _ => None,
+        };
+        if let Some((pairs, constructor)) = finite_constructor {
+            if children.len() != pairs.len() {
+                return Err(LeanCompileError::unsupported(
+                    "FiniteConstructorCongruence/Children",
+                ));
+            }
+            let mut equalities = Vec::with_capacity(children.len());
+            for (index, ((left, right), child)) in pairs.into_iter().zip(children).enumerate() {
+                if !matches!(source_subject(child)?,Fact::AtomicFact(AtomicFact::EqualFact(eq)) if eq.left.ir()==left.ir() && eq.right.ir()==right.ir())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "FiniteConstructorCongruence/ChildSubject",
+                    ));
+                }
+                let prior = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualityRequirements(children),
+                    index,
+                );
+                let checked = self.compile_verify(child, &prior)?;
+                let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
+                equalities.push(format!(
+                    "(show {} = {} from {})",
+                    self.compile_normalization_value(left, &formed)?,
+                    self.compile_normalization_value(right, &formed)?,
+                    checked.1
+                ));
+            }
+            // Denotation congruence retains both original formations, including
+            // literal distinctness and finite-sequence natural-length evidence.
+            let left = self.compile_object_reference(&fact.left, position)?;
+            let right = self.compile_object_reference(&fact.right, position)?;
+            return Ok(match constructor {
+                "literal" => equalities.iter().rev().fold("(rfl : Litex.SetSemantics.emptyValue (M := M) = Litex.SetSemantics.emptyValue (M := M))".to_owned(),|tail,head|format!("(congrArg₂ (Litex.SetSemantics.insertValue (M := M)) {head} {tail})")),
+                "cartesian" => format!("(congrArg (Litex.FiniteFunction.cartValue (M := M)) (funext {}))",finite_vector_proof(&equalities)),
+                "sequence" => format!("(by\n  let _left := {left}\n  let _right := {right}\n  exact Litex.seqSetSameOfCarrier _left _right {})",equalities[0]),
+                "finite_sequence" => format!("(by\n  let _left := {left}\n  let _right := {right}\n  exact Litex.finiteSeqSameOfArgs _left _right {} {})",equalities[0],equalities[1]),
+                _ => unreachable!(),
+            });
+        }
+        let set_constructor = match (&fact.left, &fact.right) {
+        (Obj::SetOperator(SetOperator::Union(left)), Obj::SetOperator(SetOperator::Union(right))) => Some((
+            vec![(left.left.as_ref(), right.left.as_ref()), (left.right.as_ref(), right.right.as_ref())],
+            "(Litex.SetSemantics.unionValue (M := M))",
+        )),
+        (Obj::SetOperator(SetOperator::Intersect(left)), Obj::SetOperator(SetOperator::Intersect(right))) => Some((
+            vec![(left.left.as_ref(), right.left.as_ref()), (left.right.as_ref(), right.right.as_ref())],
+            "(fun (a b : M.Value) => Litex.SetSemantics.sepValue (M := M) a (fun z => M.mem z b))",
+        )),
+        (Obj::SetOperator(SetOperator::SetMinus(left)), Obj::SetOperator(SetOperator::SetMinus(right))) => Some((
+            vec![(left.left.as_ref(), right.left.as_ref()), (left.right.as_ref(), right.right.as_ref())],
+            "(fun (a b : M.Value) => Litex.SetSemantics.sepValue (M := M) a (fun z => ¬ M.mem z b))",
+        )),
+        (Obj::SetOperator(SetOperator::SymmetricDifference(left)), Obj::SetOperator(SetOperator::SymmetricDifference(right))) => Some((
+            vec![(left.left.as_ref(), right.left.as_ref()), (left.right.as_ref(), right.right.as_ref())],
+            "(Litex.symmetricDifferenceValue (M := M))",
+        )),
+        (Obj::SetOperator(SetOperator::PowerSet(left)), Obj::SetOperator(SetOperator::PowerSet(right))) => Some((
+            vec![(left.set.as_ref(), right.set.as_ref())],
+            "(Litex.SetSemantics.powerValue (M := M))",
+        )),
+        (Obj::SetOperator(SetOperator::FamilyUnion(left)), Obj::SetOperator(SetOperator::FamilyUnion(right))) => Some((
+            vec![(left.left.as_ref(), right.left.as_ref())],
+            "(fun A => Litex.IndexedUnionSemantics.indexedUnionValue (M := M) A id)",
+        )),
+        (Obj::SetOperator(SetOperator::FamilyIntersect(left)), Obj::SetOperator(SetOperator::FamilyIntersect(right))) => Some((
+            vec![(left.left.as_ref(), right.left.as_ref())],
+            "(Litex.familyIntersectValue (M := M))",
+        )),
+        _ => None,
+    };
+        if let Some((pairs, operation)) = set_constructor {
+            if children.len() != pairs.len() {
+                return Err(LeanCompileError::unsupported(
+                    "SetConstructorCongruence/Children",
+                ));
+            }
+            let mut equalities = Vec::with_capacity(pairs.len());
+            for (index, ((left, right), child)) in pairs.into_iter().zip(children).enumerate() {
+                if !matches!(source_subject(child)?, Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                if eq.left.ir() == left.ir() && eq.right.ir() == right.ir())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "SetConstructorCongruence/ChildSubject",
+                    ));
+                }
+                let prior = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualityRequirements(children),
+                    index,
+                );
+                let checked = self.compile_verify(child, &prior)?;
+                let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
+                equalities.push(format!(
+                    "(show {} = {} from {})",
+                    self.compile_normalization_value(left, &formed)?,
+                    self.compile_normalization_value(right, &formed)?,
+                    checked.1
+                ));
+            }
+            // In particular, FamilyIntersect consumes both original nonempty
+            // requirements; a denotation equality does not manufacture WD.
+            self.compile_object_reference(&fact.left, position)?;
+            self.compile_object_reference(&fact.right, position)?;
+            return Ok(if equalities.len() == 1 {
+                format!("(congrArg {operation} {})", equalities[0])
+            } else {
+                format!(
+                    "(congrArg₂ {operation} {} {})",
+                    equalities[0], equalities[1]
+                )
+            });
+        }
+        let constructor = match (&fact.left, &fact.right) {
+            (
+                Obj::FunctionSpace(FunctionSpace::FnRange(left)),
+                Obj::FunctionSpace(FunctionSpace::FnRange(right)),
+            ) => Some((
+                vec![(left.function.as_ref(), right.function.as_ref())],
+                "functionRangeValueCongr",
+            )),
+            (
+                Obj::FunctionSpace(FunctionSpace::Preimage(left)),
+                Obj::FunctionSpace(FunctionSpace::Preimage(right)),
+            ) => Some((
+                vec![
+                    (left.function.as_ref(), right.function.as_ref()),
+                    (left.value.as_ref(), right.value.as_ref()),
+                ],
+                "pointPreimageValueCongr",
+            )),
+            (
+                Obj::FunctionSpace(FunctionSpace::PreimageSet(left)),
+                Obj::FunctionSpace(FunctionSpace::PreimageSet(right)),
+            ) => Some((
+                vec![
+                    (left.function.as_ref(), right.function.as_ref()),
+                    (left.target_set.as_ref(), right.target_set.as_ref()),
+                ],
+                "setPreimageValueCongr",
+            )),
+            _ => None,
+        };
+        if let Some((pairs, law)) = constructor {
+            if children.len() != pairs.len() {
+                return Err(LeanCompileError::unsupported(
+                    "FunctionConstructorCongruence/Children",
+                ));
+            }
+            let mut equalities = Vec::with_capacity(pairs.len());
+            for (index, ((left, right), child)) in pairs.into_iter().zip(children).enumerate() {
+                if !matches!(source_subject(child)?, Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                if eq.left.ir() == left.ir() && eq.right.ir() == right.ir())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "FunctionConstructorCongruence/ChildSubject",
+                    ));
+                }
+                let prior = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualityRequirements(children),
+                    index,
+                );
+                let checked = self.compile_verify(child, &prior)?;
+                let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
+                equalities.push(format!(
+                    "(show {} = {} from {})",
+                    self.compile_normalization_value(left, &formed)?,
+                    self.compile_normalization_value(right, &formed)?,
+                    checked.1
+                ));
+            }
+            // Both actual constructors keep their original complete interfaces
+            // and formation evidence. Child WD belongs to its original stage.
+            self.compile_object_reference(&fact.left, position)?;
+            self.compile_object_reference(&fact.right, position)?;
+            return Ok(format!("(Litex.{law} (M := M) {})", equalities.join(" ")));
+        }
+        if let (
+            Obj::FunctionSpace(FunctionSpace::Composition(left)),
+            Obj::FunctionSpace(FunctionSpace::Composition(right)),
+        ) = (&fact.left, &fact.right)
+        {
+            if children.len() != 2 {
+                return Err(LeanCompileError::unsupported(
+                    "CompositionCongruence/Children",
+                ));
+            }
+            let mut equalities = Vec::with_capacity(2);
+            for (index, ((left, right), child)) in
+                [(&left.outer, &right.outer), (&left.inner, &right.inner)]
+                    .into_iter()
+                    .zip(children)
+                    .enumerate()
+            {
+                if !matches!(source_subject(child)?,Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                if eq.left.ir()==left.ir() && eq.right.ir()==right.ir())
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "CompositionCongruence/ChildSubject",
+                    ));
+                }
+                let prior = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualityRequirements(children),
+                    index,
+                );
+                let checked = self.compile_verify(child, &prior)?;
+                let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
+                equalities.push(format!(
+                    "(show {} = {} from {})",
+                    self.compile_normalization_value(left, &formed)?,
+                    self.compile_normalization_value(right, &formed)?,
+                    checked.1
+                ));
+            }
+            self.compile_object_reference(&fact.left, position)?;
+            self.compile_object_reference(&fact.right, position)?;
+            return Ok(format!(
+                "(Litex.compositionValueCongr (M := M) {} {})",
+                equalities[0], equalities[1]
+            ));
+        }
         if matches!(
             (&fact.left, &fact.right),
             (Obj::BoundOperator(_), Obj::BoundOperator(_))
@@ -88,7 +435,15 @@ impl LitexToLeanCompiler {
                     SourceOwner::EqualityRequirements(children),
                     index,
                 );
-                components.push(self.compile_verify(child, &child_position)?.1);
+                let compiled = self.compile_verify(child, &child_position)?;
+                let formed =
+                    SourcePosition::new(Some(&child_position), SourceOwner::Verify(child), 2);
+                components.push(format!(
+                    "(show {} = {} from {})",
+                    self.compile_normalization_value(left, &formed)?,
+                    self.compile_normalization_value(right, &formed)?,
+                    compiled.1
+                ));
             }
             return Ok(format!(
                 "(congrArg (Litex.FiniteFunction.tupleValue (M := M)) (funext {}))",
@@ -103,7 +458,7 @@ impl LitexToLeanCompiler {
         if left.body.len() != 1
             || right.body.len() != 1
             || left.body[0].len() != right.body[0].len()
-            || !matches!(left.body[0].len(), 1 | 2)
+            || left.body[0].is_empty()
         {
             return Err(LeanCompileError::unsupported(
                 "Equality/MatchingOneArgByOne/FunctionArity",
@@ -142,21 +497,26 @@ impl LitexToLeanCompiler {
                 SourceOwner::EqualityRequirements(children),
                 index,
             );
-            compiled.push(self.compile_verify(result, &child_position)?.1);
+            let checked = self.compile_verify(result, &child_position)?;
+            if left.body[0].len() > 2 {
+                let formed =
+                    SourcePosition::new(Some(&child_position), SourceOwner::Verify(result), 2);
+                compiled.push(format!(
+                    "(show {} = {} from {})",
+                    self.compile_normalization_value(&a, &formed)?,
+                    self.compile_normalization_value(&b, &formed)?,
+                    checked.1
+                ));
+            } else {
+                compiled.push(checked.1);
+            }
         }
         self.compile_object_reference(&fact.left, position)?;
         self.compile_object_reference(&fact.right, position)?;
-        if compiled.len() == 2 {
-            Ok(format!(
-                "(congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {} {})",
-                compiled[1], compiled[0]
-            ))
-        } else {
-            Ok(format!(
-                "(congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {} (congrArg₂ (Litex.FiniteFunction.pack2 (M := M)) {} {}))",
-                compiled[2], compiled[0], compiled[1]
-            ))
-        }
+        let (head, arguments) = compiled
+            .split_last()
+            .ok_or_else(|| LeanCompileError::unsupported("FunctionCongruence/Children"))?;
+        Self::function_call_congruence(head, arguments)
     }
 
     pub(in crate::compile_to_lean) fn compile_arithmetic_congruence_strategy(
@@ -166,6 +526,15 @@ impl LitexToLeanCompiler {
         children: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        // Preserve the exact producer gate;this strategy peels ArithmeticOperator only.
+        if !matches!(
+            (&fact.left, &fact.right),
+            (Obj::ArithmeticOperator(_), Obj::ArithmeticOperator(_))
+        ) {
+            return Err(LeanCompileError::unsupported(
+                "ArithmeticCongruence/Constructor",
+            ));
+        }
         let (_, pairs) = arithmetic_constructor_pairs(&fact.left, &fact.right)
             .ok_or_else(|| LeanCompileError::unsupported("ArithmeticCongruence/Constructor"))?;
         if requirements.len() != pairs.len() || children.len() != requirements.len() {
@@ -244,11 +613,13 @@ impl LitexToLeanCompiler {
         let operation_term = arithmetic_operation_term(operation);
         if compiled.len() == 1 {
             Ok(format!("(congrArg {operation_term} {})", compiled[0]))
-        } else {
+        } else if compiled.len() == 2 {
             Ok(format!(
                 "(congrArg₂ {operation_term} {} {})",
                 compiled[0], compiled[1]
             ))
+        } else {
+            curried_value_congruence(&operation_term, &compiled)
         }
     }
 
@@ -331,6 +702,18 @@ impl LitexToLeanCompiler {
                     (left, right),
                     (Obj::ArithmeticOperator(_), Obj::ArithmeticOperator(_))
                         | (
+                            Obj::FunctionSpace(FunctionSpace::FnRange(_)),
+                            Obj::FunctionSpace(FunctionSpace::FnRange(_))
+                        )
+                        | (
+                            Obj::IteratedOperator(IteratedOperator::Sum(_)),
+                            Obj::IteratedOperator(IteratedOperator::Sum(_))
+                        )
+                        | (
+                            Obj::IteratedOperator(IteratedOperator::Product(_)),
+                            Obj::IteratedOperator(IteratedOperator::Product(_))
+                        )
+                        | (
                             Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_)),
                             Obj::IteratedOperator(IteratedOperator::SumOfFiniteSet(_))
                         )
@@ -353,6 +736,10 @@ impl LitexToLeanCompiler {
                         | (
                             Obj::ProductShape(ProductShape::Tuple(_)),
                             Obj::ProductShape(ProductShape::Tuple(_))
+                        )
+                        | (
+                            Obj::FunctionSpace(FunctionSpace::Preimage(_)),
+                            Obj::FunctionSpace(FunctionSpace::Preimage(_))
                         )
                         | (
                             Obj::FunctionSpace(FunctionSpace::PreimageSet(_)),

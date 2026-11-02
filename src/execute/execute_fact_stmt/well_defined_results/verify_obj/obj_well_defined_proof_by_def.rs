@@ -1289,6 +1289,12 @@ pub struct FieldAccessObjWellDefinedProof {
     pub child_obj_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub requirement_fact_verified: Vec<VerifyFactResult>,
     pub argument_scope: Option<FnObjArgumentScope>,
+    pub projection_steps: Vec<FieldAccessProjectionProof>,
+}
+
+pub struct FieldAccessProjectionProof {
+    pub carrier: StructObj,
+    pub field_index: usize,
 }
 
 impl FieldAccessObjWellDefinedProof {
@@ -1299,6 +1305,7 @@ impl FieldAccessObjWellDefinedProof {
             argument_scope: None,
             child_obj_well_defined,
             requirement_fact_verified,
+            projection_steps: Vec::new(),
         }
     }
 }

@@ -4,12 +4,16 @@ mod compile_builtin_rewrite;
 mod compile_builtin_strategy;
 mod compile_cart_membership;
 mod compile_closed_calculation;
+mod compile_closed_subtraction_bound;
 mod compile_complex_arithmetic_closure;
 mod compile_componentwise_additive_order;
+mod compile_finite_cardinality_order;
+mod compile_finite_set_strategy;
 mod compile_intersection;
 mod compile_known_atomic;
 mod compile_min_max_order;
 mod compile_natural_predecessor;
+mod compile_negative_factor_order;
 mod compile_nonmembership;
 mod compile_nonnegative_builtin;
 mod compile_order;
@@ -28,6 +32,7 @@ mod compile_set_minus;
 mod compile_set_nonmembership;
 mod compile_set_operator_membership;
 mod compile_set_subset_rule;
+mod compile_signed_bound;
 mod compile_signed_membership;
 mod compile_strict_order_transitivity;
 mod compile_structural_membership;
@@ -53,3 +58,11 @@ mod compile_finite_sets;
 mod compile_function_set_strategy;
 
 mod compile_negation_order;
+
+mod compile_trig_bounds;
+
+mod compile_inverse_principal_bounds;
+
+mod compile_abs_order;
+
+mod compile_log_product_sign;

@@ -19,9 +19,18 @@ impl LitexToLeanCompiler {
         local: bool,
     ) -> Result<String, LeanCompileError> {
         if local {
-            return Err(LeanCompileError::unsupported(
-                "RecursiveFunction/LocalDeclaration",
-            ));
+            let mut cursor = Some(position);
+            while let Some(scope) = cursor {
+                if matches!(scope.owner, SourceOwner::Template(_)) {
+                    break;
+                }
+                cursor = scope.parent;
+            }
+            if cursor.is_none() {
+                return Err(LeanCompileError::unsupported(
+                    "RecursiveFunction/LocalDeclaration",
+                ));
+            }
         }
         let ExecHaveFnByInducStmtResult::Success(proof) = result else {
             return Err(LeanCompileError::new(
@@ -30,7 +39,7 @@ impl LitexToLeanCompiler {
             ));
         };
         let signature = recursive_signature(proof);
-        let parameter = self.validate_recursive_nat_shape(proof, &signature, position)?;
+        self.validate_recursive_nat_shape(proof, &signature, position)?;
         let fn_set = Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone()));
         self.compile_wd(
             success_object_wd(&proof.fn_set_well_defined, &fn_set)?,
@@ -38,34 +47,8 @@ impl LitexToLeanCompiler {
         )?;
         let scope = SourcePosition::new(Some(position), SourceOwner::RecursiveFunction(proof), 0);
         let completed = SourcePosition { before: 7, ..scope };
-        let restricted = self.recursive_restricted_signature(proof, &completed)?;
-        let restricted_parameter = &restricted.set_bound_parameters.groups[0].params[0];
-        let mut bindings = HashMap::from([
-            (parameter.id, "(M.number (_index : ℂ))".to_string()),
-            (restricted_parameter.id, "_argument".to_string()),
-        ]);
-        let mut clauses = Vec::new();
-        for clause in &restricted.dom_facts {
-            clauses.push(self.compile_function_raw_predicate(
-                &function_guard_fact(clause)?,
-                &completed,
-                &bindings,
-            )?);
-        }
-        let guard = format!(
-            "(fun (_index : ℕ) (_argument : M.Value) => {})",
-            conjunction_proposition(clauses)?
-        );
-        let base_body = recursive_case_body(proof, 0)?;
-        let step_body = recursive_case_body(proof, 1)?;
-        bindings.remove(&restricted_parameter.id);
-        bindings.insert(proof.statement.name.id, "_prefix".into());
-        let step = format!(
-            "(fun (_index : ℕ) (_prefix : M.Value) => {})",
-            self.compile_function_raw_expression_bound(step_body, &completed, &bindings)?
-        );
-        bindings.insert(parameter.id, "(M.number 0)".into());
-        let base = self.compile_function_raw_expression_bound(base_body, &completed, &bindings)?;
+        let (guard, base, step) =
+            self.compile_recursive_value_parts(proof, &completed, &HashMap::new())?;
         let target = self.compile_object_reference(&signature.ret_set, &completed)?;
         let guard_sound = "(by\n  intro _index _argument _member _guard\n  exact Litex.NativeBridge.naturalValue_lt_number _index _argument _member _guard.1)";
         let base_proof = self.compile_recursive_case_return(proof, 0, &scope)?;
@@ -78,13 +61,21 @@ impl LitexToLeanCompiler {
             &object,
             &object,
             &value,
-            false,
+            local,
             position,
         )?;
-        let name = self.context_application(
-            &format!("_object_i{}", proof.statement.name.id.value()),
-            position,
-        );
+        let name = format!("_object_i{}", proof.statement.name.id.value());
+        let name = if local {
+            name
+        } else {
+            self.context_application(&name, position)
+        };
+        let keyword = if local { "have" } else { "theorem" };
+        let context = if local {
+            String::new()
+        } else {
+            self.context_header(position)?
+        };
         let stored = &proof.store_and_infer_result;
         if stored.membership_fact_id != stored.membership.primary_fact_id()
             || stored.case_defining_fact_ids
@@ -133,9 +124,8 @@ impl LitexToLeanCompiler {
         let mut declarations = vec![
             declaration,
             format!(
-                "theorem h_{}{} : {} :=\n  {}",
+                "{keyword} h_{}{context} : {} :=\n  {}",
                 stored.membership_fact_id.value(),
-                self.context_header(position)?,
                 member.0,
                 member.1
             ),
@@ -148,9 +138,64 @@ impl LitexToLeanCompiler {
                 &name,
                 &after_stores,
                 position,
+                local,
             )?);
         }
         Ok(declarations.join("\n"))
+    }
+
+    fn compile_recursive_value_parts(
+        &self,
+        proof: &ExecHaveFnByInducStmtSuccessResult,
+        position: &SourcePosition<'_>,
+        outer: &HashMap<IdentifierId, String>,
+    ) -> Result<(String, String, String), LeanCompileError> {
+        let parameter =
+            self.validate_recursive_nat_shape(proof, &recursive_signature(proof), position)?;
+        let restricted = self.recursive_restricted_signature(proof, position)?;
+        let restricted_parameter = &restricted.set_bound_parameters.groups[0].params[0];
+        let mut bindings = outer.clone();
+        bindings.extend([
+            (parameter.id, "(M.number (_index : ℂ))".to_string()),
+            (restricted_parameter.id, "_argument".to_string()),
+        ]);
+        let mut clauses = Vec::new();
+        for clause in &restricted.dom_facts {
+            clauses.push(self.compile_function_raw_predicate(
+                &function_guard_fact(clause)?,
+                position,
+                &bindings,
+            )?);
+        }
+        let guard = format!(
+            "(fun (_index : ℕ) (_argument : M.Value) => {})",
+            conjunction_proposition(clauses)?
+        );
+        let base_body = recursive_case_body(proof, 0)?;
+        let step_body = recursive_case_body(proof, 1)?;
+        bindings.remove(&restricted_parameter.id);
+        bindings.insert(proof.statement.name.id, "_prefix".into());
+        let step = format!(
+            "(fun (_index : ℕ) (_prefix : M.Value) => {})",
+            self.compile_function_raw_expression_bound(step_body, position, &bindings)?
+        );
+        bindings.insert(parameter.id, "(M.number 0)".into());
+        let base = self.compile_function_raw_expression_bound(base_body, position, &bindings)?;
+        Ok((guard, base, step))
+    }
+
+    pub(super) fn compile_recursive_raw_value(
+        &self,
+        proof: &ExecHaveFnByInducStmtSuccessResult,
+        position: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<String, LeanCompileError> {
+        let scope = SourcePosition::new(Some(position), SourceOwner::RecursiveFunction(proof), 7);
+        let (guard, base, step) = self.compile_recursive_value_parts(proof, &scope, bindings)?;
+        // The current checked recursive carrier is a standard numeric set.
+        let target =
+            self.compile_object_reference(&proof.statement.fn_set_clause.ret_set, &scope)?;
+        Ok(format!("(Litex.RecursiveNatFn.graph (⟨Litex.denote {target}, Litex.isSet {target}, {guard}, {base}, {step}⟩ : Litex.RecursiveNatFn M))"))
     }
 
     pub(in crate::compile_to_lean) fn compile_recursive_signature_reference(
@@ -202,7 +247,15 @@ impl LitexToLeanCompiler {
         if proof.statement.measure != parameter_obj
             || !is_zero(&proof.statement.lower_bound)
             || !matches!(&proof.statement.cases[0].case_fact, AndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(f)) if f.left == parameter_obj && is_zero(&f.right))
-            || !matches!(&proof.statement.cases[1].case_fact, AndChainAtomicFact::AtomicFact(AtomicFact::GreaterFact(f)) if f.left == parameter_obj && is_zero(&f.right))
+            || !match &proof.statement.cases[1].case_fact {
+                AndChainAtomicFact::AtomicFact(AtomicFact::GreaterFact(f)) => {
+                    f.left == parameter_obj && is_zero(&f.right)
+                }
+                AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(f)) => {
+                    f.left == parameter_obj && is_one(&f.right)
+                }
+                _ => false,
+            }
         {
             return Err(LeanCompileError::unsupported(
                 "RecursiveFunction/ZeroSuccessorShape",
@@ -322,7 +375,7 @@ impl LitexToLeanCompiler {
         Ok(definitions)
     }
 
-    fn compile_recursive_formation_checks(
+    pub(super) fn compile_recursive_formation_checks(
         &self,
         proof: &ExecHaveFnByInducStmtSuccessResult,
         position: &SourcePosition<'_>,
@@ -375,6 +428,10 @@ impl LitexToLeanCompiler {
             &coverage,
             &formed,
         )?);
+        let formed = SourcePosition {
+            before: 8,
+            ..formed
+        };
         for disjoint in &proof.case_checks.disjoint {
             let scope =
                 SourcePosition::new(Some(&formed), SourceOwner::RecursiveDisjoint(disjoint), 1);
@@ -403,7 +460,7 @@ impl LitexToLeanCompiler {
         Ok(definitions)
     }
 
-    fn compile_recursive_case_assumption(
+    pub(super) fn compile_recursive_case_assumption(
         &self,
         proof: &ExecHaveFnByInducStmtSuccessResult,
         index: usize,
@@ -459,7 +516,7 @@ impl LitexToLeanCompiler {
         definitions.extend(self.compile_recursive_parameter(proof, current, member, position)?);
         definitions.extend(self.compile_recursive_formation_checks(proof, position)?);
         let formed = SourcePosition {
-            before: 7,
+            before: 8,
             ..*position
         };
         if index == 1 {
@@ -478,7 +535,7 @@ impl LitexToLeanCompiler {
         let hypothesis = if index == 0 {
             "rfl"
         } else {
-            "(by\n  refine ⟨0, ((_index + 1 : ℕ) : ℝ), rfl, ?_, ?_⟩\n  · change M.number ((_index + 1 : ℕ) : ℂ) = M.number (((_index + 1 : ℕ) : ℝ) : ℂ)\n    simp only [Complex.ofReal_natCast]\n  · exact_mod_cast Nat.zero_lt_succ _index)"
+            recursive_successor_assumption(proof)
         };
         definitions.extend(self.compile_recursive_case_assumption(
             proof,
@@ -534,12 +591,17 @@ impl LitexToLeanCompiler {
             position,
         )?);
         let formed = SourcePosition {
-            before: 7,
+            before: 8,
             ..*position
         };
         let case = &proof.case_checks.cases[1];
         let case_position = SourcePosition::new(Some(&formed), SourceOwner::RecursiveCase(case), 0);
-        definitions.extend(self.compile_recursive_case_assumption(proof, 1, "(by\n  refine ⟨0, ((_index + 1 : ℕ) : ℝ), rfl, ?_, ?_⟩\n  · change M.number ((_index + 1 : ℕ) : ℂ) = M.number (((_index + 1 : ℕ) : ℝ) : ℂ)\n    simp only [Complex.ofReal_natCast]\n  · exact_mod_cast Nat.zero_lt_succ _index)", &case_position)?);
+        definitions.extend(self.compile_recursive_case_assumption(
+            proof,
+            1,
+            recursive_successor_assumption(proof),
+            &case_position,
+        )?);
         let completed = SourcePosition {
             before: 2,
             ..case_position
@@ -557,6 +619,91 @@ impl LitexToLeanCompiler {
             "(by\n  {})",
             definitions.join("\n").replace('\n', "\n  ")
         ))
+    }
+
+    /// Consume this original restricted self-call, including both smaller-index
+    /// guards, before a publication uses its argument with the completed graph.
+    pub(super) fn compile_recursive_self_requirements(
+        &self,
+        argument: &Obj,
+        declaration: &ExecHaveFnByInducStmtSuccessResult,
+        wd: &ObjWellDefinedProof,
+        producer: &SourcePosition<'_>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let DetailedObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::FnObj(call),
+            ..
+        } = (wd).detailed_ref()
+        else {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveFunction/CallFormation",
+            ));
+        };
+        let Some(FnObjDomainFnSetEvidence::InFunctionSet {
+            fact_id,
+            fn_set,
+            function_equal,
+        }) = &call.domain_fn_set
+        else {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveFunction/CallSelfEvidence",
+            ));
+        };
+        if *fact_id != declaration.restricted_self_membership.primary_fact_id()
+            || !function_equal.path.is_empty()
+            || call.child_obj_well_defined.len() != 1
+            || call.requirement_fact_verified.len() != 3
+        {
+            return Err(LeanCompileError::new("RecursiveFunction/CallSelfEvidence", "The recursive call lost its exact self-signature and ordered smaller-index evidence."));
+        }
+        let selected = self.recursive_restricted_signature(declaration, producer)?;
+        if *fn_set != selected {
+            return Err(LeanCompileError::new(
+                "RecursiveFunction/CallSelfSignature",
+                "The call selected another restricted signature.",
+            ));
+        }
+        ensure_object(argument, &call.child_obj_well_defined[0])?;
+        let call_parameter = &fn_set.set_bound_parameters.groups[0].params[0];
+        let substitution = HashMap::from([(call_parameter.id, argument.clone())]);
+        if !matches!(source_subject(&call.requirement_fact_verified[0])?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == argument.ir() && f.set == Obj::StandardSet(StandardSet::N))
+        {
+            return Err(LeanCompileError::new(
+                "RecursiveFunction/CallParameterSubject",
+                "The selected call's first requirement is not this exact argument in N.",
+            ));
+        }
+        for (guard, verified) in fn_set
+            .dom_facts
+            .iter()
+            .zip(&call.requirement_fact_verified[1..])
+        {
+            if !instantiated_fact_matches(
+                &function_guard_fact(guard)?,
+                &source_subject(verified)?,
+                &substitution,
+            ) {
+                return Err(LeanCompileError::new(
+                    "RecursiveFunction/CallGuardSubject",
+                    "The selected smaller-index guard proof has another subject or stage order.",
+                ));
+            }
+        }
+        let cursor = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
+        let mut requirements = Vec::new();
+        for (index, verified) in call.requirement_fact_verified.iter().enumerate() {
+            requirements.push(
+                self.compile_verify(
+                    verified,
+                    &SourcePosition {
+                        before: 1 + index,
+                        ..cursor
+                    },
+                )?
+                .1,
+            );
+        }
+        Ok(requirements)
     }
 
     fn compile_recursive_body_congruence(
@@ -597,40 +744,21 @@ impl LitexToLeanCompiler {
                             "RecursiveFunction/PredecessorCall",
                         ));
                     }
-                    let guard = position.with_visible_wd(object, &mut |wd, producer| {
-                        let DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FnObj(call), .. } = (wd).detailed_ref() else {
-                            return Err(LeanCompileError::unsupported("RecursiveFunction/CallFormation"));
-                        };
-                        let Some(FnObjDomainFnSetEvidence::InFunctionSet { fact_id, fn_set, function_equal }) = &call.domain_fn_set else {
-                            return Err(LeanCompileError::unsupported("RecursiveFunction/CallSelfEvidence"));
-                        };
-                        if *fact_id != declaration.restricted_self_membership.primary_fact_id() || !function_equal.path.is_empty()
-                            || call.child_obj_well_defined.len() != 1 || call.requirement_fact_verified.len() != 3
-                        {
-                            return Err(LeanCompileError::new("RecursiveFunction/CallSelfEvidence", "The recursive call lost its exact self-signature and ordered smaller-index evidence."));
-                        }
-                        let selected = self.recursive_restricted_signature(declaration, position)?;
-                        if *fn_set != selected {
-                            return Err(LeanCompileError::new("RecursiveFunction/CallSelfSignature", "The call selected another restricted signature."));
-                        }
-                        ensure_object(argument, &call.child_obj_well_defined[0])?;
-                        let call_parameter = &fn_set.set_bound_parameters.groups[0].params[0];
-                        let substitution = HashMap::from([(call_parameter.id, argument.as_ref().clone())]);
-                        if !matches!(source_subject(&call.requirement_fact_verified[0])?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == argument.ir() && f.set == Obj::StandardSet(StandardSet::N)) {
-                            return Err(LeanCompileError::new("RecursiveFunction/CallParameterSubject", "The selected call's first requirement is not this exact argument in N."));
-                        }
-                        for (guard, verified) in fn_set.dom_facts.iter().zip(&call.requirement_fact_verified[1..]) {
-                            if !instantiated_fact_matches(&function_guard_fact(guard)?, &source_subject(verified)?, &substitution) {
-                                return Err(LeanCompileError::new("RecursiveFunction/CallGuardSubject", "The selected smaller-index guard proof has another subject or stage order."));
-                            }
-                        }
-                        let cursor = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
-                        let mut requirements = Vec::new();
-                        for (index, verified) in call.requirement_fact_verified.iter().enumerate() {
-                            requirements.push(self.compile_verify(verified, &SourcePosition { before: 1 + index, ..cursor })?.1);
-                        }
-                        Ok(requirements)
-                    })?.ok_or_else(|| LeanCompileError::new("RecursiveFunction/CallProducer", "The source body owns no preceding WD for this recursive call."))?;
+                    let guard = position
+                        .with_visible_wd(object, &mut |wd, producer| {
+                            self.compile_recursive_self_requirements(
+                                argument,
+                                declaration,
+                                wd,
+                                producer,
+                            )
+                        })?
+                        .ok_or_else(|| {
+                            LeanCompileError::new(
+                                "RecursiveFunction/CallProducer",
+                                "The source body owns no preceding WD for this recursive call.",
+                            )
+                        })?;
                     let raw =
                         self.compile_function_raw_expression_bound(argument, position, bindings)?;
                     Ok(format!(
@@ -699,6 +827,7 @@ impl LitexToLeanCompiler {
         object: &str,
         position: &SourcePosition<'_>,
         outer: &SourcePosition<'_>,
+        local: bool,
     ) -> Result<String, LeanCompileError> {
         let source = self.resolve_fact(store.primary_fact_id(), position)?;
         self.validate_store(&store.store, &source)?;
@@ -752,12 +881,27 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::new("RecursiveFunction/CaseEquationConclusion", "The stored conclusion differs from this exact source function and selected branch body."));
         }
         let proposition = self.compile_function_raw_predicate(&then, position, &bindings)?;
+        let positive = if matches!(
+            proof.statement.cases[1].case_fact,
+            AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(_))
+        ) {
+            format!("(by\n  have _lower : (1 : ℝ) ≤ (_index : ℝ) := (Litex.NativeBridge.le_iff_ofDenoteReal (Litex.number (M := M) 1) _value_i{id} 1 (_index : ℝ) rfl (by simpa only [Complex.ofReal_natCast] using _index_spec)).mp h_{guard_id}\n  have _one_le : 1 ≤ _index := by exact_mod_cast _lower\n  exact Nat.succ_le_iff.mp _one_le)")
+        } else {
+            format!("Litex.NativeBridge.naturalValue_pos (Litex.denote _value_i{id}) h_{member_id} h_{guard_id}")
+        };
+        let positive = positive.replace('\n', "\n  ");
         let body = if index == 0 {
             format!("rw [h_{guard_id}]\n  exact Litex.recursiveNatFn_zero {object}")
         } else {
-            format!("let _index := Litex.NativeBridge.asNat _value_i{id} h_{member_id}\n  have _index_spec : Litex.denote _value_i{id} = M.number (_index : ℂ) := Litex.NativeBridge.asNat_spec _value_i{id} h_{member_id}\n  have _index_positive : 0 < _index := Litex.NativeBridge.naturalValue_pos (Litex.denote _value_i{id}) h_{member_id} h_{guard_id}\n  obtain ⟨_previous, _index_eq⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt _index_positive)\n  rw [_index_spec, _index_eq]\n  exact Litex.recursiveNatFn_succ {object} _previous")
+            format!("let _index := Litex.NativeBridge.asNat _value_i{id} h_{member_id}\n  have _index_spec : Litex.denote _value_i{id} = M.number (_index : ℂ) := Litex.NativeBridge.asNat_spec _value_i{id} h_{member_id}\n  have _index_positive : 0 < _index := {positive}\n  obtain ⟨_previous, _index_eq⟩ := Nat.exists_eq_succ_of_ne_zero (Nat.ne_of_gt _index_positive)\n  rw [_index_spec, _index_eq]\n  exact Litex.recursiveNatFn_succ {object} _previous")
         };
-        Ok(format!("theorem h_{}{} : ∀ {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{member_id} : Litex.In _value_i{id} Litex.N) (h_{guard_id} : {guard}), {proposition} := by\n  intro _Host_i{id} _rep_i{id} _value_i{id} h_{member_id} h_{guard_id}\n  {body}", forall.fact_id.value(), self.context_header(outer)?))
+        let keyword = if local { "have" } else { "theorem" };
+        let context = if local {
+            String::new()
+        } else {
+            self.context_header(outer)?
+        };
+        Ok(format!("{keyword} h_{}{context} : ∀ {{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{member_id} : Litex.In _value_i{id} Litex.N) (h_{guard_id} : {guard}), {proposition} := by\n  intro _Host_i{id} _rep_i{id} _value_i{id} h_{member_id} h_{guard_id}\n  {body}", forall.fact_id.value()))
     }
 }
 
@@ -820,5 +964,16 @@ fn contains_identifier(object: &Obj, target: IdentifierId) -> bool {
             _ => false,
         },
         _ => false,
+    }
+}
+
+fn recursive_successor_assumption(proof: &ExecHaveFnByInducStmtSuccessResult) -> &'static str {
+    if matches!(
+        proof.statement.cases[1].case_fact,
+        AndChainAtomicFact::AtomicFact(AtomicFact::GreaterEqualFact(_))
+    ) {
+        "(by\n  refine ⟨1, ((_index + 1 : ℕ) : ℝ), rfl, ?_, ?_⟩\n  · change M.number ((_index + 1 : ℕ) : ℂ) = M.number (((_index + 1 : ℕ) : ℝ) : ℂ)\n    simp only [Complex.ofReal_natCast]\n  · exact_mod_cast Nat.succ_le_succ (Nat.zero_le _index))"
+    } else {
+        "(by\n  refine ⟨0, ((_index + 1 : ℕ) : ℝ), rfl, ?_, ?_⟩\n  · change M.number ((_index + 1 : ℕ) : ℂ) = M.number (((_index + 1 : ℕ) : ℝ) : ℂ)\n    simp only [Complex.ofReal_natCast]\n  · exact_mod_cast Nat.zero_lt_succ _index)"
     }
 }

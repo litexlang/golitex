@@ -149,7 +149,16 @@ impl LitexToLeanCompiler {
         }
 
         let mut lines = Vec::new();
-        if local {
+        // Template objects live in Type and must select the same witness in
+        // their definition and publications. Prop elimination alone cannot do that.
+        let mut enclosing = Some(position);
+        let mut in_template = false;
+        while let Some(scope) = enclosing {
+            in_template |= matches!(scope.owner, SourceOwner::Template(_));
+            enclosing = scope.parent;
+        }
+        let select = !local || in_template;
+        if local && !select {
             let mut names = Vec::new();
             for (parameter, store) in outputs.iter().zip(stores) {
                 names.push(format!("_value_i{}", parameter.id.value()));
@@ -173,15 +182,24 @@ impl LitexToLeanCompiler {
                 before: 2 + index,
                 ..*position
             };
-            if !local && index < count {
+            if select && index < count {
                 let name = format!("_value_i{}", outputs[index].id.value());
-                lines.push(format!("noncomputable def {name}{} : Litex.Obj (M := M) M.Value :=\n  Classical.choose ({tail})", self.context_header(position)?));
-                tail = format!("(Classical.choose_spec ({tail}))");
+                let (choose, specification) = if in_template {
+                    ("Litex.obtainedObject", "Litex.obtainedObject_spec")
+                } else {
+                    ("Classical.choose", "Classical.choose_spec")
+                };
+                lines.push(if local {
+                    format!("let {name} : Litex.Obj (M := M) M.Value := {choose} ({tail})")
+                } else {
+                    format!("noncomputable def {name}{} : Litex.Obj (M := M) M.Value :=\n  {choose} ({tail})", self.context_header(position)?)
+                });
+                tail = format!("({specification} ({tail}))");
             }
             let fact = self.resolve_fact(store.primary_fact_id(), &completed)?;
             let proposition = self.fact_proposition(&fact, &completed)?;
             let name = format!("h_{}", fact.fact_id().value());
-            if !local {
+            if select {
                 let last = index + 1 == primary_count && index >= count;
                 let evidence = if last {
                     tail.clone()

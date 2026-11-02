@@ -88,7 +88,9 @@ thm partial_sum_prefix:
         $basis::is_prefix_of_length(K,n,m,coefficients,prefix_coefficients)
         $basis::is_prefix_of_length(V,n,m,vectors,prefix_vectors)
         forall j closed_range(0,m):
-            prefix_sums(j)=sums(j)
+            j<=n
+            =>:
+                prefix_sums(j)=sums(j)
         =>:
             $finite_span::is_partial_sum(K,field,V,space,m,prefix_coefficients,prefix_vectors,prefix_sums)
     0 $in closed_range(0,m)
@@ -98,6 +100,8 @@ thm partial_sum_prefix:
             j<=m
             =>:
                 prefix_sums(j)=space.add(prefix_sums(j-1),space.smul(prefix_coefficients(j),prefix_vectors(j)))
+        j<=m<=n
+        j<=n
         j $in closed_range(1,n)
         j $in closed_range(0,m)
         j-1 $in closed_range(0,m)
@@ -143,6 +147,10 @@ thm partial_sum_zero_tail:
             by cases:
                 ? capped(j+1)=sums(k)
                 case j<n:
+                    j $in N
+                    j $in Z
+                    0<=j
+                    j<=n
                     j+1<=n
                     j $in closed_range(0,n)
                     j+1 $in closed_range(0,n)
@@ -222,10 +230,20 @@ thm dependence_lemma:
             have m N=k-1
             release thm basis::prefix_exists(V,n,m,vectors)
             obtain prefix from exist p finite_seq(V,m) st {$basis::is_prefix_of_length(V,n,m,vectors,p)}
+            m<=k<=n
+            m<=n
+            claim:
+                ? forall j closed_range(1,m):
+                    j $in closed_range(1,n)
+                j $in Z
+                1<=j<=m<=n
+                j<=n
+                j $in closed_range(1,n)
             have fn prefix_coefficients(j closed_range(1,m)) K=coefficients(j)
             claim:
                 ? forall j N+:
                     j<=m
+                    j<=n
                     =>:
                         prefix_coefficients(j)=coefficients(j)
                 j $in closed_range(1,m)
@@ -233,9 +251,18 @@ thm dependence_lemma:
                 j $in closed_range(1,n)
                 prefix_coefficients(j)=coefficients(j)
             by def $basis::is_prefix_of_length(K,n,m,coefficients,prefix_coefficients)
+            claim:
+                ? forall j closed_range(0,m):
+                    j $in closed_range(0,n)
+                j $in Z
+                0<=j<=m<=n
+                j<=n
+                j $in closed_range(0,n)
             have fn prefix_sums(j closed_range(0,m)) V=sums(j)
             forall j closed_range(0,m):
-                prefix_sums(j)=sums(j)
+                j<=n
+                =>:
+                    prefix_sums(j)=sums(j)
             release thm partial_sum_prefix(K,field,V,space,n,coefficients,vectors,sums,m,prefix_coefficients,prefix,prefix_sums)
             release thm finite_span::partial_sum_determines_combination(K,field,V,space,m,prefix_coefficients,prefix,prefix_sums)
             \finite_span::linear_combination<K,field,V,space,m>(prefix_coefficients,prefix)=(prefix_sums)(m)=sums(m)=sums(k-1)

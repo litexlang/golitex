@@ -69,10 +69,7 @@ impl Runtime {
                     return Some(fn_type(signature));
                 }
                 let definition = self.def_template_visible(&instance.template_name)?.clone();
-                let ids = definition.template_arg_def.ordered_param_ids();
-                if ids.len() != instance.args.len() {
-                    return None;
-                }
+                let substitution = self.template_instance_substitution(&definition, instance)?;
                 let parameters = match &definition.template_def_stmt {
                     TemplateDefEnum::HaveObjEqualStmt(stmt) => &stmt.param_def,
                     TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => &stmt.param_def,
@@ -80,8 +77,12 @@ impl Runtime {
                     TemplateDefEnum::TrustHaveStmt(stmt) => &stmt.param_def,
                     _ => return None,
                 };
-                let carrier = obj_type(&parameters.groups.first()?.param_type)?;
-                let substitution = ids.into_iter().zip(instance.args.iter().cloned()).collect();
+                let group = parameters.groups.iter().find(|g| {
+                    g.params
+                        .iter()
+                        .any(|p| p.name == instance.template_name.local_name())
+                })?;
+                let carrier = obj_type(&group.param_type)?;
                 self.inst_obj(&carrier, &substitution).ok()
             }
             _ => None,

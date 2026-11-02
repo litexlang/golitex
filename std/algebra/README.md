@@ -1,5 +1,14 @@
 # Algebra: groups, rings, fields and vector spaces
 
+Current compatibility audit, 2026-10-30: the pinned executable strictly
+loads all 19 exports through subspace_sums after explicit index/carrier facts
+were supplied in six existing files. The added bounds follow from the
+original integer/order hypotheses; finite length zero and arbitrary fields
+are retained. This historical source-prefix check does not replace independent
+course-level acceptance. General complement and linear-extension existence
+were unfinished at that earlier audit; the complement increment below now
+supplies existence.
+
 This package exports `group`, `field`, `vector_space`, `finite_span`, `basis`, `dependence`, `span_reduction`, `basis_existence`, `exchange`, `basis_comparison`, `basis_extension`, `dimension`, `subspace`, `finite_decomposition`,
 `linear_dimension`, `linear_criteria`, `coordinate_maps`, `direct_sum` and
 `subspace_sums` and `ring`. It provides shared
@@ -201,6 +210,36 @@ Its laws require distinct zero and one, commutative addition/multiplication,
 associativity, distribution and the identity/inverse laws. The inverse has the
 guarded domain `fn(x K: x != zero) K`; applying it at zero is not well-defined.
 
+The same export supplies `real_field &Field<R>` and `complex_field &Field<C>`.
+They use ordinary real/complex arithmetic and the guarded reciprocal. Their
+function-valued fields are `real_add`, `real_neg`, `real_mul`, `real_inv` and
+the corresponding `complex_` operations. The existing generic Field interface
+and its hypotheses are unchanged.
+
+For numerical evaluation, open the imported ordinary definitions that are
+used in the calculation:
+
+```litex
+release obj def Algebra::field::real_add
+release obj def Algebra::field::real_field
+release struct def Algebra::field::real_field
+Algebra::field::real_field.add(2,3)=5
+```
+
+This snippet uses the `Algebra = algebra` std import shown above. The complete
+[imported consumer](validation/.standard_fields/main.lit) also computes complex
+products and reciprocals, and applies the existing nonzero-inverse and inverse
+involution theorems. Establish inverse nonzeroness with `nonzero_field_inverse`
+before using the nested inverse conclusion in `field_inverse_involution`.
+Run `python3 std/algebra/validation/.standard_fields/check.py` from the repository
+root for strict source/import gates and three refusal controls. The controls
+reject both inverses at zero and `i*i=1`; valid statements after each rejection
+check that the Session retains its earlier context.
+
+These are source instances over existing native R/C, with no new native object,
+rule, user assumption, Field field or mathematical-name overload. The hidden
+validation directory is excluded by the existing std payload collector.
+
 The field export also supplies elementary multiplication laws:
 
 | Theorem after `Algebra::field::` | Result and required premises |
@@ -395,6 +434,193 @@ the basis_existence export below. Dimension invariance, a general dimension
 function, ring hierarchies and quotients remain outside these shared exports. No additional native rules, source trust or Lean replay
 are supplied by this increment.
 
+
+## A field as its own scalar-line space
+
+`\scalar_space<K,F>` in the vector_space export is an actual
+`VectorSpace<K,F,K>` with fields `(F.zero,F.add,F.mul)`. It reuses the supplied
+Field; scalar_space_carrier(K,F) publishes imported membership before a typed
+binding. No dimension, characteristic or R/C restriction is added.
+
+For the book's real and complex spaces, use the standard real_field and
+complex_field instances respectively. A Field on the same underlying set
+with different operations is not silently identified with the standard one.
+The [scalar-line consumer](validation/.ladr_ab/scalar_use.lit) computes real
+and complex scalar actions, identifies vector negation with Field negation,
+and imports the generic identity, inverse and zero-action results.
+
+## Selected additive inverses and differences
+
+LADR 1.28 uses an actual negative-vector value. The vector_space export selects
+`\vector_neg<K,F,V,space>(x)` from the existing unique inverse theorem, for any
+supplied Field and VectorSpace, without a dimension assumption. Its specification
+is `space.add(x,vector_neg(x))=space.zero`; vector_neg_characterization identifies
+any other candidate satisfying that equation. Both theorem interfaces include
+K, F, V and space before their vector arguments.
+
+`\vector_difference<K,F,V,space>(u,v)` is defined as
+`space.add(u,\vector_neg<K,F,V,space>(v))`. The source theorem
+`minus_one_times_vector(K,F,V,space,x)` proves LADR 1.32:
+`space.smul(F.neg(F.one),x)=\vector_neg<K,F,V,space>(x)`.
+Neither operation changes the VectorSpace struct or introduces a native overload.
+
+The [imported inverse consumer](validation/.ladr_ab/main.lit) computes negatives
+of real and complex native coordinates, includes the zero-dimensional space,
+and proves x-x=zero over an arbitrary supplied space. The focused check is
+`python3 std/algebra/validation/.ladr_ab/check.py`; set LITEX_CHECK_BINARY to a
+fixed executable when concurrent release builds are running. The current
+checkpoint accepts 31 source and 43 imported statements, with three sign,
+carrier and empty-coordinate refusals that retain context.
+
+## Scalar-valued function spaces
+
+The vector_space export supplies the LADR 1.24 construction over a supplied
+Field. X is any set, including the empty set. Each family has exactly three
+template parameters K, F and X:
+
+| Interface after `Algebra::vector_space::` | Result |
+| --- | --- |
+| `\function_zero<K,F,X>` | Zero function X -> K |
+| `\function_add<K,F,X>(f,g)` | Pointwise sum of two X -> K functions |
+| `\function_smul<K,F,X>(a,f)` | Pointwise scalar multiple |
+| `\function_space<K,F,X>` | The existing VectorSpace structure on `fn(x X) K`, with those three operations |
+| `function_space_carrier(K,F,X)` | Proved membership used before a typed binding of the imported structure value |
+
+For example, after opening the real Field definitions as above, callers can
+obtain the sequence space through:
+
+```litex
+release thm Algebra::vector_space::function_space_carrier(R,Algebra::field::real_field,N)
+have sequence_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,fn(x N) R> = \Algebra::vector_space::function_space<R,Algebra::field::real_field,N>
+```
+
+The [complete imported consumer](validation/.function_spaces/main.lit) computes
+the sum and scalar multiple of real and complex sequences, constructs an
+empty-domain space, and applies zero_scalar_times_vector over an arbitrary
+supplied Field and domain. It records the structure's defining tuple before
+calculating through its operation fields. Bare `release obj def` accepts an
+identifier, so instantiated template values use their definition equation.
+
+Run `python3 std/algebra/validation/.function_spaces/check.py` for strict source
+and imported checks plus three exact-domain/wrong-value refusals. Functions
+on a larger domain require an explicit restriction; no point may be evaluated
+outside X. The record's actual carrier is `fn(x X) K`. A direct retargeting of
+that record to a structure parameterized by native `finite_seq(K,n)` was
+rejected even with a checked equality of the underlying sets. Native coordinate
+records instead use the separate finite_span construction below; implicit
+record conversion is not part of that construction.
+
+The only new theorem publishes constructor membership. The laws are proved
+locally using the existing Field and VectorSpace interfaces. There is no new
+native rule, user trust, axiom, certificate proposition or struct-field change.
+
+## Native finite coordinate spaces
+
+The finite_span export constructs `coordinate_space<K,F,n>` on exactly
+`finite_seq(K,n)` for every `n N`, including zero. K is a nonempty scalar set
+and F is the supplied Field<K>. Its zero, addition and scalar multiplication
+are the existing zero_coefficients, add_coefficients and smul_coefficients;
+the proof reuses neg_coefficients for the additive inverse.
+
+Call the membership theorem before binding the imported structure:
+
+```litex
+release thm Algebra::finite_span::coordinate_space_carrier(R,Algebra::field::real_field,2)
+have plane &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,finite_seq(R,2)> = \Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2>
+```
+
+The [imported consumer](validation/.coordinate_spaces/main.lit) records the
+defining tuple before computing through the structure fields. It uses the
+existing coefficient entry theorems, performs real and complex calculations,
+feeds a constructed vector to matrix_apply_identity, constructs the zero-length
+space, and applies zero_scalar_times_vector for arbitrary K, F and n.
+The carrier is the native finite sequence itself, without a new wrapper or
+a conversion of the raw function-space record.
+
+Run `python3 std/algebra/validation/.coordinate_spaces/check.py` for the strict
+source/imported gates and index/scalar/wrong-value refusal controls. Coordinate
+indices remain exactly 1..n. In particular, the zero-dimensional space has an
+empty vector but no coordinate at 1. A real coordinate space accepts real
+scalars; complex multiplication uses the space over the complex Field.
+
+## Finite subspace families and directness
+
+The subspace_sums export extends the existing binary constructions to any
+finite list `members finite_seq(power_set(V),n)`. Every member must satisfy
+the existing ambient is_subspace relation. A decomposition is an actual
+finite_seq(V,n), whose jth entry belongs to members(j).
+
+| Interface after `Algebra::subspace_sums::` | Meaning |
+| --- | --- |
+| `is_subspace_family(K,F,V,space,n,members)` | All indexed subsets are ambient subspaces |
+| `is_family_decomposition(K,F,V,space,n,members,terms)` | A valid family and componentwise membership |
+| `\finite_subspace_sum<K,F,V,space,n,members>` | Actual subset consisting of the component-list sums; guarded by family validity |
+| `finite_subspace_sum_is_subspace(...)` | Closure under the supplied ambient operations |
+| `finite_subspace_sum_contains_summand(...,index)` | members(index) is contained in the sum, for index in 1..n |
+| `finite_subspace_sum_is_least(...,U)` | The sum is contained in any ambient subspace containing all summands |
+| `empty_is_subspace_family(...)`, `empty_subspace_family_sum(...)` | Length zero is valid and sums to {space.zero} |
+| `is_direct_subspace_family(...)` | Component summation is injective on valid decompositions |
+| `direct_subspace_family_unique_decomposition(...,value)` | A vector in a direct sum has exactly one component list |
+| `direct_subspace_family_zero_decomposition(...,terms,index)` | A zero-sum decomposition in a direct family has zero at every valid index |
+| `trivial_zero_decompositions_imply_direct(...)` | The converse zero-decomposition criterion |
+| `direct_pair_family_intersection(K,F,V,space,members)` | A direct two-member family has intersection {space.zero} |
+| `trivial_pair_intersection_implies_direct(K,F,V,space,members)` | A valid two-member family with that intersection is direct |
+
+The ellipses in this table stand for K,F,V,space,n,members in that order;
+the two empty-family interfaces omit n. The carrier theorem
+finite_subspace_sum_carrier publishes the imported set's membership in
+power_set(V). None of these interfaces assumes finite dimensionality.
+Pair directness concerns the sum itself and does not require that sum to fill V.
+The older is_internal_direct_sum contract, which also requires the sum to be V,
+keeps its meaning.
+
+The [family consumer](validation/.ladr_ab/family_use.lit) checks three summands,
+the empty family and arbitrary-field leastness. The
+[directness consumer](validation/.ladr_ab/direct_use.lit) checks (V,{0},{0}),
+unique decompositions and the empty family, and proves that (V,V,V) is not
+direct in a nonzero real plane. The
+[pair consumer](validation/.ladr_ab/pair_use.lit) checks both intersection
+directions, proves a direct sum is a proper singleton, and constructs its
+actual inherited VectorSpace using the existing subspace export.
+The [generic converse consumer](validation/.ladr_ab/inherit_use.lit) uses
+inherited_space_is_subspace(K,F,V,space,U,inherited): if U is a nonempty subset
+and its supplied vector structure has the same zero and pointwise operations
+as the ambient space, then U satisfies the ambient subspace criterion.
+
+Run check_families.py and check_pairs.py in validation/.ladr_ab for the
+strict file gates and executable family, length, index and false-equality
+controls. The underlying proofs reuse vector_list_sum, existing unit
+coefficients, subspace cancellation and combination closure.
+
+## Finite vector-list sums
+
+The finite_span export defines `\vector_list_sum<K,F,V,space,n>(vectors)` by
+the existing linear_combination with `\one_coefficients<K,F,n>`. It accepts
+exactly `finite_seq(V,n)` and includes n=0. There is no separate fold, native
+overload or additional assumption.
+
+| Theorem after `Algebra::finite_span::` | Result |
+| --- | --- |
+| `empty_vector_list_sum(K,F,V,space,vectors)` | The empty list sums to space.zero |
+| `vector_list_sum_add(K,F,V,space,n,left,right,result)` | A termwise sum has the sum of the two list sums |
+| `vector_list_sum_smul(K,F,V,space,n,a,vectors,result)` | A termwise scalar multiple has the scalar multiple of the sum |
+| `zero_vector_list_sum(K,F,V,space,n,vectors)` | An all-zero list sums to zero |
+| `vector_list_sum_from_trace(K,F,V,space,n,vectors,sums)` | The value is sums(n) when sums(0)=zero and sums(j)=add(sums(j-1),vectors(j)) |
+| `two_vector_list_sum(K,F,V,space,terms)` | A two-element list sums to add(terms(1),terms(2)) |
+
+The termwise premises use positive integer indices j with j<=n. Trace functions
+have domain closed_range(0,n). one_coefficients_entry and
+one_coefficients_carrier expose the all-one list, following the existing
+zero-coefficient interfaces. equal_contributions_equal_combinations identifies
+two weighted combinations whose contributions agree at each index.
+
+The [imported vector-sum consumer](validation/.ladr_ab/sum_use.lit) sums three
+copies of the native real vector (1,2), obtaining second coordinate 6. It also
+checks the empty list and imports the arbitrary-field add/scale/zero laws.
+`python3 std/algebra/validation/.ladr_ab/check_sums.py` checks these files and
+three wrong-value, missing-premise and index refusals. The all-one sum checkpoint
+has 53 strict source and 24 imported statements; the subsequent two-element
+specialization passes the 54-statement source checkpoint.
 
 ## Finite combinations and span
 
@@ -1432,3 +1658,180 @@ proof work and is excluded from the passing consumers.
 Left/right-only ideals, polynomial rings, quotient rings and isomorphism
 structure are not supplied by this batch. No new trust, axiom, parser or kernel
 rule was introduced.
+
+## Polynomial function interface checkpoint
+
+The polynomial export constructs actual real and complex polynomial functions
+from finite coefficient lists. Entry k+1 is the coefficient of x^k, with a list
+of length n+1 and n in N. Constants and zero are included; trailing zero
+coefficients are permitted. Each public operation has one fixed R or C carrier.
+
+| Interface | Contract |
+| --- | --- |
+| real_polynomial_value<n>, complex_polynomial_value<n> | Evaluate a length-(n+1) coefficient list at a scalar |
+| real_polynomial_from_coefficients<n>, complex_polynomial_from_coefficients<n> | Construct a complete R→R or C→C function |
+| is_real_polynomial, is_complex_polynomial | Existence of a finite coefficient representation of that function |
+| real_polynomials, complex_polynomials | Actual sets of those functions |
+| real_constant_polynomial, complex_constant_polynomial | Typed polynomial-set values for any constant in the fixed scalar carrier |
+| real_polynomial_function_carrier, complex_polynomial_function_carrier | Expose callable membership for a polynomial-set value |
+
+The named _value_at and _value_spec theorems expose constructor and evaluation
+equations. _from_coefficients_is_polynomial, _contains and
+_of_pointwise_representation support imported construction and recognition.
+The [imported consumer](validation/.ladr_ab/poly_use.lit) evaluates the nonreal
+polynomial (1+i)+(2+i)z at 2, obtains 5+3i, checks real zero, and proves that
+the coefficient list (i,0) represents the constant function i. Generic imported
+callers cover arbitrary complex coefficients, including nonreal ones.
+
+This checkpoint passes 36 source and 31 imported statements plus three
+refusal controls with retained context; see
+[acceptance](validation/.ladr_ab/polynomial_acceptance.json). Polynomial-space closure,
+coefficient uniqueness, degree (with minus infinity for zero), division and FTA
+remain unfinished. The full LADR 2.10–2.12 correspondence is not yet accepted.
+No axiom, trust, native rule or protected data shape was added.
+
+## First-class evaluation
+
+function_evaluation<X,Y,point> maps a complete unary function X→Y to its value
+at point in X. The source and target sets may be arbitrary; an empty source has
+no point to supply. function_evaluation_carrier and function_evaluation_spec
+publish the map's type and equation. function_evaluation_is_linear proves it
+linear from function_space<K,F,X> to scalar_space<K,F> over a supplied Field.
+The [imported consumer](validation/.ladr_ab/evaluation_use.lit) evaluates the
+square function at real 3 and complex i, and applies the generic linearity law.
+This increment passes 38 source statements, 9 imported statements and three
+refusal controls; see [acceptance](validation/.ladr_ab/evaluation_acceptance.json).
+
+## Polynomial spaces
+
+`real_polynomials_up_to<n>` and `complex_polynomials_up_to<n>` are the spans
+of the first n+1 monomial functions. Their representation theorems identify
+membership with a length-(n+1) coefficient witness; trailing zero coefficients
+are allowed. Inclusion is monotone in n. This is a coefficient bound while the
+exact-degree interface remains unfinished.
+
+`real_polynomial_space` and `complex_polynomial_space` are actual VectorSpace
+values on all real/complex polynomial functions. The corresponding
+`real_bounded_polynomial_space<n>` and `complex_bounded_polynomial_space<n>`
+are inherited VectorSpace values on the bounded sets. Evaluation linearity
+transports whole-function combinations to scalar values, reusing existing
+finite-span and restricted-space proofs.
+
+The [focused check](validation/.ladr_ab/check_polynomial_full.py) passes 96 source
+and 30 independent imported statements, plus three refusals with context
+retained. See [acceptance](validation/.ladr_ab/polynomial_full_acceptance.json).
+This accepts LADR 2.10. Coefficient uniqueness, degree, dimension and full FTA
+remain unfinished; no new axiom or kernel rule was added.
+
+The next checkpoint passes 105 source and 22 imported statements, with three
+retained-context refusals; see [acceptance](validation/.ladr_ab/polynomial_zero_acceptance.json).
+`real_polynomial_value_at_zero` and `complex_polynomial_value_at_zero` expose
+the constant coefficient. The corresponding `_first_coefficient_unique`
+theorems prove that equal functions have equal constant coefficients, even
+with different coefficient bounds. They do not establish uniqueness of every
+coefficient. `real_linear_polynomial_has_root` and
+`complex_linear_polynomial_has_root` return an actual root witness when the
+second coefficient is nonzero. This is the linear case, with the witness
+constructed as minus the first coefficient divided by the second.
+
+## Ordered basis extraction
+
+`ordered_basis::spanning_list_has_ordered_basis_of_bounded_length` extracts a
+basis from any finite spanning list over a supplied Field and VectorSpace.
+The result includes `is_ordered_sublist`: there is a strictly increasing list
+of positive original indices, each bounded by the original length, whose
+entries select exactly the returned basis vectors. Thus it preserves order
+when deleting entries. `is_ordered_sublist_selection` exposes that index witness.
+Reflexivity, composition and single-index deletion are proved as reusable laws.
+
+The [check](validation/.ladr_ab/check_ordered_basis.py) passes 6 source and 37
+independent imported statements, including an actual spanning real list,
+an empty selection and the nonadjacent positions 1 and 3. Three controls reject
+decreasing indices, an out-of-range index and a missing spanning premise while
+retaining the valid context. See [acceptance](validation/.ladr_ab/ordered_basis_acceptance.json).
+This accepts LADR 2.30. The existing range-inclusion extraction theorem remains
+available. No canonical basis selector or new assumption was introduced.
+
+## Basis and dependence converses
+
+`basis_characterization::unique_representations_imply_basis` proves a list
+is a basis when every vector has a unique coefficient representation in it.
+Together with `basis::basis_representation_exists_unique`, this gives both
+directions of LADR 2.28. Likewise,
+`basis_characterization::nontrivial_dependence_coefficients_imply_dependent`
+completes the converse to `basis::dependent_has_nontrivial_coefficients`
+for LADR 2.17. All statements allow arbitrary supplied Fields/VectorSpaces
+and include empty lists.
+
+The [check](validation/.ladr_ab/check_basis_characterization.py) passes 2 source
+and 37 imported statements, plus three refusals with context retained. The
+actual real list (0,1,2,3) spans but is dependent: existence of representations
+alone does not satisfy the uniqueness premise. See
+[acceptance](validation/.ladr_ab/basis_characterization_acceptance.json).
+
+## Standard coordinate bases and dimension
+
+`coordinate_basis::coordinate_basis<K,F,n>` is the actual list of n unit
+coordinate vectors in `finite_seq(K,n)`. Its weighted combination with any
+coefficient vector equals that vector, so it is independent, spans the whole
+coordinate space and proves its finite dimension is n, including n=0.
+`coordinate_basis::coordinate_projection<K,n,j>` returns the jth coordinate;
+j must lie in `closed_range(1,n)`. It is linear to the actual scalar space.
+
+The [check](validation/.ladr_ab/check_coordinate_basis.py) passes 20 strict
+source declarations, 33 independent imported statements and three refusals
+with context retained. The caller explicitly publishes existing carrier and
+finite-dimension theorems before checking selectors. Invalid index 0, a false
+complex coordinate and a false dimension are rejected. See
+[acceptance](validation/.ladr_ab/coordinate_basis_acceptance.json).
+
+## Native complex scalar correspondence
+
+The [independent scalar check](validation/.ladr_ab/complex_scalar/README.md)
+proves nine general claims and three refusal controls for LADR 1.1, 1.3 and
+1.5. It uses native C, re and img, with a proved unique real-coordinate pair
+for every complex scalar, field laws, unique inverses and guarded division.
+This correspondence does not assert literal set equality C = R × R.
+
+## Coordinate entry laws, deletion and complements
+
+`coordinate_arithmetic` supplies the entry formulas for the actual coordinate
+space addition, scalar multiplication, zero and selected additive inverse.
+The last formula identifies each entry with F.neg of the original entry.
+
+`dependent_removal::dependent_list_has_redundant_predecessor` returns a single
+index k whose vector belongs to the span of its predecessors, together with
+the list obtained by removing that same index and an equality of spans. Its
+input length is any natural; dependence itself rules out the empty case.
+
+`complement::finite_dimensional_subspace_has_complement(K,F,V,space,U)` proves
+existence for every subspace U of a finite-dimensional V. It extends a basis
+of U, takes the span of the added tail, and proves the internal direct-sum
+property. No canonical complement is selected. The reusable helper
+`independent_concatenation_has_trivial_span_intersection` proves disjointness
+of the two spans from independence of their concatenated list.
+
+## Infinite-dimensional scalar sequence spaces
+
+`infinite_dimension::is_infinite_dimensional(K,F,V,space)` is exactly the
+negation of the existing finite-dimensional predicate.
+`coordinate_zero_extension<K,F,n>` maps a finite coordinate vector into
+functions N+ -> K by preserving its first n entries and filling the tail with
+F.zero. Its value helper is distinctly named `zero_extended_coordinates`.
+The map is linear and injective, including n=0. The theorem
+`positive_index_function_space_is_infinite_dimensional(K,F)` applies this map
+in dimension d+1 to contradict a proposed finite dimension d. It uses the
+actual pointwise function-space record, over any supplied Field.
+
+The [finite-space tools check](validation/.ladr_ab/finite_tools/check.py)
+passes the strict final 13-statement source target, 15 independent subspace
+reuse claims and 66 imported use statements. Four controls reject dependence
+removal from an independent empty list, a false direct sum, false infinite
+dimension for the plane and a false nonzero tail. Context is retained.
+The same [receipt](validation/.ladr_ab/finite_tools/acceptance.json) covers
+actual R/C cases, zero and whole subspaces, exact source hypotheses for
+subspace dimensions and Grassmann's formula, and the consumed source hashes.
+
+The additional [complex-sum module](../complex_sums/README.md) supplies the
+finite-sum and coefficient bounds needed for polynomial growth. Exact degree,
+full coefficient uniqueness and complete FTA remain unfinished.

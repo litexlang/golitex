@@ -41,23 +41,64 @@ fn forall_store(store: &StoreFactAndInferResult) -> Result<&ForallFact, LeanComp
     }
 }
 
-fn object_binder(parameter: &BoundName) -> String {
+fn object_binder(parameter: &BoundName, local: bool) -> String {
     let id = parameter.id.value();
-    format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})")
+    let universe = if local {
+        "_".to_string()
+    } else {
+        format!("v{id}")
+    };
+    format!("{{_Host_i{id} : Type {universe}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id})")
 }
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_replacement_raw_value(
+        &self,
+        p: &ExecHaveByReplacementAxiomStmtSuccessResult,
+        position: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<String, LeanCompileError> {
+        let intro = forall_store(&p.introduction)?;
+        let [x_group, y_group] = intro.typed_parameters.groups.as_slice() else {
+            return Err(LeanCompileError::unsupported(
+                "Replacement/IntroductionBinders",
+            ));
+        };
+        let ([x], [y]) = (x_group.params.as_slice(), y_group.params.as_slice()) else {
+            return Err(LeanCompileError::unsupported(
+                "Replacement/IntroductionBinders",
+            ));
+        };
+        let [relation] = intro.dom_facts.as_slice() else {
+            return Err(LeanCompileError::unsupported(
+                "Replacement/IntroductionRelation",
+            ));
+        };
+        let domain = self.compile_function_raw_expression_bound(
+            &p.statement.source_set,
+            position,
+            bindings,
+        )?;
+        let mut bound = bindings.clone();
+        for (id, name) in [(x.id, "_replacement_x"), (y.id, "_replacement_y")] {
+            if bound.insert(id, name.into()).is_some() {
+                return Err(LeanCompileError::unsupported(
+                    "Replacement/RawBinderIdentity",
+                ));
+            }
+        }
+        let predicate = self.compile_function_raw_predicate(relation, position, &bound)?;
+        Ok(format!(
+            "(Litex.replacementValue {domain} (fun _replacement_x _replacement_y => {predicate}))"
+        ))
+    }
+
     pub(super) fn compile_replacement(
         &self,
         result: &ExecHaveByReplacementAxiomStmtResult,
         position: &SourcePosition<'_>,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if local {
-            return Err(LeanCompileError::unsupported(
-                "Replacement/LocalDeclaration",
-            ));
-        }
         let ExecHaveByReplacementAxiomStmtResult::Success(p) = result else {
             return Err(LeanCompileError::unsupported("Replacement/Failed"));
         };
@@ -150,12 +191,22 @@ impl LitexToLeanCompiler {
         let uniqueness =
             self.compile_replacement_uniqueness(unique, &citation, &p.statement.source_set)?;
         let name = format!("_object_i{}", p.statement.name.id.value());
-        let header = self.context_header(position)?;
-        let mut declarations = vec![format!("noncomputable def {name}{header} :=\n  Litex.replacement {domain} (fun _replacement_x _replacement_y => {raw}) {uniqueness}")];
-        let image_term = self.context_application(&name, position);
+        let header = if local {
+            String::new()
+        } else {
+            self.context_header(position)?
+        };
+        let definition = if local { "let" } else { "noncomputable def" };
+        let proof = if local { "have" } else { "theorem" };
+        let mut declarations = vec![format!("{definition} {name}{header} :=\n  Litex.replacement {domain} (fun _replacement_x _replacement_y => {raw}) {uniqueness}")];
+        let image_term = if local {
+            name
+        } else {
+            self.context_application(&name, position)
+        };
         let set_id = set_store.primary_fact_id().value();
         declarations.push(format!(
-            "theorem h_{set_id}{header} : Litex.IsSet {image_term} := Litex.isSet {image_term}"
+            "{proof} h_{set_id}{header} : Litex.IsSet {image_term} := Litex.isSet {image_term}"
         ));
         let xi = x.id.value();
         let yi = y.id.value();
@@ -168,13 +219,14 @@ impl LitexToLeanCompiler {
             ]),
         )?;
         let h_prop = format!("h_{}", relation.fact_id().value());
-        declarations.push(format!("theorem h_{}{header} : ∀ {} (_ : Litex.In _value_i{xi} {domain}) {} (_ : Litex.IsSet _value_i{yi}) ({h_prop} : {predicate}), Litex.In _value_i{yi} {image_term} := by\n  intro _ _ _value_i{xi} hx _ _ _value_i{yi} _ {h_prop}\n  exact Litex.replacementIntro {image_term} _value_i{xi} _value_i{yi} hx {h_prop}", intro.fact_id.value(), object_binder(x), object_binder(y)));
+        declarations.push(format!("{proof} h_{}{header} : ∀ {} (_ : Litex.In _value_i{xi} {domain}) {} (_ : Litex.IsSet _value_i{yi}) ({h_prop} : {predicate}), Litex.In _value_i{yi} {image_term} := by\n  intro _ _ _value_i{xi} hx _ _ _value_i{yi} _ {h_prop}\n  exact Litex.replacementIntro {image_term} _value_i{xi} _value_i{yi} hx {h_prop}", intro.fact_id.value(), object_binder(x, local), object_binder(y, local)));
         declarations.push(self.compile_replacement_elimination(
             p,
             &image_term,
             &domain,
             &header,
             &formed,
+            local,
         )?);
         Ok(declarations.join("\n\n"))
     }
@@ -246,6 +298,7 @@ impl LitexToLeanCompiler {
         domain: &str,
         header: &str,
         position: &SourcePosition<'_>,
+        local: bool,
     ) -> Result<String, LeanCompileError> {
         let fact = forall_store(&p.elimination)?;
         let [group] = fact.typed_parameters.groups.as_slice() else {
@@ -297,6 +350,7 @@ impl LitexToLeanCompiler {
                 (y.id, format!("(Litex.denote _value_i{yi})")),
             ]),
         )?;
-        Ok(format!("theorem h_{}{header} : ∀ {} (_ : Litex.In _value_i{yi} {image}), ∃ (_value_i{xi} : Litex.Obj (M := M) M.Value), ∃ (_ : Litex.In _value_i{xi} {domain}), {predicate} := by\n  intro _ _ _value_i{yi} hy\n  exact Litex.replacementElim {image} _value_i{yi} hy", fact.fact_id.value(), object_binder(y)))
+        let proof = if local { "have" } else { "theorem" };
+        Ok(format!("{proof} h_{}{header} : ∀ {} (_ : Litex.In _value_i{yi} {image}), ∃ (_value_i{xi} : Litex.Obj (M := M) M.Value), ∃ (_ : Litex.In _value_i{xi} {domain}), {predicate} := by\n  intro _ _ _value_i{yi} hy\n  exact Litex.replacementElim {image} _value_i{yi} hy", fact.fact_id.value(), object_binder(y, local)))
     }
 }

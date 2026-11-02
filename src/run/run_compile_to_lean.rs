@@ -32,10 +32,7 @@ fn compile_source(command: LaunchCommand) -> Result<String, CompileLeanError> {
         .join("litex.config")
         .exists()
     {
-        return Err(CompileLeanError::Hard(
-            "phase=compile: module proof closure is not supported yet; use a standalone source file"
-                .into(),
-        ));
+        return compile_module_source(command, &path);
     }
     let source = fs::read_to_string(&path).map_err(|error| {
         CompileLeanError::Hard(format!(
@@ -75,6 +72,52 @@ fn compile_source(command: LaunchCommand) -> Result<String, CompileLeanError> {
     let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(runtime);
     compiler
         .compile_run(&result, &namespace)
+        .map_err(|error| CompileLeanError::Hard(format!("phase=compile: {error}")))
+}
+
+fn compile_module_source(command: LaunchCommand, path: &Path) -> Result<String, CompileLeanError> {
+    use crate::run_module::{LoadLeanSourceFailure, LoadLeanSourceResult};
+    let loaded = crate::run_module::load_file_for_lean(command)
+        .map_err(|error| CompileLeanError::Hard(format!("phase=verify: {error}")))?;
+    let loaded = match loaded {
+        LoadLeanSourceResult::Success(loaded) => loaded,
+        LoadLeanSourceResult::Failed(LoadLeanSourceFailure::Import { path, error }) => {
+            return Err(CompileLeanError::Hard(format!(
+                "phase=verify: {}: {error}",
+                path.display()
+            )));
+        }
+        LoadLeanSourceResult::Failed(LoadLeanSourceFailure::File(file)) => {
+            let failed = file
+                .run
+                .statement_results
+                .iter()
+                .position(ExecStmtResult::is_failed);
+            return Err(match failed {
+                Some(index) => CompileLeanError::SoftFail(format!(
+                    "phase=verify: {}: statement {} failed Litex verification (soft fail)",
+                    file.path.display(),
+                    index + 1
+                )),
+                None => CompileLeanError::Hard(format!(
+                    "phase=verify: {}: {}",
+                    file.path.display(),
+                    file.run
+                        .session_error
+                        .as_ref()
+                        .map(ToString::to_string)
+                        .or_else(|| file
+                            .run
+                            .input_error
+                            .as_ref()
+                            .map(|input| RuntimeError::ParseError(input.error.clone()).to_string()))
+                        .unwrap_or_else(|| "source run failed".into())
+                )),
+            });
+        }
+    };
+    crate::compile_to_lean::LitexToLeanCompiler::new(loaded.runtime)
+        .compile_module(&loaded.closure, &artifact_namespace(path))
         .map_err(|error| CompileLeanError::Hard(format!("phase=compile: {error}")))
 }
 

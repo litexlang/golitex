@@ -126,7 +126,7 @@ fn struct_return_fields_keep_typed_sources_in_detailed_output() {
     ] {
         assert!(json.contains(evidence), "missing {evidence}");
     }
-    // The existing compiler rejects unsupported struct evidence for the whole
-    // artifact; this verifier repair does not pretend to add Lean struct support.
-    assert!(crate::compile_to_lean::compile_run(&run, rt, "StructReturn").is_err());
+    // The compiler now consumes these original tuple and template certificates.
+    crate::compile_to_lean::compile_run(&run, rt, "StructReturn")
+        .expect("returned record evidence compiles");
 }

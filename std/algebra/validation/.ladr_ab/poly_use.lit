@@ -1,0 +1,95 @@
+# Imported polynomial functions: nonreal coefficients, zero and trailing zeros.
+
+have nonreal_coefficients finite_seq(C,1+1)=fn(j closed_range(1,1+1)) C {j+i}
+
+release thm Algebra::polynomial::complex_polynomial_from_coefficients_is_polynomial(1,nonreal_coefficients)
+
+release thm Algebra::polynomial::complex_polynomial_contains(\Algebra::polynomial::complex_polynomial_from_coefficients<1>(nonreal_coefficients))
+
+have nonreal_polynomial Algebra::polynomial::complex_polynomials=\Algebra::polynomial::complex_polynomial_from_coefficients<1>(nonreal_coefficients)
+
+release thm Algebra::polynomial::complex_polynomial_function_carrier(nonreal_polynomial)
+
+release thm Algebra::polynomial::complex_polynomial_value_at(1,nonreal_coefficients,2)
+
+release thm Algebra::polynomial::complex_polynomial_value_spec(1,nonreal_coefficients,2)
+
+nonreal_polynomial=\Algebra::polynomial::complex_polynomial_from_coefficients<1>(nonreal_coefficients)
+
+nonreal_polynomial(2)=\Algebra::polynomial::complex_polynomial_from_coefficients<1>(nonreal_coefficients)(2)
+
+\Algebra::polynomial::complex_polynomial_from_coefficients<1>(nonreal_coefficients)(2)=\Algebra::polynomial::complex_polynomial_value<1>(nonreal_coefficients,2)
+
+\Algebra::polynomial::complex_polynomial_value<1>(nonreal_coefficients,2)=finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) C {nonreal_coefficients(k+1)*2^k})
+
+finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) C {nonreal_coefficients(k+1)*2^k})=5+3*i
+
+nonreal_polynomial(2)=5+3*i
+
+have padded_coefficients finite_seq(C,1+1)=fn(j closed_range(1,1+1)) C {(2-j)*i}
+
+have padded_polynomial fn(x C) C=\Algebra::polynomial::complex_polynomial_from_coefficients<1>(padded_coefficients)
+
+claim:
+    ? forall x C:
+        padded_polynomial(x)=i
+    release thm Algebra::polynomial::complex_polynomial_value_at(1,padded_coefficients,x)
+    release thm Algebra::polynomial::complex_linear_polynomial_value(padded_coefficients,x)
+    padded_coefficients(1)=i
+    padded_coefficients(2)=0
+    padded_polynomial(x)=\Algebra::polynomial::complex_polynomial_from_coefficients<1>(padded_coefficients)(x)=\Algebra::polynomial::complex_polynomial_value<1>(padded_coefficients,x)
+    \Algebra::polynomial::complex_polynomial_value<1>(padded_coefficients,x)=padded_coefficients(1)+padded_coefficients(2)*x=i+0*x=i
+
+release obj def Algebra::polynomial::complex_constant_polynomial
+
+have pure_imaginary_constant Algebra::polynomial::complex_polynomials=Algebra::polynomial::complex_constant_polynomial(i)
+
+release thm Algebra::polynomial::complex_polynomial_function_carrier(pure_imaginary_constant)
+
+Algebra::polynomial::complex_constant_polynomial(i)=fn(x C) C {i}
+
+claim:
+    ? forall x C:
+        pure_imaginary_constant(x)=i
+    pure_imaginary_constant=Algebra::polynomial::complex_constant_polynomial(i)=fn(t C) C {i}
+    pure_imaginary_constant(x)=fn(t C) C {i}(x)=i
+
+release obj def Algebra::polynomial::real_constant_polynomial
+
+have real_zero Algebra::polynomial::real_polynomials=Algebra::polynomial::real_constant_polynomial(0)
+
+release thm Algebra::polynomial::real_polynomial_function_carrier(real_zero)
+
+Algebra::polynomial::real_constant_polynomial(0)=fn(x R) R {0}
+
+claim:
+    ? forall x R:
+        real_zero(x)=0
+    real_zero=Algebra::polynomial::real_constant_polynomial(0)=fn(t R) R {0}
+    real_zero(x)=fn(t R) R {0}(x)=0
+
+claim:
+    ? forall x C:
+        padded_polynomial(x)=pure_imaginary_constant(x)
+    padded_polynomial(x)=i=pure_imaginary_constant(x)
+
+by fn_extension padded_polynomial=pure_imaginary_constant
+
+claim:
+    ? forall n N,coefficients finite_seq(C,n+1),p fn(x C) C:
+        forall x C:
+            p(x)=\Algebra::polynomial::complex_polynomial_value<n>(coefficients,x)
+        =>:
+            $Algebra::polynomial::is_complex_polynomial(p)
+    release thm Algebra::polynomial::complex_polynomial_of_pointwise_representation(n,coefficients,p)
+
+claim:
+    ? forall n N,coefficients finite_seq(R,n+1),p fn(x R) R:
+        forall x R:
+            p(x)=\Algebra::polynomial::real_polynomial_value<n>(coefficients,x)
+        =>:
+            $Algebra::polynomial::is_real_polynomial(p)
+    release thm Algebra::polynomial::real_polynomial_of_pointwise_representation(n,coefficients,p)
+
+thm nonreal_value:
+    ? nonreal_polynomial(2)=5+3*i

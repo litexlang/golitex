@@ -199,7 +199,7 @@ impl LitexToLeanCompiler {
             };
             if !matches!(
                 &fact,
-                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
+                Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::OrFact(_)
             ) {
                 return Err(LeanCompileError::unsupported(
                     "SetBuilder/CompoundPredicate",
@@ -209,17 +209,10 @@ impl LitexToLeanCompiler {
                 before: 2 + i,
                 ..scope
             };
-            self.compile_fact_wd(&captured.well_defined, &fact, &prior)
-                .map_err(|error| in_clause("formation", error))?;
             self.validate_store(&captured.store_and_infer.store, &fact)?;
-            let formed = SourcePosition {
-                parent: Some(&prior),
-                owner: SourceOwner::FactWD(&captured.well_defined),
-                before: usize::MAX,
-            };
             let clause = (
-                self.fact_proposition(&fact, &formed)
-                    .map_err(|error| in_clause("proposition", error))?,
+                self.compile_formed_fact_proposition(&captured.well_defined, &fact, &prior)
+                    .map_err(|error| in_clause("formation", error))?,
                 format!("h_{}", fact.fact_id().value()),
             );
             let completed = SourcePosition {

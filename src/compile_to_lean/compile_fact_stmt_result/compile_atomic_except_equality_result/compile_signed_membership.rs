@@ -12,6 +12,38 @@ impl LitexToLeanCompiler {
         results: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if fact.set == Obj::StandardSet(StandardSet::NPos) {
+            if requirements.len() != 2
+                || results.len() != 2
+                || membership_subject(&requirements[0], &fact.element)? != StandardSet::Z
+            {
+                return Err(LeanCompileError::unsupported(
+                    "RefinedPositiveNatural/Integer",
+                ));
+            }
+            let Fact::AtomicFact(order) = &requirements[1] else {
+                return Err(LeanCompileError::unsupported(
+                    "RefinedPositiveNatural/Order",
+                ));
+            };
+            let (zero, element, strict) = source_order_oriented(order)?;
+            if !strict || !is_exact_zero(zero) || element.ir() != fact.element.ir() {
+                return Err(LeanCompileError::unsupported(
+                    "RefinedPositiveNatural/Subject",
+                ));
+            }
+            for (requirement, result) in requirements.iter().zip(results) {
+                if source_subject(result)? != *requirement {
+                    return Err(LeanCompileError::unsupported(
+                        "RefinedPositiveNatural/Capture",
+                    ));
+                }
+            }
+            let integer = self.compile_verify(&results[0], position)?.1;
+            let positive = self.compile_verify(&results[1], position)?.1;
+            let object = self.compile_object_reference(&fact.element, position)?;
+            return Ok(format!("(Litex.inNPos_intro {object} (Litex.integerToNaturalOfNonnegative {object} ({integer}) (Litex.ltToLe (Litex.number (M := M) 0) {object} ({positive}))) ({positive}))"));
+        }
         if fact.set == Obj::StandardSet(StandardSet::N) {
             if requirements.len() != 2 || results.len() != 2 {
                 return Err(LeanCompileError::unsupported("RefinedNatural/Requirements"));

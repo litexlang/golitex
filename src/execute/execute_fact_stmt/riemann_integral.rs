@@ -238,118 +238,124 @@ impl Runtime {
                 else {
                     return Ok(None);
                 };
-                let a = f.lower.clone();
-                let b = f.upper.clone();
-                let interval = sorted_interval(a.clone(), b.clone());
-                let x = self.fresh_internal_param();
-                let restricted = literal(
-                    x.clone(),
-                    interval.clone(),
-                    analysis_apply(f.function.clone(), id(&x)),
-                );
-                let bounded: Fact = RealSetBoundedFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    set: Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
-                        function: Box::new(restricted),
-                    })),
-                    boundedness: RealBoundedness::Both,
-                    line_file: None,
-                }
-                .into();
-                // One definition: Darboux step-function enclosures of arbitrary precision.
-                // Inf/sup sums give these enclosures; conversely every enclosure bounds
-                // the lower/upper Darboux integrals. Refinement proves uniqueness.
-                // Sorted endpoints handle reversal; the singleton branch requires I=0.
-                let zero_guard = eq(self, a.clone(), b.clone());
-                let zero_value = eq(self, f.value.clone(), num("0"));
-                let nonzero = crate::ast::fact::negate_atomic_fact(
-                    &zero_guard,
-                    self.global_ids.allocate_fact_id(),
-                )
-                .expect("equality negation");
-                let zero = Fact::OrFact(OrFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    facts: vec![
-                        AndChainAtomicFact::AtomicFact(nonzero),
-                        AndChainAtomicFact::AtomicFact(zero_value),
-                    ],
-                    line_file: None,
-                });
-                let epsilon = self.fresh_internal_param();
-                let n = self.fresh_internal_param();
-                let p = self.fresh_internal_param();
-                let l = self.fresh_internal_param();
-                let u = self.fresh_internal_param();
-                let lower_sum = self.fresh_internal_param();
-                let upper_sum = self.fresh_internal_param();
-                let n_obj = id(&n);
-                let p_obj = id(&p);
-                let l_obj = id(&l);
-                let u_obj = id(&u);
-                let left = min(a.clone(), b.clone());
-                let right = max(a.clone(), b.clone());
-                let enclosure = certificate(
-                    self,
-                    "is_darboux_enclosure",
-                    vec![
-                        f.function.clone(),
-                        left.clone(),
-                        right.clone(),
-                        n_obj.clone(),
-                        p_obj.clone(),
-                        l_obj.clone(),
-                        u_obj.clone(),
-                    ],
-                );
-                let ls = darboux_sum(self, n_obj.clone(), p_obj.clone(), l_obj);
-                let us = darboux_sum(self, n_obj.clone(), p_obj, u_obj);
-                // The positive-length branch quantifies over orientation separately.
-                let oriented_value =
-                    oriented_candidate(self, a.clone(), b.clone(), f.value.clone());
-                let lower_equation = eq(self, id(&lower_sum), ls);
-                let upper_equation = eq(self, id(&upper_sum), us);
-                let bracket_lower = le(self, id(&lower_sum), oriented_value.clone());
-                let bracket_upper = le(self, oriented_value, id(&upper_sum));
-                let gap = lt(self, sub(id(&upper_sum), id(&lower_sum)), id(&epsilon));
-                let witness = Fact::ExistFact(PlainExistFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    typed_parameters: crate::ast::param::TypedParameterList {
-                        groups: vec![
-                            typed(n, Obj::StandardSet(StandardSet::NPos)),
-                            typed(p, function_space(self, num("0"), n_obj.clone())),
-                            typed(l, function_space(self, num("1"), n_obj.clone())),
-                            typed(u, function_space(self, num("1"), n_obj)),
-                            typed(lower_sum, real()),
-                            typed(upper_sum, real()),
-                        ],
-                    },
-                    facts: vec![
-                        enclosure,
-                        lower_equation,
-                        upper_equation,
-                        bracket_lower,
-                        bracket_upper,
-                        gap,
-                    ]
-                    .into_iter()
-                    .map(QuantifierFreeFact::AtomicFact)
-                    .collect(),
-                    line_file: None,
-                });
-                let positive = lt(self, left, right);
-                let epsilon_clause = function_limit_forall(
-                    self,
-                    epsilon,
-                    Obj::StandardSet(StandardSet::RPos),
-                    vec![positive],
-                    vec![witness],
-                );
-                let mut clauses = self.riemann_domain_requirements(a, b, domain.domain);
-                clauses.extend([bounded, zero, epsilon_clause]);
-                Ok(Some(clauses))
+                Ok(Some(self.riemann_integral_clauses_in_domain(f, &domain)))
             }
             _ => Ok(None),
         }
+    }
+
+    /// Retain the checked domain in callers without repeating its lookup.
+    pub(crate) fn riemann_integral_clauses_in_domain(
+        &mut self,
+        f: &HasRiemannIntegralFact,
+        domain: &RealFunctionLimitDomainProof,
+    ) -> Vec<Fact> {
+        let a = f.lower.clone();
+        let b = f.upper.clone();
+        let interval = sorted_interval(a.clone(), b.clone());
+        let x = self.fresh_internal_param();
+        let restricted = literal(
+            x.clone(),
+            interval.clone(),
+            analysis_apply(f.function.clone(), id(&x)),
+        );
+        let bounded: Fact = RealSetBoundedFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            set: Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
+                function: Box::new(restricted),
+            })),
+            boundedness: RealBoundedness::Both,
+            line_file: None,
+        }
+        .into();
+        // One definition: Darboux step-function enclosures of arbitrary precision.
+        // Inf/sup sums give these enclosures; conversely every enclosure bounds
+        // the lower/upper Darboux integrals. Refinement proves uniqueness.
+        // Sorted endpoints handle reversal; the singleton branch requires I=0.
+        let zero_guard = eq(self, a.clone(), b.clone());
+        let zero_value = eq(self, f.value.clone(), num("0"));
+        let nonzero =
+            crate::ast::fact::negate_atomic_fact(&zero_guard, self.global_ids.allocate_fact_id())
+                .expect("equality negation");
+        let zero = Fact::OrFact(OrFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            facts: vec![
+                AndChainAtomicFact::AtomicFact(nonzero),
+                AndChainAtomicFact::AtomicFact(zero_value),
+            ],
+            line_file: None,
+        });
+        let epsilon = self.fresh_internal_param();
+        let n = self.fresh_internal_param();
+        let p = self.fresh_internal_param();
+        let l = self.fresh_internal_param();
+        let u = self.fresh_internal_param();
+        let lower_sum = self.fresh_internal_param();
+        let upper_sum = self.fresh_internal_param();
+        let n_obj = id(&n);
+        let p_obj = id(&p);
+        let l_obj = id(&l);
+        let u_obj = id(&u);
+        let left = min(a.clone(), b.clone());
+        let right = max(a.clone(), b.clone());
+        let enclosure = certificate(
+            self,
+            "is_darboux_enclosure",
+            vec![
+                f.function.clone(),
+                left.clone(),
+                right.clone(),
+                n_obj.clone(),
+                p_obj.clone(),
+                l_obj.clone(),
+                u_obj.clone(),
+            ],
+        );
+        let ls = darboux_sum(self, n_obj.clone(), p_obj.clone(), l_obj);
+        let us = darboux_sum(self, n_obj.clone(), p_obj, u_obj);
+        // The positive-length branch quantifies over orientation separately.
+        let oriented_value = oriented_candidate(self, a.clone(), b.clone(), f.value.clone());
+        let lower_equation = eq(self, id(&lower_sum), ls);
+        let upper_equation = eq(self, id(&upper_sum), us);
+        let bracket_lower = le(self, id(&lower_sum), oriented_value.clone());
+        let bracket_upper = le(self, oriented_value, id(&upper_sum));
+        let gap = lt(self, sub(id(&upper_sum), id(&lower_sum)), id(&epsilon));
+        let witness = Fact::ExistFact(PlainExistFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            typed_parameters: crate::ast::param::TypedParameterList {
+                groups: vec![
+                    typed(n, Obj::StandardSet(StandardSet::NPos)),
+                    typed(p, function_space(self, num("0"), n_obj.clone())),
+                    typed(l, function_space(self, num("1"), n_obj.clone())),
+                    typed(u, function_space(self, num("1"), n_obj)),
+                    typed(lower_sum, real()),
+                    typed(upper_sum, real()),
+                ],
+            },
+            facts: vec![
+                enclosure,
+                lower_equation,
+                upper_equation,
+                bracket_lower,
+                bracket_upper,
+                gap,
+            ]
+            .into_iter()
+            .map(QuantifierFreeFact::AtomicFact)
+            .collect(),
+            line_file: None,
+        });
+        let positive = lt(self, left, right);
+        let epsilon_clause = function_limit_forall(
+            self,
+            epsilon,
+            Obj::StandardSet(StandardSet::RPos),
+            vec![positive],
+            vec![witness],
+        );
+        let mut clauses = self.riemann_domain_requirements(a, b, domain.domain.clone());
+        clauses.extend([bounded, zero, epsilon_clause]);
+        clauses
     }
 }
 fn failure(obj: Obj, stage: RiemannIntegralFailureStage) -> VerifyObjWellDefinedResult {

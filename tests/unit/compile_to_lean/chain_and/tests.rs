@@ -29,10 +29,11 @@ fn whole_known_mut(statement: &mut ExecStmtResult) -> &mut SearchProofByKnownFor
                 panic!("successful chain")
             };
             assert!(proof.adjacent.is_empty());
-            proof
+            &mut proof
                 .known_forall
                 .as_mut()
                 .expect("selected whole-known chain")
+                .application
         }
         VerifyFactResult::AndFact(proof) => {
             let VerifyAndFactResult::Success(proof) = proof.as_mut() else {
@@ -310,7 +311,11 @@ fn callee_constructor_factory_rejects_a_constructor_moved_to_a_future_then() {
     };
     let capture = goal.known_forall.as_ref().expect("selected known forall");
     let error = compiler
-        .compile_known_application(&Fact::ChainFact(goal.fact.clone()), capture, &caller)
+        .compile_known_application(
+            &Fact::ChainFact(goal.fact.clone()),
+            &capture.application,
+            &caller,
+        )
         .unwrap_err();
     assert_eq!(error.route, "WD/CalleeProducer", "{error}");
 }
@@ -332,6 +337,7 @@ fn callee_constructor_factory_reuses_inner_formation_without_foreign_requirement
         .as_ref()
         .expect("original inner whole-known route");
     let foreign = inner
+        .application
         .detailed_ref()
         .instantiation_requirements
         .detailed_ref()

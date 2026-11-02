@@ -1,0 +1,99 @@
+# Same-bound polynomial evaluation laws using existing coefficient operations.
+
+release obj def poly_use::nonreal_coefficients
+
+release obj def Algebra::field::complex_field
+
+release struct def Algebra::field::complex_field
+
+release obj def Algebra::field::complex_add
+
+release obj def Algebra::field::complex_mul
+
+have doubled_coefficients finite_seq(C,1+1)=\Algebra::finite_span::smul_coefficients<C,Algebra::field::complex_field,1+1>(2,poly_use::nonreal_coefficients)
+
+claim:
+    ? forall j closed_range(1,1+1):
+        doubled_coefficients(j)=2*poly_use::nonreal_coefficients(j)
+    j $in N+
+    j<=1+1
+    release thm Algebra::finite_span::smul_coefficients_entry(C,Algebra::field::complex_field,1+1,2,poly_use::nonreal_coefficients,doubled_coefficients,j)
+    doubled_coefficients(j)=Algebra::field::complex_field.mul(2,poly_use::nonreal_coefficients(j))=2*poly_use::nonreal_coefficients(j)
+
+release thm Algebra::polynomial::complex_polynomial_value_smul(1,poly_use::nonreal_coefficients,doubled_coefficients,2,2)
+
+claim:
+    ? \Algebra::polynomial::complex_polynomial_value<1>(poly_use::nonreal_coefficients,2)=5+3*i
+    release thm Algebra::polynomial::complex_polynomial_value_spec(1,poly_use::nonreal_coefficients,2)
+    \Algebra::polynomial::complex_polynomial_value<1>(poly_use::nonreal_coefficients,2)=finite_set_sum(closed_range(0,1),fn(k closed_range(0,1)) C {poly_use::nonreal_coefficients(k+1)*2^k})=5+3*i
+
+\Algebra::polynomial::complex_polynomial_value<1>(doubled_coefficients,2)=2*\Algebra::polynomial::complex_polynomial_value<1>(poly_use::nonreal_coefficients,2)=2*(5+3*i)=10+6*i
+
+have added_coefficients finite_seq(C,1+1)=\Algebra::finite_span::add_coefficients<C,Algebra::field::complex_field,1+1>(poly_use::nonreal_coefficients,poly_use::nonreal_coefficients)
+
+claim:
+    ? forall j closed_range(1,1+1):
+        added_coefficients(j)=poly_use::nonreal_coefficients(j)+poly_use::nonreal_coefficients(j)
+    j $in N+
+    j<=1+1
+    release thm Algebra::finite_span::add_coefficients_entry(C,Algebra::field::complex_field,1+1,poly_use::nonreal_coefficients,poly_use::nonreal_coefficients,added_coefficients,j)
+    added_coefficients(j)=Algebra::field::complex_field.add(poly_use::nonreal_coefficients(j),poly_use::nonreal_coefficients(j))=poly_use::nonreal_coefficients(j)+poly_use::nonreal_coefficients(j)
+
+release thm Algebra::polynomial::complex_polynomial_value_add(1,poly_use::nonreal_coefficients,poly_use::nonreal_coefficients,added_coefficients,2)
+
+\Algebra::polynomial::complex_polynomial_value<1>(added_coefficients,2)=\Algebra::polynomial::complex_polynomial_value<1>(poly_use::nonreal_coefficients,2)+\Algebra::polynomial::complex_polynomial_value<1>(poly_use::nonreal_coefficients,2)=(5+3*i)+(5+3*i)=10+6*i
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def Algebra::field::real_mul
+
+have real_coefficients finite_seq(R,1+1)=fn(j closed_range(1,1+1)) R {j}
+
+have zeroed_coefficients finite_seq(R,1+1)=\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,1+1>(0,real_coefficients)
+
+claim:
+    ? forall j closed_range(1,1+1):
+        zeroed_coefficients(j)=0*real_coefficients(j)
+    j $in N+
+    j<=1+1
+    release thm Algebra::finite_span::smul_coefficients_entry(R,Algebra::field::real_field,1+1,0,real_coefficients,zeroed_coefficients,j)
+    zeroed_coefficients(j)=Algebra::field::real_field.mul(0,real_coefficients(j))=0*real_coefficients(j)
+
+release thm Algebra::polynomial::real_polynomial_value_smul(1,real_coefficients,zeroed_coefficients,0,2)
+
+\Algebra::polynomial::real_polynomial_value<1>(zeroed_coefficients,2)=0*\Algebra::polynomial::real_polynomial_value<1>(real_coefficients,2)=0
+
+claim:
+    ? forall n N,left_coefficients,right_coefficients,result_coefficients finite_seq(C,n+1),x C:
+        forall j closed_range(1,n+1):
+            result_coefficients(j)=left_coefficients(j)+right_coefficients(j)
+        =>:
+            \Algebra::polynomial::complex_polynomial_value<n>(result_coefficients,x)=\Algebra::polynomial::complex_polynomial_value<n>(left_coefficients,x)+\Algebra::polynomial::complex_polynomial_value<n>(right_coefficients,x)
+    release thm Algebra::polynomial::complex_polynomial_value_add(n,left_coefficients,right_coefficients,result_coefficients,x)
+
+claim:
+    ? forall n N,left_coefficients,right_coefficients,result_coefficients finite_seq(R,n+1),x R:
+        forall j closed_range(1,n+1):
+            result_coefficients(j)=left_coefficients(j)+right_coefficients(j)
+        =>:
+            \Algebra::polynomial::real_polynomial_value<n>(result_coefficients,x)=\Algebra::polynomial::real_polynomial_value<n>(left_coefficients,x)+\Algebra::polynomial::real_polynomial_value<n>(right_coefficients,x)
+    release thm Algebra::polynomial::real_polynomial_value_add(n,left_coefficients,right_coefficients,result_coefficients,x)
+
+claim:
+    ? forall n N,coefficients,result_coefficients finite_seq(C,n+1),a,x C:
+        forall j closed_range(1,n+1):
+            result_coefficients(j)=a*coefficients(j)
+        =>:
+            \Algebra::polynomial::complex_polynomial_value<n>(result_coefficients,x)=a*\Algebra::polynomial::complex_polynomial_value<n>(coefficients,x)
+    release thm Algebra::polynomial::complex_polynomial_value_smul(n,coefficients,result_coefficients,a,x)
+
+claim:
+    ? forall n N,coefficients,result_coefficients finite_seq(R,n+1),a,x R:
+        forall j closed_range(1,n+1):
+            result_coefficients(j)=a*coefficients(j)
+        =>:
+            \Algebra::polynomial::real_polynomial_value<n>(result_coefficients,x)=a*\Algebra::polynomial::real_polynomial_value<n>(coefficients,x)
+    release thm Algebra::polynomial::real_polynomial_value_smul(n,coefficients,result_coefficients,a,x)
+

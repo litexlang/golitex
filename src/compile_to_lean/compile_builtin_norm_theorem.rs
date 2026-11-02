@@ -91,10 +91,13 @@ impl LitexToLeanCompiler {
             let Fact::AtomicFact(AtomicFact::EqualFact(f)) = &builtin.conclusions[1] else {
                 return Err(LeanCompileError::unsupported("NormSquare/InnerConclusion"));
             };
-            if f.left.ir() != first.left.ir()
-                || !matches!(&f.right, Obj::MatrixOperator(MatrixOperator::InnerProduct(p))
-                if p.left.ir() == arguments[0].ir() && p.right.ir() == arguments[0].ir() && p.dimension.ir() == arguments[1].ir())
-            {
+            super::compile_vector_laws::validate_euclidean_inner_law(
+                builtin.theorem,
+                arguments,
+                &builtin.requirements,
+                f,
+            )?;
+            if f.left.ir() != first.left.ir() {
                 return Err(LeanCompileError::unsupported("NormSquare/InnerSubject"));
             }
         }
@@ -161,7 +164,7 @@ impl LitexToLeanCompiler {
                     "(Litex.{name}Square {root}).trans (congrArg M.number (Litex.{name}SumFormula {root} ({expanded}).val.function (by rfl) (by rfl)))"
                 )
             } else if euclidean && index == 1 {
-                format!("Litex.euclideanNormSquareInner {root}")
+                super::compile_vector_laws::euclidean_inner_law_term(&root, &statement)
             } else {
                 format!("Litex.{name}Nonnegative {root}")
             };

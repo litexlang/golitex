@@ -360,7 +360,7 @@ fn build_proof_method(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue
             _ => compound_why_json(runtime, "or"),
         },
         VerifyFactResult::ChainFact(result) => match result.as_ref() {
-            VerifyChainFactResult::Success(proof) if proof.known_forall.is_some() => cite_known_forall(runtime, proof.known_forall.as_ref().unwrap()),
+            VerifyChainFactResult::Success(proof) if proof.known_forall.is_some() => cite_known_forall(runtime, &proof.known_forall.as_ref().unwrap().application),
             _ => compound_why_json(runtime, "chain"),
         },
         VerifyFactResult::ExistShapedFact(result) => {

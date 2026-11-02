@@ -1,0 +1,18 @@
+# Tracer: source-addressable whole-chain universal applications.
+# Before: the source below already verified, but its retained result discarded
+# the checked chain WD and the reader exposed neither equality individually.
+# forall t R:
+#     t = t + 0 = t
+# have chain_value R = 2
+# chain_value = chain_value + 0 = chain_value
+# Now: retain the actual application and WD once. Each equals selects its
+# adjacent relation from this whole proof, not a fabricated atomic proof.
+forall t R:
+    t = t + 0 = t
+
+have chain_value R = 2
+chain_value = chain_value + 0 = chain_value
+# Boundary: an arbitrary complex argument does not instantiate this real law;
+# it may have a separate adjacent proof. A zero denominator remains rejected.
+# Evidence: target/release/litex -strict -lang en -f examples/proof_nodes/chain/whole_forall_reading.lit
+# Producer/consumer: tests/reading_whole_chain_forall.rs; web/tests/whole-chain-forall.cjs.

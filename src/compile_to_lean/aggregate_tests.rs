@@ -2,6 +2,58 @@ use crate::execute::execute_fact_stmt::function_signature_selection::FunctionSig
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IteratedOperatorObjWellDefinedProofByDef as P;
 use crate::prelude::*;
 
+#[test]
+fn guarded_range_aggregates_replay_original_coverage() {
+    for source in [
+        include_str!("../../lean/examples/guarded_symbolic_sum/statement.lit"),
+        include_str!("../../lean/examples/guarded_natural_product/statement.lit"),
+        include_str!("../../lean/examples/guarded_closed_sum/statement.lit"),
+        include_str!("../../lean/examples/captured_range_sum/statement.lit"),
+        include_str!("../../lean/examples/captured_function_space/statement.lit"),
+        include_str!("../../lean/examples/captured_real_interval/statement.lit"),
+    ] {
+        let (runtime, run) = execute(source);
+        assert!(run.success, "{source}");
+        super::LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "guarded_range_aggregate")
+            .expect(source);
+    }
+}
+
+#[test]
+fn guarded_range_aggregates_reject_missing_or_reordered_evidence() {
+    for mutation in 0..3 {
+        let (runtime, mut run) = execute(include_str!(
+            "../../lean/examples/guarded_closed_sum/statement.lit"
+        ));
+        assert!(run.success);
+        let DetailedObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::IteratedOperator(P::Sum(proof)),
+            ..
+        } = equality(&mut run)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left
+            .as_detailed_mut()
+            .unwrap()
+        else {
+            panic!("sum construction")
+        };
+        let requirements = &mut proof.requirement_fact_verified;
+        match mutation {
+            0 => {
+                requirements.pop();
+            }
+            1 => requirements.swap(4, 5),
+            _ => requirements.swap(6, 7),
+        }
+        super::LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "invalid_range_coverage")
+            .expect_err("coverage must retain its original interval and ordered arguments");
+    }
+}
+
 fn execute(source: &str) -> (Runtime, RunLitexCodeResult) {
     let mut runtime = Runtime::new_with_result_detail(
         parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap(),
@@ -350,7 +402,7 @@ fn finite_aggregate_keeps_guard_and_fold_boundaries() {
     assert!(run.success);
     assert!(super::LitexToLeanCompiler::new(runtime)
         .compile_run(&run, "guarded_finite_aggregate")
-        .is_err());
+        .is_ok());
     assert!(
         !execute("finite_set_sum({1, 1.0}, fn(x Z) Z {x}) = 1")
             .1
@@ -471,4 +523,157 @@ fn finite_aggregate_alpha_checks_original_iterand_body() {
     assert!(compiler
         .compile_run(&run, "changed_aggregate_alpha")
         .is_err());
+}
+
+#[test]
+fn range_input_coverage_replays_positive_and_arbitrary_carriers() {
+    for source in [
+        include_str!("../../lean/examples/positive_range_aggregates/statement.lit"),
+        include_str!("../../lean/examples/covered_range_aggregates/statement.lit"),
+    ] {
+        let (runtime, run) = execute(source);
+        assert!(run.success, "{source}");
+        super::LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "range_input_coverage")
+            .expect(source);
+    }
+}
+
+#[test]
+fn range_input_coverage_rejects_missing_changed_and_reordered_start_proofs() {
+    for carrier in ["N+", "Q+", "R+"] {
+        for mutation in 0..3 {
+            let term = format!("sum(1,3,fn(k {carrier}: k != 0) R{{k}})");
+            let (runtime, mut run) = execute(&format!("{term} = {term}"));
+            assert!(run.success);
+            let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::IteratedOperator(P::Sum(proof)),
+                ..
+            } = equality(&mut run)
+                .well_defined_proof
+                .as_detailed_mut()
+                .unwrap()
+                .left
+                .as_detailed_mut()
+                .unwrap()
+            else {
+                panic!("sum construction")
+            };
+            let reqs = &mut proof.requirement_fact_verified;
+            match mutation {
+                0 => {
+                    reqs.remove(4);
+                }
+                1 => {
+                    let VerifyFactResult::AtomicExceptEquality(p) = &mut reqs[4] else {
+                        panic!("membership")
+                    };
+                    let VerifyAtomicExceptEqualityFactResult::Success(p) = p.as_mut() else {
+                        panic!("verified membership")
+                    };
+                    let AtomicFact::InFact(f) = &mut p.fact else {
+                        panic!("positive membership")
+                    };
+                    f.set = Obj::StandardSet(StandardSet::N);
+                }
+                _ => reqs.swap(4, 5),
+            }
+            super::LitexToLeanCompiler::new(runtime)
+                .compile_run(&run, "wrong_range_input")
+                .expect_err("the original positive-start certificate must be retained");
+        }
+    }
+}
+
+#[test]
+fn range_input_coverage_rejects_foreign_interval_inclusion() {
+    for change in 0..3 {
+        let term = "sum(1,3,fn(k closed_range(1,3)) R{k})";
+        let (runtime, mut run) = execute(&format!("{term} = {term}"));
+        assert!(run.success);
+        let DetailedObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::IteratedOperator(P::Sum(p)),
+            ..
+        } = equality(&mut run)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left
+            .as_detailed_mut()
+            .unwrap()
+        else {
+            panic!("sum WD")
+        };
+        if change == 0 {
+            p.requirement_fact_verified.remove(4);
+        } else {
+            let VerifyFactResult::AtomicExceptEquality(p) = &mut p.requirement_fact_verified[4]
+            else {
+                panic!("inclusion")
+            };
+            let VerifyAtomicExceptEqualityFactResult::Success(p) = p.as_mut() else {
+                panic!("verified inclusion")
+            };
+            let AtomicFact::SubsetFact(f) = &mut p.fact else {
+                panic!("inclusion fact")
+            };
+            if change == 1 {
+                f.right = Obj::StandardSet(StandardSet::R);
+            } else {
+                let Obj::SetFormer(SetFormer::ClosedRange(range)) = &mut f.left else {
+                    panic!("index range")
+                };
+                range.end = Box::new(Obj::Literal(Literal::Number(Number::new("2".into()))));
+            }
+        }
+        super::LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "wrong_interval_inclusion")
+            .expect_err("inclusion must cover the exact original interval and input carrier");
+    }
+}
+
+#[test]
+fn aggregate_domain_coverage_finite_aggregates_replay_guards_and_positive_carriers() {
+    for source in [
+        include_str!("../../lean/examples/positive_finite_aggregates/statement.lit"),
+        include_str!("../../lean/examples/guarded_finite_aggregates/statement.lit"),
+    ] {
+        let (runtime, run) = execute(source);
+        assert!(run.success, "{source}");
+        super::LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "finite_domain_coverage")
+            .expect(source);
+    }
+}
+
+#[test]
+fn aggregate_domain_coverage_rejects_missing_reordered_and_foreign_finite_guards() {
+    for change in 0..3 {
+        let (runtime, mut run) = execute("finite_set_sum({1,2},fn(k R+: k != 0) R{k}) = 3");
+        assert!(run.success);
+        let DetailedObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::IteratedOperator(P::SumOfFiniteSet(p)),
+            ..
+        } = equality(&mut run)
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left
+            .as_detailed_mut()
+            .unwrap()
+        else {
+            panic!("finite sum WD")
+        };
+        let reqs = &mut p.requirement_fact_verified;
+        match change {
+            0 => {
+                reqs.remove(3);
+            }
+            1 => reqs.swap(3, 4),
+            _ => reqs.swap(2, 3),
+        }
+        super::LitexToLeanCompiler::new(runtime)
+            .compile_run(&run, "wrong_finite_domain")
+            .expect_err("all original input guards must retain their argument and order");
+    }
 }

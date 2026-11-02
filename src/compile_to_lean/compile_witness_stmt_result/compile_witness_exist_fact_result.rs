@@ -179,7 +179,7 @@ impl LitexToLeanCompiler {
                 ..scope
             };
             let equal = self.resolve_fact(store.primary_fact_id(), &completed)?;
-            alias_equality_subject(&equal, parameters[i], &values[i])?;
+            alias_equality_subject(&equal, parameters[i], &values[i], &completed, &self.runtime)?;
             self.validate_store(&store.store, &equal)?;
             let name = format!("h_{}", equal.fact_id().value());
             let proposition = self.fact_proposition(&equal, &completed)?;

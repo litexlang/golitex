@@ -118,11 +118,12 @@ async function run(){
     assert(marker,name+" has source-local feedback");
     await marker.trigger("mouseenter");await delay();
     const preview=failed.root.querySelector(".lr-proof-popover");assert(preview);
-    assert(preview.textContent.includes(obligation),name+" keeps the actual unproved obligation");
+    if(name!=="missing-premise"){const formation=preview.querySelector('.lr-atomic-wd');assert(formation&&!formation.open);assert.equal(formation.parentNode.children.at(-1),formation);assert(!preview.textContent.includes(obligation),'the main proof omits failed expression-formation conditions');await formation.querySelector('summary').click();assert(formation.querySelector('.lr-wd-unproved-conditions').textContent.includes(obligation));}
+    else assert(preview.textContent.includes(obligation),name+" keeps the actual unproved obligation");
     assert(preview.textContent.includes("并不表示这句话为假"));
     if(name==="missing-premise")assert(!failed.row(8).classList.contains("lr-rejected"),"do not mark the entire enclosing forall as the failing line");
     await preview.querySelector(".lr-proof-pin").click();assert(failed.reader.getSelection().issue);
-    assert(failed.root.querySelector(".lr-detail-body").textContent.includes(obligation));
+    const detail=failed.root.querySelector('.lr-detail-body');if(name!=="missing-premise"){const formation=detail.querySelector('.lr-atomic-wd');assert(formation&&!formation.open);await formation.querySelector('summary').click();assert(formation.querySelector('.lr-wd-unproved-conditions').textContent.includes(obligation));}else assert(detail.textContent.includes(obligation));
     failures[name]={line,obligation};failed.reader.destroy();
   }
   const parse=mount(fixture("undefined-name")),parseNumber=parse.row(3).querySelector(".lr-line-number");

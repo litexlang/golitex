@@ -1539,7 +1539,7 @@ thm base_le_natural_power:
         1<=x
         =>:
             x<=x^n
-    0<=x
+    0<=1<=x
     claim:
         ? forall k N+:
             1<=x^k

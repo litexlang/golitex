@@ -1,0 +1,18 @@
+# Tracer: partial conjunction formation is not a local assumption.
+# Before (same source and rejection):
+# prop bounded_reciprocal(t R):
+#     exist x R st {x != 0 and 1 / x > 0}
+# Reading showed the terminal condition but not the conjunction's inner order.
+#
+# Now: still rejected. The first component is checked for formation, not
+# adopted as true; the second requires x != 0, which is not yet a local premise.
+# Reading keeps those two stages separate and publishes no definition or fact.
+prop bounded_reciprocal(t R):
+    exist x R st {x != 0 and 1 / x > 0}
+#
+# Boundary: separating the body clauses changes their formation-check order:
+# exist x R st {x != 0, 1 / x > 0}
+# That definition is well-formed, but supplies no existence witness by itself.
+# Evidence: target/release/litex -strict -lang en -f examples/test_statements/negative/def_prop_stmt/compound-formation-order.lit
+# Expected: exit 1, requirement/WD failure at x != 0, no session termination.
+# UI: src/reading/web/tests/compound-quantifier-formation.cjs

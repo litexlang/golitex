@@ -1,0 +1,13 @@
+# Generic converse to the inherited subspace construction.
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,U nonempty_set,inherited &Algebra::vector_space::VectorSpace<K,F,U>:
+        U $subset V
+        inherited.zero=space.zero
+        forall first,second U:
+            inherited.add(first,second)=space.add(first,second)
+        forall a K,first U:
+            inherited.smul(a,first)=space.smul(a,first)
+        =>:
+            $Algebra::vector_space::is_subspace(K,F,V,space,U)
+    release thm Algebra::subspace::inherited_space_is_subspace(K,F,V,space,U,inherited)

@@ -1,0 +1,210 @@
+# Rational and real sequence consistency on the unchanged original integer tail.
+
+claim:
+    ? forall start Z,n {j Z:j>=start}:
+        n $in \rseq::integer_index_tail<start>
+    n>=start
+    release thm rseq::integer_index_tail_member(start,n)
+
+template<start Z,a fn(n \rseq::integer_index_tail<start>) Q>:
+    have fn rational_tail_as_real(n {j Z:j>=start}) R = a(n)
+
+thm rational_cauchy_is_real_cauchy:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rseq::is_rational_cauchy(start,a)
+        =>:
+            $rs::is_real_tail_cauchy(start,\rational_tail_as_real<start,a>)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_steady(start,\rational_tail_as_real<start,a>,epsilon)
+        release thm rational_between_reals(0,epsilon)
+        obtain radius from exist q Q st {0<q and q<epsilon}
+        radius $in Q+
+        $rseq::is_eventually_rational_steady(start,a,radius)
+        obtain cutoff from exist c Z st {$rseq::is_rational_steady_after(start,a,radius,c)}
+        cutoff>=start
+        claim:
+            ? forall j,k Z:
+                j>=start
+                k>=start
+                j>=cutoff
+                k>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_tail_as_real<start,a>(j),\rational_tail_as_real<start,a>(k),epsilon)
+            release thm rseq::integer_index_tail_member(start,j)
+            release thm rseq::integer_index_tail_member(start,k)
+            $approx::is_epsilon_close(a(j),a(k),radius)
+            release thm approx::epsilon_close_monotone(a(j),a(k),radius,epsilon)
+            \rational_tail_as_real<start,a>(j)=a(j)
+            \rational_tail_as_real<start,a>(k)=a(k)
+            abs(\rational_tail_as_real<start,a>(j)-\rational_tail_as_real<start,a>(k))=abs(a(j)-a(k))<=epsilon
+            by def $approx::is_epsilon_close(\rational_tail_as_real<start,a>(j),\rational_tail_as_real<start,a>(k),epsilon)
+        by def $rs::is_real_tail_steady_after(start,\rational_tail_as_real<start,a>,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_steady(start,\rational_tail_as_real<start,a>,epsilon) from cutoff
+    by def $rs::is_real_tail_cauchy(start,\rational_tail_as_real<start,a>)
+
+thm real_cauchy_is_rational_cauchy:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rs::is_real_tail_cauchy(start,\rational_tail_as_real<start,a>)
+        =>:
+            $rseq::is_rational_cauchy(start,a)
+    claim:
+        ? forall epsilon Q+:
+            $rseq::is_eventually_rational_steady(start,a,epsilon)
+        epsilon $in R+
+        $rs::is_eventually_real_tail_steady(start,\rational_tail_as_real<start,a>,epsilon)
+        obtain cutoff from exist c Z st {$rs::is_real_tail_steady_after(start,\rational_tail_as_real<start,a>,epsilon,c)}
+        cutoff>=start
+        claim:
+            ? forall j,k Z:
+                j $in \rseq::integer_index_tail<start>
+                k $in \rseq::integer_index_tail<start>
+                j>=cutoff
+                k>=cutoff
+                =>:
+                    $approx::is_epsilon_close(a(j),a(k),epsilon)
+            release thm rseq::integer_index_tail_lower_bound(start,j)
+            release thm rseq::integer_index_tail_lower_bound(start,k)
+            $approx::is_epsilon_close(\rational_tail_as_real<start,a>(j),\rational_tail_as_real<start,a>(k),epsilon)
+            \rational_tail_as_real<start,a>(j)=a(j)
+            \rational_tail_as_real<start,a>(k)=a(k)
+            abs(a(j)-a(k))=abs(\rational_tail_as_real<start,a>(j)-\rational_tail_as_real<start,a>(k))<=epsilon
+            by def $approx::is_epsilon_close(a(j),a(k),epsilon)
+        by def $rseq::is_rational_steady_after(start,a,epsilon,cutoff)
+        witness $rseq::is_eventually_rational_steady(start,a,epsilon) from cutoff
+    by def $rseq::is_rational_cauchy(start,a)
+
+thm rational_native_limit_is_genuine:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q,L R:
+        $has_seq_limit(\rseq::rational_real_reindex<start,a>,L)
+        =>:
+            $rs::has_real_tail_limit(start,\rational_tail_as_real<start,a>,L)
+    claim:
+        ? forall k N+:
+            start+k-1 $in {j Z:j>=start}
+        k>=1
+        start+k-1=start+(k-1)>=start+0=start
+        start+k-1 $in {j Z:j>=start}
+    claim:
+        ? forall k N+:
+            \rational_tail_as_real<start,a>(start+k-1)=\rseq::rational_real_reindex<start,a>(k)
+        start+k-1 $in {j Z:j>=start}
+        start+k-1>=start
+        release thm rseq::integer_index_tail_member(start,start+k-1)
+        \rational_tail_as_real<start,a>(start+k-1)=a(start+k-1)
+        release thm rseq::rational_real_reindex_at(start,a,k)
+    release thm rs::real_tail_limit_from_reindexed_values(start,\rational_tail_as_real<start,a>,\rseq::rational_real_reindex<start,a>,L)
+
+thm rational_cauchy_has_genuine_limit:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rseq::is_rational_cauchy(start,a)
+        =>:
+            exist! L R st {$rs::has_real_tail_limit(start,\rational_tail_as_real<start,a>,L)}
+    release thm rseq::rational_cauchy_sequence_has_unique_real_limit(start,a)
+    obtain L from exist L R st {$has_seq_limit(\rseq::rational_real_reindex<start,a>,L)}
+    release thm rational_native_limit_is_genuine(start,a,L)
+    claim:
+        ? forall U,V R:
+            $rs::has_real_tail_limit(start,\rational_tail_as_real<start,a>,U)
+            $rs::has_real_tail_limit(start,\rational_tail_as_real<start,a>,V)
+            =>:
+                U=V
+        release thm rs::real_tail_limit_unique(start,\rational_tail_as_real<start,a>,U,V)
+    witness exist! value R st {$rs::has_real_tail_limit(start,\rational_tail_as_real<start,a>,value)} from L
+
+thm rational_tail_bound_is_real_bound:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q,M Q:
+        $rseq::is_rational_sequence_bounded_by(start,a,M)
+        =>:
+            $rs::is_real_tail_bounded_by(start,\rational_tail_as_real<start,a>,M)
+    M>=0
+    claim:
+        ? forall n {j Z:j>=start}:
+            abs(\rational_tail_as_real<start,a>(n))<=M
+        release thm rseq::integer_index_tail_member(start,n)
+        abs(a(n))<=M
+        \rational_tail_as_real<start,a>(n)=a(n)
+        abs(\rational_tail_as_real<start,a>(n))=abs(a(n))<=M
+    by def $rs::is_real_tail_bounded_by(start,\rational_tail_as_real<start,a>,M)
+
+thm real_tail_bound_has_rational_bound:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q,M {t R:t>=0}:
+        $rs::is_real_tail_bounded_by(start,\rational_tail_as_real<start,a>,M)
+        =>:
+            $rseq::is_bounded_rational_sequence(start,a)
+    release thm real_archimedean_natural_upper_bound(M)
+    obtain bound from exist b N+ st {M<b}
+    bound $in Q
+    bound>=0
+    claim:
+        ? forall n Z:
+            n $in \rseq::integer_index_tail<start>
+            =>:
+                abs(a(n))<=bound
+        release thm rseq::integer_index_tail_lower_bound(start,n)
+        abs(\rational_tail_as_real<start,a>(n))<=M
+        \rational_tail_as_real<start,a>(n)=a(n)
+        abs(a(n))=abs(\rational_tail_as_real<start,a>(n))<=M<bound
+    by def $rseq::is_rational_sequence_bounded_by(start,a,bound)
+    witness $rseq::is_bounded_rational_sequence(start,a) from bound
+
+thm bounded_rational_tail_is_real_bounded:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rseq::is_bounded_rational_sequence(start,a)
+        =>:
+            $rs::is_bounded_real_tail(start,\rational_tail_as_real<start,a>)
+    obtain M from $rseq::is_bounded_rational_sequence(start,a)
+    release thm rational_tail_bound_is_real_bound(start,a,M)
+    release thm real_archimedean_natural_upper_bound(M)
+    obtain bound from exist b N+ st {M<b}
+    bound $in R+
+    claim:
+        ? forall n {j Z:j>=start}:
+            abs(\rational_tail_as_real<start,a>(n))<=bound
+        abs(\rational_tail_as_real<start,a>(n))<=M<bound
+    by def $rs::is_real_tail_bounded_by(start,\rational_tail_as_real<start,a>,bound)
+    witness $rs::is_bounded_real_tail(start,\rational_tail_as_real<start,a>) from bound
+
+thm bounded_real_rational_tail_is_rational_bounded:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rs::is_bounded_real_tail(start,\rational_tail_as_real<start,a>)
+        =>:
+            $rseq::is_bounded_rational_sequence(start,a)
+    obtain M from $rs::is_bounded_real_tail(start,\rational_tail_as_real<start,a>)
+    release thm real_tail_bound_has_rational_bound(start,a,M)
+
+thm rational_cauchy_native_limit_exists:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rseq::is_rational_cauchy(start,a)
+        =>:
+            exist L R st {$has_seq_limit(\rseq::rational_real_reindex<start,a>,L)}
+    release thm rseq::rational_cauchy_sequence_has_unique_real_limit(start,a)
+    obtain L from exist L R st {$has_seq_limit(\rseq::rational_real_reindex<start,a>,L)}
+    witness exist value R st {$has_seq_limit(\rseq::rational_real_reindex<start,a>,value)} from L
+
+thm rational_cauchy_selected_limit_is_genuine:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rseq::is_rational_cauchy(start,a)
+        =>:
+            $rs::has_real_tail_limit(start,\rational_tail_as_real<start,a>,lim(\rseq::rational_real_reindex<start,a>))
+    release thm rational_cauchy_native_limit_exists(start,a)
+    release thm seq_limit_selected(\rseq::rational_real_reindex<start,a>)
+    release thm rational_native_limit_is_genuine(start,a,lim(\rseq::rational_real_reindex<start,a>))
+
+thm rational_cauchy_real_tail_converges:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rseq::is_rational_cauchy(start,a)
+        =>:
+            $rs::is_convergent_real_tail(start,\rational_tail_as_real<start,a>)
+    release thm rational_cauchy_has_genuine_limit(start,a)
+    obtain L from exist L R st {$rs::has_real_tail_limit(start,\rational_tail_as_real<start,a>,L)}
+    witness $rs::is_convergent_real_tail(start,\rational_tail_as_real<start,a>) from L
+
+thm rational_cauchy_selected_limits_agree:
+    ? forall start Z,a fn(n \rseq::integer_index_tail<start>) Q:
+        $rseq::is_rational_cauchy(start,a)
+        =>:
+            \rs::real_tail_limit<start>(\rational_tail_as_real<start,a>)=lim(\rseq::rational_real_reindex<start,a>)
+    release thm rational_cauchy_real_tail_converges(start,a)
+    release thm rational_cauchy_selected_limit_is_genuine(start,a)
+    release thm rs::real_tail_limit_value(start,\rational_tail_as_real<start,a>,lim(\rseq::rational_real_reindex<start,a>))

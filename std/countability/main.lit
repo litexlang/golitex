@@ -1,0 +1,1361 @@
+prop is_countably_infinite_set(X set):
+    $card::has_equal_cardinality(N,X)
+
+prop is_at_most_countable_set(X set):
+    $is_finite_set(X) or $is_countably_infinite_set(X)
+
+prop is_uncountable_set(X set):
+    not $is_finite_set(X)
+    not $is_countably_infinite_set(X)
+
+thm countably_infinite_set_is_not_finite:
+    ? forall X set:
+        $is_countably_infinite_set(X)
+        =>:
+            not $is_finite_set(X)
+    $card::has_equal_cardinality(N,X)
+    release thm card::equal_cardinality_symmetric(N,X)
+    by contra:
+        ? not $is_finite_set(X)
+        release thm card::equal_cardinality_finite_transfer(X,N)
+        impossible $is_finite_set(N)
+
+thm equal_cardinality_preserves_countable_infiniteness:
+    ? forall X,Y set:
+        $is_countably_infinite_set(X)
+        $card::has_equal_cardinality(X,Y)
+        =>:
+            $is_countably_infinite_set(Y)
+    $card::has_equal_cardinality(N,X)
+    release thm card::equal_cardinality_transitive(N,X,Y)
+    by def $is_countably_infinite_set(Y)
+
+thm native_naturals_are_countably_infinite:
+    ? $is_countably_infinite_set(N)
+    release thm card::equal_cardinality_reflexive(N)
+    by def $is_countably_infinite_set(N)
+
+thm countably_infinite_set_is_at_most_countable:
+    ? forall X set:
+        $is_countably_infinite_set(X)
+        =>:
+            $is_at_most_countable_set(X)
+    $is_finite_set(X) or $is_countably_infinite_set(X)
+    by def $is_at_most_countable_set(X)
+
+thm finite_set_is_at_most_countable:
+    ? forall X set:
+        $is_finite_set(X)
+        =>:
+            $is_at_most_countable_set(X)
+    $is_finite_set(X) or $is_countably_infinite_set(X)
+    by def $is_at_most_countable_set(X)
+
+thm finite_set_is_not_countably_infinite:
+    ? forall X set:
+        $is_finite_set(X)
+        =>:
+            not $is_countably_infinite_set(X)
+    by contra:
+        ? not $is_countably_infinite_set(X)
+        release thm countably_infinite_set_is_not_finite(X)
+        impossible $is_finite_set(X)
+
+thm equal_cardinality_preserves_at_most_countability:
+    ? forall X,Y set:
+        $is_at_most_countable_set(X)
+        $card::has_equal_cardinality(X,Y)
+        =>:
+            $is_at_most_countable_set(Y)
+    $is_finite_set(X) or $is_countably_infinite_set(X)
+    by cases:
+        ? $is_at_most_countable_set(Y)
+        case $is_finite_set(X):
+            release thm card::equal_cardinality_finite_transfer(X,Y)
+            $is_finite_set(Y) or $is_countably_infinite_set(Y)
+            by def $is_at_most_countable_set(Y)
+        case $is_countably_infinite_set(X):
+            release thm equal_cardinality_preserves_countable_infiniteness(X,Y)
+            $is_finite_set(Y) or $is_countably_infinite_set(Y)
+            by def $is_at_most_countable_set(Y)
+
+thm native_positive_naturals_are_countably_infinite:
+    ? $is_countably_infinite_set(N+)
+    claim:
+        ? forall n N:
+            n+1 $in N+
+        n>=0
+        n+1>0
+        n+1 $in N+
+    have fn successor(n N) N+=n+1
+    claim:
+        ? forall a,b N:
+            successor(a)=successor(b)
+            =>:
+                a=b
+        successor(a)=a+1
+        successor(b)=b+1
+        a+1=b+1
+        a=b
+    by def $injective(N,N+,successor)
+    claim:
+        ? forall y N+:
+            exist x N st {y=successor(x)}
+        y $in Z
+        y>=1
+        y-1>=0
+        y-1 $in Z
+        y-1 $in N
+        successor(y-1)=(y-1)+1=y
+        witness exist x N st {y=successor(x)} from y-1
+    by def $surjective(N,N+,successor)
+    by def $bijective(N,N+,successor)
+    witness $card::has_equal_cardinality(N,N+) from successor
+    by def $is_countably_infinite_set(N+)
+
+thm uncountable_set_is_not_at_most_countable:
+    ? forall X set:
+        $is_uncountable_set(X)
+        =>:
+            not $is_at_most_countable_set(X)
+    not $is_finite_set(X)
+    not $is_countably_infinite_set(X)
+    by contra:
+        ? not $is_at_most_countable_set(X)
+        $is_finite_set(X) or $is_countably_infinite_set(X)
+        by cases:
+            ? not $is_at_most_countable_set(X)
+            case $is_finite_set(X):
+                impossible $is_finite_set(X)
+            case $is_countably_infinite_set(X):
+                impossible $is_countably_infinite_set(X)
+        impossible $is_at_most_countable_set(X)
+
+thm not_at_most_countable_set_is_uncountable:
+    ? forall X set:
+        not $is_at_most_countable_set(X)
+        =>:
+            $is_uncountable_set(X)
+    by contra:
+        ? not $is_finite_set(X)
+        release thm finite_set_is_at_most_countable(X)
+        impossible $is_at_most_countable_set(X)
+    by contra:
+        ? not $is_countably_infinite_set(X)
+        release thm countably_infinite_set_is_at_most_countable(X)
+        impossible $is_at_most_countable_set(X)
+    by def $is_uncountable_set(X)
+
+thm finite_set_is_not_uncountable:
+    ? forall X set:
+        $is_finite_set(X)
+        =>:
+            not $is_uncountable_set(X)
+    by contra:
+        ? not $is_uncountable_set(X)
+        not $is_finite_set(X)
+        impossible $is_finite_set(X)
+
+thm countably_infinite_set_is_not_uncountable:
+    ? forall X set:
+        $is_countably_infinite_set(X)
+        =>:
+            not $is_uncountable_set(X)
+    by contra:
+        ? not $is_uncountable_set(X)
+        not $is_countably_infinite_set(X)
+        impossible $is_countably_infinite_set(X)
+
+thm source_well_ordering_complete_contract:
+    ? forall X power_set(N):
+        $is_nonempty_set(X)
+        =>:
+            exist! n N st {$rsub::is_least_natural_member(X,n)}
+    release thm rsub::least_natural_member_exists_unique(X)
+
+claim:
+    ? forall X power_set(N),point X:
+        point $in N
+        point $in Z
+        point $in R
+    X $subset N
+    point $in N
+    point $in Z
+    point $in R
+
+claim:
+    ? forall X power_set(N),a fn(n N) X,n N:
+        a(n) $in N
+        a(n) $in Z
+        a(n) $in R
+        a(n+1) $in N
+        a(n+1) $in Z
+        a(n+1) $in R
+    X $subset N
+    n+1 $in N
+    a(n) $in X
+    a(n) $in N
+    a(n) $in Z
+    a(n) $in R
+    a(n+1) $in X
+    a(n+1) $in N
+    a(n+1) $in Z
+    a(n+1) $in R
+
+claim:
+    ? forall X power_set(N),a fn(n N) X:
+        a $in fn(n N) N
+    release thm fn_set_member(a,fn(n N) N)
+
+prop is_strictly_increasing_natural_map(a fn(n N) N):
+    forall n N:
+        a(n+1)>a(n)
+
+thm strictly_increasing_natural_map_offset_growth:
+    ? forall a fn(n N) N,n,offset N:
+        $is_strictly_increasing_natural_map(a)
+        =>:
+            a(n+offset)>=a(n)+offset
+    by induc offset from 0:
+        ? a(n+offset)>=a(n)+offset
+        ? from offset=0:
+            n+0=n
+            a(n+0)=a(n)=a(n)+0
+        ? induc:
+            n+offset $in N
+            n+offset+1 $in N
+            a(n+offset) $in Z
+            a(n+offset+1) $in Z
+            a(n+offset+1)>a(n+offset)
+            a(n+offset+1)>=a(n+offset)+1>=a(n)+offset+1
+            n+(offset+1)=n+offset+1
+            a(n+(offset+1))=a(n+offset+1)>=a(n)+offset+1=a(n)+(offset+1)
+
+thm strictly_increasing_natural_map_pairwise_growth:
+    ? forall a fn(n N) N,n,k N:
+        $is_strictly_increasing_natural_map(a)
+        n<=k
+        =>:
+            a(k)>=a(n)+(k-n)
+    k-n $in Z
+    k-n>=0
+    k-n $in N
+    release thm strictly_increasing_natural_map_offset_growth(a,n,k-n)
+    n+(k-n)=k
+    a(k)=a(n+(k-n))>=a(n)+(k-n)
+
+thm strictly_increasing_natural_map_is_at_least_index:
+    ? forall a fn(n N) N,n N:
+        $is_strictly_increasing_natural_map(a)
+        =>:
+            a(n)>=n
+    release thm strictly_increasing_natural_map_offset_growth(a,0,n)
+    a(0) $in N
+    a(0)>=0
+    0+n=n
+    a(n)=a(0+n)>=a(0)+n>=n
+
+thm strictly_increasing_natural_subset_map_is_injective:
+    ? forall X power_set(N),a fn(n N) X:
+        $is_strictly_increasing_natural_map(a)
+        =>:
+            $injective(N,X,a)
+    claim:
+        ? forall j,k N:
+            a(j)=a(k)
+            =>:
+                j=k
+        a(j) $in R
+        a(k) $in R
+        j $in R
+        k $in R
+        by cases:
+            ? j=k
+            case j<k:
+                release thm strictly_increasing_natural_map_pairwise_growth(a,j,k)
+                k-j>0
+                a(k)>=a(j)+(k-j)>a(j)
+                a(k)=a(j)
+                a(k)<=a(j)
+                impossible a(k)>a(j)
+            case j=k:
+                j=k
+            case j>k:
+                release thm strictly_increasing_natural_map_pairwise_growth(a,k,j)
+                j-k>0
+                a(j)>=a(k)+(j-k)>a(k)
+                a(j)=a(k)
+                a(j)<=a(k)
+                impossible a(j)>a(k)
+    by def $injective(N,X,a)
+
+prop is_increasing_natural_subset_enumeration(X power_set(N),a fn(n N) X):
+    $bijective(N,X,a)
+    $is_strictly_increasing_natural_map(a)
+
+thm infinite_natural_subset_has_member_above_bound:
+    ? forall X {S power_set(N):not $is_finite_set(S)},bound N:
+        exist index N st {index $in X and index>bound}
+    X $in power_set(N)
+    X $subset N
+    not $is_finite_set(X)
+    bound $in Z
+    by contra:
+        ? exist index N st {index $in X and index>bound}
+        claim:
+            ? forall point X:
+                point $in closed_range(0,bound)
+            point $in N
+            point $in Z
+            point $in R
+            point>=0
+            by contra:
+                ? point<=bound
+                point>bound
+                witness exist index N st {index $in X and index>bound} from point
+                impossible exist index N st {index $in X and index>bound}
+            point $in closed_range(0,bound)
+        X $subset closed_range(0,bound)
+        $is_finite_set(closed_range(0,bound))
+        release thm subset_of_finite_set_is_finite(X,closed_range(0,bound))
+        impossible $is_finite_set(X)
+
+thm infinite_natural_subset_is_nonempty:
+    ? forall X {S power_set(N):not $is_finite_set(S)}:
+        $is_nonempty_set(X)
+    release thm infinite_natural_subset_has_member_above_bound(X,0)
+    obtain chosen from exist index N st {index $in X and index>0}
+    witness $is_nonempty_set(X) from chosen
+
+claim:
+    ? forall X {S power_set(N):not $is_finite_set(S)}:
+        X $in power_set(N)
+        $is_nonempty_set(X)
+        X $in {S power_set(N):$is_nonempty_set(S)}
+    X $in power_set(N)
+    release thm infinite_natural_subset_is_nonempty(X)
+    X $in {S power_set(N):$is_nonempty_set(S)}
+
+claim:
+    ? forall X power_set(N),bound N:
+        {point N:point $in X and point>bound} $in power_set(N)
+    {point N:point $in X and point>bound} $subset N
+    {point N:point $in X and point>bound} $in power_set(N)
+
+template<X power_set(N)>:
+    have fn natural_subset_upper_tail(bound N) power_set(N)={point N:point $in X and point>bound}
+
+thm infinite_natural_subset_upper_tail_is_nonempty:
+    ? forall X {S power_set(N):not $is_finite_set(S)},bound N:
+        $is_nonempty_set(\natural_subset_upper_tail<X>(bound))
+    release thm infinite_natural_subset_has_member_above_bound(X,bound)
+    obtain chosen from exist index N st {index $in X and index>bound}
+    \natural_subset_upper_tail<X>(bound)={point N:point $in X and point>bound}
+    chosen $in {point N:point $in X and point>bound}
+    chosen $in \natural_subset_upper_tail<X>(bound)
+    witness $is_nonempty_set(\natural_subset_upper_tail<X>(bound)) from chosen
+
+claim:
+    ? forall X {S power_set(N):not $is_finite_set(S)},bound N:
+        \natural_subset_upper_tail<X>(bound) $in power_set(N)
+        $is_nonempty_set(\natural_subset_upper_tail<X>(bound))
+        \natural_subset_upper_tail<X>(bound) $in {S power_set(N):$is_nonempty_set(S)}
+    release thm infinite_natural_subset_upper_tail_is_nonempty(X,bound)
+    \natural_subset_upper_tail<X>(bound) $in power_set(N)
+    \natural_subset_upper_tail<X>(bound) $in {S power_set(N):$is_nonempty_set(S)}
+
+release obj def rsub::least_natural_member
+
+claim:
+    ? forall X {S power_set(N):not $is_finite_set(S)},bound N:
+        rsub::least_natural_member(\natural_subset_upper_tail<X>(bound)) $in X
+        rsub::least_natural_member(\natural_subset_upper_tail<X>(bound))>bound
+    \natural_subset_upper_tail<X>(bound) $in power_set(N)
+    $is_nonempty_set(\natural_subset_upper_tail<X>(bound))
+    \natural_subset_upper_tail<X>(bound) $in {S power_set(N):$is_nonempty_set(S)}
+    $rsub::is_least_natural_member(\natural_subset_upper_tail<X>(bound),rsub::least_natural_member(\natural_subset_upper_tail<X>(bound)))
+    rsub::least_natural_member(\natural_subset_upper_tail<X>(bound)) $in \natural_subset_upper_tail<X>(bound)
+    \natural_subset_upper_tail<X>(bound)={point N:point $in X and point>bound}
+    have tail power_set(N)={point N:point $in X and point>bound}
+    \natural_subset_upper_tail<X>(bound)=tail
+    rsub::least_natural_member(\natural_subset_upper_tail<X>(bound)) $in N
+    rsub::least_natural_member(\natural_subset_upper_tail<X>(bound)) $in tail
+    rsub::least_natural_member(\natural_subset_upper_tail<X>(bound)) $in X
+    rsub::least_natural_member(\natural_subset_upper_tail<X>(bound))>bound
+
+thm increasing_natural_enumeration_initial_is_least:
+    ? forall X power_set(N),a fn(n N) X:
+        $is_increasing_natural_subset_enumeration(X,a)
+        =>:
+            $rsub::is_least_natural_member(X,a(0))
+    a $in fn(n N) N
+    $is_strictly_increasing_natural_map(a)
+    $bijective(N,X,a)
+    $surjective(N,X,a)
+    a(0) $in X
+    a(0) $in N
+    a(0) $in R
+    claim:
+        ? forall candidate N:
+            candidate $in X
+            =>:
+                a(0)<=candidate
+        obtain index from exist k N st {candidate=a(k)}
+        index>=0
+        a(index) $in R
+        release thm strictly_increasing_natural_map_pairwise_growth(a,0,index)
+        a(index)>=a(0)+(index-0)>=a(0)
+        candidate=a(index)>=a(0)
+        a(0)<=candidate
+    by def $rsub::is_least_natural_member(X,a(0))
+
+thm increasing_natural_enumeration_successor_is_least:
+    ? forall X power_set(N),a fn(n N) X,n N:
+        $is_increasing_natural_subset_enumeration(X,a)
+        =>:
+            $rsub::is_least_natural_member(\natural_subset_upper_tail<X>(a(n)),a(n+1))
+    a $in fn(k N) N
+    $is_strictly_increasing_natural_map(a)
+    $bijective(N,X,a)
+    $surjective(N,X,a)
+    n+1 $in N
+    a(n) $in N
+    a(n) $in R
+    a(n+1) $in X
+    a(n+1) $in N
+    a(n+1) $in R
+    a(n+1)>a(n)
+    \natural_subset_upper_tail<X>(a(n))={point N:point $in X and point>a(n)}
+    have tail power_set(N)={point N:point $in X and point>a(n)}
+    \natural_subset_upper_tail<X>(a(n))=tail
+    a(n+1) $in tail
+    a(n+1) $in \natural_subset_upper_tail<X>(a(n))
+    claim:
+        ? forall candidate N:
+            candidate $in \natural_subset_upper_tail<X>(a(n))
+            =>:
+                a(n+1)<=candidate
+        candidate $in tail
+        candidate $in X
+        candidate>a(n)
+        obtain index from exist k N st {candidate=a(k)}
+        index $in R
+        n $in R
+        a(index) $in R
+        by contra:
+            ? n<index
+            index<=n
+            release thm strictly_increasing_natural_map_pairwise_growth(a,index,n)
+            n-index>=0
+            a(n)>=a(index)+(n-index)>=a(index)=candidate>a(n)
+            impossible a(n)>a(n)
+        n+1<=index
+        release thm strictly_increasing_natural_map_pairwise_growth(a,n+1,index)
+        index-(n+1)>=0
+        candidate=a(index)>=a(n+1)+(index-(n+1))>=a(n+1)
+        a(n+1)<=candidate
+    by def $rsub::is_least_natural_member(\natural_subset_upper_tail<X>(a(n)),a(n+1))
+
+thm infinite_natural_subset_increasing_enumeration_exists:
+    ? forall X {S power_set(N):not $is_finite_set(S)}:
+        exist a fn(n N) X st {$is_increasing_natural_subset_enumeration(X,a)}
+    X $in power_set(N)
+    X $subset N
+    $is_nonempty_set(X)
+    X $in {S power_set(N):$is_nonempty_set(S)}
+    $rsub::is_least_natural_member(X,rsub::least_natural_member(X))
+    rsub::least_natural_member(X) $in X
+    have start X=rsub::least_natural_member(X)
+    start $in N
+    have fn greedy_step(k N,previous X) X=rsub::least_natural_member(\natural_subset_upper_tail<X>(previous))
+    have fn chosen(n N) X=\nat::natural_recursion<X,start,greedy_step>(n)
+    chosen $in fn(n N) N
+    release thm nat::natural_recursion_equations(X,start,greedy_step,0)
+    chosen(0)=\nat::natural_recursion<X,start,greedy_step>(0)=start
+    claim:
+        ? forall n N:
+            chosen(n+1)=greedy_step(n,chosen(n))
+        release thm nat::natural_recursion_equations(X,start,greedy_step,n)
+        chosen(n)=\nat::natural_recursion<X,start,greedy_step>(n)
+        chosen(n+1)=\nat::natural_recursion<X,start,greedy_step>(n+1)=greedy_step(n,\nat::natural_recursion<X,start,greedy_step>(n))=greedy_step(n,chosen(n))
+    claim:
+        ? forall n N:
+            chosen(n+1)>chosen(n)
+        chosen(n) $in X
+        chosen(n) $in N
+        chosen(n+1)=greedy_step(n,chosen(n))=rsub::least_natural_member(\natural_subset_upper_tail<X>(chosen(n)))
+        rsub::least_natural_member(\natural_subset_upper_tail<X>(chosen(n)))>chosen(n)
+        chosen(n+1)>chosen(n)
+    by def $is_strictly_increasing_natural_map(chosen)
+    release thm strictly_increasing_natural_subset_map_is_injective(X,chosen)
+    claim:
+        ? forall target X:
+            exist index N st {target=chosen(index)}
+        target $in N
+        target $in R
+        by contra:
+            ? exist index N st {target=chosen(index)}
+            claim:
+                ? forall index N:
+                    chosen(index)!=target
+                by contra:
+                    ? chosen(index)!=target
+                    chosen(index)=target
+                    witness exist hit N st {target=chosen(hit)} from index
+                    impossible exist hit N st {target=chosen(hit)}
+            claim:
+                ? forall index N:
+                    chosen(index)<target
+                by induc index from 0:
+                    ? chosen(index)<target
+                    ? from index=0:
+                        rsub::least_natural_member(X)<=target
+                        start=rsub::least_natural_member(X)
+                        chosen(0)=start<=target
+                        chosen(0) $in R
+                        chosen(0)!=target
+                        by contra:
+                            ? chosen(0)<target
+                            chosen(0)>=target
+                            chosen(0)=target
+                            impossible chosen(0)=target
+                    ? induc:
+                        chosen(index) $in N
+                        chosen(index)<target
+                        \natural_subset_upper_tail<X>(chosen(index)) $in {S power_set(N):$is_nonempty_set(S)}
+                        $rsub::is_least_natural_member(\natural_subset_upper_tail<X>(chosen(index)),rsub::least_natural_member(\natural_subset_upper_tail<X>(chosen(index))))
+                        have tail power_set(N)={point N:point $in X and point>chosen(index)}
+                        \natural_subset_upper_tail<X>(chosen(index))={point N:point $in X and point>chosen(index)}
+                        \natural_subset_upper_tail<X>(chosen(index))=tail
+                        target $in tail
+                        target $in \natural_subset_upper_tail<X>(chosen(index))
+                        rsub::least_natural_member(\natural_subset_upper_tail<X>(chosen(index)))<=target
+                        chosen(index+1)=greedy_step(index,chosen(index))=rsub::least_natural_member(\natural_subset_upper_tail<X>(chosen(index)))<=target
+                        chosen(index+1) $in R
+                        chosen(index+1)!=target
+                        by contra:
+                            ? chosen(index+1)<target
+                            chosen(index+1)>=target
+                            chosen(index+1)=target
+                            impossible chosen(index+1)=target
+            chosen(target) $in N
+            chosen(target) $in R
+            chosen(target)<target
+            release thm strictly_increasing_natural_map_is_at_least_index(chosen,target)
+            chosen(target)>=target
+            impossible chosen(target)<target
+    by def $surjective(N,X,chosen)
+    by def $bijective(N,X,chosen)
+    by def $is_increasing_natural_subset_enumeration(X,chosen)
+    witness exist a fn(n N) X st {$is_increasing_natural_subset_enumeration(X,a)} from chosen
+
+thm infinite_natural_subset_increasing_enumeration_unique:
+    ? forall X {S power_set(N):not $is_finite_set(S)},a,b fn(n N) X:
+        $is_increasing_natural_subset_enumeration(X,a)
+        $is_increasing_natural_subset_enumeration(X,b)
+        =>:
+            a=b
+    X $in power_set(N)
+    a $in fn(n N) N
+    b $in fn(n N) N
+    claim:
+        ? forall n N:
+            a(n)=b(n)
+        by induc n from 0:
+            ? a(n)=b(n)
+            ? from n=0:
+                release thm increasing_natural_enumeration_initial_is_least(X,a)
+                release thm increasing_natural_enumeration_initial_is_least(X,b)
+                a(0) $in X
+                b(0) $in X
+                a(0) $in R
+                b(0) $in R
+                a(0)<=b(0)
+                b(0)<=a(0)
+                a(0)=b(0)
+            ? induc:
+                a(n) $in N
+                b(n) $in N
+                a(n)=b(n)
+                \natural_subset_upper_tail<X>(a(n))=\natural_subset_upper_tail<X>(b(n))
+                release thm increasing_natural_enumeration_successor_is_least(X,a,n)
+                release thm increasing_natural_enumeration_successor_is_least(X,b,n)
+                a(n+1) $in N
+                b(n+1) $in N
+                a(n+1) $in R
+                b(n+1) $in R
+                a(n+1) $in \natural_subset_upper_tail<X>(a(n))
+                b(n+1) $in \natural_subset_upper_tail<X>(b(n))
+                a(n+1) $in \natural_subset_upper_tail<X>(b(n))
+                b(n+1) $in \natural_subset_upper_tail<X>(a(n))
+                a(n+1)<=b(n+1)
+                b(n+1)<=a(n+1)
+                a(n+1)=b(n+1)
+    by fn_extension a=b
+
+thm infinite_natural_subset_increasing_enumeration_exists_unique:
+    ? forall X {S power_set(N):not $is_finite_set(S)}:
+        exist! a fn(n N) X st {$is_increasing_natural_subset_enumeration(X,a)}
+    release thm infinite_natural_subset_increasing_enumeration_exists(X)
+    obtain chosen from exist a fn(n N) X st {$is_increasing_natural_subset_enumeration(X,a)}
+    claim:
+        ? forall a,b fn(n N) X:
+            $is_increasing_natural_subset_enumeration(X,a)
+            $is_increasing_natural_subset_enumeration(X,b)
+            =>:
+                a=b
+        release thm infinite_natural_subset_increasing_enumeration_unique(X,a,b)
+    witness exist! a fn(n N) X st {$is_increasing_natural_subset_enumeration(X,a)} from chosen:
+        $is_increasing_natural_subset_enumeration(X,chosen)
+
+thm infinite_natural_subset_is_countably_infinite:
+    ? forall X {S power_set(N):not $is_finite_set(S)}:
+        $main::is_countably_infinite_set(X)
+    release thm infinite_natural_subset_increasing_enumeration_exists_unique(X)
+    obtain enumeration from exist a fn(n N) X st {$is_increasing_natural_subset_enumeration(X,a)}
+    $bijective(N,X,enumeration)
+    witness $card::has_equal_cardinality(N,X) from enumeration
+    by def $main::is_countably_infinite_set(X)
+
+thm natural_subset_is_at_most_countable:
+    ? forall X power_set(N):
+        $main::is_at_most_countable_set(X)
+    by cases:
+        ? $main::is_at_most_countable_set(X)
+        case $is_finite_set(X):
+            release thm main::finite_set_is_at_most_countable(X)
+        case not $is_finite_set(X):
+            X $in {S power_set(N):not $is_finite_set(S)}
+            release thm infinite_natural_subset_is_countably_infinite(X)
+            release thm main::countably_infinite_set_is_at_most_countable(X)
+
+thm subset_of_at_most_countable_set_is_at_most_countable:
+    ? forall X,Y set:
+        $main::is_at_most_countable_set(X)
+        Y $subset X
+        =>:
+            $main::is_at_most_countable_set(Y)
+    $is_finite_set(X) or $main::is_countably_infinite_set(X)
+    by cases:
+        ? $main::is_at_most_countable_set(Y)
+        case $is_finite_set(X):
+            release thm subset_of_finite_set_is_finite(Y,X)
+            release thm main::finite_set_is_at_most_countable(Y)
+        case $main::is_countably_infinite_set(X):
+            $card::has_equal_cardinality(N,X)
+            obtain forward from $card::has_equal_cardinality(N,X)
+            $bijective(N,X,forward)
+            $injective(N,X,forward)
+            $surjective(N,X,forward)
+            have index_set power_set(N)={index N:forward(index) $in Y}
+            claim:
+                ? forall index index_set:
+                    forward(index) $in Y
+                index $in N
+                forward(index) $in Y
+            have fn restricted(index index_set) Y=forward(index)
+            claim:
+                ? forall a,b index_set:
+                    restricted(a)=restricted(b)
+                    =>:
+                        a=b
+                a $in N
+                b $in N
+                forward(a)=restricted(a)=restricted(b)=forward(b)
+                a=b
+            by def $injective(index_set,Y,restricted)
+            claim:
+                ? forall target Y:
+                    exist index index_set st {target=restricted(index)}
+                target $in X
+                obtain index from exist n N st {target=forward(n)}
+                forward(index) $in Y
+                index $in index_set
+                restricted(index)=forward(index)=target
+                witness exist n index_set st {target=restricted(n)} from index
+            by def $surjective(index_set,Y,restricted)
+            by def $bijective(index_set,Y,restricted)
+            witness $card::has_equal_cardinality(index_set,Y) from restricted
+            release thm natural_subset_is_at_most_countable(index_set)
+            release thm main::equal_cardinality_preserves_at_most_countability(index_set,Y)
+
+prop is_first_natural_occurrence(Y set,f fn(n N) Y,index N):
+    forall earlier N:
+        f(earlier)=f(index)
+        =>:
+            index<=earlier
+
+thm natural_sequence_image_is_at_most_countable:
+    ? forall Y set,f fn(n N) Y:
+        $main::is_at_most_countable_set(fn_range(f))
+    have index_set power_set(N)={index N:$is_first_natural_occurrence(Y,f,index)}
+    claim:
+        ? forall index index_set:
+            f(index) $in fn_range(f)
+        index $in N
+        f(index) $in fn_range(f)
+    have fn restricted(index index_set) fn_range(f)=f(index)
+    claim:
+        ? forall a,b index_set:
+            restricted(a)=restricted(b)
+            =>:
+                a=b
+        a $in N
+        b $in N
+        a $in R
+        b $in R
+        $is_first_natural_occurrence(Y,f,a)
+        $is_first_natural_occurrence(Y,f,b)
+        f(a)=restricted(a)=restricted(b)=f(b)
+        a<=b
+        b<=a
+        a=b
+    by def $injective(index_set,fn_range(f),restricted)
+    claim:
+        ? forall target fn_range(f):
+            exist index index_set st {target=restricted(index)}
+        have by fn_preimage: hit from target $in fn_range(f)
+        have hits power_set(N)={index N:f(index)=target}
+        hit $in N
+        target=f(hit)
+        hit $in hits
+        witness $is_nonempty_set(hits) from hit
+        hits $in {S power_set(N):$is_nonempty_set(S)}
+        $rsub::is_least_natural_member(hits,rsub::least_natural_member(hits))
+        have least N=rsub::least_natural_member(hits)
+        least $in hits
+        f(least)=target
+        claim:
+            ? forall earlier N:
+                f(earlier)=f(least)
+                =>:
+                    least<=earlier
+            f(earlier)=target
+            earlier $in hits
+            rsub::least_natural_member(hits)<=earlier
+            least<=earlier
+        by def $is_first_natural_occurrence(Y,f,least)
+        least $in index_set
+        restricted(least)=f(least)=target
+        witness exist index index_set st {target=restricted(index)} from least
+    by def $surjective(index_set,fn_range(f),restricted)
+    by def $bijective(index_set,fn_range(f),restricted)
+    witness $card::has_equal_cardinality(index_set,fn_range(f)) from restricted
+    release thm natural_subset_is_at_most_countable(index_set)
+    release thm main::equal_cardinality_preserves_at_most_countability(index_set,fn_range(f))
+
+thm countably_infinite_domain_image_is_at_most_countable:
+    ? forall X,Y set,f fn(x X) Y:
+        $main::is_countably_infinite_set(X)
+        =>:
+            $main::is_at_most_countable_set(fn_range(f))
+    $card::has_equal_cardinality(N,X)
+    obtain enumeration from $card::has_equal_cardinality(N,X)
+    $bijective(N,X,enumeration)
+    $surjective(N,X,enumeration)
+    have fn sequence(n N) Y=f(enumeration(n))
+    claim:
+        ? forall target fn_range(sequence):
+            target $in fn_range(f)
+        have by fn_preimage: index from target $in fn_range(sequence)
+        target=sequence(index)=f(enumeration(index))
+        f(enumeration(index)) $in fn_range(f)
+        target $in fn_range(f)
+    claim:
+        ? forall target fn_range(f):
+            target $in fn_range(sequence)
+        have by fn_preimage: source from target $in fn_range(f)
+        obtain index from exist n N st {source=enumeration(n)}
+        sequence(index)=f(enumeration(index))=f(source)=target
+        sequence(index) $in fn_range(sequence)
+        target $in fn_range(sequence)
+    by extension fn_range(sequence)=fn_range(f)
+    release thm natural_sequence_image_is_at_most_countable(Y,sequence)
+    $main::is_at_most_countable_set(fn_range(f))
+
+thm injection_into_naturals_gives_at_most_countability:
+    ? forall X set,f fn(x X) N:
+        $injective(X,N,f)
+        =>:
+            $main::is_at_most_countable_set(X)
+    fn_range(f) $subset N
+    have image power_set(N)=fn_range(f)
+    claim:
+        ? forall x X:
+            f(x) $in image
+        f(x) $in fn_range(f)
+        f(x) $in image
+    f $in fn(x X) image
+    claim:
+        ? forall a,b X:
+            f(a)=f(b)
+            =>:
+                a=b
+        a=b
+    by def $injective(X,image,f)
+    claim:
+        ? forall target image:
+            exist x X st {target=f(x)}
+        target $in fn_range(f)
+        have by fn_preimage: source from target $in fn_range(f)
+        witness exist x X st {target=f(x)} from source
+    by def $surjective(X,image,f)
+    by def $bijective(X,image,f)
+    witness $card::has_equal_cardinality(X,image) from f
+    release thm card::equal_cardinality_symmetric(X,image)
+    release thm natural_subset_is_at_most_countable(image)
+    release thm main::equal_cardinality_preserves_at_most_countability(image,X)
+
+thm infinite_at_most_countable_set_is_countably_infinite:
+    ? forall X set:
+        $main::is_at_most_countable_set(X)
+        not $is_finite_set(X)
+        =>:
+            $main::is_countably_infinite_set(X)
+    $is_finite_set(X) or $main::is_countably_infinite_set(X)
+    by cases:
+        ? $main::is_countably_infinite_set(X)
+        case $is_finite_set(X):
+            impossible $is_finite_set(X)
+        case $main::is_countably_infinite_set(X):
+            $main::is_countably_infinite_set(X)
+
+thm countably_infinite_subset_implies_infinite_superset:
+    ? forall X,Y set:
+        $main::is_countably_infinite_set(X)
+        X $subset Y
+        =>:
+            not $is_finite_set(Y)
+    release thm main::countably_infinite_set_is_not_finite(X)
+    by contra:
+        ? not $is_finite_set(Y)
+        release thm subset_of_finite_set_is_finite(X,Y)
+        impossible $is_finite_set(X)
+
+thm natural_quotient_and_remainder_carriers:
+    ? forall n N,q N+:
+        quot(n,q) $in N
+        n%q $in N
+    0<=n%q<q
+    n=q*quot(n,q)+n%q
+    quot(n,q) $in Z
+    claim:
+        ? quot(n,q)>=0
+        by contra:
+            ? quot(n,q)>=0
+            quot(n,q)<0
+            quot(n,q)<=-1
+            q*quot(n,q)<=q*(-1)=-q
+            -q+n%q=n%q-q<q-q=0
+            n=q*quot(n,q)+n%q<=-q+n%q<0
+            impossible n>=0
+    quot(n,q) $in N
+    n%q $in N
+
+claim:
+    ? forall n N:
+        quot(n,2) $in N
+    release thm natural_quotient_and_remainder_carriers(n,2)
+
+claim:
+    ? forall X,Y set,f fn(n N) X,g fn(n N) Y,n N:
+        f(quot(n,2)) $in union(X,Y)
+        g(quot(n,2)) $in union(X,Y)
+    quot(n,2) $in N
+    f(quot(n,2)) $in X
+    g(quot(n,2)) $in Y
+    X $subset union(X,Y)
+    Y $subset union(X,Y)
+    f(quot(n,2)) $in union(X,Y)
+    g(quot(n,2)) $in union(X,Y)
+
+claim:
+    ? forall X,Y set,f fn(n N) X,g fn(n N) Y:
+        f $in fn(n N) union(X,Y)
+        g $in fn(n N) union(X,Y)
+    claim:
+        ? forall n N:
+            f(n) $in union(X,Y)
+            g(n) $in union(X,Y)
+        f(n) $in X
+        g(n) $in Y
+        f(n) $in union(X,Y)
+        g(n) $in union(X,Y)
+    f $in fn(n N) union(X,Y)
+    g $in fn(n N) union(X,Y)
+
+thm union_of_two_countably_infinite_sets_is_countably_infinite:
+    ? forall X,Y set:
+        $main::is_countably_infinite_set(X)
+        $main::is_countably_infinite_set(Y)
+        =>:
+            $main::is_countably_infinite_set(union(X,Y))
+    $card::has_equal_cardinality(N,X)
+    $card::has_equal_cardinality(N,Y)
+    obtain f from $card::has_equal_cardinality(N,X)
+    obtain g from $card::has_equal_cardinality(N,Y)
+    $bijective(N,X,f)
+    $bijective(N,Y,g)
+    $surjective(N,X,f)
+    $surjective(N,Y,g)
+    f $in fn(n N) union(X,Y)
+    g $in fn(n N) union(X,Y)
+    claim:
+        ? forall n N:
+            quot(n,2) $in N
+            f(quot(n,2)) $in union(X,Y)
+            g(quot(n,2)) $in union(X,Y)
+        release thm natural_quotient_and_remainder_carriers(n,2)
+        f(quot(n,2)) $in X
+        g(quot(n,2)) $in Y
+        f(quot(n,2)) $in union(X,Y)
+        g(quot(n,2)) $in union(X,Y)
+    have fn combined(n N) union(X,Y) by cases:
+        case n%2=0: f(quot(n,2))
+        case not n%2=0: g(quot(n,2))
+    claim:
+        ? forall n N:
+            combined(2*n)=f(n)
+            combined(2*n+1)=g(n)
+        release thm natural_quotient_and_remainder_carriers(2*n,2)
+        release thm natural_quotient_and_remainder_carriers(2*n+1,2)
+        0<=((2*n)%2)<2
+        0<=((2*n+1)%2)<2
+        2*n=n*2+0
+        2*n=quot(2*n,2)*2+(2*n)%2
+        release thm nat::natural_division_unique(2*n,2,n,0,quot(2*n,2),(2*n)%2)
+        (2*n)%2=0
+        quot(2*n,2)=n
+        combined(2*n)=f(quot(2*n,2))=f(n)
+        2*n+1=n*2+1
+        2*n+1=quot(2*n+1,2)*2+(2*n+1)%2
+        release thm nat::natural_division_unique(2*n+1,2,n,1,quot(2*n+1,2),(2*n+1)%2)
+        (2*n+1)%2=1
+        not (2*n+1)%2=0
+        quot(2*n+1,2)=n
+        combined(2*n+1)=g(quot(2*n+1,2))=g(n)
+    claim:
+        ? forall target fn_range(combined):
+            target $in union(X,Y)
+        have by fn_preimage: index from target $in fn_range(combined)
+        combined(index) $in union(X,Y)
+        target $in union(X,Y)
+    claim:
+        ? forall target union(X,Y):
+            target $in fn_range(combined)
+        target $in X or target $in Y
+        by cases:
+            ? target $in fn_range(combined)
+            case target $in X:
+                obtain index from exist n N st {target=f(n)}
+                combined(2*index)=f(index)=target
+                combined(2*index) $in fn_range(combined)
+                target $in fn_range(combined)
+            case target $in Y:
+                obtain index from exist n N st {target=g(n)}
+                combined(2*index+1)=g(index)=target
+                combined(2*index+1) $in fn_range(combined)
+                target $in fn_range(combined)
+    by extension fn_range(combined)=union(X,Y)
+    release thm natural_sequence_image_is_at_most_countable(union(X,Y),combined)
+    $main::is_at_most_countable_set(union(X,Y))
+    X $subset union(X,Y)
+    release thm countably_infinite_subset_implies_infinite_superset(X,union(X,Y))
+    release thm infinite_at_most_countable_set_is_countably_infinite(union(X,Y))
+
+thm native_integers_are_countably_infinite:
+    ? $main::is_countably_infinite_set(Z)
+    have negatives power_set(Z)={z Z:z<=0}
+    claim:
+        ? forall n N:
+            -n $in negatives
+        n $in Z
+        n $in R
+        n>=0
+        -n $in Z
+        -n<=0
+        -n $in negatives
+    have fn negation(n N) negatives=-n
+    claim:
+        ? forall a,b N:
+            negation(a)=negation(b)
+            =>:
+                a=b
+        a $in R
+        b $in R
+        -a=negation(a)=negation(b)=-b
+        -a=-b
+        a=-(-a)=-(-b)=b
+    by def $injective(N,negatives,negation)
+    claim:
+        ? forall target negatives:
+            exist n N st {target=negation(n)}
+        target $in Z
+        target $in R
+        target<=0
+        -target $in N
+        negation(-target)=-(-target)=target
+        witness exist n N st {target=negation(n)} from -target
+    by def $surjective(N,negatives,negation)
+    by def $bijective(N,negatives,negation)
+    witness $card::has_equal_cardinality(N,negatives) from negation
+    by def $main::is_countably_infinite_set(negatives)
+    release thm main::native_naturals_are_countably_infinite
+    release thm union_of_two_countably_infinite_sets_is_countably_infinite(N,negatives)
+    claim:
+        ? forall z union(N,negatives):
+            z $in Z
+        z $in N or z $in negatives
+        by cases:
+            ? z $in Z
+            case z $in N:
+                z $in Z
+            case z $in negatives:
+                z $in Z
+    claim:
+        ? forall z Z:
+            z $in union(N,negatives)
+        z $in R
+        by cases:
+            ? z $in union(N,negatives)
+            case z>=0:
+                z $in N
+                z $in union(N,negatives)
+            case z<0:
+                z<=0
+                z $in negatives
+                z $in union(N,negatives)
+    by extension union(N,negatives)=Z
+    $main::is_countably_infinite_set(Z)
+
+have fn natural_triangular_number(n N) N by induc n from 0:
+    case n=0: 0
+    case n>=1: natural_triangular_number(n-1)+n
+
+thm natural_triangular_number_equations:
+    ? forall n N:
+        natural_triangular_number(0)=0
+        natural_triangular_number(n+1)=natural_triangular_number(n)+n+1
+    natural_triangular_number(0)=0
+    n+1 $in N
+    n+1>=1
+    (n+1)-1=n
+    natural_triangular_number((n+1)-1)=natural_triangular_number(n)
+    natural_triangular_number(n) $in R
+    natural_triangular_number(n+1)=natural_triangular_number((n+1)-1)+(n+1)
+    natural_triangular_number((n+1)-1)+(n+1)=natural_triangular_number(n)+(n+1)
+    natural_triangular_number(n)+(n+1)=natural_triangular_number(n)+n+1
+    natural_triangular_number(n+1)=natural_triangular_number(n)+n+1
+
+thm natural_triangular_number_is_strictly_increasing:
+    ? $is_strictly_increasing_natural_map(natural_triangular_number)
+    claim:
+        ? forall n N:
+            natural_triangular_number(n+1)>natural_triangular_number(n)
+        release thm natural_triangular_number_equations(n)
+        natural_triangular_number(n) $in R
+        n $in R
+        natural_triangular_number(n+1)=natural_triangular_number(n)+n+1>natural_triangular_number(n)
+    by def $is_strictly_increasing_natural_map(natural_triangular_number)
+
+have triangular_natural_pairs power_set(cart(N,N))={pair cart(N,N):pair(2)<=pair(1)}
+
+claim:
+    ? forall pair triangular_natural_pairs:
+        pair $in cart(N,N)
+        pair(1) $in N
+        pair(2) $in N
+        pair(1) $in R
+        pair(2) $in R
+        pair(2)<=pair(1)
+        natural_triangular_number(pair(1))+pair(2) $in N
+    pair $in cart(N,N)
+    pair(1) $in N
+    pair(2) $in N
+    pair(1) $in R
+    pair(2) $in R
+    pair(2)<=pair(1)
+    natural_triangular_number(pair(1))+pair(2) $in N
+
+have fn triangular_natural_pair_rank(pair triangular_natural_pairs) N=natural_triangular_number(pair(1))+pair(2)
+
+thm triangular_natural_pair_rank_separates_rows:
+    ? forall a,b triangular_natural_pairs:
+        a(1)<b(1)
+        =>:
+            triangular_natural_pair_rank(a)<triangular_natural_pair_rank(b)
+    a(1) $in N
+    a(2) $in N
+    b(1) $in N
+    b(2) $in N
+    a(1) $in R
+    a(2) $in R
+    b(1) $in R
+    b(2) $in R
+    natural_triangular_number(a(1)) $in R
+    natural_triangular_number(a(1)+1) $in R
+    natural_triangular_number(b(1)) $in R
+    triangular_natural_pair_rank(a) $in R
+    triangular_natural_pair_rank(b) $in R
+    a(2)<=a(1)
+    b(2)>=0
+    a(1)+1<=b(1)
+    release thm natural_triangular_number_is_strictly_increasing
+    release thm strictly_increasing_natural_map_pairwise_growth(natural_triangular_number,a(1)+1,b(1))
+    b(1)-(a(1)+1)>=0
+    natural_triangular_number(b(1))>=natural_triangular_number(a(1)+1)+(b(1)-(a(1)+1))>=natural_triangular_number(a(1)+1)
+    natural_triangular_number(b(1))>=natural_triangular_number(a(1)+1)
+    release thm natural_triangular_number_equations(a(1))
+    natural_triangular_number(a(1)+1)=natural_triangular_number(a(1))+a(1)+1>natural_triangular_number(a(1))+a(2)=triangular_natural_pair_rank(a)
+    natural_triangular_number(a(1)+1)>triangular_natural_pair_rank(a)
+    natural_triangular_number(b(1))>=natural_triangular_number(a(1)+1)>triangular_natural_pair_rank(a)
+    triangular_natural_pair_rank(b)=natural_triangular_number(b(1))+b(2)>=natural_triangular_number(b(1))>triangular_natural_pair_rank(a)
+    triangular_natural_pair_rank(a)<triangular_natural_pair_rank(b)
+
+thm triangular_natural_pair_rank_is_injective:
+    ? $injective(triangular_natural_pairs,N,triangular_natural_pair_rank)
+    claim:
+        ? forall a,b triangular_natural_pairs:
+            triangular_natural_pair_rank(a)=triangular_natural_pair_rank(b)
+            =>:
+                a=b
+        a $in cart(N,N)
+        b $in cart(N,N)
+        a(1) $in R
+        a(2) $in R
+        b(1) $in R
+        b(2) $in R
+        triangular_natural_pair_rank(a) $in R
+        triangular_natural_pair_rank(b) $in R
+        by cases:
+            ? a(1)=b(1)
+            case a(1)=b(1):
+                a(1)=b(1)
+            case a(1)<b(1):
+                release thm triangular_natural_pair_rank_separates_rows(a,b)
+                impossible triangular_natural_pair_rank(a)=triangular_natural_pair_rank(b)
+            case a(1)>b(1):
+                release thm triangular_natural_pair_rank_separates_rows(b,a)
+                impossible triangular_natural_pair_rank(a)=triangular_natural_pair_rank(b)
+        natural_triangular_number(a(1)) $in R
+        natural_triangular_number(b(1)) $in R
+        natural_triangular_number(a(1))=natural_triangular_number(b(1))
+        triangular_natural_pair_rank(a)=natural_triangular_number(a(1))+a(2)
+        triangular_natural_pair_rank(b)=natural_triangular_number(b(1))+b(2)
+        a(2)=triangular_natural_pair_rank(a)-natural_triangular_number(a(1))=triangular_natural_pair_rank(b)-natural_triangular_number(b(1))=b(2)
+        a=(a(1),a(2))=(b(1),b(2))=b
+    by def $injective(triangular_natural_pairs,N,triangular_natural_pair_rank)
+
+thm triangular_natural_pairs_are_countably_infinite:
+    ? $main::is_countably_infinite_set(triangular_natural_pairs)
+    release thm triangular_natural_pair_rank_is_injective
+    release thm injection_into_naturals_gives_at_most_countability(triangular_natural_pairs,triangular_natural_pair_rank)
+    claim:
+        ? forall n N:
+            (n,0) $in triangular_natural_pairs
+        (n,0) $in cart(N,N)
+        (n,0)(2)=0
+        (n,0)(1)=n
+        0<=n
+        (n,0) $in triangular_natural_pairs
+    have fn axis(n N) triangular_natural_pairs=(n,0)
+    claim:
+        ? forall n N:
+            axis(n) $in fn_range(axis)
+        axis(n) $in fn_range(axis)
+    axis $in fn(n N) fn_range(axis)
+    claim:
+        ? forall a,b N:
+            axis(a)=axis(b)
+            =>:
+                a=b
+        axis(a)=(a,0)
+        axis(b)=(b,0)
+        (a,0)=(b,0)
+        a=(a,0)(1)=(b,0)(1)=b
+    by def $injective(N,fn_range(axis),axis)
+    claim:
+        ? forall target fn_range(axis):
+            exist n N st {target=axis(n)}
+        have by fn_preimage: index from target $in fn_range(axis)
+        witness exist n N st {target=axis(n)} from index
+    by def $surjective(N,fn_range(axis),axis)
+    by def $bijective(N,fn_range(axis),axis)
+    witness $card::has_equal_cardinality(N,fn_range(axis)) from axis
+    by def $main::is_countably_infinite_set(fn_range(axis))
+    fn_range(axis) $subset triangular_natural_pairs
+    release thm countably_infinite_subset_implies_infinite_superset(fn_range(axis),triangular_natural_pairs)
+    release thm infinite_at_most_countable_set_is_countably_infinite(triangular_natural_pairs)
+
+thm native_natural_pairs_are_countably_infinite:
+    ? $main::is_countably_infinite_set(cart(N,N))
+    claim:
+        ? forall pair cart(N,N):
+            (pair(1)+pair(2),pair(1)) $in triangular_natural_pairs
+        pair(1) $in N
+        pair(2) $in N
+        pair(1) $in R
+        pair(2) $in R
+        pair(2)>=0
+        pair(1)<=pair(1)+pair(2)
+        (pair(1)+pair(2),pair(1)) $in cart(N,N)
+        (pair(1)+pair(2),pair(1))(1)=pair(1)+pair(2)
+        (pair(1)+pair(2),pair(1))(2)=pair(1)
+        (pair(1)+pair(2),pair(1)) $in triangular_natural_pairs
+    have fn place(pair cart(N,N)) triangular_natural_pairs=(pair(1)+pair(2),pair(1))
+    claim:
+        ? forall a,b cart(N,N):
+            place(a)=place(b)
+            =>:
+                a=b
+        a(1) $in R
+        a(2) $in R
+        b(1) $in R
+        b(2) $in R
+        place(a) $in triangular_natural_pairs
+        place(b) $in triangular_natural_pairs
+        place(a) $in cart(N,N)
+        place(b) $in cart(N,N)
+        a(1)=place(a)(2)=place(b)(2)=b(1)
+        a(1)+a(2)=place(a)(1)=place(b)(1)=b(1)+b(2)
+        a(2)=(a(1)+a(2))-a(1)=(b(1)+b(2))-b(1)=b(2)
+        a=(a(1),a(2))=(b(1),b(2))=b
+    by def $injective(cart(N,N),triangular_natural_pairs,place)
+    claim:
+        ? forall target triangular_natural_pairs:
+            exist pair cart(N,N) st {target=place(pair)}
+        target $in cart(N,N)
+        target(1) $in N
+        target(2) $in N
+        target(1) $in Z
+        target(2) $in Z
+        target(1) $in R
+        target(2) $in R
+        target(2)<=target(1)
+        target(1)-target(2) $in N
+        (target(2),target(1)-target(2)) $in cart(N,N)
+        target(2)+(target(1)-target(2))=target(1)
+        have candidate cart(N,N)=(target(2),target(1)-target(2))
+        candidate(1)=target(2)
+        candidate(2)=target(1)-target(2)
+        candidate(1)+candidate(2)=target(1)
+        place(candidate)=(candidate(1)+candidate(2),candidate(1))
+        (candidate(1)+candidate(2),candidate(1))=(target(1),target(2))
+        place(candidate)=(target(1),target(2))=target
+        witness exist pair cart(N,N) st {target=place(pair)} from candidate
+    by def $surjective(cart(N,N),triangular_natural_pairs,place)
+    by def $bijective(cart(N,N),triangular_natural_pairs,place)
+    witness $card::has_equal_cardinality(cart(N,N),triangular_natural_pairs) from place
+    release thm card::equal_cardinality_symmetric(cart(N,N),triangular_natural_pairs)
+    release thm triangular_natural_pairs_are_countably_infinite
+    release thm main::equal_cardinality_preserves_countable_infiniteness(triangular_natural_pairs,cart(N,N))
+
+thm product_of_two_countably_infinite_sets_is_countably_infinite:
+    ? forall X,Y set:
+        $main::is_countably_infinite_set(X)
+        $main::is_countably_infinite_set(Y)
+        =>:
+            $main::is_countably_infinite_set(cart(X,Y))
+    $card::has_equal_cardinality(N,X)
+    $card::has_equal_cardinality(N,Y)
+    obtain f from $card::has_equal_cardinality(N,X)
+    obtain g from $card::has_equal_cardinality(N,Y)
+    $bijective(N,X,f)
+    $bijective(N,Y,g)
+    $injective(N,X,f)
+    $injective(N,Y,g)
+    $surjective(N,X,f)
+    $surjective(N,Y,g)
+    claim:
+        ? forall pair cart(N,N):
+            (f(pair(1)),g(pair(2))) $in cart(X,Y)
+        pair(1) $in N
+        pair(2) $in N
+        f(pair(1)) $in X
+        g(pair(2)) $in Y
+        (f(pair(1)),g(pair(2))) $in cart(X,Y)
+    have fn combined(pair cart(N,N)) cart(X,Y)=(f(pair(1)),g(pair(2)))
+    claim:
+        ? forall a,b cart(N,N):
+            combined(a)=combined(b)
+            =>:
+                a=b
+        a(1) $in N
+        a(2) $in N
+        b(1) $in N
+        b(2) $in N
+        combined(a) $in cart(X,Y)
+        combined(b) $in cart(X,Y)
+        f(a(1))=combined(a)(1)=combined(b)(1)=f(b(1))
+        f(a(1))=f(b(1))
+        a(1)=b(1)
+        g(a(2))=combined(a)(2)=combined(b)(2)=g(b(2))
+        g(a(2))=g(b(2))
+        a(2)=b(2)
+        a=(a(1),a(2))=(b(1),b(2))=b
+    by def $injective(cart(N,N),cart(X,Y),combined)
+    claim:
+        ? forall target cart(X,Y):
+            exist pair cart(N,N) st {target=combined(pair)}
+        target(1) $in X
+        target(2) $in Y
+        obtain first from exist n N st {target(1)=f(n)}
+        obtain second from exist n N st {target(2)=g(n)}
+        have candidate cart(N,N)=(first,second)
+        candidate(1)=first
+        candidate(2)=second
+        f(candidate(1))=f(first)=target(1)
+        g(candidate(2))=g(second)=target(2)
+        combined(candidate)=(f(candidate(1)),g(candidate(2)))
+        (f(candidate(1)),g(candidate(2)))=(target(1),target(2))
+        combined(candidate)=(target(1),target(2))=target
+        witness exist pair cart(N,N) st {target=combined(pair)} from candidate
+    by def $surjective(cart(N,N),cart(X,Y),combined)
+    by def $bijective(cart(N,N),cart(X,Y),combined)
+    witness $card::has_equal_cardinality(cart(N,N),cart(X,Y)) from combined
+    release thm native_natural_pairs_are_countably_infinite
+    release thm main::equal_cardinality_preserves_countable_infiniteness(cart(N,N),cart(X,Y))
+
+thm native_rationals_are_countably_infinite:
+    ? $main::is_countably_infinite_set(Q)
+    release thm native_integers_are_countably_infinite
+    release thm main::native_positive_naturals_are_countably_infinite
+    release thm product_of_two_countably_infinite_sets_is_countably_infinite(Z,N+)
+    claim:
+        ? forall pair cart(Z,N+):
+            pair(1)/pair(2) $in Q
+        pair(1) $in Z
+        pair(1) $in Q
+        pair(1) $in R
+        pair(2) $in N+
+        pair(2) $in Z
+        pair(2) $in Q
+        pair(2) $in R
+        pair(2)>0
+        pair(2)!=0
+        pair(1)/pair(2) $in Q
+    have fn rational_value(pair cart(Z,N+)) Q=pair(1)/pair(2)
+    claim:
+        ? forall target fn_range(rational_value):
+            target $in Q
+        have by fn_preimage: pair from target $in fn_range(rational_value)
+        rational_value(pair) $in Q
+        target $in Q
+    claim:
+        ? forall target Q:
+            target $in fn_range(rational_value)
+        release thm rational_has_unique_reduced_fraction(target)
+        obtain numerator,denominator from exist! p Z,d N+ st {target=p/d,gcd(p,d)=1}
+        have candidate cart(Z,N+)=(numerator,denominator)
+        candidate(1)=numerator
+        candidate(2)=denominator
+        rational_value(candidate)=candidate(1)/candidate(2)=numerator/denominator=target
+        rational_value(candidate) $in fn_range(rational_value)
+        target $in fn_range(rational_value)
+    by extension fn_range(rational_value)=Q
+    release thm countably_infinite_domain_image_is_at_most_countable(cart(Z,N+),Q,rational_value)
+    $main::is_at_most_countable_set(Q)
+    release thm main::native_naturals_are_countably_infinite
+    N $subset Q
+    release thm countably_infinite_subset_implies_infinite_superset(N,Q)
+    release thm infinite_at_most_countable_set_is_countably_infinite(Q)

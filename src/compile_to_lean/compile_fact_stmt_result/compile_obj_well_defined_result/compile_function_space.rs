@@ -84,9 +84,31 @@ impl LitexToLeanCompiler {
             ..*position
         };
         let checked_header = self.compile_function_raw_header(signature, &completed_return)?;
-        let signature = self.compile_fn_signature(signature, &completed_return)?;
+        let compiled_signature = self.compile_fn_signature(signature, &completed_return)?;
+        // The original header above is still validated. A previously emitted
+        // sequence/matrix expansion can already own this same function space;
+        // reuse its source fact ID after checking binder alpha equivalence.
+        let object = Obj::FunctionSpace(FunctionSpace::FnSet(signature.clone()));
+        if let Some(reference) =
+            position.with_visible_inferred_subject_filter(&object, &mut |store, producer| {
+                // A closed function's inner inference can have the same
+                // signature. Its local declaration is not a visible binding.
+                if position
+                    .visible_fact(store.primary_fact_id(), &self.runtime)
+                    .is_err()
+                {
+                    return Ok(None);
+                }
+                self.compile_sequence_inferred_subject(&object, store, producer)
+            })?
+        {
+            return Ok(reference);
+        }
+        // Keep the checked payload a term: duplicated tactic-produced objects
+        // can leave distinct metavariables during dependent argument checking.
         Ok(format!(
-            "(let _checked_header : {checked_header} := (by\n    {}\n    exact True.intro);\n  Litex.fnSet {signature})",
+            "(show Litex.Obj (M := M) (Litex.FunctionSignature M) from (let _checked_header : (\n    {}\n  ) := (by\n    {}\n    exact True.intro);\n  Litex.fnSet {compiled_signature}))",
+            checked_header.replace('\n', "\n    "),
             head.replace('\n', "\n    ")
         ))
     }
@@ -116,34 +138,78 @@ impl LitexToLeanCompiler {
             ..*position
         };
         ensure_object(&function.equal_to, &wd.body_well_defined)?;
-        self.compile_wd(&wd.body_well_defined, &body_position)?;
-        let membership = match &wd.body_in_ret_set {
-            AnonymousFnBodyInReturnSetProof::CheckedMembership(proof) => proof,
-            AnonymousFnBodyInReturnSetProof::EmptyCompleteDomain(_) => {
-                return Err(LeanCompileError::unsupported(
-                    "Function/EmptyCompleteDomain",
-                ))
-            }
-        };
-        match source_subject(membership)? {
-            Fact::AtomicFact(AtomicFact::InFact(member))
-                if member.element.ir() == function.equal_to.ir()
-                    && member.set.ir() == signature.ret_set.ir() => {}
-            _ => return Err(LeanCompileError::new(
-                "Function/ReturnSubject",
-                "The recorded return proof does not establish this body in its declared carrier.",
-            )),
-        }
+        let body_constructor = self.compile_wd(&wd.body_well_defined, &body_position)?;
         let membership_position = SourcePosition {
             before: body_position.before + 1,
             ..*position
         };
-        let member = self.compile_verify(membership, &membership_position)?;
+        let body_local = SourcePosition::new(
+            Some(&membership_position),
+            SourceOwner::ObjectLocal(&wd.body_well_defined),
+            0,
+        );
+        let return_proof = match &wd.body_in_ret_set {
+            AnonymousFnBodyInReturnSetProof::CheckedMembership(membership) => {
+                match source_subject(membership)? {
+                    Fact::AtomicFact(AtomicFact::InFact(member))
+                        if member.element.ir() == function.equal_to.ir()
+                            && member.set.ir() == signature.ret_set.ir() => {}
+                    _ => return Err(LeanCompileError::new(
+                        "Function/ReturnSubject",
+                        "The recorded return proof does not establish this body in its declared carrier.",
+                    )),
+                }
+                let member = self.compile_verify(membership, &body_local)?;
+                format!("change {}\nexact {}", member.0, member.1)
+            }
+            AnonymousFnBodyInReturnSetProof::EmptyCompleteDomain(empty) => {
+                use crate::execute::execute_fact_stmt::function_domain::FunctionDomainEmptyProof;
+                let captured = match empty {
+                    FunctionDomainEmptyProof::ParameterCarrier(p) => &p.signature,
+                    FunctionDomainEmptyProof::GuardExclusion(p) => &p.signature,
+                };
+                if captured != signature {
+                    return Err(LeanCompileError::unsupported(
+                        "Function/EmptyDomainSignature",
+                    ));
+                }
+                let values: Vec<_> = signature
+                    .set_bound_parameters
+                    .groups
+                    .iter()
+                    .flat_map(|group| &group.params)
+                    .map(|parameter| format!("_raw_i{}", parameter.id.value()))
+                    .collect();
+                let members: Vec<_> = wd
+                    .defined_params
+                    .store_and_infer_results
+                    .iter()
+                    .map(|store| format!("h_{}", store.primary_fact_id().value()))
+                    .collect();
+                let guards: Vec<_> = wd
+                    .assumed_dom_facts
+                    .iter()
+                    .map(|assumed| {
+                        format!("h_{}", assumed.store_and_infer.primary_fact_id().value())
+                    })
+                    .collect();
+                // The producer checked absence after carrier WD and before
+                // introducing these parameters or assuming these guards.
+                let prior = SourcePosition {
+                    before: wd.param_type_well_defined.len(),
+                    ..*position
+                };
+                let excluded = self
+                    .compile_empty_function_assignment(empty, &values, &members, &guards, &prior)?;
+                format!("exact False.elim {excluded}")
+            }
+        };
         let h_return = format!(
-            "(by\n  {}\n  change {}\n  exact {})",
+            "(by\n  {}\n  let {} := {}\n  {})",
             head.replace('\n', "\n  "),
-            member.0.replace('\n', "\n  "),
-            member.1.replace('\n', "\n  ")
+            body_local.object_local_name(),
+            body_constructor.replace('\n', "\n  "),
+            return_proof.replace('\n', "\n  "),
         );
         if !Self::function_uses_numeric_interface(signature) {
             return self.compile_formula_function_on(function, &h_return, &membership_position);
@@ -195,7 +261,7 @@ impl LitexToLeanCompiler {
         let body = self.compile_function_body_template(function, position)?;
         let arguments = variables.join(" ");
         let checked_type = format!(
-            "∀ {binders}, {members} → ({guard} {arguments}) → M.mem ({body} {arguments}) (Litex.denote {output})"
+            "∀ {binders}, {members} → ({guard} {arguments}) → M.mem ({body} {arguments}) (Litex.denote _litex_output)"
         );
         let (domain, domain_set) = self.compile_function_base_domain(signature, position)?;
         let packed_guard = self.compile_function_packed_guard_template(signature, position)?;
@@ -209,8 +275,11 @@ impl LitexToLeanCompiler {
                 inputs.len()
             )).collect::<Vec<_>>().join(" ")
         };
+        // A checked carrier can contain tactic-generated data. Bind it once so
+        // the domain theorem and its sethood argument use the same value.
         let h_return = format!(
-            "(by\n  have _litex_checked_return : {checked_type} := {}\n  intro _litex_input _litex_domain\n  obtain ⟨_litex_members, _litex_guard⟩ := (Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote {output}) {domain_set} (Litex.isSet {output}) {packed_guard} _litex_input).mp _litex_domain\n  exact _litex_checked_return {} {memberships} _litex_guard)",
+            "(by\n  let _litex_output := {}\n  have _litex_checked_return : {checked_type} := {}\n  intro _litex_input _litex_domain\n  obtain ⟨_litex_members, _litex_guard⟩ := (Litex.FunctionSignature.withGuard_domain {domain} (Litex.denote _litex_output) {domain_set} (Litex.isSet _litex_output) {packed_guard} _litex_input).mp _litex_domain\n  exact _litex_checked_return {} {memberships} _litex_guard)",
+            output.replace('\n', "\n  "),
             checked_return.replace('\n', "\n  "),
             packed_values.join(" ")
         );

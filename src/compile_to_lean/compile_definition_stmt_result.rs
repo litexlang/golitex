@@ -47,10 +47,12 @@ impl LitexToLeanCompiler {
             ExecDefinitionStmtResult::DefTemplate(result) => {
                 self.compile_template_statement(result, position, local)
             }
+            ExecDefinitionStmtResult::DefStrategy(result) => {
+                self.compile_strategy_statement(result, position, local)
+            }
             ExecDefinitionStmtResult::DefAlgoByCases(_)
             | ExecDefinitionStmtResult::DefAlgoByInduc(_)
-            | ExecDefinitionStmtResult::Axiom(_)
-            | ExecDefinitionStmtResult::DefStrategy(_) => {
+            | ExecDefinitionStmtResult::Axiom(_) => {
                 Err(LeanCompileError::unsupported("Definition"))
             }
         }

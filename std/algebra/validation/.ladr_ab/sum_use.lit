@@ -1,0 +1,103 @@
+# Three nonzero real coordinate vectors: explicit accumulation trace.
+
+release obj def Algebra::field::real_add
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def main::plane
+
+release struct def main::plane
+
+release obj def main::u
+
+\Algebra::finite_span::coordinate_space<R,Algebra::field::real_field,2> = (\Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>)
+
+main::plane = (\Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>,\Algebra::finite_span::smul_coefficients<R,Algebra::field::real_field,2>)
+
+main::plane.zero = \Algebra::finite_span::zero_coefficients<R,Algebra::field::real_field,2>
+
+main::plane.add = \Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>
+
+Algebra::field::real_field.zero=0
+
+have repeated finite_seq(finite_seq(R,2),3)=fn(j closed_range(1,3)) finite_seq(R,2) {main::u}
+
+have fn sum_trace(j closed_range(0,3)) finite_seq(R,2)=fn(k closed_range(1,2)) R {j*k}
+
+claim:
+    ? sum_trace(0)=main::plane.zero
+    claim:
+        ? forall k closed_range(1,2):
+            sum_trace(0)(k)=main::plane.zero(k)
+        k $in N+
+        k<=2
+        release thm Algebra::finite_span::zero_coefficients_entry(R,Algebra::field::real_field,2,main::plane.zero,k)
+        sum_trace(0)(k)=0*k=0=Algebra::field::real_field.zero=main::plane.zero(k)
+    by fn_extension sum_trace(0)=main::plane.zero
+
+claim:
+    ? forall j N+:
+        j<=3
+        =>:
+            sum_trace(j)=main::plane.add(sum_trace(j-1),repeated(j))
+    j $in closed_range(1,3)
+    j $in closed_range(0,3)
+    j-1 $in closed_range(0,3)
+    repeated(j)=main::u
+    have next_sum finite_seq(R,2)=main::plane.add(sum_trace(j-1),repeated(j))
+    next_sum=\Algebra::finite_span::add_coefficients<R,Algebra::field::real_field,2>(sum_trace(j-1),repeated(j))
+    claim:
+        ? forall k closed_range(1,2):
+            next_sum(k)=sum_trace(j)(k)
+        k $in N+
+        k<=2
+        release thm Algebra::finite_span::add_coefficients_entry(R,Algebra::field::real_field,2,sum_trace(j-1),repeated(j),next_sum,k)
+        sum_trace(j-1)(k)=(j-1)*k
+        repeated(j)(k)=main::u(k)=k
+        next_sum(k)=Algebra::field::real_field.add(sum_trace(j-1)(k),repeated(j)(k))=Algebra::field::real_add((j-1)*k,k)=j*k=sum_trace(j)(k)
+    by fn_extension next_sum=sum_trace(j)
+    sum_trace(j)=next_sum=main::plane.add(sum_trace(j-1),repeated(j))
+
+release thm Algebra::finite_span::vector_list_sum_from_trace(R,Algebra::field::real_field,finite_seq(R,2),main::plane,3,repeated,sum_trace)
+
+have sum_value finite_seq(R,2)=\Algebra::finite_span::vector_list_sum<R,Algebra::field::real_field,finite_seq(R,2),main::plane,3>(repeated)
+
+sum_value=sum_trace(3)
+
+sum_value(2)=sum_trace(3)(2)=3*2=6
+
+have empty_list finite_seq(finite_seq(R,2),0)=fn(j closed_range(1,0)) finite_seq(R,2) {main::u}
+
+release thm Algebra::finite_span::empty_vector_list_sum(R,Algebra::field::real_field,finite_seq(R,2),main::plane,empty_list)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,n N,left_vectors,right_vectors,result_vectors finite_seq(V,n):
+        forall j N+:
+            j<=n
+            =>:
+                result_vectors(j)=space.add(left_vectors(j),right_vectors(j))
+        =>:
+            \Algebra::finite_span::vector_list_sum<K,F,V,space,n>(result_vectors)=space.add(\Algebra::finite_span::vector_list_sum<K,F,V,space,n>(left_vectors),\Algebra::finite_span::vector_list_sum<K,F,V,space,n>(right_vectors))
+    release thm Algebra::finite_span::vector_list_sum_add(K,F,V,space,n,left_vectors,right_vectors,result_vectors)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,n N,a K,vectors,result_vectors finite_seq(V,n):
+        forall j N+:
+            j<=n
+            =>:
+                result_vectors(j)=space.smul(a,vectors(j))
+        =>:
+            \Algebra::finite_span::vector_list_sum<K,F,V,space,n>(result_vectors)=space.smul(a,\Algebra::finite_span::vector_list_sum<K,F,V,space,n>(vectors))
+    release thm Algebra::finite_span::vector_list_sum_smul(K,F,V,space,n,a,vectors,result_vectors)
+
+claim:
+    ? forall K nonempty_set,F &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,F,V>,n N,vectors finite_seq(V,n):
+        forall j N+:
+            j<=n
+            =>:
+                vectors(j)=space.zero
+        =>:
+            \Algebra::finite_span::vector_list_sum<K,F,V,space,n>(vectors)=space.zero
+    release thm Algebra::finite_span::zero_vector_list_sum(K,F,V,space,n,vectors)

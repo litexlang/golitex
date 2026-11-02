@@ -1,0 +1,53 @@
+# Converses for unique basis representations and nontrivial dependence relations.
+
+thm unique_representations_imply_basis:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        forall x V:
+            exist! coefficients finite_seq(K,n) st {$finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,x)}
+        =>:
+            $basis::is_basis(K,field,V,space,n,vectors)
+    \finite_span::span<K,field,V,space,n,vectors> ={value V: $finite_span::is_linear_combination(K,field,V,space,n,value,vectors)}
+    claim:
+        ? forall x V:
+            x $in \finite_span::span<K,field,V,space,n,vectors>
+        obtain coefficients from exist! candidate finite_seq(K,n) st {$finite_span::has_linear_combination_value(K,field,V,space,n,candidate,vectors,x)}
+        witness $finite_span::is_linear_combination(K,field,V,space,n,x,vectors) from coefficients
+        x $in \finite_span::span<K,field,V,space,n,vectors>
+    by extension \finite_span::span<K,field,V,space,n,vectors> =V
+    by def $finite_span::spans(K,field,V,space,n,vectors)
+    release thm finite_span::zero_coefficients_carrier(K,field,n)
+    have zeros finite_seq(K,n)=\finite_span::zero_coefficients<K,field,n>
+    release thm finite_span::zero_coefficients_has_zero_value(K,field,V,space,n,vectors)
+    $finite_span::has_linear_combination_value(K,field,V,space,n,zeros,vectors,space.zero)
+    claim:
+        ? forall coefficients finite_seq(K,n):
+            $finite_span::has_linear_combination_value(K,field,V,space,n,coefficients,vectors,space.zero)
+            =>:
+                $basis::has_only_zero_coefficients(K,field,n,coefficients)
+        exist! candidate finite_seq(K,n) st {$finite_span::has_linear_combination_value(K,field,V,space,n,candidate,vectors,space.zero)}
+        coefficients=zeros
+        claim:
+            ? forall k N+:
+                k<=n
+                =>:
+                    coefficients(k)=field.zero
+            k $in closed_range(1,n)
+            release thm finite_span::zero_coefficients_entry(K,field,n,zeros,k)
+            coefficients(k)=zeros(k)=\finite_span::zero_coefficients<K,field,n>(k)=field.zero
+        by def $basis::has_only_zero_coefficients(K,field,n,coefficients)
+    by def $basis::is_linearly_independent(K,field,V,space,n,vectors)
+    by def $basis::is_basis(K,field,V,space,n,vectors)
+
+thm nontrivial_dependence_coefficients_imply_dependent:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $basis::has_nontrivial_dependence_coefficients(K,field,V,space,n,vectors)
+        =>:
+            $basis::is_linearly_dependent(K,field,V,space,n,vectors)
+    obtain coefficients from $basis::has_nontrivial_dependence_coefficients(K,field,V,space,n,vectors)
+    claim:
+        ? not $basis::is_linearly_independent(K,field,V,space,n,vectors)
+        by contra:
+            ? not $basis::is_linearly_independent(K,field,V,space,n,vectors)
+            $basis::has_only_zero_coefficients(K,field,n,coefficients)
+            impossible not $basis::has_only_zero_coefficients(K,field,n,coefficients)
+    by def $basis::is_linearly_dependent(K,field,V,space,n,vectors)

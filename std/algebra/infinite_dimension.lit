@@ -1,0 +1,162 @@
+# Infinite-dimensional spaces and zero extension into scalar sequences on N+.
+
+prop is_infinite_dimensional(K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>):
+    not $basis::is_finite_dimensional(K,F,V,space)
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>:
+        \vector_space::scalar_space<K,F> $in &vector_space::VectorSpace<K,F,K>
+    release thm vector_space::scalar_space_carrier(K,F)
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        \finite_span::coordinate_space<K,F,n> $in &vector_space::VectorSpace<K,F,finite_seq(K,n)>
+    release thm finite_span::coordinate_space_carrier(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $basis::is_finite_dimensional(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>)
+    release thm coordinate_basis::coordinate_space_is_finite_dimensional(K,F,n)
+
+claim:
+    ? forall K nonempty_set,F &field::Field<K>:
+        \vector_space::function_space<K,F,N+> $in &vector_space::VectorSpace<K,F,fn(t N+) K>
+    release thm vector_space::function_space_carrier(K,F,N+)
+
+template<K nonempty_set,F &field::Field<K>,n N,vector finite_seq(K,n)>:
+    have fn zero_extended_coordinates(j N+) K by cases:
+        case j<=n: vector(j)
+        case j>n: F.zero
+
+template<K nonempty_set,F &field::Field<K>,n N>:
+    have fn coordinate_zero_extension(vector finite_seq(K,n)) fn(t N+) K=\zero_extended_coordinates<K,F,n,vector>
+
+thm coordinate_zero_extension_carrier:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        \coordinate_zero_extension<K,F,n> $in fn(vector finite_seq(K,n)) fn(t N+) K
+
+thm coordinate_zero_extension_entry:
+    ? forall K nonempty_set,F &field::Field<K>,n N,vector finite_seq(K,n),j N+:
+        j<=n
+        =>:
+            \coordinate_zero_extension<K,F,n>(vector)(j)=vector(j)
+    \coordinate_zero_extension<K,F,n>(vector)(j)=\zero_extended_coordinates<K,F,n,vector>(j)=vector(j)
+
+thm coordinate_zero_extension_tail:
+    ? forall K nonempty_set,F &field::Field<K>,n N,vector finite_seq(K,n),j N+:
+        j>n
+        =>:
+            \coordinate_zero_extension<K,F,n>(vector)(j)=F.zero
+    \coordinate_zero_extension<K,F,n>(vector)(j)=\zero_extended_coordinates<K,F,n,vector>(j)=F.zero
+
+thm coordinate_zero_extension_is_injective:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $injective(finite_seq(K,n),fn(t N+) K,\coordinate_zero_extension<K,F,n>)
+    claim:
+        ? forall u,v finite_seq(K,n):
+            \coordinate_zero_extension<K,F,n>(u)=\coordinate_zero_extension<K,F,n>(v)
+            =>:
+                u=v
+        have first fn(t N+) K=\coordinate_zero_extension<K,F,n>(u)
+        have second fn(t N+) K=\coordinate_zero_extension<K,F,n>(v)
+        first=\coordinate_zero_extension<K,F,n>(u)=\coordinate_zero_extension<K,F,n>(v)=second
+        claim:
+            ? forall j closed_range(1,n):
+                u(j)=v(j)
+            j $in N+
+            j<=n
+            release thm coordinate_zero_extension_entry(K,F,n,u,j)
+            release thm coordinate_zero_extension_entry(K,F,n,v,j)
+            first(j)=second(j)
+            u(j)=\coordinate_zero_extension<K,F,n>(u)(j)=first(j)=second(j)=\coordinate_zero_extension<K,F,n>(v)(j)=v(j)
+        by fn_extension u=v
+    by def $injective(finite_seq(K,n),fn(t N+) K,\coordinate_zero_extension<K,F,n>)
+
+thm coordinate_zero_extension_is_linear:
+    ? forall K nonempty_set,F &field::Field<K>,n N:
+        $vector_space::is_linear_map(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,fn(t N+) K,\vector_space::function_space<K,F,N+>,\coordinate_zero_extension<K,F,n>)
+    \vector_space::function_space<K,F,N+> =(\vector_space::function_zero<K,F,N+>,\vector_space::function_add<K,F,N+>,\vector_space::function_smul<K,F,N+>)
+    release struct def \vector_space::function_space<K,F,N+>
+    \vector_space::function_space<K,F,N+>.add=\vector_space::function_add<K,F,N+>
+    \vector_space::function_space<K,F,N+>.smul=\vector_space::function_smul<K,F,N+>
+    claim:
+        ? forall u,v finite_seq(K,n):
+            \coordinate_zero_extension<K,F,n>(\finite_span::coordinate_space<K,F,n>.add(u,v))=\vector_space::function_space<K,F,N+>.add(\coordinate_zero_extension<K,F,n>(u),\coordinate_zero_extension<K,F,n>(v))
+        have added finite_seq(K,n)=\finite_span::coordinate_space<K,F,n>.add(u,v)
+        have first fn(t N+) K=\coordinate_zero_extension<K,F,n>(added)
+        have second fn(t N+) K=\vector_space::function_space<K,F,N+>.add(\coordinate_zero_extension<K,F,n>(u),\coordinate_zero_extension<K,F,n>(v))
+        claim:
+            ? forall j N+:
+                first(j)=second(j)
+            by cases:
+                ? first(j)=second(j)
+                case j<=n:
+                    j $in closed_range(1,n)
+                    release thm coordinate_zero_extension_entry(K,F,n,added,j)
+                    release thm coordinate_zero_extension_entry(K,F,n,u,j)
+                    release thm coordinate_zero_extension_entry(K,F,n,v,j)
+                    release thm coordinate_arithmetic::coordinate_space_add_entry(K,F,n,u,v,j)
+                    added(j)=\finite_span::coordinate_space<K,F,n>.add(u,v)(j)=F.add(u(j),v(j))
+                    \coordinate_zero_extension<K,F,n>(u)(j) $in K
+                    \coordinate_zero_extension<K,F,n>(v)(j) $in K
+                    first(j)=\coordinate_zero_extension<K,F,n>(added)(j)=added(j)=F.add(u(j),v(j))
+                    second(j)=\vector_space::function_space<K,F,N+>.add(\coordinate_zero_extension<K,F,n>(u),\coordinate_zero_extension<K,F,n>(v))(j)=\vector_space::function_add<K,F,N+>(\coordinate_zero_extension<K,F,n>(u),\coordinate_zero_extension<K,F,n>(v))(j)=F.add(\coordinate_zero_extension<K,F,n>(u)(j),\coordinate_zero_extension<K,F,n>(v)(j))=F.add(u(j),v(j))
+                case j>n:
+                    release thm coordinate_zero_extension_tail(K,F,n,added,j)
+                    release thm coordinate_zero_extension_tail(K,F,n,u,j)
+                    release thm coordinate_zero_extension_tail(K,F,n,v,j)
+                    \coordinate_zero_extension<K,F,n>(u)(j) $in K
+                    \coordinate_zero_extension<K,F,n>(v)(j) $in K
+                    first(j)=\coordinate_zero_extension<K,F,n>(added)(j)=F.zero
+                    second(j)=\vector_space::function_space<K,F,N+>.add(\coordinate_zero_extension<K,F,n>(u),\coordinate_zero_extension<K,F,n>(v))(j)=\vector_space::function_add<K,F,N+>(\coordinate_zero_extension<K,F,n>(u),\coordinate_zero_extension<K,F,n>(v))(j)=F.add(\coordinate_zero_extension<K,F,n>(u)(j),\coordinate_zero_extension<K,F,n>(v)(j))=F.add(F.zero,F.zero)=F.zero
+        by fn_extension first=second
+        \coordinate_zero_extension<K,F,n>(\finite_span::coordinate_space<K,F,n>.add(u,v))=\coordinate_zero_extension<K,F,n>(added)=first=second=\vector_space::function_space<K,F,N+>.add(\coordinate_zero_extension<K,F,n>(u),\coordinate_zero_extension<K,F,n>(v))
+    claim:
+        ? forall a K,u finite_seq(K,n):
+            \coordinate_zero_extension<K,F,n>(\finite_span::coordinate_space<K,F,n>.smul(a,u))=\vector_space::function_space<K,F,N+>.smul(a,\coordinate_zero_extension<K,F,n>(u))
+        have scaled finite_seq(K,n)=\finite_span::coordinate_space<K,F,n>.smul(a,u)
+        have first fn(t N+) K=\coordinate_zero_extension<K,F,n>(scaled)
+        have second fn(t N+) K=\vector_space::function_space<K,F,N+>.smul(a,\coordinate_zero_extension<K,F,n>(u))
+        claim:
+            ? forall j N+:
+                first(j)=second(j)
+            by cases:
+                ? first(j)=second(j)
+                case j<=n:
+                    j $in closed_range(1,n)
+                    release thm coordinate_zero_extension_entry(K,F,n,scaled,j)
+                    release thm coordinate_zero_extension_entry(K,F,n,u,j)
+                    release thm coordinate_arithmetic::coordinate_space_smul_entry(K,F,n,a,u,j)
+                    scaled(j)=\finite_span::coordinate_space<K,F,n>.smul(a,u)(j)=F.mul(a,u(j))
+                    \coordinate_zero_extension<K,F,n>(u)(j) $in K
+                    first(j)=\coordinate_zero_extension<K,F,n>(scaled)(j)=scaled(j)=F.mul(a,u(j))
+                    second(j)=\vector_space::function_space<K,F,N+>.smul(a,\coordinate_zero_extension<K,F,n>(u))(j)=\vector_space::function_smul<K,F,N+>(a,\coordinate_zero_extension<K,F,n>(u))(j)=F.mul(a,\coordinate_zero_extension<K,F,n>(u)(j))=F.mul(a,u(j))
+                case j>n:
+                    release thm coordinate_zero_extension_tail(K,F,n,scaled,j)
+                    release thm coordinate_zero_extension_tail(K,F,n,u,j)
+                    release thm field::mul_zero(K,F,a)
+                    \coordinate_zero_extension<K,F,n>(u)(j) $in K
+                    first(j)=\coordinate_zero_extension<K,F,n>(scaled)(j)=F.zero
+                    second(j)=\vector_space::function_space<K,F,N+>.smul(a,\coordinate_zero_extension<K,F,n>(u))(j)=\vector_space::function_smul<K,F,N+>(a,\coordinate_zero_extension<K,F,n>(u))(j)=F.mul(a,\coordinate_zero_extension<K,F,n>(u)(j))=F.mul(a,F.zero)=F.zero
+        by fn_extension first=second
+        \coordinate_zero_extension<K,F,n>(\finite_span::coordinate_space<K,F,n>.smul(a,u))=\coordinate_zero_extension<K,F,n>(scaled)=first=second=\vector_space::function_space<K,F,N+>.smul(a,\coordinate_zero_extension<K,F,n>(u))
+    by def $vector_space::is_linear_map(K,F,finite_seq(K,n),\finite_span::coordinate_space<K,F,n>,fn(t N+) K,\vector_space::function_space<K,F,N+>,\coordinate_zero_extension<K,F,n>)
+
+thm positive_index_function_space_is_infinite_dimensional:
+    ? forall K nonempty_set,F &field::Field<K>:
+        $is_infinite_dimensional(K,F,fn(t N+) K,\vector_space::function_space<K,F,N+>)
+    claim:
+        ? not $basis::is_finite_dimensional(K,F,fn(t N+) K,\vector_space::function_space<K,F,N+>)
+        by contra:
+            ? not $basis::is_finite_dimensional(K,F,fn(t N+) K,\vector_space::function_space<K,F,N+>)
+            have d N=\dimension::finite_dimension<K,F,fn(t N+) K>(\vector_space::function_space<K,F,N+>)
+            d=\dimension::finite_dimension<K,F,fn(t N+) K>(\vector_space::function_space<K,F,N+>)
+            release thm coordinate_basis::coordinate_space_dimension(K,F,d+1)
+            release thm coordinate_zero_extension_is_linear(K,F,d+1)
+            release thm coordinate_zero_extension_is_injective(K,F,d+1)
+            release thm linear_criteria::injective_dimension_bound(K,F,finite_seq(K,d+1),\finite_span::coordinate_space<K,F,d+1>,fn(t N+) K,\vector_space::function_space<K,F,N+>,\coordinate_zero_extension<K,F,d+1>)
+            d+1=\dimension::finite_dimension<K,F,finite_seq(K,d+1)>(\finite_span::coordinate_space<K,F,d+1>)<=\dimension::finite_dimension<K,F,fn(t N+) K>(\vector_space::function_space<K,F,N+>)=d
+            d+1>d
+            impossible d+1<=d
+    by def $is_infinite_dimensional(K,F,fn(t N+) K,\vector_space::function_space<K,F,N+>)
+

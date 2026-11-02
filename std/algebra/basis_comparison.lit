@@ -104,6 +104,7 @@ thm independent_list_in_span_length_bound:
         \finite_span::span<K,field,V,space,n,current> = \finite_span::span<K,field,V,space,n,generators>
         forall j N+:
             j<=length
+            j<=m
             =>:
                 current(positions(j))=independent(j)
     prop has_prefix_exchange(length N):
@@ -124,6 +125,7 @@ thm independent_list_in_span_length_bound:
                 claim:
                     ? forall j N+:
                         j<=0
+                        j<=m
                         =>:
                             generators(positions(j))=independent(j)
                     by contra:
@@ -164,6 +166,8 @@ thm independent_list_in_span_length_bound:
                             positions(j)!=k
                     j $in closed_range(1,length)
                     positions(j) $in closed_range(1,n)
+                    j<=length<=m
+                    j<=m
                     current(positions(j))=independent(j)=prefix(j)
                     by thm span_reduction::span_contains_generator(K,field,V,space,length,prefix,j) => prefix(j) $in \finite_span::span<K,field,V,space,length,prefix>
                     by contra:
@@ -219,6 +223,7 @@ thm independent_list_in_span_length_bound:
                 claim:
                     ? forall j N+:
                         j<=length+1
+                        j<=m
                         =>:
                             replaced(appended(j))=independent(j)
                     j $in closed_range(1,length+1)

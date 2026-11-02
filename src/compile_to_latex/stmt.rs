@@ -1,9 +1,10 @@
 use super::fact::{
-    and_chain, atomic, conclusions, exist_shaped, fact, facts, forall, parameters, quantifier_frees,
+    and_chain, atomic, calculation_layout, conclusions, exist_shaped, fact, facts, forall,
+    parameters, quantifier_free, quantifier_frees,
 };
 use super::helper::{
-    call_parens, display, escape_text, group_if_compound, ident, identifier, inline, name,
-    predicate_or_fn_call,
+    call_parens, display, escape_text, ident, identifier, inline, multiline_conjunction, name,
+    predicate_or_fn_call, quantified_layout,
 };
 use super::language::{phrase, sentence, Phrase};
 use super::obj::{fn_set, function_space, obj};
@@ -22,7 +23,22 @@ pub(super) fn statements(
     let mut out = String::new();
     for value in values {
         out.push_str(&statement(value, modules, lang)?);
-        out.push('\n');
+        if !out.ends_with('\n') {
+            out.push('\n');
+        }
+    }
+    Ok(out)
+}
+
+fn proof_steps(
+    values: &[Stmt],
+    modules: &GlobalModuleManager,
+    lang: OutputLanguage,
+) -> RuntimeResult<String> {
+    let mut out = String::new();
+    for value in values {
+        out.push_str(&statement(value, modules, lang)?);
+        out.push_str("\\par\n");
     }
     Ok(out)
 }
@@ -74,16 +90,19 @@ fn statement(
                 "",
             ),
             ByStmt::ByContraStmt(x) => format!(
-                "{}{}{}{}{}",
+                "{}{}{}{}",
+                heading(Phrase::ContradictionMethod, "", lang),
                 say(Phrase::Goal, &inline(&f(&x.to_prove)?), "", ""),
-                say(Phrase::ContradictionMethod, "", "", ""),
-                say(
-                    Phrase::Suppose,
-                    &inline(&format!(r"\neg {}", group_if_compound(&f(&x.to_prove)?))),
-                    "",
-                    ""
-                ),
-                proof(&x.proof, modules, lang)?,
+                quote(&format!(
+                    "{}{}",
+                    say(
+                        Phrase::ContraryAssumption,
+                        &inline(&format!(r"\neg\left({}\right)", f(&x.to_prove)?)),
+                        "",
+                        ""
+                    ),
+                    proof_steps(&x.proof, modules, lang)?
+                )),
                 say(
                     Phrase::Contradiction,
                     &inline(&f(&x.impossible_fact)?),
@@ -98,21 +117,26 @@ fn statement(
                     ));
                 }
                 let mut out = say(
-                    Phrase::Goal,
+                    Phrase::Cases,
                     &inline(&facts(&x.then_facts, modules, lang)?),
                     "",
                     "",
                 );
-                out.push_str(&say(Phrase::Cases, "", "", ""));
+                out.push_str("\\begin{description}\n");
                 for (i, case) in x.cases.iter().enumerate() {
-                    out.push_str(&heading(Phrase::Case, &(i + 1).to_string(), lang));
-                    out.push_str(&say(
-                        Phrase::Suppose,
-                        &inline(&and_chain(case, modules, lang)?),
-                        "",
-                        "",
+                    out.push_str(&format!(
+                        "\\item[\\textbf{{{} {}.}}] {}\\par\n",
+                        phrase(lang, Phrase::Case),
+                        i + 1,
+                        sentence(
+                            lang,
+                            Phrase::Suppose,
+                            &inline(&and_chain(case, modules, lang)?),
+                            "",
+                            ""
+                        ),
                     ));
-                    out.push_str(&proof(&x.proofs[i], modules, lang)?);
+                    out.push_str(&proof_steps(&x.proofs[i], modules, lang)?);
                     if let Some(impossible) = &x.impossible_facts[i] {
                         out.push_str(&say(
                             Phrase::Contradiction,
@@ -122,6 +146,7 @@ fn statement(
                         ));
                     }
                 }
+                out.push_str("\\end{description}\n");
                 out
             }
             ByStmt::ByInducStmt(x) => induction(
@@ -154,7 +179,7 @@ fn statement(
                     "",
                     ""
                 ),
-                proof(&x.proof, modules, lang)?
+                quote(&proof_steps(&x.proof, modules, lang)?)
             ),
             ByStmt::ByForStmt(x) => format!(
                 "{}{}",
@@ -164,7 +189,7 @@ fn statement(
                     "",
                     ""
                 ),
-                proof(&x.proof, modules, lang)?
+                quote(&proof_steps(&x.proof, modules, lang)?)
             ),
             ByStmt::ByExtensionStmt(x) => format!(
                 "{}{}",
@@ -174,7 +199,7 @@ fn statement(
                     "",
                     ""
                 ),
-                proof(&x.proof, modules, lang)?
+                quote(&proof_steps(&x.proof, modules, lang)?)
             ),
             ByStmt::ByFnExtensionStmt(x) => format!(
                 "{}{}",
@@ -184,7 +209,7 @@ fn statement(
                     "",
                     ""
                 ),
-                proof(&x.proof, modules, lang)?
+                quote(&proof_steps(&x.proof, modules, lang)?)
             ),
         },
         Stmt::ReleaseAndExpand(x) => match x {
@@ -232,7 +257,7 @@ fn statement(
             ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(x) => format!(
                 "{}{}",
                 say(Phrase::Choice, &inline(&o(&x.family)?), "", ""),
-                proof(&x.proof, modules, lang)?
+                quote(&proof_steps(&x.proof, modules, lang)?)
             ),
             ReleaseAndExpandStmt::ReleaseRegularityAxiomStmt(x) => {
                 say(Phrase::Regularity, &inline(&o(&x.set)?), "", "")
@@ -247,7 +272,7 @@ fn statement(
                 format!(
                     "{}{}",
                     say(Phrase::Zorn, &inline(&o(&x.set)?), &inline(&names), ""),
-                    proof(&x.proof, modules, lang)?
+                    quote(&proof_steps(&x.proof, modules, lang)?)
                 )
             }
         },
@@ -283,7 +308,7 @@ fn statement(
                         )?),
                         ""
                     ),
-                    proof(&x.proof, modules, lang)?
+                    quote(&proof_steps(&x.proof, modules, lang)?)
                 )
             }
             WitnessStmt::WitnessAtomicFact(x) => {
@@ -307,7 +332,7 @@ fn statement(
                         &inline(&goal),
                         ""
                     ),
-                    proof(&x.proof, modules, lang)?
+                    quote(&proof_steps(&x.proof, modules, lang)?)
                 )
             }
             WitnessStmt::WitnessNonemptySet(x) => format!(
@@ -318,7 +343,7 @@ fn statement(
                     &inline(&format!(r"{}\ne\varnothing", o(&x.set)?)),
                     ""
                 ),
-                proof(&x.proof, modules, lang)?
+                quote(&proof_steps(&x.proof, modules, lang)?)
             ),
         },
         Stmt::ProofBlock(x) => match x {
@@ -331,7 +356,7 @@ fn statement(
             ProofBlockStmt::SketchStmt(x) => format!(
                 "{}{}",
                 heading(Phrase::Sketch, "", lang),
-                quote(&statements(&x.proof, modules, lang)?)
+                quote(&proof_steps(&x.proof, modules, lang)?)
             ),
         },
         Stmt::Command(CommandStmt::EvalStmt(x)) => {
@@ -432,26 +457,25 @@ fn definition(
                     args.push(ident(&p.name));
                 }
             }
+            let clauses = x
+                .iff_facts
+                .iter()
+                .map(|value| fact(value, modules, lang))
+                .collect::<RuntimeResult<Vec<_>>>()?;
             let body = format!(
                 r"{} \Longleftrightarrow {}",
                 predicate_or_fn_call(&ident(&x.name), &args.join(", ")),
-                group_if_compound(&facts(&x.iff_facts, modules, lang)?)
+                multiline_conjunction(clauses)
             );
-            let heading_text = heading(Phrase::Definition, &x.name, lang);
-            if x.typed_parameters.groups.is_empty() {
-                format!("{}{}", heading_text, display(&body))
-            } else {
-                format!(
-                    "{}{}",
-                    heading_text,
-                    say(
-                        Phrase::ForEvery,
-                        &inline(&parameters(&x.typed_parameters, modules, lang)?),
-                        &inline(&body),
-                        ""
-                    )
-                )
-            }
+            format!(
+                "{}{}",
+                heading(Phrase::Definition, &x.name, lang),
+                display(&quantified_layout(
+                    r"\forall",
+                    &parameters(&x.typed_parameters, modules, lang)?,
+                    &body
+                ))
+            )
         }
         DefinitionStmt::DefAbstractPropStmt(x) => {
             let args = x
@@ -491,12 +515,17 @@ fn definition(
         DefinitionStmt::DefStructStmt(x) => {
             let mut out = heading(Phrase::Structure, &x.name, lang);
             if let Some((params, dom)) = &x.param_def_with_dom {
-                out.push_str(&say(
-                    Phrase::Given,
-                    &inline(&parameters(params, modules, lang)?),
-                    &inline(&quantifier_frees(dom, modules, lang)?),
-                    "",
-                ));
+                let params = inline(&parameters(params, modules, lang)?);
+                if dom.is_empty() {
+                    out.push_str(&say(Phrase::Let, &params, "", ""));
+                } else {
+                    out.push_str(&say(
+                        Phrase::Given,
+                        &params,
+                        &inline(&quantifier_frees(dom, modules, lang)?),
+                        "",
+                    ));
+                }
             }
             if !x.fields.is_empty() {
                 out.push_str("\\begin{description}\n");
@@ -681,6 +710,38 @@ fn fact_paragraph(
 ) -> RuntimeResult<String> {
     match value {
         Fact::ForallFact(x) => forall_paragraph(x, modules, lang),
+        Fact::ChainFact(x) if x.prop_names.len() >= 3 => {
+            Ok(display(&calculation_layout(x, modules, lang)?))
+        }
+        Fact::AndFact(x) if x.facts.len() > 1 => Ok(display(&multiline_conjunction(
+            x.facts
+                .iter()
+                .map(|value| atomic(value, modules, lang))
+                .collect::<RuntimeResult<Vec<_>>>()?,
+        ))),
+        Fact::AtomicFact(_) | Fact::ChainFact(_) | Fact::OrFact(_) => {
+            Ok(format!("{};\n", inline(&fact(value, modules, lang)?)))
+        }
+        Fact::ExistFact(x) | Fact::ExistUniqueFact(x) | Fact::NotExistFact(x)
+            if x.facts.len() > 1 =>
+        {
+            let quantifier = match value {
+                Fact::ExistFact(_) => r"\exists",
+                Fact::ExistUniqueFact(_) => r"\exists!",
+                _ => r"\nexists",
+            };
+            let body = multiline_conjunction(
+                x.facts
+                    .iter()
+                    .map(|value| quantifier_free(value, modules, lang))
+                    .collect::<RuntimeResult<Vec<_>>>()?,
+            );
+            Ok(display(&quantified_layout(
+                quantifier,
+                &parameters(&x.typed_parameters, modules, lang)?,
+                &body,
+            )))
+        }
         _ => Ok(display(&fact(value, modules, lang)?)),
     }
 }
@@ -689,6 +750,32 @@ fn forall_paragraph(
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
 ) -> RuntimeResult<String> {
+    if value.dom_facts.len() > 1 || value.then_facts.len() > 1 {
+        let premises = multiline_conjunction(
+            value
+                .dom_facts
+                .iter()
+                .map(|value| fact(value, modules, lang))
+                .collect::<RuntimeResult<Vec<_>>>()?,
+        );
+        let conclusions = multiline_conjunction(
+            value
+                .then_facts
+                .iter()
+                .map(|value| conclusions(std::slice::from_ref(value), modules, lang))
+                .collect::<RuntimeResult<Vec<_>>>()?,
+        );
+        let body = if premises.is_empty() {
+            conclusions
+        } else {
+            format!(r"{} \Longrightarrow {}", premises, conclusions)
+        };
+        return Ok(display(&quantified_layout(
+            r"\forall",
+            &parameters(&value.typed_parameters, modules, lang)?,
+            &body,
+        )));
+    }
     if value.typed_parameters.groups.is_empty() {
         let then = conclusions(&value.then_facts, modules, lang)?;
         return if value.dom_facts.is_empty() {
@@ -832,25 +919,30 @@ fn inductive_cases(
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
 ) -> RuntimeResult<String> {
-    let mut out = String::new();
+    let mut out = String::from("\\begin{description}\n");
     for (i, value) in values.iter().enumerate() {
-        out.push_str(&heading(Phrase::Case, &(i + 1).to_string(), lang));
-        out.push_str(&paragraph(&sentence(
-            lang,
-            Phrase::Suppose,
-            &inline(&and_chain(&value.case_fact, modules, lang)?),
-            "",
-            "",
-        )));
+        out.push_str(&format!(
+            "\\item[\\textbf{{{} {}.}}] {}\\par\n",
+            phrase(lang, Phrase::Case),
+            i + 1,
+            sentence(
+                lang,
+                Phrase::Suppose,
+                &inline(&and_chain(&value.case_fact, modules, lang)?),
+                "",
+                ""
+            )
+        ));
         match &value.body {
             HaveFnByInducCaseBody::EqualTo(x) => {
                 out.push_str(&display(&format!("{head} = {}", obj(x, modules, lang)?)))
             }
             HaveFnByInducCaseBody::NestedCases(xs) => {
-                out.push_str(&quote(&inductive_cases(xs, head, modules, lang)?))
+                out.push_str(&inductive_cases(xs, head, modules, lang)?)
             }
         }
     }
+    out.push_str("\\end{description}\n");
     Ok(out)
 }
 #[allow(clippy::too_many_arguments)]
@@ -879,15 +971,25 @@ fn induction(
         &inline(&obj(from, modules, lang)?),
         "",
     )));
-    if let Some(base) = base {
-        out.push_str(&heading(Phrase::Base, "", lang));
-        out.push_str(&quote(&statements(base, modules, lang)?));
+    if base.is_some() || step.is_some() {
+        out.push_str("\\begin{description}\n");
+        if let Some(base) = base {
+            out.push_str(&format!(
+                "\\item[\\textbf{{{}.}}]\n{}",
+                phrase(lang, Phrase::Base),
+                proof_steps(base, modules, lang)?
+            ));
+        }
+        if let Some(step) = step {
+            out.push_str(&format!(
+                "\\item[\\textbf{{{}.}}]\n{}",
+                phrase(lang, Phrase::Step),
+                proof_steps(step, modules, lang)?
+            ));
+        }
+        out.push_str("\\end{description}\n");
     }
-    if let Some(step) = step {
-        out.push_str(&heading(Phrase::Step, "", lang));
-        out.push_str(&quote(&statements(step, modules, lang)?));
-    }
-    out.push_str(&proof(body, modules, lang)?);
+    out.push_str(&proof_steps(body, modules, lang)?);
     Ok(out)
 }
 fn bound_names(names: &[BoundName]) -> String {
@@ -899,14 +1001,14 @@ fn bound_names(names: &[BoundName]) -> String {
 }
 fn heading(key: Phrase, title: &str, lang: OutputLanguage) -> String {
     format!(
-        "\\par\\noindent\\textbf{{{}{}{}.}}\\par\n",
+        "\\par\\medskip\\noindent\\textbf{{{}{}{}.}}\\par\\nopagebreak[4]\n",
         phrase(lang, key),
         if title.is_empty() { "" } else { " " },
         escape_text(title)
     )
 }
 fn paragraph(text: &str) -> String {
-    format!("\\par\\noindent {text}\n")
+    format!("\\par\\noindent {text}\\par\n")
 }
 fn quote(text: &str) -> String {
     format!("\\begin{{quote}}\n{text}\\end{{quote}}\n")
@@ -920,9 +1022,9 @@ fn proof(
         Ok(String::new())
     } else {
         Ok(format!(
-            "{}{}",
+            "{}{}\\par\\nobreak\\hfill$\\square$\\par\n",
             heading(Phrase::Proof, "", lang),
-            quote(&statements(body, modules, lang)?)
+            proof_steps(body, modules, lang)?
         ))
     }
 }

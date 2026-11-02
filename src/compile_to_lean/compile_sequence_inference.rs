@@ -147,7 +147,13 @@ impl LitexToLeanCompiler {
         let AtomicFact::InFact(derived) = &stored.fact else {
             return Ok(None);
         };
-        if derived.set != *object {
+        if !matches!(object, Obj::FunctionSpace(FunctionSpace::FnSet(_)))
+            || !super::helper::instantiated_object_matches(
+                &derived.set,
+                object,
+                &Default::default(),
+            )
+        {
             return Ok(None);
         }
         let mut current = Some(position);

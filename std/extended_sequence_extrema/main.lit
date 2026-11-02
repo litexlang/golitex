@@ -1,0 +1,233 @@
+release obj def xreal::extended_real_sup
+
+release obj def xreal::extended_real_negate
+
+release obj def xreal::extended_set_supremum
+
+release obj def xreal::extended_set_infimum
+
+thm extended_tail_start_member:
+    ? forall start Z:
+        start $in {j Z:j>=start}
+    start>=start
+    start $in {j Z:j>=start}
+
+thm extended_tail_range_is_extended_set:
+    ? forall start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal:
+        fn_range(a) $in power_set(xreal::ExtendedReal)
+    fn_range(a) $subset xreal::ExtendedReal
+    fn_range(a) $in power_set(xreal::ExtendedReal)
+
+thm extended_tail_range_is_nonempty:
+    ? forall start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal:
+        $is_nonempty_set(fn_range(a))
+    release thm extended_tail_start_member(start)
+    a(start) $in fn_range(a)
+    witness $is_nonempty_set(fn_range(a)) from a(start)
+
+template<start Z>:
+    have fn extended_tail_supremum(a fn(n {j Z:j>=start}) xreal::ExtendedReal) xreal::ExtendedReal = xreal::extended_set_supremum(fn_range(a))
+
+template<start Z>:
+    have fn extended_tail_infimum(a fn(n {j Z:j>=start}) xreal::ExtendedReal) xreal::ExtendedReal = xreal::extended_set_infimum(fn_range(a))
+
+prop is_extended_tail_upper_bound(start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal,M xreal::ExtendedReal):
+    forall n {j Z:j>=start}:
+        $xreal::extended_real_le(a(n),M)
+
+prop is_extended_tail_lower_bound(start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal,M xreal::ExtendedReal):
+    forall n {j Z:j>=start}:
+        $xreal::extended_real_le(M,a(n))
+
+thm extended_tail_supremum_bounds_members:
+    ? forall start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal,n {j Z:j>=start}:
+        $xreal::extended_real_le(a(n),\extended_tail_supremum<start>(a))
+    release thm extended_tail_range_is_extended_set(start,a)
+    a(n) $in fn_range(a)
+    release thm xreal::extended_set_supremum_bounds_members(fn_range(a),a(n))
+    \extended_tail_supremum<start>(a)=xreal::extended_set_supremum(fn_range(a))
+    $xreal::extended_real_le(a(n),\extended_tail_supremum<start>(a))
+
+thm extended_tail_infimum_bounds_members:
+    ? forall start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal,n {j Z:j>=start}:
+        $xreal::extended_real_le(\extended_tail_infimum<start>(a),a(n))
+    release thm extended_tail_range_is_extended_set(start,a)
+    a(n) $in fn_range(a)
+    release thm xreal::extended_set_infimum_bounds_members(fn_range(a),a(n))
+    \extended_tail_infimum<start>(a)=xreal::extended_set_infimum(fn_range(a))
+    $xreal::extended_real_le(\extended_tail_infimum<start>(a),a(n))
+
+thm extended_tail_supremum_le_upper_bound:
+    ? forall start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal,M xreal::ExtendedReal:
+        $is_extended_tail_upper_bound(start,a,M)
+        =>:
+            $xreal::extended_real_le(\extended_tail_supremum<start>(a),M)
+    release thm extended_tail_range_is_extended_set(start,a)
+    claim:
+        ? forall x fn_range(a):
+            $xreal::extended_real_le(x,M)
+        have by fn_preimage: n from x $in fn_range(a)
+        x=a(n)
+        $xreal::extended_real_le(a(n),M)
+        $xreal::extended_real_le(x,M)
+    by def $xreal::is_extended_set_upper_bound(fn_range(a),M)
+    release thm xreal::extended_set_supremum_le_upper_bound(fn_range(a),M)
+    \extended_tail_supremum<start>(a)=xreal::extended_set_supremum(fn_range(a))
+    $xreal::extended_real_le(\extended_tail_supremum<start>(a),M)
+
+thm extended_tail_infimum_ge_lower_bound:
+    ? forall start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal,M xreal::ExtendedReal:
+        $is_extended_tail_lower_bound(start,a,M)
+        =>:
+            $xreal::extended_real_le(M,\extended_tail_infimum<start>(a))
+    release thm extended_tail_range_is_extended_set(start,a)
+    claim:
+        ? forall x fn_range(a):
+            $xreal::extended_real_le(M,x)
+        have by fn_preimage: n from x $in fn_range(a)
+        x=a(n)
+        $xreal::extended_real_le(M,a(n))
+        $xreal::extended_real_le(M,x)
+    by def $xreal::is_extended_set_lower_bound(fn_range(a),M)
+    release thm xreal::extended_set_infimum_ge_lower_bound(fn_range(a),M)
+    \extended_tail_infimum<start>(a)=xreal::extended_set_infimum(fn_range(a))
+    $xreal::extended_real_le(M,\extended_tail_infimum<start>(a))
+
+thm extended_set_supremum_strict_approach:
+    ? forall E power_set(xreal::ExtendedReal),y xreal::ExtendedReal:
+        $xreal::extended_real_lt(y,xreal::extended_set_supremum(E))
+        =>:
+            exist x E st {$xreal::extended_real_lt(y,x) and $xreal::extended_real_le(x,xreal::extended_set_supremum(E))}
+    by contra:
+        ? exist x E st {$xreal::extended_real_lt(y,x) and $xreal::extended_real_le(x,xreal::extended_set_supremum(E))}
+        claim:
+            ? forall x E:
+                $xreal::extended_real_le(x,y)
+            by contra:
+                ? $xreal::extended_real_le(x,y)
+                release thm xreal::extended_real_order_total(x,y)
+                claim:
+                    ? $xreal::extended_real_le(y,x)
+                    by cases:
+                        ? $xreal::extended_real_le(y,x)
+                        case $xreal::extended_real_le(x,y):
+                            by contra:
+                                ? $xreal::extended_real_le(y,x)
+                                impossible $xreal::extended_real_le(x,y)
+                        case $xreal::extended_real_le(y,x):
+                            $xreal::extended_real_le(y,x)
+                by contra:
+                    ? y!=x
+                    release thm xreal::extended_real_order_reflexive(x)
+                    $xreal::extended_real_le(x,y)
+                    impossible $xreal::extended_real_le(x,y)
+                by def $xreal::extended_real_lt(y,x)
+                release thm xreal::extended_set_supremum_bounds_members(E,x)
+                witness exist value E st {$xreal::extended_real_lt(y,value) and $xreal::extended_real_le(value,xreal::extended_set_supremum(E))} from x
+                impossible exist value E st {$xreal::extended_real_lt(y,value) and $xreal::extended_real_le(value,xreal::extended_set_supremum(E))}
+        by def $xreal::is_extended_set_upper_bound(E,y)
+        release thm xreal::extended_set_supremum_le_upper_bound(E,y)
+        $xreal::extended_real_le(y,xreal::extended_set_supremum(E))
+        release thm xreal::extended_real_order_antisymmetric(y,xreal::extended_set_supremum(E))
+        impossible y=xreal::extended_set_supremum(E)
+
+thm extended_set_infimum_strict_approach:
+    ? forall E power_set(xreal::ExtendedReal),y xreal::ExtendedReal:
+        $xreal::extended_real_lt(xreal::extended_set_infimum(E),y)
+        =>:
+            exist x E st {$xreal::extended_real_le(xreal::extended_set_infimum(E),x) and $xreal::extended_real_lt(x,y)}
+    by contra:
+        ? exist x E st {$xreal::extended_real_le(xreal::extended_set_infimum(E),x) and $xreal::extended_real_lt(x,y)}
+        claim:
+            ? forall x E:
+                $xreal::extended_real_le(y,x)
+            by contra:
+                ? $xreal::extended_real_le(y,x)
+                release thm xreal::extended_real_order_total(y,x)
+                claim:
+                    ? $xreal::extended_real_le(x,y)
+                    by cases:
+                        ? $xreal::extended_real_le(x,y)
+                        case $xreal::extended_real_le(y,x):
+                            by contra:
+                                ? $xreal::extended_real_le(x,y)
+                                impossible $xreal::extended_real_le(y,x)
+                        case $xreal::extended_real_le(x,y):
+                            $xreal::extended_real_le(x,y)
+                by contra:
+                    ? x!=y
+                    release thm xreal::extended_real_order_reflexive(y)
+                    $xreal::extended_real_le(y,x)
+                    impossible $xreal::extended_real_le(y,x)
+                by def $xreal::extended_real_lt(x,y)
+                release thm xreal::extended_set_infimum_bounds_members(E,x)
+                witness exist value E st {$xreal::extended_real_le(xreal::extended_set_infimum(E),value) and $xreal::extended_real_lt(value,y)} from x
+                impossible exist value E st {$xreal::extended_real_le(xreal::extended_set_infimum(E),value) and $xreal::extended_real_lt(value,y)}
+        by def $xreal::is_extended_set_lower_bound(E,y)
+        release thm xreal::extended_set_infimum_ge_lower_bound(E,y)
+        $xreal::extended_real_le(xreal::extended_set_infimum(E),y)
+        release thm xreal::extended_real_order_antisymmetric(xreal::extended_set_infimum(E),y)
+        impossible xreal::extended_set_infimum(E)=y
+
+thm extended_tail_supremum_approached:
+    ? forall start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal,y xreal::ExtendedReal:
+        $xreal::extended_real_lt(y,\extended_tail_supremum<start>(a))
+        =>:
+            exist n {j Z:j>=start} st {$xreal::extended_real_lt(y,a(n)) and $xreal::extended_real_le(a(n),\extended_tail_supremum<start>(a))}
+    release thm extended_tail_range_is_extended_set(start,a)
+    \extended_tail_supremum<start>(a)=xreal::extended_set_supremum(fn_range(a))
+    $xreal::extended_real_lt(y,xreal::extended_set_supremum(fn_range(a)))
+    release thm extended_set_supremum_strict_approach(fn_range(a),y)
+    exist x fn_range(a) st {$xreal::extended_real_lt(y,x) and $xreal::extended_real_le(x,xreal::extended_set_supremum(fn_range(a)))}
+    obtain x from exist x fn_range(a) st {$xreal::extended_real_lt(y,x) and $xreal::extended_real_le(x,xreal::extended_set_supremum(fn_range(a)))}
+    have by fn_preimage: n from x $in fn_range(a)
+    x=a(n)
+    a(n) $in xreal::ExtendedReal
+    $xreal::extended_real_lt(y,a(n))
+    $xreal::extended_real_le(a(n),\extended_tail_supremum<start>(a))
+    witness exist index {j Z:j>=start} st {$xreal::extended_real_lt(y,a(index)) and $xreal::extended_real_le(a(index),\extended_tail_supremum<start>(a))} from n
+
+thm extended_tail_infimum_approached:
+    ? forall start Z,a fn(n {j Z:j>=start}) xreal::ExtendedReal,y xreal::ExtendedReal:
+        $xreal::extended_real_lt(\extended_tail_infimum<start>(a),y)
+        =>:
+            exist n {j Z:j>=start} st {$xreal::extended_real_le(\extended_tail_infimum<start>(a),a(n)) and $xreal::extended_real_lt(a(n),y)}
+    release thm extended_tail_range_is_extended_set(start,a)
+    \extended_tail_infimum<start>(a)=xreal::extended_set_infimum(fn_range(a))
+    $xreal::extended_real_lt(xreal::extended_set_infimum(fn_range(a)),y)
+    release thm extended_set_infimum_strict_approach(fn_range(a),y)
+    exist x fn_range(a) st {$xreal::extended_real_le(xreal::extended_set_infimum(fn_range(a)),x) and $xreal::extended_real_lt(x,y)}
+    obtain x from exist x fn_range(a) st {$xreal::extended_real_le(xreal::extended_set_infimum(fn_range(a)),x) and $xreal::extended_real_lt(x,y)}
+    have by fn_preimage: n from x $in fn_range(a)
+    x=a(n)
+    a(n) $in xreal::ExtendedReal
+    $xreal::extended_real_le(\extended_tail_infimum<start>(a),a(n))
+    $xreal::extended_real_lt(a(n),y)
+    witness exist index {j Z:j>=start} st {$xreal::extended_real_le(\extended_tail_infimum<start>(a),a(index)) and $xreal::extended_real_lt(a(index),y)} from n
+
+claim:
+    ? R $subset xreal::ExtendedReal
+    release thm xreal::real_numbers_subset_extended_reals
+
+template<start Z,a fn(n {j Z:j>=start}) R>:
+    have fn real_tail_as_extended(n {j Z:j>=start}) xreal::ExtendedReal = a(n)
+
+thm real_tail_as_extended_has_same_range:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        fn_range(\real_tail_as_extended<start,a>)=fn_range(a)
+    release thm fn_set_member(\real_tail_as_extended<start,a>,fn(n {j Z:j>=start}) xreal::ExtendedReal)
+    claim:
+        ? forall x fn_range(\real_tail_as_extended<start,a>):
+            x $in fn_range(a)
+        have by fn_preimage: n from x $in fn_range(\real_tail_as_extended<start,a>)
+        x=\real_tail_as_extended<start,a>(n)=a(n)
+        a(n) $in fn_range(a)
+        x $in fn_range(a)
+    claim:
+        ? forall x fn_range(a):
+            x $in fn_range(\real_tail_as_extended<start,a>)
+        have by fn_preimage: n from x $in fn_range(a)
+        x=a(n)=\real_tail_as_extended<start,a>(n)
+        \real_tail_as_extended<start,a>(n) $in fn_range(\real_tail_as_extended<start,a>)
+        x $in fn_range(\real_tail_as_extended<start,a>)
+    by extension fn_range(\real_tail_as_extended<start,a>)=fn_range(a)

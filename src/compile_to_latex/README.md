@@ -35,7 +35,7 @@ Spanish (`es`), Arabic (`ar`), Japanese (`ja`), Korean (`ko`), and Vietnamese
 language dispatch and equal-sized phrase tables. There is no fallback language.
 
 Default output is an embeddable fragment combining text paragraphs, inline or
-display math, case arrays, and scoped proof quotations. Inline math uses `$...$`
+display math, piecewise function arrays, and structured proof branches. Inline math uses `$...$`
 (not `\(...\)`), so preview or copy paths that drop a backslash do not turn the
 delimiters into literal parentheses around the formula. `-document` (or the Rust
 `to_latex_document` API) adds a XeLaTeX article wrapper using `amsmath`,
@@ -53,6 +53,36 @@ delimiters into literal parentheses around the formula. `-document` (or the Rust
 A minimal TeX installation may lack these packages or fonts. Fragment users can
 supply their own document typography. PDF compilation is outside the Litex CLI:
 the CLI writes LaTeX, and does not install fonts or invoke a TeX engine.
+
+## Mathematical reading layout
+
+Theorem, definition, claim, axiom and trust labels remain explicit. A theorem or
+claim with a source proof has one proof caption and an end marker; a bodyless
+theorem receives neither. Proof methods introduce their bodies directly, so
+nesting a case split or contradiction does not add another generic proof caption.
+Sketches and template declarations retain their distinct scoped quotations.
+
+Case splits and induction phases use native `description` items. For example,
+`by cases` with `case n = 1` and `case n != 1` produces two separately labelled
+items, each containing its own assumption and proof body. A contradiction has
+a method heading, a separate goal, an indented contrary assumption and source
+derivation, and a separate conflicting-fact paragraph. No additional inference
+is generated.
+
+Inside a proof, each source statement ends its own paragraph. Outside proof
+blocks, adjacent atomic facts, disjunctions and short chains may flow in a
+paragraph, separated by semicolons. Chains with at least three relations use an aligned display.
+Equality chains continue at the equality sign; mixed relations repeat each
+original adjacent left operand, so `1 < 4 > 3 < 5` renders as `1 < 4`, `4 > 3`,
+and `3 < 5`, preserving the source comparisons. Multiclause predicates, guarded
+universal facts and existential facts display their quantifiers, domains and
+conjunctions in structured rows. Formula-only Reading projections keep their
+existing independent layout.
+
+The document wrapper sets paragraph/display spacing, disables paragraph
+indentation, and avoids stretching short pages to their full height. It uses the
+existing package set. Fragment consumers need to preserve paragraphs, displays
+and list boundaries; flattening them to inline text loses the branch structure.
 
 ## Data flow and API
 
@@ -111,9 +141,8 @@ Missing configs and import cycles fail before successful artifact output.
 | release/expand/register/witness/claim/sketch/trust | Localized source actions, source-owned targets and explicit assumption/sketch labels |
 | eval | Request to evaluate the expression; no computed value |
 
-Dispatchers exhaustively match the current enums. Retained but parser-retired
-cart/tuple dimension/projection objects and shape predicates fail explicitly.
-Malformed externally supplied chain/case/binding payloads also fail. Unknown
+Dispatchers exhaustively match the current enums. Invalid source syntax fails
+on the parse-only route. Malformed externally supplied chain/case/binding payloads also fail. Unknown
 user predicates preserve their names and arguments; their meaning is not guessed.
 Comments and quoted asides are already discarded by the tokenizer and are not
 recovered. A bodyless theorem is rendered without an invented proof. Very long formulas
@@ -128,6 +157,52 @@ remain convertible, whereas invalid syntax fails with no successful partial
 content. Those boundary inputs live in conversion tests, outside the ordinary
 positive verification examples.
 
+The layout tracer is
+[`structured_proof_layout.lit`](../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit),
+a checked positive-integer proof combining cases and contradiction. It retains
+the original mathematics while replacing repeated proof captions and displays
+with a single proof and distinct branches. Its generated
+[Chinese PDF](../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.zh.pdf)
+and [English PDF](../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.en.pdf)
+have editable `.tex` companions. Parameterized structures without additional
+guards use a plain introduction, avoiding empty `$$` math in conditional prose.
+
+## Per-type format contract
+
+[FORMATS.md](FORMATS.md) assigns a layout or mathematical notation to every
+current leaf: 52 statement types and 150 object types. The maintained
+[machine catalog](../../tests/fixtures/compile_to_latex/format_catalog.json)
+also exercises five application-head forms, five limit directions and all ten
+logical fact shapes. These 222 specimens are parse-only format examples;
+their parser context is not a mathematical verification certificate.
+
+`catalog_kinds.rs` exhaustively classifies the actual AST variants. Catalog tests
+compare the exact declared type sets, parse each specimen, check its actual
+variant, and render it through the production compiler. New variants, omitted
+rows, duplicate rows and samples of the wrong type fail. A separate operand
+retention check uses unique sentinels for every matrix and multivariable
+selector argument, including explicit dimensions. Export the compiler-owned
+specimens for a native rendered gallery with:
+
+```sh
+LITEX_LATEX_CATALOG_OUTPUT="$PWD/tmp/latex-catalog.json" \
+  cargo test --release --lib compile_to_latex -- --nocapture
+```
+
+Matrix notation is selected by the individual operation: transpose, Hermitian
+transpose, determinant, trace, products, minor submatrices, cofactors and norms
+have separate formats. Bracketed size tags such as `[m,n]` retain source
+dimension operands and are not matrix-entry subscripts. Fibre preimages use
+`f^{-1}[{y}]`, while set preimages use `f^{-1}[S]`. Generated summation and
+integration variables preserve the original functions and bounds.
+
+The [per-type acceptance report](../../tests/fixtures/compile_to_latex/all_types_acceptance.json)
+records the current exhaustive coverage, real CLI/native typography checks,
+and the separate verified source/evidence hover tracer. The native gallery
+checks each exported full fragment byte for byte against the actual CLI,
+then renders the unchanged selected fragment with XeLaTeX. Gallery samples
+and verified proof evidence have separate provenance.
+
 ## Focused validation
 
 ```sh
@@ -139,7 +214,7 @@ cargo build --release
 target/release/litex -f examples/stmt_nodes/compile_to_latex/identity.lit
 ```
 
-Unit coverage converts every one of the 50 current statement fixtures in all ten
+Unit coverage converts every current statement fixture in all ten
 languages, exercises the maintained object corpus, and checks grouping, logical
 scope, escaping, assumptions and unchanged execution stores. CLI tests check the
 actual binary, all language/document modes, error envelopes, manifest order,
@@ -147,7 +222,7 @@ file-prefix selection and module identity; intentionally invalid dependency
 source demonstrates that imports are not executed. Generated document syntax,
 fonts and typography are checked separately with XeLaTeX.
 
-The optional native typography gate converts the 50 statement fixtures and 94
+The optional native typography gate converts the current statement and
 object fixtures in every locale and rejects TeX errors or missing glyphs:
 
 ```sh
@@ -155,6 +230,13 @@ python3 tests/compile_to_latex_xelatex.py --output-dir tmp/2026-10-06/compile-to
 ```
 
 The dated [acceptance report](../../tests/fixtures/compile_to_latex/acceptance.json) records the focused gates, binary checksum, typography results and environment limits. The [Chinese example document](../../examples/stmt_nodes/compile_to_latex/identity.zh.tex) and [rendered example](../../examples/stmt_nodes/compile_to_latex/identity.zh.pdf) show the primary tracer.
+
+The [layout redesign acceptance](../../tests/fixtures/compile_to_latex/layout_redesign_acceptance.json)
+records the 2026-11-01 layout checks: 18 optimized production-module tests,
+7 real CLI release tests, and all 52 statement / 106 object fixtures compiled
+in all ten locales. It also records the unrelated concurrent Lean interface
+error that blocked the subsequent whole-crate Cargo build/unit attempts.
+Overfull warnings for very long formulas remain outside the typography gate.
 
 The [command separation acceptance](../../tests/fixtures/compile_to_latex/command_separation_acceptance.json)
 records the 2026-10-07 parser, dispatcher, Runtime provenance and real CLI

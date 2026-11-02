@@ -1,3 +1,4 @@
+use super::ChainFactWellDefinedProof;
 use crate::ast::fact::ChainFact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::SearchProofByKnownForallFact;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
@@ -10,7 +11,25 @@ pub enum VerifyChainFactResult {
 pub struct VerifyChainFactSuccess {
     pub fact: ChainFact,
     pub adjacent: Vec<VerifyFactResult>,
-    pub known_forall: Option<SearchProofByKnownForallFact>,
+    pub known_forall: Option<KnownForallChainProof>,
+}
+
+// The selected whole-chain application precedes the existing adjacent WD check.
+pub struct KnownForallChainProof {
+    pub application: SearchProofByKnownForallFact,
+    pub well_defined_proof: ChainFactWellDefinedProof,
+}
+
+impl KnownForallChainProof {
+    pub fn new(
+        application: SearchProofByKnownForallFact,
+        well_defined_proof: ChainFactWellDefinedProof,
+    ) -> Self {
+        Self {
+            application,
+            well_defined_proof,
+        }
+    }
 }
 
 // Soft miss keeps the child VerifyFactResult as-is (WD detail stays inside it).
@@ -62,7 +81,7 @@ pub fn chain_fact_result_from_adjacent_fail(
 pub fn chain_fact_result_from_success(
     fact: &ChainFact,
     adjacent: Vec<VerifyFactResult>,
-    known_forall: Option<SearchProofByKnownForallFact>,
+    known_forall: Option<KnownForallChainProof>,
 ) -> VerifyFactResult {
     VerifyFactResult::ChainFact(Box::new(VerifyChainFactResult::Success(
         VerifyChainFactSuccess {

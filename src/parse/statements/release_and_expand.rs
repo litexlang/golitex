@@ -292,7 +292,7 @@ impl Runtime {
         if !is_simple_name(&name) {
             return Err(tb.parse_error(format!("expected a simple prop name, got `{name}`")));
         }
-        Ok(AtomicName::plain(name))
+        Ok(self.atomic_name_for_plain_prop_ref(name))
     }
 }
 

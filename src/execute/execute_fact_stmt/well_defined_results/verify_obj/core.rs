@@ -707,6 +707,34 @@ impl Runtime {
         value: &FnObj,
         fn_set: &FnSet,
     ) -> Option<Obj> {
+        self.applied_fn_set_return_set_with(value, fn_set, |_| {})
+    }
+
+    pub(crate) fn applied_fn_set_return_signature(
+        &mut self,
+        value: &FnObj,
+        fn_set: &FnSet,
+    ) -> Option<AppliedFnSetReturnSignature> {
+        let mut layers = Vec::new();
+        let return_set = self.applied_fn_set_return_set_with(value, fn_set, |space| {
+            layers.push(space.clone());
+        })?;
+        Some(AppliedFnSetReturnSignature {
+            application: value.clone(),
+            layers,
+            return_set,
+        })
+    }
+
+    // Both consumers run exactly the same instantiations and alias lookups.
+    // Observing a layer only clones its existing interface; it cannot access
+    // Runtime or introduce another verification, store or mathematical ID.
+    fn applied_fn_set_return_set_with(
+        &mut self,
+        value: &FnObj,
+        fn_set: &FnSet,
+        mut observe: impl FnMut(&FnSet),
+    ) -> Option<Obj> {
         let mut space = fn_set.clone();
         let last = value.body.len().checked_sub(1)?;
         for (layer_index, layer) in value.body.iter().enumerate() {
@@ -714,6 +742,7 @@ impl Runtime {
             if args.len() != set_bound_parameter_count(&space.set_bound_parameters) {
                 return None;
             }
+            observe(&space);
             let subst = set_bound_params_to_arg_map(&space.set_bound_parameters, &args);
             let next_ret = self.inst_obj(space.ret_set.as_ref(), &subst).ok()?;
             if layer_index < last {

@@ -1,0 +1,247 @@
+# Ordered finite sublists and basis extraction by deletion.
+# Selection maps are strictly increasing positive original indices, with explicit bounds.
+
+prop is_ordered_sublist_selection(V set,n,m N,original finite_seq(V,n),selected finite_seq(V,m),indices finite_seq(N+,m)):
+    m<=n
+    forall j N+:
+        j<=m
+        =>:
+            indices(j)<=n
+    forall j N+:
+        j<=m
+        indices(j)<=n
+        =>:
+            selected(j)=original(indices(j))
+    forall j,k N+:
+        j<=m
+        k<=m
+        j<k
+        =>:
+            indices(j)<indices(k)
+
+prop is_ordered_sublist(V set,n,m N,original finite_seq(V,n),selected finite_seq(V,m)):
+    exist indices finite_seq(N+,m) st {$is_ordered_sublist_selection(V,n,m,original,selected,indices)}
+
+thm list_is_own_ordered_sublist:
+    ? forall V set,n N,original finite_seq(V,n):
+        $is_ordered_sublist(V,n,n,original,original)
+    have indices finite_seq(N+,n)=fn(j closed_range(1,n)) N+ {j}
+    claim:
+        ? forall j N+:
+            j<=n
+            =>:
+                indices(j)<=n
+        j $in closed_range(1,n)
+        indices(j)=j
+    claim:
+        ? forall j N+:
+            j<=n
+            indices(j)<=n
+            =>:
+                original(j)=original(indices(j))
+        j $in closed_range(1,n)
+        indices(j)=j
+    claim:
+        ? forall j,k N+:
+            j<=n
+            k<=n
+            j<k
+            =>:
+                indices(j)<indices(k)
+        j $in closed_range(1,n)
+        k $in closed_range(1,n)
+        indices(j)=j
+        indices(k)=k
+    by def $is_ordered_sublist_selection(V,n,n,original,original,indices)
+    witness exist map finite_seq(N+,n) st {$is_ordered_sublist_selection(V,n,n,original,original,map)} from indices
+
+thm ordered_sublist_transitive:
+    ? forall V set,n,m,k N,original finite_seq(V,n),middle finite_seq(V,m),selected finite_seq(V,k):
+        $is_ordered_sublist(V,n,m,original,middle)
+        $is_ordered_sublist(V,m,k,middle,selected)
+        =>:
+            $is_ordered_sublist(V,n,k,original,selected)
+    obtain first_map from $is_ordered_sublist(V,n,m,original,middle)
+    obtain second_map from $is_ordered_sublist(V,m,k,middle,selected)
+    m<=n
+    k<=m
+    k<=n
+    claim:
+        ? forall j closed_range(1,k):
+            second_map(j) $in closed_range(1,m)
+        j $in N+
+        j<=k
+        second_map(j) $in N+
+        second_map(j)<=m
+        second_map(j) $in closed_range(1,m)
+    have indices finite_seq(N+,k)=fn(j closed_range(1,k)) N+ {first_map(second_map(j))}
+    claim:
+        ? forall j N+:
+            j<=k
+            =>:
+                indices(j)<=n
+        j $in closed_range(1,k)
+        second_map(j) $in N+
+        second_map(j)<=m
+        first_map(second_map(j))<=n
+        indices(j)=first_map(second_map(j))
+    claim:
+        ? forall j N+:
+            j<=k
+            indices(j)<=n
+            =>:
+                selected(j)=original(indices(j))
+        j $in closed_range(1,k)
+        second_map(j) $in N+
+        second_map(j)<=m
+        first_map(second_map(j))<=n
+        indices(j)=first_map(second_map(j))
+        selected(j)=middle(second_map(j))
+        middle(second_map(j))=original(first_map(second_map(j)))=original(indices(j))
+    claim:
+        ? forall j,l N+:
+            j<=k
+            l<=k
+            j<l
+            =>:
+                indices(j)<indices(l)
+        j $in closed_range(1,k)
+        l $in closed_range(1,k)
+        second_map(j) $in N+
+        second_map(l) $in N+
+        second_map(j)<=m
+        second_map(l)<=m
+        second_map(j)<second_map(l)
+        first_map(second_map(j))<first_map(second_map(l))
+        indices(j)=first_map(second_map(j))
+        indices(l)=first_map(second_map(l))
+        indices(j)<indices(l)
+    by def $is_ordered_sublist_selection(V,n,k,original,selected,indices)
+    witness exist map finite_seq(N+,k) st {$is_ordered_sublist_selection(V,n,k,original,selected,map)} from indices
+
+thm removed_list_is_ordered_sublist:
+    ? forall V nonempty_set,n N+,original finite_seq(V,n),k N+,reduced finite_seq(V,n-1):
+        $basis::is_list_with_index_removed(V,n,original,k,reduced)
+        =>:
+            $is_ordered_sublist(V,n,n-1,original,reduced)
+    k<=n
+    n-1 $in N
+    (n-1)+1=n
+    have fn indices(j closed_range(1,n-1)) N+ by cases:
+        case j<k: j
+        case j>=k: j+1
+    claim:
+        ? forall j N+:
+            j<=n-1
+            =>:
+                indices(j)<=n
+        j $in closed_range(1,n-1)
+        by cases:
+            ? indices(j)<=n
+            case j<k:
+                indices(j)=j
+                j<=n
+            case j>=k:
+                indices(j)=j+1
+                j+1<=n-1+1=n
+    claim:
+        ? forall j N+:
+            j<=n-1
+            indices(j)<=n
+            =>:
+                reduced(j)=original(indices(j))
+        j $in closed_range(1,n-1)
+        j<=n
+        by cases:
+            ? reduced(j)=original(indices(j))
+            case j<k:
+                indices(j)=j
+                reduced(j)=original(j)=original(indices(j))
+            case j>=k:
+                j<n
+                j+1 $in closed_range(1,n)
+                indices(j)=j+1
+                reduced(j)=original(j+1)=original(indices(j))
+    claim:
+        ? forall j,l N+:
+            j<=n-1
+            l<=n-1
+            j<l
+            =>:
+                indices(j)<indices(l)
+        j $in closed_range(1,n-1)
+        l $in closed_range(1,n-1)
+        by cases:
+            ? indices(j)<indices(l)
+            case l<k:
+                j<k
+                indices(j)=j
+                indices(l)=l
+                indices(j)<indices(l)
+            case l>=k:
+                indices(l)=l+1
+                by cases:
+                    ? indices(j)<indices(l)
+                    case j<k:
+                        indices(j)=j
+                        j<l+1
+                        indices(j)<indices(l)
+                    case j>=k:
+                        indices(j)=j+1
+                        j+1<l+1
+                        indices(j)<indices(l)
+    by def $is_ordered_sublist_selection(V,n,n-1,original,reduced,indices)
+    witness exist map finite_seq(N+,n-1) st {$is_ordered_sublist_selection(V,n,n-1,original,reduced,map)} from indices
+
+thm spanning_list_has_ordered_basis_of_bounded_length:
+    ? forall K nonempty_set,field &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            exist m N,selected finite_seq(V,m) st {m<=n,$basis::is_basis(K,field,V,space,m,selected),$is_ordered_sublist(V,n,m,vectors,selected)}
+    prop is_ordered_basis_extractable_at_length(length N):
+        forall listed finite_seq(V,length):
+            $finite_span::spans(K,field,V,space,length,listed)
+            =>:
+                exist m N,selected finite_seq(V,m) st {m<=length,$basis::is_basis(K,field,V,space,m,selected),$is_ordered_sublist(V,length,m,listed,selected)}
+    by induc length from 0:
+        ? $is_ordered_basis_extractable_at_length(length)
+        ? from length=0:
+            claim:
+                ? forall listed finite_seq(V,0):
+                    $finite_span::spans(K,field,V,space,0,listed)
+                    =>:
+                        exist m N,selected finite_seq(V,m) st {m<=0,$basis::is_basis(K,field,V,space,m,selected),$is_ordered_sublist(V,0,m,listed,selected)}
+                release thm dependence::empty_list_is_independent(K,field,V,space,listed)
+                by def $basis::is_basis(K,field,V,space,0,listed)
+                release thm list_is_own_ordered_sublist(V,0,listed)
+                witness exist m N,selected finite_seq(V,m) st {m<=0,$basis::is_basis(K,field,V,space,m,selected),$is_ordered_sublist(V,0,m,listed,selected)} from 0,listed
+            by def $is_ordered_basis_extractable_at_length(0)
+        ? induc:
+            length $in N
+            length+1 $in N+
+            claim:
+                ? forall listed finite_seq(V,length+1):
+                    $finite_span::spans(K,field,V,space,length+1,listed)
+                    =>:
+                        exist m N,selected finite_seq(V,m) st {m<=length+1,$basis::is_basis(K,field,V,space,m,selected),$is_ordered_sublist(V,length+1,m,listed,selected)}
+                by cases:
+                    ? exist m N,selected finite_seq(V,m) st {m<=length+1,$basis::is_basis(K,field,V,space,m,selected),$is_ordered_sublist(V,length+1,m,listed,selected)}
+                    case $basis::is_linearly_independent(K,field,V,space,length+1,listed):
+                        by def $basis::is_basis(K,field,V,space,length+1,listed)
+                        release thm list_is_own_ordered_sublist(V,length+1,listed)
+                        witness exist m N,selected finite_seq(V,m) st {m<=length+1,$basis::is_basis(K,field,V,space,m,selected),$is_ordered_sublist(V,length+1,m,listed,selected)} from length+1,listed
+                    case not $basis::is_linearly_independent(K,field,V,space,length+1,listed):
+                        by def $basis::is_linearly_dependent(K,field,V,space,length+1,listed)
+                        release thm span_reduction::dependent_list_has_span_preserving_removal(K,field,V,space,length+1,listed)
+                        obtain k,reduced from exist selected_k N+,r finite_seq(V,(length+1)-1) st {$basis::is_list_with_index_removed(V,length+1,listed,selected_k,r),\finite_span::span<K,field,V,space,length+1,listed> = \finite_span::span<K,field,V,space,(length+1)-1,r>}
+                        (length+1)-1=length
+                        \finite_span::span<K,field,V,space,(length+1)-1,reduced> = \finite_span::span<K,field,V,space,length+1,listed> = V
+                        by def $finite_span::spans(K,field,V,space,(length+1)-1,reduced)
+                        $is_ordered_basis_extractable_at_length((length+1)-1)
+                        obtain m,selected from exist b N,w finite_seq(V,b) st {b<=(length+1)-1,$basis::is_basis(K,field,V,space,b,w),$is_ordered_sublist(V,(length+1)-1,b,reduced,w)}
+                        release thm removed_list_is_ordered_sublist(V,length+1,listed,k,reduced)
+                        release thm ordered_sublist_transitive(V,length+1,(length+1)-1,m,listed,reduced,selected)
+                        m<=length+1
+                        witness exist b N,w finite_seq(V,b) st {b<=length+1,$basis::is_basis(K,field,V,space,b,w),$is_ordered_sublist(V,length+1,b,listed,w)} from m,selected
+            by def $is_ordered_basis_extractable_at_length(length+1)
+    $is_ordered_basis_extractable_at_length(n)

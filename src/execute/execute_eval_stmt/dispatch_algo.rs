@@ -1,9 +1,10 @@
 use super::evaluate_closed_numeric::evaluate_closed_numeric_obj;
 use super::helper::{
-    algo_call_key, build_algo_param_subst, flatten_fn_obj_args, fn_obj_plain_name,
+    algo_call_key, build_algo_param_subst, flatten_fn_obj_args, fn_obj_algo_name,
     is_number_literal, set_bound_parameter_count,
 };
 use super::result::ExecEvalStmtFailed;
+use crate::ast::names::AtomicName;
 use crate::ast::obj::{FnObj, Obj};
 use crate::ast::stmt::{DefAlgoByCasesStmt, HaveFnEqualCaseByCaseStmt};
 use crate::exec_env::StoredDefAlgo;
@@ -22,7 +23,7 @@ pub fn evaluate_fn_obj_with_algo(
     depth: usize,
     active_calls: &mut super::helper::ActiveAlgoCalls,
 ) -> RuntimeResult<Result<Obj, ExecEvalStmtFailed>> {
-    let Some(fn_name) = fn_obj_plain_name(fn_obj) else {
+    let Some(fn_name) = fn_obj_algo_name(fn_obj) else {
         return Ok(Err(ExecEvalStmtFailed::UnsupportedExpression));
     };
     let raw_args = flatten_fn_obj_args(fn_obj);
@@ -121,11 +122,11 @@ pub fn evaluate_fn_obj_with_algo(
 
 fn dispatch_algo_return_expr(
     runtime: &mut Runtime,
-    fn_name: &str,
+    fn_name: &AtomicName,
     evaluated_args: &[Obj],
     verify_state: VerifyState,
 ) -> RuntimeResult<Result<Obj, ExecEvalStmtFailed>> {
-    let Some(algo) = runtime.def_algo_visible_in_stack(fn_name).cloned() else {
+    let Some(algo) = runtime.def_algo_visible(fn_name).cloned() else {
         return Ok(Err(ExecEvalStmtFailed::AlgoDispatchFailed));
     };
     let param_count = match &algo {

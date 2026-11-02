@@ -9,7 +9,7 @@ use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain;
 
 #[test]
-fn dvd_unified_lean_rejects_the_actual_native_rule_certificate() {
+fn dvd_builtin_diagnostic_identifies_the_original_rule_family() {
     let mut rt = Runtime::new_with_result_detail(
         LaunchCommand::Eval {
             code: String::new(),
@@ -56,7 +56,7 @@ const DIV_ZERO_LOWER: &str = "claim:\n    ? forall a R, b R:\n        0 < b\n   
 const DIV_ZERO_UPPER: &str = "claim:\n    ? forall a R, b R:\n        0 < b\n        a <= 0\n        =>:\n            a / b <= 0\n    a / b <= 0\n";
 
 #[test]
-fn sqrt_quotient_square_lean_rejects_the_unhandled_rule_certificate() {
+fn sqrt_quotient_square_replays_the_original_defined_equation_certificate() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_arithmetic::SqrtQuotientSquareProof;
 
     let (mut result, mut compiler) = checked("0=0\n2^2=4*1^2\n");
@@ -89,13 +89,10 @@ fn sqrt_quotient_square_lean_rejects_the_unhandled_rule_certificate() {
             ElementaryArithmeticProof::SqrtQuotientSquare(SqrtQuotientSquareProof::new(source)),
         ),
     );
-    assert_eq!(
-        compiler
-            .compile_run(&result, "sqrt_quotient_square_unhandled")
-            .unwrap_err()
-            .route,
-        "Equality/BuiltinRule"
-    );
+    let generated = compiler
+        .compile_run(&result, "sqrt_quotient_square_certificate")
+        .expect("the original defined square root and quotient are supported");
+    assert!(generated.contains("Litex.sqrtQuotientSquareValue"));
 }
 
 #[test]

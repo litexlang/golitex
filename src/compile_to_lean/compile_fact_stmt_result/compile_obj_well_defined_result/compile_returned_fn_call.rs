@@ -1,47 +1,93 @@
 use crate::compile_to_lean::compile_function_template::function_guard_fact;
 use crate::compile_to_lean::helper::*;
-use crate::compile_to_lean::source_position::SourcePosition;
+use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof;
 use crate::prelude::*;
 use std::collections::HashMap;
 
 impl LitexToLeanCompiler {
-    /// Read fixed codomain layers, without substituting or searching for a
-    /// different signature. Dependent return carriers are rejected by their
-    /// signature compiler; sequence/Cartesian layers retain separate consumers.
-    pub(in crate::compile_to_lean) fn fixed_function_call_layers<'a>(
-        application: &FnObj,
-        signature: &'a FnSet,
-    ) -> Result<Vec<&'a FnSet>, LeanCompileError> {
-        let mut layers = Vec::new();
-        let mut current = signature;
-        for (index, arguments) in application.body.iter().enumerate() {
-            if arguments.len()
-                != current
+    /// Borrow one fixed return interface and count its original obligations.
+    fn returned_call_layer<'a>(
+        output: &'a Obj,
+        arguments: &[Box<Obj>],
+    ) -> Result<(usize, &'a Obj), LeanCompileError> {
+        let (expected, guards, next) = match output {
+            Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => (
+                signature
                     .set_bound_parameters
                     .groups
                     .iter()
                     .map(|g| g.params.len())
-                    .sum::<usize>()
-            {
-                return Err(LeanCompileError::unsupported("ReturnedFunction/LayerArity"));
+                    .sum(),
+                signature.dom_facts.len(),
+                signature.ret_set.as_ref(),
+            ),
+            Obj::ProductShape(ProductShape::Cart(cart)) => {
+                let index = arguments
+                    .first()
+                    .and_then(|a| {
+                        crate::execute::execute_fact_stmt::known_tuple::literal_positive_usize(a)
+                    })
+                    .ok_or_else(|| {
+                        LeanCompileError::unsupported("ReturnedCart/VariableCoordinate")
+                    })?;
+                let next = cart
+                    .args
+                    .get(index - 1)
+                    .ok_or_else(|| LeanCompileError::unsupported("ReturnedCart/Index"))?;
+                (1, 0, next.as_ref())
             }
-            layers.push(current);
-            if index + 1 < application.body.len() {
-                let Obj::FunctionSpace(FunctionSpace::FnSet(next)) = current.ret_set.as_ref()
-                else {
+            _ => {
+                let (dimensions, carrier, _) =
+                    super::compile_returned_array_call::array_parts(output)?;
+                (dimensions.len(), 0, carrier)
+            }
+        };
+        if arguments.len() != expected {
+            return Err(LeanCompileError::unsupported("ReturnedFunction/LayerArity"));
+        }
+        Ok((expected + guards, next))
+    }
+
+    /// Validate the selected flat record, including the shared verifier's
+    /// checked prefix-interface refinement between two application groups.
+    /// No membership or signature is searched for or manufactured here.
+    pub(super) fn returned_call_layout(
+        application: &FnObj,
+        mut output: &Obj,
+        requirements: &[VerifyFactResult],
+        mut offset: usize,
+    ) -> Result<(Vec<(usize, bool)>, usize), LeanCompileError> {
+        let mut layers = Vec::new();
+        let mut needs_refinement = false;
+        for (index, arguments) in application.body.iter().enumerate().skip(1) {
+            if needs_refinement {
+                let mut prefix = application.clone();
+                prefix.body.truncate(index);
+                let requirement = requirements.get(offset).ok_or_else(|| {
+                    LeanCompileError::unsupported("ReturnedFunction/PrefixMembership")
+                })?;
+                if !matches!(source_subject(requirement)?, Fact::AtomicFact(AtomicFact::InFact(p))
+                    if p.element.ir() == Obj::FnObj(prefix).ir() && p.set.ir() == output.ir())
+                {
                     return Err(LeanCompileError::unsupported(
-                        "ReturnedFunction/LayerCarrier",
+                        "ReturnedFunction/PrefixMembership",
                     ));
-                };
-                current = next;
+                }
+                offset += 1;
             }
+            let (count, next) = Self::returned_call_layer(output, arguments)?;
+            layers.push((offset, needs_refinement));
+            // The native finite-function signature returns the union of all
+            // factors. A further call through a multi-factor Cartesian result
+            // therefore retains its checked, more precise prefix membership.
+            needs_refinement =
+                matches!(output, Obj::ProductShape(ProductShape::Cart(c)) if c.args.len() > 1);
+            output = next;
+            offset += count;
         }
-        if layers.is_empty() {
-            return Err(LeanCompileError::unsupported("ReturnedFunction/EmptyCall"));
-        }
-        Ok(layers)
+        Ok((layers, offset))
     }
 
     /// Read the final carrier from the original signature and complete call shape.
@@ -65,28 +111,7 @@ impl LitexToLeanCompiler {
         }
         let mut output = signature.ret_set.as_ref();
         for arguments in &application.body[1..] {
-            output = match output {
-                Obj::FunctionSpace(FunctionSpace::FnSet(next))
-                    if arguments.len()
-                        == next
-                            .set_bound_parameters
-                            .groups
-                            .iter()
-                            .map(|g| g.params.len())
-                            .sum::<usize>() =>
-                {
-                    next.ret_set.as_ref()
-                }
-                Obj::SetFormer(SetFormer::MatrixSet(m)) if arguments.len() == 2 => m.set.as_ref(),
-                Obj::SetFormer(SetFormer::FiniteSeqSet(s)) if arguments.len() == 1 => {
-                    s.set.as_ref()
-                }
-                _ => {
-                    return Err(LeanCompileError::unsupported(
-                        "ReturnedFunction/LayerCarrier",
-                    ));
-                }
-            };
+            output = Self::returned_call_layer(output, arguments)?.1;
         }
         Ok(output)
     }
@@ -99,6 +124,7 @@ impl LitexToLeanCompiler {
         evidence: &FnObjObjWellDefinedProof,
         mut receiver: String,
         mut output: Obj,
+        mut member: String,
         position: &SourcePosition<'_>,
     ) -> Result<(String, Obj, String), LeanCompileError> {
         let total_args = application.body.iter().map(Vec::len).sum::<usize>();
@@ -108,33 +134,86 @@ impl LitexToLeanCompiler {
             .checked_sub(total_args)
             .ok_or_else(|| LeanCompileError::unsupported("ReturnedFunction/ChildStages"))?;
         let mut child_offset = head_offset + application.body[0].len();
-        let mut requirement_offset = evidence.requirement_fact_verified.len();
-        // Count the trailing layers to find their actual first requirement.
-        let Obj::FunctionSpace(FunctionSpace::FnSet(first_return)) = &output else {
-            return Err(LeanCompileError::unsupported(
-                "ReturnedFunction/LayerCarrier",
-            ));
+        let first_requirements = match evidence.domain_fn_set.as_ref() {
+            Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::InFunctionSet {fn_set, ..}
+                | crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::AnonymousLiteral {fn_set}
+                | crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::TemplateDefinition {fn_set, ..}) =>
+                application.body[0].len() + fn_set.dom_facts.len(),
+            Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::Matrix(p)) =>
+                application.body[0].len() + p.function.body.dom_facts.len(),
+            Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::Composition(p)) =>
+                application.body[0].len() + p.function.body.dom_facts.len(),
+            Some(crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence::MultivariableSelector(p)) =>
+                application.body[0].len() + p.signature.dom_facts.len(),
+            _ => return Err(LeanCompileError::unsupported("ReturnedFunction/DomainEvidence")),
         };
-        let mut space = first_return;
-        for index in 1..application.body.len() {
-            let count = application.body[index].len() + space.dom_facts.len();
-            requirement_offset = requirement_offset.checked_sub(count).ok_or_else(|| {
-                LeanCompileError::unsupported("ReturnedFunction/RequirementStages")
-            })?;
-            if index + 1 < application.body.len() {
-                let Obj::FunctionSpace(FunctionSpace::FnSet(next)) = space.ret_set.as_ref() else {
-                    return Err(LeanCompileError::unsupported(
-                        "ReturnedFunction/LayerCarrier",
-                    ));
-                };
-                space = next;
-            }
+        let (layers, end) = Self::returned_call_layout(
+            application,
+            &output,
+            &evidence.requirement_fact_verified,
+            first_requirements,
+        )?;
+        if end != evidence.requirement_fact_verified.len() {
+            return Err(LeanCompileError::unsupported(
+                "ReturnedFunction/RequirementStages",
+            ));
         }
-        for arguments in &application.body[1..] {
+        for (layer_index, (arguments, (mut requirement_offset, refined))) in
+            application.body[1..].iter().zip(layers).enumerate()
+        {
+            if refined {
+                let earlier_children = SourcePosition {
+                    before: child_offset,
+                    ..*position
+                };
+                let prior = SourcePosition::new(
+                    Some(&earlier_children),
+                    SourceOwner::EqualityRequirements(&evidence.requirement_fact_verified),
+                    requirement_offset - 1,
+                );
+                member = self
+                    .compile_verify(
+                        &evidence.requirement_fact_verified[requirement_offset - 1],
+                        &prior,
+                    )?
+                    .1;
+            }
+            if matches!(output, Obj::ProductShape(ProductShape::Cart(_))) {
+                let final_layer = layer_index + 2 == application.body.len();
+                let (call, carrier, checked) = self.compile_returned_cart_call(
+                    application,
+                    arguments,
+                    evidence,
+                    &receiver,
+                    &output,
+                    &member,
+                    child_offset,
+                    requirement_offset,
+                    final_layer,
+                    position,
+                )?;
+                receiver = call;
+                output = carrier;
+                member = checked;
+                child_offset += arguments.len();
+                continue;
+            }
             let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) = &output else {
-                return Err(LeanCompileError::unsupported(
-                    "ReturnedFunction/LayerCarrier",
-                ));
+                let (call, carrier) = self.compile_returned_array_step(
+                    arguments,
+                    evidence,
+                    &receiver,
+                    &output,
+                    &member,
+                    child_offset,
+                    requirement_offset,
+                    position,
+                )?;
+                receiver = call;
+                output = carrier;
+                member = format!("(Litex.callOnInOutput {receiver})");
+                child_offset += arguments.len();
+                continue;
             };
             let parameters = signature
                 .set_bound_parameters
@@ -211,14 +290,14 @@ impl LitexToLeanCompiler {
                 &formed,
             )?;
             let (_, domain) = self.compile_complete_input(signature, &terms, &proofs, &formed)?;
-            // Every preceding layer is a generic CallOn. Reuse its own output
-            // certificate after binding the receiver, so nested terms stay shared.
+            // Reuse the preceding layer's actual membership certificate.
+            // Cartesian projections need their retained coordinate proof.
             receiver = format!(
-                "(by\n  let _returned_receiver := {receiver}\n  let _returned_signature : Litex.FunctionSignature M := {sig}\n  have _returned_member : Litex.In _returned_receiver (Litex.fnSet _returned_signature) := by exact Litex.callOnInOutput _returned_receiver\n  have _returned_domain : M.mem (Litex.denote {packed}) _returned_signature.domain := {domain}\n  exact Litex.callOn _returned_signature _returned_receiver {packed} _returned_member _returned_domain)"
+                "(by\n  let _returned_receiver := {receiver}\n  let _returned_signature : Litex.FunctionSignature M := {sig}\n  have _returned_member : Litex.In _returned_receiver (Litex.fnSet _returned_signature)  := {member}\n  have _returned_domain : M.mem (Litex.denote {packed}) _returned_signature.domain := {domain}\n  exact Litex.callOn _returned_signature _returned_receiver {packed} _returned_member _returned_domain)"
             );
             output = signature.ret_set.as_ref().clone();
+            member = format!("(Litex.callOnInOutput {receiver})");
         }
-        let member = format!("(Litex.callOnInOutput {receiver})");
         Ok((receiver, output, member))
     }
 }

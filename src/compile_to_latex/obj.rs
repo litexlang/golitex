@@ -1,5 +1,6 @@
 use super::fact::quantifier_free;
 use super::helper::{call_parens, ident, identifier, join_land, name, operator, parens};
+use super::matrix::matrix;
 use crate::ast::obj::*;
 use crate::launch_command::OutputLanguage;
 use crate::module_manager::GlobalModuleManager;
@@ -13,104 +14,112 @@ pub(super) fn obj(
     expression(value, modules, lang, 0)
 }
 
-fn expression(
+pub(super) fn expression(
     value: &Obj,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
     parent: u8,
 ) -> RuntimeResult<String> {
     let o = |x: &Obj| obj(x, modules, lang);
+    let h = |x: &Obj| function_operand(x, modules, lang);
     let e = |x: &Obj, p| expression(x, modules, lang, p);
     let (text, precedence) = match value {
         Obj::LimitOperator(LimitOperator::MultivariableScalar(x)) => (
-            format!("\\lim_{{x\\to {}}} {}(x)", o(&x.point)?, o(&x.function)?),
+            super::helper::dimensioned(
+                format!(r"\lim_{{\xi\to {}}} {}(\xi)", o(&x.point)?, h(&x.function)?),
+                &[o(&x.dimension)?],
+            ),
             50,
         ),
         Obj::LimitOperator(LimitOperator::MultivariableVector(x)) => (
-            format!("\\lim_{{x\\to {}}} {}(x)", o(&x.point)?, o(&x.function)?),
+            super::helper::dimensioned(
+                format!(r"\lim_{{\xi\to {}}} {}(\xi)", o(&x.point)?, h(&x.function)?),
+                &[o(&x.input_dimension)?, o(&x.output_dimension)?],
+            ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Partial(x)) => (
-            format!(
-                "\\frac{{\\partial {}}}{{\\partial x_{{{}}}}}{}",
-                o(&x.function)?,
-                o(&x.coordinate)?,
-                parens(&o(&x.point)?)
+            super::helper::dimensioned(
+                format!(
+                    "\\frac{{\\partial {}}}{{\\partial x_{{{}}}}}{}",
+                    h(&x.function)?,
+                    o(&x.coordinate)?,
+                    parens(&o(&x.point)?)
+                ),
+                &[o(&x.dimension)?],
             ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(x)) => (
-            format!("D{}{}", parens(&o(&x.function)?), parens(&o(&x.point)?)),
+            super::helper::dimensioned(
+                format!("D{}{}", h(&x.function)?, parens(&o(&x.point)?)),
+                &[o(&x.dimension)?],
+            ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(x)) => (
-            format!("D{}{}", parens(&o(&x.function)?), parens(&o(&x.point)?)),
+            super::helper::dimensioned(
+                format!("D{}{}", h(&x.function)?, parens(&o(&x.point)?)),
+                &[o(&x.input_dimension)?, o(&x.output_dimension)?],
+            ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Gradient(x)) => (
-            format!(
-                "\\nabla {}{}",
-                parens(&o(&x.function)?),
-                parens(&o(&x.point)?)
+            super::helper::dimensioned(
+                format!("\\nabla {}{}", h(&x.function)?, parens(&o(&x.point)?)),
+                &[o(&x.dimension)?],
             ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Jacobian(x)) => (
-            format!("J_{{{}}}{}", o(&x.function)?, parens(&o(&x.point)?)),
+            super::helper::dimensioned(
+                format!("J_{{{}}}{}", o(&x.function)?, parens(&o(&x.point)?)),
+                &[o(&x.input_dimension)?, o(&x.output_dimension)?],
+            ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Hessian(x)) => (
-            format!("H_{{{}}}{}", o(&x.function)?, parens(&o(&x.point)?)),
+            super::helper::dimensioned(
+                format!("H_{{{}}}{}", o(&x.function)?, parens(&o(&x.point)?)),
+                &[o(&x.dimension)?],
+            ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Divergence(x)) => (
-            format!(
-                "\\nabla\\cdot {}{}",
-                parens(&o(&x.function)?),
-                parens(&o(&x.point)?)
+            super::helper::dimensioned(
+                format!("\\nabla\\cdot {}{}", h(&x.function)?, parens(&o(&x.point)?)),
+                &[o(&x.dimension)?],
             ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Curl(x)) => (
             format!(
                 "\\nabla\\times {}{}",
-                parens(&o(&x.function)?),
+                h(&x.function)?,
                 parens(&o(&x.point)?)
             ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Laplacian(x)) => (
-            format!(
-                "\\Delta {}{}",
-                parens(&o(&x.function)?),
-                parens(&o(&x.point)?)
+            super::helper::dimensioned(
+                format!("\\Delta {}{}", h(&x.function)?, parens(&o(&x.point)?)),
+                &[o(&x.dimension)?],
             ),
             50,
         ),
-        Obj::MatrixOperator(value) => {
-            let args = value
-                .operand_refs()
-                .into_iter()
-                .map(o)
-                .collect::<RuntimeResult<Vec<_>>>()?;
-            (operator(value.name(), &args), 50)
-        }
+        Obj::MatrixOperator(value) => (matrix(value, modules, lang)?, 50),
 
         Obj::IntegralOperator(IntegralOperator::Riemann(x)) => (
             format!(
                 r"\int_{{{}}}^{{{}}} {}(\xi)\,\mathrm{{d}}\xi",
                 o(&x.lower)?,
                 o(&x.upper)?,
-                e(&x.function, 51)?
+                h(&x.function)?
             ),
             50,
         ),
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => (
-            format!(
-                "{}^{{\\prime}}{}",
-                parens(&o(&x.function)?),
-                parens(&o(&x.point)?)
-            ),
+            format!("{}^{{\\prime}}{}", h(&x.function)?, parens(&o(&x.point)?)),
             50,
         ),
         Obj::BoundOperator(BoundOperator::Supremum(x)) => {
@@ -203,7 +212,7 @@ fn expression(
             }
             let bound = ident(&bound);
             let function = o(&x.function)?;
-            let application = format!("{}{}", parens(&function), call_parens(&bound));
+            let application = format!("{}{}", h(&x.function)?, call_parens(&bound));
             let direction = match &x.approach {
                 LimitApproach::AtPoint(_) => "",
                 LimitApproach::FromLeft(_) => "^{-}",
@@ -234,7 +243,7 @@ fn expression(
                 bound.push('n');
             }
             let bound = ident(&bound);
-            let application = format!("{}{}", parens(&o(&x.sequence)?), call_parens(&bound));
+            let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
             (format!(r"\lim_{{{}\to\infty}} {}", bound, application), 50)
         }
         Obj::LimitOperator(LimitOperator::SequenceLiminf(x)) => {
@@ -244,7 +253,7 @@ fn expression(
                 bound.push('n');
             }
             let bound = ident(&bound);
-            let application = format!("{}{}", parens(&o(&x.sequence)?), call_parens(&bound));
+            let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
             (
                 format!(r"\liminf_{{{}\to\infty}} {}", bound, application),
                 50,
@@ -257,7 +266,7 @@ fn expression(
                 bound.push('n');
             }
             let bound = ident(&bound);
-            let application = format!("{}{}", parens(&o(&x.sequence)?), call_parens(&bound));
+            let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
             (
                 format!(r"\limsup_{{{}\to\infty}} {}", bound, application),
                 50,
@@ -320,7 +329,7 @@ fn expression(
                     r"\left\{{\xi\in {}\;\middle|\;\exists\iota\in {},\ \xi\in {}(\iota)\right\}}",
                     o(&x.ambient_set)?,
                     o(&x.index_set)?,
-                    e(&x.family_fn, 51)?
+                    h(&x.family_fn)?
                 ),
                 50,
             ),
@@ -329,7 +338,7 @@ fn expression(
                     r"\left\{{\xi\in {}\;\middle|\;\forall\iota\in {},\ \xi\in {}(\iota)\right\}}",
                     o(&x.ambient_set)?,
                     o(&x.index_set)?,
-                    e(&x.family_fn, 51)?
+                    h(&x.family_fn)?
                 ),
                 50,
             ),
@@ -442,10 +451,18 @@ fn expression(
                     format!("{} \\circ {}", e(&x.outer, 26)?, e(&x.inner, 25)?)
                 }
                 FunctionSpace::Preimage(x) => {
-                    operator("preimage", &[o(&x.function)?, o(&x.value)?])
+                    format!(
+                        r"{}^{{-1}}\!\left[\left\{{{}\right\}}\right]",
+                        e(&x.function, 41)?,
+                        o(&x.value)?
+                    )
                 }
                 FunctionSpace::PreimageSet(x) => {
-                    operator("preimage_set", &[o(&x.function)?, o(&x.target_set)?])
+                    format!(
+                        r"{}^{{-1}}\!\left[{}\right]",
+                        e(&x.function, 41)?,
+                        o(&x.target_set)?
+                    )
                 }
             },
             if matches!(x, FunctionSpace::Composition(_)) {
@@ -478,24 +495,20 @@ fn expression(
                     r"\sum_{{\iota={}}}^{{{}}} {}(\iota)",
                     o(&x.start)?,
                     o(&x.end)?,
-                    e(&x.func, 51)?
+                    h(&x.func)?
                 ),
                 IteratedOperator::Product(x) => format!(
                     r"\prod_{{\iota={}}}^{{{}}} {}(\iota)",
                     o(&x.start)?,
                     o(&x.end)?,
-                    e(&x.func, 51)?
+                    h(&x.func)?
                 ),
-                IteratedOperator::SumOfFiniteSet(x) => format!(
-                    r"\sum_{{\iota\in {}}} {}(\iota)",
-                    o(&x.set)?,
-                    e(&x.func, 51)?
-                ),
-                IteratedOperator::ProductOfFiniteSet(x) => format!(
-                    r"\prod_{{\iota\in {}}} {}(\iota)",
-                    o(&x.set)?,
-                    e(&x.func, 51)?
-                ),
+                IteratedOperator::SumOfFiniteSet(x) => {
+                    format!(r"\sum_{{\iota\in {}}} {}(\iota)", o(&x.set)?, h(&x.func)?)
+                }
+                IteratedOperator::ProductOfFiniteSet(x) => {
+                    format!(r"\prod_{{\iota\in {}}} {}(\iota)", o(&x.set)?, h(&x.func)?)
+                }
                 IteratedOperator::Reduce(x) => operator(
                     "reduce",
                     &[
@@ -545,6 +558,23 @@ fn expression(
         parens(&text)
     } else {
         text
+    })
+}
+
+// Named and already-applied functions read naturally as f(x). Composite
+// function operands retain a group, including any existing scripts.
+fn function_operand(
+    value: &Obj,
+    modules: &GlobalModuleManager,
+    lang: OutputLanguage,
+) -> RuntimeResult<String> {
+    let rendered = obj(value, modules, lang)?;
+    Ok(match value {
+        Obj::Identifier(_)
+        | Obj::FnObj(_)
+        | Obj::InstantiatedTemplateObj(_)
+        | Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)) => rendered,
+        _ => parens(&rendered),
     })
 }
 
@@ -628,7 +658,7 @@ fn field_access(
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
 ) -> RuntimeResult<String> {
-    let mut text = expression(&value.obj, modules, lang, 51)?;
+    let mut text = expression(&value.obj, modules, lang, 50)?;
     for field in &value.fields {
         text.push_str(&format!(".{}", ident(field)));
     }

@@ -3,12 +3,14 @@ use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_forall_fact::AssumeDomFactResult;
 use crate::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, FailToVerifyObjWellDefinedResult,
+    VerifyAndDefineWdParametersFailed,
 };
 use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
 use crate::result_detail::OutputDetail;
 use crate::runtime::RuntimeResult;
 
 pub enum FailToVerifyNotForallFactWellDefinedResult {
+    Local(Box<NotForallWellDefinedLocalFailure>),
     ParamType {
         fact: crate::ast::fact::NotForallFact,
         reason: FailToVerifyObjWellDefinedResult,
@@ -30,9 +32,49 @@ pub enum FailToVerifyNotForallFactWellDefinedResult {
     },
 }
 
+// Only premises are locally assumed. Consequent formation does not establish
+// a counterexample, nor prove or assume any consequent.
+pub struct NotForallWellDefinedLocalFailure {
+    pub fact: crate::ast::fact::NotForallFact,
+    pub failure: NotForallWellDefinedLocalFailed,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum NotForallWellDefinedLocalFailed {
+    Parameters(VerifyAndDefineWdParametersFailed),
+    Premise {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_dom_facts: Vec<AssumeDomFactResult>,
+        failed_index: usize,
+        failed_dom: Box<FailToVerifyFactWellDefinedResult>,
+    },
+    Conclusion {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_dom_facts: Vec<AssumeDomFactResult>,
+        checked_then: Vec<FactWellDefinedProof>,
+        failed_index: usize,
+        failed_then: Box<FailToVerifyFactWellDefinedResult>,
+    },
+}
+
+impl NotForallWellDefinedLocalFailure {
+    pub fn new(
+        fact: crate::ast::fact::NotForallFact,
+        failure: NotForallWellDefinedLocalFailed,
+        local_env: Box<ExecEnv>,
+    ) -> Self {
+        Self {
+            fact,
+            failure,
+            local_env,
+        }
+    }
+}
+
 impl FailToVerifyNotForallFactWellDefinedResult {
     pub fn fact(&self) -> &crate::ast::fact::NotForallFact {
         match self {
+            Self::Local(local) => &local.fact,
             Self::ParamType { fact, .. }
             | Self::DomFact { fact, .. }
             | Self::ThenFact { fact, .. } => fact,

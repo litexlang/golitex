@@ -3,12 +3,14 @@ use crate::execute::exec_stmt_result::ParamTypeWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_forall_fact::AssumeDomFactResult;
 use crate::execute::execute_fact_stmt::well_defined_results::{
     FactWellDefinedProof, FailToVerifyFactWellDefinedResult, FailToVerifyObjWellDefinedResult,
+    VerifyAndDefineWdParametersFailed,
 };
 use crate::execute::introduce_typed_parameters::IntroduceTypedParametersResult;
 use crate::result_detail::OutputDetail;
 use crate::runtime::RuntimeResult;
 
 pub enum FailToVerifyExistShapedFactWellDefinedResult {
+    Local(Box<ExistShapedWellDefinedLocalFailure>),
     ParamType {
         fact: crate::ast::fact::ExistShapedFact,
         reason: FailToVerifyObjWellDefinedResult,
@@ -22,9 +24,42 @@ pub enum FailToVerifyExistShapedFactWellDefinedResult {
     },
 }
 
+// Candidate parameters and body conditions are local formation assumptions;
+// this evidence supplies no witness, uniqueness or nonexistence proof.
+pub struct ExistShapedWellDefinedLocalFailure {
+    pub fact: crate::ast::fact::ExistShapedFact,
+    pub failure: ExistShapedWellDefinedLocalFailed,
+    pub local_env: Box<ExecEnv>,
+}
+
+pub enum ExistShapedWellDefinedLocalFailed {
+    Parameters(VerifyAndDefineWdParametersFailed),
+    Body {
+        introduced_params: IntroduceTypedParametersResult,
+        assumed_body_facts: Vec<AssumeDomFactResult>,
+        failed_index: usize,
+        failed_body: Box<FailToVerifyFactWellDefinedResult>,
+    },
+}
+
+impl ExistShapedWellDefinedLocalFailure {
+    pub fn new(
+        fact: crate::ast::fact::ExistShapedFact,
+        failure: ExistShapedWellDefinedLocalFailed,
+        local_env: Box<ExecEnv>,
+    ) -> Self {
+        Self {
+            fact,
+            failure,
+            local_env,
+        }
+    }
+}
+
 impl FailToVerifyExistShapedFactWellDefinedResult {
     pub fn fact(&self) -> &crate::ast::fact::ExistShapedFact {
         match self {
+            Self::Local(local) => &local.fact,
             Self::ParamType { fact, .. } | Self::BodyFact { fact, .. } => fact,
         }
     }

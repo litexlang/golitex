@@ -1,0 +1,53 @@
+# Tracer: source-local strategy body steps
+#
+# Before (mathematics passed; reading source mapping was incomplete):
+# prop same(x R):
+#     x = 0
+# strategy use_same:
+#     ? forall x R:
+#         x = 0
+#         =>:
+#             $same(x)
+#     have helper R = x
+#     claim:
+#         ? helper = 0
+#         helper = 0
+#     witness exist u R st {u = helper} from helper
+#     obtain u from exist u R st {u = helper}
+#     by def $same(x)
+# $same(0)
+# have helper R = 1
+# helper = 1
+# Former reading result: the strategy was accepted, while its have, claim,
+# witness, obtain and by-def body statements had status not_exported.
+#
+# Now: the same checked mathematics retains each actual body execution,
+# local scope, source position and citation through its statement reference.
+prop same(x R):
+    x = 0
+strategy use_same:
+    ? forall x R:
+        x = 0
+        =>:
+            $same(x)
+    have helper R = x
+    claim:
+        ? helper = 0
+        helper = 0
+    witness exist u R st {u = helper} from helper
+    obtain u from exist u R st {u = helper}
+    by def $same(x)
+$same(0)
+have helper R = 1
+helper = 1
+
+# Boundary: local helper/witness names do not escape the strategy. The outer
+# helper above is a fresh declaration, and u is unavailable outside the proof.
+# Failed strategy bodies do not gain accepted conclusions or source steps.
+# Evidence: cargo test --release --test reading_strategy_body_capture
+# CLI: target/release/litex -strict -f examples/reading/strategy_body_steps.lit
+# Reading: target/release/litex -reading -strict -json -f examples/reading/strategy_body_steps.lit
+
+# The obtain step retains its actual existence certificate. Here the verifier
+# can use RealLineComparisonWitness and the local helper properties rather
+# than citing the preceding existential witness declaration.

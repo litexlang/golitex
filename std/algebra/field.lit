@@ -425,3 +425,67 @@ thm zero_product_from_factor:
         case b=F.zero:
             release thm mul_zero(K,F,a)
             F.mul(a,b)=F.mul(a,F.zero)=F.zero
+
+# Standard real and complex scalar fields, with inversion away from zero.
+
+have fn real_add(x,y R) R = x+y
+
+have fn real_neg(x R) R = -x
+
+have fn real_mul(x,y R) R = x*y
+
+have fn real_inv(x R: x!=0) R = 1/x
+
+forall x,y,z R:
+    real_add(real_add(x,y),z)=real_add(x,real_add(y,z))
+    real_mul(real_mul(x,y),z)=real_mul(x,real_mul(y,z))
+    real_mul(x,real_add(y,z))=real_add(real_mul(x,y),real_mul(x,z))
+
+forall x,y R:
+    real_add(x,y)=real_add(y,x)
+    real_mul(x,y)=real_mul(y,x)
+
+forall x R:
+    real_add(0,x)=x
+    real_add(x,real_neg(x))=0
+    real_mul(1,x)=x
+
+forall x R:
+    x!=0
+    =>:
+        real_mul(x,real_inv(x))=1
+
+release thm struct_member((0,1,real_add,real_neg,real_mul,real_inv),&Field<R>)
+
+have real_field &Field<R> = (0,1,real_add,real_neg,real_mul,real_inv)
+
+have fn complex_add(x,y C) C = x+y
+
+have fn complex_neg(x C) C = -x
+
+have fn complex_mul(x,y C) C = x*y
+
+have fn complex_inv(x C: x!=0) C = 1/x
+
+forall x,y,z C:
+    complex_add(complex_add(x,y),z)=complex_add(x,complex_add(y,z))
+    complex_mul(complex_mul(x,y),z)=complex_mul(x,complex_mul(y,z))
+    complex_mul(x,complex_add(y,z))=complex_add(complex_mul(x,y),complex_mul(x,z))
+
+forall x,y C:
+    complex_add(x,y)=complex_add(y,x)
+    complex_mul(x,y)=complex_mul(y,x)
+
+forall x C:
+    complex_add(0,x)=x
+    complex_add(x,complex_neg(x))=0
+    complex_mul(1,x)=x
+
+forall x C:
+    x!=0
+    =>:
+        complex_mul(x,complex_inv(x))=1
+
+release thm struct_member((0,1,complex_add,complex_neg,complex_mul,complex_inv),&Field<C>)
+
+have complex_field &Field<C> = (0,1,complex_add,complex_neg,complex_mul,complex_inv)

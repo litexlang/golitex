@@ -1,0 +1,27 @@
+# Tracer: claim parameters and assumptions remain local to their proof.
+# Before (reading lost this context after a later body failure):
+# claim:
+#     ? forall x R:
+#         x > 0
+#         =>:
+#             x >= 0
+#     x > 0
+#     2 = 3
+# The old and current verifier both reject that last step. The executable
+# negative counterpart is negative/claim_stmt/retained-quantified-context.lit.
+# Now: completed claims publish only their goals, while local proof steps
+# and hypotheses remain available as separate reading evidence.
+# Boundary: a helper name never escapes either a successful or failed claim.
+# Gate: litex -strict -f examples/reading/claim_context.lit
+
+claim:
+    ? forall good_x R:
+        good_x > 0
+        =>:
+            good_x >= 0
+    good_x > 0
+
+claim:
+    ? 1 = 1
+    have success_inner R = 2
+    success_inner = 2

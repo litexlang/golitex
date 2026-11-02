@@ -12,12 +12,9 @@ impl LitexToLeanCompiler {
         _index: usize,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if local {
-            return Err(LeanCompileError::unsupported("Function/LocalDeclaration"));
-        }
         match result {
             ExecHaveFnEqualStmtResult::Success(proof) => {
-                self.compile_have_fn_equal(proof, position)
+                self.compile_have_fn_equal(proof, position, local)
             }
             ExecHaveFnEqualStmtResult::Failed(_) => Err(LeanCompileError::new(
                 "Function/Failed",
@@ -30,6 +27,7 @@ impl LitexToLeanCompiler {
         &self,
         proof: &ExecHaveFnEqualStmtSuccessResult,
         position: &SourcePosition<'_>,
+        local: bool,
     ) -> Result<String, LeanCompileError> {
         let anonymous = Obj::FunctionSpace(FunctionSpace::AnonymousFn(
             proof.statement.equal_to_anonymous_fn.clone(),
@@ -76,40 +74,41 @@ impl LitexToLeanCompiler {
             ..*position
         };
         let membership = self.resolve_fact(stores.membership_fact_id, &after_member)?;
-        let named_object = match &membership {
-            Fact::AtomicFact(AtomicFact::InFact(member)) if member.set == fn_set => {
-                match &member.element {
-                    Obj::Identifier(IdentifierObj::Plain { id, name })
-                        if *id == proof.statement.name.id && *name == proof.statement.name.name =>
-                    {
-                        &member.element
-                    }
-                    _ => {
-                        return Err(LeanCompileError::new(
+        let identifier =
+            Obj::Identifier(position.defining_identifier(&proof.statement.name, &self.runtime)?);
+        let named_object =
+            match &membership {
+                Fact::AtomicFact(AtomicFact::InFact(member)) if member.set == fn_set => {
+                    match &member.element {
+                        element if *element == identifier => &member.element,
+                        _ => return Err(LeanCompileError::new(
                             "Function/MembershipSubject",
                             "The captured function membership names another source declaration.",
-                        ))
+                        )),
                     }
                 }
-            }
-            _ => {
-                return Err(LeanCompileError::new(
-                    "Function/MembershipSubject",
-                    "The captured membership has another source function signature.",
-                ))
-            }
-        };
+                _ => {
+                    return Err(LeanCompileError::new(
+                        "Function/MembershipSubject",
+                        "The captured membership has another source function signature.",
+                    ))
+                }
+            };
         self.validate_store(&stores.membership.store, &membership)?;
         let declaration = self.bind_alias(
             &proof.statement.name,
             named_object,
             &anonymous,
             &value,
-            false,
+            local,
             position,
         )?;
         let name = format!("_object_i{}", proof.statement.name.id.value());
-        let object = self.context_application(&name, &after_definition);
+        let object = if local {
+            name
+        } else {
+            self.context_application(&name, &after_definition)
+        };
         let member = (
             // Formation above checked this exact signature. Its stored field
             // avoids printing the complete domain/guard a second time.
@@ -123,7 +122,13 @@ impl LitexToLeanCompiler {
             ..*position
         };
         let defining_equal = self.resolve_fact(stores.defining_equal_fact_id, &after_equal)?;
-        alias_equality_subject(&defining_equal, &proof.statement.name, &anonymous)?;
+        alias_equality_subject(
+            &defining_equal,
+            &proof.statement.name,
+            &anonymous,
+            &after_equal,
+            &self.runtime,
+        )?;
         self.validate_store(&stores.defining_equal.store, &defining_equal)?;
         // The definition above is this exact checked anonymous object. Keep the
         // original equality citation, but refer to the definition on both sides

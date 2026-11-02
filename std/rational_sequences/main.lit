@@ -1,0 +1,1803 @@
+# Rational sequences with arbitrary integer starting indices.
+
+template<start Z>:
+    have integer_index_tail set = {n Z:n >= start}
+
+thm integer_index_tail_member_integer:
+    ? forall start Z,n \integer_index_tail<start>:
+        n $in Z
+    \integer_index_tail<start> = {k Z:k >= start}
+    n $in Z
+
+thm integer_index_tail_lower_bound:
+    ? forall start,n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            n >= start
+    \integer_index_tail<start> = {k Z:k >= start}
+    n >= start
+
+thm integer_index_tail_member:
+    ? forall start,n Z:
+        n >= start
+        =>:
+            n $in \integer_index_tail<start>
+    \integer_index_tail<start> = {k Z:k >= start}
+    release thm set_builder_member(n,{k Z:k >= start})
+
+prop is_rational_steady(start Z,a fn(n \integer_index_tail<start>) Q,epsilon R+):
+    forall j,k Z:
+        j $in \integer_index_tail<start>
+        k $in \integer_index_tail<start>
+        =>:
+            $approx::is_epsilon_close(a(j),a(k),epsilon)
+
+prop is_rational_steady_after(start Z,a fn(n \integer_index_tail<start>) Q,epsilon R+,cutoff Z):
+    cutoff >= start
+    forall j,k Z:
+        j $in \integer_index_tail<start>
+        k $in \integer_index_tail<start>
+        j >= cutoff
+        k >= cutoff
+        =>:
+            $approx::is_epsilon_close(a(j),a(k),epsilon)
+
+prop is_eventually_rational_steady(start Z,a fn(n \integer_index_tail<start>) Q,epsilon R+):
+    exist cutoff Z st {$is_rational_steady_after(start,a,epsilon,cutoff)}
+
+prop is_rational_cauchy(start Z,a fn(n \integer_index_tail<start>) Q):
+    forall epsilon Q+:
+        $is_eventually_rational_steady(start,a,epsilon)
+
+template<start Z,value Q>:
+    have fn rational_constant_sequence(n \integer_index_tail<start>) Q = value
+
+thm rational_constant_sequence_is_cauchy:
+    ? forall start Z,value Q:
+        $is_rational_cauchy(start,\rational_constant_sequence<start,value>)
+    claim:
+        ? forall epsilon Q+:
+            $is_eventually_rational_steady(start,\rational_constant_sequence<start,value>,epsilon)
+        claim:
+            ? forall j,k Z:
+                j $in \integer_index_tail<start>
+                k $in \integer_index_tail<start>
+                j >= start
+                k >= start
+                =>:
+                    $approx::is_epsilon_close(\rational_constant_sequence<start,value>(j),\rational_constant_sequence<start,value>(k),epsilon)
+            release thm approx::epsilon_close_reflexive(value,epsilon)
+            \rational_constant_sequence<start,value>(j) = value
+            \rational_constant_sequence<start,value>(k) = value
+            $approx::is_epsilon_close(\rational_constant_sequence<start,value>(j),\rational_constant_sequence<start,value>(k),epsilon)
+        by def $is_rational_steady_after(start,\rational_constant_sequence<start,value>,epsilon,start)
+        witness $is_eventually_rational_steady(start,\rational_constant_sequence<start,value>,epsilon) from start
+    by def $is_rational_cauchy(start,\rational_constant_sequence<start,value>)
+
+have fn rational_reciprocal_sequence(n \integer_index_tail<1>) Q = 1/n
+
+thm rational_reciprocal_sequence_is_cauchy:
+    ? $is_rational_cauchy(1,rational_reciprocal_sequence)
+    claim:
+        ? forall epsilon Q+:
+            $is_eventually_rational_steady(1,rational_reciprocal_sequence,epsilon)
+        release thm real_archimedean_natural_upper_bound(2/epsilon)
+        obtain N0 from exist N0 N+ st {2/epsilon < N0}
+        N0 >= 1
+        2 = (2/epsilon)*epsilon < N0*epsilon
+        2/N0 < (N0*epsilon)/N0 = epsilon
+        1/N0 = (2/N0)/2 < epsilon/2
+        1/N0 < epsilon/2
+        claim:
+            ? forall j,k Z:
+                j $in \integer_index_tail<1>
+                k $in \integer_index_tail<1>
+                j >= N0
+                k >= N0
+                =>:
+                    $approx::is_epsilon_close(rational_reciprocal_sequence(j),rational_reciprocal_sequence(k),epsilon)
+            j >= N0 >= 1
+            k >= N0 >= 1
+            j > 0
+            k > 0
+            0 < N0*j
+            0 < N0*k
+            N0 <= j
+            N0 <= k
+            1/j = N0/(N0*j) <= j/(N0*j) = 1/N0 < epsilon/2
+            1/k = N0/(N0*k) <= k/(N0*k) = 1/N0 < epsilon/2
+            1/j > 0
+            1/k > 0
+            abs(1/j) = 1/j
+            abs(1/k) = 1/k
+            abs(-(1/k)) = abs(1/k) = 1/k
+            1/j-1/k = 1/j+(-(1/k))
+            abs(1/j-1/k) = abs(1/j+(-(1/k))) <= abs(1/j)+abs(-(1/k)) = 1/j+1/k
+            1/j+1/k < epsilon/2+1/k < epsilon/2+epsilon/2 = epsilon
+            abs(1/j-1/k) <= 1/j+1/k < epsilon
+            rational_reciprocal_sequence(j) = 1/j
+            rational_reciprocal_sequence(k) = 1/k
+            abs(rational_reciprocal_sequence(j)-rational_reciprocal_sequence(k)) = abs(1/j-1/k) <= epsilon
+            by def $approx::is_epsilon_close(rational_reciprocal_sequence(j),rational_reciprocal_sequence(k),epsilon)
+        by def $is_rational_steady_after(1,rational_reciprocal_sequence,epsilon,N0)
+        witness $is_eventually_rational_steady(1,rational_reciprocal_sequence,epsilon) from N0
+    by def $is_rational_cauchy(1,rational_reciprocal_sequence)
+
+prop is_rational_sequence_bounded_by(start Z,a fn(n \integer_index_tail<start>) Q,M Q):
+    M >= 0
+    forall n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            abs(a(n)) <= M
+
+prop is_bounded_rational_sequence(start Z,a fn(n \integer_index_tail<start>) Q):
+    exist M Q st {$is_rational_sequence_bounded_by(start,a,M)}
+
+prop is_finite_rational_sequence_bounded_by(n N,a finite_seq(Q,n),M Q):
+    M >= 0
+    forall k closed_range(1,n):
+        abs(a(k)) <= M
+
+thm finite_rational_sequence_is_bounded:
+    ? forall n N,a finite_seq(Q,n):
+        exist M Q st {$is_finite_rational_sequence_bounded_by(n,a,M)}
+    by cases:
+        ? exist M Q st {$is_finite_rational_sequence_bounded_by(n,a,M)}
+        case n = 0:
+            claim:
+                ? forall k closed_range(1,n):
+                    abs(a(k)) <= 0
+                by contra:
+                    ? abs(a(k)) <= 0
+                    k >= 1
+                    k <= n = 0 < 1
+                    impossible k >= 1
+            by def $is_finite_rational_sequence_bounded_by(n,a,0)
+            witness exist M Q st {$is_finite_rational_sequence_bounded_by(n,a,M)} from 0
+        case n > 0:
+            n >= 1
+            1 <= n
+            1 $in closed_range(1,n)
+            have fn magnitude(k closed_range(1,n)) R = abs(a(k))
+            $is_finite_set(closed_range(1,n))
+            $is_finite_set(fn_range(magnitude))
+            magnitude(1) $in fn_range(magnitude)
+            witness $is_nonempty_set(fn_range(magnitude)) from magnitude(1)
+            fn_range(magnitude) $subset R
+            have upper R = finite_set_max(fn_range(magnitude))
+            release thm real_archimedean_natural_upper_bound(upper)
+            obtain M from exist M N+ st {upper < M}
+            M $in Q
+            M >= 0
+            claim:
+                ? forall k closed_range(1,n):
+                    abs(a(k)) <= M
+                magnitude(k) $in fn_range(magnitude)
+                magnitude(k) <= finite_set_max(fn_range(magnitude))
+                abs(a(k)) = magnitude(k) <= finite_set_max(fn_range(magnitude)) = upper < M
+                abs(a(k)) <= M
+            by def $is_finite_rational_sequence_bounded_by(n,a,M)
+            witness exist bound Q st {$is_finite_rational_sequence_bounded_by(n,a,bound)} from M
+
+claim:
+    ? forall start Z,k N+:
+        start+k-1 $in \integer_index_tail<start>
+    start+k-1 $in Z
+    k >= 1
+    k-1 $in N
+    k-1 >= 0
+    start+k-1 = start+(k-1) >= start+0 = start
+    start+k-1 >= start
+    release thm integer_index_tail_member(start,start+k-1)
+
+template<start Z,a fn(n \integer_index_tail<start>) Q>:
+    have fn rational_real_reindex(k N+) R = a(start+k-1)
+
+thm rational_real_reindex_at:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,k N+:
+        \rational_real_reindex<start,a>(k) = a(start+k-1)
+
+thm rational_original_index_positive:
+    ? forall start,n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            n-start+1 $in N+
+            start+(n-start+1)-1 = n
+    release thm integer_index_tail_lower_bound(start,n)
+    n-start $in N
+    n-start+1 $in N+
+    n-start+1 $in Z
+    n-start+1 >= 1
+    n-start+1 > 0
+    n-start+1 $in N+
+    start+(n-start+1)-1 = n
+
+thm integer_reindex_ge_cutoff:
+    ? forall start,cutoff,k Z:
+        k >= cutoff-start+1
+        =>:
+            start+k-1 >= cutoff
+    k-(cutoff-start+1) $in N
+    have offset N = k-(cutoff-start+1)
+    offset >= 0
+    start+k-1 = cutoff+(k-(cutoff-start+1)) = cutoff+offset >= cutoff+0 = cutoff
+    start+k-1 >= cutoff
+
+thm rational_cauchy_is_native_cauchy:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_cauchy(start,a)
+        =>:
+            $is_seq_cauchy(\rational_real_reindex<start,a>)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {cart({k N+:k >= cutoff},{k N+:k >= cutoff}) $subset {p cart(N+,N+):abs(\rational_real_reindex<start,a>(p(1))-\rational_real_reindex<start,a>(p(2))) < epsilon}}
+        release thm rational_between_reals(0,epsilon)
+        obtain radius from exist q Q st {0 < q and q < epsilon}
+        radius $in Q+
+        $is_eventually_rational_steady(start,a,radius)
+        obtain old from exist c Z st {$is_rational_steady_after(start,a,radius,c)}
+        $is_rational_steady_after(start,a,radius,old)
+        old >= start
+        old-start $in N
+        have cutoff N+ = old-start+1
+        claim:
+            ? forall p cart({k N+:k >= cutoff},{k N+:k >= cutoff}):
+                p $in {pair cart(N+,N+):abs(\rational_real_reindex<start,a>(pair(1))-\rational_real_reindex<start,a>(pair(2))) < epsilon}
+            p(1) $in {k N+:k >= cutoff}
+            p(2) $in {k N+:k >= cutoff}
+            p(1) $in N+
+            p(2) $in N+
+            p(1) >= cutoff
+            p(2) >= cutoff
+            p(1) >= old-start+1
+            p(2) >= old-start+1
+            release thm integer_reindex_ge_cutoff(start,old,p(1))
+            release thm integer_reindex_ge_cutoff(start,old,p(2))
+            start+p(1)-1 $in \integer_index_tail<start>
+            start+p(2)-1 $in \integer_index_tail<start>
+            $approx::is_epsilon_close(a(start+p(1)-1),a(start+p(2)-1),radius)
+            abs(a(start+p(1)-1)-a(start+p(2)-1)) <= radius
+            release thm rational_real_reindex_at(start,a,p(1))
+            release thm rational_real_reindex_at(start,a,p(2))
+            abs(\rational_real_reindex<start,a>(p(1))-\rational_real_reindex<start,a>(p(2))) = abs(a(start+p(1)-1)-a(start+p(2)-1)) <= radius < epsilon
+            release thm set_builder_member(p,{pair cart(N+,N+):abs(\rational_real_reindex<start,a>(pair(1))-\rational_real_reindex<start,a>(pair(2))) < epsilon})
+        by def cart({k N+:k >= cutoff},{k N+:k >= cutoff}) $subset {p cart(N+,N+):abs(\rational_real_reindex<start,a>(p(1))-\rational_real_reindex<start,a>(p(2))) < epsilon}
+        witness exist c N+ st {cart({k N+:k >= c},{k N+:k >= c}) $subset {p cart(N+,N+):abs(\rational_real_reindex<start,a>(p(1))-\rational_real_reindex<start,a>(p(2))) < epsilon}} from cutoff
+    release thm sequence_cauchy_from_epsilon(\rational_real_reindex<start,a>)
+
+thm rational_cauchy_sequence_is_bounded:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_cauchy(start,a)
+        =>:
+            $is_bounded_rational_sequence(start,a)
+    \rational_real_reindex<start,a> $in seq(R)
+    release thm rational_cauchy_is_native_cauchy(start,a)
+    release thm sequence_cauchy_bounded(\rational_real_reindex<start,a>)
+    $is_real_bounded(fn_range(\rational_real_reindex<start,a>))
+    obtain lower from exist lower R st {$is_real_lower_bound(fn_range(\rational_real_reindex<start,a>),lower)}
+    obtain upper from exist upper R st {$is_real_upper_bound(fn_range(\rational_real_reindex<start,a>),upper)}
+    release thm real_archimedean_natural_upper_bound(abs(lower)+abs(upper)+1)
+    obtain M from exist M N+ st {abs(lower)+abs(upper)+1 < M}
+    M $in Q
+    M >= 0
+    abs(lower) >= 0
+    abs(upper) >= 0
+    abs(lower) = abs(lower)+0 <= abs(lower)+abs(upper) < abs(lower)+abs(upper)+1 < M
+    abs(upper) = 0+abs(upper) <= abs(lower)+abs(upper) < abs(lower)+abs(upper)+1 < M
+    abs(lower) < M
+    M > abs(lower)
+    -M < -abs(lower)
+    -M <= -abs(lower)
+    abs(upper) < M
+    release thm approx::absolute_value_two_sided_bounds(lower,abs(lower))
+    release thm approx::absolute_value_two_sided_bounds(upper,abs(upper))
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                abs(a(n)) <= M
+        release thm rational_original_index_positive(start,n)
+        have k N+ = n-start+1
+        start+k-1 = start+(n-start+1)-1 = n
+        release thm rational_real_reindex_at(start,a,k)
+        \rational_real_reindex<start,a>(k) = a(start+k-1) = a(n)
+        \rational_real_reindex<start,a>(k) $in fn_range(\rational_real_reindex<start,a>)
+        lower <= \rational_real_reindex<start,a>(k) <= upper
+        lower <= a(n) <= upper
+        -M <= -abs(lower) <= lower <= a(n)
+        a(n) <= upper <= abs(upper) <= M
+        -M <= a(n) <= M
+        abs(a(n)) <= M
+    by def $is_rational_sequence_bounded_by(start,a,M)
+    witness $is_bounded_rational_sequence(start,a) from M
+
+thm rational_constant_sequence_is_bounded:
+    ? forall start Z,value Q:
+        $is_bounded_rational_sequence(start,\rational_constant_sequence<start,value>)
+    abs(value) $in Q
+    abs(value) >= 0
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                abs(\rational_constant_sequence<start,value>(n)) <= abs(value)
+        \rational_constant_sequence<start,value>(n) = value
+        abs(\rational_constant_sequence<start,value>(n)) = abs(value)
+    by def $is_rational_sequence_bounded_by(start,\rational_constant_sequence<start,value>,abs(value))
+    witness $is_bounded_rational_sequence(start,\rational_constant_sequence<start,value>) from abs(value)
+
+# Equivalent rational sequences (Tao section 5.2).
+
+prop are_rational_sequences_close(start Z,a,b fn(n \integer_index_tail<start>) Q,epsilon R+):
+    forall n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            $approx::is_epsilon_close(a(n),b(n),epsilon)
+
+prop are_rational_sequences_close_after(start Z,a,b fn(n \integer_index_tail<start>) Q,epsilon R+,cutoff Z):
+    cutoff >= start
+    forall n Z:
+        n $in \integer_index_tail<start>
+        n >= cutoff
+        =>:
+            $approx::is_epsilon_close(a(n),b(n),epsilon)
+
+prop are_eventually_rational_sequences_close(start Z,a,b fn(n \integer_index_tail<start>) Q,epsilon R+):
+    exist cutoff Z st {$are_rational_sequences_close_after(start,a,b,epsilon,cutoff)}
+
+prop are_equivalent_rational_sequences(start Z,a,b fn(n \integer_index_tail<start>) Q):
+    forall epsilon Q+:
+        $are_eventually_rational_sequences_close(start,a,b,epsilon)
+
+thm integer_common_tail_cutoff:
+    ? forall start,first,second Z:
+        first >= start
+        second >= start
+        =>:
+            first+second-start >= first
+            first+second-start >= second
+            first+second-start >= start
+    first-start $in N
+    second-start $in N
+    first-start >= 0
+    second-start >= 0
+    first+second-start = first+(second-start) >= first+0 = first
+    first+second-start = second+(first-start) >= second+0 = second
+    first+second-start >= first >= start
+
+thm rational_sequence_equivalence_reflexive:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $are_equivalent_rational_sequences(start,a,a)
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,a,a,epsilon)
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= start
+                =>:
+                    $approx::is_epsilon_close(a(n),a(n),epsilon)
+            release thm approx::epsilon_close_reflexive(a(n),epsilon)
+        by def $are_rational_sequences_close_after(start,a,a,epsilon,start)
+        witness $are_eventually_rational_sequences_close(start,a,a,epsilon) from start
+    by def $are_equivalent_rational_sequences(start,a,a)
+
+thm rational_sequence_equivalence_symmetric:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q:
+        $are_equivalent_rational_sequences(start,a,b)
+        =>:
+            $are_equivalent_rational_sequences(start,b,a)
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,b,a,epsilon)
+        $are_eventually_rational_sequences_close(start,a,b,epsilon)
+        obtain cutoff from exist cutoff Z st {$are_rational_sequences_close_after(start,a,b,epsilon,cutoff)}
+        $are_rational_sequences_close_after(start,a,b,epsilon,cutoff)
+        cutoff >= start
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(b(n),a(n),epsilon)
+            $approx::is_epsilon_close(a(n),b(n),epsilon)
+            release thm approx::epsilon_close_symmetric(a(n),b(n),epsilon)
+        by def $are_rational_sequences_close_after(start,b,a,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(start,b,a,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(start,b,a)
+
+thm rational_sequence_equivalence_transitive:
+    ? forall start Z,a,b,c fn(n \integer_index_tail<start>) Q:
+        $are_equivalent_rational_sequences(start,a,b)
+        $are_equivalent_rational_sequences(start,b,c)
+        =>:
+            $are_equivalent_rational_sequences(start,a,c)
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,a,c,epsilon)
+        epsilon/2 $in Q+
+        $are_eventually_rational_sequences_close(start,a,b,epsilon/2)
+        $are_eventually_rational_sequences_close(start,b,c,epsilon/2)
+        obtain first from exist first Z st {$are_rational_sequences_close_after(start,a,b,epsilon/2,first)}
+        obtain second from exist second Z st {$are_rational_sequences_close_after(start,b,c,epsilon/2,second)}
+        $are_rational_sequences_close_after(start,a,b,epsilon/2,first)
+        $are_rational_sequences_close_after(start,b,c,epsilon/2,second)
+        first >= start
+        second >= start
+        release thm integer_common_tail_cutoff(start,first,second)
+        have cutoff Z = first+second-start
+        cutoff = first+second-start >= first
+        cutoff = first+second-start >= second
+        cutoff = first+second-start >= start
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(a(n),c(n),epsilon)
+            n >= cutoff >= first
+            n >= cutoff >= second
+            $approx::is_epsilon_close(a(n),b(n),epsilon/2)
+            $approx::is_epsilon_close(b(n),c(n),epsilon/2)
+            release thm approx::epsilon_close_transitive(a(n),b(n),c(n),epsilon/2,epsilon/2)
+            epsilon/2+epsilon/2 = epsilon
+            $approx::is_epsilon_close(a(n),c(n),epsilon)
+        by def $are_rational_sequences_close_after(start,a,c,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(start,a,c,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(start,a,c)
+
+thm positive_geometric_dominates_index:
+    ? forall q R,n N+:
+        q >= 2
+        =>:
+            n <= q^n
+    0 < 2 <= q
+    q > 0
+    n >= 1
+    by induc n from 1:
+        ? n <= q^n
+        ? from n = 1:
+            1 <= 2 <= q = q^1
+        ? induc:
+            n >= 1
+            1 <= n
+            n+1 = 1+n <= n+n = 2*n
+            2 <= q
+            2*n <= q*n
+            q*n <= q*q^n
+            q*q^n = q^n*q = q^(n+1)
+            n+1 <= 2*n <= q*n <= q*q^n = q^(n+1)
+
+template<center,coefficient Q>:
+    have fn rational_tenth_perturbation(n \integer_index_tail<1>) Q = center+coefficient*10^(-n)
+
+thm rational_tenth_perturbations_equivalent:
+    ? forall center,left,right Q:
+        $are_equivalent_rational_sequences(1,\rational_tenth_perturbation<center,left>,\rational_tenth_perturbation<center,right>)
+    have delta Q = abs(left-right)
+    delta = abs(left-right) >= 0
+    delta >= 0
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(1,\rational_tenth_perturbation<center,left>,\rational_tenth_perturbation<center,right>,epsilon)
+        release thm real_archimedean_natural_upper_bound(delta/epsilon)
+        obtain cutoff from exist cutoff N+ st {delta/epsilon < cutoff}
+        cutoff >= 1
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<1>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_tenth_perturbation<center,left>(n),\rational_tenth_perturbation<center,right>(n),epsilon)
+            n >= cutoff >= 1
+            n > 0
+            n $in N+
+            cutoff <= n
+            delta = (delta/epsilon)*epsilon < cutoff*epsilon <= n*epsilon
+            delta < n*epsilon
+            delta/n < (n*epsilon)/n = epsilon
+            delta/n < epsilon
+            release thm positive_geometric_dominates_index(10,n)
+            10^n > 0
+            10^n*n > 0
+            delta*n <= delta*10^n
+            delta/(10^n) = (delta*n)/(10^n*n) <= (delta*10^n)/(10^n*n) = delta/n
+            10^(-n) > 0
+            abs(10^(-n)) = 10^(-n)
+            10^(-n) = 1/(10^n)
+            delta*10^(-n) = delta*(1/(10^n)) = delta/(10^n)
+            \rational_tenth_perturbation<center,left>(n) = center+left*10^(-n)
+            \rational_tenth_perturbation<center,right>(n) = center+right*10^(-n)
+            \rational_tenth_perturbation<center,left>(n)-\rational_tenth_perturbation<center,right>(n) = (center+left*10^(-n))-(center+right*10^(-n)) = (left-right)*10^(-n)
+            abs(\rational_tenth_perturbation<center,left>(n)-\rational_tenth_perturbation<center,right>(n)) = abs((left-right)*10^(-n)) = abs(left-right)*abs(10^(-n)) = delta*10^(-n) = delta/(10^n) <= delta/n < epsilon
+            by def $approx::is_epsilon_close(\rational_tenth_perturbation<center,left>(n),\rational_tenth_perturbation<center,right>(n),epsilon)
+        by def $are_rational_sequences_close_after(1,\rational_tenth_perturbation<center,left>,\rational_tenth_perturbation<center,right>,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(1,\rational_tenth_perturbation<center,left>,\rational_tenth_perturbation<center,right>,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(1,\rational_tenth_perturbation<center,left>,\rational_tenth_perturbation<center,right>)
+
+# Section 5.3: rational representative arithmetic over native R.
+
+thm rational_cauchy_sequence_has_unique_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_cauchy(start,a)
+        =>:
+            exist! L R st {$has_seq_limit(\rational_real_reindex<start,a>,L)}
+    \rational_real_reindex<start,a> $in seq(R)
+    release thm rational_cauchy_is_native_cauchy(start,a)
+    release thm sequence_cauchy_convergent(\rational_real_reindex<start,a>)
+    release thm sequence_limit_from_convergent(\rational_real_reindex<start,a>)
+    claim:
+        ? forall L,M R:
+            $has_seq_limit(\rational_real_reindex<start,a>,L)
+            $has_seq_limit(\rational_real_reindex<start,a>,M)
+            =>:
+                L = M
+        release thm seq_limit_unique(\rational_real_reindex<start,a>,L,M)
+    obtain L from exist L R st {$has_seq_limit(\rational_real_reindex<start,a>,L)}
+    witness exist! value R st {$has_seq_limit(\rational_real_reindex<start,a>,value)} from L
+
+thm native_cauchy_is_rational_cauchy:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_seq_cauchy(\rational_real_reindex<start,a>)
+        =>:
+            $is_rational_cauchy(start,a)
+    \rational_real_reindex<start,a> $in seq(R)
+    claim:
+        ? forall epsilon Q+:
+            $is_eventually_rational_steady(start,a,epsilon)
+        epsilon $in R+
+        release thm sequence_cauchy_tail(\rational_real_reindex<start,a>,epsilon)
+        obtain N0 from exist N0 N+ st {cart({k N+:k >= N0},{k N+:k >= N0}) $subset {p cart(N+,N+):abs(\rational_real_reindex<start,a>(p(1))-\rational_real_reindex<start,a>(p(2))) < epsilon}}
+        have cutoff Z = start+N0-1
+        cutoff = start+N0-1
+        N0 >= 1
+        N0-1 >= 0
+        cutoff = start+(N0-1) >= start+0 = start
+        claim:
+            ? forall j,k Z:
+                j $in \integer_index_tail<start>
+                k $in \integer_index_tail<start>
+                j >= cutoff
+                k >= cutoff
+                =>:
+                    $approx::is_epsilon_close(a(j),a(k),epsilon)
+            release thm rational_original_index_positive(start,j)
+            release thm rational_original_index_positive(start,k)
+            j-cutoff $in N
+            j-cutoff >= 0
+            j-start+1 = j-(start+N0-1)+N0 = (j-cutoff)+N0 >= 0+N0 = N0
+            k-cutoff $in N
+            k-cutoff >= 0
+            k-start+1 = k-(start+N0-1)+N0 = (k-cutoff)+N0 >= 0+N0 = N0
+            j-start+1 $in {idx N+:idx >= N0}
+            k-start+1 $in {idx N+:idx >= N0}
+            (j-start+1,k-start+1) $in cart({idx N+:idx >= N0},{idx N+:idx >= N0})
+            (j-start+1,k-start+1) $in {p cart(N+,N+):abs(\rational_real_reindex<start,a>(p(1))-\rational_real_reindex<start,a>(p(2))) < epsilon}
+            (j-start+1,k-start+1)(1) = j-start+1
+            (j-start+1,k-start+1)(2) = k-start+1
+            abs(\rational_real_reindex<start,a>((j-start+1,k-start+1)(1))-\rational_real_reindex<start,a>((j-start+1,k-start+1)(2))) < epsilon
+            \rational_real_reindex<start,a>((j-start+1,k-start+1)(1)) = \rational_real_reindex<start,a>(j-start+1)
+            \rational_real_reindex<start,a>((j-start+1,k-start+1)(2)) = \rational_real_reindex<start,a>(k-start+1)
+            \rational_real_reindex<start,a>(j-start+1)-\rational_real_reindex<start,a>(k-start+1) = \rational_real_reindex<start,a>((j-start+1,k-start+1)(1))-\rational_real_reindex<start,a>((j-start+1,k-start+1)(2))
+            abs(\rational_real_reindex<start,a>(j-start+1)-\rational_real_reindex<start,a>(k-start+1)) = abs(\rational_real_reindex<start,a>((j-start+1,k-start+1)(1))-\rational_real_reindex<start,a>((j-start+1,k-start+1)(2))) < epsilon
+            release thm rational_real_reindex_at(start,a,j-start+1)
+            release thm rational_real_reindex_at(start,a,k-start+1)
+            \rational_real_reindex<start,a>(j-start+1) = a(start+(j-start+1)-1) = a(j)
+            \rational_real_reindex<start,a>(k-start+1) = a(start+(k-start+1)-1) = a(k)
+            abs(a(j)-a(k)) = abs(\rational_real_reindex<start,a>(j-start+1)-\rational_real_reindex<start,a>(k-start+1)) < epsilon
+            by def $approx::is_epsilon_close(a(j),a(k),epsilon)
+        by def $is_rational_steady_after(start,a,epsilon,cutoff)
+        witness $is_eventually_rational_steady(start,a,epsilon) from cutoff
+    by def $is_rational_cauchy(start,a)
+
+prop is_rational_real_limit_tail(start Z,a fn(n \integer_index_tail<start>) Q,L R,epsilon R+,cutoff Z):
+    cutoff >= start
+    forall n Z:
+        n $in \integer_index_tail<start>
+        n >= cutoff
+        =>:
+            abs(a(n)-L) < epsilon
+
+thm rational_sequence_real_limit_tail:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,L R,epsilon R+:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        =>:
+            exist cutoff Z st {$is_rational_real_limit_tail(start,a,L,epsilon,cutoff)}
+    \rational_real_reindex<start,a> $in seq(R)
+    release thm seq_limit_tail(\rational_real_reindex<start,a>,L,epsilon)
+    obtain N0 from exist N0 N+ st {{k N+:k >= N0} $subset preimage_set(\rational_real_reindex<start,a>,{v R:abs(v-L) < epsilon})}
+    have cutoff Z = start+N0-1
+    cutoff = start+N0-1
+    N0 >= 1
+    N0-1 >= 0
+    cutoff = start+(N0-1) >= start+0 = start
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            n >= cutoff
+            =>:
+                abs(a(n)-L) < epsilon
+        release thm rational_original_index_positive(start,n)
+        n-cutoff $in N
+        n-cutoff >= 0
+        n-start+1 = n-(start+N0-1)+N0 = (n-cutoff)+N0 >= 0+N0 = N0
+        n-start+1 $in {k N+:k >= N0}
+        n-start+1 $in preimage_set(\rational_real_reindex<start,a>,{v R:abs(v-L) < epsilon})
+        \rational_real_reindex<start,a>(n-start+1) $in {v R:abs(v-L) < epsilon}
+        abs(\rational_real_reindex<start,a>(n-start+1)-L) < epsilon
+        release thm rational_real_reindex_at(start,a,n-start+1)
+        \rational_real_reindex<start,a>(n-start+1) = a(start+(n-start+1)-1) = a(n)
+        abs(a(n)-L) = abs(\rational_real_reindex<start,a>(n-start+1)-L) < epsilon
+    by def $is_rational_real_limit_tail(start,a,L,epsilon,cutoff)
+    witness exist c Z st {$is_rational_real_limit_tail(start,a,L,epsilon,c)} from cutoff
+
+thm rational_sequence_equivalence_preserves_real_limit:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,L R:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        $are_equivalent_rational_sequences(start,a,b)
+        =>:
+            $has_seq_limit(\rational_real_reindex<start,b>,L)
+    \rational_real_reindex<start,b> $in seq(R)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k >= cutoff} $subset preimage_set(\rational_real_reindex<start,b>,{v R:abs(v-L) < epsilon})}
+        epsilon/2 $in R+
+        release thm rational_between_reals(0,epsilon/2)
+        obtain radius from exist q Q st {0 < q and q < epsilon/2}
+        radius $in Q+
+        release thm rational_sequence_real_limit_tail(start,a,L,epsilon/2)
+        obtain first from exist first Z st {$is_rational_real_limit_tail(start,a,L,epsilon/2,first)}
+        $is_rational_real_limit_tail(start,a,L,epsilon/2,first)
+        $are_eventually_rational_sequences_close(start,a,b,radius)
+        obtain second from exist second Z st {$are_rational_sequences_close_after(start,a,b,radius,second)}
+        $are_rational_sequences_close_after(start,a,b,radius,second)
+        first >= start
+        second >= start
+        release thm integer_common_tail_cutoff(start,first,second)
+        have cutoff Z = first+second-start
+        cutoff = first+second-start >= first
+        cutoff = first+second-start >= second
+        cutoff = first+second-start >= start
+        cutoff-start $in N
+        have native_cutoff N+ = cutoff-start+1
+        native_cutoff = cutoff-start+1
+        claim:
+            ? forall k {idx N+:idx >= native_cutoff}:
+                k $in preimage_set(\rational_real_reindex<start,b>,{v R:abs(v-L) < epsilon})
+            k $in N+
+            k >= native_cutoff = cutoff-start+1
+            k $in Z
+            release thm integer_reindex_ge_cutoff(start,cutoff,k)
+            start+k-1 $in Z
+            start+k-1 $in \integer_index_tail<start>
+            start+k-1 >= cutoff >= first
+            start+k-1 >= cutoff >= second
+            abs(a(start+k-1)-L) < epsilon/2
+            $approx::is_epsilon_close(a(start+k-1),b(start+k-1),radius)
+            abs(a(start+k-1)-b(start+k-1)) <= radius
+            abs(b(start+k-1)-a(start+k-1)) = abs(a(start+k-1)-b(start+k-1)) <= radius
+            b(start+k-1)-L = (b(start+k-1)-a(start+k-1))+(a(start+k-1)-L)
+            abs(b(start+k-1)-L) = abs((b(start+k-1)-a(start+k-1))+(a(start+k-1)-L)) <= abs(b(start+k-1)-a(start+k-1))+abs(a(start+k-1)-L) <= radius+abs(a(start+k-1)-L) < radius+epsilon/2 < epsilon/2+epsilon/2 = epsilon
+            release thm rational_real_reindex_at(start,b,k)
+            abs(\rational_real_reindex<start,b>(k)-L) = abs(b(start+k-1)-L) < epsilon
+            \rational_real_reindex<start,b>(k) $in {v R:abs(v-L) < epsilon}
+        by def {k N+:k >= native_cutoff} $subset preimage_set(\rational_real_reindex<start,b>,{v R:abs(v-L) < epsilon})
+        witness exist N1 N+ st {{k N+:k >= N1} $subset preimage_set(\rational_real_reindex<start,b>,{v R:abs(v-L) < epsilon})} from native_cutoff
+    release thm seq_limit_from_epsilon(\rational_real_reindex<start,b>,L)
+
+thm rational_sequence_equivalence_from_common_real_limit:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,L R:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        $has_seq_limit(\rational_real_reindex<start,b>,L)
+        =>:
+            $are_equivalent_rational_sequences(start,a,b)
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,a,b,epsilon)
+        epsilon/2 $in R+
+        release thm rational_sequence_real_limit_tail(start,a,L,epsilon/2)
+        release thm rational_sequence_real_limit_tail(start,b,L,epsilon/2)
+        obtain first from exist first Z st {$is_rational_real_limit_tail(start,a,L,epsilon/2,first)}
+        obtain second from exist second Z st {$is_rational_real_limit_tail(start,b,L,epsilon/2,second)}
+        $is_rational_real_limit_tail(start,a,L,epsilon/2,first)
+        $is_rational_real_limit_tail(start,b,L,epsilon/2,second)
+        first >= start
+        second >= start
+        release thm integer_common_tail_cutoff(start,first,second)
+        have cutoff Z = first+second-start
+        cutoff = first+second-start >= first
+        cutoff = first+second-start >= second
+        cutoff = first+second-start >= start
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(a(n),b(n),epsilon)
+            n >= cutoff >= first
+            n >= cutoff >= second
+            abs(a(n)-L) < epsilon/2
+            abs(b(n)-L) < epsilon/2
+            abs(L-b(n)) = abs(b(n)-L) < epsilon/2
+            a(n)-b(n) = (a(n)-L)+(L-b(n))
+            abs(a(n)-b(n)) = abs((a(n)-L)+(L-b(n))) <= abs(a(n)-L)+abs(L-b(n)) < epsilon/2+abs(L-b(n)) < epsilon/2+epsilon/2 = epsilon
+            by def $approx::is_epsilon_close(a(n),b(n),epsilon)
+        by def $are_rational_sequences_close_after(start,a,b,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(start,a,b,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(start,a,b)
+
+thm equivalent_rational_sequences_have_same_real_limit:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,L,M R:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        $has_seq_limit(\rational_real_reindex<start,b>,M)
+        $are_equivalent_rational_sequences(start,a,b)
+        =>:
+            L = M
+    release thm rational_sequence_equivalence_preserves_real_limit(start,a,b,L)
+    \rational_real_reindex<start,b> $in seq(R)
+    release thm seq_limit_unique(\rational_real_reindex<start,b>,L,M)
+
+template<start Z,a,b fn(n \integer_index_tail<start>) Q>:
+    have fn rational_sequence_sum(n \integer_index_tail<start>) Q = a(n)+b(n)
+
+thm rational_sequence_sum_at:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            \rational_sequence_sum<start,a,b>(n) = a(n)+b(n)
+
+thm rational_cauchy_sequences_sum:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q:
+        $is_rational_cauchy(start,a)
+        $is_rational_cauchy(start,b)
+        =>:
+            $is_rational_cauchy(start,\rational_sequence_sum<start,a,b>)
+    claim:
+        ? forall epsilon Q+:
+            $is_eventually_rational_steady(start,\rational_sequence_sum<start,a,b>,epsilon)
+        epsilon/2 $in Q+
+        $is_eventually_rational_steady(start,a,epsilon/2)
+        $is_eventually_rational_steady(start,b,epsilon/2)
+        obtain first from exist first Z st {$is_rational_steady_after(start,a,epsilon/2,first)}
+        obtain second from exist second Z st {$is_rational_steady_after(start,b,epsilon/2,second)}
+        $is_rational_steady_after(start,a,epsilon/2,first)
+        $is_rational_steady_after(start,b,epsilon/2,second)
+        first >= start
+        second >= start
+        release thm integer_common_tail_cutoff(start,first,second)
+        have cutoff Z = first+second-start
+        cutoff = first+second-start >= first
+        cutoff = first+second-start >= second
+        cutoff = first+second-start >= start
+        claim:
+            ? forall j,k Z:
+                j $in \integer_index_tail<start>
+                k $in \integer_index_tail<start>
+                j >= cutoff
+                k >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_sequence_sum<start,a,b>(j),\rational_sequence_sum<start,a,b>(k),epsilon)
+            j >= cutoff >= first
+            k >= cutoff >= first
+            j >= cutoff >= second
+            k >= cutoff >= second
+            $approx::is_epsilon_close(a(j),a(k),epsilon/2)
+            $approx::is_epsilon_close(b(j),b(k),epsilon/2)
+            release thm approx::epsilon_close_addition(a(j),a(k),b(j),b(k),epsilon/2,epsilon/2)
+            release thm rational_sequence_sum_at(start,a,b,j)
+            release thm rational_sequence_sum_at(start,a,b,k)
+            epsilon/2+epsilon/2 = epsilon
+            $approx::is_epsilon_close(\rational_sequence_sum<start,a,b>(j),\rational_sequence_sum<start,a,b>(k),epsilon)
+        by def $is_rational_steady_after(start,\rational_sequence_sum<start,a,b>,epsilon,cutoff)
+        witness $is_eventually_rational_steady(start,\rational_sequence_sum<start,a,b>,epsilon) from cutoff
+    by def $is_rational_cauchy(start,\rational_sequence_sum<start,a,b>)
+
+thm rational_sequence_sums_equivalent:
+    ? forall start Z,a,b,u,v fn(n \integer_index_tail<start>) Q:
+        $are_equivalent_rational_sequences(start,a,u)
+        $are_equivalent_rational_sequences(start,b,v)
+        =>:
+            $are_equivalent_rational_sequences(start,\rational_sequence_sum<start,a,b>,\rational_sequence_sum<start,u,v>)
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,\rational_sequence_sum<start,a,b>,\rational_sequence_sum<start,u,v>,epsilon)
+        epsilon/2 $in Q+
+        $are_eventually_rational_sequences_close(start,a,u,epsilon/2)
+        $are_eventually_rational_sequences_close(start,b,v,epsilon/2)
+        obtain first from exist first Z st {$are_rational_sequences_close_after(start,a,u,epsilon/2,first)}
+        obtain second from exist second Z st {$are_rational_sequences_close_after(start,b,v,epsilon/2,second)}
+        $are_rational_sequences_close_after(start,a,u,epsilon/2,first)
+        $are_rational_sequences_close_after(start,b,v,epsilon/2,second)
+        first >= start
+        second >= start
+        release thm integer_common_tail_cutoff(start,first,second)
+        have cutoff Z = first+second-start
+        cutoff = first+second-start >= first
+        cutoff = first+second-start >= second
+        cutoff = first+second-start >= start
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_sequence_sum<start,a,b>(n),\rational_sequence_sum<start,u,v>(n),epsilon)
+            n >= cutoff >= first
+            n >= cutoff >= second
+            $approx::is_epsilon_close(a(n),u(n),epsilon/2)
+            $approx::is_epsilon_close(b(n),v(n),epsilon/2)
+            release thm approx::epsilon_close_addition(a(n),u(n),b(n),v(n),epsilon/2,epsilon/2)
+            release thm rational_sequence_sum_at(start,a,b,n)
+            release thm rational_sequence_sum_at(start,u,v,n)
+            epsilon/2+epsilon/2 = epsilon
+            $approx::is_epsilon_close(\rational_sequence_sum<start,a,b>(n),\rational_sequence_sum<start,u,v>(n),epsilon)
+        by def $are_rational_sequences_close_after(start,\rational_sequence_sum<start,a,b>,\rational_sequence_sum<start,u,v>,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(start,\rational_sequence_sum<start,a,b>,\rational_sequence_sum<start,u,v>,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(start,\rational_sequence_sum<start,a,b>,\rational_sequence_sum<start,u,v>)
+
+thm rational_sequence_sum_real_limit:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,L,M R:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        $has_seq_limit(\rational_real_reindex<start,b>,M)
+        =>:
+            $has_seq_limit(\rational_real_reindex<start,\rational_sequence_sum<start,a,b>>,L+M)
+    \rational_real_reindex<start,a> $in seq(R)
+    \rational_real_reindex<start,b> $in seq(R)
+    \rational_real_reindex<start,\rational_sequence_sum<start,a,b>> $in seq(R)
+    release thm seq_limit_add(\rational_real_reindex<start,a>,\rational_real_reindex<start,b>,L,M)
+    claim:
+        ? forall k N+:
+            (fn(j N+) R {\rational_real_reindex<start,a>(j)+\rational_real_reindex<start,b>(j)})(k) = \rational_real_reindex<start,\rational_sequence_sum<start,a,b>>(k)
+        start+k-1 $in Z
+        start+k-1 $in \integer_index_tail<start>
+        release thm rational_real_reindex_at(start,a,k)
+        release thm rational_real_reindex_at(start,b,k)
+        release thm rational_real_reindex_at(start,\rational_sequence_sum<start,a,b>,k)
+        release thm rational_sequence_sum_at(start,a,b,start+k-1)
+        (fn(j N+) R {\rational_real_reindex<start,a>(j)+\rational_real_reindex<start,b>(j)})(k) = \rational_real_reindex<start,a>(k)+\rational_real_reindex<start,b>(k) = a(start+k-1)+b(start+k-1) = \rational_sequence_sum<start,a,b>(start+k-1) = \rational_real_reindex<start,\rational_sequence_sum<start,a,b>>(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {\rational_real_reindex<start,a>(j)+\rational_real_reindex<start,b>(j)},\rational_real_reindex<start,\rational_sequence_sum<start,a,b>>,L+M,1)
+
+thm rational_constant_sequence_real_limit:
+    ? forall start Z,value Q:
+        $has_seq_limit(\rational_real_reindex<start,\rational_constant_sequence<start,value>>,value)
+    claim:
+        ? forall k N+:
+            \rational_real_reindex<start,\rational_constant_sequence<start,value>>(k) = value
+        start+k-1 $in \integer_index_tail<start>
+        release thm rational_real_reindex_at(start,\rational_constant_sequence<start,value>,k)
+        \rational_real_reindex<start,\rational_constant_sequence<start,value>>(k) = \rational_constant_sequence<start,value>(start+k-1) = value
+    release thm seq_limit_constant(\rational_real_reindex<start,\rational_constant_sequence<start,value>>,value)
+
+template<start Z,a,b fn(n \integer_index_tail<start>) Q>:
+    have fn rational_sequence_product(n \integer_index_tail<start>) Q = a(n)*b(n)
+
+thm rational_sequence_product_at:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            \rational_sequence_product<start,a,b>(n) = a(n)*b(n)
+
+thm rational_equivalent_sequence_is_cauchy:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q:
+        $is_rational_cauchy(start,a)
+        $are_equivalent_rational_sequences(start,a,b)
+        =>:
+            $is_rational_cauchy(start,b)
+    claim:
+        ? forall epsilon Q+:
+            $is_eventually_rational_steady(start,b,epsilon)
+        epsilon/3 $in Q+
+        $is_eventually_rational_steady(start,a,epsilon/3)
+        $are_eventually_rational_sequences_close(start,a,b,epsilon/3)
+        obtain first from exist first Z st {$is_rational_steady_after(start,a,epsilon/3,first)}
+        obtain second from exist second Z st {$are_rational_sequences_close_after(start,a,b,epsilon/3,second)}
+        $is_rational_steady_after(start,a,epsilon/3,first)
+        $are_rational_sequences_close_after(start,a,b,epsilon/3,second)
+        first >= start
+        second >= start
+        release thm integer_common_tail_cutoff(start,first,second)
+        have cutoff Z = first+second-start
+        cutoff = first+second-start >= first
+        cutoff = first+second-start >= second
+        cutoff = first+second-start >= start
+        claim:
+            ? forall j,k Z:
+                j $in \integer_index_tail<start>
+                k $in \integer_index_tail<start>
+                j >= cutoff
+                k >= cutoff
+                =>:
+                    $approx::is_epsilon_close(b(j),b(k),epsilon)
+            j >= cutoff >= first
+            k >= cutoff >= first
+            j >= cutoff >= second
+            k >= cutoff >= second
+            $approx::is_epsilon_close(a(j),a(k),epsilon/3)
+            $approx::is_epsilon_close(a(j),b(j),epsilon/3)
+            $approx::is_epsilon_close(a(k),b(k),epsilon/3)
+            release thm approx::epsilon_close_symmetric(a(j),b(j),epsilon/3)
+            release thm approx::epsilon_close_transitive(b(j),a(j),a(k),epsilon/3,epsilon/3)
+            epsilon/3+epsilon/3 = 2*epsilon/3
+            $approx::is_epsilon_close(b(j),a(k),2*epsilon/3)
+            release thm approx::epsilon_close_transitive(b(j),a(k),b(k),2*epsilon/3,epsilon/3)
+            2*epsilon/3+epsilon/3 = epsilon
+            $approx::is_epsilon_close(b(j),b(k),epsilon)
+        by def $is_rational_steady_after(start,b,epsilon,cutoff)
+        witness $is_eventually_rational_steady(start,b,epsilon) from cutoff
+    by def $is_rational_cauchy(start,b)
+
+thm rational_cauchy_sequences_product:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q:
+        $is_rational_cauchy(start,a)
+        $is_rational_cauchy(start,b)
+        =>:
+            $is_rational_cauchy(start,\rational_sequence_product<start,a,b>)
+    release thm rational_cauchy_sequence_is_bounded(start,a)
+    release thm rational_cauchy_sequence_is_bounded(start,b)
+    obtain left_bound from exist M Q st {$is_rational_sequence_bounded_by(start,a,M)}
+    obtain right_bound from exist M Q st {$is_rational_sequence_bounded_by(start,b,M)}
+    $is_rational_sequence_bounded_by(start,a,left_bound)
+    $is_rational_sequence_bounded_by(start,b,right_bound)
+    left_bound >= 0
+    right_bound >= 0
+    left_bound+right_bound >= 0
+    left_bound+right_bound+1 > 0
+    claim:
+        ? forall epsilon Q+:
+            $is_eventually_rational_steady(start,\rational_sequence_product<start,a,b>,epsilon)
+        have radius Q+ = epsilon/(left_bound+right_bound+1)
+        radius > 0
+        left_bound+right_bound < left_bound+right_bound+1
+        radius*(left_bound+right_bound) < radius*(left_bound+right_bound+1) = (epsilon/(left_bound+right_bound+1))*(left_bound+right_bound+1) = epsilon
+        $is_eventually_rational_steady(start,a,radius)
+        $is_eventually_rational_steady(start,b,radius)
+        obtain first from exist first Z st {$is_rational_steady_after(start,a,radius,first)}
+        obtain second from exist second Z st {$is_rational_steady_after(start,b,radius,second)}
+        $is_rational_steady_after(start,a,radius,first)
+        $is_rational_steady_after(start,b,radius,second)
+        first >= start
+        second >= start
+        release thm integer_common_tail_cutoff(start,first,second)
+        have cutoff Z = first+second-start
+        cutoff = first+second-start >= first
+        cutoff = first+second-start >= second
+        cutoff = first+second-start >= start
+        claim:
+            ? forall j,k Z:
+                j $in \integer_index_tail<start>
+                k $in \integer_index_tail<start>
+                j >= cutoff
+                k >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_sequence_product<start,a,b>(j),\rational_sequence_product<start,a,b>(k),epsilon)
+            j >= cutoff >= first
+            k >= cutoff >= first
+            j >= cutoff >= second
+            k >= cutoff >= second
+            $approx::is_epsilon_close(a(j),a(k),radius)
+            $approx::is_epsilon_close(b(j),b(k),radius)
+            abs(a(j)-a(k)) <= radius
+            abs(b(j)-b(k)) <= radius
+            abs(a(j)) <= left_bound
+            abs(b(k)) <= right_bound
+            release thm approx::bounded_product_difference(a(j),a(k),b(j),b(k),left_bound,right_bound,radius)
+            release thm rational_sequence_product_at(start,a,b,j)
+            release thm rational_sequence_product_at(start,a,b,k)
+            abs(\rational_sequence_product<start,a,b>(j)-\rational_sequence_product<start,a,b>(k)) = abs(a(j)*b(j)-a(k)*b(k)) <= radius*(left_bound+right_bound) < epsilon
+            by def $approx::is_epsilon_close(\rational_sequence_product<start,a,b>(j),\rational_sequence_product<start,a,b>(k),epsilon)
+        by def $is_rational_steady_after(start,\rational_sequence_product<start,a,b>,epsilon,cutoff)
+        witness $is_eventually_rational_steady(start,\rational_sequence_product<start,a,b>,epsilon) from cutoff
+    by def $is_rational_cauchy(start,\rational_sequence_product<start,a,b>)
+
+thm rational_sequence_products_equivalent:
+    ? forall start Z,a,b,u,v fn(n \integer_index_tail<start>) Q:
+        $is_rational_cauchy(start,a)
+        $is_rational_cauchy(start,b)
+        $are_equivalent_rational_sequences(start,a,u)
+        $are_equivalent_rational_sequences(start,b,v)
+        =>:
+            $are_equivalent_rational_sequences(start,\rational_sequence_product<start,a,b>,\rational_sequence_product<start,u,v>)
+    release thm rational_cauchy_sequence_is_bounded(start,a)
+    release thm rational_equivalent_sequence_is_cauchy(start,b,v)
+    release thm rational_cauchy_sequence_is_bounded(start,v)
+    obtain left_bound from exist M Q st {$is_rational_sequence_bounded_by(start,a,M)}
+    obtain right_bound from exist M Q st {$is_rational_sequence_bounded_by(start,v,M)}
+    $is_rational_sequence_bounded_by(start,a,left_bound)
+    $is_rational_sequence_bounded_by(start,v,right_bound)
+    left_bound >= 0
+    right_bound >= 0
+    left_bound+right_bound >= 0
+    left_bound+right_bound+1 > 0
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,\rational_sequence_product<start,a,b>,\rational_sequence_product<start,u,v>,epsilon)
+        have radius Q+ = epsilon/(left_bound+right_bound+1)
+        radius > 0
+        left_bound+right_bound < left_bound+right_bound+1
+        radius*(left_bound+right_bound) < radius*(left_bound+right_bound+1) = (epsilon/(left_bound+right_bound+1))*(left_bound+right_bound+1) = epsilon
+        $are_eventually_rational_sequences_close(start,a,u,radius)
+        $are_eventually_rational_sequences_close(start,b,v,radius)
+        obtain first from exist first Z st {$are_rational_sequences_close_after(start,a,u,radius,first)}
+        obtain second from exist second Z st {$are_rational_sequences_close_after(start,b,v,radius,second)}
+        $are_rational_sequences_close_after(start,a,u,radius,first)
+        $are_rational_sequences_close_after(start,b,v,radius,second)
+        first >= start
+        second >= start
+        release thm integer_common_tail_cutoff(start,first,second)
+        have cutoff Z = first+second-start
+        cutoff = first+second-start >= first
+        cutoff = first+second-start >= second
+        cutoff = first+second-start >= start
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_sequence_product<start,a,b>(n),\rational_sequence_product<start,u,v>(n),epsilon)
+            n >= cutoff >= first
+            n >= cutoff >= second
+            $approx::is_epsilon_close(a(n),u(n),radius)
+            $approx::is_epsilon_close(b(n),v(n),radius)
+            abs(a(n)-u(n)) <= radius
+            abs(b(n)-v(n)) <= radius
+            abs(a(n)) <= left_bound
+            abs(v(n)) <= right_bound
+            release thm approx::bounded_product_difference(a(n),u(n),b(n),v(n),left_bound,right_bound,radius)
+            release thm rational_sequence_product_at(start,a,b,n)
+            release thm rational_sequence_product_at(start,u,v,n)
+            abs(\rational_sequence_product<start,a,b>(n)-\rational_sequence_product<start,u,v>(n)) = abs(a(n)*b(n)-u(n)*v(n)) <= radius*(left_bound+right_bound) < epsilon
+            by def $approx::is_epsilon_close(\rational_sequence_product<start,a,b>(n),\rational_sequence_product<start,u,v>(n),epsilon)
+        by def $are_rational_sequences_close_after(start,\rational_sequence_product<start,a,b>,\rational_sequence_product<start,u,v>,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(start,\rational_sequence_product<start,a,b>,\rational_sequence_product<start,u,v>,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(start,\rational_sequence_product<start,a,b>,\rational_sequence_product<start,u,v>)
+
+thm rational_sequence_product_real_limit:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,L,M R:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        $has_seq_limit(\rational_real_reindex<start,b>,M)
+        =>:
+            $has_seq_limit(\rational_real_reindex<start,\rational_sequence_product<start,a,b>>,L*M)
+    \rational_real_reindex<start,a> $in seq(R)
+    \rational_real_reindex<start,b> $in seq(R)
+    \rational_real_reindex<start,\rational_sequence_product<start,a,b>> $in seq(R)
+    release thm seq_limit_multiply(\rational_real_reindex<start,a>,\rational_real_reindex<start,b>,L,M)
+    claim:
+        ? forall k N+:
+            (fn(j N+) R {\rational_real_reindex<start,a>(j)*\rational_real_reindex<start,b>(j)})(k) = \rational_real_reindex<start,\rational_sequence_product<start,a,b>>(k)
+        start+k-1 $in Z
+        start+k-1 $in \integer_index_tail<start>
+        release thm rational_real_reindex_at(start,a,k)
+        release thm rational_real_reindex_at(start,b,k)
+        release thm rational_real_reindex_at(start,\rational_sequence_product<start,a,b>,k)
+        release thm rational_sequence_product_at(start,a,b,start+k-1)
+        (fn(j N+) R {\rational_real_reindex<start,a>(j)*\rational_real_reindex<start,b>(j)})(k) = \rational_real_reindex<start,a>(k)*\rational_real_reindex<start,b>(k) = a(start+k-1)*b(start+k-1) = \rational_sequence_product<start,a,b>(start+k-1) = \rational_real_reindex<start,\rational_sequence_product<start,a,b>>(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {\rational_real_reindex<start,a>(j)*\rational_real_reindex<start,b>(j)},\rational_real_reindex<start,\rational_sequence_product<start,a,b>>,L*M,1)
+
+template<start Z,a fn(n \integer_index_tail<start>) Q>:
+    have fn rational_sequence_negation(n \integer_index_tail<start>) Q = -a(n)
+
+thm rational_sequence_negation_at:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            \rational_sequence_negation<start,a>(n) = -a(n)
+
+thm rational_cauchy_sequence_negation:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_cauchy(start,a)
+        =>:
+            $is_rational_cauchy(start,\rational_sequence_negation<start,a>)
+    claim:
+        ? forall epsilon Q+:
+            $is_eventually_rational_steady(start,\rational_sequence_negation<start,a>,epsilon)
+        $is_eventually_rational_steady(start,a,epsilon)
+        obtain cutoff from exist cutoff Z st {$is_rational_steady_after(start,a,epsilon,cutoff)}
+        $is_rational_steady_after(start,a,epsilon,cutoff)
+        cutoff >= start
+        claim:
+            ? forall j,k Z:
+                j $in \integer_index_tail<start>
+                k $in \integer_index_tail<start>
+                j >= cutoff
+                k >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_sequence_negation<start,a>(j),\rational_sequence_negation<start,a>(k),epsilon)
+            $approx::is_epsilon_close(a(j),a(k),epsilon)
+            release thm approx::epsilon_close_scaling(a(j),a(k),-1,epsilon)
+            epsilon*abs(-1) = epsilon
+            a(j)*(-1) = -a(j)
+            a(k)*(-1) = -a(k)
+            release thm rational_sequence_negation_at(start,a,j)
+            release thm rational_sequence_negation_at(start,a,k)
+            $approx::is_epsilon_close(\rational_sequence_negation<start,a>(j),\rational_sequence_negation<start,a>(k),epsilon)
+        by def $is_rational_steady_after(start,\rational_sequence_negation<start,a>,epsilon,cutoff)
+        witness $is_eventually_rational_steady(start,\rational_sequence_negation<start,a>,epsilon) from cutoff
+    by def $is_rational_cauchy(start,\rational_sequence_negation<start,a>)
+
+thm rational_sequence_negations_equivalent:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q:
+        $are_equivalent_rational_sequences(start,a,b)
+        =>:
+            $are_equivalent_rational_sequences(start,\rational_sequence_negation<start,a>,\rational_sequence_negation<start,b>)
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,\rational_sequence_negation<start,a>,\rational_sequence_negation<start,b>,epsilon)
+        $are_eventually_rational_sequences_close(start,a,b,epsilon)
+        obtain cutoff from exist cutoff Z st {$are_rational_sequences_close_after(start,a,b,epsilon,cutoff)}
+        $are_rational_sequences_close_after(start,a,b,epsilon,cutoff)
+        cutoff >= start
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_sequence_negation<start,a>(n),\rational_sequence_negation<start,b>(n),epsilon)
+            $approx::is_epsilon_close(a(n),b(n),epsilon)
+            release thm approx::epsilon_close_scaling(a(n),b(n),-1,epsilon)
+            epsilon*abs(-1) = epsilon
+            a(n)*(-1) = -a(n)
+            b(n)*(-1) = -b(n)
+            release thm rational_sequence_negation_at(start,a,n)
+            release thm rational_sequence_negation_at(start,b,n)
+            $approx::is_epsilon_close(\rational_sequence_negation<start,a>(n),\rational_sequence_negation<start,b>(n),epsilon)
+        by def $are_rational_sequences_close_after(start,\rational_sequence_negation<start,a>,\rational_sequence_negation<start,b>,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(start,\rational_sequence_negation<start,a>,\rational_sequence_negation<start,b>,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(start,\rational_sequence_negation<start,a>,\rational_sequence_negation<start,b>)
+
+thm rational_sequence_negation_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,L R:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        =>:
+            $has_seq_limit(\rational_real_reindex<start,\rational_sequence_negation<start,a>>,-L)
+    \rational_real_reindex<start,a> $in seq(R)
+    \rational_real_reindex<start,\rational_sequence_negation<start,a>> $in seq(R)
+    release thm seq_limit_neg(\rational_real_reindex<start,a>,L)
+    claim:
+        ? forall k N+:
+            (fn(j N+) R {-\rational_real_reindex<start,a>(j)})(k) = \rational_real_reindex<start,\rational_sequence_negation<start,a>>(k)
+        start+k-1 $in Z
+        start+k-1 $in \integer_index_tail<start>
+        release thm rational_real_reindex_at(start,a,k)
+        release thm rational_real_reindex_at(start,\rational_sequence_negation<start,a>,k)
+        release thm rational_sequence_negation_at(start,a,start+k-1)
+        (fn(j N+) R {-\rational_real_reindex<start,a>(j)})(k) = -\rational_real_reindex<start,a>(k) = -a(start+k-1) = \rational_sequence_negation<start,a>(start+k-1) = \rational_real_reindex<start,\rational_sequence_negation<start,a>>(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {-\rational_real_reindex<start,a>(j)},\rational_real_reindex<start,\rational_sequence_negation<start,a>>,-L,1)
+
+thm eventually_equal_rational_sequences_equivalent:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,cutoff Z:
+        cutoff >= start
+        forall n Z:
+            n $in \integer_index_tail<start>
+            n >= cutoff
+            =>:
+                a(n) = b(n)
+        =>:
+            $are_equivalent_rational_sequences(start,a,b)
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,a,b,epsilon)
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(a(n),b(n),epsilon)
+            a(n) = b(n)
+            release thm approx::epsilon_close_reflexive(a(n),epsilon)
+            $approx::is_epsilon_close(a(n),b(n),epsilon)
+        by def $are_rational_sequences_close_after(start,a,b,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(start,a,b,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(start,a,b)
+
+template<start Z,a fn(n \integer_index_tail<start>) Q,cutoff Z,value Q>:
+    have fn rational_sequence_replace_prefix(n \integer_index_tail<start>) Q by cases:
+        case n < cutoff: value
+        case n >= cutoff: a(n)
+
+thm rational_sequence_replace_prefix_before:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,cutoff Z,value Q,n Z:
+        n $in \integer_index_tail<start>
+        n < cutoff
+        =>:
+            \rational_sequence_replace_prefix<start,a,cutoff,value>(n) = value
+
+thm rational_sequence_replace_prefix_after:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,cutoff Z,value Q,n Z:
+        n $in \integer_index_tail<start>
+        n >= cutoff
+        =>:
+            \rational_sequence_replace_prefix<start,a,cutoff,value>(n) = a(n)
+
+thm rational_sequence_replace_prefix_equivalent:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,cutoff Z,value Q:
+        cutoff >= start
+        =>:
+            $are_equivalent_rational_sequences(start,a,\rational_sequence_replace_prefix<start,a,cutoff,value>)
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            n >= cutoff
+            =>:
+                a(n) = \rational_sequence_replace_prefix<start,a,cutoff,value>(n)
+        release thm rational_sequence_replace_prefix_after(start,a,cutoff,value,n)
+    release thm eventually_equal_rational_sequences_equivalent(start,a,\rational_sequence_replace_prefix<start,a,cutoff,value>,cutoff)
+
+thm rational_cauchy_sequence_replace_prefix:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,cutoff Z,value Q:
+        cutoff >= start
+        $is_rational_cauchy(start,a)
+        =>:
+            $is_rational_cauchy(start,\rational_sequence_replace_prefix<start,a,cutoff,value>)
+    release thm rational_sequence_replace_prefix_equivalent(start,a,cutoff,value)
+    release thm rational_equivalent_sequence_is_cauchy(start,a,\rational_sequence_replace_prefix<start,a,cutoff,value>)
+
+thm rational_sequence_replace_prefix_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,cutoff Z,value Q,L R:
+        cutoff >= start
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        =>:
+            $has_seq_limit(\rational_real_reindex<start,\rational_sequence_replace_prefix<start,a,cutoff,value>>,L)
+    \rational_real_reindex<start,a> $in seq(R)
+    \rational_real_reindex<start,\rational_sequence_replace_prefix<start,a,cutoff,value>> $in seq(R)
+    cutoff-start $in N
+    have native_cutoff N+ = cutoff-start+1
+    native_cutoff = cutoff-start+1
+    claim:
+        ? forall k N+:
+            k >= native_cutoff
+            =>:
+                \rational_real_reindex<start,a>(k) = \rational_real_reindex<start,\rational_sequence_replace_prefix<start,a,cutoff,value>>(k)
+        k >= native_cutoff = cutoff-start+1
+        k $in Z
+        release thm integer_reindex_ge_cutoff(start,cutoff,k)
+        start+k-1 $in \integer_index_tail<start>
+        start+k-1 $in Z
+        release thm rational_sequence_replace_prefix_after(start,a,cutoff,value,start+k-1)
+        release thm rational_real_reindex_at(start,a,k)
+        release thm rational_real_reindex_at(start,\rational_sequence_replace_prefix<start,a,cutoff,value>,k)
+        \rational_real_reindex<start,a>(k) = a(start+k-1) = \rational_sequence_replace_prefix<start,a,cutoff,value>(start+k-1) = \rational_real_reindex<start,\rational_sequence_replace_prefix<start,a,cutoff,value>>(k)
+    release thm seq_limit_eventually_equal(\rational_real_reindex<start,a>,\rational_real_reindex<start,\rational_sequence_replace_prefix<start,a,cutoff,value>>,L,native_cutoff)
+
+prop is_rational_sequence_away_from_zero_by(start Z,a fn(n \integer_index_tail<start>) Q,c Q+):
+    forall n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            abs(a(n)) >= c
+
+prop is_rational_sequence_bounded_away_from_zero(start Z,a fn(n \integer_index_tail<start>) Q):
+    exist c Q+ st {$is_rational_sequence_away_from_zero_by(start,a,c)}
+
+thm rational_sequence_away_from_zero_has_nonzero_values:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_sequence_bounded_away_from_zero(start,a)
+        =>:
+            a $in fn(n \integer_index_tail<start>) Q*
+    obtain c from $is_rational_sequence_bounded_away_from_zero(start,a)
+    $is_rational_sequence_away_from_zero_by(start,a,c)
+    claim:
+        ? forall n \integer_index_tail<start>:
+            a(n) $in Q*
+        release thm integer_index_tail_member_integer(start,n)
+        n $in Z
+        abs(a(n)) >= c > 0
+        by contra:
+            ? a(n) != 0
+            a(n) = 0
+            abs(a(n)) = abs(0) = 0
+            impossible c > 0
+        a(n) $in Q*
+    release thm fn_set_member(a,fn(n \integer_index_tail<start>) Q*)
+
+template<x R>:
+    have fn rational_floor_sequence(n \integer_index_tail<1>) Q = floor(n*x)/n
+
+thm rational_floor_sequence_at:
+    ? forall x R,n Z:
+        n $in \integer_index_tail<1>
+        =>:
+            \rational_floor_sequence<x>(n) = floor(n*x)/n
+
+thm rational_floor_sequence_error:
+    ? forall x R,n Z:
+        n $in \integer_index_tail<1>
+        =>:
+            abs(\rational_floor_sequence<x>(n)-x) < 1/n
+    release thm integer_index_tail_lower_bound(1,n)
+    n >= 1
+    n > 0
+    floor(n*x) <= n*x
+    n*x < floor(n*x)+1
+    floor(n*x)/n <= (n*x)/n = x
+    (n*x)/n < (floor(n*x)+1)/n = floor(n*x)/n+1/n
+    0 <= x-floor(n*x)/n
+    x-floor(n*x)/n < (floor(n*x)/n+1/n)-floor(n*x)/n = 1/n
+    abs(x-floor(n*x)/n) = x-floor(n*x)/n < 1/n
+    release thm rational_floor_sequence_at(x,n)
+    abs(\rational_floor_sequence<x>(n)-x) = abs(x-\rational_floor_sequence<x>(n)) = abs(x-floor(n*x)/n) < 1/n
+
+thm rational_floor_sequence_real_limit:
+    ? forall x R:
+        $has_seq_limit(\rational_real_reindex<1,\rational_floor_sequence<x>>,x)
+    \rational_real_reindex<1,\rational_floor_sequence<x>> $in seq(R)
+    claim:
+        ? forall epsilon R+:
+            exist cutoff N+ st {{k N+:k >= cutoff} $subset preimage_set(\rational_real_reindex<1,\rational_floor_sequence<x>>,{v R:abs(v-x) < epsilon})}
+        release thm real_archimedean_natural_upper_bound(1/epsilon)
+        obtain cutoff from exist cutoff N+ st {1/epsilon < cutoff}
+        1 = (1/epsilon)*epsilon < cutoff*epsilon
+        1/cutoff < (cutoff*epsilon)/cutoff = epsilon
+        claim:
+            ? forall k {idx N+:idx >= cutoff}:
+                k $in preimage_set(\rational_real_reindex<1,\rational_floor_sequence<x>>,{v R:abs(v-x) < epsilon})
+            k $in N+
+            k >= cutoff
+            k $in Z
+            release thm integer_index_tail_member(1,k)
+            0 < cutoff*k
+            1/k = cutoff/(cutoff*k) <= k/(cutoff*k) = 1/cutoff < epsilon
+            release thm rational_floor_sequence_error(x,k)
+            release thm rational_real_reindex_at(1,\rational_floor_sequence<x>,k)
+            1+k-1 = k
+            \rational_floor_sequence<x>(1+k-1) = \rational_floor_sequence<x>(k)
+            \rational_real_reindex<1,\rational_floor_sequence<x>>(k) = \rational_floor_sequence<x>(1+k-1) = \rational_floor_sequence<x>(k)
+            abs(\rational_real_reindex<1,\rational_floor_sequence<x>>(k)-x) = abs(\rational_floor_sequence<x>(k)-x) < 1/k < epsilon
+            \rational_real_reindex<1,\rational_floor_sequence<x>>(k) $in {v R:abs(v-x) < epsilon}
+        by def {k N+:k >= cutoff} $subset preimage_set(\rational_real_reindex<1,\rational_floor_sequence<x>>,{v R:abs(v-x) < epsilon})
+        witness exist N1 N+ st {{k N+:k >= N1} $subset preimage_set(\rational_real_reindex<1,\rational_floor_sequence<x>>,{v R:abs(v-x) < epsilon})} from cutoff
+    release thm seq_limit_from_epsilon(\rational_real_reindex<1,\rational_floor_sequence<x>>,x)
+
+thm rational_floor_sequence_is_cauchy:
+    ? forall x R:
+        $is_rational_cauchy(1,\rational_floor_sequence<x>)
+    release thm rational_floor_sequence_real_limit(x)
+    \rational_real_reindex<1,\rational_floor_sequence<x>> $in seq(R)
+    release thm sequence_limit_cauchy(\rational_real_reindex<1,\rational_floor_sequence<x>>,x)
+    release thm native_cauchy_is_rational_cauchy(1,\rational_floor_sequence<x>)
+
+thm nonzero_real_has_separated_rational_representation:
+    ? forall x R*:
+        exist a fn(n \integer_index_tail<1>) Q st {$is_rational_cauchy(1,a),$is_rational_sequence_bounded_away_from_zero(1,a),$has_seq_limit(\rational_real_reindex<1,a>,x)}
+    abs(x) > 0
+    abs(x)/2 > 0
+    release thm rational_between_reals(0,abs(x)/2)
+    obtain c from exist q Q st {0 < q and q < abs(x)/2}
+    c $in Q+
+    release thm real_archimedean_natural_upper_bound(2/abs(x))
+    obtain cutoff from exist N0 N+ st {2/abs(x) < N0}
+    cutoff $in Z
+    cutoff >= 1
+    2 = (2/abs(x))*abs(x) < cutoff*abs(x)
+    2/cutoff < (cutoff*abs(x))/cutoff = abs(x)
+    1/cutoff = (2/cutoff)/2 < abs(x)/2
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<1>
+            =>:
+                abs(\rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>(n)) >= c
+        by cases:
+            ? abs(\rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>(n)) >= c
+            case n < cutoff:
+                release thm rational_sequence_replace_prefix_before(1,\rational_floor_sequence<x>,cutoff,c,n)
+                abs(\rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>(n)) = abs(c) = c
+            case n >= cutoff:
+                n >= cutoff >= 1
+                n > 0
+                cutoff*n > 0
+                1/n = cutoff/(cutoff*n) <= n/(cutoff*n) = 1/cutoff < abs(x)/2
+                release thm rational_floor_sequence_error(x,n)
+                abs(\rational_floor_sequence<x>(n)-x) < 1/n < abs(x)/2
+                abs(x-\rational_floor_sequence<x>(n)) = abs(\rational_floor_sequence<x>(n)-x) < abs(x)/2
+                x = (x-\rational_floor_sequence<x>(n))+\rational_floor_sequence<x>(n)
+                abs(x) = abs((x-\rational_floor_sequence<x>(n))+\rational_floor_sequence<x>(n)) <= abs(x-\rational_floor_sequence<x>(n))+abs(\rational_floor_sequence<x>(n)) < abs(x)/2+abs(\rational_floor_sequence<x>(n))
+                abs(x)-abs(x)/2 < (abs(x)/2+abs(\rational_floor_sequence<x>(n)))-abs(x)/2 = abs(\rational_floor_sequence<x>(n))
+                abs(x)/2 = abs(x)-abs(x)/2 < abs(\rational_floor_sequence<x>(n))
+                release thm rational_sequence_replace_prefix_after(1,\rational_floor_sequence<x>,cutoff,c,n)
+                abs(\rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>(n)) = abs(\rational_floor_sequence<x>(n)) > abs(x)/2 > c
+    by def $is_rational_sequence_away_from_zero_by(1,\rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>,c)
+    witness $is_rational_sequence_bounded_away_from_zero(1,\rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>) from c
+    release thm rational_floor_sequence_is_cauchy(x)
+    release thm rational_cauchy_sequence_replace_prefix(1,\rational_floor_sequence<x>,cutoff,c)
+    release thm rational_floor_sequence_real_limit(x)
+    release thm rational_sequence_replace_prefix_real_limit(1,\rational_floor_sequence<x>,cutoff,c,x)
+    witness exist a fn(n \integer_index_tail<1>) Q st {$is_rational_cauchy(1,a),$is_rational_sequence_bounded_away_from_zero(1,a),$has_seq_limit(\rational_real_reindex<1,a>,x)} from \rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>
+
+template<start Z,a fn(n \integer_index_tail<start>) Q*>:
+    have fn rational_sequence_reciprocal(n \integer_index_tail<start>) Q = 1/a(n)
+
+thm rational_sequence_reciprocal_at:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q*,n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            \rational_sequence_reciprocal<start,a>(n) = 1/a(n)
+
+thm rational_cauchy_sequence_reciprocal:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q*:
+        $is_rational_cauchy(start,a)
+        $is_rational_sequence_bounded_away_from_zero(start,a)
+        =>:
+            $is_rational_cauchy(start,\rational_sequence_reciprocal<start,a>)
+    obtain c from $is_rational_sequence_bounded_away_from_zero(start,a)
+    $is_rational_sequence_away_from_zero_by(start,a,c)
+    c*c > 0
+    claim:
+        ? forall epsilon Q+:
+            $is_eventually_rational_steady(start,\rational_sequence_reciprocal<start,a>,epsilon)
+        have radius Q+ = epsilon*c*c
+        $is_eventually_rational_steady(start,a,radius)
+        obtain cutoff from exist cutoff Z st {$is_rational_steady_after(start,a,radius,cutoff)}
+        $is_rational_steady_after(start,a,radius,cutoff)
+        cutoff >= start
+        claim:
+            ? forall j,k Z:
+                j $in \integer_index_tail<start>
+                k $in \integer_index_tail<start>
+                j >= cutoff
+                k >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_sequence_reciprocal<start,a>(j),\rational_sequence_reciprocal<start,a>(k),epsilon)
+            abs(a(j)) >= c
+            abs(a(k)) >= c
+            $approx::is_epsilon_close(a(j),a(k),radius)
+            abs(a(j)-a(k)) <= radius
+            a(j) $in Q*
+            a(k) $in Q*
+            a(j) $in R*
+            a(k) $in R*
+            release thm approx::reciprocal_difference_bound(a(j),a(k),c,c)
+            abs(a(j)-a(k))/(c*c) <= radius/(c*c) = (epsilon*c*c)/(c*c) = epsilon
+            release thm rational_sequence_reciprocal_at(start,a,j)
+            release thm rational_sequence_reciprocal_at(start,a,k)
+            abs(\rational_sequence_reciprocal<start,a>(j)-\rational_sequence_reciprocal<start,a>(k)) = abs(1/a(j)-1/a(k)) <= abs(a(j)-a(k))/(c*c) <= epsilon
+            by def $approx::is_epsilon_close(\rational_sequence_reciprocal<start,a>(j),\rational_sequence_reciprocal<start,a>(k),epsilon)
+        by def $is_rational_steady_after(start,\rational_sequence_reciprocal<start,a>,epsilon,cutoff)
+        witness $is_eventually_rational_steady(start,\rational_sequence_reciprocal<start,a>,epsilon) from cutoff
+    by def $is_rational_cauchy(start,\rational_sequence_reciprocal<start,a>)
+
+thm rational_sequence_reciprocal_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q*,L R*:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        =>:
+            $has_seq_limit(\rational_real_reindex<start,\rational_sequence_reciprocal<start,a>>,1/L)
+    have fn ones(k N+) R = 1
+    \rational_real_reindex<start,a> $in seq(R)
+    \rational_real_reindex<start,\rational_sequence_reciprocal<start,a>> $in seq(R)
+    claim:
+        ? forall k N+:
+            \rational_real_reindex<start,a>(k) != 0
+        start+k-1 $in \integer_index_tail<start>
+        a(start+k-1) $in Q*
+        a(start+k-1) != 0
+        release thm rational_real_reindex_at(start,a,k)
+    claim:
+        ? forall k N+:
+            ones(k) = 1
+        ones(k) = 1
+    release thm seq_limit_constant(ones,1)
+    release thm seq_limit_divide(ones,\rational_real_reindex<start,a>,1,L)
+    claim:
+        ? forall k N+:
+            (fn(j N+) R {ones(j)/\rational_real_reindex<start,a>(j)})(k) = \rational_real_reindex<start,\rational_sequence_reciprocal<start,a>>(k)
+        start+k-1 $in Z
+        start+k-1 $in \integer_index_tail<start>
+        release thm rational_real_reindex_at(start,a,k)
+        release thm rational_real_reindex_at(start,\rational_sequence_reciprocal<start,a>,k)
+        release thm rational_sequence_reciprocal_at(start,a,start+k-1)
+        \rational_real_reindex<start,a>(k) != 0
+        \rational_real_reindex<start,a>(k) $in R*
+        a(start+k-1) $in Q*
+        a(start+k-1) $in R*
+        ones(k) = 1
+        (fn(j N+) R {ones(j)/\rational_real_reindex<start,a>(j)})(k) = ones(k)/\rational_real_reindex<start,a>(k) = 1/\rational_real_reindex<start,a>(k) = 1/a(start+k-1) = \rational_sequence_reciprocal<start,a>(start+k-1) = \rational_real_reindex<start,\rational_sequence_reciprocal<start,a>>(k)
+    release thm seq_limit_eventually_equal(fn(j N+) R {ones(j)/\rational_real_reindex<start,a>(j)},\rational_real_reindex<start,\rational_sequence_reciprocal<start,a>>,1/L,1)
+
+thm rational_sequence_reciprocals_equivalent:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q*:
+        $is_rational_sequence_bounded_away_from_zero(start,a)
+        $is_rational_sequence_bounded_away_from_zero(start,b)
+        $are_equivalent_rational_sequences(start,a,b)
+        =>:
+            $are_equivalent_rational_sequences(start,\rational_sequence_reciprocal<start,a>,\rational_sequence_reciprocal<start,b>)
+    obtain c from $is_rational_sequence_bounded_away_from_zero(start,a)
+    obtain d from $is_rational_sequence_bounded_away_from_zero(start,b)
+    $is_rational_sequence_away_from_zero_by(start,a,c)
+    $is_rational_sequence_away_from_zero_by(start,b,d)
+    c*d > 0
+    claim:
+        ? forall epsilon Q+:
+            $are_eventually_rational_sequences_close(start,\rational_sequence_reciprocal<start,a>,\rational_sequence_reciprocal<start,b>,epsilon)
+        have radius Q+ = epsilon*c*d
+        $are_eventually_rational_sequences_close(start,a,b,radius)
+        obtain cutoff from exist cutoff Z st {$are_rational_sequences_close_after(start,a,b,radius,cutoff)}
+        $are_rational_sequences_close_after(start,a,b,radius,cutoff)
+        cutoff >= start
+        claim:
+            ? forall n Z:
+                n $in \integer_index_tail<start>
+                n >= cutoff
+                =>:
+                    $approx::is_epsilon_close(\rational_sequence_reciprocal<start,a>(n),\rational_sequence_reciprocal<start,b>(n),epsilon)
+            abs(a(n)) >= c
+            abs(b(n)) >= d
+            $approx::is_epsilon_close(a(n),b(n),radius)
+            abs(a(n)-b(n)) <= radius
+            a(n) $in Q*
+            b(n) $in Q*
+            a(n) $in R*
+            b(n) $in R*
+            release thm approx::reciprocal_difference_bound(a(n),b(n),c,d)
+            abs(a(n)-b(n))/(c*d) <= radius/(c*d) = (epsilon*c*d)/(c*d) = epsilon
+            release thm rational_sequence_reciprocal_at(start,a,n)
+            release thm rational_sequence_reciprocal_at(start,b,n)
+            abs(\rational_sequence_reciprocal<start,a>(n)-\rational_sequence_reciprocal<start,b>(n)) = abs(1/a(n)-1/b(n)) <= abs(a(n)-b(n))/(c*d) <= epsilon
+            by def $approx::is_epsilon_close(\rational_sequence_reciprocal<start,a>(n),\rational_sequence_reciprocal<start,b>(n),epsilon)
+        by def $are_rational_sequences_close_after(start,\rational_sequence_reciprocal<start,a>,\rational_sequence_reciprocal<start,b>,epsilon,cutoff)
+        witness $are_eventually_rational_sequences_close(start,\rational_sequence_reciprocal<start,a>,\rational_sequence_reciprocal<start,b>,epsilon) from cutoff
+    by def $are_equivalent_rational_sequences(start,\rational_sequence_reciprocal<start,a>,\rational_sequence_reciprocal<start,b>)
+
+# Section 5.4: signed representatives and native real order.
+
+prop is_rational_sequence_positive_by(start Z,a fn(n \integer_index_tail<start>) Q,c Q+):
+    forall n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            a(n) >= c
+
+prop is_rational_sequence_negative_by(start Z,a fn(n \integer_index_tail<start>) Q,c Q+):
+    forall n Z:
+        n $in \integer_index_tail<start>
+        =>:
+            a(n) <= -c
+
+prop is_rational_sequence_positively_bounded_away_from_zero(start Z,a fn(n \integer_index_tail<start>) Q):
+    exist c Q+ st {$is_rational_sequence_positive_by(start,a,c)}
+
+prop is_rational_sequence_negatively_bounded_away_from_zero(start Z,a fn(n \integer_index_tail<start>) Q):
+    exist c Q+ st {$is_rational_sequence_negative_by(start,a,c)}
+
+thm rational_sequence_positive_bound_is_absolute:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,c Q+:
+        $is_rational_sequence_positive_by(start,a,c)
+        =>:
+            $is_rational_sequence_away_from_zero_by(start,a,c)
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                abs(a(n)) >= c
+        a(n) >= c > 0
+        abs(a(n)) = a(n) >= c
+    by def $is_rational_sequence_away_from_zero_by(start,a,c)
+
+thm rational_sequence_negative_bound_is_absolute:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,c Q+:
+        $is_rational_sequence_negative_by(start,a,c)
+        =>:
+            $is_rational_sequence_away_from_zero_by(start,a,c)
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                abs(a(n)) >= c
+        a(n) <= -c < 0
+        -a(n) >= -(-c) = c
+        abs(a(n)) = -a(n) >= c
+    by def $is_rational_sequence_away_from_zero_by(start,a,c)
+
+thm rational_sequence_positive_is_separated:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_sequence_positively_bounded_away_from_zero(start,a)
+        =>:
+            $is_rational_sequence_bounded_away_from_zero(start,a)
+    obtain c from $is_rational_sequence_positively_bounded_away_from_zero(start,a)
+    $is_rational_sequence_positive_by(start,a,c)
+    release thm rational_sequence_positive_bound_is_absolute(start,a,c)
+    witness $is_rational_sequence_bounded_away_from_zero(start,a) from c
+
+thm rational_sequence_negative_is_separated:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_sequence_negatively_bounded_away_from_zero(start,a)
+        =>:
+            $is_rational_sequence_bounded_away_from_zero(start,a)
+    obtain c from $is_rational_sequence_negatively_bounded_away_from_zero(start,a)
+    $is_rational_sequence_negative_by(start,a,c)
+    release thm rational_sequence_negative_bound_is_absolute(start,a,c)
+    witness $is_rational_sequence_bounded_away_from_zero(start,a) from c
+
+thm positive_rational_sequence_is_not_negative:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_sequence_positively_bounded_away_from_zero(start,a)
+        =>:
+            not $is_rational_sequence_negatively_bounded_away_from_zero(start,a)
+    by contra:
+        ? not $is_rational_sequence_negatively_bounded_away_from_zero(start,a)
+        obtain c from $is_rational_sequence_positively_bounded_away_from_zero(start,a)
+        obtain d from $is_rational_sequence_negatively_bounded_away_from_zero(start,a)
+        $is_rational_sequence_positive_by(start,a,c)
+        $is_rational_sequence_negative_by(start,a,d)
+        release thm integer_index_tail_member(start,start)
+        a(start) >= c > 0
+        a(start) <= -d < 0
+        impossible a(start) > 0
+
+thm positive_rational_sequence_negation_is_negative:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q:
+        $is_rational_sequence_positively_bounded_away_from_zero(start,a)
+        =>:
+            $is_rational_sequence_negatively_bounded_away_from_zero(start,\rational_sequence_negation<start,a>)
+    obtain c from $is_rational_sequence_positively_bounded_away_from_zero(start,a)
+    $is_rational_sequence_positive_by(start,a,c)
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                \rational_sequence_negation<start,a>(n) <= -c
+        a(n) >= c
+        -a(n) <= -c
+        release thm rational_sequence_negation_at(start,a,n)
+        \rational_sequence_negation<start,a>(n) = -a(n) <= -c
+    by def $is_rational_sequence_negative_by(start,\rational_sequence_negation<start,a>,c)
+    witness $is_rational_sequence_negatively_bounded_away_from_zero(start,\rational_sequence_negation<start,a>) from c
+
+thm rational_sequence_real_limits_preserve_order:
+    ? forall start Z,a,b fn(n \integer_index_tail<start>) Q,L,M R:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        $has_seq_limit(\rational_real_reindex<start,b>,M)
+        forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                a(n) <= b(n)
+        =>:
+            L <= M
+    \rational_real_reindex<start,a> $in seq(R)
+    \rational_real_reindex<start,b> $in seq(R)
+    claim:
+        ? forall k N+:
+            k >= 1
+            =>:
+                \rational_real_reindex<start,a>(k) <= \rational_real_reindex<start,b>(k)
+        start+k-1 $in Z
+        k >= 1
+        k-1 $in N
+        k-1 >= 0
+        start+k-1 = start+(k-1) >= start+0 = start
+        release thm integer_index_tail_member(start,start+k-1)
+        a(start+k-1) <= b(start+k-1)
+        release thm rational_real_reindex_at(start,a,k)
+        release thm rational_real_reindex_at(start,b,k)
+        \rational_real_reindex<start,a>(k) = a(start+k-1) <= b(start+k-1) = \rational_real_reindex<start,b>(k)
+    release thm seq_limit_compare(\rational_real_reindex<start,a>,\rational_real_reindex<start,b>,L,M,1)
+
+thm rational_sequence_positive_bound_passes_to_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,c Q+,L R:
+        $is_rational_sequence_positive_by(start,a,c)
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        =>:
+            L >= c
+    release thm rational_constant_sequence_real_limit(start,c)
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                \rational_constant_sequence<start,c>(n) <= a(n)
+        a(n) >= c
+        \rational_constant_sequence<start,c>(n) = c <= a(n)
+    release thm rational_sequence_real_limits_preserve_order(start,\rational_constant_sequence<start,c>,a,c,L)
+
+thm rational_sequence_negative_bound_passes_to_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,c Q+,L R:
+        $is_rational_sequence_negative_by(start,a,c)
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        =>:
+            L <= -c
+    release thm rational_constant_sequence_real_limit(start,-c)
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                a(n) <= \rational_constant_sequence<start,-c>(n)
+        a(n) <= -c = \rational_constant_sequence<start,-c>(n)
+    release thm rational_sequence_real_limits_preserve_order(start,a,\rational_constant_sequence<start,-c>,L,-c)
+
+thm positive_rational_sequence_has_positive_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,L R:
+        $is_rational_sequence_positively_bounded_away_from_zero(start,a)
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        =>:
+            L > 0
+    obtain c from $is_rational_sequence_positively_bounded_away_from_zero(start,a)
+    $is_rational_sequence_positive_by(start,a,c)
+    release thm rational_sequence_positive_bound_passes_to_real_limit(start,a,c,L)
+    L >= c > 0
+
+thm negative_rational_sequence_has_negative_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,L R:
+        $is_rational_sequence_negatively_bounded_away_from_zero(start,a)
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        =>:
+            L < 0
+    obtain c from $is_rational_sequence_negatively_bounded_away_from_zero(start,a)
+    $is_rational_sequence_negative_by(start,a,c)
+    release thm rational_sequence_negative_bound_passes_to_real_limit(start,a,c,L)
+    L <= -c < 0
+
+thm positive_real_has_positive_rational_representation:
+    ? forall x R+:
+        exist a fn(n \integer_index_tail<1>) Q st {$is_rational_cauchy(1,a),$is_rational_sequence_positively_bounded_away_from_zero(1,a),$has_seq_limit(\rational_real_reindex<1,a>,x)}
+    x/2 > 0
+    release thm rational_between_reals(0,x/2)
+    obtain c from exist q Q st {0 < q and q < x/2}
+    c $in Q+
+    release thm real_archimedean_natural_upper_bound(2/x)
+    obtain cutoff from exist N0 N+ st {2/x < N0}
+    cutoff $in Z
+    cutoff >= 1
+    2 = (2/x)*x < cutoff*x
+    2/cutoff < (cutoff*x)/cutoff = x
+    1/cutoff = (2/cutoff)/2 < x/2
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<1>
+            =>:
+                \rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>(n) >= c
+        by cases:
+            ? \rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>(n) >= c
+            case n < cutoff:
+                release thm rational_sequence_replace_prefix_before(1,\rational_floor_sequence<x>,cutoff,c,n)
+            case n >= cutoff:
+                n >= cutoff >= 1
+                n > 0
+                cutoff*n > 0
+                1/n = cutoff/(cutoff*n) <= n/(cutoff*n) = 1/cutoff < x/2
+                release thm rational_floor_sequence_error(x,n)
+                abs(\rational_floor_sequence<x>(n)-x) < 1/n < x/2
+                release thm approx::absolute_value_two_sided_bounds(\rational_floor_sequence<x>(n)-x,x/2)
+                \rational_floor_sequence<x>(n)-x >= -(x/2)
+                \rational_floor_sequence<x>(n) = (\rational_floor_sequence<x>(n)-x)+x >= -(x/2)+x = x/2
+                release thm rational_sequence_replace_prefix_after(1,\rational_floor_sequence<x>,cutoff,c,n)
+                \rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>(n) = \rational_floor_sequence<x>(n) >= x/2 > c
+    by def $is_rational_sequence_positive_by(1,\rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>,c)
+    witness $is_rational_sequence_positively_bounded_away_from_zero(1,\rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>) from c
+    release thm rational_floor_sequence_is_cauchy(x)
+    release thm rational_cauchy_sequence_replace_prefix(1,\rational_floor_sequence<x>,cutoff,c)
+    release thm rational_floor_sequence_real_limit(x)
+    release thm rational_sequence_replace_prefix_real_limit(1,\rational_floor_sequence<x>,cutoff,c,x)
+    witness exist a fn(n \integer_index_tail<1>) Q st {$is_rational_cauchy(1,a),$is_rational_sequence_positively_bounded_away_from_zero(1,a),$has_seq_limit(\rational_real_reindex<1,a>,x)} from \rational_sequence_replace_prefix<1,\rational_floor_sequence<x>,cutoff,c>
+
+thm negative_real_has_negative_rational_representation:
+    ? forall x R:
+        x < 0
+        =>:
+            exist a fn(n \integer_index_tail<1>) Q st {$is_rational_cauchy(1,a),$is_rational_sequence_negatively_bounded_away_from_zero(1,a),$has_seq_limit(\rational_real_reindex<1,a>,x)}
+    -x > 0
+    -x $in R+
+    release thm positive_real_has_positive_rational_representation(-x)
+    obtain a from exist a fn(n \integer_index_tail<1>) Q st {$is_rational_cauchy(1,a),$is_rational_sequence_positively_bounded_away_from_zero(1,a),$has_seq_limit(\rational_real_reindex<1,a>,-x)}
+    $is_rational_cauchy(1,a)
+    $is_rational_sequence_positively_bounded_away_from_zero(1,a)
+    $has_seq_limit(\rational_real_reindex<1,a>,-x)
+    release thm rational_cauchy_sequence_negation(1,a)
+    release thm positive_rational_sequence_negation_is_negative(1,a)
+    release thm rational_sequence_negation_real_limit(1,a,-x)
+    -(-x) = x
+    $has_seq_limit(\rational_real_reindex<1,\rational_sequence_negation<1,a>>,x)
+    witness exist b fn(n \integer_index_tail<1>) Q st {$is_rational_cauchy(1,b),$is_rational_sequence_negatively_bounded_away_from_zero(1,b),$has_seq_limit(\rational_real_reindex<1,b>,x)} from \rational_sequence_negation<1,a>
+
+thm nonnegative_rational_sequence_has_nonnegative_real_limit:
+    ? forall start Z,a fn(n \integer_index_tail<start>) Q,L R:
+        $has_seq_limit(\rational_real_reindex<start,a>,L)
+        forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                a(n) >= 0
+        =>:
+            L >= 0
+    \rational_real_reindex<start,a> $in seq(R)
+    \rational_real_reindex<start,\rational_constant_sequence<start,0>> $in seq(R)
+    release thm rational_constant_sequence_real_limit(start,0)
+    $has_seq_limit(\rational_real_reindex<start,\rational_constant_sequence<start,0>>,0)
+    claim:
+        ? forall n Z:
+            n $in \integer_index_tail<start>
+            =>:
+                \rational_constant_sequence<start,0>(n) <= a(n)
+        \rational_constant_sequence<start,0>(n) = 0 <= a(n)
+    release thm rational_sequence_real_limits_preserve_order(start,\rational_constant_sequence<start,0>,a,0,L)

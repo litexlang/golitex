@@ -327,13 +327,15 @@ impl LitexToLeanCompiler {
             &proof.function_well_defined,
         )?;
         let checked = self.compile_wd(&proof.function_well_defined, &operands)?;
-        let compatibility = self.compile_composition_compatibility(proof, &s, &hf, &operands)?;
+        let compatibility =
+            self.compile_composition_compatibility(proof, &inner, &s, &hf, &operands)?;
         Ok(format!("(let _composition_lambda := {checked};\nLitex.compose {outer} {inner} {s} {t} {hf} {hg} {compatibility})"))
     }
 
     fn compile_composition_compatibility(
         &self,
         proof: &CompositionObjWellDefinedProof,
+        original_inner: &str,
         outer_signature: &str,
         outer_member: &str,
         position: &SourcePosition<'_>,
@@ -403,12 +405,20 @@ impl LitexToLeanCompiler {
             .collect::<Vec<_>>()
             .join(" → ");
         let guard = self.compile_function_guard_template(&function.body, position)?;
-        let Obj::FnObj(call) = function.equal_to.as_ref() else {
-            return Err(LeanCompileError::unsupported("Composition/ExpandedCall"));
+        // Keep the checked operand representation. Re-rendering the expanded
+        // body can change a formula function into a different raw graph; the
+        // first call group can also belong to a function-valued provider.
+        let packed_input = match raw.as_slice() {
+            [input] => input.clone(),
+            [first, second] => format!("(Litex.FiniteFunction.pack2 (M := M) {first} {second})"),
+            _ => format!(
+                "(Litex.FiniteFunction.tupleValue (M := M) ![{}])",
+                raw.join(", ")
+            ),
         };
-        let inner_call = &call.body[0][0];
-        let raw_inner =
-            self.compile_function_raw_expression(inner_call, &function.body, position)?;
+        let raw_inner = format!(
+            "(Litex.FunctionSemantics.callValue (Litex.denote {original_inner}) {packed_input})"
+        );
         let checked_type = format!(
             "∀ {binders}, {members} → ({guard} {}) → M.mem {raw_inner} ({outer_signature}).domain",
             raw.join(" ")
@@ -446,7 +456,9 @@ impl LitexToLeanCompiler {
         let finish = if values.len() == 1 {
             format!("exact {result}")
         } else {
-            format!("simpa only [← _composition_repack] using ({result})")
+            format!(
+                "simpa only [Litex.FiniteFunction.pack2, ← _composition_repack] using ({result})"
+            )
         };
         Ok(format!("(by\n  have _composition_checked : {checked_type} := {checked}\n  intro _composition_input _preimage_domain\n  {}{repack}\n  {finish})",parts.join("\n  ")))
     }

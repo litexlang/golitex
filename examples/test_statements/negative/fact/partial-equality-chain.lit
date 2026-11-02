@@ -1,0 +1,10 @@
+# Tracer: a failed equality chain keeps each actual adjacent check.
+# Before: neither equals sign exposed its retained check at the source.
+# Now: the first equality has its own proof; the second has its own rejection.
+# Boundary: the chain and forall are unproved; the final clause is unchecked.
+# Evidence: node src/reading/web/tests/failed-chain-proofs.cjs <fixtures>
+forall z R:
+    z > 0
+    =>:
+        z + 0 = z = 0
+        z = z

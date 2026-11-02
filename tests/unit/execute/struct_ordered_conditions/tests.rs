@@ -61,12 +61,29 @@ fn struct_condition_cannot_supply_its_own_or_later_wd_premise() {
         let code = format!("struct NonzeroCoordinate:\n    x R\n    y R\n    <=>:\n{conditions}");
         let run = rt.run_litex_code(&code).unwrap();
         assert!(run.session_error.is_none(), "{:?}", run.session_error);
-        assert!(matches!(
-            &run.statement_results[0],
-            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
-                ExecDefStructStmtResult::Failed(ExecDefStructStmtFailed::EquivalentFact(_))
-            ))
-        ));
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
+            ExecDefStructStmtResult::Failed(ExecDefStructStmtFailed::Local(local)),
+        )) = &run.statement_results[0]
+        else {
+            panic!("expected retained struct failure")
+        };
+        let crate::execute::DefStructLocalFailed::Fields { field_failure, .. } = &local.failure
+        else {
+            panic!("expected field-scope failure")
+        };
+        let crate::execute::DefStructFieldLocalFailed::Condition {
+            fields,
+            equivalent_facts,
+            ..
+        } = &field_failure.failure
+        else {
+            panic!("expected condition WD failure")
+        };
+        assert_eq!(fields.len(), 2);
+        assert!(
+            equivalent_facts.is_empty(),
+            "a condition cannot justify its own WD"
+        );
         assert!(rt
             .def_struct_visible_in_stack("NonzeroCoordinate")
             .is_none());

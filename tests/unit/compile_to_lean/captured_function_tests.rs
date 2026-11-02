@@ -136,8 +136,8 @@ fn captured_function_rejects_binder_collisions_and_dependent_carriers() {
             panic!()
         };
         if carrier {
-            inner.body.ret_set =
-                Box::new(Obj::Identifier(IdentifierObj::from_bound_name(parameter)));
+            let local = &inner.body.set_bound_parameters.groups[0].params[0];
+            inner.body.ret_set = Box::new(Obj::Identifier(IdentifierObj::from_bound_name(local)));
         } else {
             inner.body.set_bound_parameters.groups[0].params[0].id = parameter.id;
         }

@@ -75,12 +75,28 @@ fn dependent_struct_fields_rollback_a_later_invalid_type() {
         .run_litex_code("struct Bad:\n    point R\n    at fn(x R: 1 / 0 = x) R")
         .unwrap();
     assert!(run.session_error.is_none(), "{:?}", run.session_error);
-    assert!(matches!(
-        &run.statement_results[0],
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
-            ExecDefStructStmtResult::Failed(ExecDefStructStmtFailed::FieldType(_))
-        ))
-    ));
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
+        ExecDefStructStmtResult::Failed(ExecDefStructStmtFailed::Local(local)),
+    )) = &run.statement_results[0]
+    else {
+        panic!("expected retained struct failure")
+    };
+    let crate::execute::DefStructLocalFailed::Fields { field_failure, .. } = &local.failure else {
+        panic!("expected field-scope failure")
+    };
+    let crate::execute::DefStructFieldLocalFailed::Field { fields, .. } = &field_failure.failure
+    else {
+        panic!("expected field-type WD failure")
+    };
+    assert_eq!(fields.len(), 1);
+    for id in &fields[0].defined.stored_fact_ids {
+        assert!(field_failure
+            .field_local_env
+            .facts
+            .facts_by_id
+            .contains_key(id));
+        assert!(rt.fact_by_id_in_stack(*id).is_none());
+    }
     assert!(rt.def_struct_visible_in_stack("Bad").is_none());
     assert!(!rt.run_litex_code("point = point").unwrap().success);
     assert_eq!(rt.execution_environments_stack.len(), 1);

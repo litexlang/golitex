@@ -20,11 +20,11 @@ async function run(){
   assert.equal(pinned.reader.getSelection().explanationOpen,false);pinned.reader.destroy();
 
   const help=mount('lesson-definitions-en'),keyword=help.root.querySelector('[data-keyword="prop"]');assert(keyword);
-  help.root.querySelector('.lr-ide').rect=rect(20,100,1000,500);keyword.rect=rect(200,200,32,24);await keyword.trigger('mouseenter');assert(help.root.querySelector('.lr-token-help'));
-  keyword.rect=rect(200,650,32,24);await help.window.dispatch('scroll');assert(!help.root.querySelector('.lr-token-help'),'keyword help closes at the editor clipping boundary');help.reader.destroy();
+  help.root.querySelector('.lr-ide').rect=rect(20,100,1000,500);keyword.rect=rect(200,200,32,24);keyword.closest('.lr-code-row').rect=rect(100,200,800,24);help.document.elementFromPoint=()=>keyword;await help.root.querySelector('.lr-ide-input').trigger('pointermove',{clientX:200,clientY:200});await delay();assert(help.root.querySelector('.lr-proof-symbol:not([hidden])'));
+  keyword.rect=rect(200,650,32,24);keyword.closest('.lr-code-row').rect=rect(100,650,800,24);await help.window.dispatch('scroll');assert(!help.root.querySelector('.lr-proof-popover'),'keyword help closes at the editor clipping boundary');help.reader.destroy();
 
   const proof=mount('sqrt-two'),equal=proof.root.querySelector('.lr-chain-equality');
-  proof.root.querySelector('.lr-ide').rect=rect(20,100,1000,500);equal.rect=rect(200,200,10,24);await equal.trigger('mouseenter');await delay();assert(proof.root.querySelector('.lr-proof-popover'));
+  proof.root.querySelector('.lr-ide').rect=rect(20,100,1000,500);equal.rect=rect(200,200,10,24);equal.closest('.lr-code-row').rect=rect(100,200,800,24);proof.document.elementFromPoint=()=>equal;await proof.root.querySelector('.lr-ide-input').trigger('pointermove',{clientX:200,clientY:200});await delay();assert(proof.root.querySelector('.lr-proof-popover'));
   equal.rect=rect(1100,200,10,24);await proof.window.dispatch('scroll');assert(!proof.root.querySelector('.lr-proof-popover'),'proof help closes when its exact source is horizontally clipped');proof.reader.destroy();
 
   const inferred=mount('definition'),owner=inferred.root.querySelector('.lr-inference-toggle');assert(owner);

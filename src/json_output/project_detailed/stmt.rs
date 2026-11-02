@@ -12,7 +12,7 @@ use super::wd::{
     project_fact_wd_proof, project_obj_wd_proof, project_param_type_wd,
     project_verify_fact_wd_result, project_verify_obj_wd,
 };
-use crate::execute::execute_by_stmt::{ByContradictionClosingFailed, ExecByContraStmtFailed};
+use crate::execute::execute_by_stmt::ByContradictionClosingFailed;
 use crate::execute::execute_by_stmt::{
     ExecByCasesStmtResult, ExecByContraStmtResult, ExecByDefStmtResult,
     ExecByEnumerateFiniteSetStmtResult, ExecByExtensionStmtResult, ExecByFnExtensionStmtResult,
@@ -576,14 +576,32 @@ fn project_def_strategy(result: &ExecDefStrategyStmtResult, runtime: &Runtime) -
             vec![
                 ("statement_result", statement_result_value(true)),
                 ("kind", string("def_strategy")),
+                ("statement", string(s.statement.readable_string())),
                 (
                     "goal_well_defined",
                     project_verify_fact_wd_result(&s.goal_wd, runtime),
                 ),
-                ("proof_steps", project_stmt_steps(&s.proof_steps, runtime)),
+                (
+                    "introduced_params",
+                    super::verify::project_introduced_params(&s.body.introduced_params, runtime),
+                ),
+                (
+                    "assumed_dom_facts",
+                    JsonValue::Array(
+                        s.body
+                            .assumed_dom_facts
+                            .iter()
+                            .map(|dom| super::verify::project_assume_dom(dom, runtime))
+                            .collect(),
+                    ),
+                ),
+                (
+                    "proof_steps",
+                    project_stmt_steps(&s.body.proof_steps, runtime),
+                ),
                 (
                     "conclusion_proofs",
-                    project_verify_facts(&s.conclusion_proofs, runtime),
+                    project_verify_facts(&s.body.conclusion_proofs, runtime),
                 ),
             ],
         ),
@@ -777,7 +795,7 @@ fn project_let_obj(result: &ExecLetObjStmtResult, runtime: &Runtime) -> JsonValu
                 ),
                 (
                     "store_and_infer",
-                    project_have_store_ids(&s.stored_fact_ids, runtime),
+                    project_store_and_infer(&s.store_and_infer_result, runtime),
                 ),
             ],
         ),
@@ -863,6 +881,33 @@ pub(in crate::json_output) fn project_def_prop_failure(
 ) -> JsonValue {
     use crate::execute::execute_def_prop_stmt::ExecDefPropStmtFailed;
     let (phase, failure) = match failed {
+        ExecDefPropStmtFailed::Local(context) => match &context.failure {
+            crate::execute::DefPropLocalFailed::Parameters(failed) => match failed {
+                crate::execute::IntroduceTypedParametersFailed::ParamType(wd)
+                | crate::execute::IntroduceTypedParametersFailed::ParamTypeWithPrefix {
+                    failed: wd,
+                    ..
+                } => ("parameter_type", project_verify_obj_wd(wd, runtime)),
+                crate::execute::IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                    failed,
+                    ..
+                } => (
+                    "auto_open_struct_layer",
+                    object_for(
+                        runtime,
+                        vec![
+                            ("obj", string(failed.obj.readable_string())),
+                            ("struct_obj", string(failed.struct_obj.readable_string())),
+                            ("reason", string(&failed.reason)),
+                        ],
+                    ),
+                ),
+            },
+            crate::execute::DefPropLocalFailed::Condition { failed, .. } => (
+                "iff_fact_well_defined",
+                super::wd_failure::project_fact_wd_failure(failed, runtime),
+            ),
+        },
         ExecDefPropStmtFailed::NameClash(msg) => ("name_clash", string(msg)),
         ExecDefPropStmtFailed::ParamType(wd) => {
             ("parameter_type", project_verify_obj_wd(wd, runtime))
@@ -1336,8 +1381,21 @@ fn project_by_contra(result: &ExecByContraStmtResult, runtime: &Runtime) -> Json
                     super::proof_block_failure::project_contra_failure(failed, runtime),
                 ),
             ];
-            if let ExecByContraStmtFailed::Closing(closing) = failed {
+            if let Some(closing) = failed.closing_failure() {
                 let failure = match closing {
+                    ByContradictionClosingFailed::AfterImpossible(context) => {
+                        let mut value = match &context.failure {
+                            crate::execute::execute_by_stmt::ByContradictionOppositeFailed::NegationUnsupported(message) => object_for(runtime, vec![("phase", string("negate_impossible")), ("message", string(message))]),
+                            crate::execute::execute_by_stmt::ByContradictionOppositeFailed::Verification(proof) => object_for(runtime, vec![("phase", string("negated_impossible")), ("verification", project_verify_fact(proof, runtime))]),
+                        };
+                        if let JsonValue::Object(fields) = &mut value {
+                            fields.insert(
+                                "proved_impossible".into(),
+                                project_verify_fact(&context.impossible, runtime),
+                            );
+                        }
+                        value
+                    }
                     ByContradictionClosingFailed::Impossible(proof) => object_for(
                         runtime,
                         vec![

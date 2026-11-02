@@ -1,0 +1,11 @@
+# Equality of callable values is reusable without equality of their inputs.
+# Run: cargo run --release -- -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/function_value_congruence.lit
+# The original cardinality proof had to publish both cartesian memberships,
+# release fn_set_member twice and instantiate equal_functions_apply for each
+# coordinate (std/cardinality/main.lit, split injectivity proof).
+# Boundary: both applications must be well-defined and use equal arguments.
+forall Domain,X,Y set,F fn(t Domain) cart(X,Y),a,b Domain:
+    F(a)=F(b)
+    =>:
+        F(a)(1)=F(b)(1)
+        F(a)(2)=F(b)(2)

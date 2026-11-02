@@ -316,3 +316,35 @@ thm restricted_space_is_vector_space:
         $vector_space::is_subspace(K,field,V,space,U)
         =>:
             \restricted_space<K,field,V,space,U> $in &vector_space::VectorSpace<K,field,U>
+
+# Converse: a supplied inherited vector structure implies ambient closure.
+
+thm inherited_space_is_subspace:
+    ? forall K nonempty_set,F &field::Field<K>,V nonempty_set,space &vector_space::VectorSpace<K,F,V>,U nonempty_set,inherited &vector_space::VectorSpace<K,F,U>:
+        U $subset V
+        inherited.zero=space.zero
+        forall first,second U:
+            inherited.add(first,second)=space.add(first,second)
+        forall a K,first U:
+            inherited.smul(a,first)=space.smul(a,first)
+        =>:
+            $vector_space::is_subspace(K,F,V,space,U)
+    U $in power_set(V)
+    inherited.zero $in U
+    space.zero $in U
+    claim:
+        ? forall first,second V:
+            first $in U
+            second $in U
+            =>:
+                space.add(first,second) $in U
+        inherited.add(first,second) $in U
+        space.add(first,second)=inherited.add(first,second)
+    claim:
+        ? forall a K,first V:
+            first $in U
+            =>:
+                space.smul(a,first) $in U
+        inherited.smul(a,first) $in U
+        space.smul(a,first)=inherited.smul(a,first)
+    by def $vector_space::is_subspace(K,F,V,space,U)

@@ -1,0 +1,483 @@
+# General equinumerosity and finite cardinality source/native correspondence.
+
+prop has_equal_cardinality(X,Y set):
+    exist f fn(x X) Y st {$bijective(X,Y,f)}
+
+thm equal_cardinality_reflexive:
+    ? forall X set:
+        $has_equal_cardinality(X,X)
+    have fn identity(x X) X = x
+    claim:
+        ? forall a,b X:
+            identity(a) = identity(b)
+            =>:
+                a = b
+        a = identity(a) = identity(b) = b
+    by def $injective(X,X,identity)
+    claim:
+        ? forall y X:
+            exist x X st {y = identity(x)}
+        witness exist x X st {y = identity(x)} from y
+    by def $surjective(X,X,identity)
+    by def $bijective(X,X,identity)
+    witness $has_equal_cardinality(X,X) from identity
+
+thm equal_cardinality_symmetric:
+    ? forall X,Y set:
+        $has_equal_cardinality(X,Y)
+        =>:
+            $has_equal_cardinality(Y,X)
+    obtain forward from $has_equal_cardinality(X,Y)
+    forall y Y:
+        exist! x X st {forward(x) = y}
+    have fn backward by exist!:
+        ? forall y Y:
+            exist! x X st {forward(x) = y}
+    claim:
+        ? forall a,b Y:
+            backward(a) = backward(b)
+            =>:
+                a = b
+        a = forward(backward(a)) = forward(backward(b)) = b
+    by def $injective(Y,X,backward)
+    claim:
+        ? forall x X:
+            exist y Y st {x = backward(y)}
+        backward(forward(x)) = x
+        witness exist y Y st {x = backward(y)} from forward(x)
+    by def $surjective(Y,X,backward)
+    by def $bijective(Y,X,backward)
+    witness $has_equal_cardinality(Y,X) from backward
+
+thm equal_cardinality_transitive:
+    ? forall X,Y,D set:
+        $has_equal_cardinality(X,Y)
+        $has_equal_cardinality(Y,D)
+        =>:
+            $has_equal_cardinality(X,D)
+    obtain first from $has_equal_cardinality(X,Y)
+    obtain second from $has_equal_cardinality(Y,D)
+    $injective(X,Y,first)
+    $injective(Y,D,second)
+    $surjective(X,Y,first)
+    $surjective(Y,D,second)
+    have combined fn(x X) D = compose(second,first)
+    claim:
+        ? forall a,b X:
+            combined(a) = combined(b)
+            =>:
+                a = b
+        second(first(a)) = combined(a) = combined(b) = second(first(b))
+        first(a) = first(b)
+        a = b
+    by def $injective(X,D,combined)
+    claim:
+        ? forall z D:
+            exist x X st {z = combined(x)}
+        obtain y from exist y Y st {z = second(y)}
+        obtain x from exist x X st {y = first(x)}
+        combined(x) = second(first(x)) = second(y) = z
+        witness exist t X st {z = combined(t)} from x
+    by def $surjective(X,D,combined)
+    by def $bijective(X,D,combined)
+    witness $has_equal_cardinality(X,D) from combined
+
+prop has_n_elements(X set,n N):
+    $has_equal_cardinality(X,closed_range(1,n))
+
+thm equal_cardinality_finite_transfer:
+    ? forall X finite_set,Y set:
+        $has_equal_cardinality(X,Y)
+        =>:
+            $is_finite_set(Y)
+    obtain f from $has_equal_cardinality(X,Y)
+    $surjective(X,Y,f)
+    $is_finite_set(Y)
+
+thm has_n_elements_is_finite:
+    ? forall X set,n N:
+        $has_n_elements(X,n)
+        =>:
+            $is_finite_set(X)
+    $has_equal_cardinality(X,closed_range(1,n))
+    release thm equal_cardinality_symmetric(X,closed_range(1,n))
+    release thm equal_cardinality_finite_transfer(closed_range(1,n),X)
+
+thm finite_set_has_n_elements:
+    ? forall X finite_set:
+        $has_n_elements(X,finite_set_size(X))
+    release thm finite_set_has_bijective_index(X)
+    obtain indexing from exist f finite_seq(X,finite_set_size(X)) st {$bijective(closed_range(1,finite_set_size(X)),X,f)}
+    indexing $in fn(k closed_range(1,finite_set_size(X))) X
+    witness $has_equal_cardinality(closed_range(1,finite_set_size(X)),X) from indexing
+    release thm equal_cardinality_symmetric(closed_range(1,finite_set_size(X)),X)
+    by def $has_n_elements(X,finite_set_size(X))
+
+thm initial_segment_size:
+    ? forall n N:
+        finite_set_size(closed_range(1,n)) = n
+    by cases:
+        ? finite_set_size(closed_range(1,n)) = n
+        case n = 0:
+            closed_range(1,n) = closed_range(1,0) = {}
+            finite_set_size(closed_range(1,n)) = finite_set_size({}) = 0 = n
+        case n > 0:
+            n >= 1
+            1 <= n
+            finite_set_size(closed_range(1,n)) = n - 1 + 1 = n
+
+thm equal_cardinality_native_size:
+    ? forall X,Y finite_set:
+        $has_equal_cardinality(X,Y)
+        =>:
+            finite_set_size(X) = finite_set_size(Y)
+    obtain f from $has_equal_cardinality(X,Y)
+    $bijective(X,Y,f)
+    finite_set_size(X) = finite_set_size(Y)
+
+thm has_n_elements_native_size:
+    ? forall X finite_set,n N:
+        $has_n_elements(X,n)
+        =>:
+            finite_set_size(X) = n
+    $has_equal_cardinality(X,closed_range(1,n))
+    release thm equal_cardinality_native_size(X,closed_range(1,n))
+    release thm initial_segment_size(n)
+    finite_set_size(X) = finite_set_size(closed_range(1,n)) = n
+
+thm native_size_has_n_elements:
+    ? forall X finite_set,n N:
+        finite_set_size(X) = n
+        =>:
+            $has_n_elements(X,n)
+    release thm finite_set_has_n_elements(X)
+    $has_n_elements(X,n)
+
+thm finite_cardinality_unique:
+    ? forall X set,n,m N:
+        $has_n_elements(X,n)
+        $has_n_elements(X,m)
+        =>:
+            n = m
+    release thm has_n_elements_is_finite(X,n)
+    release thm has_n_elements_native_size(X,n)
+    release thm has_n_elements_native_size(X,m)
+    n = finite_set_size(X) = m
+
+thm positive_cardinality_nonempty:
+    ? forall X set,n N+:
+        $has_n_elements(X,n)
+        =>:
+            $is_nonempty_set(X)
+    release thm has_n_elements_is_finite(X,n)
+    release thm has_n_elements_native_size(X,n)
+    by contra:
+        ? $is_nonempty_set(X)
+        claim:
+            ? forall x X:
+                x $in {}
+            by contra:
+                ? x $in {}
+                witness $is_nonempty_set(X) from x
+                impossible $is_nonempty_set(X)
+        by def X $subset {}
+        by extension X = {}
+        finite_set_size(X) = finite_set_size({}) = 0
+        n = finite_set_size(X) = 0
+        n <= 0
+        impossible n > 0
+
+thm remove_member_cardinality:
+    ? forall X set,n N+,point X:
+        $has_n_elements(X,n)
+        =>:
+            $has_n_elements(set_minus(X,{point}),n-1)
+    release thm has_n_elements_is_finite(X,n)
+    release thm has_n_elements_native_size(X,n)
+    {point} $subset X
+    intersect(X,{point}) = {point}
+    $is_finite_set(set_minus(X,{point}))
+    finite_set_size(set_minus(X,{point})) = finite_set_size(X)-finite_set_size(intersect(X,{point})) = finite_set_size(X)-finite_set_size({point}) = n-1
+    release thm native_size_has_n_elements(set_minus(X,{point}),n-1)
+
+prop has_finite_cardinality(X set):
+    exist n N st {$has_n_elements(X,n)}
+
+thm finite_cardinality_is_native_finite:
+    ? forall X set:
+        $has_finite_cardinality(X)
+        =>:
+            $is_finite_set(X)
+    obtain n from $has_finite_cardinality(X)
+    release thm has_n_elements_is_finite(X,n)
+
+thm native_finite_has_cardinality:
+    ? forall X finite_set:
+        $has_finite_cardinality(X)
+    release thm finite_set_has_n_elements(X)
+    witness $has_finite_cardinality(X) from finite_set_size(X)
+
+thm naturals_have_no_finite_cardinality:
+    ? not $has_finite_cardinality(N)
+    by contra:
+        ? not $has_finite_cardinality(N)
+        release thm finite_cardinality_is_native_finite(N)
+        impossible $is_finite_set(N)
+
+thm finite_image_size_bound:
+    ? forall X finite_set,Y set,f fn(x X) Y:
+        $is_finite_set(fn_range(f))
+        finite_set_size(fn_range(f)) <= finite_set_size(X)
+    thm surjection_bound:
+        ? forall A,B finite_set,g fn(x A) B:
+            $surjective(A,B,g)
+            =>:
+                finite_set_size(B) <= finite_set_size(A)
+    have image finite_set = fn_range(f)
+    have fn onto(x X) image = f(x)
+    claim:
+        ? forall y image:
+            exist x X st {y = onto(x)}
+        y $in fn_range(f)
+        have by fn_preimage: preimage_point from y $in fn_range(f)
+        onto(preimage_point) = f(preimage_point) = y
+        witness exist x X st {y = onto(x)} from preimage_point
+    by def $surjective(X,image,onto)
+    release thm surjection_bound(X,image,onto)
+    finite_set_size(fn_range(f)) = finite_set_size(image) <= finite_set_size(X)
+
+# Prefix restriction and finite sequence/function-space counting.
+
+claim:
+    ? forall n N,k closed_range(1,n):
+        k $in closed_range(1,n+1)
+    1 <= k <= n < n+1
+    k $in closed_range(1,n+1)
+
+claim:
+    ? forall Y set,n N,v finite_seq(Y,n+1):
+        (fn(k closed_range(1,n)) Y {v(k)}) $in finite_seq(Y,n)
+    finite_seq(Y,n) = fn(k closed_range(1,n)) Y
+    (fn(k closed_range(1,n)) Y {v(k)}) $in fn(k closed_range(1,n)) Y
+    (fn(k closed_range(1,n)) Y {v(k)}) $in finite_seq(Y,n)
+
+template<Y set,n N>:
+    have fn finite_sequence_init(v finite_seq(Y,n+1)) finite_seq(Y,n) = fn(k closed_range(1,n)) Y {v(k)}
+
+thm finite_sequence_init_coordinate:
+    ? forall Y set,n N,v finite_seq(Y,n+1),k closed_range(1,n):
+        \finite_sequence_init<Y,n>(v)(k) = v(k)
+    \finite_sequence_init<Y,n>(v) = fn(t closed_range(1,n)) Y {v(t)}
+    \finite_sequence_init<Y,n>(v)(k) = (fn(t closed_range(1,n)) Y {v(t)})(k) = v(k)
+
+thm finite_sequence_successor_equal_cardinality:
+    ? forall Y set,n N:
+        $has_equal_cardinality(finite_seq(Y,n+1),cart(finite_seq(Y,n),Y))
+    thm equal_functions_apply:
+        ? forall Domain,Range set,f,g fn(x Domain) Range,x Domain:
+            f = g
+            =>:
+                f(x) = g(x)
+    n+1 $in N
+    n+1 $in closed_range(1,n+1)
+    finite_seq(Y,n) = fn(k closed_range(1,n)) Y
+    claim:
+        ? forall k closed_range(1,n):
+            k $in closed_range(1,n+1)
+        1 <= k <= n < n+1
+        k $in closed_range(1,n+1)
+    claim:
+        ? forall v finite_seq(Y,n+1):
+            exist! p cart(finite_seq(Y,n),Y) st {p(1) = \finite_sequence_init<Y,n>(v),p(2) = v(n+1)}
+        have prefix_value finite_seq(Y,n) = \finite_sequence_init<Y,n>(v)
+        have last_value Y = v(n+1)
+        (prefix_value,last_value) $in cart(finite_seq(Y,n),Y)
+        claim:
+            ? forall p,q cart(finite_seq(Y,n),Y):
+                p(1) = \finite_sequence_init<Y,n>(v)
+                p(2) = v(n+1)
+                q(1) = \finite_sequence_init<Y,n>(v)
+                q(2) = v(n+1)
+                =>:
+                    p = q
+            p(1) = \finite_sequence_init<Y,n>(v) = q(1)
+            p(2) = v(n+1) = q(2)
+            release tuple def p
+            release tuple def q
+            claim:
+                ? forall k closed_range(1,2):
+                    p(k) = q(k)
+                by cases:
+                    ? p(k) = q(k)
+                    case k <= 1:
+                        k = 1
+                        p(k) = p(1) = q(1) = q(k)
+                    case k > 1:
+                        k >= 2
+                        k = 2
+                        p(k) = p(2) = q(2) = q(k)
+            release thm tuple_equal_from_coordinates(p,q)
+        witness exist! p cart(finite_seq(Y,n),Y) st {p(1) = \finite_sequence_init<Y,n>(v),p(2) = v(n+1)} from (prefix_value,last_value):
+            (prefix_value,last_value)(1) = prefix_value = \finite_sequence_init<Y,n>(v)
+            (prefix_value,last_value)(2) = last_value = v(n+1)
+    have fn split by exist!:
+        ? forall v finite_seq(Y,n+1):
+            exist! p cart(finite_seq(Y,n),Y) st {p(1) = \finite_sequence_init<Y,n>(v),p(2) = v(n+1)}
+    claim:
+        ? forall a,b finite_seq(Y,n+1):
+            split(a) = split(b)
+            =>:
+                a = b
+        split(a) $in cart(finite_seq(Y,n),Y)
+        split(b) $in cart(finite_seq(Y,n),Y)
+        release thm fn_set_member(split(a),fn(k closed_range(1,2)) union(finite_seq(Y,n),Y))
+        release thm fn_set_member(split(b),fn(k closed_range(1,2)) union(finite_seq(Y,n),Y))
+        release thm equal_functions_apply(closed_range(1,2),union(finite_seq(Y,n),Y),split(a),split(b),1)
+        release thm equal_functions_apply(closed_range(1,2),union(finite_seq(Y,n),Y),split(a),split(b),2)
+        split(a)(1) = \finite_sequence_init<Y,n>(a)
+        split(b)(1) = \finite_sequence_init<Y,n>(b)
+        split(a)(2) = a(n+1)
+        split(b)(2) = b(n+1)
+        have left finite_seq(Y,n) = split(a)(1)
+        have right finite_seq(Y,n) = split(b)(1)
+        left = split(a)(1) = split(b)(1) = right
+        left = split(a)(1) = \finite_sequence_init<Y,n>(a)
+        right = split(b)(1) = \finite_sequence_init<Y,n>(b)
+        a(n+1) = split(a)(2) = split(b)(2) = b(n+1)
+        claim:
+            ? forall k closed_range(1,n+1):
+                a(k) = b(k)
+            by cases:
+                ? a(k) = b(k)
+                case k <= n:
+                    k $in closed_range(1,n)
+                    release thm finite_sequence_init_coordinate(Y,n,a,k)
+                    release thm finite_sequence_init_coordinate(Y,n,b,k)
+                    a(k) = \finite_sequence_init<Y,n>(a)(k) = left(k) = right(k) = \finite_sequence_init<Y,n>(b)(k) = b(k)
+                case k > n:
+                    k = n+1
+                    a(k) = a(n+1) = b(n+1) = b(k)
+        by fn_extension a = b
+    by def $injective(finite_seq(Y,n+1),cart(finite_seq(Y,n),Y),split)
+    claim:
+        ? forall p cart(finite_seq(Y,n),Y):
+            exist v finite_seq(Y,n+1) st {p = split(v)}
+        have prefix finite_seq(Y,n) = p(1)
+        have last Y = p(2)
+        have fn joined(k closed_range(1,n+1)) Y by cases:
+            case k <= n: prefix(k)
+            case k > n: last
+        joined $in finite_seq(Y,n+1)
+        claim:
+            ? forall k closed_range(1,n):
+                \finite_sequence_init<Y,n>(joined)(k) = prefix(k)
+            k $in closed_range(1,n+1)
+            release thm finite_sequence_init_coordinate(Y,n,joined,k)
+            \finite_sequence_init<Y,n>(joined)(k) = joined(k) = prefix(k)
+        by fn_extension \finite_sequence_init<Y,n>(joined) = prefix
+        n+1 > n
+        joined(n+1) = last
+        p(1) = prefix = \finite_sequence_init<Y,n>(joined)
+        p(2) = last = joined(n+1)
+        p = split(joined)
+        witness exist v finite_seq(Y,n+1) st {p = split(v)} from joined
+    by def $surjective(finite_seq(Y,n+1),cart(finite_seq(Y,n),Y),split)
+    by def $bijective(finite_seq(Y,n+1),cart(finite_seq(Y,n),Y),split)
+    witness $has_equal_cardinality(finite_seq(Y,n+1),cart(finite_seq(Y,n),Y)) from split
+
+thm finite_sequence_size:
+    ? forall Y finite_set,n N:
+        finite_set_size(finite_seq(Y,n)) = finite_set_size(Y)^n
+    thm cartesian_size:
+        ? forall A,B finite_set:
+            finite_set_size(cart(A,B)) = finite_set_size(A)*finite_set_size(B)
+    finite_set_size(Y) $in N
+    by induc n from 0:
+        ? finite_set_size(finite_seq(Y,n)) = finite_set_size(Y)^n
+        ? from n = 0:
+            finite_seq(Y,0) = {tuple()}
+            finite_set_size(finite_seq(Y,0)) = finite_set_size({tuple()}) = 1 = finite_set_size(Y)^0
+        ? induc:
+            n $in N
+            n+1 $in N
+            release thm finite_sequence_successor_equal_cardinality(Y,n)
+            release thm equal_cardinality_native_size(finite_seq(Y,n+1),cart(finite_seq(Y,n),Y))
+            release thm cartesian_size(finite_seq(Y,n),Y)
+            finite_set_size(finite_seq(Y,n+1)) = finite_set_size(cart(finite_seq(Y,n),Y)) = finite_set_size(finite_seq(Y,n))*finite_set_size(Y) = finite_set_size(Y)^n*finite_set_size(Y) = finite_set_size(Y)^(n+1)
+
+
+thm finite_function_space_equal_cardinality:
+    ? forall X finite_set,Y set:
+        $has_equal_cardinality(finite_seq(Y,finite_set_size(X)),fn(x X) Y)
+    thm equal_functions_apply:
+        ? forall Domain,Range set,f,g fn(x Domain) Range,x Domain:
+            f = g
+            =>:
+                f(x) = g(x)
+    release thm finite_set_has_bijective_index(X)
+    obtain indexing from exist f finite_seq(X,finite_set_size(X)) st {$bijective(closed_range(1,finite_set_size(X)),X,f)}
+    finite_seq(X,finite_set_size(X)) = fn(k closed_range(1,finite_set_size(X))) X
+    indexing $in fn(k closed_range(1,finite_set_size(X))) X
+    $bijective(closed_range(1,finite_set_size(X)),X,indexing)
+    forall x X:
+        exist! k closed_range(1,finite_set_size(X)) st {indexing(k) = x}
+    have fn address by exist!:
+        ? forall x X:
+            exist! k closed_range(1,finite_set_size(X)) st {indexing(k) = x}
+    have fn decode(values finite_seq(Y,finite_set_size(X))) fn(x X) Y = compose(values,address)
+    claim:
+        ? forall u,v finite_seq(Y,finite_set_size(X)):
+            decode(u) = decode(v)
+            =>:
+                u = v
+        decode(u) $in fn(x X) Y
+        decode(v) $in fn(x X) Y
+        decode(u) = compose(u,address)
+        decode(v) = compose(v,address)
+        claim:
+            ? forall k closed_range(1,finite_set_size(X)):
+                u(k) = v(k)
+            indexing(k) $in X
+            address(indexing(k)) = k
+            release thm equal_functions_apply(X,Y,decode(u),compose(u,address),indexing(k))
+            release thm equal_functions_apply(X,Y,decode(v),compose(v,address),indexing(k))
+            release thm equal_functions_apply(X,Y,decode(u),decode(v),indexing(k))
+            u(k) = u(address(indexing(k))) = compose(u,address)(indexing(k)) = decode(u)(indexing(k)) = decode(v)(indexing(k)) = compose(v,address)(indexing(k)) = v(address(indexing(k))) = v(k)
+        by fn_extension u = v
+    by def $injective(finite_seq(Y,finite_set_size(X)),fn(x X) Y,decode)
+    claim:
+        ? forall f fn(x X) Y:
+            exist values finite_seq(Y,finite_set_size(X)) st {f = decode(values)}
+        have fn values(k closed_range(1,finite_set_size(X))) Y = f(indexing(k))
+        values $in finite_seq(Y,finite_set_size(X))
+        decode(values) $in fn(x X) Y
+        decode(values) = compose(values,address)
+        claim:
+            ? forall x X:
+                decode(values)(x) = f(x)
+            indexing(address(x)) = x
+            release thm equal_functions_apply(X,Y,decode(values),compose(values,address),x)
+            decode(values)(x) = compose(values,address)(x) = values(address(x)) = f(indexing(address(x))) = f(x)
+        by fn_extension decode(values) = f
+        witness exist table finite_seq(Y,finite_set_size(X)) st {f = decode(table)} from values
+    by def $surjective(finite_seq(Y,finite_set_size(X)),fn(x X) Y,decode)
+    by def $bijective(finite_seq(Y,finite_set_size(X)),fn(x X) Y,decode)
+    witness $has_equal_cardinality(finite_seq(Y,finite_set_size(X)),fn(x X) Y) from decode
+
+thm finite_function_space_is_finite:
+    ? forall X,Y finite_set:
+        $is_finite_set(fn(x X) Y)
+    release thm finite_function_space_equal_cardinality(X,Y)
+    $is_finite_set(finite_seq(Y,finite_set_size(X)))
+    release thm equal_cardinality_finite_transfer(finite_seq(Y,finite_set_size(X)),fn(x X) Y)
+
+thm finite_function_space_cardinality:
+    ? forall X,Y finite_set:
+        $has_n_elements(fn(x X) Y,finite_set_size(Y)^finite_set_size(X))
+    release thm finite_function_space_is_finite(X,Y)
+    release thm finite_function_space_equal_cardinality(X,Y)
+    release thm equal_cardinality_native_size(finite_seq(Y,finite_set_size(X)),fn(x X) Y)
+    release thm finite_sequence_size(Y,finite_set_size(X))
+    finite_set_size(fn(x X) Y) = finite_set_size(finite_seq(Y,finite_set_size(X))) = finite_set_size(Y)^finite_set_size(X)
+    release thm native_size_has_n_elements(fn(x X) Y,finite_set_size(Y)^finite_set_size(X))
+

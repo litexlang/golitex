@@ -51,6 +51,26 @@ pub enum ExecHaveObjInNonemptySetStmtFailed {
     ParamType(VerifyObjWellDefinedResult),
     NonemptyCheck(VerifyFactResult),
     AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
+    Local(Box<ExecHaveObjInNonemptySetLocalFailure>),
+}
+
+pub struct ExecHaveObjInNonemptySetLocalFailure {
+    pub statement: HaveObjInNonemptySetOrParamTypeStmt,
+    pub completed_groups: Vec<HaveObjInNonemptySetGroupResult>,
+    pub failure: HaveObjInNonemptySetLocalFailed,
+    pub local_env: Box<crate::exec_env::exec_env::ExecEnv>,
+}
+
+pub enum HaveObjInNonemptySetLocalFailed {
+    ParamType(VerifyObjWellDefinedResult),
+    Nonempty {
+        param_type_well_defined: ParamTypeWellDefinedProof,
+        failed: VerifyFactResult,
+    },
+    AutoOpen {
+        opened_before_fail: Vec<crate::execute::ReleaseOneStructLayerProof>,
+        failed: crate::execute::FailToReleaseOneStructLayer,
+    },
 }
 
 // Each group: WD type → prove nonempty → define symbols; then auto-open.
@@ -105,13 +125,24 @@ impl Runtime {
                 {
                     Ok(mut proofs) => proofs.remove(0),
                     Err(failed) => {
-                        return Ok(Err(ExecHaveObjInNonemptySetStmtFailed::ParamType(failed)));
+                        return Ok(Err((
+                            groups,
+                            HaveObjInNonemptySetLocalFailed::ParamType(failed),
+                        )));
                     }
                 };
                 let nonempty_check =
                     match rt.verify_have_obj_nonempty_obligations(&one, verify_state.clone())? {
                         Ok(mut checks) => checks.remove(0),
-                        Err(failed) => return Ok(Err(failed)),
+                        Err(failed) => {
+                            return Ok(Err((
+                                groups,
+                                HaveObjInNonemptySetLocalFailed::Nonempty {
+                                    param_type_well_defined,
+                                    failed,
+                                },
+                            )))
+                        }
                     };
                 let defined_params = rt.define_typed_parameters_in_current_env(
                     &one,
@@ -132,10 +163,14 @@ impl Runtime {
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )? {
                 Ok(layers) => layers,
-                Err((_, failed)) => {
-                    return Ok(Err(
-                        ExecHaveObjInNonemptySetStmtFailed::AutoOpenStructLayer(failed),
-                    ));
+                Err((opened_before_fail, failed)) => {
+                    return Ok(Err((
+                        groups,
+                        HaveObjInNonemptySetLocalFailed::AutoOpen {
+                            opened_before_fail,
+                            failed,
+                        },
+                    )));
                 }
             };
             Ok(Ok((
@@ -147,8 +182,17 @@ impl Runtime {
 
         let (groups, store_and_infer_result, auto_opened_struct_layers) = match commit {
             Ok(parts) => parts,
-            Err(failed) => {
-                return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(failed));
+            Err((completed_groups, failure)) => {
+                return Ok(ExecHaveObjInNonemptySetStmtResult::Failed(
+                    ExecHaveObjInNonemptySetStmtFailed::Local(Box::new(
+                        ExecHaveObjInNonemptySetLocalFailure {
+                            statement: stmt.clone(),
+                            completed_groups,
+                            failure,
+                            local_env: nested_env,
+                        },
+                    )),
+                ));
             }
         };
         self.top_exec_env_mut().merge_from(&nested_env)?;
@@ -167,8 +211,7 @@ impl Runtime {
         &mut self,
         param_def: &TypedParameterList,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Result<Vec<ParamTypeFactCheckResult>, ExecHaveObjInNonemptySetStmtFailed>>
-    {
+    ) -> RuntimeResult<Result<Vec<ParamTypeFactCheckResult>, VerifyFactResult>> {
         let mut out = Vec::new();
         for group in &param_def.groups {
             let check = match &group.param_type {
@@ -184,9 +227,7 @@ impl Runtime {
                     }));
                     let verify_result = self.verify_fact(&fact, verify_state.clone())?;
                     if verify_result.is_failed() {
-                        return Ok(Err(ExecHaveObjInNonemptySetStmtFailed::NonemptyCheck(
-                            verify_result,
-                        )));
+                        return Ok(Err(verify_result));
                     }
                     ParamTypeFactCheckResult::Obj(verify_result)
                 }

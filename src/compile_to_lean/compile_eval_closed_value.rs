@@ -11,7 +11,7 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(EvalRational, String), LeanCompileError> {
         let (value, proof, _) =
-            self.compile_eval_value(object, &[], &mut 0, &[], &mut 0, position)?;
+            self.compile_eval_value(object, &[], &mut 0, &[], &mut 0, &[], &mut 0, position)?;
         Ok((value, proof))
     }
 
@@ -24,8 +24,22 @@ impl LitexToLeanCompiler {
         remaining: &mut usize,
         aggregates: &[crate::execute::execute_eval_stmt::aggregate_evaluation_result::AggregateEvaluationResult],
         remaining_aggregates: &mut usize,
+        matrices: &[crate::execute::execute_eval_stmt::aggregate_evaluation_result::MatrixScalarEvaluationResult],
+        remaining_matrices: &mut usize,
         position: &SourcePosition<'_>,
     ) -> Result<(EvalRational, String, Vec<FactId>), LeanCompileError> {
+        if matches!(object, Obj::MatrixOperator(_)) {
+            return self.compile_eval_matrix_value(
+                object,
+                evaluations,
+                remaining,
+                aggregates,
+                remaining_aggregates,
+                matrices,
+                remaining_matrices,
+                position,
+            );
+        }
         if matches!(object, Obj::FnObj(_)) {
             return self.compile_eval_function_value(
                 object,
@@ -33,14 +47,20 @@ impl LitexToLeanCompiler {
                 remaining,
                 aggregates,
                 remaining_aggregates,
+                matrices,
+                remaining_matrices,
                 position,
             );
         }
         if matches!(object, Obj::IteratedOperator(_)) {
             return self.compile_eval_aggregate_value(
                 object,
+                evaluations,
+                remaining,
                 aggregates,
                 remaining_aggregates,
+                matrices,
+                remaining_matrices,
                 position,
             );
         }
@@ -51,8 +71,26 @@ impl LitexToLeanCompiler {
                 remaining,
                 aggregates,
                 remaining_aggregates,
+                matrices,
+                remaining_matrices,
                 position,
             );
+        }
+        if let Obj::ComplexOperator(ComplexOperator::Conjugate(p)) = object {
+            let (value, child, cites) = self.compile_eval_value(
+                &p.arg,
+                evaluations,
+                remaining,
+                aggregates,
+                remaining_aggregates,
+                matrices,
+                remaining_matrices,
+                position,
+            )?;
+            let number = exact_rational_literal(&value, "ℂ")?;
+            let raw = self.compile_normalization_value(object, position)?;
+            let proof = format!("(show {raw} = M.number {number} from (congrArg (Litex.complexUnaryValue (M := M) (fun z : ℂ => star z)) {child}).trans ((Litex.complexUnaryValue_number (M := M) (fun z : ℂ => star z) {number}).trans (congrArg M.number (by norm_num))))");
+            return Ok((value, proof, cites));
         }
         if matches!(
             object,
@@ -62,6 +100,44 @@ impl LitexToLeanCompiler {
                     | ComplexOperator::ComplexAbs(_)
             )
         ) {
+            if EvalRational::from_obj(object).is_none() {
+                let (argument, native, operation) = match object {
+                    Obj::ComplexOperator(ComplexOperator::RealPart(p)) => {
+                        (&p.arg, "(fun z : ℂ => (z.re : ℂ))", "real")
+                    }
+                    Obj::ComplexOperator(ComplexOperator::ImaginaryPart(p)) => {
+                        (&p.arg, "(fun z : ℂ => (z.im : ℂ))", "imaginary")
+                    }
+                    Obj::ComplexOperator(ComplexOperator::ComplexAbs(p)) => {
+                        (&p.arg, "(fun z : ℂ => (‖z‖ : ℂ))", "absolute")
+                    }
+                    _ => unreachable!(),
+                };
+                let (argument, child, cites) = self.compile_eval_value(
+                    argument,
+                    evaluations,
+                    remaining,
+                    aggregates,
+                    remaining_aggregates,
+                    matrices,
+                    remaining_matrices,
+                    position,
+                )?;
+                let zero = EvalRational::new(0, 1).unwrap();
+                let value = match operation {
+                    "imaginary" => zero,
+                    "absolute" if argument.is_negative() => {
+                        zero.sub(&argument).ok_or_else(|| {
+                            LeanCompileError::unsupported("Eval/ExactComplexObservation")
+                        })?
+                    }
+                    _ => argument.clone(),
+                };
+                let number = exact_rational_literal(&argument, "ℂ")?;
+                let output = exact_rational_literal(&value, "ℂ")?;
+                let raw = self.compile_normalization_value(object, position)?;
+                return Ok((value, format!("(show {raw} = M.number {output} from (congrArg (Litex.complexUnaryValue (M := M) {native}) {child}).trans ((Litex.complexUnaryValue_number (M := M) {native} {number}).trans (congrArg M.number (by norm_num))))"), cites));
+            }
             // The original complex object has already been formed by source
             // WD. Its numeric observer replays that exact constructor and the
             // selected Mathlib bridge; no new complex representation is made.
@@ -86,8 +162,43 @@ impl LitexToLeanCompiler {
                 remaining,
                 aggregates,
                 remaining_aggregates,
+                matrices,
+                remaining_matrices,
                 position,
             );
+        }
+        let real_unary = match object {
+            Obj::ExpLogOperator(ExpLogOperator::Exp(p)) => Some((&p.arg, "Real.exp")),
+            Obj::ExpLogOperator(ExpLogOperator::Ln(p)) => Some((&p.arg, "Real.log")),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sinh(p)) => Some((&p.arg, "Real.sinh")),
+            Obj::HyperbolicOperator(HyperbolicOperator::Cosh(p)) => Some((&p.arg, "Real.cosh")),
+            Obj::HyperbolicOperator(HyperbolicOperator::Tanh(p)) => Some((&p.arg, "Real.tanh")),
+            Obj::HyperbolicOperator(HyperbolicOperator::Sech(p)) => {
+                Some((&p.arg, "Litex.nativeSech"))
+            }
+            _ => None,
+        };
+        if let Some((arg, native)) = real_unary {
+            // These are exactly the special values selected by the closed
+            // evaluator (zero, or one for ln), with the original child route.
+            let value = EvalRational::from_obj(object)
+                .ok_or_else(|| LeanCompileError::unsupported("Eval/ExactRealUnaryValue"))?;
+            let (argument, child, cites) = self.compile_eval_value(
+                arg,
+                evaluations,
+                remaining,
+                aggregates,
+                remaining_aggregates,
+                matrices,
+                remaining_matrices,
+                position,
+            )?;
+            let ac = exact_rational_literal(&argument, "ℂ")?;
+            let ar = exact_rational_literal(&argument, "ℝ")?;
+            let output = exact_rational_literal(&value, "ℂ")?;
+            let raw = self.compile_normalization_value(object, position)?;
+            let proof = format!("(show {raw} = M.number {output} from (congrArg (Litex.realUnaryValue (M := M) {native}) {child}).trans (by\n  have _cast : {ac} = (({ar} : ℝ) : ℂ) := by norm_num\n  exact (congrArg (fun x : ℂ => Litex.realUnaryValue (M := M) {native} (M.number x)) _cast).trans ((Litex.realUnaryValue_number (M := M) {native} {ar}).trans (congrArg M.number (by norm_num [Litex.nativeSech])))))");
+            return Ok((value, proof, cites));
         }
         if let Obj::ExpLogOperator(ExpLogOperator::Sqrt(sqrt)) = object {
             let (argument, child, cites) = self.compile_eval_value(
@@ -96,6 +207,8 @@ impl LitexToLeanCompiler {
                 remaining,
                 aggregates,
                 remaining_aggregates,
+                matrices,
+                remaining_matrices,
                 position,
             )?;
             let value = argument
@@ -126,6 +239,8 @@ impl LitexToLeanCompiler {
                 remaining,
                 aggregates,
                 remaining_aggregates,
+                matrices,
+                remaining_matrices,
                 position,
             );
         }
@@ -151,6 +266,8 @@ impl LitexToLeanCompiler {
                     remaining,
                     aggregates,
                     remaining_aggregates,
+                    matrices,
+                    remaining_matrices,
                     position,
                 )?;
                 let value = EvalRational::new(0, 1)
@@ -175,6 +292,8 @@ impl LitexToLeanCompiler {
                     remaining,
                     aggregates,
                     remaining_aggregates,
+                    matrices,
+                    remaining_matrices,
                     position,
                 )?;
                 let (av, ap, mut cites) = self.compile_eval_value(
@@ -183,6 +302,8 @@ impl LitexToLeanCompiler {
                     remaining,
                     aggregates,
                     remaining_aggregates,
+                    matrices,
+                    remaining_matrices,
                     position,
                 )?;
                 cites.extend(right_cites);

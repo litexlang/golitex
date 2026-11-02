@@ -91,11 +91,11 @@ impl LitexToLeanCompiler {
         if bindings.is_empty() {
             term
         } else {
-            format!(
-                "(by\n  {}\n  exact {})",
-                bindings.join("\n").replace('\n', "\n  "),
-                term.replace('\n', "\n  ")
-            )
+            // Keep the proposition reducible under dependent existential
+            // binders. Elaborating the entire Prop with a tactic can leave
+            // delayed metavariables that obstruct native existence proofs and
+            // Classical.choose_spec. Proof receivers are typed separately below.
+            format!("({};\n{term})", bindings.join(";\n"))
         }
     }
 
@@ -183,10 +183,35 @@ impl LitexToLeanCompiler {
                 "(show @Eq M.Value _ _ from Eq.refl _)".to_string()
                 }
             }
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Multivariable(p)) => {
+                if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::TotalDifferential(_))) {self.compile_total_differential_equality(fact,p,position)?} else if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::ScalarDifferential(_))) {self.compile_scalar_differential_equality(fact,p,position)?} else if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::Laplacian(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::Laplacian(_))) {self.compile_laplacian_equality(fact,p,position)?} else if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::Hessian(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::Hessian(_))) {self.compile_hessian_equality(fact,p,position)?} else if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::Curl(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::Curl(_))) {self.compile_curl_equality(fact,p,position)?} else if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::Divergence(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::Divergence(_))) {self.compile_divergence_equality(fact,p,position)?} else if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::Jacobian(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::Jacobian(_))) {self.compile_jacobian_equality(fact,p,position)?} else if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::Gradient(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::Gradient(_))) {self.compile_gradient_equality(fact,p,position)?} else if matches!(&fact.left,Obj::DerivativeOperator(DerivativeOperator::Partial(_)))||matches!(&fact.right,Obj::DerivativeOperator(DerivativeOperator::Partial(_))) {self.compile_partial_derivative_equality(fact,p,position)?} else if matches!(&fact.left,Obj::LimitOperator(LimitOperator::MultivariableVector(_)))||matches!(&fact.right,Obj::LimitOperator(LimitOperator::MultivariableVector(_))) {self.compile_multivariable_vector_equality(fact,p,position)?} else {self.compile_multivariable_scalar_equality(fact,p,position)?}
+            },
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FnRangeOfConstantAnonymousFn(p)) => self.compile_constant_function_range(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FnRangeOfEmptyDomain(p)) => self.compile_function_range_empty(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::EmptyFunctionGraph(p)) => self.compile_function_graph_empty(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::EmptyDomainFunctionSpaceSingleton(p)) => self.compile_function_space_singleton(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::UnionAbsorptionFromSubset(p)) => self.compile_union_absorption(fact, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SetMinusRecoversSubset(p)) => self.compile_set_minus_recovery(fact, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::EmptySetFromNotNonempty(p)) => self.compile_empty_of_not_nonempty(fact, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::UnionSetMinusDecomposition(_)) => self.compile_set_decomposition(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SetMinusIntersectSelf(_)) => self.compile_set_decomposition(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::PowerSetOfEmpty(_)) => self.compile_power_empty(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(rule @ (EqualitySearchProofByBuiltinRule::FamilyUnionOfEmpty(_) | EqualitySearchProofByBuiltinRule::FamilyUnionOfSingleton(_) | EqualitySearchProofByBuiltinRule::FamilyUnionOfPowerSet(_))) => self.compile_family_union_identity(fact, rule, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReOfReal(p)) => self.compile_real_projection(fact, false, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ImgOfReal(p)) => self.compile_real_projection(fact, true, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReOfRealPlusImagScaled(p)) => self.compile_rectangular_projection(fact, false, &p.real_coefficient_real, &p.imaginary_coefficient_real, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ImgOfRealPlusImagScaled(p)) => self.compile_rectangular_projection(fact, true, &p.real_coefficient_real, &p.imaginary_coefficient_real, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReOfProduct(_)) => self.compile_complex_product_projection(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ImgOfProduct(_)) => self.compile_complex_product_projection(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryIdentity(p)) => self.compile_elementary_identity(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ExponentialLogarithmIdentity(p)) => self.compile_exponential_logarithm_identity(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ScalarExtra(p)) => self.compile_scalar_extra(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(rule @ (EqualitySearchProofByBuiltinRule::LogProduct(_) | EqualitySearchProofByBuiltinRule::LogQuotient(_) | EqualitySearchProofByBuiltinRule::LogReciprocal(_) | EqualitySearchProofByBuiltinRule::LogChangeOfBase(_) | EqualitySearchProofByBuiltinRule::LogArgPower(_) | EqualitySearchProofByBuiltinRule::LogBasePower(_))) => self.compile_log_algebra(fact, rule, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::NativeMatrixLaw(p)) => self.compile_native_matrix_law(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::RealBounds(p)) => self.compile_real_extremum_equality(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLimsup(p)) => self.compile_sequence_limsup_equality(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLiminf(p)) => self.compile_sequence_liminf_equality(fact,p,position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::RiemannIntegralSelectedValue(p)) => self.compile_riemann_equality(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::DerivativeSelectedValue(p)) => self.compile_derivative_equality(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLimit(p)) => self.compile_sequence_limit_equality(fact,p,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FunctionLimit(p)) => self.compile_function_limit_equality(fact,p,position)?,
@@ -194,6 +219,22 @@ impl LitexToLeanCompiler {
                 proof @ TheyAreTheSameProof::SameFreeParamShape(_),
             ) => self.compile_identity(&fact.left, &fact.right, proof, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::PeriodicTrig(p))) => self.compile_periodic_trig(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ArcsinSinRightInverse(p)) => self.compile_trig_principal_inverse(fact, "Arcsin", &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ArccosCosRightInverse(p)) => self.compile_trig_principal_inverse(fact, "Arccos", &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ArctanTanRightInverse(p)) => self.compile_trig_principal_inverse(fact, "Arctan", &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ArccotCotRightInverse(p)) => self.compile_trig_principal_inverse(fact, "Arccot", &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(ElementaryArithmeticProof::PositivePowerCancellation { premise, requirements })) => self.compile_positive_integer_power_cancellation(fact, premise, requirements, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(ElementaryArithmeticProof::ZeroToPositiveRealPower { requirements })) => self.compile_constant_base_power(fact, Some(StandardSet::RPos), requirements, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(ElementaryArithmeticProof::SqrtSquareNonpositive(p))) => self.compile_sqrt_nonpositive_square(fact, &p.nonpositive_argument, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(ElementaryArithmeticProof::SqrtQuotientSquare(p))) => self.compile_sqrt_quotient_square(fact, &p.quotient_equation, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(ElementaryArithmeticProof::ModNegation { requirements })) => self.compile_remainder_elementary(fact, false, requirements, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(ElementaryArithmeticProof::ModNaturalPower { requirements })) => self.compile_remainder_elementary(fact, true, requirements, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::OneToAnyPower(_)) => self.compile_constant_base_power(fact, None, &[], position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ZeroToPosNatPower(p)) => self.compile_constant_base_power(fact, Some(StandardSet::NPos), &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::NegativeIntegerPowerReciprocal(p)) => self.compile_negative_integer_reciprocal(fact, [&p.base_numeric, &p.exponent_integer, &p.base_nonzero], position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReciprocalAsNegOnePower(p)) => self.compile_reciprocal_negative_one(fact, false, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::QuotientAsMulNegOnePower(p)) => self.compile_reciprocal_negative_one(fact, true, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::PowerOfProduct(p)) => self.compile_natural_product_power(fact, &p.proof_of_requirement_facts, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SinArcsinLeftInverse(_)) => self.compile_trig_left_inverse(fact, "Sin", "Arcsin", position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::CosArccosLeftInverse(_)) => self.compile_trig_left_inverse(fact, "Cos", "Arccos", position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TanArctanLeftInverse(_)) => self.compile_trig_left_inverse(fact, "Tan", "Arctan", position)?,
@@ -226,6 +267,11 @@ impl LitexToLeanCompiler {
                 self.compile_equality_known_special_property(fact, proof, position)?
             }
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ScalarIdentity(p @ (ScalarIdentityBuiltinRuleProof::FiniteSetMaxSelection(_) | ScalarIdentityBuiltinRuleProof::FiniteSetMinSelection(_)))) => self.compile_finite_extremum_selection(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ScalarIdentity(p)) => self.compile_scalar_identity(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::AbsAbsAbsorption(_)) => self.compile_abs_idempotent(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::AbsOfNegation(_)) => self.compile_abs_negation(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::AbsProduct(_)) => self.compile_abs_product(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::AbsNonposEqualsNegation(p)) => self.compile_abs_nonpositive(fact, &p.proof_of_requirement_facts, position)?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::AbsNonnegEqualsSelf(proof),
             ) => self.compile_abs_nonnegative_identity(fact, proof, position)?,
@@ -382,6 +428,11 @@ impl LitexToLeanCompiler {
                 &proof.proof_of_requirement_facts,
                 position,
             )?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ElementaryArithmetic(ElementaryArithmeticProof::SqrtKnownSquare { premise, requirements })) => self.compile_sqrt_known_square(fact, premise, requirements, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SqrtOfSquareEqualsAbs(_)) => self.compile_sqrt_of_square(fact, true, &[], position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SqrtOfSquare(p)) => self.compile_sqrt_of_square(fact, false, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SqrtProduct(p)) => self.compile_sqrt_product_quotient(fact, false, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SqrtQuotient(p)) => self.compile_sqrt_product_quotient(fact, true, &p.proof_of_requirement_facts, position)?,
             EqualFactSearchedProof::ByBuiltinRule(
                 EqualitySearchProofByBuiltinRule::SqrtSquare(proof),
             ) => self.compile_sqrt_square(fact, &proof.proof_of_requirement_facts, position)?,
@@ -514,6 +565,16 @@ impl LitexToLeanCompiler {
             ) => self.compile_composition_equality(fact, p, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::AggregateCalculation(proof)) => self.compile_aggregate_calculation(fact, proof, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SeqEqualsFnOnNPos(_)) => self.compile_seq_equality(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FiniteSeqEqualsFnOnOneBasedDomain(_)) => self.compile_finite_seq_space_equality(fact, super::compile_seq::FiniteSeqSpaceRule::OneBased, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FiniteSeqZeroEqualsFnOnEmpty(_)) => self.compile_finite_seq_space_equality(fact, super::compile_seq::FiniteSeqSpaceRule::EmptyInput, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::EmptySetFromSizeZero(p)) => self.compile_empty_from_cardinality(fact, &p.proof_of_requirement_facts, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FiniteSetEqualFromSubsetSize(p)) => self.compile_equal_from_subset_cardinality(fact, &p.size_equal_proof, &p.subset_proof, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FiniteSetSizeSetMinus(_)) => self.compile_cardinality_decomposition(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FiniteSetSizeUnion(_)) => self.compile_cardinality_decomposition(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ExpOfSum(_)) => self.compile_exp_sum(fact, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SinOfSum(_)) => self.compile_trig_sum(fact, true, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::CosOfSum(_)) => self.compile_trig_sum(fact, false, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::AbsSquare(p)) => self.compile_absolute_square(fact, &p.base_real, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::LnOfExp(_)) => self.compile_exp_ln_inverse(fact, false, &[], position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ExpOfLn(p)) => self.compile_exp_ln_inverse(fact, true, &p.proof_of_requirement_facts, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::EulerEqualsExpOne(_)) => self.compile_euler_identity(fact, false, position)?,
@@ -585,6 +646,15 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinStrategy(
                 EqualitySearchProofByBuiltinStrategy::ModCongruence(proof),
             ) => self.compile_mod_congruence(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::CartesianCoordinateEquality(proof),
+            ) => self.compile_cartesian_coordinate_strategy(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(proof),
+            ) => self.compile_function_application_strategy(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::AbsProductFromFactors(proof),
+            ) => self.compile_abs_product_strategy(fact, proof, position)?,
             EqualFactSearchedProof::ByMatchingOneArgByOne(proof) => self
                 .compile_matching_one_arg_by_one(
                     fact,

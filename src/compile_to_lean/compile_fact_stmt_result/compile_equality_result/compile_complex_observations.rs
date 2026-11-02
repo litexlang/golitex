@@ -165,7 +165,7 @@ impl LitexToLeanCompiler {
         ))
     }
 
-    fn compile_complex_native_identity(
+    pub(in crate::compile_to_lean) fn compile_complex_native_identity(
         &self,
         fact: &EqualFact,
         tactic: &str,

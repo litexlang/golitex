@@ -1,0 +1,445 @@
+claim:
+    ? forall n {j Z:j>=1}:
+        n $in N+
+    n $in Z
+    n>=1
+    n>0
+    n $in N+
+
+claim:
+    ? forall n {j Z:j>=1}:
+        n $in R+
+    n $in N+
+    n $in R
+    n>0
+    n $in R+
+
+claim:
+    ? forall degree N+:
+        1/degree $in R+
+        1/degree>0
+    degree>0
+    degree $in R+
+    1/degree>0
+    1/degree $in R+
+
+claim:
+    ? forall n {j Z:j>=1}:
+        n $in R
+    n $in Z
+    n $in R
+
+claim:
+    ? forall degree N+:
+        1/degree $in R
+    degree>0
+    degree $in R
+    degree!=0
+    1/degree $in R
+
+claim:
+    ? forall x R+,degree N+:
+        x^(1/degree) $in R
+    x>=0
+    release thm power::nonnegative_real_root_is_real(x,degree)
+
+claim:
+    ? forall n {j Z:j>=1}:
+        n>0
+        n>=0
+        n!=0
+    n>=1
+    n>0
+    n>=0
+    n!=0
+
+claim:
+    ? forall degree N+,n {j Z:j>=1}:
+        n^(1/degree) $in R
+    n $in R
+    n>=0
+    release thm power::nonnegative_real_root_is_real(n,degree)
+
+claim:
+    ? forall degree N+,n {j Z:j>=1}:
+        n^(1/degree) $in R+
+    n $in R+
+    1/degree $in R
+    n>=0
+    release thm power::nonnegative_real_root_is_real(n,degree)
+    release thm power::positive_real_power_is_positive(n,1/degree)
+
+claim:
+    ? forall degree N+,n {j Z:j>=1}:
+        n^(1/degree) $in R*
+    n $in R+
+    1/degree $in R
+    n>=0
+    release thm power::nonnegative_real_root_is_real(n,degree)
+    release thm power::positive_real_power_is_positive(n,1/degree)
+    n^(1/degree)>0
+    n^(1/degree)!=0
+    n^(1/degree) $in R*
+
+claim:
+    ? forall degree N+,n {j Z:j>=1}:
+        n^(1/degree)!=0
+    n $in R+
+    1/degree $in R
+    n>=0
+    release thm power::nonnegative_real_root_is_real(n,degree)
+    release thm power::positive_real_power_is_positive(n,1/degree)
+    n^(1/degree)>0
+    n^(1/degree)!=0
+
+claim:
+    ? forall degree N+,n {j Z:j>=1}:
+        1/(n^(1/degree)) $in R
+    n $in R+
+    1/degree $in R
+    n>=0
+    release thm power::nonnegative_real_root_is_real(n,degree)
+    release thm power::positive_real_power_is_positive(n,1/degree)
+    n^(1/degree)>0
+    n^(1/degree)!=0
+    1/(n^(1/degree)) $in R
+
+template<degree N+>:
+    have fn reciprocal_natural_root_tail(n {j Z:j>=1}) R=1/(n^(1/degree))
+
+thm reciprocal_natural_root_tail_values:
+    ? forall degree N+,n {j Z:j>=1}:
+        \reciprocal_natural_root_tail<degree>(n)>0
+        \reciprocal_natural_root_tail<degree>(n)^degree=1/n
+    n $in N+
+    n>0
+    n $in R+
+    degree>0
+    1/degree $in R
+    n^(1/degree) $in R
+    n^(1/degree)>0
+    n^(1/degree)!=0
+    1/(n^(1/degree)) $in R
+    1/(n^(1/degree))>0
+    \reciprocal_natural_root_tail<degree>(n)=1/(n^(1/degree))
+    \reciprocal_natural_root_tail<degree>(n)>0
+    release thm power::positive_real_power_negative_exponent(n,1/degree)
+    release thm power::positive_real_power_iteration(n,-(1/degree),degree)
+    \reciprocal_natural_root_tail<degree>(n)=n^(-(1/degree))
+    \reciprocal_natural_root_tail<degree>(n)^degree=(n^(-(1/degree)))^degree=n^((-(1/degree))*degree)
+    (-(1/degree))*degree=-1
+    n^((-(1/degree))*degree)=n^(-1)=1/n
+    \reciprocal_natural_root_tail<degree>(n)^degree=1/n
+
+thm reciprocal_natural_root_tail_limit:
+    ? forall degree N+:
+        $rs::has_real_tail_limit(1,\reciprocal_natural_root_tail<degree>,0)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(1,\reciprocal_natural_root_tail<degree>,0,epsilon)
+        release thm power::positive_real_power_is_positive(epsilon,degree)
+        epsilon^degree>0
+        epsilon^degree!=0
+        release thm real_archimedean_natural_upper_bound(1/(epsilon^degree))
+        obtain cutoff from exist k N+ st {1/(epsilon^degree)<k}
+        cutoff>=1
+        claim:
+            ? forall n Z:
+                n>=1
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\reciprocal_natural_root_tail<degree>(n),0,epsilon)
+            n $in {j Z:j>=1}
+            n>0
+            n>=cutoff>1/(epsilon^degree)
+            1/(epsilon^degree)<n
+            1=(1/(epsilon^degree))*(epsilon^degree)<n*(epsilon^degree)
+            1/n<(n*(epsilon^degree))/n=epsilon^degree
+            release thm reciprocal_natural_root_tail_values(degree,n)
+            \reciprocal_natural_root_tail<degree>(n) $in R
+            \reciprocal_natural_root_tail<degree>(n)>=0
+            epsilon>=0
+            \reciprocal_natural_root_tail<degree>(n)^degree=1/n<epsilon^degree
+            release thm power::nonnegative_real_positive_natural_power_reflects_strict_order(\reciprocal_natural_root_tail<degree>(n),epsilon,degree)
+            \reciprocal_natural_root_tail<degree>(n)-0=\reciprocal_natural_root_tail<degree>(n)>0
+            abs(\reciprocal_natural_root_tail<degree>(n)-0)=\reciprocal_natural_root_tail<degree>(n)<epsilon
+            by def $approx::is_epsilon_close(\reciprocal_natural_root_tail<degree>(n),0,epsilon)
+        by def $rs::is_real_tail_close_after(1,\reciprocal_natural_root_tail<degree>,0,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(1,\reciprocal_natural_root_tail<degree>,0,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(1,\reciprocal_natural_root_tail<degree>,0)
+
+template<base R>:
+    have fn real_geometric_tail_from_one(n {j Z:j>=1}) R=(fn(k N+) R {base^k})(n)
+
+claim:
+    ? forall k N+:
+        1+k-1 $in {j Z:j>=1}
+        k $in {j Z:j>=1}
+    release thm rs::real_tail_positive_index(1,k)
+    1+k-1=k
+    k $in {j Z:j>=1}
+
+thm real_geometric_tail_from_one_values:
+    ? forall base R,k N+:
+        \real_geometric_tail_from_one<base>(k)=base^k
+    k $in {j Z:j>=1}
+    \real_geometric_tail_from_one<base>(k)=(fn(j N+) R {base^j})(k)=base^k
+
+thm real_geometric_tail_small_base_limit:
+    ? forall base R:
+        abs(base)<1
+        =>:
+            $rs::has_real_tail_limit(1,\real_geometric_tail_from_one<base>,0)
+    have fn native(k N+) R=base^k
+    claim:
+        ? forall k N+:
+            native(k)=base^k
+        native(k)=base^k
+    release thm series::sequence_geometric_limit(native,base)
+    claim:
+        ? forall k N+:
+            \real_geometric_tail_from_one<base>(1+k-1)=native(k)
+        release thm rs::real_tail_positive_index(1,k)
+        1+k-1=k
+        \real_geometric_tail_from_one<base>(1+k-1)=base^(1+k-1)=base^k=native(k)
+    release thm rs::real_tail_limit_from_reindexed_values(1,\real_geometric_tail_from_one<base>,native,0)
+
+thm real_geometric_tail_one_limit:
+    ? $rs::has_real_tail_limit(1,\real_geometric_tail_from_one<1>,1)
+    have fn native(k N+) R=1
+    claim:
+        ? forall k N+:
+            native(k)=1
+        native(k)=1
+    release thm seq_limit_constant(native,1)
+    claim:
+        ? forall k N+:
+            \real_geometric_tail_from_one<1>(1+k-1)=native(k)
+        release thm rs::real_tail_positive_index(1,k)
+        1+k-1=k
+        \real_geometric_tail_from_one<1>(1+k-1)=1^(1+k-1)=1=native(k)
+    release thm rs::real_tail_limit_from_reindexed_values(1,\real_geometric_tail_from_one<1>,native,1)
+
+thm real_geometric_tail_minus_one_diverges:
+    ? not $rs::is_convergent_real_tail(1,\real_geometric_tail_from_one<-1>)
+    by contra:
+        ? not $rs::is_convergent_real_tail(1,\real_geometric_tail_from_one<-1>)
+        release thm rsl::convergent_real_tail_is_cauchy(1,\real_geometric_tail_from_one<-1>)
+        $rs::is_eventually_real_tail_steady(1,\real_geometric_tail_from_one<-1>,1)
+        obtain cutoff from $rs::is_eventually_real_tail_steady(1,\real_geometric_tail_from_one<-1>,1)
+        cutoff>=1
+        cutoff $in {j Z:j>=1}
+        cutoff $in N+
+        cutoff+1 $in Z
+        cutoff+1>=1
+        cutoff+1>=cutoff
+        cutoff+1 $in {j Z:j>=1}
+        cutoff+1 $in N+
+        \real_geometric_tail_from_one<-1>(cutoff) $in R
+        \real_geometric_tail_from_one<-1>(cutoff+1) $in R
+        release thm real_geometric_tail_from_one_values(-1,cutoff)
+        release thm real_geometric_tail_from_one_values(-1,cutoff+1)
+        release thm series::absolute_natural_power(-1,cutoff)
+        abs((-1)^cutoff)=abs(-1)^cutoff=1^cutoff=1
+        abs(\real_geometric_tail_from_one<-1>(cutoff))=1
+        (-1)^(cutoff+1)=(-1)^cutoff*(-1)^1=(-1)^cutoff*(-1)
+        \real_geometric_tail_from_one<-1>(cutoff+1)=(-1)^(cutoff+1)=(-1)^cutoff*(-1)
+        (-1)^cutoff*(-1)=\real_geometric_tail_from_one<-1>(cutoff)*(-1)=-\real_geometric_tail_from_one<-1>(cutoff)
+        \real_geometric_tail_from_one<-1>(cutoff+1)=-\real_geometric_tail_from_one<-1>(cutoff)
+        \real_geometric_tail_from_one<-1>(cutoff)-\real_geometric_tail_from_one<-1>(cutoff+1)=\real_geometric_tail_from_one<-1>(cutoff)-(-\real_geometric_tail_from_one<-1>(cutoff))=2*\real_geometric_tail_from_one<-1>(cutoff)
+        abs(\real_geometric_tail_from_one<-1>(cutoff)-\real_geometric_tail_from_one<-1>(cutoff+1))=abs(2*\real_geometric_tail_from_one<-1>(cutoff))=abs(2)*abs(\real_geometric_tail_from_one<-1>(cutoff))=2*1=2
+        $approx::is_epsilon_close(\real_geometric_tail_from_one<-1>(cutoff),\real_geometric_tail_from_one<-1>(cutoff+1),1)
+        abs(\real_geometric_tail_from_one<-1>(cutoff)-\real_geometric_tail_from_one<-1>(cutoff+1))<=1
+        impossible 2<=1
+
+thm real_geometric_tail_large_magnitude_diverges:
+    ? forall base R:
+        abs(base)>1
+        =>:
+            not $rs::is_convergent_real_tail(1,\real_geometric_tail_from_one<base>)
+    by contra:
+        ? not $rs::is_convergent_real_tail(1,\real_geometric_tail_from_one<base>)
+        release thm rs::convergent_real_tail_is_bounded(1,\real_geometric_tail_from_one<base>)
+        obtain M from $rs::is_bounded_real_tail(1,\real_geometric_tail_from_one<base>)
+        abs(base)-1=abs(base)+(-1)>1+(-1)=0
+        have t R+=abs(base)-1
+        t>=0
+        t!=0
+        release thm real_archimedean_natural_upper_bound((M+1)/t)
+        obtain k from exist k N+ st {(M+1)/t<k}
+        k $in N
+        k $in {j Z:j>=1}
+        M+1=((M+1)/t)*t<k*t
+        1+k*t>1+(M+1)=M+2>M
+        1+t=1+(abs(base)-1)=abs(base)
+        1+t>0
+        (1+t)^k $in R
+        release thm series::bernoulli_nonnegative(t,k)
+        release thm series::absolute_natural_power(base,k)
+        release thm real_geometric_tail_from_one_values(base,k)
+        abs(\real_geometric_tail_from_one<base>(k))=abs(base^k)=abs(base)^k=(1+t)^k
+        abs(\real_geometric_tail_from_one<base>(k))>=1+k*t>M
+        abs(\real_geometric_tail_from_one<base>(k))>M
+        abs(\real_geometric_tail_from_one<base>(k))<=M
+        impossible abs(\real_geometric_tail_from_one<base>(k))<=M
+
+claim:
+    ? forall value R+,n {j Z:j>=1}:
+        value^(1/n) $in R+
+    n $in N+
+    n>0
+    1/n $in R
+    value>=0
+    release thm power::nonnegative_real_root_is_real(value,n)
+    release thm power::positive_real_power_is_positive(value,1/n)
+
+template<value R+>:
+    have fn positive_base_nth_root_tail(n {j Z:j>=1}) R+=value^(1/n)
+
+thm positive_base_nth_root_tail_power:
+    ? forall value R+,n {j Z:j>=1}:
+        \positive_base_nth_root_tail<value>(n)^n=value
+    n $in N+
+    value>=0
+    release thm power::nonnegative_real_root_properties(value,n)
+    \positive_base_nth_root_tail<value>(n)=value^(1/n)
+    \positive_base_nth_root_tail<value>(n)^n=(value^(1/n))^n=value
+
+thm positive_base_nth_root_tail_at_least_one:
+    ? forall value R+,n {j Z:j>=1}:
+        value>=1
+        =>:
+            \positive_base_nth_root_tail<value>(n)>=1
+    n $in N+
+    \positive_base_nth_root_tail<value>(n) $in R+
+    \positive_base_nth_root_tail<value>(n)>0
+    release thm positive_base_nth_root_tail_power(value,n)
+    by contra:
+        ? \positive_base_nth_root_tail<value>(n)>=1
+        \positive_base_nth_root_tail<value>(n)<1
+        \positive_base_nth_root_tail<value>(n)>=0
+        release thm power::nonnegative_real_positive_natural_power_preserves_strict_order(\positive_base_nth_root_tail<value>(n),1,n)
+        value=\positive_base_nth_root_tail<value>(n)^n<1^n=1
+        impossible value>=1
+
+thm positive_base_nth_root_tail_large_base_limit:
+    ? forall value R+:
+        value>=1
+        =>:
+            $rs::has_real_tail_limit(1,\positive_base_nth_root_tail<value>,1)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(1,\positive_base_nth_root_tail<value>,1,epsilon)
+        release thm real_archimedean_natural_upper_bound((value-1)/epsilon)
+        obtain cutoff from exist k N+ st {(value-1)/epsilon<k}
+        cutoff>=1
+        claim:
+            ? forall n Z:
+                n>=1
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\positive_base_nth_root_tail<value>(n),1,epsilon)
+            n $in {j Z:j>=1}
+            n $in N+
+            n $in N
+            epsilon>0
+            n>=cutoff>(value-1)/epsilon
+            (value-1)/epsilon<n
+            value-1=((value-1)/epsilon)*epsilon<n*epsilon
+            value=(value-1)+1<n*epsilon+1=1+n*epsilon
+            1+epsilon>0
+            1+epsilon!=0
+            (1+epsilon)^n $in R
+            epsilon>=0
+            release thm series::bernoulli_nonnegative(epsilon,n)
+            (1+epsilon)^n>=1+n*epsilon>value
+            release thm positive_base_nth_root_tail_power(value,n)
+            \positive_base_nth_root_tail<value>(n) $in R+
+            \positive_base_nth_root_tail<value>(n)>=0
+            1+epsilon>=0
+            \positive_base_nth_root_tail<value>(n)^n=value<(1+epsilon)^n
+            release thm power::nonnegative_real_positive_natural_power_reflects_strict_order(\positive_base_nth_root_tail<value>(n),1+epsilon,n)
+            release thm positive_base_nth_root_tail_at_least_one(value,n)
+            1-epsilon=1-epsilon+0<1-epsilon+epsilon=1<=\positive_base_nth_root_tail<value>(n)
+            \positive_base_nth_root_tail<value>(n)<=1+epsilon
+            release thm rsl::real_symmetric_interval_gives_epsilon_close(\positive_base_nth_root_tail<value>(n),1,epsilon)
+        by def $rs::is_real_tail_close_after(1,\positive_base_nth_root_tail<value>,1,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(1,\positive_base_nth_root_tail<value>,1,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(1,\positive_base_nth_root_tail<value>,1)
+
+thm positive_base_nth_root_tail_small_base_limit:
+    ? forall value R+:
+        value<1
+        =>:
+            $rs::has_real_tail_limit(1,\positive_base_nth_root_tail<value>,1)
+    value>0
+    value!=0
+    1/value $in R+
+    have reciprocal R+=1/value
+    reciprocal=1/value>value/value=1
+    reciprocal>=1
+    release thm positive_base_nth_root_tail_large_base_limit(reciprocal)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(1,\positive_base_nth_root_tail<value>,1,epsilon)
+        $rs::is_eventually_real_tail_close(1,\positive_base_nth_root_tail<reciprocal>,1,epsilon)
+        obtain cutoff from $rs::is_eventually_real_tail_close(1,\positive_base_nth_root_tail<reciprocal>,1,epsilon)
+        cutoff>=1
+        claim:
+            ? forall n Z:
+                n>=1
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\positive_base_nth_root_tail<value>(n),1,epsilon)
+            n $in {j Z:j>=1}
+            n $in N+
+            n>0
+            n!=0
+            1/n $in R
+            \positive_base_nth_root_tail<value>(n) $in R+
+            \positive_base_nth_root_tail<reciprocal>(n)=reciprocal^(1/n)
+            release thm power::positive_real_power_is_positive(reciprocal,1/n)
+            \positive_base_nth_root_tail<reciprocal>(n) $in R+
+            have s R+=\positive_base_nth_root_tail<value>(n)
+            have t R+=\positive_base_nth_root_tail<reciprocal>(n)
+            s=\positive_base_nth_root_tail<value>(n)=value^(1/n)
+            t=\positive_base_nth_root_tail<reciprocal>(n)=reciprocal^(1/n)
+            value*reciprocal=value*(1/value)=1
+            release thm power::positive_real_product_power(value,reciprocal,1/n)
+            value^(1/n)*reciprocal^(1/n)=(value*reciprocal)^(1/n)=1^(1/n)=1
+            s*t=(value^(1/n))*t=(value^(1/n))*(reciprocal^(1/n))=1
+            t>0
+            t!=0
+            s=(s*t)/t=1/t
+            release thm positive_base_nth_root_tail_at_least_one(reciprocal,n)
+            t=\positive_base_nth_root_tail<reciprocal>(n)>=1
+            t>=1
+            1/t<=t/t=1
+            s<=1
+            s-1=s+(-1)<=1+(-1)=0
+            abs(s-1)=-(s-1)=1-s
+            t-1=t+(-1)>=1+(-1)=0
+            (t-1)/t=(t-1)*(1/t)<=(t-1)*1=t-1
+            1-s=1-1/t=(t-1)/t
+            abs(t-1)=t-1
+            $approx::is_epsilon_close(\positive_base_nth_root_tail<reciprocal>(n),1,epsilon)
+            abs(\positive_base_nth_root_tail<reciprocal>(n)-1)<=epsilon
+            t-1=\positive_base_nth_root_tail<reciprocal>(n)-1
+            abs(t-1)=abs(\positive_base_nth_root_tail<reciprocal>(n)-1)<=epsilon
+            abs(s-1)=1-s=(t-1)/t<=t-1=abs(t-1)<=epsilon
+            \positive_base_nth_root_tail<value>(n)-1=s-1
+            abs(\positive_base_nth_root_tail<value>(n)-1)=abs(s-1)<=epsilon
+            by def $approx::is_epsilon_close(\positive_base_nth_root_tail<value>(n),1,epsilon)
+        by def $rs::is_real_tail_close_after(1,\positive_base_nth_root_tail<value>,1,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(1,\positive_base_nth_root_tail<value>,1,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(1,\positive_base_nth_root_tail<value>,1)
+
+thm positive_base_nth_root_tail_limit:
+    ? forall value R+:
+        $rs::has_real_tail_limit(1,\positive_base_nth_root_tail<value>,1)
+    by cases:
+        ? $rs::has_real_tail_limit(1,\positive_base_nth_root_tail<value>,1)
+        case value>=1:
+            release thm positive_base_nth_root_tail_large_base_limit(value)
+        case value<1:
+            release thm positive_base_nth_root_tail_small_base_limit(value)

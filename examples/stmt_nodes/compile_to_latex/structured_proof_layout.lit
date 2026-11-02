@@ -1,0 +1,22 @@
+# Tracer: structured mathematical proof layout.
+# Before: repeated Proof captions, nested quote blocks, and one display per fact.
+# Now: explicit cases, one outer Proof caption, scoped contradiction steps.
+# The Litex proof and its mathematical assumptions are unchanged.
+# Verify: target/release/litex -strict -lang en -f examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit
+# Render: target/release/litex -latex -document -lang zh -f examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit
+# Boundary: -latex remains parse-only and does not certify a proof.
+
+claim:
+    ? forall n N+:
+        n = 1 or n > 1
+    n >= 1
+    by cases:
+        ? n = 1 or n > 1
+        case n = 1:
+            n = 1 or n > 1
+        case n != 1:
+            by contra:
+                ? n > 1
+                n <= 1
+                n = 1
+                impossible n != 1

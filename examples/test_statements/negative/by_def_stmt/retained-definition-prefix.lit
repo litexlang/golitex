@@ -1,0 +1,22 @@
+# Expected rejection: retained-definition-prefix
+# Owner: ByDefStmt
+# Before: the same source was rejected at 2 < 1, but its checked prefix and
+# detached definition scope were discarded from the reading result.
+# prop small_positive(x R):
+#     x > 0
+#     x < 1
+#     x != 0
+# by def $small_positive(2)
+# Now: retain actual checks of 2 in R and 2 > 0, the rejected condition 2 < 1,
+# and the unexecuted condition 2 != 0. The predicate instance is not published.
+prop small_positive(x R):
+    x > 0
+    x < 1
+    x != 0
+
+by def $small_positive(2)
+# Boundary: rejection is not a proof of the negation; goal-WD failure does not
+# enter this definition-checking scope. No trust or new proof rule is used.
+# Evidence: target/release/litex -strict -lang en -f examples/test_statements/negative/by_def_stmt/retained-definition-prefix.lit
+# Expected: exit 1, definition_requirement at 2 < 1, and no stored target.
+# Producer: tests/reading_failed_definitions.rs; consumer: failed-definition-applications.cjs.

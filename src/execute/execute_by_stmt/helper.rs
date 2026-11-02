@@ -83,15 +83,23 @@ pub(super) fn close_by_contradiction(
     let negated_fact = match negate_fact_for_contra(runtime, impossible) {
         Ok(fact) => fact,
         Err(message) => {
-            return Ok(Err(
-                ByContradictionClosingFailed::NegateImpossibleUnsupported(message),
-            ));
+            return Ok(Err(ByContradictionClosingFailed::AfterImpossible(
+                Box::new(super::ByContradictionAfterImpossibleFailed::new(
+                    impossible.clone(),
+                    impossible_proof,
+                    super::ByContradictionOppositeFailed::NegationUnsupported(message),
+                )),
+            )));
         }
     };
     let negated_proof = verify_goal_fact(runtime, &negated_fact)?;
     if negated_proof.is_failed() {
-        return Ok(Err(ByContradictionClosingFailed::NegatedImpossible(
-            negated_proof,
+        return Ok(Err(ByContradictionClosingFailed::AfterImpossible(
+            Box::new(super::ByContradictionAfterImpossibleFailed::new(
+                impossible.clone(),
+                impossible_proof,
+                super::ByContradictionOppositeFailed::Verification(negated_proof),
+            )),
         )));
     }
     let impossible_fact_id = lookup_known_fact_id(runtime, impossible);

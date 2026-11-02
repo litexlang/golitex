@@ -147,6 +147,24 @@ pub enum ExecDefineObjStmtResult {
 }
 
 impl ExecStmtResult {
+    // Observe the failed trust-have transaction without changing its discard
+    // behavior. Other results retain their existing scope contracts.
+    pub(crate) fn retain_failed_statement_scope(
+        mut self,
+        local_env: Box<crate::exec_env::exec_env::ExecEnv>,
+    ) -> Self {
+        use crate::execute::execute_unsafe_stmt::{
+            ExecTrustHaveStmtFailed, ExecTrustHaveStmtResult,
+        };
+        if let Self::Trust(ExecTrustBoundaryStmtResult::TrustHaveStmt(
+            ExecTrustHaveStmtResult::Failed(ExecTrustHaveStmtFailed::Retained(failure)),
+        )) = &mut self
+        {
+            failure.local_env = Some(local_env);
+        }
+        self
+    }
+
     pub fn is_failed(&self) -> bool {
         match self {
             Self::Fact(r) => r.is_failed(),

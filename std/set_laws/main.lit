@@ -1,0 +1,61 @@
+# Set display compatibility, relative complements and the Russell diagonal.
+
+thm set_with_member_is_nonempty:
+    ? forall S set,x S:
+        $is_nonempty_set(S)
+    witness $is_nonempty_set(S) from x
+
+thm singleton_union_display:
+    ? forall a,b set:
+        a != b
+        =>:
+            {a,b} = union({a},{b})
+    claim:
+        ? forall x {a,b}:
+            x $in union({a},{b})
+        by cases:
+            ? x $in union({a},{b})
+            case x = a:
+                x $in {a}
+                x $in union({a},{b})
+            case x = b:
+                x $in {b}
+                x $in union({a},{b})
+    claim:
+        ? forall x union({a},{b}):
+            x $in {a,b}
+        by cases:
+            ? x $in {a,b}
+            case x $in {a}:
+                x = a
+                x $in {a,b}
+            case x $in {b}:
+                x = b
+                x $in {a,b}
+    by extension {a,b} = union({a},{b})
+
+thm relative_complement_partition:
+    ? forall X set,A power_set(X):
+        union(A,set_minus(X,A)) = X
+        intersect(A,set_minus(X,A)) = {}
+    A $subset X
+    union(A,set_minus(X,A)) = union(A,X) = X
+    intersect(A,set_minus(X,A)) = {}
+
+thm russell_diagonal_outside:
+    ? forall U set:
+        not {x U:not x $in x} $in U
+    have diagonal set = {x U:not x $in x}
+    by contra:
+        ? not {x U:not x $in x} $in U
+        diagonal $in U
+        claim:
+            ? not diagonal $in diagonal
+            by contra:
+                ? not diagonal $in diagonal
+                diagonal $in {x U:not x $in x}
+                not diagonal $in diagonal
+                impossible diagonal $in diagonal
+        release thm set_builder_member(diagonal,{x U:not x $in x})
+        diagonal $in diagonal
+        impossible diagonal $in diagonal

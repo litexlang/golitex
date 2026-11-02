@@ -12,6 +12,52 @@ fn invalid(stage: &str) -> LeanCompileError {
 }
 
 impl LitexToLeanCompiler {
+    fn compile_difference_sign(
+        &self,
+        proof: &StructuralRealSignProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let StructuralRealSignReason::DifferenceFromOrder {
+            left_real,
+            right_real,
+            source,
+        } = &proof.reason
+        else {
+            return Err(invalid("DifferenceReason"));
+        };
+        let Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) = &proof.element else {
+            return Err(invalid("DifferenceConstructor"));
+        };
+        let (lower, upper, strict) = source_order_oriented(&source.fact)?;
+        if left_real.set != StandardSet::R
+            || right_real.set != StandardSet::R
+            || left_real.element.ir() != sub.left.ir()
+            || right_real.element.ir() != sub.right.ir()
+            || lower.ir() != sub.right.ir()
+            || upper.ir() != sub.left.ir()
+            || proof.sign
+                != if strict {
+                    RealSign::Positive
+                } else {
+                    RealSign::Nonnegative
+                }
+        {
+            return Err(invalid("DifferenceSubject"));
+        }
+        let left = self.compile_structural(left_real, position)?;
+        let right = self.compile_structural(right_real, position)?;
+        let source = self.compile_order_known_premise(source, position)?.1;
+        let object = self.compile_object_reference(&proof.element, position)?;
+        let left_object = self.compile_object_reference(&sub.left, position)?;
+        let right_object = self.compile_object_reference(&sub.right, position)?;
+        let (bridge, iff, law) = if strict {
+            ("ltOfDenoteReal", "lt_iff_ofDenoteReal", "sub_pos")
+        } else {
+            ("leOfDenoteReal", "le_iff_ofDenoteReal", "sub_nonneg")
+        };
+        Ok(format!("(by\n  let _sign_sub := {object}\n  obtain ⟨a, ha⟩ := (M.real_members _).mp ({left})\n  obtain ⟨b, hb⟩ := (M.real_members _).mp ({right})\n  have hs : Litex.denote _sign_sub = M.number ((a - b : ℝ) : ℂ) := by\n    change M.subValue (Litex.denote ({left_object})) (Litex.denote ({right_object})) = _\n    rw [ha, hb, M.sub_numbers, Complex.ofReal_sub]\n  exact Litex.NativeBridge.{bridge} (Litex.number (M := M) 0) _sign_sub 0 (a-b) rfl hs ({law}.mpr ((Litex.NativeBridge.{iff} ({right_object}) ({left_object}) b a hb ha).mp ({source})))\n)"))
+    }
+
     pub(super) fn compile_structural_positive_order(
         &self,
         goal: &AtomicFact,
@@ -34,6 +80,9 @@ impl LitexToLeanCompiler {
             return Err(invalid("Sign"));
         }
         match &proof.reason {
+            StructuralRealSignReason::DifferenceFromOrder { .. } => {
+                self.compile_difference_sign(proof, position)
+            }
             StructuralRealSignReason::WeakAndNonzero {
                 real,
                 weak,
@@ -293,6 +342,19 @@ impl LitexToLeanCompiler {
                 return Ok(format!(
                     "(by\n  have _sign_real := {real}\n  exact {cited}\n)"
                 ));
+            }
+            StructuralRealSignReason::Membership(member) => {
+                if member.element.ir() != element.ir() || member.set != StandardSet::N {
+                    return Err(invalid("NaturalMembership"));
+                }
+                return Ok(format!(
+                    "(Litex.naturalNonnegative {} {})",
+                    self.compile_object_reference(element, position)?,
+                    self.compile_structural(member, position)?
+                ));
+            }
+            StructuralRealSignReason::DifferenceFromOrder { .. } => {
+                return self.compile_difference_sign(proof, position);
             }
             StructuralRealSignReason::Add { left, right }
             | StructuralRealSignReason::Mul { left, right } => {

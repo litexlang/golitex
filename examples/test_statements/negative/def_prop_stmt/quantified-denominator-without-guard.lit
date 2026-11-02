@@ -1,0 +1,10 @@
+# Before reading retention: only the nested terminal denominator error survived.
+# prop quotients_are_real(a R):
+#     forall x R:
+#         x / a $in R
+#
+# This definition still rejects: a real denominator may be zero.
+# Reading retains the arbitrary x and the failed formation condition a != 0.
+prop quotients_are_real(a R):
+    forall x R:
+        x / a $in R

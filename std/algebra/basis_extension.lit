@@ -19,10 +19,18 @@ thm append_outside_span_is_independent:
         obtain sums from $finite_span::has_linear_combination_value(K,field,V,space,m+1,coefficients,\append_vector<V,m,vectors,x>,space.zero)
         release thm basis::prefix_exists(K,m+1,m,coefficients)
         obtain prefix_coefficients from exist selected finite_seq(K,m) st {$basis::is_prefix_of_length(K,m+1,m,coefficients,selected)}
+        claim:
+            ? forall j closed_range(0,m):
+                j $in closed_range(0,m+1)
+            j $in Z
+            0<=j<=m<m+1
+            j<=m+1
+            j $in closed_range(0,m+1)
         have fn prefix_sums(j closed_range(0,m)) V=sums(j)
         claim:
             ? forall j N+:
                 j<=m
+                j<=m+1
                 =>:
                     vectors(j)=\append_vector<V,m,vectors,x>(j)
             j $in closed_range(1,m+1)
@@ -196,6 +204,7 @@ thm independent_list_extends_to_basis:
                         claim:
                             ? forall j N+:
                                 j<=length
+                                j<=r
                                 =>:
                                     extended(j)=current(j)
                             j<=length<length+1

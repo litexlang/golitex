@@ -73,7 +73,7 @@ impl LitexToLeanCompiler {
             return Ok(proof);
         }
         if let Some(proof) = position
-            .with_visible_alias(object, &mut |_, value, wd, producer| {
+            .with_visible_alias(object, &self.runtime, &mut |_, value, wd, producer| {
                 let wd = success_object_wd(wd, value)?;
                 self.numeric_function_real_wd(wd, producer)
             })?
@@ -177,7 +177,7 @@ impl LitexToLeanCompiler {
             ));
         }
         if let Some(observation) =
-            position.with_visible_alias(object, &mut |_, value, wd, producer| {
+            position.with_visible_alias(object, &self.runtime, &mut |_, value, wd, producer| {
                 let wd = success_object_wd(wd, value)?;
                 self.numeric_wd(wd, producer)
             })?
@@ -197,6 +197,13 @@ impl LitexToLeanCompiler {
             if let Some(observation) = position
                 .with_visible_wd(object, &mut |wd, producer| self.numeric_wd(wd, producer))?
             {
+                return Ok(observation);
+            }
+            if let Some(observation) = position.with_released_definition_wd(
+                object,
+                &self.runtime,
+                &mut |wd, producer| self.numeric_wd(wd, producer),
+            )? {
                 return Ok(observation);
             }
         }
@@ -427,18 +434,44 @@ impl LitexToLeanCompiler {
             return Ok((literal, proof, member, Some(value)));
         }
         match (wd).detailed_ref() {
+            DetailedObjWellDefinedProof::ByDef {
+                obj: Obj::MatrixOperator(operator @ (MatrixOperator::Trace(_) | MatrixOperator::Determinant(_))),
+                proof: ObjWellDefinedProofByDef::MatrixOperator(_),
+            } => {
+                // These certified constructors already prove their complex
+                // codomain. Keep the original WD and observe one opaque scalar;
+                // do not expand matrix entries or search for new membership.
+                let law = match operator {
+                    MatrixOperator::Trace(_) => "Litex.matrixTraceInC",
+                    MatrixOperator::Determinant(_) => "Litex.matrixDeterminantInC",
+                    _ => unreachable!(),
+                };
+                let term = self.compile_wd(wd, position)?;
+                let setup = format!("let _litex_matrix_scalar := {term}; let _litex_matrix_member := {law} _litex_matrix_scalar;");
+                Ok((
+                    format!("({setup} Litex.NativeBridge.asComplex _litex_matrix_scalar _litex_matrix_member)"),
+                    format!("({setup} Litex.NativeBridge.asComplex_spec _litex_matrix_scalar _litex_matrix_member)"),
+                    format!("({setup} _litex_matrix_member)"),
+                    None,
+                ))
+            }
             DetailedObjWellDefinedProof::ByDef {obj, proof} if matches!((obj,proof),
                 (Obj::DerivativeOperator(DerivativeOperator::AtPoint(_)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(_)))|
+                (Obj::DerivativeOperator(DerivativeOperator::Partial(_)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Partial(_)))|
+                (Obj::DerivativeOperator(DerivativeOperator::Divergence(_)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Divergence(_)))|
                 (Obj::BoundOperator(_),ObjWellDefinedProofByDef::BoundOperator(_))|
-                (Obj::LimitOperator(LimitOperator::Sequence(_) | LimitOperator::SequenceLimsup(_) | LimitOperator::SequenceLiminf(_) | LimitOperator::Function(_)), ObjWellDefinedProofByDef::LimitOperator(_))) => {
+                (Obj::LimitOperator(LimitOperator::Sequence(_) | LimitOperator::SequenceLimsup(_) | LimitOperator::SequenceLiminf(_) | LimitOperator::Function(_) | LimitOperator::MultivariableScalar(_)), ObjWellDefinedProofByDef::LimitOperator(_))) => {
                 // A scalar selector is an opaque normalization atom. Replaying
                 // its original WD constructs it; the proved codomain law then
                 // supplies its numeric observation without choosing a new route.
                 let term=self.compile_wd(wd,position)?;
                 let law=match obj{
                     Obj::DerivativeOperator(DerivativeOperator::AtPoint(_))=>"Litex.derivativeInR",
+                    Obj::DerivativeOperator(DerivativeOperator::Partial(_))=>"Litex.partialDerivativeInR",
+                    Obj::DerivativeOperator(DerivativeOperator::Divergence(_))=>"Litex.divergenceInR",
                     Obj::BoundOperator(BoundOperator::Supremum(_))=>"Litex.supremumInR",
                     Obj::BoundOperator(BoundOperator::Infimum(_))=>"Litex.infimumInR",
+                    Obj::LimitOperator(LimitOperator::MultivariableScalar(_))=>"Litex.multivariableScalarLimitInR",
                     Obj::LimitOperator(LimitOperator::Sequence(_))=>"Litex.sequenceLimitInR",
                     Obj::LimitOperator(LimitOperator::SequenceLimsup(_))=>"Litex.sequenceExtremumInR true",
                     Obj::LimitOperator(LimitOperator::SequenceLiminf(_))=>"Litex.sequenceExtremumInR false",
@@ -843,6 +876,7 @@ impl LitexToLeanCompiler {
                     application,
                     proof,
                     output_reference.unwrap_or(&call),
+                    &constructor,
                 )?;
                 return Ok((call, output, member));
             }

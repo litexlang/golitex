@@ -1,0 +1,32 @@
+# Tracer: failed strategy with a checked body and conclusion prefix.
+# Before: the mathematics was rejected, but reading retained only the final
+# failed index/result. The actual parameter, premise and body prefix was lost.
+# Original failing source (the active source below is deliberately unchanged):
+# prop P(x R):
+#     x = 0
+# strategy fail_final:
+#     ? forall x R:
+#         x = 0
+#         =>:
+#             x = x
+#             $P(x + 1)
+#             x + 0 = x
+#     have helper R = x
+#     helper = x
+# Now: retain those actual local stages while rejecting and not registering
+# the strategy. The third conclusion was not checked; helpers cannot escape.
+# Expected CLI: exit 1, run_result failure, session_terminated false.
+# Run: target/release/litex -strict -f examples/test_statements/negative/def_strategy_stmt/retained-final-prefix.lit
+# Reading: target/release/litex -reading -strict -json -f examples/test_statements/negative/def_strategy_stmt/retained-final-prefix.lit
+
+prop P(x R):
+    x = 0
+strategy fail_final:
+    ? forall x R:
+        x = 0
+        =>:
+            x = x
+            $P(x + 1)
+            x + 0 = x
+    have helper R = x
+    helper = x

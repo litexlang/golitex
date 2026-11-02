@@ -11,10 +11,7 @@ impl Runtime {
             AtomicFact::MultivariableAnalysisFact(f) => {
                 Ok(InferAtomicFactResult::MultivariableAnalysisFact(vec![
                     InferMultivariableAnalysisFactResult::Definition(
-                        InferMultivariableAnalysisDefinitionResult {
-                            source_fact_id: f.fact_id,
-                            derived: self.store_multivariable_definition(f, state)?,
-                        },
+                        self.store_multivariable_definition(f, state)?,
                     ),
                 ]))
             }
@@ -22,11 +19,29 @@ impl Runtime {
                 InferAtomicFactResult::NotMultivariableAnalysisFact(Vec::new()),
             ),
             AtomicFact::HasRiemannIntegralFact(f) => {
+                let function_domain =
+                    self.checked_real_function_limit_domain(&f.function, state)?;
+                let mut derived = Vec::new();
+                if let Some(domain) = &function_domain {
+                    for clause in self.riemann_integral_clauses_in_domain(f, domain) {
+                        derived.push(self.store_inferred_fact(&clause)?);
+                    }
+                }
+                let existence = self.riemann_integral_existence(
+                    f.function.clone(),
+                    f.lower.clone(),
+                    f.upper.clone(),
+                );
+                derived.push(self.store_inferred_fact(&existence)?);
+                let integrable =
+                    self.riemann_integrable(f.function.clone(), f.lower.clone(), f.upper.clone());
+                derived.push(self.store_inferred_fact(&integrable.into())?);
                 Ok(InferAtomicFactResult::HasRiemannIntegralFact(vec![
                     InferHasRiemannIntegralFactResult::Definition(
                         InferHasRiemannIntegralDefinitionResult {
                             source_fact_id: f.fact_id,
-                            derived: self.store_real_analysis_definition(fact, state)?,
+                            function_domain,
+                            derived,
                         },
                     ),
                 ]))

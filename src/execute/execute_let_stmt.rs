@@ -16,6 +16,7 @@ pub struct ExecLetObjStmtSuccessResult {
     pub statement: LetObjStmt,
     pub value_well_defined: VerifyObjWellDefinedResult,
     pub stored_fact_ids: Vec<FactId>,
+    pub store_and_infer_result: crate::store_fact_and_infer::StoreFactAndInferResult,
 }
 
 pub enum ExecLetObjStmtResult {
@@ -80,6 +81,7 @@ impl Runtime {
             statement: let_stmt.clone(),
             value_well_defined,
             stored_fact_ids: store_and_infer_result.stored_fact_ids(),
+            store_and_infer_result,
         }))
     }
 }

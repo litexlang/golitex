@@ -1,0 +1,1041 @@
+prop is_real_tail_adherent(start Z,a fn(n {j Z:j>=start}) R,c R,epsilon R+):
+    exist n {j Z:j>=start} st {$approx::is_epsilon_close(a(n),c,epsilon)}
+
+prop is_real_tail_adherent_after(start Z,a fn(n {j Z:j>=start}) R,c R,epsilon R+,cutoff {j Z:j>=start}):
+    exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),c,epsilon)}
+
+prop is_continually_real_tail_adherent(start Z,a fn(n {j Z:j>=start}) R,c R,epsilon R+):
+    forall cutoff {j Z:j>=start}:
+        $is_real_tail_adherent_after(start,a,c,epsilon,cutoff)
+
+prop is_real_tail_limit_point(start Z,a fn(n {j Z:j>=start}) R,c R):
+    forall epsilon R+:
+        $is_continually_real_tail_adherent(start,a,c,epsilon)
+
+thm real_tail_limit_point_witness:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,c R,epsilon R+,cutoff {j Z:j>=start}:
+        $is_real_tail_limit_point(start,a,c)
+        =>:
+            exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),c,epsilon)}
+    $is_continually_real_tail_adherent(start,a,c,epsilon)
+    $is_real_tail_adherent_after(start,a,c,epsilon,cutoff)
+    obtain n from $is_real_tail_adherent_after(start,a,c,epsilon,cutoff)
+    witness exist index {j Z:j>=start} st {index>=cutoff and $approx::is_epsilon_close(a(index),c,epsilon)} from n
+
+thm real_tail_arbitrarily_late_close_is_limit_point:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,c R:
+        forall epsilon R+,cutoff {j Z:j>=start}:
+            exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),c,epsilon)}
+        =>:
+            $is_real_tail_limit_point(start,a,c)
+    claim:
+        ? forall epsilon R+:
+            $is_continually_real_tail_adherent(start,a,c,epsilon)
+        claim:
+            ? forall cutoff {j Z:j>=start}:
+                $is_real_tail_adherent_after(start,a,c,epsilon,cutoff)
+            obtain n from exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),c,epsilon)}
+            witness $is_real_tail_adherent_after(start,a,c,epsilon,cutoff) from n
+        by def $is_continually_real_tail_adherent(start,a,c,epsilon)
+    by def $is_real_tail_limit_point(start,a,c)
+
+thm real_tail_limit_is_limit_point:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $rs::has_real_tail_limit(start,a,L)
+        =>:
+            $is_real_tail_limit_point(start,a,L)
+    claim:
+        ? forall epsilon R+,cutoff {j Z:j>=start}:
+            exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),L,epsilon)}
+        $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        obtain old from $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        old>=start
+        cutoff>=start
+        old-start $in N
+        old-start>=0
+        cutoff-start $in N
+        cutoff-start>=0
+        have n Z=cutoff+old-start
+        n=cutoff+(old-start)>=cutoff+0=cutoff
+        n=old+(cutoff-start)>=old+0=old
+        n>=start
+        n $in {j Z:j>=start}
+        $approx::is_epsilon_close(a(n),L,epsilon)
+        witness exist index {j Z:j>=start} st {index>=cutoff and $approx::is_epsilon_close(a(index),L,epsilon)} from n
+    release thm real_tail_arbitrarily_late_close_is_limit_point(start,a,L)
+
+thm real_tail_limit_point_unique_of_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L,c R:
+        $rs::has_real_tail_limit(start,a,L)
+        $is_real_tail_limit_point(start,a,c)
+        =>:
+            c=L
+    by contra:
+        ? c=L
+        c-L!=0
+        c-L $in R*
+        abs(c-L)>0
+        have epsilon R+=abs(c-L)/3
+        $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        obtain cutoff from $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        cutoff>=start
+        cutoff $in {j Z:j>=start}
+        release thm real_tail_limit_point_witness(start,a,c,epsilon,cutoff)
+        obtain n from exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),c,epsilon)}
+        n>=start
+        $approx::is_epsilon_close(a(n),L,epsilon)
+        abs(a(n)-L)<=epsilon
+        abs(a(n)-c)<=epsilon
+        c-a(n)=-(a(n)-c)
+        abs(c-a(n))=abs(a(n)-c)<=epsilon
+        c-L=(c-a(n))+(a(n)-L)
+        abs(c-L)=abs((c-a(n))+(a(n)-L))<=abs(c-a(n))+abs(a(n)-L)<=epsilon+epsilon
+        epsilon+epsilon=2*epsilon
+        3*epsilon=3*(abs(c-L)/3)=abs(c-L)
+        2*epsilon<3*epsilon=abs(c-L)
+        abs(c-L)<=epsilon+epsilon=2*epsilon
+        impossible abs(c-L)<=2*epsilon
+
+claim:
+    ? forall start Z,cutoff {j Z:j>=start},n {j Z:j>=cutoff}:
+        n $in {j Z:j>=start}
+    n $in Z
+    n>=cutoff>=start
+    n $in {j Z:j>=start}
+
+template<start Z,a fn(n {j Z:j>=start}) R,cutoff {j Z:j>=start}>:
+    have fn real_tail_restriction(n {j Z:j>=cutoff}) R=a(n)
+
+template<start Z,a fn(n {j Z:j>=start}) R>:
+    have fn real_tail_upper_extrema(cutoff {j Z:j>=start}) xreal::ExtendedReal=\sext::real_tail_supremum<cutoff>(\real_tail_restriction<start,a,cutoff>)
+
+template<start Z,a fn(n {j Z:j>=start}) R>:
+    have fn real_tail_lower_extrema(cutoff {j Z:j>=start}) xreal::ExtendedReal=\sext::real_tail_infimum<cutoff>(\real_tail_restriction<start,a,cutoff>)
+
+template<start Z>:
+    have fn real_tail_limsup(a fn(n {j Z:j>=start}) R) xreal::ExtendedReal=\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,a>)
+
+template<start Z>:
+    have fn real_tail_liminf(a fn(n {j Z:j>=start}) R) xreal::ExtendedReal=\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,a>)
+
+thm real_tail_upper_extrema_bounds_value:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,cutoff,n {j Z:j>=start}:
+        n>=cutoff
+        =>:
+            $xreal::extended_real_le(a(n),\real_tail_upper_extrema<start,a>(cutoff))
+    n>=cutoff
+    n $in {j Z:j>=cutoff}
+    release thm sext::real_tail_supremum_bounds_members(cutoff,\real_tail_restriction<start,a,cutoff>,n)
+    \real_tail_restriction<start,a,cutoff>(n)=a(n)
+    \real_tail_upper_extrema<start,a>(cutoff)=\sext::real_tail_supremum<cutoff>(\real_tail_restriction<start,a,cutoff>)
+    $xreal::extended_real_le(a(n),\real_tail_upper_extrema<start,a>(cutoff))
+
+thm real_tail_lower_extrema_bounds_value:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,cutoff,n {j Z:j>=start}:
+        n>=cutoff
+        =>:
+            $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(cutoff),a(n))
+    n>=cutoff
+    n $in {j Z:j>=cutoff}
+    release thm sext::real_tail_infimum_bounds_members(cutoff,\real_tail_restriction<start,a,cutoff>,n)
+    \real_tail_restriction<start,a,cutoff>(n)=a(n)
+    \real_tail_lower_extrema<start,a>(cutoff)=\sext::real_tail_infimum<cutoff>(\real_tail_restriction<start,a,cutoff>)
+    $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(cutoff),a(n))
+
+thm real_tail_upper_extrema_decrease:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,earlier,later {j Z:j>=start}:
+        earlier<=later
+        =>:
+            $xreal::extended_real_le(\real_tail_upper_extrema<start,a>(later),\real_tail_upper_extrema<start,a>(earlier))
+    claim:
+        ? forall n {j Z:j>=later}:
+            $xreal::extended_real_le(\real_tail_restriction<start,a,later>(n),\real_tail_upper_extrema<start,a>(earlier))
+        n $in Z
+        n>=later>=earlier>=start
+        n $in {j Z:j>=start}
+        release thm real_tail_upper_extrema_bounds_value(start,a,earlier,n)
+        \real_tail_restriction<start,a,later>(n)=a(n)
+        $xreal::extended_real_le(\real_tail_restriction<start,a,later>(n),\real_tail_upper_extrema<start,a>(earlier))
+    by def $sext::is_real_tail_extended_upper_bound(later,\real_tail_restriction<start,a,later>,\real_tail_upper_extrema<start,a>(earlier))
+    release thm sext::real_tail_supremum_le_upper_bound(later,\real_tail_restriction<start,a,later>,\real_tail_upper_extrema<start,a>(earlier))
+    \real_tail_upper_extrema<start,a>(later)=\sext::real_tail_supremum<later>(\real_tail_restriction<start,a,later>)
+    $xreal::extended_real_le(\real_tail_upper_extrema<start,a>(later),\real_tail_upper_extrema<start,a>(earlier))
+
+thm real_tail_lower_extrema_increase:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,earlier,later {j Z:j>=start}:
+        earlier<=later
+        =>:
+            $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(earlier),\real_tail_lower_extrema<start,a>(later))
+    claim:
+        ? forall n {j Z:j>=later}:
+            $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(earlier),\real_tail_restriction<start,a,later>(n))
+        n $in Z
+        n>=later>=earlier>=start
+        n $in {j Z:j>=start}
+        release thm real_tail_lower_extrema_bounds_value(start,a,earlier,n)
+        \real_tail_restriction<start,a,later>(n)=a(n)
+        $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(earlier),\real_tail_restriction<start,a,later>(n))
+    by def $sext::is_real_tail_extended_lower_bound(later,\real_tail_restriction<start,a,later>,\real_tail_lower_extrema<start,a>(earlier))
+    release thm sext::real_tail_infimum_ge_lower_bound(later,\real_tail_restriction<start,a,later>,\real_tail_lower_extrema<start,a>(earlier))
+    \real_tail_lower_extrema<start,a>(later)=\sext::real_tail_infimum<later>(\real_tail_restriction<start,a,later>)
+    $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(earlier),\real_tail_lower_extrema<start,a>(later))
+
+thm extended_real_lt_le_transitive:
+    ? forall x,y,z xreal::ExtendedReal:
+        $xreal::extended_real_lt(x,y)
+        $xreal::extended_real_le(y,z)
+        =>:
+            $xreal::extended_real_lt(x,z)
+    $xreal::extended_real_le(x,y)
+    x!=y
+    release thm xreal::extended_real_order_transitive(x,y,z)
+    by contra:
+        ? x!=z
+        z=x
+        $xreal::extended_real_le(y,x)
+        release thm xreal::extended_real_order_antisymmetric(x,y)
+        impossible x=y
+    by def $xreal::extended_real_lt(x,z)
+
+thm extended_real_le_lt_transitive:
+    ? forall x,y,z xreal::ExtendedReal:
+        $xreal::extended_real_le(x,y)
+        $xreal::extended_real_lt(y,z)
+        =>:
+            $xreal::extended_real_lt(x,z)
+    $xreal::extended_real_le(y,z)
+    y!=z
+    release thm xreal::extended_real_order_transitive(x,y,z)
+    by contra:
+        ? x!=z
+        z=x
+        $xreal::extended_real_le(z,y)
+        release thm xreal::extended_real_order_antisymmetric(y,z)
+        impossible y=z
+    by def $xreal::extended_real_lt(x,z)
+
+thm real_strict_order_is_extended_order:
+    ? forall x,y R:
+        x<y
+        =>:
+            $xreal::extended_real_lt(x,y)
+    x<=y
+    x!=y
+    release thm xreal::real_order_is_extended_real_order(x,y)
+    by def $xreal::extended_real_lt(x,y)
+
+thm extended_strict_order_on_reals:
+    ? forall x,y R:
+        $xreal::extended_real_lt(x,y)
+        =>:
+            x<y
+    $xreal::extended_real_le(x,y)
+    x!=y
+    release thm xreal::extended_real_order_on_reals(x,y)
+    by contra:
+        ? x<y
+        y<=x
+        x=y
+        impossible x=y
+
+prop is_real_tail_below_after(start Z,a fn(n {j Z:j>=start}) R,x xreal::ExtendedReal,cutoff {j Z:j>=start}):
+    forall n {j Z:j>=start}:
+        n>=cutoff
+        =>:
+            $xreal::extended_real_lt(a(n),x)
+
+prop is_real_tail_above_after(start Z,a fn(n {j Z:j>=start}) R,x xreal::ExtendedReal,cutoff {j Z:j>=start}):
+    forall n {j Z:j>=start}:
+        n>=cutoff
+        =>:
+            $xreal::extended_real_lt(x,a(n))
+
+thm real_tail_limsup_eventually_below:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,x xreal::ExtendedReal:
+        $xreal::extended_real_lt(\real_tail_limsup<start>(a),x)
+        =>:
+            exist cutoff {j Z:j>=start} st {$is_real_tail_below_after(start,a,x,cutoff)}
+    release thm fn_set_member(\real_tail_upper_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    \real_tail_limsup<start>(a)=\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,a>)
+    release thm xseq::extended_tail_infimum_approached(start,\real_tail_upper_extrema<start,a>,x)
+    obtain cutoff from exist k {j Z:j>=start} st {$xreal::extended_real_le(\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,a>),\real_tail_upper_extrema<start,a>(k)) and $xreal::extended_real_lt(\real_tail_upper_extrema<start,a>(k),x)}
+    claim:
+        ? forall n {j Z:j>=start}:
+            n>=cutoff
+            =>:
+                $xreal::extended_real_lt(a(n),x)
+        a(n) $in R
+        release thm real_tail_upper_extrema_bounds_value(start,a,cutoff,n)
+        release thm extended_real_le_lt_transitive(a(n),\real_tail_upper_extrema<start,a>(cutoff),x)
+    by def $is_real_tail_below_after(start,a,x,cutoff)
+    witness exist k {j Z:j>=start} st {$is_real_tail_below_after(start,a,x,k)} from cutoff
+
+thm real_tail_liminf_eventually_above:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,x xreal::ExtendedReal:
+        $xreal::extended_real_lt(x,\real_tail_liminf<start>(a))
+        =>:
+            exist cutoff {j Z:j>=start} st {$is_real_tail_above_after(start,a,x,cutoff)}
+    release thm fn_set_member(\real_tail_lower_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    \real_tail_liminf<start>(a)=\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,a>)
+    release thm xseq::extended_tail_supremum_approached(start,\real_tail_lower_extrema<start,a>,x)
+    obtain cutoff from exist k {j Z:j>=start} st {$xreal::extended_real_lt(x,\real_tail_lower_extrema<start,a>(k)) and $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(k),\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,a>))}
+    claim:
+        ? forall n {j Z:j>=start}:
+            n>=cutoff
+            =>:
+                $xreal::extended_real_lt(x,a(n))
+        a(n) $in R
+        release thm real_tail_lower_extrema_bounds_value(start,a,cutoff,n)
+        release thm extended_real_lt_le_transitive(x,\real_tail_lower_extrema<start,a>(cutoff),a(n))
+    by def $is_real_tail_above_after(start,a,x,cutoff)
+    witness exist k {j Z:j>=start} st {$is_real_tail_above_after(start,a,x,k)} from cutoff
+
+thm real_tail_limsup_arbitrarily_late_above:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,x xreal::ExtendedReal,cutoff {j Z:j>=start}:
+        $xreal::extended_real_lt(x,\real_tail_limsup<start>(a))
+        =>:
+            exist n {j Z:j>=start} st {n>=cutoff and $xreal::extended_real_lt(x,a(n))}
+    release thm fn_set_member(\real_tail_upper_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    release thm xseq::extended_tail_infimum_bounds_members(start,\real_tail_upper_extrema<start,a>,cutoff)
+    \real_tail_limsup<start>(a)=\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,a>)
+    $xreal::extended_real_le(\real_tail_limsup<start>(a),\real_tail_upper_extrema<start,a>(cutoff))
+    release thm extended_real_lt_le_transitive(x,\real_tail_limsup<start>(a),\real_tail_upper_extrema<start,a>(cutoff))
+    \real_tail_upper_extrema<start,a>(cutoff)=\sext::real_tail_supremum<cutoff>(\real_tail_restriction<start,a,cutoff>)
+    release thm sext::real_tail_supremum_approached(cutoff,\real_tail_restriction<start,a,cutoff>,x)
+    obtain n from exist n {j Z:j>=cutoff} st {$xreal::extended_real_lt(x,\real_tail_restriction<start,a,cutoff>(n)) and $xreal::extended_real_le(\real_tail_restriction<start,a,cutoff>(n),\sext::real_tail_supremum<cutoff>(\real_tail_restriction<start,a,cutoff>))}
+    n $in Z
+    n>=cutoff>=start
+    n $in {j Z:j>=start}
+    \real_tail_restriction<start,a,cutoff>(n)=a(n)
+    $xreal::extended_real_lt(x,a(n))
+    witness exist index {j Z:j>=start} st {index>=cutoff and $xreal::extended_real_lt(x,a(index))} from n
+
+thm real_tail_liminf_arbitrarily_late_below:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,x xreal::ExtendedReal,cutoff {j Z:j>=start}:
+        $xreal::extended_real_lt(\real_tail_liminf<start>(a),x)
+        =>:
+            exist n {j Z:j>=start} st {n>=cutoff and $xreal::extended_real_lt(a(n),x)}
+    release thm fn_set_member(\real_tail_lower_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    release thm xseq::extended_tail_supremum_bounds_members(start,\real_tail_lower_extrema<start,a>,cutoff)
+    \real_tail_liminf<start>(a)=\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,a>)
+    $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(cutoff),\real_tail_liminf<start>(a))
+    release thm extended_real_le_lt_transitive(\real_tail_lower_extrema<start,a>(cutoff),\real_tail_liminf<start>(a),x)
+    \real_tail_lower_extrema<start,a>(cutoff)=\sext::real_tail_infimum<cutoff>(\real_tail_restriction<start,a,cutoff>)
+    release thm sext::real_tail_infimum_approached(cutoff,\real_tail_restriction<start,a,cutoff>,x)
+    obtain n from exist n {j Z:j>=cutoff} st {$xreal::extended_real_le(\sext::real_tail_infimum<cutoff>(\real_tail_restriction<start,a,cutoff>),\real_tail_restriction<start,a,cutoff>(n)) and $xreal::extended_real_lt(\real_tail_restriction<start,a,cutoff>(n),x)}
+    n $in Z
+    n>=cutoff>=start
+    n $in {j Z:j>=start}
+    \real_tail_restriction<start,a,cutoff>(n)=a(n)
+    $xreal::extended_real_lt(a(n),x)
+    witness exist index {j Z:j>=start} st {index>=cutoff and $xreal::extended_real_lt(a(index),x)} from n
+
+thm real_tail_restriction_at_start:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        \real_tail_restriction<start,a,start> =a
+    release thm sext::real_tail_start_member(start)
+    release thm fn_set_member(\real_tail_restriction<start,a,start>,fn(n {j Z:j>=start}) R)
+    claim:
+        ? forall n {j Z:j>=start}:
+            \real_tail_restriction<start,a,start>(n)=a(n)
+        \real_tail_restriction<start,a,start>(n)=a(n)
+    by fn_extension \real_tail_restriction<start,a,start> =a
+
+thm real_tail_extrema_at_start:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        \real_tail_upper_extrema<start,a>(start)=\sext::real_tail_supremum<start>(a)
+        \real_tail_lower_extrema<start,a>(start)=\sext::real_tail_infimum<start>(a)
+    release thm real_tail_restriction_at_start(start,a)
+    \real_tail_upper_extrema<start,a>(start)=\sext::real_tail_supremum<start>(\real_tail_restriction<start,a,start>)=\sext::real_tail_supremum<start>(a)
+    \real_tail_lower_extrema<start,a>(start)=\sext::real_tail_infimum<start>(\real_tail_restriction<start,a,start>)=\sext::real_tail_infimum<start>(a)
+
+thm real_tail_cross_extremal_bounds:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,lower_cutoff,upper_cutoff {j Z:j>=start}:
+        $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(lower_cutoff),\real_tail_upper_extrema<start,a>(upper_cutoff))
+    lower_cutoff>=start
+    upper_cutoff>=start
+    lower_cutoff-start $in N
+    upper_cutoff-start $in N
+    have n Z=lower_cutoff+upper_cutoff-start
+    n=lower_cutoff+(upper_cutoff-start)>=lower_cutoff+0=lower_cutoff
+    n=upper_cutoff+(lower_cutoff-start)>=upper_cutoff+0=upper_cutoff
+    n>=start
+    n $in {j Z:j>=start}
+    a(n) $in R
+    release thm real_tail_lower_extrema_bounds_value(start,a,lower_cutoff,n)
+    release thm real_tail_upper_extrema_bounds_value(start,a,upper_cutoff,n)
+    release thm xreal::extended_real_order_transitive(\real_tail_lower_extrema<start,a>(lower_cutoff),a(n),\real_tail_upper_extrema<start,a>(upper_cutoff))
+
+thm real_tail_liminf_le_limsup:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $xreal::extended_real_le(\real_tail_liminf<start>(a),\real_tail_limsup<start>(a))
+    release thm fn_set_member(\real_tail_upper_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    release thm fn_set_member(\real_tail_lower_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    claim:
+        ? forall lower_cutoff {j Z:j>=start}:
+            $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(lower_cutoff),\real_tail_limsup<start>(a))
+        claim:
+            ? forall upper_cutoff {j Z:j>=start}:
+                $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(lower_cutoff),\real_tail_upper_extrema<start,a>(upper_cutoff))
+            release thm real_tail_cross_extremal_bounds(start,a,lower_cutoff,upper_cutoff)
+        by def $xseq::is_extended_tail_lower_bound(start,\real_tail_upper_extrema<start,a>,\real_tail_lower_extrema<start,a>(lower_cutoff))
+        release thm xseq::extended_tail_infimum_ge_lower_bound(start,\real_tail_upper_extrema<start,a>,\real_tail_lower_extrema<start,a>(lower_cutoff))
+        \real_tail_limsup<start>(a)=\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,a>)
+        $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(lower_cutoff),\real_tail_limsup<start>(a))
+    by def $xseq::is_extended_tail_upper_bound(start,\real_tail_lower_extrema<start,a>,\real_tail_limsup<start>(a))
+    release thm xseq::extended_tail_supremum_le_upper_bound(start,\real_tail_lower_extrema<start,a>,\real_tail_limsup<start>(a))
+    \real_tail_liminf<start>(a)=\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,a>)
+    $xreal::extended_real_le(\real_tail_liminf<start>(a),\real_tail_limsup<start>(a))
+
+thm real_tail_four_extrema_order:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $xreal::extended_real_le(\sext::real_tail_infimum<start>(a),\real_tail_liminf<start>(a))
+        $xreal::extended_real_le(\real_tail_liminf<start>(a),\real_tail_limsup<start>(a))
+        $xreal::extended_real_le(\real_tail_limsup<start>(a),\sext::real_tail_supremum<start>(a))
+    release thm sext::real_tail_start_member(start)
+    release thm real_tail_extrema_at_start(start,a)
+    release thm fn_set_member(\real_tail_upper_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    release thm fn_set_member(\real_tail_lower_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    release thm xseq::extended_tail_supremum_bounds_members(start,\real_tail_lower_extrema<start,a>,start)
+    release thm xseq::extended_tail_infimum_bounds_members(start,\real_tail_upper_extrema<start,a>,start)
+    \real_tail_liminf<start>(a)=\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,a>)
+    \real_tail_limsup<start>(a)=\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,a>)
+    $xreal::extended_real_le(\sext::real_tail_infimum<start>(a),\real_tail_liminf<start>(a))
+    release thm real_tail_liminf_le_limsup(start,a)
+    $xreal::extended_real_le(\real_tail_limsup<start>(a),\sext::real_tail_supremum<start>(a))
+
+thm real_tail_limit_point_le_upper_extrema:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,c R,cutoff {j Z:j>=start}:
+        $is_real_tail_limit_point(start,a,c)
+        =>:
+            $xreal::extended_real_le(c,\real_tail_upper_extrema<start,a>(cutoff))
+    release thm xreal::real_number_is_extended_real(c)
+    have U xreal::ExtendedReal=\real_tail_upper_extrema<start,a>(cutoff)
+    by contra:
+        ? $xreal::extended_real_le(c,U)
+        release thm xreal::extended_real_order_total(c,U)
+        claim:
+            ? $xreal::extended_real_le(U,c)
+            by cases:
+                ? $xreal::extended_real_le(U,c)
+                case $xreal::extended_real_le(c,U):
+                    by contra:
+                        ? $xreal::extended_real_le(U,c)
+                        impossible $xreal::extended_real_le(c,U)
+                case $xreal::extended_real_le(U,c):
+                    $xreal::extended_real_le(U,c)
+        by contra:
+            ? U!=c
+            release thm xreal::extended_real_order_reflexive(c)
+            $xreal::extended_real_le(c,U)
+            impossible $xreal::extended_real_le(c,U)
+        by def $xreal::extended_real_lt(U,c)
+        a(cutoff) $in R
+        release thm xreal::real_number_is_extended_real(a(cutoff))
+        release thm real_tail_upper_extrema_bounds_value(start,a,cutoff,cutoff)
+        release thm xreal::real_negative_infinity_is_not_real
+        release thm xreal::real_positive_infinity_is_not_real
+        by contra:
+            ? a(cutoff)!=xreal::real_negative_infinity
+            xreal::real_negative_infinity=a(cutoff)
+            xreal::real_negative_infinity $in R
+            impossible xreal::real_negative_infinity $in R
+        by contra:
+            ? U!=xreal::real_positive_infinity
+            $xreal::extended_real_le(xreal::real_positive_infinity,c)
+            release thm xreal::positive_infinity_le_only_itself(c)
+            xreal::real_positive_infinity=c
+            xreal::real_positive_infinity $in R
+            impossible xreal::real_positive_infinity $in R
+        release thm xreal::nontrivial_extended_real_order_is_finite(a(cutoff),U)
+        release thm extended_strict_order_on_reals(U,c)
+        c-U=c+(-U)>U+(-U)=0
+        have epsilon R+=(c-U)/2
+        release thm real_tail_limit_point_witness(start,a,c,epsilon,cutoff)
+        obtain n from exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),c,epsilon)}
+        a(n) $in R
+        abs(a(n)-c)<=epsilon
+        release thm approx::absolute_value_two_sided_bounds(a(n)-c,epsilon)
+        c-epsilon=-epsilon+c<=(a(n)-c)+c=a(n)
+        release thm real_tail_upper_extrema_bounds_value(start,a,cutoff,n)
+        $xreal::extended_real_le(a(n),U)
+        release thm xreal::extended_real_order_on_reals(a(n),U)
+        c-epsilon<=a(n)<=U
+        c-epsilon=c-(c-U)/2=U+(c-U)/2=U+epsilon>U+0=U
+        impossible c-epsilon<=U
+
+thm real_tail_lower_extrema_le_limit_point:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,c R,cutoff {j Z:j>=start}:
+        $is_real_tail_limit_point(start,a,c)
+        =>:
+            $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(cutoff),c)
+    release thm xreal::real_number_is_extended_real(c)
+    have V xreal::ExtendedReal=\real_tail_lower_extrema<start,a>(cutoff)
+    by contra:
+        ? $xreal::extended_real_le(V,c)
+        release thm xreal::extended_real_order_total(V,c)
+        claim:
+            ? $xreal::extended_real_le(c,V)
+            by cases:
+                ? $xreal::extended_real_le(c,V)
+                case $xreal::extended_real_le(V,c):
+                    by contra:
+                        ? $xreal::extended_real_le(c,V)
+                        impossible $xreal::extended_real_le(V,c)
+                case $xreal::extended_real_le(c,V):
+                    $xreal::extended_real_le(c,V)
+        by contra:
+            ? c!=V
+            release thm xreal::extended_real_order_reflexive(c)
+            $xreal::extended_real_le(V,c)
+            impossible $xreal::extended_real_le(V,c)
+        by def $xreal::extended_real_lt(c,V)
+        a(cutoff) $in R
+        release thm xreal::real_number_is_extended_real(a(cutoff))
+        release thm real_tail_lower_extrema_bounds_value(start,a,cutoff,cutoff)
+        release thm xreal::real_negative_infinity_is_not_real
+        release thm xreal::real_positive_infinity_is_not_real
+        by contra:
+            ? c!=xreal::real_negative_infinity
+            xreal::real_negative_infinity=c
+            xreal::real_negative_infinity $in R
+            impossible xreal::real_negative_infinity $in R
+        by contra:
+            ? V!=xreal::real_positive_infinity
+            $xreal::extended_real_le(xreal::real_positive_infinity,a(cutoff))
+            release thm xreal::positive_infinity_le_only_itself(a(cutoff))
+            xreal::real_positive_infinity=a(cutoff)
+            xreal::real_positive_infinity $in R
+            impossible xreal::real_positive_infinity $in R
+        release thm xreal::nontrivial_extended_real_order_is_finite(c,V)
+        release thm extended_strict_order_on_reals(c,V)
+        V-c=V+(-c)>c+(-c)=0
+        have epsilon R+=(V-c)/2
+        release thm real_tail_limit_point_witness(start,a,c,epsilon,cutoff)
+        obtain n from exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),c,epsilon)}
+        a(n) $in R
+        abs(a(n)-c)<=epsilon
+        release thm approx::absolute_value_two_sided_bounds(a(n)-c,epsilon)
+        a(n)=(a(n)-c)+c<=epsilon+c=c+epsilon
+        release thm real_tail_lower_extrema_bounds_value(start,a,cutoff,n)
+        $xreal::extended_real_le(V,a(n))
+        release thm xreal::extended_real_order_on_reals(V,a(n))
+        V<=a(n)<=c+epsilon
+        c+epsilon=c+(V-c)/2=V-(V-c)/2=V-epsilon<V-0=V
+        impossible V<=c+epsilon
+
+thm real_tail_limit_points_between_liminf_limsup:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,c R:
+        $is_real_tail_limit_point(start,a,c)
+        =>:
+            $xreal::extended_real_le(\real_tail_liminf<start>(a),c)
+            $xreal::extended_real_le(c,\real_tail_limsup<start>(a))
+    release thm xreal::real_number_is_extended_real(c)
+    release thm fn_set_member(\real_tail_upper_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    release thm fn_set_member(\real_tail_lower_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    claim:
+        ? forall cutoff {j Z:j>=start}:
+            $xreal::extended_real_le(c,\real_tail_upper_extrema<start,a>(cutoff))
+        release thm real_tail_limit_point_le_upper_extrema(start,a,c,cutoff)
+    by def $xseq::is_extended_tail_lower_bound(start,\real_tail_upper_extrema<start,a>,c)
+    release thm xseq::extended_tail_infimum_ge_lower_bound(start,\real_tail_upper_extrema<start,a>,c)
+    \real_tail_limsup<start>(a)=\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,a>)
+    $xreal::extended_real_le(c,\real_tail_limsup<start>(a))
+    claim:
+        ? forall cutoff {j Z:j>=start}:
+            $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(cutoff),c)
+        release thm real_tail_lower_extrema_le_limit_point(start,a,c,cutoff)
+    by def $xseq::is_extended_tail_upper_bound(start,\real_tail_lower_extrema<start,a>,c)
+    release thm xseq::extended_tail_supremum_le_upper_bound(start,\real_tail_lower_extrema<start,a>,c)
+    \real_tail_liminf<start>(a)=\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,a>)
+    $xreal::extended_real_le(\real_tail_liminf<start>(a),c)
+
+thm real_symmetric_interval_gives_epsilon_close:
+    ? forall x,L R,epsilon R+:
+        L-epsilon<=x
+        x<=L+epsilon
+        =>:
+            $approx::is_epsilon_close(x,L,epsilon)
+    by cases:
+        ? abs(x-L)<=epsilon
+        case x-L>=0:
+            abs(x-L)=x-L
+            x-L=x+(-L)<=(L+epsilon)+(-L)=epsilon
+            abs(x-L)<=epsilon
+        case x-L<0:
+            abs(x-L)=-(x-L)=L-x
+            -x<=-(L-epsilon)
+            L-x=L+(-x)<=L+(-(L-epsilon))=epsilon
+            abs(x-L)<=epsilon
+    by def $approx::is_epsilon_close(x,L,epsilon)
+
+thm finite_real_tail_limsup_is_limit_point:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        \real_tail_limsup<start>(a) $in R
+        =>:
+            $is_real_tail_limit_point(start,a,\real_tail_limsup<start>(a))
+    have L R=\real_tail_limsup<start>(a)
+    claim:
+        ? forall epsilon R+,cutoff {j Z:j>=start}:
+            exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),L,epsilon)}
+        have lower R=L-epsilon
+        have upper R=L+epsilon
+        lower=L-epsilon=L-epsilon+0<L-epsilon+epsilon=L
+        upper=L+epsilon>L+0=L
+        release thm xreal::real_number_is_extended_real(lower)
+        release thm xreal::real_number_is_extended_real(upper)
+        release thm real_strict_order_is_extended_order(lower,L)
+        release thm real_strict_order_is_extended_order(L,upper)
+        $xreal::extended_real_lt(\real_tail_limsup<start>(a),upper)
+        release thm real_tail_limsup_eventually_below(start,a,upper)
+        obtain old from exist k {j Z:j>=start} st {$is_real_tail_below_after(start,a,upper,k)}
+        old>=start
+        cutoff>=start
+        old-start $in N
+        cutoff-start $in N
+        have common Z=old+cutoff-start
+        common=old+(cutoff-start)>=old+0=old
+        common=cutoff+(old-start)>=cutoff+0=cutoff
+        common>=start
+        common $in {j Z:j>=start}
+        release thm real_tail_limsup_arbitrarily_late_above(start,a,lower,common)
+        obtain n from exist n {j Z:j>=start} st {n>=common and $xreal::extended_real_lt(lower,a(n))}
+        n>=common>=old
+        $xreal::extended_real_lt(a(n),upper)
+        a(n) $in R
+        release thm extended_strict_order_on_reals(lower,a(n))
+        release thm extended_strict_order_on_reals(a(n),upper)
+        L-epsilon=lower<=a(n)<=upper=L+epsilon
+        release thm real_symmetric_interval_gives_epsilon_close(a(n),L,epsilon)
+        n>=common>=cutoff
+        witness exist index {j Z:j>=start} st {index>=cutoff and $approx::is_epsilon_close(a(index),L,epsilon)} from n
+    release thm real_tail_arbitrarily_late_close_is_limit_point(start,a,L)
+    $is_real_tail_limit_point(start,a,\real_tail_limsup<start>(a))
+
+thm finite_real_tail_liminf_is_limit_point:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        \real_tail_liminf<start>(a) $in R
+        =>:
+            $is_real_tail_limit_point(start,a,\real_tail_liminf<start>(a))
+    have L R=\real_tail_liminf<start>(a)
+    claim:
+        ? forall epsilon R+,cutoff {j Z:j>=start}:
+            exist n {j Z:j>=start} st {n>=cutoff and $approx::is_epsilon_close(a(n),L,epsilon)}
+        have lower R=L-epsilon
+        have upper R=L+epsilon
+        lower=L-epsilon=L-epsilon+0<L-epsilon+epsilon=L
+        upper=L+epsilon>L+0=L
+        release thm xreal::real_number_is_extended_real(lower)
+        release thm xreal::real_number_is_extended_real(upper)
+        release thm real_strict_order_is_extended_order(lower,L)
+        release thm real_strict_order_is_extended_order(L,upper)
+        $xreal::extended_real_lt(lower,\real_tail_liminf<start>(a))
+        release thm real_tail_liminf_eventually_above(start,a,lower)
+        obtain old from exist k {j Z:j>=start} st {$is_real_tail_above_after(start,a,lower,k)}
+        old>=start
+        cutoff>=start
+        old-start $in N
+        cutoff-start $in N
+        have common Z=old+cutoff-start
+        common=old+(cutoff-start)>=old+0=old
+        common=cutoff+(old-start)>=cutoff+0=cutoff
+        common>=start
+        common $in {j Z:j>=start}
+        release thm real_tail_liminf_arbitrarily_late_below(start,a,upper,common)
+        obtain n from exist n {j Z:j>=start} st {n>=common and $xreal::extended_real_lt(a(n),upper)}
+        n>=common>=old
+        $xreal::extended_real_lt(lower,a(n))
+        a(n) $in R
+        release thm extended_strict_order_on_reals(lower,a(n))
+        release thm extended_strict_order_on_reals(a(n),upper)
+        L-epsilon=lower<=a(n)<=upper=L+epsilon
+        release thm real_symmetric_interval_gives_epsilon_close(a(n),L,epsilon)
+        n>=common>=cutoff
+        witness exist index {j Z:j>=start} st {index>=cutoff and $approx::is_epsilon_close(a(index),L,epsilon)} from n
+    release thm real_tail_arbitrarily_late_close_is_limit_point(start,a,L)
+    $is_real_tail_limit_point(start,a,\real_tail_liminf<start>(a))
+
+thm extended_real_between_reals_is_real:
+    ? forall x xreal::ExtendedReal,lower,upper R:
+        $xreal::extended_real_le(lower,x)
+        $xreal::extended_real_le(x,upper)
+        =>:
+            x $in R
+    release thm xreal::real_number_is_extended_real(lower)
+    release thm xreal::real_number_is_extended_real(upper)
+    release thm xreal::real_negative_infinity_is_not_real
+    release thm xreal::real_positive_infinity_is_not_real
+    by contra:
+        ? lower!=xreal::real_negative_infinity
+        xreal::real_negative_infinity=lower
+        xreal::real_negative_infinity $in R
+        impossible xreal::real_negative_infinity $in R
+    by contra:
+        ? x!=xreal::real_positive_infinity
+        $xreal::extended_real_le(xreal::real_positive_infinity,upper)
+        release thm xreal::positive_infinity_le_only_itself(upper)
+        xreal::real_positive_infinity=upper
+        xreal::real_positive_infinity $in R
+        impossible xreal::real_positive_infinity $in R
+    release thm xreal::nontrivial_extended_real_order_is_finite(lower,x)
+
+thm bounded_real_tail_extremal_limits_are_real:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $rs::is_bounded_real_tail(start,a)
+        =>:
+            \real_tail_liminf<start>(a) $in R
+            \real_tail_limsup<start>(a) $in R
+    release thm sext::bounded_real_tail_extrema_are_real(start,a)
+    release thm real_tail_four_extrema_order(start,a)
+    release thm xreal::extended_real_order_transitive(\sext::real_tail_infimum<start>(a),\real_tail_liminf<start>(a),\real_tail_limsup<start>(a))
+    release thm xreal::extended_real_order_transitive(\real_tail_liminf<start>(a),\real_tail_limsup<start>(a),\sext::real_tail_supremum<start>(a))
+    release thm extended_real_between_reals_is_real(\real_tail_limsup<start>(a),\sext::real_tail_infimum<start>(a),\sext::real_tail_supremum<start>(a))
+    release thm extended_real_between_reals_is_real(\real_tail_liminf<start>(a),\sext::real_tail_infimum<start>(a),\sext::real_tail_supremum<start>(a))
+
+thm real_tail_limit_equals_extremal_limits:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        $rs::has_real_tail_limit(start,a,L)
+        =>:
+            \real_tail_limsup<start>(a)=L
+            \real_tail_liminf<start>(a)=L
+    release thm rs::real_tail_limit_implies_convergent(start,a,L)
+    release thm rs::convergent_real_tail_is_bounded(start,a)
+    release thm bounded_real_tail_extremal_limits_are_real(start,a)
+    release thm finite_real_tail_limsup_is_limit_point(start,a)
+    release thm finite_real_tail_liminf_is_limit_point(start,a)
+    release thm real_tail_limit_point_unique_of_limit(start,a,L,\real_tail_limsup<start>(a))
+    release thm real_tail_limit_point_unique_of_limit(start,a,L,\real_tail_liminf<start>(a))
+
+thm equal_finite_real_tail_extremal_limits_give_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R,L R:
+        \real_tail_limsup<start>(a)=L
+        \real_tail_liminf<start>(a)=L
+        =>:
+            $rs::has_real_tail_limit(start,a,L)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(start,a,L,epsilon)
+        have lower R=L-epsilon
+        have upper R=L+epsilon
+        lower=L-epsilon=L-epsilon+0<L-epsilon+epsilon=L
+        upper=L+epsilon>L+0=L
+        release thm xreal::real_number_is_extended_real(lower)
+        release thm xreal::real_number_is_extended_real(upper)
+        release thm real_strict_order_is_extended_order(lower,L)
+        release thm real_strict_order_is_extended_order(L,upper)
+        $xreal::extended_real_lt(\real_tail_limsup<start>(a),upper)
+        $xreal::extended_real_lt(lower,\real_tail_liminf<start>(a))
+        release thm real_tail_limsup_eventually_below(start,a,upper)
+        release thm real_tail_liminf_eventually_above(start,a,lower)
+        obtain first from exist k {j Z:j>=start} st {$is_real_tail_below_after(start,a,upper,k)}
+        obtain second from exist k {j Z:j>=start} st {$is_real_tail_above_after(start,a,lower,k)}
+        first>=start
+        second>=start
+        first-start $in N
+        second-start $in N
+        have common Z=first+second-start
+        common=first+(second-start)>=first+0=first
+        common=second+(first-start)>=second+0=second
+        common>=start
+        claim:
+            ? forall n Z:
+                n>=start
+                n>=common
+                =>:
+                    $approx::is_epsilon_close(a(n),L,epsilon)
+            n $in {j Z:j>=start}
+            n>=common>=first
+            n>=common>=second
+            $xreal::extended_real_lt(lower,a(n))
+            $xreal::extended_real_lt(a(n),upper)
+            a(n) $in R
+            release thm extended_strict_order_on_reals(lower,a(n))
+            release thm extended_strict_order_on_reals(a(n),upper)
+            L-epsilon=lower<=a(n)<=upper=L+epsilon
+            release thm real_symmetric_interval_gives_epsilon_close(a(n),L,epsilon)
+        by def $rs::is_real_tail_close_after(start,a,L,epsilon,common)
+        witness $rs::is_eventually_real_tail_close(start,a,L,epsilon) from common
+    by def $rs::has_real_tail_limit(start,a,L)
+
+thm real_tail_supremum_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\sext::real_tail_supremum<start>(a),\sext::real_tail_supremum<start>(b))
+    claim:
+        ? forall n {j Z:j>=start}:
+            $xreal::extended_real_le(a(n),\sext::real_tail_supremum<start>(b))
+        a(n) $in R
+        b(n) $in R
+        a(n)<=b(n)
+        release thm xreal::real_order_is_extended_real_order(a(n),b(n))
+        release thm sext::real_tail_supremum_bounds_members(start,b,n)
+        release thm xreal::extended_real_order_transitive(a(n),b(n),\sext::real_tail_supremum<start>(b))
+    by def $sext::is_real_tail_extended_upper_bound(start,a,\sext::real_tail_supremum<start>(b))
+    release thm sext::real_tail_supremum_le_upper_bound(start,a,\sext::real_tail_supremum<start>(b))
+
+thm real_tail_infimum_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\sext::real_tail_infimum<start>(a),\sext::real_tail_infimum<start>(b))
+    claim:
+        ? forall n {j Z:j>=start}:
+            $xreal::extended_real_le(\sext::real_tail_infimum<start>(a),b(n))
+        a(n) $in R
+        b(n) $in R
+        a(n)<=b(n)
+        release thm xreal::real_order_is_extended_real_order(a(n),b(n))
+        release thm sext::real_tail_infimum_bounds_members(start,a,n)
+        release thm xreal::extended_real_order_transitive(\sext::real_tail_infimum<start>(a),a(n),b(n))
+    by def $sext::is_real_tail_extended_lower_bound(start,b,\sext::real_tail_infimum<start>(a))
+    release thm sext::real_tail_infimum_ge_lower_bound(start,b,\sext::real_tail_infimum<start>(a))
+
+thm real_tail_upper_extrema_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,cutoff {j Z:j>=start}:
+        forall n {j Z:j>=start}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\real_tail_upper_extrema<start,a>(cutoff),\real_tail_upper_extrema<start,b>(cutoff))
+    claim:
+        ? forall n {j Z:j>=cutoff}:
+            \real_tail_restriction<start,a,cutoff>(n)<=\real_tail_restriction<start,b,cutoff>(n)
+        n $in Z
+        n>=cutoff>=start
+        n $in {j Z:j>=start}
+        a(n)<=b(n)
+        \real_tail_restriction<start,a,cutoff>(n)=a(n)
+        \real_tail_restriction<start,b,cutoff>(n)=b(n)
+        \real_tail_restriction<start,a,cutoff>(n)<=\real_tail_restriction<start,b,cutoff>(n)
+    release thm real_tail_supremum_pointwise_comparison(cutoff,\real_tail_restriction<start,a,cutoff>,\real_tail_restriction<start,b,cutoff>)
+    \real_tail_upper_extrema<start,a>(cutoff)=\sext::real_tail_supremum<cutoff>(\real_tail_restriction<start,a,cutoff>)
+    \real_tail_upper_extrema<start,b>(cutoff)=\sext::real_tail_supremum<cutoff>(\real_tail_restriction<start,b,cutoff>)
+    $xreal::extended_real_le(\real_tail_upper_extrema<start,a>(cutoff),\real_tail_upper_extrema<start,b>(cutoff))
+
+thm real_tail_lower_extrema_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R,cutoff {j Z:j>=start}:
+        forall n {j Z:j>=start}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(cutoff),\real_tail_lower_extrema<start,b>(cutoff))
+    claim:
+        ? forall n {j Z:j>=cutoff}:
+            \real_tail_restriction<start,a,cutoff>(n)<=\real_tail_restriction<start,b,cutoff>(n)
+        n $in Z
+        n>=cutoff>=start
+        n $in {j Z:j>=start}
+        a(n)<=b(n)
+        \real_tail_restriction<start,a,cutoff>(n)=a(n)
+        \real_tail_restriction<start,b,cutoff>(n)=b(n)
+        \real_tail_restriction<start,a,cutoff>(n)<=\real_tail_restriction<start,b,cutoff>(n)
+    release thm real_tail_infimum_pointwise_comparison(cutoff,\real_tail_restriction<start,a,cutoff>,\real_tail_restriction<start,b,cutoff>)
+    \real_tail_lower_extrema<start,a>(cutoff)=\sext::real_tail_infimum<cutoff>(\real_tail_restriction<start,a,cutoff>)
+    \real_tail_lower_extrema<start,b>(cutoff)=\sext::real_tail_infimum<cutoff>(\real_tail_restriction<start,b,cutoff>)
+    $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(cutoff),\real_tail_lower_extrema<start,b>(cutoff))
+
+thm extended_tail_supremum_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) xreal::ExtendedReal:
+        forall n {j Z:j>=start}:
+            $xreal::extended_real_le(a(n),b(n))
+        =>:
+            $xreal::extended_real_le(\xseq::extended_tail_supremum<start>(a),\xseq::extended_tail_supremum<start>(b))
+    claim:
+        ? forall n {j Z:j>=start}:
+            $xreal::extended_real_le(a(n),\xseq::extended_tail_supremum<start>(b))
+        $xreal::extended_real_le(a(n),b(n))
+        release thm xseq::extended_tail_supremum_bounds_members(start,b,n)
+        release thm xreal::extended_real_order_transitive(a(n),b(n),\xseq::extended_tail_supremum<start>(b))
+    by def $xseq::is_extended_tail_upper_bound(start,a,\xseq::extended_tail_supremum<start>(b))
+    release thm xseq::extended_tail_supremum_le_upper_bound(start,a,\xseq::extended_tail_supremum<start>(b))
+
+thm extended_tail_infimum_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) xreal::ExtendedReal:
+        forall n {j Z:j>=start}:
+            $xreal::extended_real_le(a(n),b(n))
+        =>:
+            $xreal::extended_real_le(\xseq::extended_tail_infimum<start>(a),\xseq::extended_tail_infimum<start>(b))
+    claim:
+        ? forall n {j Z:j>=start}:
+            $xreal::extended_real_le(\xseq::extended_tail_infimum<start>(a),b(n))
+        $xreal::extended_real_le(a(n),b(n))
+        release thm xseq::extended_tail_infimum_bounds_members(start,a,n)
+        release thm xreal::extended_real_order_transitive(\xseq::extended_tail_infimum<start>(a),a(n),b(n))
+    by def $xseq::is_extended_tail_lower_bound(start,b,\xseq::extended_tail_infimum<start>(a))
+    release thm xseq::extended_tail_infimum_ge_lower_bound(start,b,\xseq::extended_tail_infimum<start>(a))
+
+thm real_tail_limsup_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\real_tail_limsup<start>(a),\real_tail_limsup<start>(b))
+    release thm fn_set_member(\real_tail_upper_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    release thm fn_set_member(\real_tail_upper_extrema<start,b>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    claim:
+        ? forall cutoff {j Z:j>=start}:
+            $xreal::extended_real_le(\real_tail_upper_extrema<start,a>(cutoff),\real_tail_upper_extrema<start,b>(cutoff))
+        release thm real_tail_upper_extrema_pointwise_comparison(start,a,b,cutoff)
+    release thm extended_tail_infimum_pointwise_comparison(start,\real_tail_upper_extrema<start,a>,\real_tail_upper_extrema<start,b>)
+    \real_tail_limsup<start>(a)=\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,a>)
+    \real_tail_limsup<start>(b)=\xseq::extended_tail_infimum<start>(\real_tail_upper_extrema<start,b>)
+    $xreal::extended_real_le(\real_tail_limsup<start>(a),\real_tail_limsup<start>(b))
+
+thm real_tail_liminf_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\real_tail_liminf<start>(a),\real_tail_liminf<start>(b))
+    release thm fn_set_member(\real_tail_lower_extrema<start,a>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    release thm fn_set_member(\real_tail_lower_extrema<start,b>,fn(k {j Z:j>=start}) xreal::ExtendedReal)
+    claim:
+        ? forall cutoff {j Z:j>=start}:
+            $xreal::extended_real_le(\real_tail_lower_extrema<start,a>(cutoff),\real_tail_lower_extrema<start,b>(cutoff))
+        release thm real_tail_lower_extrema_pointwise_comparison(start,a,b,cutoff)
+    release thm extended_tail_supremum_pointwise_comparison(start,\real_tail_lower_extrema<start,a>,\real_tail_lower_extrema<start,b>)
+    \real_tail_liminf<start>(a)=\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,a>)
+    \real_tail_liminf<start>(b)=\xseq::extended_tail_supremum<start>(\real_tail_lower_extrema<start,b>)
+    $xreal::extended_real_le(\real_tail_liminf<start>(a),\real_tail_liminf<start>(b))
+
+thm real_tail_four_extrema_pointwise_comparison:
+    ? forall start Z,a,b fn(n {j Z:j>=start}) R:
+        forall n {j Z:j>=start}:
+            a(n)<=b(n)
+        =>:
+            $xreal::extended_real_le(\sext::real_tail_supremum<start>(a),\sext::real_tail_supremum<start>(b))
+            $xreal::extended_real_le(\sext::real_tail_infimum<start>(a),\sext::real_tail_infimum<start>(b))
+            $xreal::extended_real_le(\real_tail_limsup<start>(a),\real_tail_limsup<start>(b))
+            $xreal::extended_real_le(\real_tail_liminf<start>(a),\real_tail_liminf<start>(b))
+    release thm real_tail_supremum_pointwise_comparison(start,a,b)
+    release thm real_tail_infimum_pointwise_comparison(start,a,b)
+    release thm real_tail_limsup_pointwise_comparison(start,a,b)
+    release thm real_tail_liminf_pointwise_comparison(start,a,b)
+
+thm real_tail_squeeze_limit:
+    ? forall start Z,a,b,c fn(n {j Z:j>=start}) R,L R:
+        forall n {j Z:j>=start}:
+            a(n)<=b(n)<=c(n)
+        $rs::has_real_tail_limit(start,a,L)
+        $rs::has_real_tail_limit(start,c,L)
+        =>:
+            $rs::has_real_tail_limit(start,b,L)
+    claim:
+        ? forall n {j Z:j>=start}:
+            a(n)<=b(n)
+        a(n)<=b(n)<=c(n)
+        a(n)<=b(n)
+    claim:
+        ? forall n {j Z:j>=start}:
+            b(n)<=c(n)
+        a(n)<=b(n)<=c(n)
+        b(n)<=c(n)
+    release thm real_tail_limit_equals_extremal_limits(start,a,L)
+    release thm real_tail_limit_equals_extremal_limits(start,c,L)
+    release thm xreal::real_number_is_extended_real(L)
+    release thm real_tail_limsup_pointwise_comparison(start,a,b)
+    release thm real_tail_limsup_pointwise_comparison(start,b,c)
+    $xreal::extended_real_le(L,\real_tail_limsup<start>(b))
+    $xreal::extended_real_le(\real_tail_limsup<start>(b),L)
+    release thm xreal::extended_real_order_antisymmetric(\real_tail_limsup<start>(b),L)
+    release thm real_tail_liminf_pointwise_comparison(start,a,b)
+    release thm real_tail_liminf_pointwise_comparison(start,b,c)
+    $xreal::extended_real_le(L,\real_tail_liminf<start>(b))
+    $xreal::extended_real_le(\real_tail_liminf<start>(b),L)
+    release thm xreal::extended_real_order_antisymmetric(\real_tail_liminf<start>(b),L)
+    release thm equal_finite_real_tail_extremal_limits_give_limit(start,b,L)
+
+template<start Z,a fn(n {j Z:j>=start}) R>:
+    have fn real_tail_absolute_values(n {j Z:j>=start}) R=abs(a(n))
+
+thm real_tail_zero_limit_implies_absolute_zero_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $rs::has_real_tail_limit(start,a,0)
+        =>:
+            $rs::has_real_tail_limit(start,\real_tail_absolute_values<start,a>,0)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(start,\real_tail_absolute_values<start,a>,0,epsilon)
+        $rs::is_eventually_real_tail_close(start,a,0,epsilon)
+        obtain cutoff from $rs::is_eventually_real_tail_close(start,a,0,epsilon)
+        cutoff>=start
+        claim:
+            ? forall n Z:
+                n>=start
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(\real_tail_absolute_values<start,a>(n),0,epsilon)
+            n $in {j Z:j>=start}
+            a(n) $in R
+            abs(a(n))>=0
+            \real_tail_absolute_values<start,a>(n)=abs(a(n))
+            abs(\real_tail_absolute_values<start,a>(n)-0)=abs(\real_tail_absolute_values<start,a>(n))=abs(abs(a(n)))=abs(a(n))=abs(a(n)-0)
+            $approx::is_epsilon_close(a(n),0,epsilon)
+            abs(a(n)-0)<=epsilon
+            abs(\real_tail_absolute_values<start,a>(n)-0)<=epsilon
+            by def $approx::is_epsilon_close(\real_tail_absolute_values<start,a>(n),0,epsilon)
+        by def $rs::is_real_tail_close_after(start,\real_tail_absolute_values<start,a>,0,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(start,\real_tail_absolute_values<start,a>,0,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(start,\real_tail_absolute_values<start,a>,0)
+
+thm absolute_zero_limit_implies_real_tail_zero_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $rs::has_real_tail_limit(start,\real_tail_absolute_values<start,a>,0)
+        =>:
+            $rs::has_real_tail_limit(start,a,0)
+    claim:
+        ? forall epsilon R+:
+            $rs::is_eventually_real_tail_close(start,a,0,epsilon)
+        $rs::is_eventually_real_tail_close(start,\real_tail_absolute_values<start,a>,0,epsilon)
+        obtain cutoff from $rs::is_eventually_real_tail_close(start,\real_tail_absolute_values<start,a>,0,epsilon)
+        cutoff>=start
+        claim:
+            ? forall n Z:
+                n>=start
+                n>=cutoff
+                =>:
+                    $approx::is_epsilon_close(a(n),0,epsilon)
+            n $in {j Z:j>=start}
+            a(n) $in R
+            abs(a(n))>=0
+            \real_tail_absolute_values<start,a>(n)=abs(a(n))
+            abs(a(n)-0)=abs(a(n))=abs(abs(a(n)))=abs(\real_tail_absolute_values<start,a>(n))=abs(\real_tail_absolute_values<start,a>(n)-0)
+            $approx::is_epsilon_close(\real_tail_absolute_values<start,a>(n),0,epsilon)
+            abs(\real_tail_absolute_values<start,a>(n)-0)<=epsilon
+            abs(a(n)-0)<=epsilon
+            by def $approx::is_epsilon_close(a(n),0,epsilon)
+        by def $rs::is_real_tail_close_after(start,a,0,epsilon,cutoff)
+        witness $rs::is_eventually_real_tail_close(start,a,0,epsilon) from cutoff
+    by def $rs::has_real_tail_limit(start,a,0)
+
+thm real_tail_cauchy_has_limit:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $rs::is_real_tail_cauchy(start,a)
+        =>:
+            exist L R st {$rs::has_real_tail_limit(start,a,L)}
+    release thm fn_set_member(\rs::real_tail_reindex<start,a>,fn(k N+) R)
+    \rs::real_tail_reindex<start,a> $in seq(R)
+    release thm rs::real_tail_cauchy_is_native_cauchy(start,a)
+    release thm sequence_cauchy_convergent(\rs::real_tail_reindex<start,a>)
+    release thm sequence_limit_from_convergent(\rs::real_tail_reindex<start,a>)
+    obtain L from exist L R st {$has_seq_limit(\rs::real_tail_reindex<start,a>,L)}
+    release thm rs::native_limit_is_real_tail_limit(start,a,L)
+    witness exist value R st {$rs::has_real_tail_limit(start,a,value)} from L
+
+thm real_tail_cauchy_converges:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $rs::is_real_tail_cauchy(start,a)
+        =>:
+            $rs::is_convergent_real_tail(start,a)
+    release thm real_tail_cauchy_has_limit(start,a)
+    obtain L from exist L R st {$rs::has_real_tail_limit(start,a,L)}
+    witness $rs::is_convergent_real_tail(start,a) from L
+
+thm convergent_real_tail_is_cauchy:
+    ? forall start Z,a fn(n {j Z:j>=start}) R:
+        $rs::is_convergent_real_tail(start,a)
+        =>:
+            $rs::is_real_tail_cauchy(start,a)
+    obtain L from $rs::is_convergent_real_tail(start,a)
+    release thm rs::real_tail_limit_is_cauchy(start,a,L)

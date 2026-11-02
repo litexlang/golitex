@@ -1,0 +1,37 @@
+# Tracer: retain actual failed theorem stages without proving its false goal.
+#
+# Before:
+# prop P(x R):
+#     x = 0
+# thm fail_final:
+#     ? forall x R:
+#         x = 0
+#         =>:
+#             x = x
+#             $P(x + 1)
+#             x + 0 = x
+#     have helper R = x
+#     helper = x
+# Former reading result: the failing index/result survived; actual local
+# parameters, adopted premise, checked body and earlier final check were lost.
+#
+# Now: the same strict source remains rejected at P(x+1). Its original typed
+# local history is inspectable; later final checks are not executed.
+prop P(x R):
+    x = 0
+thm fail_final:
+    ? forall x R:
+        x = 0
+        =>:
+            x = x
+            $P(x + 1)
+            x + 0 = x
+    have helper R = x
+    helper = x
+
+# Boundary: this theorem is not registered, and helper cannot escape its scope.
+# A checked prefix does not prove the failed conclusion.
+# Evidence: tests/reading_failed_theorem_context.rs and
+# src/reading/web/tests/failed-theorem-context.cjs.
+# Run (expected exit1): target/release/litex -strict -lang en -f
+# examples/test_statements/negative/def_thm_stmt/retained-final-prefix.lit

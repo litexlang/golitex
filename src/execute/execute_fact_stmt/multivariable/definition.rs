@@ -10,6 +10,20 @@ impl Runtime {
         relation: &MultivariableAnalysisRelation,
         state: VerifyState,
     ) -> RuntimeResult<Option<Vec<Fact>>> {
+        Ok(self
+            .captured_multivariable_defining_clauses(relation, state)?
+            .map(|(_, clauses)| clauses))
+    }
+    pub(crate) fn captured_multivariable_defining_clauses(
+        &mut self,
+        relation: &MultivariableAnalysisRelation,
+        state: VerifyState,
+    ) -> RuntimeResult<
+        Option<(
+            super::super::function_domain::CompleteFunctionDomainProof,
+            Vec<Fact>,
+        )>,
+    > {
         let Some((source, _)) = self.multivariable_signature_requirements(relation, state)? else {
             return Ok(None);
         };
@@ -329,7 +343,7 @@ impl Runtime {
                 )]
             }
         };
-        Ok(Some(clauses))
+        Ok(Some((source, clauses)))
     }
     pub(crate) fn multivariable_accumulation(&mut self, domain: Obj, point: Obj, n: Obj) -> Fact {
         let radius = self.fresh_internal_param();
@@ -505,10 +519,12 @@ pub enum MultivariableDefinitionProof {
     LaplacianAt(LaplacianAtRelationDefinitionProof),
 }
 pub struct ScalarMultivariableLimitRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 pub struct VectorMultivariableLimitRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -521,18 +537,22 @@ pub struct VectorMultivariableContinuousAtRelationDefinitionProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 pub struct PartialDerivativeAtRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 pub struct SecondPartialDerivativeAtRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 pub struct ScalarDifferentialAtRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 pub struct TotalDerivativeAtRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -549,6 +569,7 @@ pub struct GradientAtRelationDefinitionProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 pub struct JacobianAtRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -557,10 +578,12 @@ pub struct HessianAtRelationDefinitionProof {
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 pub struct DivergenceAtRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
 pub struct CurlAtRelationDefinitionProof {
+    pub function_domain: Box<super::super::function_domain::CompleteFunctionDomainProof>,
     pub requirement_facts: Vec<Fact>,
     pub proof_of_requirement_facts: Vec<VerifyFactResult>,
 }
@@ -570,18 +593,21 @@ pub struct LaplacianAtRelationDefinitionProof {
 }
 pub(crate) fn definition_proof(
     relation: &MultivariableAnalysisRelation,
+    function_domain: super::super::function_domain::CompleteFunctionDomainProof,
     requirement_facts: Vec<Fact>,
     proof_of_requirement_facts: Vec<VerifyFactResult>,
 ) -> MultivariableDefinitionProof {
     match relation {
         MultivariableAnalysisRelation::ScalarLimit(_) => MultivariableDefinitionProof::ScalarLimit(
             ScalarMultivariableLimitRelationDefinitionProof {
+                function_domain: Box::new(function_domain),
                 requirement_facts,
                 proof_of_requirement_facts,
             },
         ),
         MultivariableAnalysisRelation::VectorLimit(_) => MultivariableDefinitionProof::VectorLimit(
             VectorMultivariableLimitRelationDefinitionProof {
+                function_domain: Box::new(function_domain),
                 requirement_facts,
                 proof_of_requirement_facts,
             },
@@ -605,6 +631,7 @@ pub(crate) fn definition_proof(
         MultivariableAnalysisRelation::PartialDerivativeAt(_) => {
             MultivariableDefinitionProof::PartialDerivativeAt(
                 PartialDerivativeAtRelationDefinitionProof {
+                    function_domain: Box::new(function_domain),
                     requirement_facts,
                     proof_of_requirement_facts,
                 },
@@ -613,6 +640,7 @@ pub(crate) fn definition_proof(
         MultivariableAnalysisRelation::SecondPartialDerivativeAt(_) => {
             MultivariableDefinitionProof::SecondPartialDerivativeAt(
                 SecondPartialDerivativeAtRelationDefinitionProof {
+                    function_domain: Box::new(function_domain),
                     requirement_facts,
                     proof_of_requirement_facts,
                 },
@@ -621,6 +649,7 @@ pub(crate) fn definition_proof(
         MultivariableAnalysisRelation::ScalarDifferentialAt(_) => {
             MultivariableDefinitionProof::ScalarDifferentialAt(
                 ScalarDifferentialAtRelationDefinitionProof {
+                    function_domain: Box::new(function_domain),
                     requirement_facts,
                     proof_of_requirement_facts,
                 },
@@ -629,6 +658,7 @@ pub(crate) fn definition_proof(
         MultivariableAnalysisRelation::TotalDerivativeAt(_) => {
             MultivariableDefinitionProof::TotalDerivativeAt(
                 TotalDerivativeAtRelationDefinitionProof {
+                    function_domain: Box::new(function_domain),
                     requirement_facts,
                     proof_of_requirement_facts,
                 },
@@ -658,6 +688,7 @@ pub(crate) fn definition_proof(
         }
         MultivariableAnalysisRelation::JacobianAt(_) => {
             MultivariableDefinitionProof::JacobianAt(JacobianAtRelationDefinitionProof {
+                function_domain: Box::new(function_domain),
                 requirement_facts,
                 proof_of_requirement_facts,
             })
@@ -670,12 +701,14 @@ pub(crate) fn definition_proof(
         }
         MultivariableAnalysisRelation::DivergenceAt(_) => {
             MultivariableDefinitionProof::DivergenceAt(DivergenceAtRelationDefinitionProof {
+                function_domain: Box::new(function_domain),
                 requirement_facts,
                 proof_of_requirement_facts,
             })
         }
         MultivariableAnalysisRelation::CurlAt(_) => {
             MultivariableDefinitionProof::CurlAt(CurlAtRelationDefinitionProof {
+                function_domain: Box::new(function_domain),
                 requirement_facts,
                 proof_of_requirement_facts,
             })

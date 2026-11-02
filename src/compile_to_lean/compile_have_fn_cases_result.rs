@@ -16,11 +16,6 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if local {
-            return Err(LeanCompileError::unsupported(
-                "PiecewiseFunction/LocalDeclaration",
-            ));
-        }
         let ExecHaveFnEqualCaseByCaseStmtResult::Success(p) = result else {
             return Err(LeanCompileError::unsupported("PiecewiseFunction/Failed"));
         };
@@ -152,11 +147,13 @@ impl LitexToLeanCompiler {
         );
         let object = Obj::Identifier(IdentifierObj::from_bound_name(&p.statement.name));
         let mut declarations =
-            vec![self.bind_alias(&p.statement.name, &object, &object, &value, false, position)?];
-        let name = self.context_application(
-            &format!("_object_i{}", p.statement.name.id.value()),
-            position,
-        );
+            vec![self.bind_alias(&p.statement.name, &object, &object, &value, local, position)?];
+        let name = format!("_object_i{}", p.statement.name.id.value());
+        let name = if local {
+            name
+        } else {
+            self.context_application(&name, position)
+        };
         let stores = &p.store_and_infer_result;
         if stores.membership_fact_id != stores.membership.primary_fact_id()
             || stores.case_defining_fact_ids

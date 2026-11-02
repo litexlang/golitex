@@ -52,6 +52,42 @@ mathematical description of that theorem. The report distinguishes specific
 name-hover explanations, generic labels and available bilingual catalogue
 comments; AST `Identifier` coverage cannot substitute for this check.
 
+`builtin_theorems` is an optional source-catalogue table keyed by the native
+`BuiltinTheoremId` variant. The generator validates canonical names and arities
+against the live native dispatch and embeds plain bilingual cards with native
+canonical names and declared arities. The reader selects these from retained
+builtin callee/application identities or the source observer's optional
+`symbols[].builtin_theorem` declaration identity. The latter is produced only
+for typed bare theorem calls resolved by `BuiltinTheoremId::from_name`; it
+contains `type`, canonical `name` and declared `arity`, while the symbol kind
+is `builtin_theorem`. It remains available on rejected calls and does not
+record a proof, rule application or successful invocation. Qualified and user
+theorem names do not receive this native identity. Conflicting declaration and
+application identities fail closed, with matching rule identity when present.
+A theorem spelling, user declaration or
+unknown/malformed native identity cannot supply a borrowed description. Older
+exports with a retained successful typed identity do not require catalogue
+messages or the new optional declaration metadata.
+
+These cards state the mathematical law, domains, obligations and a checked
+source example; they do not manufacture premise proofs or parameter bindings.
+The ordinary theorem-application view continues to show the actual call's
+requirements, stored conclusions and final collapsed WD independently. Kernel
+catalogue comments are audited separately from these viewer-owned descriptions.
+
+Membership descriptions retain complete function/tuple domains, every
+comprehension condition, and the set-valued condition in family-intersection
+projections. Real-bound descriptions distinguish a supplied bound, a proposed
+extremum, and an existentially obtained certified extremum; they preserve the
+strict comparisons needed for crossing and rational-density conclusions.
+
+Sequence-limit descriptions retain positive-integer domains, the complete
+epsilon/cutoff quantifier order, and both nonzero premises for a full-domain
+quotient. Finite limsup/liminf descriptions distinguish eventual bounds from
+hits on every tail; negation and negative scaling exchange the two kinds.
+Candidate proofs, existence propositions and proof-consuming selectors remain
+separate, and sum-bound cards state the interface's explicit absolute bounds.
+
 Leading keywords use the actual captured statement kind: `have` for an arbitrary
 element differs from `have` for an equality definition, and a function defined by
 cases differs from one given by a single body. The longest documented phrase is
@@ -116,6 +152,343 @@ documented as supported predicates. Syntax patterns in reference cards are not
 claimed as verified examples; existing checked tutorial examples remain attached
 to their corresponding keyword cards.
 
+`ProofBlockBodyFailed` retains its completed `prior_steps`, actual failed
+statement and execution result. The reading observer maps these results to
+unique, exactly matching
+original AST child under the current source parent. The failed child's verdict
+and failure details are source-addressable; unmatched or synthetic statements
+retain raw evidence. Following steps remain unexecuted. Prefix results from a
+failed body stay in the retained native scope, or in an explicitly marked
+reading-only lexical scope when the caller did not retain its environment.
+Goal-WD and conclusion failures do not manufacture failed body-step records.
+When the enclosing body result references an exactly parented failed child on
+the same source row, the row shows the child's report once. The enclosing
+failure retains its statement identity; older or incomplete mappings keep their
+available reports rather than guessing which one to suppress.
+
+Entered case failures retain `ByCasesBranchFailure`: the actual checked
+assumption, its store/inference result, the entered failure stage and the
+detached local environment returned by the existing scope API. The observer
+shows this assumption at the case header and in matching failed-step/header
+cards. Local facts remain local; a rejected case statement publishes no common
+conclusion. An assumption-introduction failure does not certify an entered
+case. Original `case_contexts` metadata separately records source conditions,
+header spans and ordered body spans; source syntax is never a substitute for
+stored assumptions or a runtime scope certificate. Old bundles keep their
+available native evidence without inventing missing context. Retained evidence
+does not change checking, storage, scope exit, rollback or mathematical IDs.
+
+If a later case fails, `ExecByCasesStmtFailed::Branch` also retains the already
+completed goal-formation checks, coverage proof and earlier successful branches
+in execution order. A closing-goal failure retains its already proved local
+targets. Their body steps, assumptions, body-step consequences and conditional proofs stay
+addressable at the original case headers and source lines. The enclosing header
+can disclose why the cases cover all possibilities and distinguish completed,
+failed and unexecuted cases. A shared target FactId can occur in several local
+case proofs; each proof keeps its own condition and scope. These conditional
+targets are not displayed as global conclusions of a rejected statement. Legacy
+or incomplete records do not acquire inferred case-completion certificates.
+When a subject was mentioned before its environment snapshot was visited, the
+first actual environment index determines its scope. Runtime environments are
+visited outermost first, then retained environments before their children. This
+keeps local assumptions out of outer publication lists and preserves genuine
+body seeds at their own producer, while successful outer publication remains
+outer. This bookkeeping belongs only to the reading observer.
+Body-statement consequences use the existing inline disclosures. Local closing-target
+consequences have a separate, initially closed disclosure at their case header.
+Selecting one shows the actual stored target, its owning case condition and the
+specific inference rule that stored that conclusion. `ParamTypes` and
+`ExpandDefinition` remain distinct; a batch containing both does not assign both
+rules to every conclusion. Named definition links use matching resolved source
+identities. Missing origins or rule effects cannot borrow another definition or
+rule. Successful common publication and its outer inferences keep their outer
+meaning; this local view does not turn them into conditional-only conclusions.
+Case placement comes from the retained branch result and its exact stored-target
+inference reference. The inference index can retain a reused seed's outer scope;
+it does not replace that branch owner. Inferences published by the enclosing
+statement stay on its own source row.
+
+Ordinary inferred-fact selections show their actual source instance and the
+specific native rule that stored the selected conclusion. Rule attribution
+requires the exact producer's store/infer reference and the matching typed
+store effect; a batch's list of rules is not assigned to every output. The
+source and result remain distinct FactIds. A one-way consequence is not
+replaced by the full defining equivalence. Named-definition navigation also
+requires matching declaration identity. Native checks and fact citations used
+by the rule are available in an initially closed conditions disclosure, so a
+nonzero-factor cancellation exposes its nonzero certificate. Storage is not
+presented as another verification or a new WD proof.
+
+The same rule renderer serves local case consequences without changing their
+conditional scope. Negated-universal consequences retain their specialized
+quantifier-negation explanation and identity checks. Incomplete or conflicting
+source, rule, storage or scope records receive an explicit incomplete-record
+message; they do not acquire a neighboring definition or guessed proof.
+
+## Logical actions beside the source
+
+Failed ordinary universals already retain `VerifyForallFactFailed::FailToSearchProof`.
+The viewer uses its actual introduced parameters, assumed premises, locally
+proved clauses, failing index and detached scope. Header and failing-clause
+previews retain that context; completed clauses have local proof links and a
+closed prefix disclosure. Hovering a completed clause opens its own proof
+directly, including local context and a closed formation tail; it does not add
+another folded copy of the formula. A failed or unchecked clause gains no proof, and the
+whole universal is not published. Local premise consequences retain their own
+inference rules. Missing or foreign records cannot supply inferred hypotheses;
+an incomplete prefix does not erase separately verified context records.
+
+Following a citation or scope link from a source preview records that preview's
+mathematical focus, including the source position. Back restores its explanation
+without inheriting an older error, keyword, reference or equality-step selection.
+This uses the existing viewer history; it adds no proof or runtime state.
+
+The failing clause's native identity also locates failures inside expression
+formation. For an enclosing failed body, the reader follows only validated
+parent/child execution records to the precise inner failure. This keeps outer
+headers, inner headers and the actual error row distinct without duplicated
+diagnostics. Native verification and failure payloads are unchanged.
+
+Failed claims retain `ExecClaimLocalFailure`: the original claim, completed
+goal-formation checks, a typed body-failure prefix and the detached local
+environment returned by the existing scope API. Quantified failures distinguish
+parameter introduction, premise formation, body execution and conclusion
+checks. Completed body steps and earlier conclusion checks remain addressable;
+the failed step is rejected and the unexecuted suffix gains no proof. A final
+store failure retains the completed local body and the existing store-helper
+diagnostic. None of these records activates a scope or publishes the goal.
+The compact Normal/Detailed failure phase and diagnostic are unchanged.
+
+Source-adjacent failed-claim cards use these actual parameter and premise
+records. Completed local conclusion checks have an initially closed disclosure
+and remain distinct from a finished claim. Missing or foreign introduction,
+store, subject or scope records cannot supply guessed hypotheses. An incomplete
+closing-check list does not erase separately retained parameter/premise context.
+Consequences of an actual local premise retain their own rule and proof links,
+including when the enclosing claim fails; they remain conditional on that
+premise in its retained local scope.
+Legacy lexical-only failure scopes retain their existing information.
+
+A goal-formation check can mention the same premise FactId as the actual body.
+The viewer's WD normalization preserves an already retained local scope instead
+of moving that body premise into the WD-only scope. File/lexical legacy
+fallbacks remain available; this is presentation bookkeeping, not an Env or
+Runtime scope change. Scope ownership and source visibility are independent:
+WD-only mentions remain hidden until an actual source action identifies them.
+
+Successful `by contra`, `by cases` and `claim` blocks display their actual stored
+conclusions on the block header. The goal line does not become an assumption:
+`by contra` shows the retained reverse assumption at `?`, with its actual local
+inferences behind a collapsed count. Case conditions are attached to their own
+branch scopes. Header proof previews expose coverage and each branch's closing
+proof, or both sides of a contradiction. Proof cases require coverage, not
+pairwise disjointness. Claim and ordinary universal proofs expose arbitrary
+parameters, assumed premises and the actual conclusion checks.
+
+These are reader views of retained typed results. Fact positions come from the
+native fact AST and the source statement's byte range; command tokens validate
+assumption and contradiction anchors. Local scopes come from the retained
+`local_env`, never indentation. A mapped verified source fact uses its exact
+source execution's scope, while local assumptions and their inferred outputs
+use their recorded assumption scope. The original bundle is not rewritten.
+Missing identities, scope ownership or source anchors do not create guessed
+facts. Rejected blocks get no successful conclusion arrows.
+
+Hovering local actions or facts softly marks their actual context. The same
+proof preview retains the independent symbol compartment, keyboard access,
+pinning, citation navigation and edit invalidation. Inference labels show only
+`Consequences n ▸` until opened. A repeated source step uses the selected
+execution record; if native executions reuse a FactId, its proof remains
+addressed by the execution statement rather than manufacturing another fact or
+borrowing the first execution's scope. Source line selection keeps the existing
+execution chooser accessible.
+
+Ordinary and strong induction expose separate base and successor contexts,
+their actual assumptions and instantiated conclusion proofs. Strong induction
+retains the universal hypothesis over every integer from the starting value
+through the current parameter. A shared proof body keeps separate execution
+choices labelled by phase. Finite enumeration and `by for` expose each native
+assignment separately, distinguish proved instances from vacuous implications
+whose antecedent was refuted, and retain empty-domain vacuity.
+
+The three witness forms expose actual local witness equalities, body or
+membership checks, and the separate uniqueness obligation for `exist!`.
+Parameter-domain and expression checks remain last and closed. Local bindings
+link to the witness invocation rather than borrowing the predicate definition's
+source position. These are retained execution explanations; they do not add
+new proof routes or extend unsupported witness forms.
+
+Optional statement `block_anchors` locate structured induction titles. Each
+entry contains a role (`induction_base` or `induction_step`), physical line,
+exact UTF-8 byte range and original source text. The reading observer derives
+them from the original native TokenBlock hierarchy after checking the typed
+statement and source header. They carry no mathematical evidence or FactId.
+The viewer checks their ranges and tokens; old or conflicting metadata omits
+title annotations while retained stages remain available from the goal/header.
+
+These adapters have per-form acceptance examples rather than a claim about
+every possible nested or legacy shape. Source-position details and internal
+atomic proof routes also need further acceptance; keyword help alone does not
+establish logical-view coverage.
+
+The Zorn, Choice and Regularity views separate the foundation principle from
+its verified applicability premises and actual existential publication. Local
+proof steps retain their native scope. A retained obligation may verify while
+its subsequent local store fails; that error is not converted into a stored
+fact. The final publication is separate from these local stages.
+The simple predicate names in a Zorn header use the same file/module reference
+resolution as ordinary predicate applications. Its interface checker retains
+the existing exact domain and defining-form requirements.
+
+`eval` displays its actual rewrite citations, rewritten expression, exact value
+and published source-to-value equality. Function applications, checked algorithm
+equations, finite folds and scalar matrix computations stay in closed trace
+disclosures. A fold retains its enumeration/bounds, optional seed, term values
+and accumulations, including the empty sum/product identities. The final closed
+WD disclosure reads the source, call and result checks. These views perform no
+fresh evaluation or proof search. Qualified algorithm evaluation resolves the
+existing export/module identity through the shared definition lookup; it does
+not discard qualifiers or change source-WD and equation-check permissions.
+Calls into an imported chapter still need its released function interface in
+the caller's proof context; importing the chapter does not silently publish all
+its local facts. The qualified-call regression uses explicit `release obj def`
+before evaluating the imported algorithms.
+
+Object introductions have source-row explanations for `let`, arbitrary typed
+`have`, typed equalities, `have` by existence, both `obtain` forms, function
+preimages and replacement images. The views use actual ordered stores and
+their producer identities. An existential variable-to-witness-name mapping is
+displayed as a naming correspondence, never as a new equality about a free
+variable. Predicate arguments and existential variables are shown separately.
+Preimage views retain the selected function interface, complete argument
+groups, input domains and additional stored conditions. Replacement remains an
+explicit application of the Axiom of Replacement, with its actual
+single-valuedness citation and introduction/elimination properties.
+
+Real one-layer struct auto-opening is retained separately from the declaration's
+main type/equality stores. Its properties start collapsed and link the resolved
+struct definition. Only layers whose object matches a declared symbol can
+contribute properties or inferences; type-preflight layers remain temporary.
+
+Internal WD assumptions are hidden using their retained local stores, even
+when an older fact-directory entry reports an outer scope. Actual successful
+introduction stores restore the declaration properties; a body condition
+guaranteed by existence is not labelled as an assumption. Its real inference
+outputs stay at that body's native source row, separate from preflight
+inferences. Property links and symbol information navigate to the actual
+introduction. Repeated source lines follow the currently selected native
+scope across adjacent statements; they do not silently return to the first
+execution. Missing or conflicting source, symbol, store, interface or proof
+records do not produce guessed properties or bindings.
+
+Six function/algorithm definition forms have source-local definition checks:
+formula, piecewise, unique-existence and inductive functions, plus algorithms by
+cases or induction. Function guards are local input assumptions; their WD
+preflight stores cannot become proved facts at the definition row. Formula
+definitions retain the actual return-membership proof. An independently empty
+complete input domain makes that return obligation vacuous, without proving a
+standalone false membership or skipping expression WD.
+
+Piecewise headers expose actual coverage and pairwise disjointness certificates;
+each native `case` position exposes its local conditions and return check.
+Nested recursive cases keep their enclosing scopes, integer measure, lower
+bound and restricted recursive interface. Unique-existence definitions show
+the checked source proposition and the three retained function properties.
+Actual case-equation outputs navigate to the matched source branch. Executable
+algorithm registration is distinguished from evaluating a concrete call.
+Missing conditions, mismatched pairs, scopes or store identities remain
+explicitly incomplete. These views do not reclassify an enclosing template as
+a separately exported function statement, or hide an actual failed evaluation
+in a module whose preceding definitions were accepted.
+
+Seven extensionality and explicit-release forms have source-local proof views.
+`by extension` retains both checked subset directions. `by fn_extension` shows
+the complete input interfaces, their actual comparison and the pointwise
+universal proof or its known-universal citation. Returned functions retain
+their separate application layers. Neither a few equal values nor a partial
+input interface substitutes for the native domain certificate.
+
+Object and struct releases link to the original definition and list only the
+actual publication stores. A retained `TrustHave` origin remains explicit;
+releasing a definition does not turn an assumption into a proof. Cartesian
+release shows the checked defining equality. Tuple release distinguishes a
+known tuple value from Cartesian membership, follows the checked finite shape
+and index domain, and retains the native `fn_set_member` requirements and
+coordinate proofs. Empty tuples have no coordinate obligations. Range
+expansion displays possible values as a disjunction, including singleton
+ranges, rather than claiming every alternative simultaneously.
+
+Published properties are collapsed by default. Their real inference batches
+belong to the release header; WD-only temporary stores remain hidden even when
+their event reports an outer scope. Existing FactIds and producers are
+preserved. Expression WD remains the final closed section; missing or
+conflicting domain, shape, source, store or proof correspondence is reported
+without inventing evidence.
+
+Object symbol hover and selection reuse the actual declaration's introduction
+record. A given-value declaration explains its value; it is not described as
+choosing an arbitrary element. Trusted objects retain their explicit assumption
+origin, and real structural parameters and failed-check temporaries retain their
+local scope. Structural domains and laws remain grouped, closed and citable;
+the symbol's domain is not repeated in a second generic summary. Ambiguous or
+foreign execution identities do not borrow another declaration's properties.
+Virtual Eval source labels read **Current input**, while actual filenames and
+authored source titles remain intact. This changes labels, not source identity.
+
+Six mathematical-interface definitions have source-local logical views.
+Predicate clauses are defining conditions, not proofs of instances;
+`abstract_prop` declares untyped argument names and arity without invented
+domains or a defining equivalence. Theorems retain their actual goal proof and
+publication stores. Strategies retain their proved parameter/premise interface
+without ordinary known-universal publication.
+
+Struct headers show ordered field domains and conditions without claiming an
+instance exists. Optional `structure_field` entries in `block_anchors` retain
+the original UTF-8 ranges, typed binding identities and field indices. They are
+validated against the original token block, rather than retokenizing a rendered
+header lacking its body. Old bundles keep the field information at the header;
+missing, duplicate or conflicting anchors never guess another field's line.
+
+Template parameters and premises remain local while the actual publication
+records retain all quantified binders and source-fact links. Its body execution
+reuses the existing object/function/assumption explanations at the native body
+position, under the original template owner and local scope; it does not
+fabricate an inner source Stmt or relabel the template header. A premise written
+on that same header is included once. Definition-body checks, field checks and
+proof premises stay distinct; formation remains the final closed disclosure.
+Name display distinguishes the template's retained local defining placeholder
+from competing public declarations. Only its exact resolved family can lose an
+internal export prefix; real shadows and other public definitions retain the
+existing ambiguity boundary.
+
+Template body cards list their actual arbitrary parameters and adopted premises,
+with links to the original local facts. Consequences of those assumptions retain
+their own inference rule and definition links, start closed, and share the
+template header's source row. Structural parameters expose their checked local
+structure properties separately. Conditional family properties remain distinct
+from these local assumptions. An entered failed template retains only the
+premise prefix it actually adopted; a later failed condition and an unexecuted
+body acquire no assumption or proof. Body type preflight remains a separate
+scope. Set-kind fact references use the same mathematical phrasing as quantified
+expressions, rather than exposing internal predicate spellings.
+
+Reflexive, symmetric and transitive registration expose the actual verified
+universal law and link to the resolved predicate definition. Registration
+installs a usable property; it does not separately publish a universal fact or
+assume arbitrary instances. Its local parameter/premise scopes come from the
+retained universal proof.
+
+`trust`, `trust have` and `axiom` explicitly distinguish accepted assumptions
+from proved facts. Their actual stores are collapsed at the source header;
+body conditions and inferred consequences keep their own source positions.
+`trust have` does not claim an existence proof. Later fact reuse retains its
+native trust dependency, and releasing a trusted object's definition keeps the
+`TrustHave` assumption origin. Strict-policy rejection remains distinct from
+syntax, formation and truth-verification failures; the reader changes none of
+those policies. `sketch` exposes its checked local steps without publishing
+objects, definitions or facts to the parent scope. Its body keeps a source-local
+scope reminder, without a fabricated closing goal or WD certificate.
+
 `by thm` and `release thm` have separate language-help and application views.
 The application view uses the successful execution's resolved callee, actual
 arguments, premise proofs and direct stored conclusion identities. User theorem
@@ -129,11 +502,131 @@ reuse of a conclusion keeps its own citation route, rather than borrowing the
 producer's entire theorem application. Missing records and failed applications
 receive no fabricated bindings or successful-application explanation. This
 adapter does not yet explain every internal theorem derivation or complete
-function-domain certificate step by step.
+function-domain source construction step by step.
+
+Native matrix function membership explains the captured construction body,
+its existing and required complete input interfaces, and the scalar-range
+evidence separately. The five native scalar sources distinguish real constants,
+real input matrices, real operands, a returned real-valued function and a
+complex-valued interface. A complex interface does not assert that entries
+are non-real. Equality aliases follow their retained path and fact identities;
+local input premises stay in their original proof scope. Matrix-space reduction
+opens the actual corresponding function-membership proof. The accepted native
+rule owns the domain-renaming and standard-scalar inclusion checks: this result
+does not retain a separate domain-comparison or subset FactId, and the viewer
+does not manufacture one. Expression formation remains last and closed;
+`ParentAtomic` is not presented as an independent WD certificate. These views
+do not yet cover every matrix application, scalar or equality proof family.
+
+The final formation disclosure now opens the actual complete-domain checks for
+`fn_set_member`, `cart_member_from_coordinates` and
+`tuple_equal_from_coordinates`. It retains the existing interface, required
+inputs, parameter/guard correspondence and native alpha-renaming or two
+verified inclusion proofs. Named function definitions, existing memberships,
+finite functions, compositions, templates, returned functions, matrices and
+multivariable selectors keep their native interface sources and citations.
+
+Ordinary function-space membership also requires the complete input domain,
+followed by the return-value conditions. Its source bubble separates these two
+mathematical obligations and shows their retained proofs. Cartesian membership
+uses the actual product-identification proof and each coordinate's factor
+membership. The native function-membership strategy, Cartesian strategy and
+Cartesian builtin rule retain their distinct owners. Nested universal premises
+keep their bound variables and citations inside their own proof; they are not
+flattened into the enclosing statement's context. Missing or foreign domain and
+condition records receive an incomplete-evidence notice. Expression checks stay
+last and closed. These views do not reconstruct discarded failed-search traces,
+and a search miss is not a proof that the membership is false.
+
+Rejected multiline statements have a muted status at their own source header,
+separate from the red marker at the actual failure. Both views reference the
+same native rejection. A retained body-step reference identifies the exact
+failed child, including nested blocks and case indices; its source link returns
+to the same header issue. Captured goals are optional and closed by default.
+An owning typed goal uses the mathematical formatter; a text-only captured goal
+stays complete Litex, without parsing a second mathematical model from its
+string. Missing source spans or foreign child records never justify a guessed
+step or jump. Failed goals and local assumptions are not shown as established
+outer results. Pointer, keyword, keyboard and edit-invalidation behavior remains
+source-adjacent.
+Generated comparison binders can be paired even when they have no source token.
+Tuple equality displays the required index domain and the actual interfaces of
+both peers. Its internal real-return placeholder is not a coordinate-value
+requirement; complex-valued tuples remain valid examples.
+
+Domain failures distinguish unavailable complete interfaces, function/target
+formation, parameter-count mismatches and failed inclusion directions. A
+completed first inclusion remains inspectable when the reverse fails. Failure
+records do not retain the original complete target interface, so the viewer
+shows only their recorded source candidates and obligations. It does not infer
+an interface from source strings, label an unproved inclusion false or present
+a return-range premise failure as an input-domain mismatch. Cross-file examples
+explicitly release a named function definition before using its defining
+equality; this presentation change does not alter module publication rules.
+Exported names and retained provisional defining names are treated as the same
+declaration only when their actual declaration reference and remaining body
+agree. Unloaded or ambiguous exports keep their configured public namespace;
+internal file prefixes and safely identified generated comparison binders are
+not presented as mathematical names. These changes affect display only.
+
+A verified `forall ... <=>:` has a source-header entry for the two implications.
+Shared premises remain separate from the left and right sides: each side is a
+premise in one direction and a goal in the other, not an unconditional source
+fact. The viewer consumes the actual two direction proofs and their separately
+stored universal identities; proof-goal IDs are not merged with saved IDs.
+Following a later citation opens the direction actually cited. Direction proofs,
+published results and the final direction-specific formation checks are
+collapsed. Retained partial failures distinguish an established first direction
+from a failed or unexecuted second direction, without publishing an equivalence.
+The owning statement's retained explicit-assumption dependencies remain visible
+at the header and when following a saved direction.
+Quantified shared premises are explicitly grouped before the outer implication.
+The original iff has no invented whole-expression WD certificate: the final
+disclosure shows each direction's retained checks under its own premises.
+
+`not forall` explains its retained counterexample existential and the actual
+proof of that existence. Shared premises and the native Boolean form of the
+negated conclusion remain intact: refuting a conjunction needs at least one
+failed condition, while refuting a disjunction requires each disjunct to fail.
+Source-clause hints describe the formula's roles rather than asserting its
+conditions independently. Known existence, builtin and universal applications
+retain their own citations and bindings. A witness is shown through its actual
+construction; an existence proof does not introduce a new named object.
+
+The existential checked during verification and the fresh existential later
+stored by `InferNotForallFactResult` have distinct identities. Both remain
+inspectable, and later reuse follows the actual stored inference. Inferences
+from a local `not forall` assumption remain explicitly conditional on that
+assumption and stay within its scope. The final closed formation disclosure
+uses the counterexample's retained parameter and
+body-expression checks; it does not invent a separate original-universal
+certificate. Rejection, missing records and private formation assumptions stay
+distinct from proved or published facts. Cross-file examples use named theorem
+interfaces and explicit release under the existing module publication rules.
 
 This module connects the source to its actual verification evidence, so readers
 can follow citations back to facts, definitions and rules. Concept highlighting
 follows resolved symbol identity, separately from proof dependencies.
+
+Conjunction and disjunction explanations consume their native verification
+records. A conjunction shows each checked component, or the actual universal
+instance that supplies the whole conjunction. Selecting a stored component
+opens that component's proof. Partial failures retain the accepted prefix and
+the failed component without treating the whole conjunction as established.
+The whole-conjunction universal route does not retain independent component WD
+certificates; the final closed formation disclosure states that limitation.
+
+A disjunction distinguishes a locally selected branch, reuse of a stored
+disjunction with argument-equality certificates, universal instantiation and
+builtin coverage rules. Temporary negations of other branches are labelled as
+local hypotheses, including when followed as citations. Discharging them
+establishes the whole disjunction, not its individual branches. A direct branch
+proof need not negate the other branches. Builtin rules retain their own names,
+bilingual comments and actual conditions; coverage does not assert that the
+branches are disjoint or choose a true one. Integer-range rules retain their
+interval and real carrier-equality citations. Expression formation is checked
+for every alternative, even if another alternative is true. Missing branch,
+scope, citation or equality records are never reconstructed from source text.
 
 Hover anywhere in a mapped fact's source row for a transient proof preview;
 focusing its line number provides the same keyboard access. The sentence owns
@@ -600,14 +1093,14 @@ the current verifier. These cards describe builtin contracts, not an inferred
 type of the selected expression; resolved user declarations keep their own help.
 
 Detailed keyword cards currently cover `prop`, `by def`, `forall`, `claim`,
-`have fn`, `by contra` and `release thm`: summary, syntax, behavior/restrictions and a runnable
+`have fn`, `by contra`, `by thm` and `release thm`: summary, syntax, behavior/restrictions and a runnable
 example. Other existing keyword hints remain concise. Numeric cards cover
 arithmetic, real elementary/trigonometric/hyperbolic functions, integer
 operations and complex parts/modulus; this is not exhaustive builtin coverage.
 The format borrows summary-plus-detail from Python PEP 257 and the synopsis,
 parameters/results and examples structure from Linux man-pages(7).
 
-The `prop` and `by def` cards explain the shared `nonnegative(x R)` example
+The `prop`, `by def` and `by thm` cards explain the shared `nonnegative(x R)` example
 point by point. The expanded reference distinguishes formal parameter type,
 predicate meaning, the complete defining equivalence, declaration versus
 instance, and proof by substitution. Its equivalence is rendered with the
@@ -651,3 +1144,574 @@ WD ownership, proof search, fact identities or verification order.
 If atomic proof search fails after WD succeeds, the rejection explanation keeps
 that same closed WD tail. A successful domain check never marks the goal proved;
 a failure during WD continues to show its unmet condition as the diagnostic.
+
+### Function interface and return evidence
+
+Exact-interface cards distinguish stored membership from an anonymous function's
+declared interface. They show the existing and required complete interfaces,
+including guards and return domains; splitting shared parameter groups does not
+change the mathematical interface. Call-return cards retain every participating
+function property. Standard-return guarantees display their native numeric
+inclusions; codomain proofs distinguish matching returns from alternative
+interfaces with the same complete input domains at every call layer.
+
+`AppliedFnSetReturnSignature` observes the existing return-set computation once:
+it retains the application, ordered resolved interfaces and final return set.
+It introduces no mathematical IDs, searches, argument proofs or stores. The
+reader can show each actual parameter correspondence through an aliased returned
+function space without implementing its own resolver. Expression checks remain
+last and collapsed. Old exports use only structurally retained literal interfaces
+and report missing alias-dependent substitutions honestly.
+
+### Equality proofs at local source clauses
+
+A checked local universal conclusion keeps its adjacent equality proofs at the
+original equals signs, even when a later clause rejects the enclosing proof.
+This includes theorem, strategy and claim closing checks that retain a proof
+without creating a stored Fact row. The viewer follows the original quantified
+goal, exact clause identity, local scope and adjacent endpoints; it does not
+invent a stored fact or promote well-definedness mentions to source assertions.
+
+Each equals sign opens its own proof, local context and direct citations.
+Pinning, keyboard selection and following a scope or citation preserve the exact
+equality on Back. Selecting the source line restores the whole clause; editing
+invalidates the previous targets. The enclosing failed statement stays unfinished
+and publishes no result. Definitions, unexecuted clauses and synthetic internal
+laws do not acquire source equality proofs from this mapping. A partially failed
+chain retains its own rejected-chain checks rather than becoming a completed
+local clause.
+
+
+### Rejected chain checks
+
+A rejected source chain retains the checks of its adjacent relations. Each
+actually verified equals sign opens that proof; the actual failed equals sign
+opens its rejection instead. Later unchecked equals signs receive no proof
+targets. A checked prefix is available in a closed disclosure at the failed
+source row and header. Selecting a relation, pinning it or following its scope
+and citations preserves its exact source position on Back. The original chain
+remains unproved and publishes no result.
+
+Mapping uses only the selected rejected source result: a direct fact, a retained
+universal conclusion or a retained claim closing check. It does not scan arbitrary
+nested WD certificates for a proof to attach. A universal may already have an
+entered native scope and checked prefix when a later adjacent expression fails
+WD; a claim whose goal fails WD has not entered its body. Predicate declarations
+and unentered goal checks do not acquire asserted source results. Proof-search
+failure and expression-formation failure keep distinct explanations. Successful
+atomic checks and failed searches with a successful formation certificate keep
+their own closed WD disclosure last. Missing or conflicting result/index/subject,
+operator, endpoint or scope records cannot borrow another relation's proof.
+
+## Whole-chain universal applications
+
+When a retained universal proves an entire chain, the viewer shows that actual
+application and its original conclusion, argument bindings, strict match proofs
+and premises. Selecting an equals sign projects the corresponding adjacent
+relation from the whole chain; it does not create an independent atomic proof
+or a stored fact identity.
+
+Native `VerifyChainFactSuccess.known_forall` now contains
+`KnownForallChainProof { application, well_defined_proof }`. The latter is the
+chain WD result already checked by the verifier, retained once in execution
+order. Detailed output keeps the application fields and adds its
+`well_defined_proof`; Normal output and mathematical storage are unchanged.
+Older direct application payloads retain proof navigation and explicitly
+report unavailable WD details in the final closed disclosure. Missing or
+conflicting source, conclusion, binding or endpoint records do not acquire a
+proof correspondence.
+
+## Failed explicit definition checks
+
+An entered `by def` failure retains its original statement, completed goal WD,
+actual local failure and detached environment in `ExecByDefLocalFailure`.
+Both user and builtin `DefinitionProofFailed::Requirement` payloads now retain
+the instantiated requirement list and the actual successful prefix in order.
+No requirement is reverified and no failed target is stored or published.
+
+The source-adjacent failure card pairs these native requirements with their
+proofs, shows the exact unmet condition and keeps later conditions explicitly
+unchecked. Completed checks and the unchecked suffix start closed. The final
+closed formation section keeps goal/condition WD separate from truth checking.
+Definition and argument links come from the retained statement and resolved
+declaration, not textual substitution. Old records lacking this context retain
+their actual failed condition and explicitly report the missing history.
+Goal-WD rejection does not claim that definition checking was entered.
+Normal failure fields remain compatible; Detailed failure output additionally
+includes `requirement_facts` and `proof_of_requirement_facts`.
+
+Failed `by thm` and `release thm` calls retain their resolved callee and actual
+instantiated requirements, completed verification/store pairs, detached local
+scope and failed stage. The shared reader distinguishes preparation, argument,
+complete-domain, premise and target-selection failures. Successful prefixes and
+unchecked suffixes start folded; argument/formation checks are last. A selected
+local theorem return is never presented as an outer proved fact when the whole
+invocation fails. Copied theorem declarations carry actual parameter bindings,
+so unopened source chapters need loading only when the reader follows the source
+link. Legacy failures without retained history remain explicitly incomplete.
+The focused source is
+`examples/test_statements/negative/by_thm_stmt/retained-invocation-prefix.lit`;
+producer tests are `tests/reading_failed_theorems.rs`, and interaction tests are
+`web/tests/failed-theorem-invocations.cjs`. Retention of later derivation and
+conclusion/closing WD failures is not full runnable-source or UI acceptance for
+those paths. The full 52-statement reading audit remains unfinished.
+
+A failed `by contra` retains its original source, successful goal formation,
+actual reverse assumption and its verify/store record, completed body prefix,
+exact failure and detached local environment. The reader keeps the temporary
+assumption and actual consequences beside `?`, while the failed block has no
+completed outer arrow. An earlier body failure marks the final contradiction
+check as unexecuted. At `impossible`, the first successful proof remains
+available even if construction or verification of its negation fails; the same
+ordered closing evidence is used by case proofs. Argument/formation checks
+remain last and folded. A genuine local hypothesis is hoverable despite its
+owning block's failure; incomplete or foreign source/scope records cannot
+create one. Old snapshots without the retained scope or first-side proof keep
+explicitly incomplete histories. Complete final-store and assumption-formation
+failure UI acceptance still requires runnable source probes.
+
+
+Failed object introductions retain their actual ordered checks without
+publishing a partial declaration. The source-adjacent explanation distinguishes
+nonempty-domain checks, local typed parameters used only in type preflight,
+value formation, instantiated value domains, and verified existential or
+predicate sources before witness-count rejection. Completed checks and temporary
+properties are collapsed; failed and unexecuted stages remain separate. A
+failed declaration introduces no object or defining equality into its parent.
+Older result snapshots that discarded these stages remain explicitly incomplete.
+The dedicated tracer is
+`examples/test_statements/negative/have_obj_equal_stmt/retained-membership-prefix.lit`.
+
+Symbol hover and selection distinguish attempted declarations from completed
+definitions. A rejected declaration keeps its source location and a link to its
+actual checks, without presenting source equations, parameter domains or
+defining conditions as established properties. Missing verdicts and ambiguous
+execution records remain explicitly incomplete. The verdict belongs to the
+declaration itself: a rejected use does not invalidate an earlier definition,
+and an accepted declaration inside a later rejected proof remains a local
+definition. Formal parameters retain their separate role. Repeated source
+executions use the selected execution or its visible scope; they cannot borrow
+another execution's definition checks. This is a read-only presentation rule;
+it changes neither verification results nor symbol, fact or scope identities.
+
+
+Failed predicate, struct and template definitions retain the original declaration
+and the actual environment returned by each existing local-scope API. The
+ordered failure variants keep parameter-type WD prefixes, conditions assumed
+for later WD, earlier field declarations and the actual template body failure.
+Struct field checks retain their nested environment separately from header
+parameters. Successful result schemas, verification order and storage are
+unchanged; Normal diagnostics keep their previous contract.
+
+The source-adjacent card separates completed local checks, the failed input
+and the unchecked suffix. Field and condition source rows distinguish checked,
+failed and unexecuted stages. Local assumptions link to their actual FactIds
+and scopes; they are not proofs of a predicate instance or public consequences
+of a failed definition. Prefixes start closed and formation checks remain last
+and closed. An unchecked source row has no formation proof of its own.
+
+The public fixture generator's `--failed-interfaces` flag and
+`web/tests/failed-interface-checks.cjs` exercise these selected histories.
+Legacy, incomplete and foreign records cannot acquire reconstructed assumptions.
+This is not exhaustive failure coverage: structure auto-opening, reserved
+struct-header domain facts and additional template body variants still need
+source-specific acceptance. The live parser currently supplies no struct-header
+domain list; retaining that native branch does not establish runnable syntax.
+
+## Quantified formation failures
+
+Ordinary forall proof introduction and formation-only forall checks now retain
+separate stage-ordered failure records and their existing detached local scopes.
+Both keep actual completed parameter groups and premise assumptions. Formation
+checking also keeps completed consequent WD certificates without treating those
+consequents as assumptions or proved facts. For example, checking that `x = 0`
+is a well-formed expression under `x > 0` does not prove `x = 0`.
+
+The source-adjacent cards distinguish arbitrary parameters, adopted premises,
+formation-checked clauses, the current failure and unchecked suffixes. Actual
+local premise consequences remain collapsed and traceable by their native IDs;
+failed universals publish no enclosing conclusion. A checked formation-only
+clause has no fabricated proof/citation link. Selected earlier clauses use their
+own WD certificate; unchecked clauses inherit no later certificate. Missing or
+conflicting scopes, source identities, prefixes, endpoints and inference owners
+remain incomplete. The parent scope is checked against the retained execution
+record hierarchy, including nested definition scopes.
+
+The runnable tracer is
+`examples/stmt_nodes/definition/quantified_condition_formation.lit`.
+The WD parameter helper's three peer consumers also retain their actual local
+formation histories on failure. Existential-shaped bodies (`exist`, `exist!`,
+`not exist`) are formation-checked and locally assumed in order for later body
+checks. Negated universals and equivalences assume only common premises; their
+consequents and equivalence sides have formation certificates, not proofs of
+truth. No failed enclosing statement publishes those local assumptions.
+
+Top-level negated universals are checked through an actual derived
+counterexample existential; equivalences through two actual forall directions.
+The reader follows the retained typed correspondence and exact child evidence,
+preserving a completed first direction separately from a failed second one.
+It does not equate distinct goal IDs by spelling or reconstruct missing proof
+stages. Selected local inferences keep their true source and definition links
+through lazy exports and Back. The public negative tracer is
+`examples/test_statements/negative/def_prop_stmt/quantified-peer-formation-prefix.lit`;
+producer checks are `tests/reading_peer_quantifier_formation.rs`, and public
+events are in `web/tests/peer-quantifier-formation.cjs`.
+The earlier checkpoint exercised atomic/equality clauses; selected compound
+clauses are described below. Nonempty structure-opening and additional nested
+quantified/structured clause histories still lack exhaustive UI acceptance.
+The full statement-reading goal remains active.
+
+## Compound quantified formation clauses
+
+Source-adjacent formation histories cover selected conjunctions, comparison
+chains and disjunctions. Complete clauses use their actual source/certificate
+and store correspondence. A failed compound retains the ordered component,
+adjacent-relation or branch prefix, current failure and unchecked suffix in a
+closed disclosure. Earlier component checks establish only formation; they are
+not assumptions inside the still-unaccepted compound. Disjunction formation is
+not short-circuit evaluation and selects no true alternative.
+
+In `exist x R st {x != 0 and 1 / x > 0}`, checking the first atomic expression
+for formation does not adopt `x != 0` before the second check. The conjunction
+therefore still rejects. With separate body clauses, the first completed clause
+is locally adopted before later formation checks. Neither form provides an
+existence witness simply by declaring the predicate. The public positive and
+negative tracers are `examples/stmt_nodes/definition/compound_condition_formation.lit`
+and `examples/test_statements/negative/def_prop_stmt/compound-formation-order.lit`.
+
+Stored conjunction components and chain edges keep their actual indices and
+identities; disjunction alternatives remain unassumed. A definition-derived
+consequence of a stored conjunction follows the corresponding atomic inference
+child and source component to its resolved definition. This uses retained typed
+order, not substitution or rendered-name guesses. A failed quantified child
+replaces a duplicate enclosing-definition card at that same source position only
+when whole-fact identity and strict native scope ancestry agree; the definition
+header still shows the enclosing failure. Source, Native records, proof policy,
+store/check order and scope ownership remain unchanged.
+
+## Ordinary compound failure histories
+
+Ordinary conjunctions and comparison chains verify their atomic components in
+order. Earlier successful checks are genuine proofs, while the failed component
+and later unchecked components establish no whole conjunction or chain.
+Disjunctions first require every alternative to be well-defined; a formed
+alternative has not thereby been proved true. Thus `1 = 2 or 1 / 0 = 0 or 1 = 1`
+stops during formation of the second alternative despite the true last one.
+
+Source-adjacent bubbles preserve this distinction. Retained compound formation
+prefixes, nested And/Chain alternatives and unchecked suffixes appear in a
+closed disclosure inside the final formation section. Actual And/Chain proof
+prefixes keep their own proof navigation. Failed adjacent equalities have their
+own final, closed formation section, rather than displaying a failed domain
+condition as a truth-proof premise. No successful formation certificate is
+invented for a failed check.
+
+The existing universal-failure and source-equality mappings identify selected
+local conclusions and chain edges by their real owner, source, scope, subject
+and component correspondence. This includes selected checks inside `forall`
+and `claim`; an enclosing goal or neighboring equality cannot supply the
+missing proof. Missing or foreign records retain an incomplete explanation.
+Pre-entry goal failures introduce no assumption, and rejected statements publish
+no outer conclusion or inference. See `web/tests/compound-fact-formation.cjs` and
+`web/tests/failed-chain-proofs.cjs` for real Native/public-event acceptance.
+
+## Failed explicit-assumption declarations
+
+A failed `trust have` retains its actual parameter introduction, prepared body,
+parameter-to-file-root bindings, completed body formation certificates, failed
+index and unentered remainder. The statement transaction supplies its already
+returned environment without changing discard/merge behavior. A direct template
+body uses the template environment and introduces no extra scope. Optional
+environments in generated capture enter a reading scope only when present.
+
+Every body clause is checked for formation before any body clause is stored. A
+completed body formation check is not yet an assumption, and supplies no proof
+of its assertion. Closed source-adjacent folds distinguish that prefix, the
+unestablished condition and unchecked clauses. Native bindings relate source
+parameters to their actual prepared identities; the viewer does not infer that
+relation from names or construct instantiated mathematics. Strict-policy failures
+remain pre-entry and have no invented history. The current complete cards cover
+atomic/equality body clauses and templates without additional template premises;
+structure-opening and other compound histories remain qualified.
+
+## Atomic formation failures and goal positions
+
+The viewer distinguishes failed argument formation, predicate lookup/arity,
+builtin predicate-domain requirements and truth search. Their authority is the
+retained typed failure and its exact source subject, not a parsed diagnostic
+string. Completed domain checks and failed requirements stay in the final,
+initially closed formation section. Predicate signature failures report the
+actual name and recorded expected/supplied argument counts. Analysis-domain
+misses without a precise failed requirement remain incomplete.
+
+Pre-entry goal failures use the retained goal's position, including question-mark
+rows within nested `claim` and `by contra` blocks. The enclosing header provides
+an overview and a link to that source row. Goal formation failure introduces no
+assumption and publishes no fact. The shared viewer changes neither the Native
+graph nor Normal output; source identity, scope, check order and publication
+remain owned by execution. See `web/tests/atomic-fact-formation.cjs`.
+
+## Reading a structural definition expansion
+
+`release struct def` uses the checked membership and the actual one-layer
+publication history. The source bubble groups field domains, this layer's
+defining conditions and an optional coordinate representation. It displays
+recorded structure arguments and links each matched field or law to its
+defining source. The initially closed property list preserves direct store
+order and FactIds; gray inferred consequences remain separately addressable.
+
+Classification compares retained declaration and instance structure, using
+resolved parameter and field identities, flattened field paths, coordinate
+indices, instantiated types, laws and source positions. It does not construct
+an instance or allocate an identity. Missing or inconsistent evidence retains
+an unclassified property list. Lazy definition loading uses the existing
+generation and connected-element guards. An actual proof may cite an earlier
+automatic opening rather than a redundant explicit release; the viewer keeps
+that actual citation. See `web/tests/struct-expansion.cjs`.
+
+Actual scoped parameter introductions also retain automatic one-layer structure
+openings. Their initially closed source hints and fact explanations connect
+the local parameter membership to the structure definition and its recorded
+field/law consequences. The logical source is the parameter introduction;
+the original defining field or law is a separate link. Parameter membership
+is an assumption in this scope, not an independently proved global fact.
+Parameter-domain checks stay in the final closed formation disclosure.
+
+Only retained entry contexts are eligible: quantified proofs, claim/theorem
+bodies and the supported process frames. A failure after entry may retain
+these local consequences without publishing an enclosing conclusion. A claim's
+pre-entry goal check or an object's hypothetical type preflight must not become
+an actual proof context; diagnostic phase alone does not establish entry.
+Missing or inconsistent identities remain unclassified. Original TokenBlock
+field order and typed binding identities locate field spans even when resolved
+types acquire internal module qualifiers. Historical JSON without those spans
+can still link to the whole definition. See
+`web/tests/automatic-struct-origins.cjs`; partial/generated structure histories
+and exhaustive result-branch coverage remain open.
+
+## Origins of structural objects and temporary checks
+
+Successful `have` and `have ... = ...` declarations connect their actual
+stored structural membership to the recorded field domains and conditions.
+`trust have` keeps its explicit object/body assumptions separate from these
+structural consequences. Expanding the definition does not prove existence
+of an explicitly assumed object. Property lists and coordinate representations
+start closed; selecting a property links its real introduction and its defining
+field or law separately.
+
+A rejected trust-have can retain fully opened temporary structural properties
+before body formation fails. The viewer presents them as checking context,
+not publication to later statements. Earlier body clauses have only passed
+formation; none become assumptions until every body clause passes. This also
+applies inside a template's actual retained environment. A template parameter's
+local structural condition and a temporary trusted object have distinct labels.
+Compound clauses retain their original binders and actual file-root rewrite
+bindings; display comparison constructs no AST or proof. Strict-policy rejection
+and an invalid given object do not acquire successful introduction origins.
+See `web/tests/struct-introduction-history.cjs`. Failed type preflight,
+partial internal opening errors and exhaustive generated contexts remain
+separate coverage boundaries.
+
+## Executed strategy body statements
+
+A successful strategy definition retains its checked proof body as ordered
+source-statement references. Local object introductions, nested claims,
+witnesses, existential elimination and explicit definition proofs keep their
+own source spans, scopes and actual citations. Registering a strategy is
+distinct from publishing its conditional conclusion as an unconditional fact.
+The source observer only associates an already retained typed proof body;
+it does not execute the strategy again or change verification.
+
+See `examples/reading/strategy_body_steps.lit` and
+`web/tests/strategy-source.cjs`. In that example, existential elimination uses
+the recorded `RealLineComparisonWitness` certificate and local object
+properties; proximity to a witness statement is not evidence of a citation.
+Older exports without body references remain source-only at those positions.
+Rejected strategies retain only the body steps actually executed. A completed
+local step can have an accepted source record even when a later step or final
+conclusion fails; the strategy itself remains unregistered. Its parameters,
+adopted premises, completed body/conclusion prefixes and failing check are
+retained in `ExecDefStrategyLocalFailure` with the already detached local
+environment. The execution order and outer commit/rollback rules are unchanged.
+
+The shared local-proof viewer distinguishes these checks from registration,
+leaves checked conclusion lists closed, and follows actual local hypotheses
+and definition sources. A failed final goal is identified from its retained
+typed check and exact source, rather than a generic statement-kind message.
+Missing or mismatched histories cannot supply assumptions or completed checks.
+Legacy exports without those stages state the missing-history boundary.
+See `web/tests/failed-strategy-context.cjs` and the strict negative tracer
+`examples/test_statements/negative/def_strategy_stmt/retained-final-prefix.lit`.
+Partial parameter introduction and every generated/repeated failure path still
+require their own source and event acceptance.
+
+Inference batches use the ownership scope of their actual stored conclusions,
+settled after all environment snapshots have been indexed. A seed FactId may
+occur both during temporary goal formation and in the actual proof; its preferred
+fact-table scope cannot distinguish these occurrences. The retained typed
+store/infer reference identifies the actual body event. Consumers must not pick
+the first batch sharing a seed or source line, nor use temporary consequences
+as proof-body results. This export annotation changes neither facts nor proofs.
+
+
+## Rejected theorem-definition histories
+
+Rejected theorem definitions retain their original local proof stages in
+`ExecDefThmLocalFailure`: goal formation, arbitrary-parameter introduction,
+adopted premises, executed body steps and the completed final-check prefix.
+Universal and direct goals remain separate result routes. A later failure does
+not register the theorem or publish its local helpers. Post-proof storage
+failures retain the completed proof and already detached environment; this
+retention does not establish source reachability for every such branch.
+
+The source observer uses those original records for failed-goal hovers,
+closed conclusion-check lists, actual local inference and definition/citation
+navigation. Older exports without the local history remain explicitly
+incomplete. A conjunction's `failed_component` locates the actual rejected
+component; its checked prefix does not prove the whole conjunction. Generic
+proof-search diagnostics are omitted when an exact typed local goal already
+supplies the localized explanation; concrete condition errors remain visible.
+Formation checks stay in the final closed disclosure.
+
+See `examples/test_statements/negative/def_thm_stmt/retained-final-prefix.lit`,
+`retained-compound-goal.lit`, `web/tests/failed-theorem-context.cjs`,
+`tests/reading_failed_theorem_context.rs` and
+`tests/failed_theorem_result_capture.rs`. Parameter-entry, operational and
+every generated/repeated failure path need independent source acceptance;
+retained fields alone are not a coverage certificate.
+
+## Goals not reached during a local proof
+
+After a claim, theorem or strategy stops in its body, the original goal can
+show a compact `Not checked` annotation on its own source row. If final
+conclusion checking stops at one item, later items have the same pending
+status. The card shows the actual local context and links to the stopped
+check; Back returns to that exact goal. A pending target is neither an
+assumption nor a failed or successful proof, and supplies no inferred fact.
+
+The reader requires the retained original goal, local scope, ordered source
+body and complete executed prefix before classifying this status. Missing,
+foreign and older incomplete histories remain unclassified. Contradiction
+and case assumptions keep their own roles. The selected source acceptance
+uses distinct goal rows; ambiguous shared-row and generated contexts need
+their own evidence. See `web/tests/pending-goals.cjs` and
+`examples/test_statements/negative/def_thm_stmt/pending-goal-after-body-failure.lit`.
+
+
+## Rejected relation-law registrations
+
+When a checked reflexivity, symmetry or transitivity law fails, its source card
+shows the actual arbitrary parameters and adopted premises and states that the
+property was not registered. The failed conclusion has its own source target,
+local context and final closed formation checks. Local premise inference stays
+beside the premise that produced it; those assumptions and consequences do not
+become facts in the enclosing scope.
+
+This view follows the exact registration-failure envelope and retained failed
+universal verification. The law shape, predicate identity, source positions,
+parameter stores, adopted premise identities, failed target and scope owner must
+correspond. Shape/arity/pre-entry failures cannot borrow a later local context.
+Missing or foreign records remain incomplete. Selecting an ordinary universal
+premise also shows its own quantified parameter frame and other local premises,
+while displaying the selected premise once. Case/contradiction assumptions keep
+their existing parent-context behavior.
+
+A registered property is distinct from its later use. The selected public
+reflexivity/symmetry/transitivity caller sources actually verify by definition
+or a stored universal; their success does not certify a KnownRewrite route.
+The reader does not invent a specific registration-source citation that the
+runtime did not retain. See `web/tests/registration-failures.cjs` and the strict
+negative tracer `examples/test_statements/negative/register_transitive_prop_stmt/retained-law-context.lit`.
+
+## Actual transitivity applications
+
+An actual registered `Transitivity` or builtin `OrderTransitivity` proof pairs
+the cited left relation with the separately checked residual relation, then
+shows their shared endpoint and target. The residual expands through its own
+retained proof: definition arguments and conditions, or exact calculation.
+Definition conditions keep their citations inside the corresponding condition
+instead of repeating a flat list of all descendant dependencies. Each proof's
+own formation checks remain last and initially closed.
+
+The reader validates the typed route, target identity, relation, all endpoints,
+source ownership and scope visibility. A left relation may be a local premise,
+an actual inferred consequence or a globally stored fact; following it preserves
+that origin and Back returns to the exact application. A checked prefix inside
+a failed theorem remains local. Incomplete or foreign records never acquire a
+constructed derivation. The retained runtime has no selected registration-source
+FactId, so the card does not invent that citation.
+
+See `web/tests/transitivity-applications.cjs` and
+`examples/proof_nodes/atomic/by_known_rewrite/registered_transitivity_application.lit`.
+The qualified acceptance registers the relation in the caller chapter. An
+earlier-file-only registration and a mixed strict/non-strict order probe
+currently have bare search misses; their source evidence is preserved in the
+local reading todo. These observations neither change search permissions nor
+certify reflexivity/symmetry applications or all transitivity combinations.
+
+## Proof-command source addresses
+
+An accepted proof command has a source execution address even when its returned
+fact cannot own that header row. A block-form `by def:` retains its checked goal
+at the `?` row; the command header now exposes that same actual definition proof.
+A bare `release thm` can return a theorem's existing FactId, including across
+source files, without publishing any new FactId. Its header exposes this actual
+application while the canonical fact keeps its original producer and source.
+
+The shared logical-action index derives this address from the accepted typed
+execution, verified source token span, local scope owner and exact returned
+store/subject identities. It uses the existing proof and theorem renderers.
+No new source row or inline button is added. Pinning preserves the command
+address; following a definition or original conclusion and returning restores
+that exact invocation. Missing or foreign histories cannot create the address.
+See `web/tests/proof-invocation-addresses.cjs` and the existing canonical
+`examples/test_statements/by_def_stmt.lit` and `release_thm_stmt.lit`.
+
+## Definition proofs keep citations within their obligations
+
+User and builtin definitions display their retained obligation/proof pairs.
+Each obligation owns its proof citations; the parent does not flatten nested
+quantifier parameters, local consequences or later stored facts into a root
+Context list. For `by def {1} $subset {1, 2}`, the initial card shows the complete
+universal membership condition. Expanding it retains the arbitrary element,
+its actual equality from singleton membership, the builtin membership rule and
+links back to the local origin. Native scope and fact storage are unchanged.
+
+Ordinary nondefinition builtin/strategy rules retain their actual root inputs
+and rule identities. Missing definition requirements/proofs receive an honest
+incomplete-history note; conflicting pairs do not acquire a derivation. Each
+proof's own formation checks remain last and initially closed. See
+`web/tests/definition-scopes.cjs`.
+
+## A theorem call with several conclusions
+
+The source header of `release thm release_sides(4)` explains the actual call
+once: its resolved theorem, argument substitution and checked premises precede
+the complete list of returned conclusions. Each conclusion links to its own
+FactId and canonical producer. Pinning, following that link and returning
+restores the exact invoking statement, including repeated and qualified calls.
+Later use of a conclusion retains its own proof route.
+
+One final, initially closed formation disclosure separates the call's shared
+argument/domain checks from each returned expression's own certificate. A
+missing or mismatched certificate remains incomplete for that conclusion;
+it cannot borrow the next conclusion's checks. Inferred consequences are not
+counted as additional theorem returns. See `web/tests/theorem-conclusion-groups.cjs`.
+
+## Instantiating a universal equality in reverse
+
+The actual `ByKnownForallFactViaSymmetry` route shows its cited universal,
+recorded argument correspondence and premises, the retained reversed equality,
+and the symmetry step that obtains the source goal. For an assumed
+`forall x R: f(x) = x`, the reader shows `x = a`, then `f(a) = a`, then
+`a = f(a)`. The intermediate equality is not presented as a stored fact.
+Each equality in a chain keeps its own proof and exact citation/Back address.
+Missing or foreign records cannot supply the derivation. The shared argument
+correspondence check also serves whole-chain universal applications.
+
+The maintained tracer is
+`examples/proof_nodes/equal/by_known_forall/instantiation_then_symmetry.lit`;
+the public-event checks are in `web/tests/forall-equality-symmetry.cjs`.
+This is equality symmetry after a universal application, distinct from a
+registered predicate's symmetry property. Registration examples whose actual
+proof uses definition unfolding remain displayed by that route.

@@ -1,5 +1,11 @@
 use crate::prelude::*;
 
+pub struct VerifyAndDefineWdParametersFailed {
+    pub param_type_well_defined: Vec<ParamTypeWellDefinedProof>,
+    pub defined_params: StoreHaveObjAndInferResult,
+    pub failed: VerifyObjWellDefinedResult,
+}
+
 impl Runtime {
     // Called inside a quantifier's local WD scope. Each carrier may refer to
     // earlier groups, but not to its own or later binders: `A set, a A`.
@@ -7,7 +13,8 @@ impl Runtime {
         &mut self,
         parameters: &TypedParameterList,
         verify_state: VerifyState,
-    ) -> RuntimeResult<Result<IntroduceTypedParametersResult, VerifyObjWellDefinedResult>> {
+    ) -> RuntimeResult<Result<IntroduceTypedParametersResult, VerifyAndDefineWdParametersFailed>>
+    {
         let mut proofs = Vec::with_capacity(parameters.groups.len());
         let mut defined_params = StoreHaveObjAndInferResult::new(Vec::new());
         for group in &parameters.groups {
@@ -18,7 +25,13 @@ impl Runtime {
                 self.verify_typed_parameters_well_definedness_or_fail(&one, verify_state.clone())?;
             match checked {
                 Ok(mut group_proofs) => proofs.append(&mut group_proofs),
-                Err(failed) => return Ok(Err(failed)),
+                Err(failed) => {
+                    return Ok(Err(VerifyAndDefineWdParametersFailed {
+                        param_type_well_defined: proofs,
+                        defined_params,
+                        failed,
+                    }));
+                }
             }
             let defined = self.define_typed_parameters_in_current_env(&one, None, verify_state)?;
             defined_params.extend(defined);

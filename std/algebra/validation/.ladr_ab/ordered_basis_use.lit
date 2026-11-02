@@ -1,0 +1,171 @@
+# Ordered basis extraction: generic caller, actual real span, empty and nonadjacent selections.
+
+release obj def Algebra::field::real_field
+
+release struct def Algebra::field::real_field
+
+release obj def Algebra::field::real_mul
+
+release thm Algebra::vector_space::scalar_space_carrier(R,Algebra::field::real_field)
+
+have ordered_check_space &Algebra::vector_space::VectorSpace<R,Algebra::field::real_field,R> =\Algebra::vector_space::scalar_space<R,Algebra::field::real_field>
+
+\Algebra::vector_space::scalar_space<R,Algebra::field::real_field> =(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+ordered_check_space=(Algebra::field::real_field.zero,Algebra::field::real_field.add,Algebra::field::real_field.mul)
+
+release struct def ordered_check_space
+
+ordered_check_space.smul=Algebra::field::real_field.mul
+
+have ordered_check_vectors finite_seq(R,4)=fn(j closed_range(1,4)) R {j-1}
+
+release thm Algebra::finite_span::span_is_subspace(R,Algebra::field::real_field,R,ordered_check_space,4,ordered_check_vectors)
+
+release thm Algebra::span_reduction::span_contains_generator(R,Algebra::field::real_field,R,ordered_check_space,4,ordered_check_vectors,2)
+
+ordered_check_vectors(2)=1
+
+1 $in \Algebra::finite_span::span<R,Algebra::field::real_field,R,ordered_check_space,4,ordered_check_vectors>
+
+claim:
+    ? forall x R:
+        x $in \Algebra::finite_span::span<R,Algebra::field::real_field,R,ordered_check_space,4,ordered_check_vectors>
+    ordered_check_space.smul(x,1) $in \Algebra::finite_span::span<R,Algebra::field::real_field,R,ordered_check_space,4,ordered_check_vectors>
+    ordered_check_space.smul(x,1)=Algebra::field::real_field.mul(x,1)=Algebra::field::real_mul(x,1)=x
+
+by extension \Algebra::finite_span::span<R,Algebra::field::real_field,R,ordered_check_space,4,ordered_check_vectors> =R
+
+by def $Algebra::finite_span::spans(R,Algebra::field::real_field,R,ordered_check_space,4,ordered_check_vectors)
+
+release thm Algebra::ordered_basis::spanning_list_has_ordered_basis_of_bounded_length(R,Algebra::field::real_field,R,ordered_check_space,4,ordered_check_vectors)
+
+obtain ordered_check_length,ordered_check_basis from exist m N,selected finite_seq(R,m) st {m<=4,$Algebra::basis::is_basis(R,Algebra::field::real_field,R,ordered_check_space,m,selected),$Algebra::ordered_basis::is_ordered_sublist(R,4,m,ordered_check_vectors,selected)}
+
+obtain ordered_check_indices from $Algebra::ordered_basis::is_ordered_sublist(R,4,ordered_check_length,ordered_check_vectors,ordered_check_basis)
+
+$Algebra::ordered_basis::is_ordered_sublist_selection(R,4,ordered_check_length,ordered_check_vectors,ordered_check_basis,ordered_check_indices)
+
+claim:
+    ? forall K nonempty_set,field &Algebra::field::Field<K>,V nonempty_set,space &Algebra::vector_space::VectorSpace<K,field,V>,n N,vectors finite_seq(V,n):
+        $Algebra::finite_span::spans(K,field,V,space,n,vectors)
+        =>:
+            exist m N,selected finite_seq(V,m) st {m<=n,$Algebra::basis::is_basis(K,field,V,space,m,selected),$Algebra::ordered_basis::is_ordered_sublist(V,n,m,vectors,selected)}
+    release thm Algebra::ordered_basis::spanning_list_has_ordered_basis_of_bounded_length(K,field,V,space,n,vectors)
+
+have ordered_check_empty finite_seq(R,0)=fn(j closed_range(1,0)) R {0}
+
+release thm Algebra::ordered_basis::list_is_own_ordered_sublist(R,0,ordered_check_empty)
+
+obtain ordered_check_empty_indices from $Algebra::ordered_basis::is_ordered_sublist(R,0,0,ordered_check_empty,ordered_check_empty)
+
+$Algebra::ordered_basis::is_ordered_sublist_selection(R,0,0,ordered_check_empty,ordered_check_empty,ordered_check_empty_indices)
+
+have ordered_check_original finite_seq(R,3)=fn(j closed_range(1,3)) R {10*j}
+
+have ordered_check_sublist finite_seq(R,2)=fn(j closed_range(1,2)) R {20*j-10}
+
+claim:
+    ? forall j closed_range(1,2):
+        2*j-1 $in N+
+    j $in Z
+    j $in R
+    j>=1
+    2*j $in Z
+    2*j-1 $in Z
+    2*j>=2
+    2*j-1>=1
+    2*j-1>0
+    2*j-1 $in N+
+
+have ordered_check_good_indices finite_seq(N+,2)=fn(j closed_range(1,2)) N+ {2*j-1}
+
+claim:
+    ? $Algebra::ordered_basis::is_ordered_sublist_selection(R,3,2,ordered_check_original,ordered_check_sublist,ordered_check_good_indices)
+    claim:
+        ? forall j N+:
+            j<=2
+            =>:
+                ordered_check_good_indices(j)<=3
+        j $in closed_range(1,2)
+        j $in R
+        2*j=j+j
+        j+j<=2+j<=2+2=4
+        2*j<=4
+        2*j-1<=4-1=3
+        ordered_check_good_indices(j)=2*j-1
+    claim:
+        ? forall j N+:
+            j<=2
+            ordered_check_good_indices(j)<=3
+            =>:
+                ordered_check_sublist(j)=ordered_check_original(ordered_check_good_indices(j))
+        j $in closed_range(1,2)
+        j $in R
+        ordered_check_good_indices(j) $in R
+        ordered_check_good_indices(j)=2*j-1
+        ordered_check_good_indices(j) $in closed_range(1,3)
+        ordered_check_sublist(j)=20*j-10=10*(2*j-1)=10*ordered_check_good_indices(j)=ordered_check_original(ordered_check_good_indices(j))
+    claim:
+        ? forall j,k N+:
+            j<=2
+            k<=2
+            j<k
+            =>:
+                ordered_check_good_indices(j)<ordered_check_good_indices(k)
+        j $in closed_range(1,2)
+        k $in closed_range(1,2)
+        j $in R
+        k $in R
+        2*j=j+j
+        2*k=k+k
+        j+j<k+j<k+k
+        2*j<2*k
+        2*j-1<2*k-1
+        ordered_check_good_indices(j)=2*j-1
+        ordered_check_good_indices(k)=2*k-1
+        ordered_check_good_indices(j)<ordered_check_good_indices(k)
+    by def $Algebra::ordered_basis::is_ordered_sublist_selection(R,3,2,ordered_check_original,ordered_check_sublist,ordered_check_good_indices)
+
+have fn ordered_check_reverse_values(j closed_range(1,2)) R by cases:
+    case j=1: 20
+    case j!=1: 10
+
+have fn ordered_check_reverse_indices(j closed_range(1,2)) N+ by cases:
+    case j=1: 2
+    case j!=1: 1
+
+claim:
+    ? forall j N+:
+        j<=2
+        =>:
+            ordered_check_reverse_indices(j)<=3
+    j $in closed_range(1,2)
+    by cases:
+        ? ordered_check_reverse_indices(j)<=3
+        case j=1:
+            ordered_check_reverse_indices(j)=2
+        case j!=1:
+            ordered_check_reverse_indices(j)=1
+
+claim:
+    ? forall j N+:
+        j<=2
+        ordered_check_reverse_indices(j)<=3
+        =>:
+            ordered_check_reverse_values(j)=ordered_check_original(ordered_check_reverse_indices(j))
+    j $in closed_range(1,2)
+    by cases:
+        ? ordered_check_reverse_values(j)=ordered_check_original(ordered_check_reverse_indices(j))
+        case j=1:
+            ordered_check_reverse_indices(j)=2
+            ordered_check_reverse_values(j)=20=ordered_check_original(2)=ordered_check_original(ordered_check_reverse_indices(j))
+        case j!=1:
+            ordered_check_reverse_indices(j)=1
+            ordered_check_reverse_values(j)=10=ordered_check_original(1)=ordered_check_original(ordered_check_reverse_indices(j))
+
+have fn ordered_check_outside_indices(j closed_range(1,2)) N+ by cases:
+    case j=1: 1
+    case j!=1: 4
+
+have ordered_check_zero_vectors finite_seq(R,2)=fn(j closed_range(1,2)) R {0}

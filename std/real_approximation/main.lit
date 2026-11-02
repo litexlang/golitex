@@ -1,0 +1,272 @@
+# Absolute-error estimates on real scalars; positive radii are part of the contract.
+
+prop is_epsilon_close(x,y R,epsilon R+):
+    abs(x-y) <= epsilon
+
+thm absolute_value_two_sided_bounds:
+    ? forall t,b R:
+        abs(t) <= b
+        =>:
+            -b <= t <= b
+    by cases:
+        ? -abs(t) <= t
+        case t >= 0:
+            abs(t) = t
+            -abs(t) = -t
+            0 <= t
+            -t <= 0
+            -t <= 0 <= t
+            -abs(t) <= t
+        case t < 0:
+            abs(t) = -t
+            -abs(t) = -(-t) = t
+            -abs(t) <= t
+    -b <= -abs(t)
+    -b <= -abs(t) <= t
+    t <= abs(t) <= b
+
+thm epsilon_close_reflexive:
+    ? forall x R,epsilon R+:
+        $is_epsilon_close(x,x,epsilon)
+    x-x = 0
+    abs(x-x) = abs(0) = 0
+    by def $is_epsilon_close(x,x,epsilon)
+
+thm epsilon_close_identity:
+    ? forall x,y R:
+        forall epsilon R+:
+            $is_epsilon_close(x,y,epsilon)
+        =>:
+            x = y
+    by contra:
+        ? x = y
+        x-y != 0
+        x-y $in R*
+        abs(x-y) > 0
+        abs(x-y)/2 $in R+
+        $is_epsilon_close(x,y,abs(x-y)/2)
+        abs(x-y) <= abs(x-y)/2
+        abs(x-y)/2 < abs(x-y)
+        impossible abs(x-y) <= abs(x-y)/2
+
+thm rational_epsilon_close_identity:
+    ? forall x,y Q:
+        forall epsilon Q+:
+            $is_epsilon_close(x,y,epsilon)
+        =>:
+            x = y
+    by contra:
+        ? x = y
+        abs(x-y) $in Q
+        x-y != 0
+        x-y $in R*
+        abs(x-y) > 0
+        abs(x-y)/2 $in Q+
+        $is_epsilon_close(x,y,abs(x-y)/2)
+        abs(x-y) <= abs(x-y)/2
+        abs(x-y)/2 < abs(x-y)
+        impossible abs(x-y) <= abs(x-y)/2
+
+thm epsilon_close_symmetric:
+    ? forall x,y R,epsilon R+:
+        $is_epsilon_close(x,y,epsilon)
+        =>:
+            $is_epsilon_close(y,x,epsilon)
+    abs(x-y) <= epsilon
+    abs(y-x) = abs(x-y) <= epsilon
+    by def $is_epsilon_close(y,x,epsilon)
+
+thm epsilon_close_transitive:
+    ? forall x,y,z R,epsilon,delta R+:
+        $is_epsilon_close(x,y,epsilon)
+        $is_epsilon_close(y,z,delta)
+        =>:
+            $is_epsilon_close(x,z,epsilon+delta)
+    abs(x-y) <= epsilon
+    abs(y-z) <= delta
+    x-z = (x-y)+(y-z)
+    abs(x-z) = abs((x-y)+(y-z)) <= abs(x-y)+abs(y-z) <= epsilon+delta
+    by def $is_epsilon_close(x,z,epsilon+delta)
+
+thm epsilon_close_addition:
+    ? forall x,y,z,w R,epsilon,delta R+:
+        $is_epsilon_close(x,y,epsilon)
+        $is_epsilon_close(z,w,delta)
+        =>:
+            $is_epsilon_close(x+z,y+w,epsilon+delta)
+    abs(x-y) <= epsilon
+    abs(z-w) <= delta
+    (x+z)-(y+w) = (x-y)+(z-w)
+    abs((x+z)-(y+w)) = abs((x-y)+(z-w)) <= abs(x-y)+abs(z-w) <= epsilon+delta
+    by def $is_epsilon_close(x+z,y+w,epsilon+delta)
+
+thm epsilon_close_subtraction:
+    ? forall x,y,z,w R,epsilon,delta R+:
+        $is_epsilon_close(x,y,epsilon)
+        $is_epsilon_close(z,w,delta)
+        =>:
+            $is_epsilon_close(x-z,y-w,epsilon+delta)
+    abs(x-y) <= epsilon
+    abs(w-z) = abs(z-w) <= delta
+    (x-z)-(y-w) = (x-y)+(w-z)
+    abs((x-z)-(y-w)) = abs((x-y)+(w-z)) <= abs(x-y)+abs(w-z) <= epsilon+delta
+    by def $is_epsilon_close(x-z,y-w,epsilon+delta)
+
+thm epsilon_close_monotone:
+    ? forall x,y R,epsilon,enlarged R+:
+        $is_epsilon_close(x,y,epsilon)
+        epsilon <= enlarged
+        =>:
+            $is_epsilon_close(x,y,enlarged)
+    abs(x-y) <= epsilon <= enlarged
+    by def $is_epsilon_close(x,y,enlarged)
+
+thm epsilon_close_between:
+    ? forall center,left,right,point R,epsilon R+:
+        $is_epsilon_close(center,left,epsilon)
+        $is_epsilon_close(center,right,epsilon)
+        left <= point <= right
+        =>:
+            $is_epsilon_close(center,point,epsilon)
+    abs(left-center) = abs(center-left) <= epsilon
+    abs(right-center) = abs(center-right) <= epsilon
+    release thm absolute_value_two_sided_bounds(left-center,epsilon)
+    release thm absolute_value_two_sided_bounds(right-center,epsilon)
+    left-center <= point-center <= right-center
+    -epsilon <= left-center <= point-center
+    point-center <= right-center <= epsilon
+    abs(point-center) <= epsilon
+    abs(center-point) = abs(point-center) <= epsilon
+    by def $is_epsilon_close(center,point,epsilon)
+
+thm epsilon_close_scaling:
+    ? forall x,y R,z R*,epsilon R+:
+        $is_epsilon_close(x,y,epsilon)
+        =>:
+            $is_epsilon_close(x*z,y*z,epsilon*abs(z))
+    abs(x-y) <= epsilon
+    abs(z) > 0
+    x*z-y*z = (x-y)*z
+    abs(x*z-y*z) = abs((x-y)*z) = abs(x-y)*abs(z) <= epsilon*abs(z)
+    by def $is_epsilon_close(x*z,y*z,epsilon*abs(z))
+
+thm epsilon_close_multiplication:
+    ? forall x,y,z,w R,epsilon,delta R+:
+        $is_epsilon_close(x,y,epsilon)
+        $is_epsilon_close(z,w,delta)
+        =>:
+            $is_epsilon_close(x*z,y*w,epsilon*abs(z)+delta*abs(x)+epsilon*delta)
+    have a R = y-x
+    have b R = w-z
+    abs(a) = abs(y-x) = abs(x-y) <= epsilon
+    abs(b) = abs(w-z) = abs(z-w) <= delta
+    abs(z) >= 0
+    abs(x) >= 0
+    abs(a) >= 0
+    abs(b) >= 0
+    abs(a*z) = abs(a)*abs(z) <= epsilon*abs(z)
+    abs(b*x) = abs(b)*abs(x) <= delta*abs(x)
+    abs(a*b) = abs(a)*abs(b) <= epsilon*abs(b) <= epsilon*delta
+    y = x+(y-x) = x+a
+    w = z+(w-z) = z+b
+    y*w-x*z = (x+a)*(z+b)-x*z = a*z+b*x+a*b
+    abs(y*w-x*z) = abs(a*z+b*x+a*b) <= abs(a*z+b*x)+abs(a*b) <= abs(a*z)+abs(b*x)+abs(a*b)
+    abs(a*z) <= epsilon*abs(z)
+    abs(b*x) <= delta*abs(x)
+    abs(a*b) <= epsilon*delta
+    abs(a*z)+abs(b*x)+abs(a*b) <= epsilon*abs(z)+abs(b*x)+abs(a*b) <= epsilon*abs(z)+delta*abs(x)+abs(a*b) <= epsilon*abs(z)+delta*abs(x)+epsilon*delta
+    abs(x*z-y*w) = abs(y*w-x*z) <= epsilon*abs(z)+delta*abs(x)+epsilon*delta
+    by def $is_epsilon_close(x*z,y*w,epsilon*abs(z)+delta*abs(x)+epsilon*delta)
+
+thm absolute_value_natural_power:
+    ? forall x R,n N:
+        abs(x^n) = abs(x)^n
+    by induc n from 0:
+        ? abs(x^n) = abs(x)^n
+        ? from n = 0:
+            abs(x^0) = abs(1) = 1 = abs(x)^0
+        ? induc:
+            x^(n+1) = x^n*x
+            abs(x^(n+1)) = abs(x^n*x) = abs(x^n)*abs(x) = abs(x)^n*abs(x) = abs(x)^(n+1)
+
+thm absolute_value_integer_power:
+    ? forall x R*,n Z:
+        abs(x^n) = abs(x)^n
+    thm reciprocal_power:
+        ? forall t R*,k N:
+            t^(-k) = 1/(t^k)
+    thm reciprocal_absolute:
+        ? forall t R*:
+            abs(1/t) = 1/abs(t)
+        abs(t) > 0
+        abs(1/t)*abs(t) = abs((1/t)*t) = abs(1) = 1
+        abs(1/t) = (abs(1/t)*abs(t))/abs(t) = 1/abs(t)
+    by cases:
+        ? abs(x^n) = abs(x)^n
+        case n >= 0:
+            n $in N
+            release thm absolute_value_natural_power(x,n)
+        case n < 0:
+            -n $in Z
+            -n > 0
+            -n $in N
+            x^(-n) != 0
+            x^(-n) $in R*
+            abs(x) > 0
+            abs(x) $in R*
+            release thm reciprocal_power(abs(x),-n)
+            abs(x)^n = abs(x)^(-(-n)) = 1/(abs(x)^(-n))
+            release thm absolute_value_natural_power(x,-n)
+            x^n = 1/(x^(-n))
+            release thm reciprocal_absolute(x^(-n))
+            abs(x^n) = abs(1/(x^(-n))) = 1/abs(x^(-n)) = 1/(abs(x)^(-n)) = abs(x)^n
+
+thm bounded_product_difference:
+    ? forall x,y,z,w,x_bound,w_bound,epsilon R:
+        abs(x-y) <= epsilon
+        abs(z-w) <= epsilon
+        abs(x) <= x_bound
+        abs(w) <= w_bound
+        =>:
+            abs(x*z-y*w) <= epsilon*(x_bound+w_bound)
+    0 <= abs(x) <= x_bound
+    0 <= abs(w) <= w_bound
+    x_bound >= 0
+    w_bound >= 0
+    abs(z-w) >= 0
+    abs(x-y) >= 0
+    abs(x*(z-w)) = abs(x)*abs(z-w) <= x_bound*abs(z-w) <= x_bound*epsilon
+    abs(w*(x-y)) = abs(w)*abs(x-y) <= w_bound*abs(x-y) <= w_bound*epsilon
+    x*z-y*w = x*(z-w)+w*(x-y)
+    abs(x*z-y*w) = abs(x*(z-w)+w*(x-y)) <= abs(x*(z-w))+abs(w*(x-y))
+    abs(x*(z-w)) <= x_bound*epsilon
+    abs(w*(x-y)) <= w_bound*epsilon
+    abs(x*(z-w))+abs(w*(x-y)) <= x_bound*epsilon+abs(w*(x-y)) <= x_bound*epsilon+w_bound*epsilon = epsilon*(x_bound+w_bound)
+    abs(x*z-y*w) <= epsilon*(x_bound+w_bound)
+
+thm reciprocal_difference_bound:
+    ? forall x,y R*,c,d R+:
+        abs(x) >= c
+        abs(y) >= d
+        =>:
+            abs(1/x-1/y) <= abs(x-y)/(c*d)
+    abs(x) > 0
+    abs(y) > 0
+    abs(x)*abs(y) >= c*abs(y) >= c*d > 0
+    abs(x*y) = abs(x)*abs(y)
+    1/(abs(x)*abs(y)) > 0
+    1/(c*d) > 0
+    c*d*(1/(abs(x)*abs(y))) <= (abs(x)*abs(y))*(1/(abs(x)*abs(y))) = 1
+    (c*d*(1/(abs(x)*abs(y))))*(1/(c*d)) <= 1*(1/(c*d))
+    1/(abs(x)*abs(y)) = (c*d*(1/(abs(x)*abs(y))))*(1/(c*d)) <= 1*(1/(c*d)) = 1/(c*d)
+    1/x-1/y = (y-x)/(x*y)
+    abs(y-x) = abs(x-y)
+    x*y != 0
+    abs(x*y) > 0
+    abs(1/(x*y))*abs(x*y) = abs((1/(x*y))*(x*y)) = abs(1) = 1
+    abs(1/(x*y)) = (abs(1/(x*y))*abs(x*y))/abs(x*y) = 1/abs(x*y)
+    (y-x)/(x*y) = (y-x)*(1/(x*y))
+    abs((y-x)/(x*y)) = abs((y-x)*(1/(x*y))) = abs(y-x)*abs(1/(x*y)) = abs(y-x)*(1/abs(x*y)) = abs(y-x)/abs(x*y)
+    abs(x-y) >= 0
+    abs(x-y)*(1/(abs(x)*abs(y))) <= abs(x-y)*(1/(c*d))
+    abs(1/x-1/y) = abs((y-x)/(x*y)) = abs(x-y)/abs(x*y) = abs(x-y)/(abs(x)*abs(y)) = abs(x-y)*(1/(abs(x)*abs(y))) <= abs(x-y)*(1/(c*d)) = abs(x-y)/(c*d)

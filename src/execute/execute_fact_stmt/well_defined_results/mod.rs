@@ -9,6 +9,8 @@ pub mod verify_obj;
 mod verify_param_type;
 mod well_defined_result;
 
+pub use verify_param_type::VerifyAndDefineWdParametersFailed;
+
 pub use crate::execute::execute_fact_stmt::verify_and_fact::{
     AndFactWellDefinedProof, FailToVerifyAndFactWellDefinedResult, VerifyAndFactWellDefinedResult,
 };
