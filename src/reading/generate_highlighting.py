@@ -33,7 +33,7 @@ def catalogue():
             constants[name] = json.loads(literal)
     keywords = set('prop abstract_prop let have obtain claim thm axiom strategy sketch trust import eval witness struct template strong_induc release expand register by algo for fn cases case contra def induc impossible from as forall exist exist! not and or st enumerate extension fn_extension transitive symmetric reflexive zorn_lemma axiom_of_choice regularity_axiom replacement_axiom'.split())
     types = set('obj set nonempty_set finite_set matrix N Z Q R C N+ Z+ Q+ R+ Z- Q- R- Z* Q* R* C*'.split())
-    predicates = set('in subset superset proper_subset proper_superset fn_eq fn_eq_in injective surjective bijective prime coprime dvd matrix_inversible'.split())
+    predicates = set('in subset superset proper_subset proper_superset fn_eq fn_eq_in injective surjective bijective prime coprime dvd matrix_inversible comm_ring'.split())
     operators = set('= != < > <= >= + - * / % ^ => <=> ∘ ∪ ∩ × ! &'.split())
     constants_values = {'i', 'e', 'pi'}
     groups = {kind: set() for kind in ['keyword', 'predicate', 'function', 'type', 'constant', 'operator', 'punctuation']}

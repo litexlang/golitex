@@ -51,6 +51,7 @@ import Litex.SequenceTailOrder
 import Litex.SequenceExtremaEpsilon
 import Litex.SequenceExtremaTransport
 import Litex.SequenceExtremaAffine
+import Litex.SecondPartial
 /-! Stable entrypoint for the Litex semantic library and its proved compiler adapters. -/
 
 namespace Litex

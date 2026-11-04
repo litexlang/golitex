@@ -3526,6 +3526,22 @@
         "en": "Equivalent to det(A,n)!=0 over C. This is an existence predicate; matrix_inv(A,n) is the selected value. Real matrices are accepted through their complex membership.",
         "zh": "在 C 上等价于 det(A,n)!=0。这是存在性谓词，matrix_inv(A,n) 是所选逆矩阵对象。实矩阵通过其复数域成员证据使用。"
       }
+    },
+    "comm_ring": {
+      "kind": {
+        "zh": "内置谓词",
+        "en": "Builtin predicate"
+      },
+      "syntax": "$comm_ring(K, add, mul, neg, zero, one)",
+      "summary": {
+        "zh": "给定的加法、乘法、取负、零元和单位元在 K 上构成含幺交换环。",
+        "en": "The supplied addition, multiplication, negation, zero and identity make K a commutative ring with identity."
+      },
+      "notes": {
+        "zh": "K 为非空集合；add、mul : K × K → K 和 neg : K → K 均须为全函数，zero、one ∈ K。对任意 x,y,z ∈ K，须满足：加法结合律、交换律，add(zero,x)=x，add(x,neg(x))=zero；乘法结合律、交换律，mul(one,x)=x；以及分配律 mul(x,add(y,z))=add(mul(x,y),mul(x,z))。zero、one 是传入的环元素，不必是数值 0、1；允许 zero=one 的零环。不要求非零元可逆。not $comm_ring(...) 仍要求相同的合法参数域，它否定环公理全部成立，不取消运算的定义域要求。例中三个函数给出实数上的通常运算，最后一句按定义证明相应的交换环事实。",
+        "en": "K is a nonempty set; add, mul : K × K → K and neg : K → K must be total functions, and zero, one ∈ K. For all x,y,z ∈ K require associativity and commutativity of addition, add(zero,x)=x and add(x,neg(x))=zero; associativity and commutativity of multiplication, mul(one,x)=x; and distributivity mul(x,add(y,z))=add(mul(x,y),mul(x,z)). The supplied zero and one need not be the numerals 0 and 1. The zero ring with zero=one is allowed; inverses of nonzero elements are not required. not $comm_ring(...) has the same parameter-domain requirements: it denies that all ring laws hold, without waiving the domains of the operations. In the example the three functions are the usual real operations, and the final command proves the corresponding ring fact by definition."
+      },
+      "example": "have fn ring_add(x, y R) R = x + y\nhave fn ring_mul(x, y R) R = x * y\nhave fn ring_neg(x R) R = -x\nby def $comm_ring(R, ring_add, ring_mul, ring_neg, 0, 1)"
     }
   },
   "statements": {
@@ -4166,12 +4182,12 @@
       },
       "syntax": "register symmetric: ...",
       "summary": {
-        "zh": "登记一个二元谓词的对称性规则。",
-        "en": "Register the symmetry law of a binary predicate."
+        "zh": "登记谓词在指定参数置换下保持成立的规律。",
+        "en": "Register invariance of a predicate under a specified argument permutation."
       },
       "notes": {
-        "zh": "规则形状为 P(a,b) ⇒ P(b,a)，变量须满足所登记接口的类型和适用条件。 登记前须验证相应的全称规律。",
-        "en": "The law has shape P(a,b) ⇒ P(b,a), subject to the registered interface’s types and applicability conditions. The corresponding universal law must be verified before registration."
+        "zh": "至少两个形参，均声明为 set。前提和结论使用同一个谓词，每个形参恰好出现一次，结论采用非恒等置换。登记前须证明相应的全称规律。二元交换 P(a,b) ⇒ P(b,a) 是一个特例；也允许 P(a,b,c) ⇒ P(b,c,a) 等循环置换。",
+        "en": "Use at least two set-kind parameters. The premise and conclusion use the same predicate and each parameter exactly once, with a nonidentity permutation in the conclusion. Prove the corresponding universal law before registration. The binary swap P(a,b) ⇒ P(b,a) is one case; cyclic permutations such as P(a,b,c) ⇒ P(b,c,a) are also supported."
       }
     },
     "RegisterReflexivePropStmt": {

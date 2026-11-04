@@ -236,9 +236,16 @@ impl LitexToLeanCompiler {
                     let p = validate_bound(&f.set, &f.bound, f.direction, &fact)?;
                     let name = format!("_value_i{}", p.id.value());
                     let value = format!("(Litex.denote {name})");
-                    let set = self.compile_object_reference(&f.set, &prior)?;
+                    // This inference states membership in the original set
+                    // value. Its parent already owns formation; an inferred
+                    // anonymous range has no separate new Obj constructor.
+                    let set = self.compile_function_raw_expression_bound(
+                        &f.set,
+                        &prior,
+                        &HashMap::new(),
+                    )?;
                     let binders = format!(
-                        "{{_Host : Type _}} [_rep : Litex.Representation M _Host] ({name} : Litex.Obj (M := M) _Host) (_member : Litex.In {name} {set})"
+                        "{{_Host : Type _}} [_rep : Litex.Representation M _Host] ({name} : Litex.Obj (M := M) _Host) (_member : M.mem (Litex.denote {name}) ({set}))"
                     );
                     let Fact::ForallFact(f) = &fact else {
                         unreachable!()

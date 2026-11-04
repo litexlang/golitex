@@ -7337,12 +7337,22 @@ fn same_wd_subject(source: &Obj, requested: &Obj) -> bool {
 }
 
 fn same_wd_subject_ir(source: &Obj, requested: &Obj, requested_ir: &ObjIR) -> bool {
-    // A function-space value has its own source constructor. An alias needs
-    // its recorded equality/definition route; it cannot have this literal IR.
-    // Avoid rendering unrelated proof-tree objects for each FnSet lookup.
-    let source_fn_set = matches!(source, Obj::FunctionSpace(FunctionSpace::FnSet(_)));
-    let requested_fn_set = matches!(requested, Obj::FunctionSpace(FunctionSpace::FnSet(_)));
-    if source_fn_set != requested_fn_set {
+    // Standard-set IR consists of its unique reserved keyword. Comparing
+    // those constructors needs no rendering of unrelated function bodies.
+    match (source, requested) {
+        (Obj::StandardSet(left), Obj::StandardSet(right)) => return left == right,
+        (Obj::StandardSet(_), _) | (_, Obj::StandardSet(_)) => return false,
+        _ => {}
+    }
+    // Function signatures and literals have distinct source constructors.
+    // Aliases still need their recorded equality/definition route; neither
+    // literal IR can match an unrelated arithmetic or call constructor.
+    let function_kind = |object: &Obj| match object {
+        Obj::FunctionSpace(FunctionSpace::FnSet(_)) => 1,
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) => 2,
+        _ => 0,
+    };
+    if function_kind(source) != function_kind(requested) {
         return false;
     }
     source.ir() == *requested_ir
@@ -14882,23 +14892,30 @@ pub(super) fn same_wd_constructor(left: &ObjWellDefinedProof, right: &ObjWellDef
         ) => same_call_constructor(a, b),
         (
             DetailedObjWellDefinedProof::ByDef {
-                proof:
-                    ObjWellDefinedProofByDef::ExpLogOperator(
-                        ExpLogOperatorObjWellDefinedProofByDef::Sqrt(a),
-                    ),
+                proof: ObjWellDefinedProofByDef::ExpLogOperator(a),
                 ..
             },
             DetailedObjWellDefinedProof::ByDef {
-                proof:
-                    ObjWellDefinedProofByDef::ExpLogOperator(
-                        ExpLogOperatorObjWellDefinedProofByDef::Sqrt(b),
-                    ),
+                proof: ObjWellDefinedProofByDef::ExpLogOperator(b),
                 ..
             },
-        ) => {
-            a.child_obj_well_defined.len() == 1
-                && b.child_obj_well_defined.len() == 1
-                && same_wd_constructor(&a.child_obj_well_defined[0], &b.child_obj_well_defined[0])
+        ) if std::mem::discriminant(a) == std::mem::discriminant(b) => {
+            let (Some((a, _)), Some((b, _))) = (arithmetic_stages(left), arithmetic_stages(right))
+            else {
+                return false;
+            };
+            let arity = match left.obj() {
+                Obj::ExpLogOperator(ExpLogOperator::Log(_)) => 2,
+                Obj::ExpLogOperator(
+                    ExpLogOperator::Exp(_) | ExpLogOperator::Ln(_) | ExpLogOperator::Sqrt(_),
+                ) => 1,
+                _ => return false,
+            };
+            // Domain proofs certify the same fixed wrapper; they do not
+            // choose its representation. Every child host type must agree.
+            a.len() == arity
+                && b.len() == arity
+                && a.iter().zip(b).all(|(a, b)| same_wd_constructor(a, b))
         }
         (
             DetailedObjWellDefinedProof::ByDef {

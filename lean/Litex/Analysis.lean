@@ -2750,3 +2750,134 @@ theorem riemannIntegralZeroWidth {M : Semantics.{u}} [FunctionSemantics M]
 end Litex
 
 end RiemannIntegration
+
+namespace Litex
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+-- These bridges expose exactly the six clauses of the existing predicate.
+-- They neither establish existence nor replace a captured source proof program.
+theorem riemannIntegralFromDefiningClauses (f a b value : M.Value)
+    (hv : M.mem value (M.standard .real))
+    (h : M.mem a (M.standard .real) ∧ M.mem b (M.standard .real) ∧
+      (∀ x, M.mem x (riemannIntervalValue a b) → M.mem x (F.domainValue f)) ∧
+      RealBoundedValue M (riemannRestrictedRangeValue f a b) ∧
+      (a ≠ b ∨ value = M.number 0) ∧
+      DarbouxApproximationValue f (minMaxValue false a b) (minMaxValue true a b)
+        (riemannOrientedValue a b value)) :
+    HasRiemannIntegralValue M f a b value := ⟨hv,h⟩
+
+theorem riemannIntegralDefiningClauses (f a b value : M.Value)
+    (h : HasRiemannIntegralValue M f a b value) :
+    M.mem a (M.standard .real) ∧ M.mem b (M.standard .real) ∧
+      (∀ x, M.mem x (riemannIntervalValue a b) → M.mem x (F.domainValue f)) ∧
+      RealBoundedValue M (riemannRestrictedRangeValue f a b) ∧
+      (a ≠ b ∨ value = M.number 0) ∧
+      DarbouxApproximationValue f (minMaxValue false a b) (minMaxValue true a b)
+        (riemannOrientedValue a b value) := h.2
+
+-- The enclosure bridges retain the original nine ordered defining clauses.
+theorem darbouxEnclosureFromDefiningClauses (f a b n p lower upper : M.Value)
+    (h : RealLtValue M a b ∧ M.mem n (denote (NPos (M := M))) ∧
+      M.mem p (riemannIndexFnValue (M.number 0) n) ∧
+      M.mem lower (riemannIndexFnValue (M.number 1) n) ∧
+      M.mem upper (riemannIndexFnValue (M.number 1) n) ∧
+      F.callValue p (M.number 0) = a ∧ F.callValue p n = b ∧
+      (∀ k, M.mem k (closedRangeValue (M.number 1) n) →
+        RealLtValue M (F.callValue p (M.subValue k (M.number 1))) (F.callValue p k) ∧
+        RealLeValue M a (F.callValue p (M.subValue k (M.number 1))) ∧
+        RealLeValue M (F.callValue p k) b) ∧
+      (∀ k, M.mem k (closedRangeValue (M.number 1) n) →
+        ∀ x, M.mem x (riemannClosedIntervalValue a b) →
+        RealLeValue M (F.callValue p (M.subValue k (M.number 1))) x →
+        RealLeValue M x (F.callValue p k) →
+        RealLeValue M (F.callValue lower k) (F.callValue f x) ∧
+        RealLeValue M (F.callValue f x) (F.callValue upper k))) :
+    DarbouxEnclosureValue f a b n p lower upper := h
+
+theorem darbouxEnclosureDefiningClauses (f a b n p lower upper : M.Value)
+    (h : DarbouxEnclosureValue f a b n p lower upper) :
+    RealLtValue M a b ∧ M.mem n (denote (NPos (M := M))) ∧
+      M.mem p (riemannIndexFnValue (M.number 0) n) ∧
+      M.mem lower (riemannIndexFnValue (M.number 1) n) ∧
+      M.mem upper (riemannIndexFnValue (M.number 1) n) ∧
+      F.callValue p (M.number 0) = a ∧ F.callValue p n = b ∧
+      (∀ k, M.mem k (closedRangeValue (M.number 1) n) →
+        RealLtValue M (F.callValue p (M.subValue k (M.number 1))) (F.callValue p k) ∧
+        RealLeValue M a (F.callValue p (M.subValue k (M.number 1))) ∧
+        RealLeValue M (F.callValue p k) b) ∧
+      (∀ k, M.mem k (closedRangeValue (M.number 1) n) →
+        ∀ x, M.mem x (riemannClosedIntervalValue a b) →
+        RealLeValue M (F.callValue p (M.subValue k (M.number 1))) x →
+        RealLeValue M x (F.callValue p k) →
+        RealLeValue M (F.callValue lower k) (F.callValue f x) ∧
+        RealLeValue M (F.callValue f x) (F.callValue upper k)) := h
+
+end Litex
+
+namespace Litex
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+-- The original complete real function and interval coverage supply the value
+-- at the unique input. No continuity or integral-existence premise is needed.
+theorem riemannIntegralZeroCandidate (f a : M.Value)
+    (hf : RealFunctionValue M f) (ha : M.mem a (M.standard .real))
+    (hD : ∀ x, M.mem x (riemannIntervalValue a a) → M.mem x (F.domainValue f)) :
+    HasRiemannIntegralValue M f a a (M.number 0) := by
+  obtain ⟨ar,rfl⟩ := (M.real_members a).mp ha
+  have ends (maximum : Bool) :
+      minMaxValue maximum (M.number (ar : ℂ)) (M.number (ar : ℂ)) = M.number (ar : ℂ) := by
+    rw [minMaxValue_number]
+    cases maximum <;> simp only [Bool.false_eq_true, ↓reduceIte, min_self, max_self]
+  have hself : RealLeValue M (M.number (ar : ℂ)) (M.number (ar : ℂ)) :=
+    ⟨ar,ar,rfl,rfl,le_rfl⟩
+  have haI : M.mem (M.number (ar : ℂ))
+      (riemannIntervalValue (M.number (ar : ℂ)) (M.number (ar : ℂ))) := by
+    unfold riemannIntervalValue
+    rw [ends false,ends true]
+    exact (F.sep_members _ _ _).mpr ⟨ha,hself,hself⟩
+  have singleton (x : M.Value)
+      (hx : M.mem x (riemannIntervalValue (M.number (ar : ℂ)) (M.number (ar : ℂ)))) :
+      x = M.number (ar : ℂ) := by
+    unfold riemannIntervalValue at hx
+    rw [ends false,ends true] at hx
+    obtain ⟨hxR,hax,hxa⟩ := (F.sep_members _ _ _).mp hx
+    obtain ⟨xr,rfl⟩ := (M.real_members x).mp hxR
+    have lo : ar ≤ xr := (realLeValue_numbers ar xr).mp hax
+    have hi : xr ≤ ar := (realLeValue_numbers xr ar).mp hxa
+    exact congrArg (fun r : ℝ => M.number (r : ℂ)) (le_antisymm hi lo)
+  have callReal (x : M.Value)
+      (hx : M.mem x (riemannIntervalValue (M.number (ar : ℂ)) (M.number (ar : ℂ)))) :
+      M.mem (F.callValue f x) (M.standard .real) := by
+    obtain ⟨signature,hfn,_,houtput⟩ := hf
+    have hd := F.domainValue_eq signature.domain_isSet hfn
+    exact houtput _ (FunctionSemantics.call_mem _ _ _ _ hfn (hd ▸ hD x hx))
+  let D := F.sepValue
+    (riemannIntervalValue (M.number (ar : ℂ)) (M.number (ar : ℂ))) (fun _ => True)
+  let graph := F.graphValue D (M.standard .real) (F.callValue f)
+  have hgraph : M.mem graph (F.fnSetValue D (M.standard .real)) :=
+    FunctionSemantics.graph_inFnSet _ _ _
+      (fun x hx => callReal x ((F.sep_members _ _ _).mp hx).1)
+  have rangePoint (y : M.Value)
+      (hy : M.mem y (riemannRestrictedRangeValue f (M.number (ar : ℂ)) (M.number (ar : ℂ)))) :
+      y = F.callValue f (M.number (ar : ℂ)) := by
+    change M.mem y (FunctionSemantics.rangeValue graph) at hy
+    obtain ⟨x,hxy⟩ := ((FunctionSemantics.range_spec (isSet (R (M := M))) hgraph).2 y).mp hy
+    have h := (FunctionSemantics.pair_mem_graph D (M.standard .real) (F.callValue f) x y).mp hxy
+    exact h.2.2.trans (congrArg (F.callValue f) (singleton x ((F.sep_members _ _ _).mp h.1).1))
+  have hvalue := callReal _ haI
+  obtain ⟨v,hv⟩ := (M.real_members _).mp hvalue
+  let bound : Obj (M := M) M.Value :=
+    semanticObject (F.callValue f (M.number (ar : ℂ))) (M.member_isSet hvalue)
+  refine ⟨(M.real_members _).mpr ⟨0,rfl⟩,ha,ha,hD,?_,Or.inr rfl,?_⟩
+  · constructor
+    · refine ⟨bound,hvalue,?_⟩
+      intro y hy
+      exact ⟨v,v,hv,(rangePoint y hy).trans hv,le_rfl⟩
+    · refine ⟨bound,hvalue,?_⟩
+      intro y hy
+      exact ⟨v,v,(rangePoint y hy).trans hv,hv,le_rfl⟩
+  · intro epsilon hepsilon horder
+    rw [ends false,ends true] at horder
+    exact (lt_irrefl _ (riemannRealLtObserve horder)).elim
+
+end Litex

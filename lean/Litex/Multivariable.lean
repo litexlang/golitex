@@ -3112,3 +3112,24 @@ elab "litex_normalize_smooth_coefficient" "[" rules:simpArg,* "]" : tactic => do
   unless (← getGoals).isEmpty do
     evalTactic (← `(tactic| apply congrArg _))
     evalTactic (← `(tactic| ring))
+
+namespace Litex
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+-- The complete source domain is related to the same function's semantic domain.
+-- The local set and first-derivative witness remain inside the original clause.
+theorem secondPartialFromDefiningClause
+    (f domain point n firstAxis secondAxis value : M.Value)
+    (hDomain : domain = F.domainValue f)
+    (h : SecondPartialDefinitionValue M f domain point n firstAxis secondAxis value) :
+    HasSecondPartialAtValue M f point n firstAxis secondAxis value :=
+  (congrArg (fun D => SecondPartialDefinitionValue M f D point n firstAxis secondAxis value) hDomain).mp h
+
+theorem secondPartialDefiningClause
+    (f domain point n firstAxis secondAxis value : M.Value)
+    (hDomain : domain = F.domainValue f)
+    (h : HasSecondPartialAtValue M f point n firstAxis secondAxis value) :
+    SecondPartialDefinitionValue M f domain point n firstAxis secondAxis value :=
+  (congrArg (fun D => SecondPartialDefinitionValue M f D point n firstAxis secondAxis value) hDomain.symm).mp h
+
+end Litex

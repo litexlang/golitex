@@ -610,6 +610,42 @@ impl LitexToLeanCompiler {
                 position,
             );
         }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::SecondPartialAtFromDefinition
+                | BuiltinTheoremId::SecondPartialAtToDefinition
+        ) {
+            return self.compile_builtin_second_partial_definition(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::SecondPartialAtFromFunction
+                | BuiltinTheoremId::SecondPartialAtToFunction
+        ) {
+            return self.compile_builtin_second_partial_function(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if super::compile_builtin_derivative_schema::supports(builtin.theorem) {
             return self.compile_builtin_derivative_schema(
                 call,
@@ -748,6 +784,43 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::RiemannIntegralUnique
         ) {
             return self.compile_builtin_riemann_certificate(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::RiemannIntegralFromDefinition
+                | BuiltinTheoremId::RiemannIntegralToDefinition
+                | BuiltinTheoremId::RiemannIntegralZero
+        ) {
+            return self.compile_builtin_riemann_definition(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::DarbouxEnclosureFromDefinition
+                | BuiltinTheoremId::DarbouxEnclosureToDefinition
+        ) {
+            return self.compile_builtin_darboux_definition(
                 call,
                 builtin,
                 derivation,

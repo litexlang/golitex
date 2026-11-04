@@ -264,7 +264,7 @@ fn existence(r: &SecondPartialDerivativeAtRelation, fact: &Fact) -> Result<(), L
 fn identifier(p: &BoundName) -> Obj {
     Obj::Identifier(IdentifierObj::from_bound_name(p))
 }
-fn validate_clauses(
+pub(super) fn validate_clauses(
     r: &SecondPartialDerivativeAtRelation,
     domain: &Obj,
     facts: &[Fact],

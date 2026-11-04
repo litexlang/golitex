@@ -1,5 +1,188 @@
 use super::*;
 
+#[test]
+fn exp_log_constructor_reuse_checks_each_fresh_wd_before_aliasing() {
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef as E;
+    for expression in ["exp(a)", "ln(a)", "log(2,a)", "sqrt(a)"] {
+        let (template, _) = checked(&format!("have a R+\n$is_set({expression})\n"));
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+            template.statement_results.last().unwrap()
+        else {
+            panic!("sethood fact");
+        };
+        let object =
+            super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+                &statement.verify_result,
+                0,
+            )
+            .unwrap()
+            .unwrap()
+            .obj()
+            .clone();
+        let (run, mut runtime) = checked("have a R+\n");
+        // Ask the existing verifier for independent, uncommitted occurrences
+        // in the same prefix. Result types deliberately do not implement Clone.
+        let mut check = || {
+            let VerifyObjWellDefinedResult::Success(wd) = runtime
+                .verify_obj_well_definedness(
+                    &object,
+                    crate::execute::execute_fact_stmt::VerifyState::top_level(),
+                )
+                .unwrap()
+            else {
+                panic!("fresh WD");
+            };
+            assert!(matches!(
+                wd.detailed_ref(),
+                DetailedObjWellDefinedProof::ByDef { .. }
+            ));
+            wd
+        };
+        let original = check();
+        let fresh = check();
+        let changes = (0..3).map(|_| check()).collect::<Vec<_>>();
+        let compiler = crate::compile_to_lean::LitexToLeanCompiler::new(runtime);
+        let root = SourcePosition::new(None, SourceOwner::Run(&run), run.statement_results.len());
+        let local = SourcePosition::new(Some(&root), SourceOwner::ObjectLocal(&original), 0);
+        assert!(same_wd_constructor(&original, &fresh), "{expression}");
+        assert_eq!(
+            compiler.compile_wd(&fresh, &local).unwrap(),
+            local.object_local_name(),
+            "{expression}"
+        );
+
+        for (mutation, mut changed) in changes.into_iter().enumerate() {
+            let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::ExpLogOperator(proof),
+                ..
+            } = changed.as_detailed_mut().unwrap()
+            else {
+                panic!("exp/log constructor");
+            };
+            let (children, requirements) = match proof {
+                E::Exp(p) => (
+                    &mut p.child_obj_well_defined,
+                    &mut p.requirement_fact_verified,
+                ),
+                E::Ln(p) => (
+                    &mut p.child_obj_well_defined,
+                    &mut p.requirement_fact_verified,
+                ),
+                E::Log(p) => (
+                    &mut p.child_obj_well_defined,
+                    &mut p.requirement_fact_verified,
+                ),
+                E::Sqrt(p) => (
+                    &mut p.child_obj_well_defined,
+                    &mut p.requirement_fact_verified,
+                ),
+            };
+            match mutation {
+                0 => children.clear(),
+                1 => requirements.clear(),
+                _ => {
+                    let VerifyFactResult::AtomicExceptEquality(result) = &mut requirements[0]
+                    else {
+                        panic!("domain membership");
+                    };
+                    let VerifyAtomicExceptEqualityFactResult::Success(result) = result.as_mut()
+                    else {
+                        panic!("checked membership");
+                    };
+                    let AtomicFact::InFact(fact) = &mut result.fact else {
+                        panic!("membership");
+                    };
+                    fact.set = Obj::StandardSet(StandardSet::C);
+                }
+            }
+            assert!(
+                compiler.compile_wd(&changed, &local).is_err(),
+                "{expression}, mutation {mutation}"
+            );
+        }
+    }
+}
+
+#[test]
+fn wd_subject_filter_retains_alpha_captures_calls_and_negative_keys() {
+    let (run, _) = checked(
+        "have a R\nhave b R\n\
+         $is_set(fn(x R) R {a+x})\n\
+         $is_set(fn(y R) R {a+y})\n\
+         $is_set(fn(z R) R {b+z})\n\
+         $is_set(fn(t R) R)\n\
+         $is_set(fn(u R) R {a+u}(1))\n\
+         $is_set(-3)\n",
+    );
+    let objects = run.statement_results[2..]
+        .iter()
+        .map(|statement| {
+            let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) = statement else {
+                panic!("sethood fact");
+            };
+            super::super::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof(
+                &p.verify_result,
+                0,
+            )
+            .unwrap()
+            .unwrap()
+            .obj()
+        })
+        .collect::<Vec<_>>();
+    assert!(same_wd_subject(objects[0], objects[1]));
+    assert!(same_wd_subject(objects[1], objects[0]));
+    // Bound names may change; a different free capture must remain distinct.
+    assert!(!same_wd_subject(objects[0], objects[2]));
+    assert!(!same_wd_subject(objects[2], objects[0]));
+    for other in [objects[3], objects[4]] {
+        assert!(!same_wd_subject(objects[0], other));
+        assert!(!same_wd_subject(other, objects[0]));
+    }
+    assert!(matches!(
+        objects[3],
+        Obj::FunctionSpace(FunctionSpace::FnSet(_))
+    ));
+    assert!(matches!(objects[4], Obj::FnObj(_)));
+    let generated_negative = Obj::Literal(Literal::Number(Number::new("-3".into())));
+    assert!(matches!(
+        objects[5],
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(_))
+    ));
+    assert!(same_wd_subject(objects[5], &generated_negative));
+    assert!(same_wd_subject(&generated_negative, objects[5]));
+}
+
+#[test]
+fn wd_subject_filter_keeps_all_standard_set_keywords_distinct() {
+    let sets = [
+        StandardSet::NPos,
+        StandardSet::N,
+        StandardSet::Q,
+        StandardSet::Z,
+        StandardSet::R,
+        StandardSet::C,
+        StandardSet::QPos,
+        StandardSet::RPos,
+        StandardSet::QNeg,
+        StandardSet::ZNeg,
+        StandardSet::RNeg,
+        StandardSet::QStar,
+        StandardSet::ZStar,
+        StandardSet::RStar,
+        StandardSet::CStar,
+    ]
+    .map(Obj::StandardSet);
+    for (i, left) in sets.iter().enumerate() {
+        for (j, right) in sets.iter().enumerate() {
+            assert_eq!(left.ir() == right.ir(), i == j);
+            assert_eq!(same_wd_subject(left, right), i == j);
+        }
+        let number = Obj::Literal(Literal::Number(Number::new("1".into())));
+        assert!(!same_wd_subject(left, &number));
+        assert!(!same_wd_subject(&number, left));
+    }
+}
+
 fn checked(source: &str) -> (RunLitexCodeResult, Runtime) {
     let mut runtime = Runtime::new_with_result_detail(
         LaunchCommand::Eval {

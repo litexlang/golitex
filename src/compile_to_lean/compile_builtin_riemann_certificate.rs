@@ -1,5 +1,7 @@
 //! Replay explicit integral certificate/existence/selection/uniqueness NativeSchemas.
-use super::compile_riemann_integral::{parts, validate_domain_requirement, validate_existence};
+use super::compile_riemann_integral::{
+    enclosure_arguments, parts, validate_domain_requirement, validate_existence,
+};
 use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::ast::stmt::TheoremCall;
@@ -20,26 +22,41 @@ fn candidate(fact: &Fact, args: &[Obj], value: &Obj) -> bool {
 impl LitexToLeanCompiler {
     // Read the original formation's complete domain through its original owner.
     // No Runtime domain lookup or reconstructed source WD evidence is used.
-    fn riemann_certificate_domain(
+    pub(super) fn riemann_certificate_domain(
         &self,
         fact: &AtomicFact,
         wd: &AtomicFactWellDefinedProof,
         prior: &SourcePosition<'_>,
-    ) -> Result<(Obj, String), LeanCompileError> {
-        let (f, a, b, value, negative) = parts(fact).ok_or_else(|| invalid("CandidateFamily"))?;
-        let value = value.ok_or_else(|| invalid("PositiveCandidate"))?;
-        if negative {
-            return Err(invalid("PositiveCandidate"));
-        }
-        let formed =
-            SourcePosition::new(Some(prior), SourceOwner::AtomicWDLocals(wd, 4), usize::MAX);
+    ) -> Result<(Obj, String, (String, String)), LeanCompileError> {
+        let enclosure = enclosure_arguments(fact);
+        let (f, a, b, value, arity) = if let Some(arguments) = enclosure {
+            let [f, a, b, _, _, _, _] = arguments else {
+                return Err(invalid("EnclosureArity"));
+            };
+            if !matches!(fact, AtomicFact::NormalAtomicFact(_)) {
+                return Err(invalid("PositiveEnclosure"));
+            }
+            (f, a, b, None, 7)
+        } else {
+            let (f, a, b, value, negative) =
+                parts(fact).ok_or_else(|| invalid("CandidateFamily"))?;
+            if value.is_none() || negative {
+                return Err(invalid("PositiveCandidate"));
+            }
+            (f, a, b, value, 4)
+        };
+        let formed = SourcePosition::new(
+            Some(prior),
+            SourceOwner::AtomicWDLocals(wd, arity),
+            usize::MAX,
+        );
         match &wd
             .as_detailed()
             .map_err(|_| invalid("DetailedCandidateFormation"))?
             .predicate_domain
         {
             PredicateDomainProof::FunctionAnalysis(capture) => {
-                if capture.requirements.len() != 4 {
+                if capture.requirements.len() != arity {
                     return Err(invalid("OriginalCandidateDomainStages"));
                 }
                 for (index, requirement) in capture.requirements[..3].iter().enumerate() {
@@ -51,30 +68,48 @@ impl LitexToLeanCompiler {
                         &capture.function_domain.domain,
                     )?;
                 }
-                if !matches!(&capture.requirements[3].requirement,Fact::AtomicFact(AtomicFact::InFact(m))
-                    if m.element.ir()==value.ir() && m.set==Obj::StandardSet(StandardSet::R))
-                {
-                    return Err(invalid("OriginalCandidateValueReal"));
+                if let Some(value) = value {
+                    if !matches!(&capture.requirements[3].requirement,Fact::AtomicFact(AtomicFact::InFact(m))
+                        if m.element.ir()==value.ir() && m.set==Obj::StandardSet(StandardSet::R))
+                    {
+                        return Err(invalid("OriginalCandidateValueReal"));
+                    }
                 }
                 let bindings = self
                     .compile_atomic_wd_locals(wd, fact, prior)?
                     .join("\n")
                     .replace('\n', "\n  ");
+                let view =
+                    self.compile_function_limit_domain_view(f, &capture.function_domain, &formed)?;
                 Ok((
                     capture.function_domain.domain.clone(),
                     format!("(by\n  {bindings}\n  exact _integral_real\n)"),
+                    view,
                 ))
             }
             PredicateDomainProof::ByKnownFact(cite) => {
                 self.compile_known_atomic(cite, fact, &formed)?;
                 self.with_cited_atomic_formation(cite.cite_fact_id,&formed,&mut |old,old_wd,old_prior| {
-                    let (old_f,_,_,old_v,old_negative)=parts(old).ok_or_else(||invalid("CitedCandidateFamily"))?;
-                    old_v.ok_or_else(||invalid("CitedCandidateValue"))?;
+                    let old_f = if enclosure.is_some() {
+                        let Some([f,_,_,_,_,_,_])=enclosure_arguments(old) else {
+                            return Err(invalid("CitedEnclosureFamily"));
+                        };
+                        if !matches!(old,AtomicFact::NormalAtomicFact(_)) {
+                            return Err(invalid("CitedPositiveEnclosure"));
+                        }
+                        f
+                    } else {
+                        let (old_f,_,_,old_v,old_negative)=parts(old).ok_or_else(||invalid("CitedCandidateFamily"))?;
+                        if old_v.is_none() || old_negative {
+                            return Err(invalid("CitedPositiveCandidate"));
+                        }
+                        old_f
+                    };
                     let same=|x:&Obj,y:&Obj| x.ir()==y.ir() || crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(x,y);
                     // The ordinary citation consumer above replays all original
                     // argument equalities. A function's complete domain and real
                     // function proof do not depend on endpoint/value spelling.
-                    if old_negative || !same(f,old_f) {
+                    if !same(f,old_f) {
                         return Err(invalid("CitedCandidateArguments"));
                     }
                     self.riemann_certificate_domain(old,old_wd,old_prior)
@@ -172,7 +207,7 @@ impl LitexToLeanCompiler {
         self.compile_fact_wd(wd, goal, &formed)?;
         let statement = self.compile_formed_fact_proposition(wd, goal, &formed)?;
         let scope = SourcePosition::new(Some(&formed), SourceOwner::FactWD(wd), usize::MAX);
-        let (domain, real_formation) = if builtin.theorem == RiemannIntegralSelected {
+        let (domain, real_formation, _) = if builtin.theorem == RiemannIntegralSelected {
             let (Fact::AtomicFact(atom), FactWellDefinedProof::AtomicExceptEquality(wd)) =
                 (goal, wd)
             else {

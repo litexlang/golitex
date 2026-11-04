@@ -644,6 +644,34 @@ those policies. `sketch` exposes its checked local steps without publishing
 objects, definitions or facts to the parent scope. Its body keeps a source-local
 scope reminder, without a fabricated closing goal or WD certificate.
 
+Rejected `trust` and `axiom` declarations distinguish formation failure from
+accepting an assumption. The card displays the actual failed statement and
+keeps its formation conditions last and closed. Quantified declarations retain
+their existing parameter, clause and unchecked-suffix explanations. A failed
+`sketch` keeps the retained local prefix and a link to the interrupted child;
+following either source and returning preserves the selected failure. These
+local steps are not enclosing conclusions. Earlier trust-WD checks discarded
+by the executor are not reconstructed. Strict-policy rejection currently exports
+diagnostics without a statement address, so it does not acquire a fabricated
+statement bubble. Axiom name/store failures and other unobserved internal
+histories remain outside this source acceptance.
+
+Registered reflexivity and argument permutations have their own application
+cards. They use the retained predicate identity and current goal, rather than
+inferring a proof route from an earlier registration. Reflexivity identifies
+the object in both argument positions. Permutation applications retain the
+actual position map and the independently checked alternate statement, whose
+proof and citations remain expandable. The binary swap and a three-argument
+cycle are both covered. Each target and alternate keeps its own final closed
+formation checks. Later known-fact reuse retains its citation route.
+
+The predicate-definition link follows its resolved declaration. These native
+certificates do not identify one particular registration execution, so the card
+does not guess a registration-source link. The `register symmetric` reference
+now describes general nonidentity permutations of at least two set-kind
+parameters; binary symmetry is a special case. Generated/cached proof histories
+and new lazy cross-source exports remain separate acceptance boundaries.
+
 `by thm` and `release thm` have separate language-help and application views.
 The application view uses the successful execution's resolved callee, actual
 arguments, premise proofs and direct stored conclusion identities. User theorem
@@ -861,6 +889,36 @@ their actual certificates. Known equality paths expose their ordered edges and
 any separately checked connecting equality. Unsupported forms and incomplete
 records keep explicit missing-data explanations; these adapters do not cover
 every template, matrix, induction or special-property proof form.
+
+Recorded `Ring` equality rewrites have a separate certificate-based explanation.
+The source ring remains a real cited fact or local hypothesis. Polynomial
+derivations display the retained common normal form, with each side's recorded
+operations available on demand. Congruence and opaque-atom alignments show their
+actual subequalities; operation aliases keep their checked equality proofs.
+The notation disclosure identifies the selected operations, zero and identity,
+and the actual atom-membership checks. Powers and integer coefficients refer
+to this ring; a native numeral is not silently used as its coefficient.
+When a retained atom is a numeric literal, a visible note identifies its
+carrier and explains that powers use the selected ring multiplication. This
+does not assume that the native object 2 equals the ring coefficient two.
+
+The adapter reads coefficients and topologically ordered certificate nodes; it
+does not normalize or reverify polynomials in JavaScript. Target, source, scope,
+membership and certificate correspondences are checked before showing a complete
+application. Incomplete records receive a bounded explanation. Adjacent chain
+equalities retain separate targets, later reuse keeps its own citation route,
+and local work in a failed enclosing proof is not published. Detailed steps
+start folded and expression formation remains last and closed. These source
+checks cover the observed polynomial/congruence/alignment families, rather than
+every global, qualified, lazy, generated or cached execution history.
+
+A real two-source theorem/caller case additionally checks eight distinct
+formal/actual bindings, theorem-definition navigation, the definition body's
+ring proof, its cited ring premise and exact return to the caller. A missing
+argument remains a failed call with no publication. Source hover and pinning
+use the actual invocation; the general `selectStatement` API keeps its existing
+statement-summary behavior. This gate does not establish new lazy exports or
+all qualified execution histories.
 
 Equality operators have their own proof targets when retained evidence maps
 them precisely. In `a = b = c`, hovering the first `=` explains only `a = b`;
@@ -1318,6 +1376,16 @@ arithmetic, real elementary/trigonometric/hyperbolic functions, integer
 operations and complex parts/modulus; this is not exhaustive builtin coverage.
 The format borrows summary-plus-detail from Python PEP 257 and the synopsis,
 parameters/results and examples structure from Linux man-pages(7).
+
+The builtin predicate `$comm_ring(K, add, mul, neg, zero, one)` has a bilingual
+reference shared by hover, keyboard focus and click. It states the nonempty
+carrier, total binary and unary operation domains, identities and ring laws.
+The supplied identities need not be numeric 0 and 1, and the zero ring is
+allowed. Negating this predicate does not waive the operation-domain checks.
+Its displayed real-ring example is checked verbatim; zero and shifted rings,
+guarded-operation rejections and wrong arity have executable controls in
+`web/tests/comm-ring-reference.cjs`. This reference is language help, not a
+claim that every ring-normalization certificate has a dedicated proof view.
 
 The `prop`, `by def` and `by thm` cards explain the shared `nonnegative(x R)` example
 point by point. The expanded reference distinguishes formal parameter type,

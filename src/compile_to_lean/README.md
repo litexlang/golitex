@@ -488,6 +488,30 @@ if Runtime still contains their records. [source_queries.rs](source_queries.rs)
 and the source-position checks enforce this distinction. Cached WD likewise
 needs a visible certified construction; the cache entry alone is not a proof.
 
+Constructor lookup excludes incompatible standard-set and function constructors
+before rendering their IR. Matching candidates still pass the original subject,
+binder and stage-visibility checks. This reduces repeated comparison work without
+adding a WD cache or skipping independently recorded construction evidence.
+
+Repeated `exp`, `ln`, `log` and `sqrt` constructions can reference an earlier
+certified wrapper or its child projection. The compiler first checks the new
+occurrence's complete WD, then compares the source object, constructor variant
+and every child representation. Domain proofs certify the fixed value; they
+do not choose its representation. Reuse adds no model law or result field.
+
+When a checked comparison supplies real membership, its citation is copied
+before destructuring its witnesses:
+
+```lean
+have _litex_order := h_1
+obtain ⟨_, r, _, hr, _⟩ := _litex_order
+```
+
+Destructuring `h_1` directly can pull dependent WD definitions into the
+eliminator and make the resulting proof expensive for Lean to check. This
+temporary alias retains the original fact and proof route; it adds no source
+fact, assumption or compiler registry.
+
 Lean binders, local proof blocks and necessary proof-valued `let`s preserve
 these dependencies in the output. Indentation alone does not establish scope.
 
@@ -1144,9 +1168,13 @@ and [selector reuse](../../lean/examples/partial_derivative_guarded_selector/).
 Separate [logarithm](../../lean/examples/partial_derivative_guarded_logarithm_condition/)
 and [square-root](../../lean/examples/partial_derivative_guarded_sqrt_condition/)
 conditions have checked generated pairs. A combined condition
-`ln(q(1)) * sqrt(q(1)) > 0` currently compiles, but its Lean check has not
-finished within the recorded limits. That composition is not counted as
-verified coverage.
+[`ln(q(1)) * sqrt(q(1)) > 0`](../../lean/examples/partial_derivative_guarded_log_sqrt_product/)
+and its [reversed product](../../lean/examples/partial_derivative_guarded_sqrt_log_product/)
+also have kernel-checked generated pairs. The compiler retains the guards'
+domain and auxiliary derivative WD, including nonzero denominators. The adjacent
+[nested condition `exp(ln(q(1))) * sqrt(q(1)) > 0`](../../lean/examples/partial_derivative_guarded_exp_log_sqrt/)
+also has a kernel-checked generated pair. These examples retain all recorded
+guard and derivative evidence.
 The same consumer handles [exact finite function spaces](../../lean/examples/partial_derivative_finite_function_domain/)
 using the recorded signature equality and point membership. This includes
 [arbitrary dimension and coordinate](../../lean/examples/partial_derivative_finite_function_dimension/)
@@ -1248,9 +1276,20 @@ matrix component expansion and original call WD; examples cover a
 [zero matrix](../../lean/examples/partial_derivative_zero_matrix_entry/), an
 [identity diagonal](../../lean/examples/partial_derivative_identity_diagonal/) and
 an [off-diagonal identity entry](../../lean/examples/partial_derivative_identity_off_diagonal/).
-These native reductions currently require the original unchanged call head and
-arguments, independent of local raw binders. Changed heads/arguments and native
-reductions inside substituted anonymous bodies remain open.
+These native reductions retain the original call head, independent of local raw
+binders. Arguments may change through the producer's recorded reductions: the
+compiler checks the expanded body and transports the original packed input's
+domain proof through those equalities. It retains the original call WD rather
+than requesting WD for a reduced call. Checked examples cover a
+[calculated row](../../lean/examples/partial_derivative_zero_matrix_calculated_row/),
+[two calculated indices](../../lean/examples/partial_derivative_zero_matrix_calculated_pair/),
+an [identity diagonal](../../lean/examples/partial_derivative_identity_calculated_diagonal/)
+and an [off-diagonal entry](../../lean/examples/partial_derivative_identity_calculated_off_diagonal/).
+A [matrix coefficient inside an applied scalar body](../../lean/examples/partial_derivative_applied_matrix_coefficient/)
+also compiles when the matrix call is independent of that body's parameter.
+Native matrix beta still requires an unchanged head and independence from local
+raw binders; replay using a substituted body's original WD remains open. This
+extension changes only compiler consumers, with no result or Runtime changes.
 
 Grouped anonymous calls borrow each typed receiver from the original complete
 call. The preceding result's function membership and the next input's domain

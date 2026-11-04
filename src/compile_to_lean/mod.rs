@@ -370,4 +370,8 @@ mod compile_original_continuity_formula_condition;
 
 mod compile_function_limit_composition;
 
+mod compile_builtin_darboux_definition;
 mod compile_builtin_riemann_certificate;
+mod compile_builtin_riemann_definition;
+mod compile_builtin_second_partial_definition;
+mod compile_builtin_second_partial_function;

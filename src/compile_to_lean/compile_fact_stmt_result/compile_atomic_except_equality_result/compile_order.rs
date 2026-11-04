@@ -1712,8 +1712,11 @@ impl LitexToLeanCompiler {
         // citation and argument transport have been replayed successfully.
         let (kind, _, _) = source_order_parts(fact)?;
         let (low, high, _) = source_order_oriented(fact)?;
-        let low_member = format!("(by obtain ⟨_litex_real, _, _litex_value, _, _⟩ := {order_proof}; exact (M.real_members (Litex.denote {})).mpr ⟨_litex_real, _litex_value⟩)", self.compile_object_reference(low, position)?);
-        let high_member = format!("(by obtain ⟨_, _litex_real, _, _litex_value, _⟩ := {order_proof}; exact (M.real_members (Litex.denote {})).mpr ⟨_litex_real, _litex_value⟩)", self.compile_object_reference(high, position)?);
+        // Cases on the original hypothesis can revert its dependent WD
+        // definitions into the eliminator. Destruct a fresh citation instead.
+        let citation = format!("have _litex_order := {order_proof};");
+        let low_member = format!("(by {citation} obtain ⟨_litex_real, _, _litex_value, _, _⟩ := _litex_order; exact (M.real_members (Litex.denote {})).mpr ⟨_litex_real, _litex_value⟩)", self.compile_object_reference(low, position)?);
+        let high_member = format!("(by {citation} obtain ⟨_, _litex_real, _, _litex_value, _⟩ := _litex_order; exact (M.real_members (Litex.denote {})).mpr ⟨_litex_real, _litex_value⟩)", self.compile_object_reference(high, position)?);
         match kind {
             SourceOrderKind::Less | SourceOrderKind::LessEqual => Ok((low_member, high_member)),
             SourceOrderKind::Greater | SourceOrderKind::GreaterEqual => {

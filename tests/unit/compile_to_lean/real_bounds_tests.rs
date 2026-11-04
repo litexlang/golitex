@@ -14,12 +14,43 @@ fn real_bound_examples_replay_original_evidence() {
         include_str!("../../../lean/examples/real_empty_set_bounds/statement.lit"),
         include_str!("../../../lean/examples/real_singleton_bounds/statement.lit"),
         include_str!("../../../lean/examples/real_set_bounded_components/statement.lit"),
+        include_str!("../../../lean/examples/riemann_restricted_range_bounded/statement.lit"),
     ] {
         let (run, compiler) = super::execute(source);
         compiler
             .compile_run(&run, "real_bounds")
             .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
     }
+}
+
+#[test]
+fn inferred_literal_range_requires_the_original_preceding_formation() {
+    use crate::compile_to_lean::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof;
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let (run, compiler) = super::execute(
+        "have inferred_range_subject fn(x R) R\n\
+         $is_set(fn(x R) R {inferred_range_subject(x)})\n\
+         $is_set(fn_range(fn(y R) R {inferred_range_subject(y)}))\n",
+    );
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(last)) = &run.statement_results[2] else {
+        panic!("original range statement")
+    };
+    let proof = formed_subject_proof(&last.verify_result, 0)
+        .unwrap()
+        .unwrap();
+    let Obj::FunctionSpace(FunctionSpace::FnRange(range)) = proof.obj() else {
+        panic!("original range constructor")
+    };
+    let before_literal = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    assert!(compiler
+        .compile_inferred_parameter_range(range, &before_literal)
+        .is_err());
+    let after_literal = SourcePosition::new(None, SourceOwner::Run(&run), 2);
+    compiler
+        .compile_inferred_parameter_range(range, &after_literal)
+        .expect(
+            "the checked alpha-equivalent literal keeps its original constructor and membership",
+        );
 }
 
 #[test]

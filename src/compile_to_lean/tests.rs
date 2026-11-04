@@ -4244,3 +4244,9 @@ mod function_limit_composition_tests;
 
 #[path = "../../tests/unit/compile_to_lean/riemann_certificate_tests.rs"]
 mod riemann_certificate_tests;
+#[path = "../../tests/unit/compile_to_lean/riemann_definition_theorem_tests.rs"]
+mod riemann_definition_theorem_tests;
+#[path = "../../tests/unit/compile_to_lean/second_partial_definition_theorem_tests.rs"]
+mod second_partial_definition_theorem_tests;
+#[path = "../../tests/unit/compile_to_lean/second_partial_function_tests.rs"]
+mod second_partial_function_tests;

@@ -1851,3 +1851,116 @@ invalidation. A failure object must be an actual side of the retained equality,
 and its object family must match the typed failure family. Presentation leaves
 the source rows and Native proof/publication records unchanged. These cases do
 not establish other rare eval-failure routes or browser geometry coverage.
+
+
+## Failed assumptions and local scratch blocks
+
+Run `node src/reading/web/tests/context-failures.cjs --binary <executable>`;
+`--reader <asset>` selects the candidate and `--endpoint <local-origin>`
+exercises the existing compiler POST route. Twenty-four actual inputs cover
+ordinary and registered files with their own strict/non-strict policies.
+Bilingual editable/read-only events distinguish rejected trust/axiom formation,
+accepted assumptions, local sketch success and interrupted bodies. Failed
+sketches expose their actual prefix and child source, with exact return. Local
+assumed false equalities remain unusable outside the sketch. Existing quantified
+formation records remain available; strict refusal has diagnostics but no
+invented statement address. Parser rejection is not relabeled as execution.
+
+The suite checks 48 source contexts, 144 views, 568 interactions and 47
+missing/foreign-record controls. Source/evidence/scopes remain unchanged, and
+raw Native is held only in memory; temporary source/config files are removed.
+No earlier trust-WD prefix or sketch closing-goal certificate is fabricated.
+Axiom NameClash/Store and discarded or generated histories are not source
+accepted by this gate. It does not establish browser geometry or complete
+coverage of all 52 statement kinds and their internal result branches.
+
+
+## Registered reflexivity and argument permutations
+
+Run `node src/reading/web/tests/registered-rewrites.cjs --binary <executable>`.
+`--reader <asset>` selects a reader and `--endpoint <local-origin>` uses the
+existing compiler POST API. Eleven strict sources cover actual reflexivity,
+binary symmetry and three-argument cyclic permutations, definition-route
+controls, missing registrations, later known-fact reuse and successful local
+steps inside a failed claim. The certificates are selected by the verifier;
+the suite never replaces `searched_proof` to force a branch.
+
+Twenty-two ordinary/registered source contexts exercise bilingual editable
+and read-only hover, keyboard focus, symbol help, pinning, actual proof
+citations, definition links and exact return. The alternate statement is a
+checked requirement and has no fabricated publication. Argument positions
+follow the recorded permutation. Malformed predicate, source, scope, argument
+or alternate-proof data cannot supply a derivation. Own and alternate formation
+checks remain closed at the end. Keyword hover describes general parameter
+permutations, including the three-argument case.
+
+Raw Native remains in memory and temporary compiler inputs are removed.
+An additional real two-source compiler bundle checks qualified definition and
+citation return; no new lazy export or browser geometry is claimed. Exact
+registration-execution identity is absent from these native certificates and
+is not inferred from a matching earlier statement. Full 52-kind/result coverage
+remains open.
+
+## Commutative-ring reference
+
+Run `node src/reading/web/tests/comm-ring-reference.cjs --binary <executable>`.
+Use `--reader <asset>` for a candidate and `--endpoint <local-origin>` for the
+existing compiler POST API. Eight strict sources cover the exact displayed
+example, the zero ring, shifted identities, abstract ring use, a negative local
+premise, two guarded-operation rejections and wrong arity. Both positive and
+negative predicates require total operation domains; rejected targets publish
+no facts. These are actual verifier outcomes, not modified proof certificates.
+
+Sixteen ordinary/registered contexts exercise 64 bilingual editable/read-only
+views and 224 hover, focus, click and edit interactions. The reserved name is
+highlighted as a predicate. The visible signature, domains, zero-ring boundary,
+negation restrictions and checked example agree across the three entry points.
+Source, proof, scope and publication records remain unchanged; raw graphs stay
+in memory and temporary compiler inputs are removed. This suite does not claim
+browser geometry, current-source matrix API support in an older executable,
+or complete ring-proof and 52-kind/result coverage.
+
+## Ring proof certificates
+
+Run `node src/reading/web/tests/ring-proofs.cjs --binary <executable>`; optional
+`--reader <asset>` and `--endpoint <local-origin>` select the viewer and existing
+compiler POST surface. Eighteen strictly checked inputs include polynomial
+normalization, congruence, opaque-atom alignment, operation aliases, curried
+operations, zero/integer coefficients, adjacent equalities, later reuse and a
+successful local step inside a failed claim. Missing/negative ring assumptions,
+unrelated operations, coefficient cancellation and shifted native numerals are
+actual rejection controls. No proof branch is replaced to force `Ring`.
+
+The ordinary/registered runs cover 36 source contexts, 144 bilingual editable
+and read-only views, 88 application observations, 624 interactions and 24
+missing/conflicting-data controls. Whole-fact and equality-token hover, keyboard
+focus, pinning, expansion, exact source-ring citations and return are exercised.
+Each side's displayed normalization nodes come from the native certificate;
+there is no second polynomial verifier. Formulas and integer coefficients use
+the selected ring, with explicit notation and real membership proofs.
+
+The first equality in the chain uses `Ring`; the second keeps its own identity
+proof. Later reuse keeps its own citation, and a rejected enclosing claim has
+no outer publication. Source, scopes and evidence remain unchanged. Malformed
+source, membership, expression, operation, polynomial or derivation records
+cannot produce a complete explanation. Flat fact metadata is not substituted
+for the retained scope records. Raw graphs stay in memory and temporary source
+files are removed. Global-ring, new qualified/lazy/generated/cached histories,
+browser geometry and complete 52-kind/result coverage remain separate gates.
+
+The native-literal case includes an explicit `2 $in K` premise. Its source
+proof treats 2 as a ring atom, with a visible carrier/operation note; a separate
+source rejects treating it as the ring coefficient two without a bridge. These
+are actual strict verifier outcomes, not altered certificates.
+
+Run `node src/reading/web/tests/ring-proof-contexts.cjs --binary <executable>`
+for the real two-file project; `--reader <asset>` and `--endpoint <local-origin>`
+are also supported. The caller uses `theory::ring_square` with eight renamed
+arguments. Four locale/editor views per positive or rejected project check
+theorem hover, all bindings, the actual source definition, its ring proof and
+citation, and exact navigation back to the caller. Eight views, 52 interactions
+and two missing-call-record controls leave the native source and evidence
+unchanged. A wrong argument count has no successful application or publication.
+The test uses actual source hover/pin rather than interpreting the general
+`selectStatement` summary as an invocation proof. No lazy export or browser
+geometry is claimed.

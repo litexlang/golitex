@@ -35,6 +35,13 @@ const SOURCES: &[&str] = &[
         "../../../lean/examples/partial_derivative_guarded_logarithm_condition/statement.lit"
     ),
     include_str!("../../../lean/examples/partial_derivative_guarded_sqrt_condition/statement.lit"),
+    include_str!(
+        "../../../lean/examples/partial_derivative_guarded_log_sqrt_product/statement.lit"
+    ),
+    include_str!(
+        "../../../lean/examples/partial_derivative_guarded_sqrt_log_product/statement.lit"
+    ),
+    include_str!("../../../lean/examples/partial_derivative_guarded_exp_log_sqrt/statement.lit"),
 ];
 fn number(n: i64) -> Obj {
     Obj::Literal(Literal::Number(Number::new(n.to_string())))
@@ -64,6 +71,89 @@ fn multivariable_interior_replays_actual_axis_guard_domains_and_selector_wd() {
             .unwrap_or_else(|e| panic!("{source}: {e}"));
         assert!(lean.contains("Litex.partialInteriorOfNeighborhood"));
         assert_eq!(lean, c.compile_run(&run, "guarded").unwrap());
+    }
+}
+
+#[test]
+fn multivariable_interior_compound_guard_keeps_nested_domain_and_derivative_wd() {
+    for (source, changes) in [
+        (
+            include_str!(
+                "../../../lean/examples/partial_derivative_guarded_log_sqrt_product/statement.lit"
+            ),
+            6,
+        ),
+        (
+            include_str!(
+                "../../../lean/examples/partial_derivative_guarded_exp_log_sqrt/statement.lit"
+            ),
+            7,
+        ),
+    ] {
+        for change in 0..changes {
+            let (mut run, compiler) = super::execute(source);
+            let P::OpenGuards { guards, .. } = geometry(&mut run) else {
+                panic!("open guards");
+            };
+            let operand = &mut guards[1].operands[0];
+            match change {
+                0 | 1 | 6 => {
+                    let C::Multiply { left, right } = &mut operand.constructor else {
+                        panic!("product");
+                    };
+                    let child = if change == 1 { right } else { left };
+                    let child = if change == 6 {
+                        let C::Elementary { argument, .. } = &mut child.constructor else {
+                            panic!("outer exponential");
+                        };
+                        argument
+                    } else {
+                        child
+                    };
+                    let C::Elementary { domain, .. } = &mut child.constructor else {
+                        panic!("elementary function");
+                    };
+                    let AtomicFact::InFact(fact) = &mut super::atomic_proof_mut(domain).fact else {
+                        panic!("domain membership");
+                    };
+                    fact.set = Obj::StandardSet(StandardSet::C);
+                }
+                2 => {
+                    let AtomicFact::InFact(fact) =
+                        &mut super::atomic_proof_mut(&mut operand.value_real).fact
+                    else {
+                        panic!("value membership");
+                    };
+                    fact.element = number(9);
+                }
+                3 => {
+                    let AtomicFact::InFact(fact) =
+                        &mut super::atomic_proof_mut(&mut operand.derivative_real).fact
+                    else {
+                        panic!("derivative membership");
+                    };
+                    fact.set = Obj::StandardSet(StandardSet::C);
+                }
+                4 => {
+                    let proof = operand
+                        .derivative_source_well_defined
+                        .as_detailed_mut()
+                        .unwrap();
+                    let obj = match proof {
+                        DetailedObjWellDefinedProof::ByDef { obj, .. }
+                        | DetailedObjWellDefinedProof::ByKnown { obj, .. } => obj,
+                    };
+                    *obj = number(9);
+                }
+                _ => operand.derivative_reduction.result = number(9),
+            }
+            assert!(
+                compiler
+                    .compile_run(&run, "altered_compound_guard")
+                    .is_err(),
+                "mutation {change}"
+            );
+        }
     }
 }
 

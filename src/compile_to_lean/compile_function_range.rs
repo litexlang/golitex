@@ -210,13 +210,43 @@ impl LitexToLeanCompiler {
     }
 
     /// A named inference may introduce the range before a separate range WD
-    /// result exists. An original function parameter already supplies its
-    /// carrier and exact membership citation; reuse that declaration evidence.
+    /// result exists. Reuse an original parameter's membership or a preceding
+    /// checked literal constructor; never manufacture a new function WD record.
     pub(super) fn compile_inferred_parameter_range(
         &self,
         range: &FnRange,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if matches!(
+            range.function.as_ref(),
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))
+        ) {
+            use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
+            let function = position
+                .with_visible_wd(&range.function, &mut |wd, producer| {
+                    if !matches!(
+                        wd.detailed_ref(),
+                        DetailedObjWellDefinedProof::ByDef {
+                            proof: ObjWellDefinedProofByDef::FunctionSpace(
+                                FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(_)
+                            ),
+                            ..
+                        }
+                    ) {
+                        return Err(LeanCompileError::unsupported(
+                            "FnRange/InferenceLiteralConstructor",
+                        ));
+                    }
+                    self.compile_wd(wd, producer)
+                })?
+                .ok_or_else(|| {
+                    LeanCompileError::unsupported("FnRange/InferenceLiteralFormation")
+                })?;
+            return Ok(format!(
+                "(by\n  let _range_original_function := {}\n  exact Litex.fnRange _range_original_function _range_original_function.val.signature (Litex.formulaFnInFnSet _range_original_function)\n)",
+                function.replace('\n', "\n  ")
+            ));
+        }
         let Obj::Identifier(IdentifierObj::Plain { id, .. }) = range.function.as_ref() else {
             return Err(LeanCompileError::unsupported("FnRange/InferenceParameter"));
         };

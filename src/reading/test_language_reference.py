@@ -62,7 +62,9 @@ class LanguageReferenceTests(unittest.TestCase):
     def test_matrix_conjugation_and_inverse_contracts(self):
         self.assertIn('conj(u(j))*v(j)',self.data['entries']['inner_product']['notes']['en'])
         self.assertIn('No conjugation',self.data['entries']['outer_product']['notes']['en'])
-        self.assertIn('det(A,n) ≠ 0',self.data['entries']['matrix_inverse']['notes']['en'])
+        self.assertIn('det(A,n) ≠ 0',self.data['entries']['matrix_inv']['notes']['en'])
+        self.assertEqual(self.data['entries']['matrix_inv']['syntax'],'matrix_inv(A, n)')
+        self.assertNotIn('matrix_inverse',self.data['entries'])
         self.assertIn('n−1,n−1',self.data['entries']['matrix_minor']['notes']['en'])
     def test_selectors_require_proofs_and_do_not_change_name_contracts(self):
         self.assertEqual(self.data['entries']['lim']['syntax'],'lim(a)')
