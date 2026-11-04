@@ -90,6 +90,16 @@ impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn scope_equal_wd(term: String, bindings: &[String]) -> String {
         if bindings.is_empty() {
             term
+        } else if bindings.iter().any(|binding| binding.starts_with("have ")) {
+            // Predicate WD can contain checked proof producers as well as
+            // object lets. Finish each original proof before growing a later
+            // dependent context, and give the proposition an explicit sort.
+            // All original WD bindings are retained, including unused proofs.
+            format!(
+                "(show Prop from (by\n  {}\n  exact {}\n))",
+                bindings.join("\n").replace('\n', "\n  "),
+                term.replace('\n', "\n  ")
+            )
         } else {
             // Keep the proposition reducible under dependent existential
             // binders. Elaborating the entire Prop with a tactic can leave
@@ -152,6 +162,7 @@ impl LitexToLeanCompiler {
             }
         }
         let proof = match proof {
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::NativeMatrixProperty(p)) => self.compile_native_matrix_property(&AtomicFact::EqualFact(fact.clone()),p,position)?,
             EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_)) => {
                 if fact.left.ir() != fact.right.ir() {
                     return Err(LeanCompileError::new(

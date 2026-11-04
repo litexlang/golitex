@@ -5,6 +5,42 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    /// Both source routes retain an integer proof followed by strict positivity.
+    pub(in crate::compile_to_lean) fn compile_positive_integer_member(
+        &self,
+        fact: &InFact,
+        integer: &VerifyFactResult,
+        positive: &VerifyFactResult,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let integer_subject = source_subject(integer)?;
+        let positive_subject = source_subject(positive)?;
+        if fact.set != Obj::StandardSet(StandardSet::NPos)
+            || membership_subject(&integer_subject, &fact.element)? != StandardSet::Z
+        {
+            return Err(LeanCompileError::unsupported(
+                "RefinedPositiveNatural/Integer",
+            ));
+        }
+        let Fact::AtomicFact(order) = &positive_subject else {
+            return Err(LeanCompileError::unsupported(
+                "RefinedPositiveNatural/Order",
+            ));
+        };
+        let (zero, element, strict) = source_order_oriented(order)?;
+        if !strict || !is_exact_zero(zero) || element.ir() != fact.element.ir() {
+            return Err(LeanCompileError::unsupported(
+                "RefinedPositiveNatural/Subject",
+            ));
+        }
+        let integer_proof = self.compile_verify(integer, position)?.1;
+        let positive_proof = self.compile_verify(positive, position)?.1;
+        let object = self.compile_object_reference(&fact.element, position)?;
+        let integer_name = format!("h_{}", integer_subject.fact_id().value());
+        let positive_name = format!("h_{}", positive_subject.fact_id().value());
+        Ok(format!("(by\n  let _positive_integer := {object}\n  have {integer_name} : Litex.In _positive_integer Litex.Z := {integer_proof}\n  have {positive_name} : Litex.Lt (Litex.number (M := M) 0) _positive_integer := {positive_proof}\n  exact Litex.inNPos_intro _positive_integer (Litex.integerToNaturalOfNonnegative _positive_integer {integer_name} (Litex.ltToLe (Litex.number (M := M) 0) _positive_integer {positive_name})) {positive_name})"))
+    }
+
     pub(in crate::compile_to_lean) fn compile_refined_numeric_strategy(
         &self,
         fact: &InFact,
@@ -13,23 +49,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         if fact.set == Obj::StandardSet(StandardSet::NPos) {
-            if requirements.len() != 2
-                || results.len() != 2
-                || membership_subject(&requirements[0], &fact.element)? != StandardSet::Z
-            {
+            if requirements.len() != 2 || results.len() != 2 {
                 return Err(LeanCompileError::unsupported(
-                    "RefinedPositiveNatural/Integer",
-                ));
-            }
-            let Fact::AtomicFact(order) = &requirements[1] else {
-                return Err(LeanCompileError::unsupported(
-                    "RefinedPositiveNatural/Order",
-                ));
-            };
-            let (zero, element, strict) = source_order_oriented(order)?;
-            if !strict || !is_exact_zero(zero) || element.ir() != fact.element.ir() {
-                return Err(LeanCompileError::unsupported(
-                    "RefinedPositiveNatural/Subject",
+                    "RefinedPositiveNatural/Requirements",
                 ));
             }
             for (requirement, result) in requirements.iter().zip(results) {
@@ -39,10 +61,7 @@ impl LitexToLeanCompiler {
                     ));
                 }
             }
-            let integer = self.compile_verify(&results[0], position)?.1;
-            let positive = self.compile_verify(&results[1], position)?.1;
-            let object = self.compile_object_reference(&fact.element, position)?;
-            return Ok(format!("(Litex.inNPos_intro {object} (Litex.integerToNaturalOfNonnegative {object} ({integer}) (Litex.ltToLe (Litex.number (M := M) 0) {object} ({positive}))) ({positive}))"));
+            return self.compile_positive_integer_member(fact, &results[0], &results[1], position);
         }
         if fact.set == Obj::StandardSet(StandardSet::N) {
             if requirements.len() != 2 || results.len() != 2 {

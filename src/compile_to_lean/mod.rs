@@ -1,17 +1,29 @@
 mod compile_additive_inference;
 mod compile_assumption_stmt_result;
 mod compile_builtin_cart_membership;
+mod compile_builtin_cauchy_schwarz;
+mod compile_builtin_continuity_sides;
 mod compile_builtin_continuity_theorem;
 mod compile_builtin_dense_order_theorem;
 mod compile_builtin_finite_subset_theorem;
 mod compile_builtin_fold_theorem;
 mod compile_builtin_function_limit_theorem;
 mod compile_builtin_function_membership;
+mod compile_builtin_laplace_determinant;
+mod compile_builtin_matrix_candidates;
+mod compile_builtin_matrix_inner_adjoint;
+mod compile_builtin_matrix_rank_factorization;
+mod compile_builtin_matrix_rank_product;
 mod compile_builtin_membership_theorem;
 mod compile_builtin_norm_theorem;
+mod compile_builtin_norm_triangle;
+mod compile_builtin_norm_zero;
 mod compile_builtin_number_theory_theorem;
+mod compile_builtin_rank_existence;
 mod compile_builtin_reduced_fraction_theorem;
 mod compile_builtin_sequence_limit_theorem;
+mod compile_builtin_sequence_tail_order;
+mod compile_builtin_triangular_determinant;
 mod compile_builtin_tuple_theorem;
 mod compile_by_stmt_result;
 mod compile_callee_constructor;
@@ -21,6 +33,7 @@ mod compile_chain_closures;
 mod compile_claim_stmt_result;
 mod compile_compound_fact;
 mod compile_compound_stores;
+mod compile_continuity_point_formation;
 mod compile_def_abstract_prop_stmt_result;
 mod compile_def_prop_stmt_result;
 mod compile_def_struct_stmt_result;
@@ -96,7 +109,9 @@ mod compile_prime_inferences;
 mod compile_prop_clause_instance;
 mod compile_real_accumulation;
 mod compile_real_limit_accumulation;
+mod compile_recursive_callee_constructor;
 mod compile_recursive_case_tree;
+mod compile_recursive_function_body;
 mod compile_recursive_unfold_result;
 mod compile_register_stmt_result;
 mod compile_release_and_expand_result;
@@ -257,6 +272,8 @@ mod compile_matrix_trace;
 
 mod compile_builtin_extremum_certificate_theorem;
 mod compile_builtin_extremum_theorem;
+mod compile_builtin_sequence_extrema_affine;
+mod compile_builtin_sequence_extrema_transport;
 mod compile_builtin_sequence_extremum_theorem;
 mod compile_curl;
 mod compile_derivative_interior;
@@ -267,6 +284,10 @@ mod compile_gradient;
 mod compile_hessian;
 mod compile_jacobian;
 mod compile_laplacian;
+mod compile_multivariable_continuity;
+mod compile_multivariable_differentiability;
+mod compile_multivariable_interior;
+mod compile_multivariable_reduction;
 mod compile_multivariable_scalar_limit;
 mod compile_multivariable_vector_limit;
 mod compile_partial_derivative;
@@ -278,10 +299,12 @@ mod compile_second_partial;
 mod compile_sequence_analysis;
 mod compile_sequence_binary_map;
 mod compile_sequence_epsilon;
+mod compile_sequence_extrema_epsilon;
 mod compile_sequence_extremum;
 mod compile_sequence_extremum_definition;
 mod compile_sequence_limit;
 mod compile_sequence_map;
+mod compile_smooth_partial_derivative;
 mod compile_total_differential;
 
 mod compile_call_prefix;
@@ -318,7 +341,33 @@ mod compile_builtin_coordinate_definition;
 
 mod compile_builtin_remainder_definition;
 
+mod compile_builtin_derivative_algebra;
 mod compile_builtin_derivative_formula;
+mod compile_builtin_derivative_quotient;
+mod compile_builtin_global_continuity;
+mod compile_builtin_global_continuity_formula;
+mod compile_builtin_lipschitz;
 mod compile_builtin_unary_derivative;
+mod compile_builtin_uniform_continuity;
+mod compile_global_continuity;
+mod compile_lipschitz;
+mod compile_uniform_continuity;
+mod source_fact_formation;
 
 mod compile_matrix_inverse_predicates;
+
+mod compile_native_matrix_property;
+
+mod compile_builtin_continuity_limit_bridge;
+
+mod compile_builtin_euclidean_composition;
+
+mod compile_builtin_euclidean_scalar_algebra;
+
+mod compile_builtin_euclidean_vector_algebra;
+
+mod compile_original_continuity_formula_condition;
+
+mod compile_function_limit_composition;
+
+mod compile_builtin_riemann_certificate;

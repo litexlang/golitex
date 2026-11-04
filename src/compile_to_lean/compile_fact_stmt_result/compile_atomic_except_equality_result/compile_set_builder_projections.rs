@@ -138,10 +138,15 @@ impl LitexToLeanCompiler {
                 // The checked builder predicate already carries the clause's
                 // formation. Project its semantic proposition without inventing
                 // a second WD tree for the substituted function applications.
-                let compiled = (
-                    self.compile_function_raw_predicate(&fact, &formed, &HashMap::new())?,
-                    term,
-                );
+                let proposition = if selected == 0 {
+                    // The original base already has a checked representation.
+                    // Retain it in membership's type so later constructors can
+                    // infer that wrapper from the same FactId citation.
+                    format!("Litex.In {a} ({built}).val.bound")
+                } else {
+                    self.compile_function_raw_predicate(&fact, &formed, &HashMap::new())?
+                };
+                let compiled = (proposition, term);
                 declarations.push(self.emit_internal_fact(&fact, &compiled, position)?);
                 // Project the fact just emitted. Re-elaborating the builder
                 // inside And.left/right loses the predicate's expected type

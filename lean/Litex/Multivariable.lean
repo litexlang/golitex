@@ -2963,3 +2963,152 @@ theorem matrixRankInvertible {M : Semantics.{u}} [F : FunctionSemantics M]
   exact (NativeBridge.naturalValue_spec (denote n) hn).symm
 
 end Litex
+
+
+namespace Litex
+variable {M : Semantics.{u}} [F : FunctionSemantics M]
+
+theorem coordinatePathValueZero (point n axis : M.Value)
+    (hn : M.mem n (M.standard .natural))
+    (hp : M.mem point (realVectorSetValue n))
+    (hk : M.mem axis (closedRangeValue (M.number 1) n)) :
+    coordinatePathValue point n axis (M.number 0)=point := by
+  have hz : M.mem (M.number 0) (M.standard .real) := (M.real_members _).mpr ⟨0,by simp⟩
+  apply realVectorValueExt _ _ n (coordinatePathValueInVector point n axis _ hn hp hk hz) hp
+  intro index hi
+  rw [coordinatePathValueCall point n axis _ index hn hp hk hz hi]
+  obtain ⟨r,hr⟩ := (M.real_members _).mp (F.call_mem _ _ _ _ hp ((F.sep_members _ _ _).mpr ⟨hi,True.intro⟩))
+  obtain ⟨s,hs⟩ := (M.real_members _).mp (matrixIdentityEntry_inReal (M := M) index axis)
+  rw [hr,hs,M.mul_numbers,M.add_numbers,zero_mul,add_zero]
+
+theorem semanticDerivativeCoordinatePath (point n axis index : M.Value)
+    (hn : M.mem n (M.standard .natural))
+    (hp : M.mem point (realVectorSetValue n))
+    (hk : M.mem axis (closedRangeValue (M.number 1) n))
+    (hi : M.mem index (closedRangeValue (M.number 1) n)) :
+    SemanticDerivativeAtValue M
+      (fun h : ℝ => F.callValue (coordinatePathValue point n axis (M.number (h : ℂ))) index)
+      0 (matrixIdentityEntry index axis) := by
+  obtain ⟨c,hc⟩ := (M.real_members _).mp (F.call_mem _ _ _ _ hp ((F.sep_members _ _ _).mpr ⟨hi,True.intro⟩))
+  obtain ⟨e,he⟩ := (M.real_members _).mp (matrixIdentityEntry_inReal (M := M) index axis)
+  refine ⟨e,he,(fun h => c+h*e),Filter.Eventually.of_forall ?_,?_⟩
+  · intro h
+    dsimp only
+    rw [coordinatePathValueCall point n axis _ index hn hp hk ((M.real_members _).mpr ⟨h,rfl⟩) hi,
+      hc,he,M.mul_numbers,M.add_numbers,←Complex.ofReal_mul,←Complex.ofReal_add]
+  · have h : HasDerivAt (fun h : ℝ => c+h*e) (0+1*e) 0 :=
+      (hasDerivAt_const (0 : ℝ) c).add ((hasDerivAt_id (0 : ℝ)).mul_const e)
+    simpa only [zero_add,one_mul] using h
+
+theorem partialInteriorOfVectorDomain (f point n axis : M.Value)
+    (hn : M.mem n (M.standard .natural))
+    (hp : M.mem point (realVectorSetValue n))
+    (hk : M.mem axis (closedRangeValue (M.number 1) n))
+    (hD : F.domainValue f=realVectorSetValue n) : PartialInteriorValue M f point n axis := by
+  refine ⟨semanticObject (M.number 1) (M.member_isSet (numberInRPos (M := M) 1 (by norm_num))),numberInRPos (M := M) 1 (by norm_num),?_⟩
+  intro h hh _
+  rw [hD]
+  exact coordinatePathValueInVector point n axis h hn hp hk hh
+
+theorem partialInteriorOfMultivariableInterior (f point n axis : M.Value)
+    (hn : M.mem n (M.standard .natural))
+    (hp : M.mem point (realVectorSetValue n))
+    (hk : M.mem axis (closedRangeValue (M.number 1) n))
+    (hD : MultivariableInteriorValue (F.domainValue f) point n) :
+    PartialInteriorValue M f point n axis := by
+  obtain ⟨radius,hr,hcontrol⟩ := hD
+  refine ⟨radius,hr,?_⟩
+  intro h hh hclose
+  obtain ⟨r,rfl⟩ := (M.real_members _).mp hh
+  apply hcontrol _ (coordinatePathValueInVector point n axis _ hn hp hk ((M.real_members _).mpr ⟨r,rfl⟩))
+  rw [coordinatePathDistance point n axis r hn hp hk]
+  simpa only [absValue_number] using hclose
+
+theorem partialInteriorOfNeighborhood (f point n axis : M.Value)
+    (h : ∀ᶠ t : ℝ in 𝓝 0,
+      M.mem (coordinatePathValue point n axis (M.number (t : ℂ))) (F.domainValue f)) :
+    PartialInteriorValue M f point n axis := by
+  obtain ⟨r,hr,hball⟩ := Metric.eventually_nhds_iff.mp h
+  refine ⟨semanticObject (M.number (r : ℂ)) (M.member_isSet (numberInRPos (M := M) r hr)),
+    numberInRPos (M := M) r hr,?_⟩
+  intro t ht hclose
+  obtain ⟨s,rfl⟩ := (M.real_members _).mp ht
+  apply hball
+  rw [Real.dist_eq,sub_zero]
+  exact (realLtValue_numbers _ _).mp (by simpa only [absValue_number,semanticObject_denote] using hclose)
+
+theorem coordinatePathNeighborhoodOfInterior (domain point n axis : M.Value)
+    (hn : M.mem n (M.standard .natural))
+    (hp : M.mem point (realVectorSetValue n))
+    (hk : M.mem axis (closedRangeValue (M.number 1) n))
+    (hD : MultivariableInteriorValue domain point n) :
+    ∀ᶠ t : ℝ in 𝓝 0,
+      M.mem (coordinatePathValue point n axis (M.number (t : ℂ))) domain := by
+  obtain ⟨radius,hradius,hcontrol⟩ := hD
+  obtain ⟨r,hr,hrpos⟩ := NativeBridge.realWitnessOfPositive radius (inRPos_positive radius hradius)
+  apply Metric.eventually_nhds_iff.mpr
+  refine ⟨r,hrpos,?_⟩
+  intro t ht
+  apply hcontrol _ (coordinatePathValueInVector point n axis _ hn hp hk ((M.real_members _).mpr ⟨t,rfl⟩))
+  rw [coordinatePathDistance point n axis t hn hp hk,hr]
+  exact (realLtValue_numbers _ _).mpr (by simpa only [Real.dist_eq,sub_zero] using ht)
+
+theorem partialDerivativeOfSemanticPath (f point n axis coefficient : M.Value)
+    (raw : ℝ → M.Value)
+    (returnsReal : ∀ x, M.mem x (F.domainValue f) → M.mem (F.callValue f x) (M.standard .real))
+    (pointDomain : M.mem point (F.domainValue f))
+    (hi : PartialInteriorValue M f point n axis)
+    (hzero : raw 0=F.callValue f point)
+    (hbody : ∀ h : ℝ, M.mem (coordinatePathValue point n axis (M.number (h : ℂ))) (F.domainValue f) →
+      F.callValue f (coordinatePathValue point n axis (M.number (h : ℂ)))=raw h)
+    (hd : SemanticDerivativeAtValue M raw 0 coefficient) :
+    HasPartialDerivativeAtValue M f point n axis coefficient := by
+  obtain ⟨d,hd,native,hnative,hderivative⟩ := hd
+  have laws := partialQuotientGraphLaws f point n axis returnsReal pointDomain
+  have hz : F.callValue f point=M.number (native 0 : ℂ) := hzero.symm.trans (hnative.self_of_nhds)
+  obtain ⟨radius,hr,hcontrol⟩ := hi
+  obtain ⟨r,hrval,hrpos⟩ := NativeBridge.realWitnessOfPositive radius (inRPos_positive radius hr)
+  have pathDomain (h : ℝ) (hh : |h|<r) :
+      M.mem (coordinatePathValue point n axis (M.number (h : ℂ))) (F.domainValue f) := by
+    apply hcontrol _ ((M.real_members _).mpr ⟨h,rfl⟩)
+    rw [absValue_number,hrval]
+    exact (realLtValue_numbers _ _).mpr hh
+  refine ⟨⟨radius,hr,hcontrol⟩,0,d,by simp,hd,?_,?_⟩
+  · intro epsilon hepsilon
+    let h : ℝ := Min.min r epsilon/2
+    have hpos : 0<h := div_pos (lt_min hrpos hepsilon) (by norm_num)
+    have hsmall : h<Min.min r epsilon := by dsimp [h]; linarith [lt_min hrpos hepsilon]
+    have hrsmall : |h|<r := by rw [abs_of_pos hpos]; exact lt_of_lt_of_le hsmall (min_le_left _ _)
+    refine ⟨h,(laws.1 _).mpr ⟨(M.real_members _).mpr ⟨h,rfl⟩,?_,pathDomain h hrsmall⟩,?_,?_⟩
+    · intro eq
+      have hz : h=0 := Complex.ofReal_injective (M.number_injective (by simpa only [Complex.ofReal_zero] using eq))
+      exact (ne_of_gt hpos) hz
+    · simpa only [finiteLimitDistance,sub_zero,abs_of_pos hpos] using hpos
+    · simpa only [finiteLimitDistance,sub_zero,abs_of_pos hpos] using lt_of_lt_of_le hsmall (min_le_right _ _)
+  · intro epsilon hepsilon
+    obtain ⟨delta,hdelta,estimate⟩ := (Metric.tendsto_nhdsWithin_nhds.mp
+      (hasDerivAt_iff_tendsto_slope.mp hderivative)) epsilon hepsilon
+    obtain ⟨eta,heta,localEq⟩ := Metric.eventually_nhds_iff.mp hnative
+    refine ⟨Min.min delta eta,lt_min hdelta heta,?_⟩
+    intro h hh hpos hclose
+    have hne : h≠0 := abs_pos.mp (by simpa only [finiteLimitDistance,sub_zero] using hpos)
+    have hnear : |h|<Min.min delta eta := by simpa only [finiteLimitDistance,sub_zero] using hclose
+    have hbound := estimate (by simpa only [Set.mem_compl_iff,Set.mem_singleton_iff] using hne)
+      (by simpa only [Real.dist_eq,sub_zero] using (lt_min_iff.mp hnear).1)
+    have heq := localEq (by simpa only [Real.dist_eq,sub_zero] using (lt_min_iff.mp hnear).2)
+    refine ⟨(native h-native 0)/h,?_,?_⟩
+    · rw [laws.2 (M.number (h : ℂ)) hh,hbody h ((laws.1 _).mp hh).2.2,heq,hz,
+        M.sub_numbers,M.div_numbers _ _ (by exact_mod_cast hne),←Complex.ofReal_sub,←Complex.ofReal_div]
+    · simpa only [slope,smul_eq_mul,vsub_eq_sub,div_eq_mul_inv,Real.dist_eq,sub_zero,mul_comm] using hbound
+end Litex
+
+-- Normalize only a validated smooth-constructor coefficient, using its supplied
+-- numeric observations and the fixed polynomial identity checker.
+open Lean Elab Tactic Lean.Parser.Tactic in
+elab "litex_normalize_smooth_coefficient" "[" rules:simpArg,* "]" : tactic => do
+  let args := rules.getElems.map fun arg =>
+    (⟨arg.raw⟩ : TSyntax [`Lean.Parser.Tactic.simpStar, `Lean.Parser.Tactic.simpErase, `Lean.Parser.Tactic.simpLemma])
+  evalTactic (← `(tactic| simp only [$args,*]))
+  unless (← getGoals).isEmpty do
+    evalTactic (← `(tactic| apply congrArg _))
+    evalTactic (← `(tactic| ring))

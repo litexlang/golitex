@@ -182,8 +182,7 @@ impl LitexToLeanCompiler {
                 ));
             };
             let call_scope = SourcePosition::new(Some(site), SourceOwner::WD(wd), 0);
-            let (checked_call, _) =
-                self.compile_fn_call_with_return(application, call, &call_scope)?;
+            let (checked_call, _, _) = self.compile_fn_call(application, call, &call_scope)?;
             let arity = parameters.len();
             if call.child_obj_well_defined.len() != arity
                 || call.requirement_fact_verified.len()

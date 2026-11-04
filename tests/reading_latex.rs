@@ -120,7 +120,7 @@ fn repeated_formulas_keep_distinct_source_boundaries_and_failure_is_not_certific
     let text = blocks[0].field("content").as_str().unwrap();
     let start = child.field("start_byte").as_u64().unwrap() as usize;
     let end = child.field("end_byte").as_u64().unwrap() as usize;
-    assert_eq!(&text[start..end], "$1 = 1$;");
+    assert_eq!(&text[start..end], "We have $1 = 1$.");
     assert!(
         start > text.find("$1 = 1$;").unwrap(),
         "a proof-body statement must not bind to the identical claim goal"

@@ -11,11 +11,23 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         if !Self::function_uses_numeric_interface(signature) {
-            let (domain, domain_set) = self.compile_function_base_domain(signature, position)?;
+            // Elaborate each checked carrier once. In particular, separate
+            // copies of a builder's proof-valued predicate can otherwise leave
+            // unrelated metavariables in the domain and its sethood proof.
+            let sets = self.compile_function_input_sets(signature, position)?;
+            let names = (0..sets.len())
+                .map(|i| format!("_litex_signature_input_{i}"))
+                .collect::<Vec<_>>();
+            let bindings = sets
+                .iter()
+                .zip(&names)
+                .map(|(set, name)| format!("let {name} := {set}; "))
+                .collect::<String>();
+            let (domain, domain_set) = Self::function_base_domain_terms(&names);
             let output = self.compile_object_reference(&signature.ret_set, position)?;
             let guard = self.compile_function_packed_guard_template(signature, position)?;
             return Ok(format!(
-                "(let _litex_output := {output}; Litex.FunctionSignature.withGuard (M := M) {domain} (Litex.denote _litex_output) {domain_set} (Litex.isSet _litex_output) {guard})"
+                "(show Litex.FunctionSignature M from {bindings}let _litex_output := {output}; Litex.FunctionSignature.withGuard (M := M) {domain} (Litex.denote _litex_output) {domain_set} (Litex.isSet _litex_output) {guard})"
             ));
         }
         let domains = self.compile_function_domains(signature, position)?;
@@ -125,11 +137,15 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
         let sets = self.compile_function_input_sets(signature, position)?;
+        Ok(Self::function_base_domain_terms(&sets))
+    }
+
+    fn function_base_domain_terms(sets: &[String]) -> (String, String) {
         if sets.len() == 1 {
-            return Ok((
+            return (
                 format!("(Litex.denote {})", sets[0]),
                 format!("(Litex.isSet {})", sets[0]),
-            ));
+            );
         }
         let values = format!(
             "![{}]",
@@ -143,10 +159,10 @@ impl LitexToLeanCompiler {
             .map(|set| format!("Litex.isSet {set}"))
             .collect::<Vec<_>>();
         let proofs = finite_vector_proof(&proofs);
-        Ok((
+        (
             format!("(Litex.FiniteFunction.cartValue (M := M) {values})"),
             format!("(Litex.FiniteFunction.cart_isSet (M := M) {values} {proofs})"),
-        ))
+        )
     }
 
     pub(in crate::compile_to_lean) fn compile_function_packed_values(
@@ -416,14 +432,10 @@ impl LitexToLeanCompiler {
             let wd = success_object_wd(result, value)?;
             self.compile_wd(wd, producer)?;
             self.compile_numeric_carrier_alias(value, producer)
-        })?.ok_or_else(|| {
-            #[cfg(test)]
-            eprintln!("Numeric carrier diagnostic: {}\n{}", carrier.readable_string(), std::backtrace::Backtrace::force_capture());
-            LeanCompileError::new(
-                "Function/NumericCarrierProducer",
-                "A numeric carrier needs its preceding original RHS/let alias producer, not an equality discovered from the final environment.",
-            )
-        })
+        })?.ok_or_else(|| LeanCompileError::new(
+            "Function/NumericCarrierProducer",
+            "A numeric carrier needs its preceding original RHS/let alias producer, not an equality discovered from the final environment.",
+        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_function_guard_template(
@@ -507,8 +519,9 @@ impl LitexToLeanCompiler {
             .flat_map(|group| &group.params)
             .map(|parameter| format!("(_raw_i{} : M.Value)", parameter.id.value()))
             .collect::<Vec<_>>();
-        let body =
-            self.compile_function_raw_expression(&function.equal_to, &function.body, position)?;
+        let body = self.with_function_body_position(function, position, |body_position| {
+            self.compile_function_raw_expression(&function.equal_to, &function.body, body_position)
+        })?;
         Ok(format!("(fun {} => {body})", parameters.join(" ")))
     }
 
@@ -1291,24 +1304,26 @@ impl LitexToLeanCompiler {
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<(), LeanCompileError> {
+        fn callable_carrier(carrier: &Obj) -> bool {
+            match carrier {
+                Obj::FunctionSpace(FunctionSpace::FnSet(_))
+                | Obj::ProductShape(ProductShape::Cart(_))
+                | Obj::SetFormer(
+                    SetFormer::MatrixSet(_) | SetFormer::FiniteSeqSet(_) | SetFormer::SeqSet(_),
+                ) => true,
+                Obj::SetFormer(SetFormer::SetBuilder(builder)) => {
+                    callable_carrier(&builder.param_set)
+                }
+                _ => false,
+            }
+        }
         if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
             if matches!(
                 position.visible_parameter(*id, &self.runtime),
-                Ok((
-                    _,
-                    Some(
-                        Obj::FunctionSpace(FunctionSpace::FnSet(_))
-                            | Obj::SetFormer(
-                                SetFormer::MatrixSet(_)
-                                    | SetFormer::FiniteSeqSet(_)
-                                    | SetFormer::SeqSet(_)
-                            )
-                    ),
-                    _,
-                    _
-                ))
+                Ok((_, Some(carrier), _, _)) if callable_carrier(carrier)
             ) || position.visible_function(id).is_ok()
                 || position.visible_recursive_function(id).is_ok()
+                || position.visible_recursive_self(id).is_ok()
             {
                 return Ok(());
             }
@@ -1494,6 +1509,8 @@ impl LitexToLeanCompiler {
                 | AtomicFact::NotHasSequenceLiminfFact(_)
                 | AtomicFact::NotHasFunctionLimitFact(_)
                 | AtomicFact::NotFunctionContinuousAtFact(_)
+                | AtomicFact::NotFunctionContinuousFact(_)
+                | AtomicFact::NotFunctionLipschitzFact(_)
                 | AtomicFact::NotHasDerivativeAtFact(_)
                 | AtomicFact::NotFunctionDifferentiableAtFact(_)
                 | AtomicFact::NotRealAccumulationFact(_)
@@ -1550,12 +1567,26 @@ impl LitexToLeanCompiler {
                     format!("(Litex.{name}Value M {})", arguments[0])
                 }
             }
+            AtomicFact::FunctionLipschitzFact(_) => format!(
+                "(Litex.FunctionLipschitzValue M {} {})",
+                arguments[0], arguments[1]
+            ),
             AtomicFact::FunctionContinuousAtFact(f) => format!(
                 "(Litex.FunctionContinuousAtValue M .{} {} {})",
                 super::compile_function_continuity::continuity_side(f.side),
                 arguments[0],
                 arguments[1]
             ),
+            AtomicFact::FunctionContinuousFact(f)
+                if f.property == FunctionContinuityProperty::Continuous =>
+            {
+                format!("(Litex.FunctionContinuousValue M {})", arguments[0])
+            }
+            AtomicFact::FunctionContinuousFact(f)
+                if f.property == FunctionContinuityProperty::UniformContinuous =>
+            {
+                format!("(Litex.FunctionUniformContinuousValue M {})", arguments[0])
+            }
             f @ (AtomicFact::HasSequenceLimsupFact(_) | AtomicFact::HasSequenceLiminfFact(_)) => {
                 let (_, _, upper, _) = super::compile_sequence_extremum::extremum_parts(f).unwrap();
                 format!(
@@ -1604,17 +1635,24 @@ impl LitexToLeanCompiler {
                     MultivariableAnalysisRelation::TotalDerivativeAt(_) => {
                         "HasTotalDifferentialAtValue"
                     }
+                    MultivariableAnalysisRelation::ScalarDifferentiableAt(_) => {
+                        "ScalarDifferentiableAtValue"
+                    }
+                    MultivariableAnalysisRelation::ScalarContinuousAt(_) => {
+                        "ScalarMultivariableContinuousAtValue"
+                    }
+                    MultivariableAnalysisRelation::VectorContinuousAt(_) => {
+                        "VectorMultivariableContinuousAtValue"
+                    }
+                    MultivariableAnalysisRelation::TotalDifferentiableAt(_) => {
+                        "VectorDifferentiableAtValue"
+                    }
                     MultivariableAnalysisRelation::LaplacianAt(_) => "HasLaplacianAtValue",
                     MultivariableAnalysisRelation::JacobianAt(_) => "HasJacobianAtValue",
                     MultivariableAnalysisRelation::DivergenceAt(_) => "HasDivergenceAtValue",
                     MultivariableAnalysisRelation::CurlAt(_) => "HasCurlAtValue",
                     MultivariableAnalysisRelation::SecondPartialDerivativeAt(_) => {
                         "HasSecondPartialAtValue"
-                    }
-                    _ => {
-                        return Err(LeanCompileError::unsupported(
-                            "Function/MultivariableFamily",
-                        ));
                     }
                 };
                 format!("(Litex.{name} M {})", arguments.join(" "))
@@ -1769,8 +1807,10 @@ impl LitexToLeanCompiler {
                         )?
                     ));
                 }
+                // A named predicate keeps its declaration's canonical forall
+                // binders even when its arguments are rendered as raw values.
                 for clause in &definition.statement.iff_facts {
-                    clauses.push(self.compile_function_raw_predicate(
+                    clauses.push(self.compile_canonical_predicate_value(
                         clause,
                         &producer,
                         &substituted,

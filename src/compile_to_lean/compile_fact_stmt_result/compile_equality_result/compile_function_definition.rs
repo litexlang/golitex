@@ -328,6 +328,7 @@ impl LitexToLeanCompiler {
                 "_matrix_beta_call",
                 callable,
                 expanded,
+                None,
                 parent_wd,
                 position,
             )?;
@@ -431,12 +432,15 @@ impl LitexToLeanCompiler {
             function,
             known_path,
             expanded,
+            None,
             position,
         )
     }
 
     /// Shared elimination of an original checked call and its recorded formula.
     /// Both equality beta and eval consume their own evidence through this law.
+    /// Reduction callers may supply ordered argument congruences. The original
+    /// call still supplies domain evidence; no rewritten call is re-verified.
     pub(in crate::compile_to_lean) fn compile_checked_function_beta(
         &self,
         application: &Obj,
@@ -444,6 +448,7 @@ impl LitexToLeanCompiler {
         function: &AnonymousFn,
         known_path: Option<&KnownEqualityPathProof>,
         expanded: &Obj,
+        reduced_arguments: Option<(&[Box<Obj>], &[String])>,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let Obj::FnObj(call) = application else {
@@ -494,8 +499,16 @@ impl LitexToLeanCompiler {
                 "The original beta arguments differ from the literal's ordered parameters.",
             ));
         }
+        let arguments = reduced_arguments.map_or(call.body[0].as_slice(), |(args, _)| args);
+        if arguments.len() != parameters.len()
+            || reduced_arguments.is_some_and(|(_, equalities)| equalities.len() != arguments.len())
+        {
+            return Err(LeanCompileError::unsupported(
+                "FunctionDefinition/ReducedArguments",
+            ));
+        }
         let mut substitution = HashMap::new();
-        for (parameter, argument) in parameters.iter().zip(&call.body[0]) {
+        for (parameter, argument) in parameters.iter().zip(arguments) {
             if substitution
                 .insert(parameter.id, argument.as_ref().clone())
                 .is_some()
@@ -510,60 +523,78 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::new("FunctionDefinition/ParentSubstitution", "The captured beta endpoint is not the exact binder-ID substitution of the selected body."));
         }
         let actual = self.compile_wd(parent_wd, position)?;
-        let (literal, head_equal) = if let Some(path) = known_path {
+        let (domain, output, packed_body) =
+            self.compile_function_literal_parts(function, position, &HashMap::new())?;
+        let graph = format!(
+            "(Litex.FunctionSemantics.graphValue (M := M) {domain} {output} {packed_body})"
+        );
+        let head_equal = if let Some(path) = known_path {
             let literal = Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.clone()));
             let head = function_head_object(call.head.as_ref())?;
-            let equality = self.compile_equality_path(&head, &literal, path, position)?;
-            (self.compile_object_reference(&literal, position)?, equality)
+            let equal = self.compile_equality_path(&head, &literal, path, position)?;
+            let term = self.compile_object_reference(&literal, position)?;
+            format!("(({equal}).trans (show Litex.denote {term} = {graph} from rfl))")
         } else {
+            // A direct literal is definitional. In an applied body, the caller
+            // closes this same proof under its recorded parameter equalities.
+            "rfl".to_string()
+        };
+        let numeric = Self::function_uses_numeric_interface(actual_domain);
+        let (signature, original_input, input_domain) = if !numeric {
             (
-                "_litex_original.val.function".to_string(),
-                "rfl".to_string(),
+                "_litex_original.val.signature".to_string(),
+                "(Litex.denote _litex_original.val.argument)".to_string(),
+                "_litex_original.wd.2".to_string(),
+            )
+        } else if parameters.len() == 1 {
+            let args = "_litex_original.val.input _litex_original.val.output _litex_original.val.output_isSet _litex_original.val.guard";
+            (format!("(Litex.FunctionSignature.oneTarget {args})"),
+             "(Litex.denote _litex_original.val.argument)".to_string(),
+             format!("((Litex.FunctionSignature.oneTarget_domain {args} _).mpr _litex_original.wd.2)"))
+        } else {
+            let args = "_litex_original.val.firstInput _litex_original.val.secondInput _litex_original.val.output _litex_original.val.output_isSet _litex_original.val.guard";
+            (format!("(Litex.FunctionSignature.twoTarget {args})"),
+             "(Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))".to_string(),
+             format!("((Litex.FunctionSignature.twoTarget_domain {args} _ _).mpr _litex_original.wd.2)"))
+        };
+        let values = arguments
+            .iter()
+            .map(|a| self.compile_normalization_value(a, position))
+            .collect::<Result<Vec<_>, _>>()?;
+        let input = if let [value] = values.as_slice() {
+            value.clone()
+        } else {
+            format!(
+                "(Litex.FiniteFunction.tupleValue (M := M) ![{}])",
+                values.join(", ")
             )
         };
-        if !Self::function_uses_numeric_interface(&function.body) {
-            let endpoint = self.compile_normalization_value(expanded, position)?;
-            let application_value = self.compile_normalization_value(application, position)?;
-            let body_equality = self.compile_packed_function_body_equality(
-                function,
-                &call.body[0],
-                "_litex_original.val.argument",
-                &endpoint,
-                position,
-            )?;
-            return Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f (Litex.denote _litex_original.val.argument)) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd (Litex.denote _litex_original.val.argument) _litex_original.wd.2\n  exact _litex_call_eq.trans (_litex_beta.trans {body_equality})\n)"));
-        }
-        let (constructor_arguments, target) =
-            self.compile_function_constructor_arguments(&function.body, position)?;
-        let guard = self.compile_function_guard_template(&function.body, position)?;
-        let body = self.compile_function_body_template(function, position)?;
+        let packed =
+            self.compile_normalization_packed_argument_denotation(&call.body[0], position)?;
+        let input_equal = if let Some((_, equalities)) = reduced_arguments {
+            let reduced = if let [equal] = equalities {
+                equal.clone()
+            } else {
+                format!(
+                    "(congrArg (Litex.FiniteFunction.tupleValue (M := M)) {})",
+                    finite_vector_equality(equalities)
+                )
+            };
+            format!("(({packed}).trans {reduced})")
+        } else {
+            packed
+        };
+        let template = self.compile_function_body_template(function, position)?;
+        let body_equal = self.compile_function_packed_application_equality(&template, &values)?;
         let endpoint = self.compile_normalization_value(expanded, position)?;
         let application_value = self.compile_normalization_value(application, position)?;
-        // The caller already supplied this exact WD. Normalize its head and
-        // arguments without asking for a second producer of a substituted call.
         let head = function_head_object(call.head.as_ref())?;
         let head_denotation = self.compile_normalization_denotation(&head, position)?;
-        let input_denotation =
+        let packed_denotation =
             self.compile_normalization_packed_argument_denotation(&call.body[0], position)?;
-        let source_equal = format!("(show Litex.denote _litex_original = {application_value} from congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {head_denotation} {input_denotation})");
-        let arguments_equal = call.body[0]
-            .iter()
-            .map(|argument| self.compile_normalization_denotation(argument, position))
-            .collect::<Result<Vec<_>, _>>()?;
-        let (argument, domain_proof, body_equality) = if parameters.len() == 1 {
-            (
-                "(Litex.denote _litex_original.val.argument)".to_string(),
-                format!("((Litex.FunctionSignature.{} {constructor_arguments} {guard} _).mpr _litex_original.wd.2)", if target { "oneTarget_domain" } else { "one_domain" }),
-                format!("(show _litex_formula.val.bodyValue (Litex.denote _litex_original.val.argument) = {endpoint} from congrArg {body} {})", arguments_equal[0]),
-            )
-        } else {
-            (
-                "(Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))".to_string(),
-                format!("((Litex.FunctionSignature.{} {constructor_arguments} {guard} _ _).mpr _litex_original.wd.2)", if target { "twoTarget_domain" } else { "two_domain" }),
-                format!("(show _litex_formula.val.bodyValue (Litex.FiniteFunction.pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second)) = {endpoint} from (congrArg (fun (_pair : M.Value × M.Value) => {body} _pair.1 _pair.2) (Litex.FiniteFunction.unpack_pack2 (M := M) (Litex.denote _litex_original.val.first) (Litex.denote _litex_original.val.second))).trans (congrArg₂ {body} {} {}))", arguments_equal[0], arguments_equal[1]),
-            )
-        };
-        Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_formula := {literal}\n  have _litex_head_eq : Litex.Same _litex_original.val.function _litex_formula := {head_equal}\n  have _litex_call_eq := congrArg (fun _f => Litex.FunctionSemantics.callValue (M := M) _f {argument}) _litex_head_eq\n  have _litex_beta := Litex.FunctionSemantics.call_graphValue _ _ _ _litex_formula.wd {argument} {domain_proof}\n  exact (Eq.symm {source_equal}).trans (_litex_call_eq.trans (_litex_beta.trans {body_equality}))\n)"))
+        // The original receiver may be a generic function parameter. Its WD
+        // supplies function membership, never FormulaFn-specific body fields.
+        Ok(format!("(show {application_value} = {endpoint} from by\n  let _litex_original := {actual}\n  let _litex_signature : Litex.FunctionSignature M := {signature}\n  have _litex_source : Litex.denote _litex_original = {application_value} := congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) {head_denotation} {packed_denotation}\n  have _litex_head : Litex.denote _litex_original.val.function = {graph} := {head_equal}\n  have _litex_input : {original_input} = {input} := {input_equal}\n  have _litex_member : M.mem {graph} (Litex.FunctionSemantics.fnSetValue _litex_signature.domain _litex_signature.output) := (congrArg (fun _head => M.mem _head (Litex.FunctionSemantics.fnSetValue _litex_signature.domain _litex_signature.output)) _litex_head).mp _litex_original.wd.1\n  have _litex_domain : M.mem {input} _litex_signature.domain := (congrArg (fun _input => M.mem _input _litex_signature.domain) _litex_input).mp {input_domain}\n  exact _litex_source.symm.trans ((show Litex.denote _litex_original = Litex.FunctionSemantics.callValue {graph} {input} from congrArg₂ (Litex.FunctionSemantics.callValue (M := M)) _litex_head _litex_input).trans ((Litex.FunctionSemantics.call_graphValue_of_fnSet {domain} {output} {packed_body} _litex_signature.domain _litex_signature.output {input} _litex_member _litex_domain).trans (show {packed_body} {input} = {endpoint} from {body_equal})))\n)"))
     }
 
     pub(in crate::compile_to_lean) fn compile_normalized_function_equality(

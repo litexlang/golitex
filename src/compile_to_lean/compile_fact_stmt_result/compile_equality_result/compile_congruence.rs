@@ -701,6 +701,7 @@ impl LitexToLeanCompiler {
                 let supported = matches!(
                     (left, right),
                     (Obj::ArithmeticOperator(_), Obj::ArithmeticOperator(_))
+                        | (Obj::ComplexOperator(_), Obj::ComplexOperator(_))
                         | (
                             Obj::MatrixOperator(MatrixOperator::InnerProduct(_)),
                             Obj::MatrixOperator(MatrixOperator::InnerProduct(_))

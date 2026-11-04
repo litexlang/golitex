@@ -4,7 +4,7 @@
     {
       "kind": "Fact",
       "fixture": "examples/test_statements/fact.lit",
-      "format": "Relation/conjunction/quantifier-specific mathematics; long calculations aligned; proof-step paragraph boundaries."
+      "format": "Relation/conjunction/quantifier-specific mathematics; top-level long calculations aligned; proof facts inline."
     },
     {
       "kind": "Trust.TrustStmt",
@@ -169,32 +169,32 @@
     {
       "kind": "By.ByCasesStmt",
       "fixture": "examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit",
-      "format": "Goal paragraph; separately labelled case items with assumptions and structured proof steps."
+      "format": "Continuous goal, labelled cases, assumptions, proof steps and common conclusion in one paragraph."
     },
     {
       "kind": "By.ByContraStmt",
       "fixture": "examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit",
-      "format": "Contradiction heading; separate goal; indented negated assumption and proof steps; separate contradiction closure."
+      "format": "Run-in contradiction label, goal, contrary assumption, derivation and explicit conclusion in one paragraph."
     },
     {
       "kind": "By.ByEnumerateFiniteSetStmt",
       "fixture": "examples/test_statements/by_enumerate_finite_set_stmt.lit",
-      "format": "Finite-enumeration goal paragraph followed by a scoped proof body."
+      "format": "Finite-enumeration goal followed by inline proof steps."
     },
     {
       "kind": "By.ByInducStmt",
       "fixture": "examples/test_statements/by_induc_stmt.lit",
-      "format": "Goal and induction/base paragraph; separate base/step items when supplied; structured common-body steps."
+      "format": "Inline goal and induction/base introduction; run-in base/step labels and common proof steps."
     },
     {
       "kind": "By.ByStrongInducStmt",
       "fixture": "examples/test_statements/by_strong_induc_stmt.lit",
-      "format": "Goal and strong-induction/base paragraph; separate supplied base/step items."
+      "format": "Inline goal and strong-induction/base introduction; run-in base/step labels."
     },
     {
       "kind": "By.ByForStmt",
       "fixture": "examples/test_statements/by_for_stmt.lit",
-      "format": "Finite-iteration goal paragraph followed by a scoped proof body."
+      "format": "Finite-iteration goal followed by inline proof steps."
     },
     {
       "kind": "By.ByExtensionStmt",
@@ -234,27 +234,27 @@
     {
       "kind": "Witness.WitnessExistFact",
       "fixture": "examples/test_statements/witness_exist_fact.lit",
-      "format": "Witness values and existential goal; indented source proof steps."
+      "format": "Witness values, existential goal and inline proof steps."
     },
     {
       "kind": "Witness.WitnessAtomicFact",
       "fixture": "examples/test_statements/witness_atomic_fact.lit",
-      "format": "Witness values and named atomic goal; indented source proof steps."
+      "format": "Witness values, named atomic goal and inline proof steps."
     },
     {
       "kind": "Witness.WitnessNonemptySet",
       "fixture": "examples/test_statements/witness_nonempty_set.lit",
-      "format": "Witness and nonempty-set goal; indented source proof steps."
+      "format": "Witness, nonempty-set goal and inline proof steps."
     },
     {
       "kind": "ProofBlock.ClaimStmt",
       "fixture": "examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit",
-      "format": "Claim heading and full assertion; one proof caption with structured steps and closing square."
+      "format": "Claim heading and full assertion; one continuous proof paragraph with an inline closing square."
     },
     {
       "kind": "ProofBlock.SketchStmt",
       "fixture": "examples/test_statements/sketch_stmt.lit",
-      "format": "Explicit sketch heading and indented local statements; no proof-completion claim."
+      "format": "Explicit run-in sketch label and inline local statements; no proof-completion claim."
     },
     {
       "kind": "Command.EvalStmt",

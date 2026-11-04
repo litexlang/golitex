@@ -1447,12 +1447,6 @@ impl LitexToLeanCompiler {
                 }
                 let (operation, pairs) =
                     arithmetic_constructor_pairs(pattern, goal).ok_or_else(|| {
-                        #[cfg(test)]
-                        eprintln!(
-                            "Structure diagnostic: {} -> {}",
-                            pattern.readable_string(),
-                            goal.readable_string()
-                        );
                         LeanCompileError::unsupported("CompoundKnown/StructureConstructor")
                     })?;
                 if pairs.len() != child_matches.len() {
@@ -2191,6 +2185,8 @@ fn replace_arithmetic_children(object: &mut Obj, args: &[Obj]) -> Result<(), Lea
         Obj::IntegerOperator(IntegerOperator::Factorial(f)) => f.arg = Box::new(args[0].clone()),
         Obj::IntegerOperator(IntegerOperator::Gcd(f)) => binary!(f),
         Obj::IntegerOperator(IntegerOperator::Lcm(f)) => binary!(f),
+        Obj::IntegerOperator(IntegerOperator::Quot(f)) => binary!(f),
+        Obj::IntegerOperator(IntegerOperator::Mod(f)) => binary!(f),
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(f)) => f.arg = Box::new(args[0].clone()),
         Obj::ExpLogOperator(ExpLogOperator::Log(f)) => {
             f.base = Box::new(args[0].clone());

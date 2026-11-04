@@ -40,6 +40,7 @@ pub use real_arithmetic_constructor::{
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    NativeMatrixProperty(crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof),
     SignedNumericMembership(
         crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::SignedNumericMembershipProof,
     ),
@@ -425,6 +426,15 @@ impl Runtime {
         fact: &InFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<InFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_native_matrix_property(
+            &crate::ast::fact::AtomicFact::InFact(fact.clone()),
+            verify_state,
+        )? {
+            return Ok(Some(InFactSearchProofByBuiltinRule::NativeMatrixProperty(
+                proof,
+            )));
+        }
+
         if matches!(
             &fact.set,
             Obj::ProductShape(ProductShape::Cart(_)) | Obj::SetFormer(SetFormer::FiniteSeqSet(_))

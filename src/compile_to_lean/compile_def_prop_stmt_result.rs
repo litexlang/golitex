@@ -3,8 +3,82 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::{ExecDefPropStmtResult, ExecDefPropStmtSuccessResult};
 use crate::prelude::*;
+use std::collections::HashMap;
 
 impl LitexToLeanCompiler {
+    /// Render denotational predicate meaning with the same quantified objects
+    /// used by the checked declaration and stored source facts. This does not
+    /// replace formation: callers replay the original ordered WD separately.
+    pub(super) fn compile_canonical_predicate_value(
+        &self,
+        fact: &Fact,
+        position: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<String, LeanCompileError> {
+        let Fact::ForallFact(fact) = fact else {
+            return self.compile_function_raw_predicate(fact, position, bindings);
+        };
+        let (parameters, bound) =
+            self.compile_canonical_predicate_binders(&fact.typed_parameters, position, bindings)?;
+        let mut prefix = parameters
+            .iter()
+            .map(|(value, carrier)| {
+                format!("∀ ({value} : Litex.Obj (M := M) M.Value), ({carrier}) → ")
+            })
+            .collect::<Vec<_>>();
+        for premise in &fact.dom_facts {
+            prefix.push(format!(
+                "({}) → ",
+                self.compile_canonical_predicate_value(premise, position, &bound)?
+            ));
+        }
+        let body = conjunction_proposition(
+            fact.then_facts
+                .iter()
+                .map(|f| {
+                    self.compile_canonical_predicate_value(&f.clone().into(), position, &bound)
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+        )?;
+        Ok(format!("({}{body})", prefix.join("")))
+    }
+
+    pub(super) fn compile_canonical_predicate_binders(
+        &self,
+        parameters: &TypedParameterList,
+        position: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<(Vec<(String, String)>, HashMap<IdentifierId, String>), LeanCompileError> {
+        let mut bound = bindings.clone();
+        let mut parameters_out = Vec::new();
+        for group in &parameters.groups {
+            for parameter in &group.params {
+                let value = format!("_value_i{}", parameter.id.value());
+                let denotation = format!("(Litex.denote {value})");
+                let carrier = match &group.param_type {
+                    ParamType::Obj(s) => format!(
+                        "M.mem {denotation} {}",
+                        self.compile_function_raw_expression_bound(s, position, &bound)?
+                    ),
+                    ParamType::Set(_) => format!("M.isSet {denotation}"),
+                    kind => format!(
+                        "{} {value}",
+                        super::helper::set_kind_predicate(kind).ok_or_else(|| {
+                            LeanCompileError::unsupported("Predicate/ValueParameterKind")
+                        })?
+                    ),
+                };
+                parameters_out.push((value, carrier));
+                if bound.insert(parameter.id, denotation).is_some() {
+                    return Err(LeanCompileError::unsupported(
+                        "Predicate/ValueParameterIdentity",
+                    ));
+                }
+            }
+        }
+        Ok((parameters_out, bound))
+    }
+
     pub(in crate::compile_to_lean) fn compile_def_prop_statement(
         &self,
         result: &ExecDefPropStmtResult,

@@ -1083,6 +1083,30 @@ impl LitexToLeanCompiler {
             (
                 AtomicFact::LessFact(_),
                 AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::SumLeftStrictRightNonnegative(p),
+                ),
+            ) => self.compile_mixed_positive_sum(
+                goal,
+                &p.left_positive_proof,
+                &p.right_nonnegative_proof,
+                true,
+                position,
+            ),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
+                    LessFactSearchProofByBuiltinRule::SumLeftNonnegativeRightStrict(p),
+                ),
+            ) => self.compile_mixed_positive_sum(
+                goal,
+                &p.left_nonnegative_proof,
+                &p.right_positive_proof,
+                false,
+                position,
+            ),
+            (
+                AtomicFact::LessFact(_),
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(
                     LessFactSearchProofByBuiltinRule::FromKnownGreater(p),
                 ),
             ) => self.compile_order_known_conversion(

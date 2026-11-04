@@ -1,6 +1,10 @@
 # Tracer: structured mathematical proof layout.
 # Before: repeated Proof captions, nested quote blocks, and one display per fact.
 # Now: explicit cases, one outer Proof caption, scoped contradiction steps.
+# Prose before: Suppose n=1. [bare n=1 or n>1]; no explicit case conclusion.
+# Prose now: Suppose n=1. Then n=1 or n>1; connect steps and restate closures.
+# Flow before: every proof step, method heading and case occupied a block.
+# Flow now: one continuous proof paragraph with run-in case/method labels.
 # The Litex proof and its mathematical assumptions are unchanged.
 # Verify: target/release/litex -strict -lang en -f examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit
 # Render: target/release/litex -latex -document -lang zh -f examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit

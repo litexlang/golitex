@@ -176,7 +176,7 @@ fn record(kind: &str, source: &str, latex: &str, pattern: &str, full_source: &st
         to_latex_from_ast(&ast, &rt.global_module_manager, OutputLanguage::Chinese).unwrap();
     assert!(
         full_latex.contains(latex),
-        "isolated fragment not found in full source: {kind}"
+        "selected compiler fragment not found in full source: {kind}"
     );
     row.insert("full_source".into(), JsonValue::String(full_source.into()));
     row.insert("full_latex".into(), JsonValue::String(full_latex));
@@ -230,11 +230,14 @@ fn every_ast_type_has_a_designed_and_exercised_format() {
                 )
                 .unwrap()
             };
-            let (source, ast) = if group == "objects" {
+            let (source, latex) = if group == "objects" {
                 let source = string(row, "source").to_string();
                 let ast = parse(&mut rt, &source);
                 assert_eq!(kinds::obj_kind(object_from(&ast)), kind, "{source}");
-                (source, ast)
+                let latex =
+                    to_latex_from_ast(&ast, &rt.global_module_manager, OutputLanguage::Chinese)
+                        .unwrap();
+                (source, latex)
             } else {
                 let source = fs::read_to_string(
                     PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(string(row, "fixture")),
@@ -249,10 +252,33 @@ fn every_ast_type_has_a_designed_and_exercised_format() {
                     .into_iter()
                     .find(|value| kinds::stmt_kind(value) == kind)
                     .unwrap_or_else(|| panic!("fixture does not exercise {kind}"));
-                (target.readable_string(), vec![target.clone()])
-            };
-            let latex = to_latex_from_ast(&ast, &rt.global_module_manager, OutputLanguage::Chinese)
+                // A nested proof statement has inline typography, while the
+                // same statement at top level may have block typography.
+                // Select its exact compiler span in the original context.
+                let mapped = to_latex_with_statement_ids(
+                    &ast,
+                    &rt.global_module_manager,
+                    OutputLanguage::Chinese,
+                    &mut |value| {
+                        if value == target {
+                            Some("specimen".into())
+                        } else {
+                            None
+                        }
+                    },
+                )
                 .unwrap();
+                assert_eq!(
+                    mapped.statements.len(),
+                    1,
+                    "ambiguous source identity: {kind}"
+                );
+                let span = &mapped.statements[0];
+                (
+                    target.readable_string(),
+                    mapped.content[span.start_byte..span.end_byte].to_string(),
+                )
+            };
             assert!(
                 !latex.contains("$$") && !latex.contains("@a@") && !latex.contains("@b@"),
                 "{kind}: {latex}"
@@ -391,6 +417,9 @@ fn dimensions_preimage_scope_and_proof_paragraphs_are_not_lost() {
     )
     .unwrap();
     assert!(proof.contains(r"\textbf{Proof by contradiction.}"));
-    assert!(proof.contains("$n \\leq 1$;\n\\par\n$n = 1$;"), "{proof}");
-    assert!(proof.contains(r"\begin{quote}") && proof.contains(r"\neg\left(n > 1\right)"));
+    assert!(
+        proof.contains("Then $n \\leq 1$.\n We also have $n = 1$."),
+        "{proof}"
+    );
+    assert!(!proof.contains(r"\begin{quote}") && proof.contains(r"\neg\left(n > 1\right)"));
 }

@@ -72,6 +72,7 @@ use crate::json_output::explain::text::text;
 impl LessEqualFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::English),
             Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::English),
             Self::FloorSumLowerBound(_) => crate::json_output::explain::text::text("Floor of a sum: lower bound", "For real x,y, ⌊x⌋+⌊y⌋≤⌊x+y⌋."),
             Self::FloorSumUpperBound(_) => crate::json_output::explain::text::text("Floor of a sum: upper bound", "For real x,y, ⌊x+y⌋≤⌊x⌋+⌊y⌋+1."),
@@ -187,6 +188,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Chinese,
+            ),
             Self::StructuralRealSign(p) => {
                 super::structural_real_sign::sign_text(p, OutputLanguage::Chinese)
             }
@@ -374,6 +380,11 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::ChineseTraditional,
+            ),
             Self::StructuralRealSign(p) => {
                 super::structural_real_sign::sign_text(p, OutputLanguage::ChineseTraditional)
             }
@@ -538,6 +549,7 @@ impl LessEqualFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::French),
             Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::French),
             Self::FloorSumLowerBound(_) => text("Borne inférieure du plancher de la somme", "x,y in R => floor(x)+floor(y)<=floor(x+y)"),
             Self::FloorSumUpperBound(_) => text("Borne supérieure du plancher de la somme", "x,y in R => floor(x+y)<=floor(x)+floor(y)+1"),
@@ -655,6 +667,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Russian),
             Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Russian),
             Self::FloorSumLowerBound(_) => text("Нижняя граница целой части суммы", "x,y in R => floor(x)+floor(y)<=floor(x+y)"),
             Self::FloorSumUpperBound(_) => text("Верхняя граница целой части суммы", "x,y in R => floor(x+y)<=floor(x)+floor(y)+1"),
@@ -772,6 +785,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Spanish),
             Self::StructuralRealSign(p) => super::structural_real_sign::sign_text(p, OutputLanguage::Spanish),
             Self::FloorSumLowerBound(_) => text("Cota inferior del suelo de una suma", "x,y in R => floor(x)+floor(y)<=floor(x+y)"),
             Self::FloorSumUpperBound(_) => text("Cota superior del suelo de una suma", "x,y in R => floor(x+y)<=floor(x)+floor(y)+1"),
@@ -889,6 +903,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Arabic,
+            ),
             Self::StructuralRealSign(p) => {
                 super::structural_real_sign::sign_text(p, OutputLanguage::Arabic)
             }
@@ -1065,6 +1084,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Japanese,
+            ),
             Self::StructuralRealSign(p) => {
                 super::structural_real_sign::sign_text(p, OutputLanguage::Japanese)
             }
@@ -1230,6 +1254,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Korean,
+            ),
             Self::StructuralRealSign(p) => {
                 super::structural_real_sign::sign_text(p, OutputLanguage::Korean)
             }
@@ -1400,6 +1429,11 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Vietnamese,
+            ),
             Self::StructuralRealSign(p) => {
                 super::structural_real_sign::sign_text(p, OutputLanguage::Vietnamese)
             }
@@ -1591,6 +1625,7 @@ Self::ProductNonnegativeNegativeWeak(_) => text("ProductNonnegativeNegativeWeak"
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::NativeMatrixProperty(_) => None,
             Self::StructuralRealSign(_) => None,
             Self::SubtractionOrderPairs(_) => None,
             Self::AbsSquareRadius(_) => None,

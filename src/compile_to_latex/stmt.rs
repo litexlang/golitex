@@ -3,10 +3,11 @@ use super::fact::{
     parameters, quantifier_free, quantifier_frees,
 };
 use super::helper::{
-    call_parens, display, escape_text, ident, identifier, inline, multiline_conjunction, name,
-    predicate_or_fn_call, quantified_layout,
+    call_parens, ident, identifier, inline, multiline_conjunction, name, predicate_or_fn_call,
+    quantified_layout,
 };
 use super::language::{phrase, sentence, Phrase};
+use super::layout::Flow;
 use super::obj::{fn_set, function_space, obj};
 use super::source_map::StatementAnnotations;
 use crate::ast::fact::{Fact, ForallFact};
@@ -32,7 +33,14 @@ pub(super) fn render_statements(
 ) -> RuntimeResult<String> {
     let mut out = String::new();
     for value in values {
-        out.push_str(&statement(value, modules, lang, annotations)?);
+        out.push_str(&statement(
+            value,
+            modules,
+            lang,
+            annotations,
+            None,
+            Flow::Block,
+        )?);
         if !out.ends_with('\n') {
             out.push('\n');
         }
@@ -44,12 +52,21 @@ fn proof_steps(
     values: &[Stmt],
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    first: Phrase,
     annotations: &mut Option<StatementAnnotations<'_>>,
 ) -> RuntimeResult<String> {
     let mut out = String::new();
-    for value in values {
-        out.push_str(&statement(value, modules, lang, annotations)?);
-        out.push_str("\\par\n");
+    for (index, value) in values.iter().enumerate() {
+        let transition = if index == 0 { first } else { Phrase::Also };
+        out.push_str(&statement(
+            value,
+            modules,
+            lang,
+            annotations,
+            Some(transition),
+            Flow::Inline,
+        )?);
+        out.push(' ');
     }
     Ok(out)
 }
@@ -59,17 +76,28 @@ fn statement(
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
     annotations: &mut Option<StatementAnnotations<'_>>,
+    transition: Option<Phrase>,
+    flow: Flow,
 ) -> RuntimeResult<String> {
+    let flow = match value {
+        Stmt::By(_) | Stmt::Witness(_) => Flow::Inline,
+        Stmt::ReleaseAndExpand(
+            ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(_)
+            | ReleaseAndExpandStmt::ReleaseZornLemmaStmt(_),
+        ) => Flow::Inline,
+        Stmt::ProofBlock(ProofBlockStmt::SketchStmt(_)) => Flow::Inline,
+        _ => flow,
+    };
     let marker = annotations.as_mut().and_then(|owner| owner.record(value));
     let o = |x| obj(x, modules, lang);
     let f = |x| fact(x, modules, lang);
-    let say = |key, a: &str, b: &str, c: &str| paragraph(&sentence(lang, key, a, b, c));
+    let say = |key, a: &str, b: &str, c: &str| flow.paragraph(&sentence(lang, key, a, b, c));
     let rendered = match value {
-        Stmt::Fact(x) => fact_paragraph(x, modules, lang)?,
+        Stmt::Fact(x) => fact_paragraph(x, modules, lang, transition, flow)?,
         Stmt::Trust(x) => match x {
             TrustBoundaryStmt::TrustStmt(x) => format!(
                 "{}{}",
-                heading(Phrase::Trusted, "", lang),
+                flow.heading(Phrase::Trusted, "", lang),
                 say(
                     Phrase::Suppose,
                     &inline(&facts(&x.facts, modules, lang)?),
@@ -79,7 +107,7 @@ fn statement(
             ),
             TrustBoundaryStmt::TrustHaveStmt(x) => format!(
                 "{}{}",
-                heading(Phrase::Trusted, "", lang),
+                flow.heading(Phrase::Trusted, "", lang),
                 say(
                     Phrase::Given,
                     &inline(&parameters(&x.param_def, modules, lang)?),
@@ -88,7 +116,7 @@ fn statement(
                 )
             ),
         },
-        Stmt::Definition(x) => definition(x, modules, lang, annotations)?,
+        Stmt::Definition(x) => definition(x, modules, lang, annotations, flow)?,
         Stmt::By(x) => match x {
             ByStmt::ByThmStmt(x) => say(
                 Phrase::ByTheorem,
@@ -104,9 +132,9 @@ fn statement(
             ),
             ByStmt::ByContraStmt(x) => format!(
                 "{}{}{}{}",
-                heading(Phrase::ContradictionMethod, "", lang),
+                flow.heading(Phrase::ContradictionMethod, "", lang),
                 say(Phrase::Goal, &inline(&f(&x.to_prove)?), "", ""),
-                quote(&format!(
+                flow.quote(&format!(
                     "{}{}",
                     say(
                         Phrase::ContraryAssumption,
@@ -114,12 +142,12 @@ fn statement(
                         "",
                         ""
                     ),
-                    proof_steps(&x.proof, modules, lang, annotations)?
+                    proof_steps(&x.proof, modules, lang, Phrase::Then, annotations)?
                 )),
                 say(
-                    Phrase::Contradiction,
+                    Phrase::ContradictionConclusion,
                     &inline(&f(&x.impossible_fact)?),
-                    "",
+                    &inline(&f(&x.to_prove)?),
                     ""
                 )
             ),
@@ -135,21 +163,30 @@ fn statement(
                     "",
                     "",
                 );
-                out.push_str("\\begin{description}\n");
+                out.push_str(flow.begin_items());
                 for (i, case) in x.cases.iter().enumerate() {
-                    out.push_str(&format!(
-                        "\\item[\\textbf{{{} {}.}}] {}\\par\n",
-                        phrase(lang, Phrase::Case),
-                        i + 1,
-                        sentence(
+                    let joined = matches!(x.proofs[i].first(), Some(Stmt::Fact(_)));
+                    out.push_str(&flow.item(
+                        &format!("\\textbf{{{} {}.}}", phrase(lang, Phrase::Case), i + 1),
+                        &sentence(
                             lang,
-                            Phrase::Suppose,
+                            if joined {
+                                Phrase::SupposeFollowed
+                            } else {
+                                Phrase::Suppose
+                            },
                             &inline(&and_chain(case, modules, lang)?),
                             "",
-                            ""
+                            "",
                         ),
                     ));
-                    out.push_str(&proof_steps(&x.proofs[i], modules, lang, annotations)?);
+                    out.push_str(&proof_steps(
+                        &x.proofs[i],
+                        modules,
+                        lang,
+                        Phrase::Then,
+                        annotations,
+                    )?);
                     if let Some(impossible) = &x.impossible_facts[i] {
                         out.push_str(&say(
                             Phrase::Contradiction,
@@ -159,7 +196,13 @@ fn statement(
                         ));
                     }
                 }
-                out.push_str("\\end{description}\n");
+                out.push_str(flow.end_items());
+                out.push_str(&say(
+                    Phrase::CasesConclusion,
+                    &inline(&facts(&x.then_facts, modules, lang)?),
+                    "",
+                    "",
+                ));
                 out
             }
             ByStmt::ByInducStmt(x) => induction(
@@ -194,7 +237,13 @@ fn statement(
                     "",
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                flow.quote(&proof_steps(
+                    &x.proof,
+                    modules,
+                    lang,
+                    Phrase::WeHave,
+                    annotations
+                )?)
             ),
             ByStmt::ByForStmt(x) => format!(
                 "{}{}",
@@ -204,7 +253,13 @@ fn statement(
                     "",
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                flow.quote(&proof_steps(
+                    &x.proof,
+                    modules,
+                    lang,
+                    Phrase::WeHave,
+                    annotations
+                )?)
             ),
             ByStmt::ByExtensionStmt(x) => format!(
                 "{}{}",
@@ -214,7 +269,13 @@ fn statement(
                     "",
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                flow.quote(&proof_steps(
+                    &x.proof,
+                    modules,
+                    lang,
+                    Phrase::WeHave,
+                    annotations
+                )?)
             ),
             ByStmt::ByFnExtensionStmt(x) => format!(
                 "{}{}",
@@ -224,7 +285,13 @@ fn statement(
                     "",
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                flow.quote(&proof_steps(
+                    &x.proof,
+                    modules,
+                    lang,
+                    Phrase::WeHave,
+                    annotations
+                )?)
             ),
         },
         Stmt::ReleaseAndExpand(x) => match x {
@@ -272,7 +339,13 @@ fn statement(
             ReleaseAndExpandStmt::ReleaseAxiomOfChoiceStmt(x) => format!(
                 "{}{}",
                 say(Phrase::Choice, &inline(&o(&x.family)?), "", ""),
-                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                flow.quote(&proof_steps(
+                    &x.proof,
+                    modules,
+                    lang,
+                    Phrase::WeHave,
+                    annotations
+                )?)
             ),
             ReleaseAndExpandStmt::ReleaseRegularityAxiomStmt(x) => {
                 say(Phrase::Regularity, &inline(&o(&x.set)?), "", "")
@@ -287,7 +360,13 @@ fn statement(
                 format!(
                     "{}{}",
                     say(Phrase::Zorn, &inline(&o(&x.set)?), &inline(&names), ""),
-                    quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                    flow.quote(&proof_steps(
+                        &x.proof,
+                        modules,
+                        lang,
+                        Phrase::WeHave,
+                        annotations
+                    )?)
                 )
             }
         },
@@ -323,7 +402,13 @@ fn statement(
                         )?),
                         ""
                     ),
-                    quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                    flow.quote(&proof_steps(
+                        &x.proof,
+                        modules,
+                        lang,
+                        Phrase::WeHave,
+                        annotations
+                    )?)
                 )
             }
             WitnessStmt::WitnessAtomicFact(x) => {
@@ -347,7 +432,13 @@ fn statement(
                         &inline(&goal),
                         ""
                     ),
-                    quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                    flow.quote(&proof_steps(
+                        &x.proof,
+                        modules,
+                        lang,
+                        Phrase::WeHave,
+                        annotations
+                    )?)
                 )
             }
             WitnessStmt::WitnessNonemptySet(x) => format!(
@@ -358,20 +449,32 @@ fn statement(
                     &inline(&format!(r"{}\ne\varnothing", o(&x.set)?)),
                     ""
                 ),
-                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                flow.quote(&proof_steps(
+                    &x.proof,
+                    modules,
+                    lang,
+                    Phrase::WeHave,
+                    annotations
+                )?)
             ),
         },
         Stmt::ProofBlock(x) => match x {
             ProofBlockStmt::ClaimStmt(x) => format!(
                 "{}{}{}",
-                heading(Phrase::Claim, "", lang),
-                fact_paragraph(&x.fact, modules, lang)?,
-                proof(&x.proof, modules, lang, annotations)?
+                flow.heading(Phrase::Claim, "", lang),
+                fact_paragraph(&x.fact, modules, lang, None, flow)?,
+                proof(&x.proof, modules, lang, annotations, flow)?
             ),
             ProofBlockStmt::SketchStmt(x) => format!(
                 "{}{}",
-                heading(Phrase::Sketch, "", lang),
-                quote(&proof_steps(&x.proof, modules, lang, annotations)?)
+                flow.heading(Phrase::Sketch, "", lang),
+                flow.quote(&proof_steps(
+                    &x.proof,
+                    modules,
+                    lang,
+                    Phrase::WeHave,
+                    annotations
+                )?)
             ),
         },
         Stmt::Command(CommandStmt::EvalStmt(x)) => {
@@ -389,10 +492,11 @@ fn definition(
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
     annotations: &mut Option<StatementAnnotations<'_>>,
+    flow: Flow,
 ) -> RuntimeResult<String> {
-    let say = |key, a: &str, b: &str, c: &str| paragraph(&sentence(lang, key, a, b, c));
+    let say = |key, a: &str, b: &str, c: &str| flow.paragraph(&sentence(lang, key, a, b, c));
     Ok(match value {
-        DefinitionStmt::DefineObj(x) => define_obj(x, modules, lang)?,
+        DefinitionStmt::DefineObj(x) => define_obj(x, modules, lang, flow)?,
         DefinitionStmt::HaveFnEqualStmt(x) => {
             let fun = &x.equal_to_anonymous_fn;
             let mut names = Vec::new();
@@ -408,7 +512,7 @@ fn definition(
             );
             format!(
                 "{}{}{}",
-                heading(Phrase::Definition, &x.name.name, lang),
+                flow.heading(Phrase::Definition, &x.name.name, lang),
                 say(
                     Phrase::Let,
                     &inline(&format!(
@@ -419,7 +523,7 @@ fn definition(
                     "",
                     ""
                 ),
-                display(&equation)
+                flow.math(&equation)
             )
         }
         DefinitionStmt::HaveFnEqualCaseByCaseStmt(x) => function_cases(
@@ -430,6 +534,7 @@ fn definition(
             &x.equal_tos,
             modules,
             lang,
+            flow,
         )?,
         DefinitionStmt::DefAlgoByCasesStmt(x) => function_cases(
             &x.name,
@@ -439,6 +544,7 @@ fn definition(
             &x.equal_tos,
             modules,
             lang,
+            flow,
         )?,
         DefinitionStmt::HaveFnByInducStmt(x) => function_induction(
             &x.name,
@@ -449,6 +555,7 @@ fn definition(
             &x.cases,
             modules,
             lang,
+            flow,
         )?,
         DefinitionStmt::DefAlgoByInducStmt(x) => function_induction(
             &x.name,
@@ -459,10 +566,11 @@ fn definition(
             &x.cases,
             modules,
             lang,
+            flow,
         )?,
         DefinitionStmt::HaveFnByForallExistUniqueStmt(x) => format!(
             "{}{}",
-            heading(Phrase::Definition, &x.name.name, lang),
+            flow.heading(Phrase::Definition, &x.name.name, lang),
             say(
                 Phrase::Define,
                 &inline(&ident(&x.name.name)),
@@ -489,8 +597,8 @@ fn definition(
             );
             format!(
                 "{}{}",
-                heading(Phrase::Definition, &x.name, lang),
-                display(&quantified_layout(
+                flow.heading(Phrase::Definition, &x.name, lang),
+                flow.math(&quantified_layout(
                     r"\forall",
                     &parameters(&x.typed_parameters, modules, lang)?,
                     &body
@@ -506,7 +614,7 @@ fn definition(
                 .join(", ");
             format!(
                 "{}{}",
-                heading(Phrase::AbstractPredicate, &x.name, lang),
+                flow.heading(Phrase::AbstractPredicate, &x.name, lang),
                 say(
                     Phrase::Let,
                     &inline(&predicate_or_fn_call(&ident(&x.name), &args)),
@@ -517,23 +625,23 @@ fn definition(
         }
         DefinitionStmt::DefThmStmt(x) => format!(
             "{}{}{}",
-            heading(Phrase::Theorem, &x.name, lang),
-            fact_paragraph(&x.fact, modules, lang)?,
-            proof(&x.prove_process, modules, lang, annotations)?
+            flow.heading(Phrase::Theorem, &x.name, lang),
+            fact_paragraph(&x.fact, modules, lang, None, flow)?,
+            proof(&x.prove_process, modules, lang, annotations, flow)?
         ),
         DefinitionStmt::AxiomStmt(x) => format!(
             "{}{}",
-            heading(Phrase::Axiom, &x.name, lang),
-            forall_paragraph(&x.forall_fact, modules, lang)?
+            flow.heading(Phrase::Axiom, &x.name, lang),
+            forall_paragraph(&x.forall_fact, modules, lang, flow)?
         ),
         DefinitionStmt::DefStrategyStmt(x) => format!(
             "{}{}{}",
-            heading(Phrase::Strategy, &x.name, lang),
-            forall_paragraph(&x.forall_fact, modules, lang)?,
-            proof(&x.prove_process, modules, lang, annotations)?
+            flow.heading(Phrase::Strategy, &x.name, lang),
+            forall_paragraph(&x.forall_fact, modules, lang, flow)?,
+            proof(&x.prove_process, modules, lang, annotations, flow)?
         ),
         DefinitionStmt::DefStructStmt(x) => {
-            let mut out = heading(Phrase::Structure, &x.name, lang);
+            let mut out = flow.heading(Phrase::Structure, &x.name, lang);
             if let Some((params, dom)) = &x.param_def_with_dom {
                 let params = inline(&parameters(params, modules, lang)?);
                 if dom.is_empty() {
@@ -548,18 +656,20 @@ fn definition(
                 }
             }
             if !x.fields.is_empty() {
-                out.push_str("\\begin{description}\n");
+                out.push_str(flow.begin_items());
                 for field in &x.fields {
-                    out.push_str(&format!(
-                        "\\item[{}] {}\n",
-                        inline(&ident(&field.binding.name)),
-                        inline(&obj(&field.field_type, modules, lang)?)
-                    ));
+                    let label = inline(&ident(&field.binding.name));
+                    let value = inline(&obj(&field.field_type, modules, lang)?);
+                    if flow == Flow::Inline {
+                        out.push_str(&format!("{label}: {value}; "));
+                    } else {
+                        out.push_str(&flow.item(&label, &value));
+                    }
                 }
-                out.push_str("\\end{description}\n");
+                out.push_str(flow.end_items());
             }
             if !x.equivalent_facts.is_empty() {
-                out.push_str(&display(&facts(&x.equivalent_facts, modules, lang)?));
+                out.push_str(&flow.math(&facts(&x.equivalent_facts, modules, lang)?));
             }
             out
         }
@@ -569,62 +679,76 @@ fn definition(
                     &DefineObjStmt::HaveObjInNonemptySetStmt(y.clone()),
                     modules,
                     lang,
+                    flow,
                 )?,
-                TemplateDefEnum::HaveObjEqualStmt(y) => {
-                    define_obj(&DefineObjStmt::HaveObjEqualStmt(y.clone()), modules, lang)?
-                }
+                TemplateDefEnum::HaveObjEqualStmt(y) => define_obj(
+                    &DefineObjStmt::HaveObjEqualStmt(y.clone()),
+                    modules,
+                    lang,
+                    flow,
+                )?,
                 TemplateDefEnum::HaveObjByExistFactsStmt(y) => define_obj(
                     &DefineObjStmt::HaveObjByExistFactsStmt(y.clone()),
                     modules,
                     lang,
+                    flow,
                 )?,
                 TemplateDefEnum::HaveByReplacementAxiomStmt(y) => define_obj(
                     &DefineObjStmt::HaveByReplacementAxiomStmt(y.clone()),
                     modules,
                     lang,
+                    flow,
                 )?,
                 TemplateDefEnum::TrustHaveStmt(y) => statement(
                     &Stmt::Trust(TrustBoundaryStmt::TrustHaveStmt(y.clone())),
                     modules,
                     lang,
                     annotations,
+                    None,
+                    flow,
                 )?,
                 TemplateDefEnum::ObtainObjFromExistFact(y) => define_obj(
                     &DefineObjStmt::ObtainObjFromExistFact(y.clone()),
                     modules,
                     lang,
+                    flow,
                 )?,
                 TemplateDefEnum::ObtainObjFromAtomicFact(y) => define_obj(
                     &DefineObjStmt::ObtainObjFromAtomicFact(y.clone()),
                     modules,
                     lang,
+                    flow,
                 )?,
                 TemplateDefEnum::HaveFnEqualStmt(y) => definition(
                     &DefinitionStmt::HaveFnEqualStmt(y.clone()),
                     modules,
                     lang,
                     annotations,
+                    flow,
                 )?,
                 TemplateDefEnum::HaveFnEqualCaseByCaseStmt(y) => definition(
                     &DefinitionStmt::HaveFnEqualCaseByCaseStmt(y.clone()),
                     modules,
                     lang,
                     annotations,
+                    flow,
                 )?,
                 TemplateDefEnum::HaveFnByInducStmt(y) => definition(
                     &DefinitionStmt::HaveFnByInducStmt(y.clone()),
                     modules,
                     lang,
                     annotations,
+                    flow,
                 )?,
                 TemplateDefEnum::HaveFnByForallExistUniqueStmt(y) => definition(
                     &DefinitionStmt::HaveFnByForallExistUniqueStmt(y.clone()),
                     modules,
                     lang,
                     annotations,
+                    flow,
                 )?,
             };
-            let mut out = heading(Phrase::Template, &x.template_name, lang);
+            let mut out = flow.heading(Phrase::Template, &x.template_name, lang);
             let params = inline(&parameters(&x.template_arg_def, modules, lang)?);
             if x.template_arg_dom.is_empty() {
                 out.push_str(&say(Phrase::Let, &params, "", ""));
@@ -636,7 +760,7 @@ fn definition(
                     "",
                 ));
             }
-            out.push_str(&quote(&inner));
+            out.push_str(&flow.quote(&inner));
             out
         }
     })
@@ -646,8 +770,9 @@ fn define_obj(
     value: &DefineObjStmt,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    flow: Flow,
 ) -> RuntimeResult<String> {
-    let say = |key, a: &str, b: &str, c: &str| paragraph(&sentence(lang, key, a, b, c));
+    let say = |key, a: &str, b: &str, c: &str| flow.paragraph(&sentence(lang, key, a, b, c));
     Ok(match value {
         DefineObjStmt::LetObjStmt(x) => say(
             Phrase::Let,
@@ -736,13 +861,32 @@ fn fact_paragraph(
     value: &Fact,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    transition: Option<Phrase>,
+    flow: Flow,
 ) -> RuntimeResult<String> {
-    match value {
-        Fact::ForallFact(x) => forall_paragraph(x, modules, lang),
-        Fact::ChainFact(x) if x.prop_names.len() >= 3 => {
-            Ok(display(&calculation_layout(x, modules, lang)?))
+    // A proof uses inline formulas, preserving all clauses and comparisons.
+    // Stand-alone assertions retain their specialized display typography.
+    if flow == Flow::Inline {
+        if let Some(transition) = transition {
+            return Ok(format!(
+                "{}\n",
+                sentence(
+                    lang,
+                    transition,
+                    &inline(&fact(value, modules, lang)?),
+                    "",
+                    "",
+                )
+            ));
         }
-        Fact::AndFact(x) if x.facts.len() > 1 => Ok(display(&multiline_conjunction(
+        return Ok(format!("{};\n", inline(&fact(value, modules, lang)?)));
+    }
+    match value {
+        Fact::ForallFact(x) => forall_paragraph(x, modules, lang, flow),
+        Fact::ChainFact(x) if x.prop_names.len() >= 3 => {
+            Ok(flow.math(&calculation_layout(x, modules, lang)?))
+        }
+        Fact::AndFact(x) if x.facts.len() > 1 => Ok(flow.math(&multiline_conjunction(
             x.facts
                 .iter()
                 .map(|value| atomic(value, modules, lang))
@@ -765,20 +909,24 @@ fn fact_paragraph(
                     .map(|value| quantifier_free(value, modules, lang))
                     .collect::<RuntimeResult<Vec<_>>>()?,
             );
-            Ok(display(&quantified_layout(
+            Ok(flow.math(&quantified_layout(
                 quantifier,
                 &parameters(&x.typed_parameters, modules, lang)?,
                 &body,
             )))
         }
-        _ => Ok(display(&fact(value, modules, lang)?)),
+        _ => Ok(flow.math(&fact(value, modules, lang)?)),
     }
 }
 fn forall_paragraph(
     value: &ForallFact,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    flow: Flow,
 ) -> RuntimeResult<String> {
+    if flow == Flow::Inline {
+        return Ok(format!("{};\n", inline(&forall(value, modules, lang)?)));
+    }
     if value.dom_facts.len() > 1 || value.then_facts.len() > 1 {
         let premises = multiline_conjunction(
             value
@@ -799,7 +947,7 @@ fn forall_paragraph(
         } else {
             format!(r"{} \Longrightarrow {}", premises, conclusions)
         };
-        return Ok(display(&quantified_layout(
+        return Ok(flow.math(&quantified_layout(
             r"\forall",
             &parameters(&value.typed_parameters, modules, lang)?,
             &body,
@@ -808,9 +956,9 @@ fn forall_paragraph(
     if value.typed_parameters.groups.is_empty() {
         let then = conclusions(&value.then_facts, modules, lang)?;
         return if value.dom_facts.is_empty() {
-            Ok(display(&then))
+            Ok(flow.math(&then))
         } else {
-            Ok(paragraph(&sentence(
+            Ok(flow.paragraph(&sentence(
                 lang,
                 Phrase::IfThen,
                 &inline(&facts(&value.dom_facts, modules, lang)?),
@@ -832,7 +980,7 @@ fn forall_paragraph(
             &then,
         )
     };
-    Ok(paragraph(&text))
+    Ok(flow.paragraph(&text))
 }
 fn theorem_call(
     value: &TheoremCall,
@@ -857,6 +1005,7 @@ fn function_cases(
     equal_tos: &[crate::ast::obj::Obj],
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    flow: Flow,
 ) -> RuntimeResult<String> {
     if cases.len() != equal_tos.len() {
         return Err(RuntimeError::Unsupported(
@@ -879,9 +1028,9 @@ fn function_cases(
     }
     Ok(format!(
         "{}{}{}",
-        heading(label, &value.name, lang),
-        function_signature(value, clause, modules, lang)?,
-        display(&format!(
+        flow.heading(label, &value.name, lang),
+        function_signature(value, clause, modules, lang, flow)?,
+        flow.math(&format!(
             "{} = \\begin{{cases}}\n{}\n\\end{{cases}}",
             predicate_or_fn_call(&ident(&value.name), &names.join(", ")),
             rows.join(" \\\\\n")
@@ -893,6 +1042,7 @@ fn function_signature(
     clause: &FnSetClause,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    flow: Flow,
 ) -> RuntimeResult<String> {
     let signature = format!(
         r"{}:\ {}",
@@ -905,13 +1055,7 @@ fn function_signature(
             lang
         )?
     );
-    Ok(paragraph(&sentence(
-        lang,
-        Phrase::Let,
-        &inline(&signature),
-        "",
-        "",
-    )))
+    Ok(flow.paragraph(&sentence(lang, Phrase::Let, &inline(&signature), "", "")))
 }
 fn function_induction(
     value: &BoundName,
@@ -922,10 +1066,11 @@ fn function_induction(
     cases: &[HaveFnByInducCase],
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    flow: Flow,
 ) -> RuntimeResult<String> {
-    let mut out = heading(label, &value.name, lang);
-    out.push_str(&function_signature(value, clause, modules, lang)?);
-    out.push_str(&paragraph(&sentence(
+    let mut out = flow.heading(label, &value.name, lang);
+    out.push_str(&function_signature(value, clause, modules, lang, flow)?);
+    out.push_str(&flow.paragraph(&sentence(
         lang,
         Phrase::Induction,
         &inline(&obj(measure, modules, lang)?),
@@ -939,7 +1084,7 @@ fn function_induction(
         }
     }
     let head = predicate_or_fn_call(&ident(&value.name), &names.join(", "));
-    out.push_str(&inductive_cases(cases, &head, modules, lang)?);
+    out.push_str(&inductive_cases(cases, &head, modules, lang, flow)?);
     Ok(out)
 }
 fn inductive_cases(
@@ -947,31 +1092,30 @@ fn inductive_cases(
     head: &str,
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
+    flow: Flow,
 ) -> RuntimeResult<String> {
-    let mut out = String::from("\\begin{description}\n");
+    let mut out = String::from(flow.begin_items());
     for (i, value) in values.iter().enumerate() {
-        out.push_str(&format!(
-            "\\item[\\textbf{{{} {}.}}] {}\\par\n",
-            phrase(lang, Phrase::Case),
-            i + 1,
-            sentence(
+        out.push_str(&flow.item(
+            &format!("\\textbf{{{} {}.}}", phrase(lang, Phrase::Case), i + 1),
+            &flow.paragraph(&sentence(
                 lang,
                 Phrase::Suppose,
                 &inline(&and_chain(&value.case_fact, modules, lang)?),
                 "",
-                ""
-            )
+                "",
+            )),
         ));
         match &value.body {
             HaveFnByInducCaseBody::EqualTo(x) => {
-                out.push_str(&display(&format!("{head} = {}", obj(x, modules, lang)?)))
+                out.push_str(&flow.math(&format!("{head} = {}", obj(x, modules, lang)?)))
             }
             HaveFnByInducCaseBody::NestedCases(xs) => {
-                out.push_str(&inductive_cases(xs, head, modules, lang)?)
+                out.push_str(&inductive_cases(xs, head, modules, lang, flow)?)
             }
         }
     }
-    out.push_str("\\end{description}\n");
+    out.push_str(flow.end_items());
     Ok(out)
 }
 #[allow(clippy::too_many_arguments)]
@@ -987,14 +1131,15 @@ fn induction(
     lang: OutputLanguage,
     annotations: &mut Option<StatementAnnotations<'_>>,
 ) -> RuntimeResult<String> {
-    let mut out = paragraph(&sentence(
+    let flow = Flow::Inline;
+    let mut out = flow.paragraph(&sentence(
         lang,
         Phrase::Goal,
         &inline(&conclusions(goals, modules, lang)?),
         "",
         "",
     ));
-    out.push_str(&paragraph(&sentence(
+    out.push_str(&flow.paragraph(&sentence(
         lang,
         key,
         &inline(&ident(param)),
@@ -1002,24 +1147,28 @@ fn induction(
         "",
     )));
     if base.is_some() || step.is_some() {
-        out.push_str("\\begin{description}\n");
+        out.push_str(flow.begin_items());
         if let Some(base) = base {
-            out.push_str(&format!(
-                "\\item[\\textbf{{{}.}}]\n{}",
-                phrase(lang, Phrase::Base),
-                proof_steps(base, modules, lang, annotations)?
+            out.push_str(&flow.item(
+                &flow.heading(Phrase::Base, "", lang),
+                &proof_steps(base, modules, lang, Phrase::WeHave, annotations)?,
             ));
         }
         if let Some(step) = step {
-            out.push_str(&format!(
-                "\\item[\\textbf{{{}.}}]\n{}",
-                phrase(lang, Phrase::Step),
-                proof_steps(step, modules, lang, annotations)?
+            out.push_str(&flow.item(
+                &flow.heading(Phrase::Step, "", lang),
+                &proof_steps(step, modules, lang, Phrase::WeHave, annotations)?,
             ));
         }
-        out.push_str("\\end{description}\n");
+        out.push_str(flow.end_items());
     }
-    out.push_str(&proof_steps(body, modules, lang, annotations)?);
+    out.push_str(&proof_steps(
+        body,
+        modules,
+        lang,
+        Phrase::WeHave,
+        annotations,
+    )?);
     Ok(out)
 }
 fn bound_names(names: &[BoundName]) -> String {
@@ -1029,33 +1178,20 @@ fn bound_names(names: &[BoundName]) -> String {
         .collect::<Vec<_>>()
         .join(", ")
 }
-fn heading(key: Phrase, title: &str, lang: OutputLanguage) -> String {
-    format!(
-        "\\par\\medskip\\noindent\\textbf{{{}{}{}.}}\\par\\nopagebreak[4]\n",
-        phrase(lang, key),
-        if title.is_empty() { "" } else { " " },
-        escape_text(title)
-    )
-}
-fn paragraph(text: &str) -> String {
-    format!("\\par\\noindent {text}\\par\n")
-}
-fn quote(text: &str) -> String {
-    format!("\\begin{{quote}}\n{text}\\end{{quote}}\n")
-}
 fn proof(
     body: &[Stmt],
     modules: &GlobalModuleManager,
     lang: OutputLanguage,
     annotations: &mut Option<StatementAnnotations<'_>>,
+    flow: Flow,
 ) -> RuntimeResult<String> {
     if body.is_empty() {
         Ok(String::new())
     } else {
-        Ok(format!(
-            "{}{}\\par\\nobreak\\hfill$\\square$\\par\n",
-            heading(Phrase::Proof, "", lang),
-            proof_steps(body, modules, lang, annotations)?
-        ))
+        Ok(flow.paragraph(&format!(
+            "{}{}$\\square$",
+            Flow::Inline.heading(Phrase::Proof, "", lang),
+            proof_steps(body, modules, lang, Phrase::WeHave, annotations)?
+        )))
     }
 }

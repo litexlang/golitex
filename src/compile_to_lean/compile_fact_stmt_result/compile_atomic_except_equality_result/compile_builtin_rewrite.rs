@@ -183,26 +183,6 @@ impl LitexToLeanCompiler {
         closed_numeric: bool,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if !matches!(
-            goal,
-            AtomicFact::InFact(_)
-                | AtomicFact::IsSetFact(_)
-                | AtomicFact::IsFiniteSetFact(_)
-                | AtomicFact::NotEqualFact(_)
-                | AtomicFact::SubsetFact(_)
-                | AtomicFact::LessFact(_)
-                | AtomicFact::GreaterFact(_)
-                | AtomicFact::LessEqualFact(_)
-                | AtomicFact::GreaterEqualFact(_)
-                | AtomicFact::NotLessFact(_)
-                | AtomicFact::NotGreaterFact(_)
-                | AtomicFact::NotLessEqualFact(_)
-                | AtomicFact::NotGreaterEqualFact(_)
-        ) {
-            return Err(LeanCompileError::unsupported(
-                "Atomic/BuiltinRewrite/PredicateTransport",
-            ));
-        }
         let residual = match rewritten {
             Fact::AtomicFact(fact) if same_atomic_family(goal, fact) => fact,
             _ => {
@@ -464,9 +444,13 @@ impl LitexToLeanCompiler {
                     compiled_child.1,
                 ))
             }
-            _ => Err(LeanCompileError::unsupported(
-                "Atomic/BuiltinRewrite/PredicateTransport",
-            )),
+            _ => self.compile_raw_atomic_transport(
+                residual,
+                goal,
+                &arguments,
+                &compiled_child.1,
+                position,
+            ),
         }
     }
 }

@@ -2,7 +2,7 @@ use super::compile_def_struct_stmt_result::{has_dependent_fields, validate_struc
 use super::compile_struct_conditions::field_substitution;
 use super::compile_struct_header::header_substitution;
 use super::helper::{ensure_object, instantiated_object_matches};
-use super::source_position::{SourceOwner, SourcePosition};
+use super::source_position::{visit_complete_wd, SourceConstructor, SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     FieldAccessObjWellDefinedProof, StructishObjWellDefinedProofByDef,
@@ -66,6 +66,32 @@ impl LitexToLeanCompiler {
         proof: &FieldAccessObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
+        let (prefix, _) = self.compile_struct_projection_prefix(
+            access,
+            proof,
+            position,
+            &mut |_, _, _, _, _| Ok(None),
+        )?;
+        let n = proof.projection_steps.len();
+        Ok((
+            format!("({prefix};\n_field_value_{n})"),
+            format!("({prefix};\n(by exact _field_member_{n}))"),
+        ))
+    }
+
+    fn compile_struct_projection_prefix(
+        &self,
+        access: &FieldAccess,
+        proof: &FieldAccessObjWellDefinedProof,
+        position: &SourcePosition<'_>,
+        final_constructor: &mut impl FnMut(
+            &crate::execute::ExecDefStructStmtSuccessResult,
+            &SourcePosition<'_>,
+            usize,
+            &[String],
+            usize,
+        ) -> Result<Option<String>, LeanCompileError>,
+    ) -> Result<(String, Option<String>), LeanCompileError> {
         let member = self.validate_struct_projection(access, proof, position)?;
         let receiver = self.compile_object_reference(&access.obj, position)?;
         let mut lines = vec![
@@ -88,6 +114,7 @@ impl LitexToLeanCompiler {
             self.compile_struct_reference_arguments(carrier, position)?
         };
         bind_projection_arguments(&mut lines, &mut arguments, 0);
+        let mut constructor = None;
         for (depth, step) in proof.projection_steps.iter().enumerate() {
             let (declaration, producer, declaration_index) =
                 position.visible_struct(&step.carrier.name)?;
@@ -129,16 +156,167 @@ impl LitexToLeanCompiler {
                     depth,
                 )?;
                 bind_projection_arguments(&mut lines, &mut arguments, next);
+            } else {
+                constructor = final_constructor(declaration, &producer, index, &arguments, depth)?;
             }
         }
-        let n = proof.projection_steps.len();
-        let prefix = lines.join(";\n");
-        Ok((
-            format!("({prefix};\n_field_value_{n})"),
-            // Check the projection proof after elaborating its dependent
-            // carrier arguments, rather than inferring them from the goal set.
-            format!("({prefix};\n(by exact _field_member_{n}))"),
-        ))
+        Ok((lines.join(";\n"), constructor))
+    }
+
+    pub(super) fn compile_struct_field_constructor_reference(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        position.with_visible_field_constructor(object, &mut |evidence, caller| {
+            if let SourceConstructor::Inferred(store) = evidence {
+                return self.compile_released_field_constructor(object, store, caller);
+            }
+            let SourceConstructor::Checked(wd) = evidence else { return Ok(None); };
+            let DetailedObjWellDefinedProof::ByDef {
+                obj: Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)),
+                proof: ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(proof)), ..
+            } = wd.detailed_ref() else { return Ok(None); };
+            let step = proof.projection_steps.last().ok_or_else(|| LeanCompileError::unsupported("StructField/ProjectionStages"))?;
+            let (declaration, _, _) = caller.visible_struct(&step.carrier.name)?;
+            let mut substitution = header_substitution(&declaration.statement, &step.carrier)?;
+            substitution.extend(field_substitution(&declaration.statement, &field_receiver(access, access.fields.len().saturating_sub(1))));
+            if !has_field_constructor(object, &substitution, declaration, step.field_index, caller)? {
+                return Ok(None);
+            }
+            let (prefix, constructor) = self.compile_struct_projection_prefix(access, proof, caller,
+                &mut |declaration, producer, index, arguments, depth| {
+                    self.compile_projected_field_constructor(object, &substitution,
+                        declaration, producer, index, arguments, depth)
+                })?;
+            Ok(constructor.map(|term| format!("({prefix};\n{term})")))
+        })
+    }
+
+    fn compile_released_field_constructor(
+        &self,
+        object: &Obj,
+        store: &StoreFactResult,
+        caller: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        let (SourceOwner::StructLayer(layer), StoreFactResult::AtomicFact(stored)) =
+            (caller.owner, store)
+        else {
+            return Ok(None);
+        };
+        let AtomicFact::InFact(member) = &stored.fact else {
+            return Ok(None);
+        };
+        let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) =
+            &member.element
+        else {
+            return Ok(None);
+        };
+        let [name] = access.fields.as_slice() else {
+            return Ok(None);
+        };
+        if access.obj.ir() != layer.obj.ir() {
+            return Ok(None);
+        }
+        let (declaration, producer, _) = caller.visible_struct(&layer.struct_obj.name)?;
+        validate_struct(declaration)?;
+        let index = declaration
+            .statement
+            .fields
+            .iter()
+            .position(|f| &f.binding.name == name)
+            .ok_or_else(|| LeanCompileError::unsupported("StructField/Name"))?;
+        let mut substitution = header_substitution(&declaration.statement, &layer.struct_obj)?;
+        substitution.extend(field_substitution(&declaration.statement, &layer.obj));
+        if !has_field_constructor(object, &substitution, declaration, index, &producer)? {
+            return Ok(None);
+        }
+        if !instantiated_object_matches(
+            &declaration.statement.fields[index].field_type,
+            &member.set,
+            &substitution,
+        ) || self.resolve_fact(member.fact_id, caller)? != Fact::AtomicFact(stored.fact.clone())
+        {
+            return Err(LeanCompileError::unsupported("StructField/ReleasedCarrier"));
+        }
+        self.cited_fact_reference(member.fact_id, caller)?;
+        let (carrier, membership) = self.compile_struct_receiver(&layer.obj, caller)?;
+        if carrier != layer.struct_obj {
+            return Err(LeanCompileError::unsupported("StructField/ReceiverCarrier"));
+        }
+        let receiver = self.compile_object_reference(&layer.obj, caller)?;
+        let cart = self.compile_struct_cart_reference(
+            &carrier,
+            "_field_value_0",
+            "_field_record_member",
+            caller,
+        )?;
+        let cart_member = self.compile_struct_cart_membership(
+            &carrier,
+            "_field_value_0",
+            "_field_record_member",
+            caller,
+        )?;
+        let mut lines = vec![
+            format!("let _field_value_0 := {receiver}"),
+            format!("let _field_record_member := {membership}"),
+            format!("let _field_cart_0 := {cart}"),
+            format!("let _field_cart_member_0 := {cart_member}"),
+        ];
+        let mut arguments = self.compile_struct_reference_arguments(&carrier, caller)?;
+        bind_projection_arguments(&mut lines, &mut arguments, 0);
+        let term = self.compile_projected_field_constructor(
+            object,
+            &substitution,
+            declaration,
+            &producer,
+            index,
+            &arguments,
+            0,
+        )?;
+        Ok(term.map(|term| format!("({};\n{term})", lines.join(";\n"))))
+    }
+
+    fn compile_projected_field_constructor(
+        &self,
+        object: &Obj,
+        substitution: &HashMap<IdentifierId, Obj>,
+        declaration: &crate::execute::ExecDefStructStmtSuccessResult,
+        producer: &SourcePosition<'_>,
+        index: usize,
+        arguments: &[String],
+        depth: usize,
+    ) -> Result<Option<String>, LeanCompileError> {
+        let terms = self.compile_projected_field_constructors(
+            declaration,
+            producer,
+            index,
+            arguments,
+            depth,
+            |wd, original| {
+                visit_complete_wd(
+                    wd,
+                    original,
+                    &mut |candidate, site| {
+                        let SourceConstructor::Checked(candidate) = candidate else {
+                            return Ok(None);
+                        };
+                        if !matches!(
+                            candidate.detailed_ref(),
+                            DetailedObjWellDefinedProof::ByDef { .. }
+                        ) || !instantiated_object_matches(candidate.obj(), object, substitution)
+                        {
+                            return Ok(None);
+                        }
+                        self.compile_wd(candidate, site)
+                            .map(|value| Some(vec![value]))
+                    },
+                    &mut |_, _| Ok(None),
+                )
+                .map(|found| found.unwrap_or_default())
+            },
+        )?;
+        Ok(terms.into_iter().next())
     }
 
     /// Instantiate the constructor already checked at the original field stage.
@@ -160,6 +338,38 @@ impl LitexToLeanCompiler {
                 "StructField/IntermediateConstructor",
             ));
         };
+        self.compile_projected_field_constructors(
+            declaration,
+            producer,
+            index,
+            arguments,
+            depth,
+            |wd, formed| match wd.detailed_ref() {
+                DetailedObjWellDefinedProof::ByDef {
+                    proof:
+                        ObjWellDefinedProofByDef::Structish(
+                            StructishObjWellDefinedProofByDef::StructObj(proof),
+                        ),
+                    ..
+                } => self.compile_struct_arguments(carrier, proof, formed),
+                _ => self.compile_struct_reference_arguments(carrier, formed),
+            },
+        )
+    }
+
+    fn compile_projected_field_constructors(
+        &self,
+        declaration: &crate::execute::ExecDefStructStmtSuccessResult,
+        producer: &SourcePosition<'_>,
+        index: usize,
+        arguments: &[String],
+        depth: usize,
+        constructors: impl FnOnce(
+            &ObjWellDefinedProof,
+            &SourcePosition<'_>,
+        ) -> Result<Vec<String>, LeanCompileError>,
+    ) -> Result<Vec<String>, LeanCompileError> {
+        let field = &declaration.statement.fields[index];
         let header = SourcePosition::new(
             Some(producer),
             SourceOwner::StructHeader(declaration),
@@ -215,16 +425,7 @@ impl LitexToLeanCompiler {
         let wd = &declaration.field_scope.fields[index].well_defined;
         ensure_object(&field.field_type, wd)?;
         let formed = SourcePosition::new(Some(&prior), SourceOwner::WD(wd), usize::MAX);
-        let constructors = match wd.detailed_ref() {
-            DetailedObjWellDefinedProof::ByDef {
-                proof:
-                    ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(
-                        proof,
-                    )),
-                ..
-            } => self.compile_struct_arguments(carrier, proof, &formed)?,
-            _ => self.compile_struct_reference_arguments(carrier, &formed)?,
-        };
+        let constructors = constructors(wd, &formed)?;
         Ok(constructors
             .into_iter()
             .map(|term| {
@@ -438,4 +639,36 @@ pub(super) fn field_receiver(access: &FieldAccess, depth: usize) -> Obj {
             fields: access.fields[..depth].to_vec(),
         }))
     }
+}
+
+/// Check the recorded WD tree before rendering any receiver or field binders.
+/// Unrelated visible fields must not trigger constructor replay.
+fn has_field_constructor(
+    object: &Obj,
+    substitution: &HashMap<IdentifierId, Obj>,
+    declaration: &crate::execute::ExecDefStructStmtSuccessResult,
+    index: usize,
+    position: &SourcePosition<'_>,
+) -> Result<bool, LeanCompileError> {
+    let stage = declaration
+        .field_scope
+        .fields
+        .get(index)
+        .ok_or_else(|| LeanCompileError::unsupported("Struct/FieldStages"))?;
+    visit_complete_wd(
+        &stage.well_defined,
+        position,
+        &mut |evidence, _| {
+            let SourceConstructor::Checked(wd) = evidence else {
+                return Ok(None);
+            };
+            Ok(
+                (matches!(wd.detailed_ref(), DetailedObjWellDefinedProof::ByDef { .. })
+                    && instantiated_object_matches(wd.obj(), object, substitution))
+                .then_some(()),
+            )
+        },
+        &mut |_, _| Ok(None),
+    )
+    .map(|found| found.is_some())
 }

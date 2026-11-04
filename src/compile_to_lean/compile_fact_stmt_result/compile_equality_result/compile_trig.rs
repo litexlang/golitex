@@ -2,7 +2,7 @@ use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::compile_to_lean::compile_fact_stmt_result::compile_obj_well_defined_result::compile_trig::trig_argument;
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_periodic_trig::{PeriodicTrigBuiltinRuleProof, PeriodicTrigNonzeroBuiltinRuleProof};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_periodic_trig::PeriodicTrigBuiltinRuleProof;
 use crate::prelude::*;
 
 // A fixed normalization adapter for the selected exact-angle certificate.
@@ -44,6 +44,11 @@ impl LitexToLeanCompiler {
         proof: &PeriodicTrigBuiltinRuleProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if EvalRational::from_obj(&proof.coefficient).is_none()
+            || !proof.integer_requirements.is_empty()
+        {
+            return self.compile_symbolic_periodic_trig(fact, proof, position);
+        }
         let (object, other) = if trig_argument(&fact.left).is_some() {
             (&fact.left, &fact.right)
         } else {
@@ -62,38 +67,89 @@ impl LitexToLeanCompiler {
         self.compile_trig_native_identity(fact, &tactic, position)
     }
 
-    pub(in crate::compile_to_lean) fn compile_periodic_trig_nonzero(
+    pub(in crate::compile_to_lean) fn compile_periodic_trig_reduction(
         &self,
-        fact: &AtomicFact,
-        proof: &PeriodicTrigNonzeroBuiltinRuleProof,
+        object: &Obj,
+        proof: &PeriodicTrigBuiltinRuleProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let AtomicFact::NotEqualFact(f) = fact else {
-            return Err(LeanCompileError::unsupported("Trig/NonzeroSubject"));
-        };
-        let (object, zero) = if trig_argument(&f.left).is_some() {
-            (&f.left, &f.right)
-        } else {
-            (&f.right, &f.left)
-        };
-        let (kind, argument) = trig_argument(object)
-            .ok_or_else(|| LeanCompileError::unsupported("Trig/NonzeroSubject"))?;
-        if kind == "Tan" || !is_exact_zero(zero) {
-            return Err(LeanCompileError::unsupported("Trig/NonzeroSubject"));
+        if EvalRational::from_obj(&proof.coefficient).is_none()
+            || !proof.integer_requirements.is_empty()
+        {
+            return self.compile_symbolic_periodic_trig_reduction(object, proof, position);
         }
+        let (kind, argument) = trig_argument(object)
+            .ok_or_else(|| LeanCompileError::unsupported("Trig/PeriodicSubject"))?;
         validate_closed_coefficient(argument, &proof.coefficient, &proof.integer_requirements)?;
-        let tactic = self.closed_trig_tactic(object, &proof.coefficient, position)?;
-        let x = self.compile_numeric_observation(&f.left, position)?;
-        let y = self.compile_numeric_observation(&f.right, position)?;
+        let (argument, argument_denotation) =
+            self.compile_periodic_real_value(argument, position, 0)?;
+        let (value, value_denotation) =
+            self.compile_periodic_real_value(&proof.value, position, 0)?;
+        let operation = crate::compile_to_lean::compile_fact_stmt_result::compile_obj_well_defined_result::compile_trig::trig_native_operation(kind)?;
+        let tactic = closed_periodic_tactic(kind, &proof.coefficient, &argument, "ring")?;
         Ok(format!(
-            "(Litex.NativeBridge.notSameOfDenoteNumber {} {} {} {} {} {} (by {tactic}))",
-            self.compile_object_reference(&f.left, position)?,
-            self.compile_object_reference(&f.right, position)?,
-            x.0,
-            y.0,
-            x.1,
-            y.1
+            "((congrArg (Litex.realUnaryValue (M := M) {operation}) {argument_denotation}).trans ((Litex.realUnaryValue_number (M := M) {operation} {argument}).trans ((congrArg M.number (show (({operation} {argument}) : ℂ) = (({value} : ℝ) : ℂ) from (by {tactic}))).trans ({value_denotation}).symm)))",
         ))
+    }
+
+    /// Intermediate certificate expressions have semantic values, not fresh
+    /// source WD registrations. Replay their closed numeric denotation laws.
+    pub(super) fn compile_periodic_real_value(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+        depth: usize,
+    ) -> Result<(String, String), LeanCompileError> {
+        if depth >= 64 {
+            return Err(LeanCompileError::unsupported("Trig/ClosedValueDepth"));
+        }
+        if let Some(value) = EvalRational::from_obj(object) {
+            let (_, equality) = self.compile_eval_closed_value(object, position)?;
+            let real = exact_rational_literal(&value, "ℝ")?;
+            let complex = exact_rational_literal(&value, "ℂ")?;
+            return Ok((real.clone(), format!("(({equality}).trans (congrArg M.number (by norm_num : {complex} = (({real} : ℝ) : ℂ))))")));
+        }
+        if matches!(object, Obj::Literal(Literal::Pi(_))) {
+            let raw = self.compile_normalization_value(object, position)?;
+            return Ok((
+                "Real.pi".into(),
+                format!("(rfl : {raw} = M.number (Real.pi : ℂ))"),
+            ));
+        }
+        if let Obj::ExpLogOperator(ExpLogOperator::Sqrt(p)) = object {
+            let (arg, proof) = self.compile_periodic_real_value(&p.arg, position, depth + 1)?;
+            return Ok((format!("(Real.sqrt {arg})"), format!("((congrArg (Litex.sqrtValue (M := M)) {proof}).trans (Litex.sqrtValue_number (M := M) {arg}))")));
+        }
+        if let Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)) = object {
+            let (arg, proof) = self.compile_periodic_real_value(&p.arg, position, depth + 1)?;
+            return Ok((format!("(-{arg})"), format!("((congrArg M.negValue {proof}).trans ((M.neg_numbers (({arg} : ℝ) : ℂ)).trans (congrArg M.number (Complex.ofReal_neg {arg}).symm)))")));
+        }
+        let (left, right, operation, symbol, cast) = match object {
+            Obj::ArithmeticOperator(ArithmeticOperator::Add(p)) => {
+                (&p.left, &p.right, "add", "+", "add")
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Sub(p)) => {
+                (&p.left, &p.right, "sub", "-", "sub")
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Mul(p)) => {
+                (&p.left, &p.right, "mul", "*", "mul")
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Div(p)) => {
+                (&p.left, &p.right, "div", "/", "div")
+            }
+            _ => return Err(LeanCompileError::unsupported("Trig/ClosedSemanticValue")),
+        };
+        if operation == "div" && !EvalRational::from_obj(right).is_some_and(|n| !n.is_zero()) {
+            return Err(LeanCompileError::unsupported("Trig/ClosedDenominator"));
+        }
+        let (a, ha) = self.compile_periodic_real_value(left, position, depth + 1)?;
+        let (b, hb) = self.compile_periodic_real_value(right, position, depth + 1)?;
+        let nonzero = if operation == "div" {
+            " (by norm_num)"
+        } else {
+            ""
+        };
+        Ok((format!("({a} {symbol} {b})"), format!("((congrArg₂ M.{operation}Value {ha} {hb}).trans ((M.{operation}_numbers (({a} : ℝ) : ℂ) (({b} : ℝ) : ℂ){nonzero}).trans (congrArg M.number (Complex.ofReal_{cast} {a} {b}).symm)))")))
     }
 
     fn closed_trig_tactic(
@@ -104,61 +160,13 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         let (kind, argument) = trig_argument(object)
             .ok_or_else(|| LeanCompileError::unsupported("Trig/AngleSubject"))?;
-        if !matches!(kind, "Sin" | "Cos" | "Tan") {
-            return Err(LeanCompileError::unsupported("Trig/PeriodicOperation"));
-        }
-        let c = EvalRational::from_obj(coefficient)
-            .ok_or_else(|| LeanCompileError::unsupported("Trig/ClosedAngle"))?;
-        let period = if kind == "Tan" { 1 } else { 2 };
-        let r = c
-            .modulo_integer(period)
-            .ok_or_else(|| LeanCompileError::unsupported("Trig/AngleOverflow"))?;
-        let n = c
-            .sub(&r)
-            .and_then(|x| x.div(&EvalRational::new(period, 1)?))
-            .and_then(|x| x.to_i128_if_integer())
-            .ok_or_else(|| LeanCompileError::unsupported("Trig/AngleOverflow"))?;
-        let greater = |num, den| {
-            r.compare(&EvalRational::new(num, den).unwrap())
-                .map(|o| o == crate::rational_expression::NumberCompareResult::Greater)
-                .ok_or_else(|| LeanCompileError::unsupported("Trig/AngleOverflow"))
-        };
-        let (base, quadrant) = if greater(1, 2)? {
-            if !greater(1, 1)? {
-                (EvalRational::new(1, 1).unwrap().sub(&r), 1)
-            } else if !greater(3, 2)? {
-                (r.sub(&EvalRational::new(1, 1).unwrap()), 2)
-            } else {
-                (EvalRational::new(2, 1).unwrap().sub(&r), 3)
-            }
-        } else {
-            (Some(r.clone()), 0)
-        };
-        let base = base.ok_or_else(|| LeanCompileError::unsupported("Trig/AngleOverflow"))?;
-        let angle = match base.parts() {
-            (0, 1) => "0".to_string(),
-            (1, d @ (2 | 3 | 4 | 6)) => format!("Real.pi / {d}"),
-            _ => return Err(LeanCompileError::unsupported("Trig/ExactAngleTable")),
-        };
-        let angle = match quadrant {
-            0 => angle,
-            1 => format!("(Real.pi - ({angle}))"),
-            2 => format!("(Real.pi + ({angle}))"),
-            _ => format!("(2 * Real.pi - ({angle}))"),
-        };
         let native = self.compile_numeric_observation(argument, position)?.0;
-        let op = kind.to_lowercase();
-        let law = if kind == "Tan" {
-            "tan_add_int_mul_pi".to_string()
-        } else {
-            format!("{op}_add_int_mul_two_pi")
-        };
-        let cycle = if period == 1 {
-            "Real.pi"
-        } else {
-            "(2 * Real.pi)"
-        };
-        Ok(format!("have _angle : ({native}).re = ({angle}) + ({n} : ℤ) * {cycle} := (by (conv_lhs => norm_num); ring); rw [_angle, Real.{law}]; (conv_lhs => simp only [{EXACT_ANGLE_LAWS}]); (conv_rhs => simp only [{EXACT_ANGLE_LAWS}]); norm_num [neg_div]"))
+        closed_periodic_tactic(
+            kind,
+            coefficient,
+            &format!("({native}).re"),
+            "(conv_lhs => norm_num); ring",
+        )
     }
 
     pub(in crate::compile_to_lean) fn compile_trig_identity(
@@ -242,4 +250,84 @@ impl LitexToLeanCompiler {
             y.1
         ))
     }
+}
+
+pub(super) fn closed_periodic_tactic(
+    kind: &str,
+    coefficient: &Obj,
+    native: &str,
+    angle_normalization: &str,
+) -> Result<String, LeanCompileError> {
+    if !matches!(kind, "Sin" | "Cos" | "Tan" | "Cot") {
+        return Err(LeanCompileError::unsupported("Trig/PeriodicOperation"));
+    }
+    let c = EvalRational::from_obj(coefficient)
+        .ok_or_else(|| LeanCompileError::unsupported("Trig/ClosedAngle"))?;
+    let period = if kind == "Tan" { 1 } else { 2 };
+    let r = c
+        .modulo_integer(period)
+        .ok_or_else(|| LeanCompileError::unsupported("Trig/AngleOverflow"))?;
+    let n = c
+        .sub(&r)
+        .and_then(|x| x.div(&EvalRational::new(period, 1)?))
+        .and_then(|x| x.to_i128_if_integer())
+        .ok_or_else(|| LeanCompileError::unsupported("Trig/AngleOverflow"))?;
+    let greater = |num, den| {
+        r.compare(&EvalRational::new(num, den).unwrap())
+            .map(|o| o == crate::rational_expression::NumberCompareResult::Greater)
+            .ok_or_else(|| LeanCompileError::unsupported("Trig/AngleOverflow"))
+    };
+    let (base, quadrant) = if greater(1, 2)? {
+        if !greater(1, 1)? {
+            (EvalRational::new(1, 1).unwrap().sub(&r), 1)
+        } else if !greater(3, 2)? {
+            (r.sub(&EvalRational::new(1, 1).unwrap()), 2)
+        } else {
+            (EvalRational::new(2, 1).unwrap().sub(&r), 3)
+        }
+    } else {
+        (Some(r.clone()), 0)
+    };
+    let base = base.ok_or_else(|| LeanCompileError::unsupported("Trig/AngleOverflow"))?;
+    let angle = match base.parts() {
+        (0, 1) => "0".to_string(),
+        (1, d @ (2 | 3 | 4 | 6)) => format!("Real.pi / {d}"),
+        _ => return Err(LeanCompileError::unsupported("Trig/ExactAngleTable")),
+    };
+    let angle = match quadrant {
+        0 => angle,
+        1 => format!("(Real.pi - ({angle}))"),
+        2 => format!("(Real.pi + ({angle}))"),
+        _ => format!("(2 * Real.pi - ({angle}))"),
+    };
+    let op = kind.to_lowercase();
+    let law = if kind == "Tan" {
+        "tan_add_int_mul_pi".to_string()
+    } else {
+        format!("{op}_add_int_mul_two_pi")
+    };
+    let cycle = if period == 1 {
+        "Real.pi"
+    } else {
+        "(2 * Real.pi)"
+    };
+    let reduce = if kind == "Cot" {
+        "simp only [Litex.nativeCot]; rw [_angle, Real.cos_add_int_mul_two_pi, Real.sin_add_int_mul_two_pi]".to_string()
+    } else {
+        format!("rw [_angle, Real.{law}]")
+    };
+    let (rationalization, extra_laws) = if kind == "Cot" {
+        if base.parts() == (1, 3) {
+            (
+                "have _sqrt_three_inverse : ((Real.sqrt 3 : ℝ) : ℂ)⁻¹ = (Real.sqrt 3 : ℂ) / 3 := (by exact_mod_cast (Real.sqrt_div_self (x := (3 : ℝ))).symm); ",
+                ", div_neg, div_div_div_cancel_right₀, one_div, _sqrt_three_inverse",
+            )
+        } else {
+            ("", ", div_neg, div_div_div_cancel_right₀, one_div")
+        }
+    } else {
+        ("", "")
+    };
+    // Keep the certificate's sqrt(3)/3 form instead of the default 1/sqrt(3).
+    Ok(format!("have _angle : ({native}) = ({angle}) + ({n} : ℤ) * {cycle} := (by {angle_normalization}); {reduce}; {rationalization}norm_num [{EXACT_ANGLE_LAWS}, neg_div, -Real.tan_pi_div_six{extra_laws}]"))
 }

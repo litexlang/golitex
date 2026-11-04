@@ -1,4 +1,9 @@
+import Litex.FunctionLimitComposition
 import Litex.Multivariable
+import Litex.GlobalContinuity
+import Litex.RestrictedContinuity
+import Litex.UniformContinuity
+import Litex.Lipschitz
 import Litex.BuiltinScalar
 import Litex.BuiltinElementary
 import Litex.BuiltinComplex
@@ -10,6 +15,7 @@ import Litex.BuiltinDenseOrder
 import Litex.BuiltinNumberTheory
 import Litex.BuiltinLogarithm
 import Litex.BuiltinTrigonometry
+import Litex.RationalTrig
 import Litex.BuiltinPower
 import Litex.BuiltinFiniteIndex
 import Litex.BuiltinFolds
@@ -24,7 +30,27 @@ import Litex.RecursiveFunctions
 import Litex.BuiltinVector
 import Litex.BuiltinSequence
 import Litex.BuiltinMultivariable
+import Litex.BuiltinMatrixCandidates
+import Litex.BuiltinMatrixRank
+import Litex.BuiltinNormZero
+import Litex.BuiltinMatrixRankFactorization
+import Litex.BuiltinNormTriangle
+import Litex.BuiltinMatrixInnerAdjoint
+import Litex.BuiltinTriangularDeterminant
+import Litex.BuiltinLaplaceDeterminant
+import Litex.BuiltinCauchySchwarz
+import Litex.BuiltinRankExistence
+import Litex.MultivariableDifferentiability
+import Litex.MultivariableContinuity
+import Litex.MultivariableContinuityLimit
+import Litex.EuclideanComposition
+import Litex.EuclideanScalarAlgebra
+import Litex.EuclideanVectorAlgebra
 
+import Litex.SequenceTailOrder
+import Litex.SequenceExtremaEpsilon
+import Litex.SequenceExtremaTransport
+import Litex.SequenceExtremaAffine
 /-! Stable entrypoint for the Litex semantic library and its proved compiler adapters. -/
 
 namespace Litex
@@ -139,3 +165,4 @@ theorem matrixInversibleCarrier {M : Semantics.{u}} [F : FunctionSemantics M]
   exact hb.2.1
 
 end Litex
+

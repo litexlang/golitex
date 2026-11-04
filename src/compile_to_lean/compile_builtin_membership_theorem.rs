@@ -29,6 +29,182 @@ impl LitexToLeanCompiler {
         };
         if matches!(
             builtin.theorem,
+            BuiltinTheoremId::SequenceLimsupAddConstant
+                | BuiltinTheoremId::SequenceLiminfAddConstant
+                | BuiltinTheoremId::SequenceLimsupScaleNonnegative
+                | BuiltinTheoremId::SequenceLiminfScaleNonnegative
+                | BuiltinTheoremId::SequenceLimsupScaleNegative
+                | BuiltinTheoremId::SequenceLiminfScaleNegative
+                | BuiltinTheoremId::SequenceLimsupAddConvergent
+                | BuiltinTheoremId::SequenceLiminfAddConvergent
+                | BuiltinTheoremId::SequenceLimsupSumBound
+                | BuiltinTheoremId::SequenceLiminfSumBound
+        ) {
+            return self.compile_builtin_sequence_extrema_affine(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::SequenceLimsupCompare
+                | BuiltinTheoremId::SequenceLiminfCompare
+                | BuiltinTheoremId::SequenceLimsupEventuallyEqual
+                | BuiltinTheoremId::SequenceLiminfEventuallyEqual
+                | BuiltinTheoremId::SequenceLimsupShift
+                | BuiltinTheoremId::SequenceLiminfShift
+                | BuiltinTheoremId::SequenceLimsupNeg
+                | BuiltinTheoremId::SequenceLiminfNeg
+                | BuiltinTheoremId::SequenceLimitFromExtrema
+                | BuiltinTheoremId::SequenceExtremaOrder
+        ) {
+            return self.compile_builtin_sequence_extrema_transport(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::VectorLimitAtAdd
+                | BuiltinTheoremId::VectorLimitAtSubtract
+                | BuiltinTheoremId::VectorContinuousAtAdd
+                | BuiltinTheoremId::VectorContinuousAtSubtract
+        ) {
+            return self.compile_builtin_euclidean_vector_algebra(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MultiLimitAtAdd
+                | BuiltinTheoremId::MultiLimitAtSubtract
+                | BuiltinTheoremId::MultiLimitAtMultiply
+                | BuiltinTheoremId::MultiLimitAtDivide
+                | BuiltinTheoremId::MultiContinuousAtAdd
+                | BuiltinTheoremId::MultiContinuousAtSubtract
+                | BuiltinTheoremId::MultiContinuousAtMultiply
+                | BuiltinTheoremId::MultiContinuousAtDivide
+        ) {
+            return self.compile_builtin_euclidean_scalar_algebra(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MultiContinuousAtCompose
+                | BuiltinTheoremId::MultiLimitAtCompose
+                | BuiltinTheoremId::VectorContinuousAtCompose
+                | BuiltinTheoremId::VectorLimitAtCompose
+        ) {
+            return self.compile_builtin_euclidean_composition(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MultiContinuousAtLimit
+                | BuiltinTheoremId::MultiLimitAtContinuous
+                | BuiltinTheoremId::VectorContinuousAtLimit
+                | BuiltinTheoremId::VectorLimitAtContinuous
+        ) {
+            return self.compile_builtin_continuity_limit_bridge(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MultiContinuousAtFromDefinition
+                | BuiltinTheoremId::MultiContinuousAtToDefinition
+                | BuiltinTheoremId::VectorContinuousAtFromDefinition
+                | BuiltinTheoremId::VectorContinuousAtToDefinition
+        ) {
+            return self.compile_builtin_multivariable_continuity(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MultiDifferentiableAtFromDefinition
+                | BuiltinTheoremId::MultiDifferentiableAtToDefinition
+                | BuiltinTheoremId::VectorDifferentiableAtFromDefinition
+                | BuiltinTheoremId::VectorDifferentiableAtToDefinition
+        ) {
+            return self.compile_builtin_multivariable_differentiability(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
             BuiltinTheoremId::FnContinuousAtCompose
                 | BuiltinTheoremId::FnContinuousLeftCompose
                 | BuiltinTheoremId::FnContinuousRightCompose
@@ -138,7 +314,13 @@ impl LitexToLeanCompiler {
         }
         if matches!(
             builtin.theorem,
-            BuiltinTheoremId::SequenceLimsupConstant
+            BuiltinTheoremId::SequenceLimsupFromEpsilon
+                | BuiltinTheoremId::SequenceLiminfFromEpsilon
+                | BuiltinTheoremId::SequenceLimsupBound
+                | BuiltinTheoremId::SequenceLiminfBound
+                | BuiltinTheoremId::SequenceLimsupHit
+                | BuiltinTheoremId::SequenceLiminfHit
+                | BuiltinTheoremId::SequenceLimsupConstant
                 | BuiltinTheoremId::SequenceLiminfConstant
                 | BuiltinTheoremId::SequenceLimsupFromLimit
                 | BuiltinTheoremId::SequenceLiminfFromLimit
@@ -214,6 +396,30 @@ impl LitexToLeanCompiler {
         }
         if matches!(
             builtin.theorem,
+            BuiltinTheoremId::FnDerivativeAtNeg
+                | BuiltinTheoremId::FnDerivativeAtScale
+                | BuiltinTheoremId::FnDerivativeAtPower
+                | BuiltinTheoremId::FnDerivativeAtAdd
+                | BuiltinTheoremId::FnDerivativeAtSubtract
+                | BuiltinTheoremId::FnDerivativeAtMultiply
+                | BuiltinTheoremId::FnDerivativeAtDivide
+                | BuiltinTheoremId::FnDerivativeAtCompose
+        ) {
+            return self.compile_builtin_derivative_algebra(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
             BuiltinTheoremId::FnDerivativeAtConstant
                 | BuiltinTheoremId::FnDerivativeAtIdentity
                 | BuiltinTheoremId::FnDerivativeAtExp
@@ -243,6 +449,133 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::FnDerivativeAtNegativeInterior
         ) {
             return self.compile_builtin_real_interior(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnContinuousAtToLeft
+                | BuiltinTheoremId::FnContinuousAtToRight
+                | BuiltinTheoremId::FnContinuousFromSides
+        ) {
+            return self.compile_builtin_continuity_sides(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLipschitzFromEstimate | BuiltinTheoremId::FnLipschitzUniform
+        ) {
+            return self.compile_builtin_lipschitz(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnUniformFromEpsilon
+                | BuiltinTheoremId::FnUniformControl
+                | BuiltinTheoremId::FnUniformContinuous
+        ) {
+            return self.compile_builtin_uniform_continuity(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnContinuousConstant
+                | BuiltinTheoremId::FnContinuousIdentity
+                | BuiltinTheoremId::FnContinuousExp
+                | BuiltinTheoremId::FnContinuousSin
+                | BuiltinTheoremId::FnContinuousCos
+                | BuiltinTheoremId::FnContinuousArcsin
+                | BuiltinTheoremId::FnContinuousArccos
+                | BuiltinTheoremId::FnContinuousArctan
+                | BuiltinTheoremId::FnContinuousArccot
+                | BuiltinTheoremId::FnContinuousSinh
+                | BuiltinTheoremId::FnContinuousCosh
+                | BuiltinTheoremId::FnContinuousTanh
+                | BuiltinTheoremId::FnContinuousSech
+                | BuiltinTheoremId::FnContinuousLn
+                | BuiltinTheoremId::FnContinuousLog
+                | BuiltinTheoremId::FnContinuousTan
+                | BuiltinTheoremId::FnContinuousCot
+                | BuiltinTheoremId::FnContinuousSec
+                | BuiltinTheoremId::FnContinuousCsc
+                | BuiltinTheoremId::FnContinuousCoth
+                | BuiltinTheoremId::FnContinuousCsch
+                | BuiltinTheoremId::FnContinuousSqrt
+        ) {
+            return self.compile_builtin_global_continuity_formula(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnContinuousFromPointwise | BuiltinTheoremId::FnContinuousAt
+        ) {
+            return self.compile_builtin_global_continuity(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnDerivativeAtFromLimit | BuiltinTheoremId::FnDerivativeAtToLimit
+        ) {
+            return self.compile_builtin_derivative_quotient(
                 call,
                 builtin,
                 derivation,
@@ -371,8 +704,50 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::SequenceLimitSubtract
                 | BuiltinTheoremId::SequenceLimitMultiply
                 | BuiltinTheoremId::SequenceLimitDivide
+                | BuiltinTheoremId::SequenceLimitEventuallyEqual
+                | BuiltinTheoremId::SequenceLimitShift
+                | BuiltinTheoremId::SequenceLimitCompare
+                | BuiltinTheoremId::SequenceLimitSqueeze
         ) {
             return self.compile_builtin_sequence_limit_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::FnLimitAtContinuousCompose
+                | BuiltinTheoremId::FnLimitAtPuncturedCompose
+        ) {
+            return self.compile_builtin_function_limit_composition(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::RiemannIntegralExists
+                | BuiltinTheoremId::RiemannIntegrableFromCandidate
+                | BuiltinTheoremId::RiemannIntegralSelected
+                | BuiltinTheoremId::RiemannIntegralUnique
+        ) {
+            return self.compile_builtin_riemann_certificate(
                 call,
                 builtin,
                 derivation,
@@ -694,6 +1069,20 @@ impl LitexToLeanCompiler {
                 position,
             );
         }
+        if builtin.theorem == BuiltinTheoremId::MatrixRankFactorizationExists {
+            return self.compile_builtin_rank_existence(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if matches!(
             builtin.theorem,
             BuiltinTheoremId::MatrixRankBounds
@@ -702,8 +1091,28 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::MatrixRankTranspose
                 | BuiltinTheoremId::MatrixRankAdjoint
                 | BuiltinTheoremId::MatrixRankInvertible
+                | BuiltinTheoremId::MatrixRankProduct
+                | BuiltinTheoremId::MatrixRankFromFactorization
         ) {
             return self.compile_builtin_rank_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixInvertibleFromCandidate
+                | BuiltinTheoremId::MatrixInverseFromCandidate
+        ) {
+            return self.compile_builtin_matrix_candidate(
                 call,
                 builtin,
                 derivation,
@@ -744,6 +1153,54 @@ impl LitexToLeanCompiler {
                 position,
             );
         }
+        if builtin.theorem == BuiltinTheoremId::InnerProductCauchySchwarz {
+            return self.compile_builtin_cauchy_schwarz(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixDetLaplaceRow | BuiltinTheoremId::MatrixDetLaplaceColumn
+        ) {
+            return self.compile_builtin_laplace_determinant(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::MatrixDetUpperTriangular | BuiltinTheoremId::MatrixDetLowerTriangular
+        ) {
+            return self.compile_builtin_triangular_determinant(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if matches!(
             builtin.theorem,
             BuiltinTheoremId::MatrixDetMul
@@ -766,9 +1223,57 @@ impl LitexToLeanCompiler {
         }
         if matches!(
             builtin.theorem,
+            BuiltinTheoremId::EuclideanNormTriangle | BuiltinTheoremId::FrobeniusNormTriangle
+        ) {
+            return self.compile_builtin_norm_triangle(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::EuclideanNormZero | BuiltinTheoremId::FrobeniusNormZero
+        ) {
+            return self.compile_builtin_norm_zero(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
             BuiltinTheoremId::EuclideanNormSquare | BuiltinTheoremId::FrobeniusNormSquare
         ) {
             return self.compile_builtin_norm_theorem(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::MatrixInnerProductAdjoint {
+            return self.compile_builtin_matrix_inner_adjoint(
                 call,
                 builtin,
                 derivation,

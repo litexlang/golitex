@@ -122,9 +122,40 @@ impl LitexToLeanCompiler {
                     self.compile_structural(right, position)?
                 ))
             }
-            StructuralMembershipReason::NaturalMaxDifference { .. } => Err(
-                LeanCompileError::unsupported("StructuralMembership/OrderedSelection"),
-            ),
+            StructuralMembershipReason::NaturalMaxDifference {
+                maximum,
+                subtrahend,
+                right_operand,
+            } => {
+                let Obj::ArithmeticOperator(ArithmeticOperator::Sub(difference)) = &proof.element
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/MaxDifferenceConstructor",
+                    ));
+                };
+                let Some((left, right)) = crate::compile_to_lean::compile_fact_stmt_result::compile_obj_well_defined_result::min_max_arguments(&difference.left, true) else {
+                    return Err(LeanCompileError::unsupported("StructuralMembership/MaxDifferenceMaximum"));
+                };
+                let selected = if *right_operand { right } else { left };
+                if proof.set != StandardSet::N
+                    || maximum.set != StandardSet::N
+                    || subtrahend.set != StandardSet::N
+                    || maximum.element.ir() != difference.left.ir()
+                    || subtrahend.element.ir() != difference.right.ir()
+                    || selected.ir() != difference.right.ir()
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "StructuralMembership/MaxDifferenceSubject",
+                    ));
+                }
+                Ok(format!(
+                    "(Litex.naturalMaxDifference {} {} rfl {} {})",
+                    self.compile_object_reference(&proof.element, position)?,
+                    right_operand,
+                    self.compile_structural(maximum, position)?,
+                    self.compile_structural(subtrahend, position)?
+                ))
+            }
             StructuralMembershipReason::Known(known) => {
                 let mut fact = match self.resolve_fact(known.cite_fact_id, position)? {
                     Fact::AtomicFact(AtomicFact::InFact(fact)) => fact,

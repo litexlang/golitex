@@ -10,6 +10,7 @@ use crate::runtime::{FactId, Runtime, RuntimeResult};
 
 // Builtin rules for `a <= b`.
 pub enum LessEqualFactSearchProofByBuiltinRule {
+    NativeMatrixProperty(crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof),
     StructuralRealSign(
         crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignProof,
     ),
@@ -480,6 +481,15 @@ impl Runtime {
         fact: &crate::ast::fact::LessEqualFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<LessEqualFactSearchProofByBuiltinRule>> {
+        if let Some(proof) = self.search_native_matrix_property(
+            &crate::ast::fact::AtomicFact::LessEqualFact(fact.clone()),
+            verify_state,
+        )? {
+            return Ok(Some(
+                LessEqualFactSearchProofByBuiltinRule::NativeMatrixProperty(proof),
+            ));
+        }
+
         let existing =
             self.search_less_equal_fact_proof_by_builtin_rule_existing(fact, verify_state)?;
         if existing.is_some() {

@@ -46,6 +46,10 @@ impl LitexToLeanCompiler {
             SequenceLimitScale | SequenceLimitPower => (3, 3),
             SequenceLimitAdd | SequenceLimitSubtract | SequenceLimitMultiply => (4, 4),
             SequenceLimitDivide => (4, 6),
+            SequenceLimitEventuallyEqual => (4, 5),
+            SequenceLimitShift => (3, 3),
+            SequenceLimitCompare => (5, 5),
+            SequenceLimitSqueeze => (5, 6),
             _ => return Err(invalid("Id")),
         };
         let TheoremCallArguments::Parenthesized(args) = &call.arguments else {
@@ -101,6 +105,18 @@ impl LitexToLeanCompiler {
         }
         let goal = &builtin.conclusions[0];
         let selected = match builtin.theorem {
+            SequenceLimitEventuallyEqual
+            | SequenceLimitShift
+            | SequenceLimitCompare
+            | SequenceLimitSqueeze => {
+                super::compile_builtin_sequence_tail_order::validate_tail_order(
+                    builtin.theorem,
+                    args,
+                    req,
+                    goal,
+                )?;
+                None
+            }
             SequenceLimitAdd
             | SequenceLimitSubtract
             | SequenceLimitMultiply
@@ -392,6 +408,8 @@ impl LitexToLeanCompiler {
         )
         };
         let law = match builtin.theorem {
+            SequenceLimitEventuallyEqual | SequenceLimitShift | SequenceLimitCompare | SequenceLimitSqueeze =>
+                self.compile_sequence_tail_order_law(builtin.theorem,args,req,goal,&objects,&references,dom_proofs,position,&scope)?,
             SequenceLimitAdd | SequenceLimitSubtract | SequenceLimitMultiply | SequenceLimitDivide =>
                 self.compile_binary_sequence_limit_law(builtin.theorem, args, goal, &objects, &references, &domain(), &scope)?,
             SequenceLimitNeg | SequenceLimitAbs | SequenceLimitScale | SequenceLimitPower =>
@@ -436,8 +454,8 @@ impl LitexToLeanCompiler {
                 references[2]
             ),
             SequenceCauchyFromEpsilon => format!("Litex.sequenceCauchyOfForall {} {}", objects[0], references[1]),
-            SequenceCauchyTail => format!("(by\n  obtain ⟨_cutoff, _member, _control⟩ := {} (Litex.denote {}) {}\n  exact ⟨_cutoff, _member, _control⟩\n)", references[1], objects[1], references[2]),
-            SequenceLimitFromConvergent => references[1].clone(),
+            SequenceCauchyTail => format!("(by\n  obtain ⟨_cutoff, _member, _control⟩ := Litex.sequenceCauchyTail {} {} {}\n  exact ⟨_cutoff, _member, _control⟩\n)", objects.join(" "), references[1], references[2]),
+            SequenceLimitFromConvergent => format!("(by\n  obtain ⟨_value, _real, _limit⟩ := Litex.sequenceLimitExistsOfConvergent (Litex.denote {}) {}\n  exact ⟨_value, _real, _limit⟩\n)", objects[0], references[1]),
             SequenceLimitTail => format!(
                 "(by\n  obtain ⟨_limit_cutoff, _limit_cutoff_member, _limit_control⟩ := Litex.sequenceLimitTail {} {} {}\n  refine ⟨_limit_cutoff, _limit_cutoff_member, ?_⟩\n  exact _limit_control\n)",
                 objects.join(" "),

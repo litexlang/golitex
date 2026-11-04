@@ -50,6 +50,7 @@ impl LitexToLeanCompiler {
                         &original,
                         &component.callable,
                         &component.body,
+                        None,
                         wd,
                         producer,
                     )
@@ -167,6 +168,7 @@ impl LitexToLeanCompiler {
                 &object,
                 callable,
                 &beta.expanded_body,
+                None,
                 &evidence.application_well_defined,
                 position,
             )?;

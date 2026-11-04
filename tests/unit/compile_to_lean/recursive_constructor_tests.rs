@@ -21,6 +21,26 @@ const CASES: &[&str] = &[
     include_str!("../../../lean/examples/template_recursive_rounding/statement.lit"),
 ];
 
+const NATURAL_CASES: &[&str] = &[
+    include_str!("../../../lean/examples/natural_recursive_rounding/statement.lit"),
+    include_str!("../../../lean/examples/natural_recursive_clamping/statement.lit"),
+    include_str!("../../../lean/examples/template_natural_recursive_rounding/statement.lit"),
+];
+
+#[test]
+fn natural_recursive_constructors_keep_the_zero_successor_representation() {
+    for source in NATURAL_CASES {
+        let (run, compiler) = super::execute(source);
+        let lean = compiler.compile_run(&run, "natural_constructors").unwrap();
+        assert!(lean.contains("Litex.recursiveNatFnTarget"));
+        assert!(lean.contains("Litex.recursiveNatFn_succ"));
+        assert_eq!(
+            lean,
+            compiler.compile_run(&run, "natural_constructors").unwrap()
+        );
+    }
+}
+
 #[test]
 fn recursive_constructor_catalog_replays_scalar_matrix_and_template_equations() {
     let mut failures = Vec::new();
@@ -59,7 +79,7 @@ fn recursive(step: &mut ExecStmtResult) -> &mut ExecHaveFnByInducStmtSuccessResu
 
 #[test]
 fn recursive_constructor_replay_requires_the_original_outer_and_smaller_call_wd() {
-    for source in [CASES[0], CASES[15]] {
+    for source in [CASES[0], CASES[15], NATURAL_CASES[0], NATURAL_CASES[2]] {
         for mutation in 0..4 {
             let (mut run, compiler) = super::execute(source);
             let body = recursive(&mut run.statement_results[0]);
@@ -128,4 +148,74 @@ fn recursive_matrix_constructor_preserves_distinct_dimension_wd_order() {
     compiler
         .compile_run(&run, "changed_dimension_order")
         .expect_err("original rows and columns are distinct");
+}
+
+#[test]
+fn recursive_callee_constructor_and_numeric_observation_replay_the_original_branch() {
+    check_callee_constructor(CASES[2], "RecursiveCallee.lean");
+}
+
+#[test]
+fn natural_recursive_callee_replays_constructor_and_numeric_observation() {
+    check_callee_constructor(NATURAL_CASES[1], "NaturalRecursiveCallee.lean");
+}
+
+fn check_callee_constructor(code: &str, filename: &str) {
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let (run, compiler) = super::execute(code);
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = &run.statement_results[1]
+    else {
+        panic!()
+    };
+    let VerifyFactResult::Equality(verified) = &statement.verify_result else {
+        panic!()
+    };
+    let VerifyEqualityResult::Success(verified) = verified.as_ref() else {
+        panic!()
+    };
+    let EqualFactSearchedProof::ByKnownForallFact(application) = &verified.searched_proof else {
+        panic!()
+    };
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    let caller = SourcePosition::new(
+        Some(&root),
+        SourceOwner::Verify(&statement.verify_result),
+        1,
+    );
+    let Fact::ForallFact(source) = compiler
+        .resolve_fact(application.detailed_ref().cite.fact_id, &caller)
+        .unwrap()
+    else {
+        panic!()
+    };
+    let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(equation)) =
+        &source.then_facts[0]
+    else {
+        panic!()
+    };
+    let mut checked = String::new();
+    for observe in [false, true] {
+        let term = compiler
+            .compile_recursive_callee_constructor(
+                &source,
+                0,
+                &equation.right,
+                application,
+                &caller,
+                observe,
+            )
+            .unwrap()
+            .expect("exact recursive body constructor");
+        assert!(term.contains("_prefix_returns"));
+        assert!(term.contains("_constructor_equal"));
+        checked.push_str(&format!("\nnoncomputable def replayed_body_{observe} := {term}\n#print axioms replayed_body_{observe}\n"));
+    }
+    if let Some(directory) = std::env::var_os("LITEX_LEAN_RECURSIVE_CONSTRUCTORS_OUTPUT") {
+        let output = compiler
+            .compile_run(&run, "recursive_callee_probe")
+            .unwrap();
+        let end = output.rfind("\nend ").unwrap();
+        let output = format!("{}{}{}", &output[..end], checked, &output[end..]);
+        std::fs::write(std::path::Path::new(&directory).join(filename), output).unwrap();
+    }
 }

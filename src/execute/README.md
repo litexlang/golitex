@@ -118,8 +118,9 @@ contract and the actual source citation in each directional JSON node.
 
 A successful template retains its local body evidence and publishes only the
 facts recorded by the body's successful definition stores and their ordinary
-inference. `store_template_definition_facts` substitutes the body binding by
-the definition-owned template instance, prefixes the template parameters and
+inference. Every name defined by the body is registered as a template output.
+`store_template_definition_facts` substitutes all body bindings simultaneously
+by their definition-owned template instances, prefixes the template parameters and
 domain premises, and calls `store_fact_and_infer` in the enclosing statement
 transaction. Existing universal conclusions are flattened with the outer
 binders; case and function-domain premises remain present. Each published
@@ -132,6 +133,13 @@ For `template<S nonempty_set>: have member S`, publication stores
 arguments structurally only when the canonical template identities agree.
 The [acceptance example](../../examples/stmt_nodes/definition/template_definition_facts.lit)
 and `tests/unit/execute/template_definition_facts/tests.rs` cover this contract.
+
+An `obtain` body that defines several names keeps their joint witness relation.
+For example, if it obtains `left, right` from `exist x, y R st {y = x + 1}`,
+both `\left<t>` and `\right<t>` are callable, and the published relation is
+`\right<t> = \left<t> + 1`. The body executes once; its local identifiers do
+not escape into the parent environment. A conflicting output name or failed
+body rolls back the entire definition.
 
 ## Hard rule: only `exec_stmt`
 
@@ -924,3 +932,59 @@ premise. No std file is changed by this feature.
 Lean replay for this native proposition and certificate is currently unsupported.
 The compiler explicitly returns an error and produces no partial artifact;
 this is Litex verifier support, not a checked Lean export capability.
+
+### Direct finite matrix properties
+
+`verify_atomic_fact/search_native_matrix_property.rs` owns the goal-shaped
+property family in addition to the earlier matrix equality laws. Equality,
+weak order and membership dispatchers retain their own outer result variants;
+the selected mathematical property retains its arguments, original native BT
+conclusion, endpoint comparisons and every checked premise in stage order.
+For example, `matrix_rank(A,m,n)<=m` checks the existing rank-bounds contract
+without an explicit `release thm matrix_rank_bounds(A,m,n)`.
+
+The 22 conclusions cover rank upper bounds, self-inner-product positivity,
+Cauchy-Schwarz, Euclidean/Frobenius norm laws, inner-product right-linearity,
+the apply-adjoint identity and selection from a supplied inverse candidate.
+Dimensions remain natural including zero. Existing explicit BT names and
+contracts are preserved; no factorization witness is discovered automatically.
+The fixed root and its immediate children select at most five candidates.
+Premises use the inherited shared verifier state, without a new top-level
+search, fact publication or a matrix-specific membership/WD fallback.
+
+The Euclidean triangle rule records whether it checked the original
+`1*u(k)+1*v(k)` formula or the natural `u(k)+v(k)` formula, with identical
+complete signatures and unit coefficients. Zero-norm introduction can consume
+an exact stored `v=zero(k)` path followed by structural alpha identity with the
+contract's fresh zero function; at most 16 indexed object values are inspected.
+Both parts remain in the proof. This does not widen general forall matching
+or allow arbitrary function extensionality below its normal search ceiling.
+
+The strict tracer is
+[`native_matrix_properties.lit`](../../examples/test_objs/native_matrix_properties.lit).
+Focused producer and compiler controls live under
+`tests/unit/execute/native_matrix/properties.rs` and
+`tests/unit/compile_to_lean/native_matrix_property_tests.rs`. Detailed JSON and
+generated reading capture consume the same typed result; the compiler replays
+the selected property into existing proved Lean bridges, including a proved
+natural-vector-sum triangle bridge.
+
+
+### Direct determinant formulas
+
+Four additional native property variants reuse the existing Laplace row/column
+and upper/lower triangular BT schemas. A determinant paired with a finite sum
+selects its fixed coordinate from the complete cofactor summand; a determinant
+paired with a finite product tries the two triangular guards. Direct endpoint
+matching checks the full callback, ranges, matrix, order and orientation before
+premises are checked under the inherited state. These branches discover no
+indices or witnesses outside the supplied formula.
+
+The strict tracer is
+[`native_matrix_determinant_formulas.lit`](../../examples/test_objs/native_matrix_determinant_formulas.lit).
+Real matrix inputs and zero-matrix constructors currently need explicit complex
+matrix membership as an intermediate. A triangular zero-matrix constructor also
+needs its exact conditional zero-entry fact; source examples retain these bridges.
+This is a bounded-search boundary, not a false mathematical formula. The
+compiler shares the original explicit-schema validators and proved Lean term
+builders, retaining the selected proof, original quantified guard and callback.

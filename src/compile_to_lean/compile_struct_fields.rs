@@ -424,7 +424,7 @@ impl LitexToLeanCompiler {
                     &declaration.statement,
                     &format!("(Litex.denote {receiver})"),
                 ));
-                self.compile_function_raw_predicate(
+                self.compile_canonical_predicate_value(
                     &declaration.statement.equivalent_facts[index - 1 - 2 * n],
                     &formed,
                     &bindings,

@@ -3507,11 +3507,18 @@ pub(super) fn multivariable_value_predicate_name(
         MultivariableAnalysisRelation::HessianAt(_) => "HasHessianAtValue",
         MultivariableAnalysisRelation::ScalarDifferentialAt(_) => "HasScalarDifferentialAtValue",
         MultivariableAnalysisRelation::TotalDerivativeAt(_) => "HasTotalDifferentialAtValue",
+        MultivariableAnalysisRelation::ScalarDifferentiableAt(_) => "ScalarDifferentiableAtValue",
+        MultivariableAnalysisRelation::ScalarContinuousAt(_) => {
+            "ScalarMultivariableContinuousAtValue"
+        }
+        MultivariableAnalysisRelation::VectorContinuousAt(_) => {
+            "VectorMultivariableContinuousAtValue"
+        }
+        MultivariableAnalysisRelation::TotalDifferentiableAt(_) => "VectorDifferentiableAtValue",
         MultivariableAnalysisRelation::LaplacianAt(_) => "HasLaplacianAtValue",
         MultivariableAnalysisRelation::JacobianAt(_) => "HasJacobianAtValue",
         MultivariableAnalysisRelation::DivergenceAt(_) => "HasDivergenceAtValue",
         MultivariableAnalysisRelation::CurlAt(_) => "HasCurlAtValue",
         MultivariableAnalysisRelation::SecondPartialDerivativeAt(_) => "HasSecondPartialAtValue",
-        _ => return Err(LeanCompileError::unsupported("Atomic/MultivariableFamily")),
     })
 }

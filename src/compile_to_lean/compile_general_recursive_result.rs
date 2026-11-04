@@ -159,7 +159,12 @@ impl LitexToLeanCompiler {
         {
             return Err(general_error("CaptureIdentity"));
         }
-        let body = self.compile_general_recursive_body(&p.statement.cases, site, &bindings)?;
+        let body = self.compile_general_recursive_body(
+            &p.statement.cases,
+            &p.case_checks,
+            site,
+            &bindings,
+        )?;
         Ok((
             measure,
             lower,
@@ -387,8 +392,14 @@ impl LitexToLeanCompiler {
         bindings.insert(p.statement.name.id, "_prefix".into());
         let mut other = bindings.clone();
         other.insert(p.statement.name.id, "_other_prefix".into());
-        let body = self.compile_general_recursive_body(&p.statement.cases, scope, &bindings)?;
-        let other_body = self.compile_general_recursive_body(&p.statement.cases, scope, &other)?;
+        let body = self.compile_general_recursive_body(
+            &p.statement.cases,
+            &p.case_checks,
+            scope,
+            &bindings,
+        )?;
+        let other_body =
+            self.compile_general_recursive_body(&p.statement.cases, &p.case_checks, scope, &other)?;
         returned.push(format!("change M.mem {body} _signature.output"));
         congruent.push(format!("change {body} = {other_body}"));
         let completed = SourcePosition {
@@ -432,75 +443,11 @@ impl LitexToLeanCompiler {
             return curried_value_congruence(&operation, &equalities);
         }
         match object {
+            Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => {
+                self.compile_recursive_literal_congruence(object, function, p, site, bindings)
+            }
             Obj::FnObj(call) => {
-                let FnObjHead::Identifier(head) = call.head.as_ref() else {
-                    return Err(LeanCompileError::unsupported("RecursiveGeneral/CallHead"));
-                };
-                if call.body.len() != 1 || call.body[0].is_empty() {
-                    return Err(general_error("CallArity"));
-                }
-                let arguments = &call.body[0];
-                let equalities = arguments
-                    .iter()
-                    .map(|a| self.compile_general_recursive_congruence(a, p, site, bindings))
-                    .collect::<Result<Vec<_>, _>>()?;
-                let packed_eq = if equalities.len() == 1 {
-                    equalities[0].clone()
-                } else {
-                    format!(
-                        "(congrArg (Litex.FiniteFunction.tupleValue (M := M)) (funext {}))",
-                        finite_vector_proof(&equalities)
-                    )
-                };
-                let pack = |values: Vec<String>| {
-                    if values.len() == 1 {
-                        values[0].clone()
-                    } else {
-                        format!(
-                            "(Litex.FiniteFunction.tupleValue (M := M) ![{}])",
-                            values.join(", ")
-                        )
-                    }
-                };
-                let left = pack(
-                    arguments
-                        .iter()
-                        .map(|a| self.compile_function_raw_expression_bound(a, site, bindings))
-                        .collect::<Result<Vec<_>, _>>()?,
-                );
-                let mut other = bindings.clone();
-                other.insert(p.statement.name.id, "_other_prefix".into());
-                let right = pack(
-                    arguments
-                        .iter()
-                        .map(|a| self.compile_function_raw_expression_bound(a, site, &other))
-                        .collect::<Result<Vec<_>, _>>()?,
-                );
-                let packed_eq = format!("(show {left} = {right} from {packed_eq})");
-                if !matches!(head,IdentifierObj::Plain{id,..} if *id==p.statement.name.id) {
-                    let raw = self.compile_function_raw_expression_bound(
-                        &Obj::Identifier(head.clone()),
-                        site,
-                        bindings,
-                    )?;
-                    return Ok(format!(
-                        "(congrArg (Litex.FunctionSemantics.callValue (M := M) {raw}) {packed_eq})"
-                    ));
-                }
-                let domain = site
-                    .with_visible_wd(object, &mut |wd, owner| {
-                        let restricted = self.recursive_restricted_signature(p, owner)?;
-                        let (terms, proofs) =
-                            self.compile_recursive_call_arguments(object, p, wd, owner)?;
-                        self.compile_general_recursive_domain_member(
-                            &restricted,
-                            &terms,
-                            &proofs,
-                            owner,
-                        )
-                    })?
-                    .ok_or_else(|| general_error("CallProducer"))?;
-                Ok(format!("((_agree {} {}).trans (congrArg (Litex.FunctionSemantics.callValue (M := M) _other_prefix) {packed_eq}))",domain.0,domain.1))
+                self.compile_recursive_application_congruence(object, call, p, site, bindings)
             }
             _ => Err(LeanCompileError::unsupported(
                 "RecursiveGeneral/CongruenceObject",
@@ -517,12 +464,27 @@ impl LitexToLeanCompiler {
         wd: &ObjWellDefinedProof,
         owner: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+        if !matches!(object, Obj::FnObj(call) if call.body.len() == 1) {
+            return Err(general_error("CallSelfEvidence"));
+        }
+        self.compile_recursive_call_prefix_arguments(object, p, wd, owner)
+    }
+
+    /// The first application owns the recursive decrease; later applications
+    /// retain their own recorded return-interface and argument obligations.
+    pub(super) fn compile_recursive_call_prefix_arguments(
+        &self,
+        object: &Obj,
+        p: &ExecHaveFnByInducStmtSuccessResult,
+        wd: &ObjWellDefinedProof,
+        owner: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
         ensure_object(object, wd)?;
         let Obj::FnObj(call) = object else {
             return Err(general_error("CallWD"));
         };
         if !matches!(call.head.as_ref(), FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) if *id == p.statement.name.id)
-            || call.body.len() != 1
+            || call.body.is_empty()
         {
             return Err(general_error("CallSelfEvidence"));
         }
@@ -543,14 +505,22 @@ impl LitexToLeanCompiler {
             return Err(general_error("CallSelfEvidence"));
         };
         let restricted = self.recursive_restricted_signature(p, owner)?;
+        let total_args = call.body.iter().map(Vec::len).sum::<usize>();
+        let first_requirements = arguments.len() + restricted.dom_facts.len();
         if *fact_id != p.restricted_self_membership.primary_fact_id()
             || !function_equal.path.is_empty()
             || fn_set != &restricted
-            || evidence.child_obj_well_defined.len() != arguments.len()
-            || evidence.requirement_fact_verified.len()
-                != arguments.len() + restricted.dom_facts.len()
+            || evidence.child_obj_well_defined.len() != total_args
+            || evidence.requirement_fact_verified.len() < first_requirements
+            || (call.body.len() == 1
+                && evidence.requirement_fact_verified.len() != first_requirements)
         {
             return Err(general_error("CallSelfEvidence"));
+        }
+        if call.body.len() > 1 {
+            // This checks the entire original flat WD record, including each
+            // returned callable interface, before exposing its first prefix.
+            self.compile_wd(wd, owner)?;
         }
         let parameters = restricted
             .set_bound_parameters
@@ -583,7 +553,12 @@ impl LitexToLeanCompiler {
                 },
             )?);
         }
-        for (i, checked) in evidence.requirement_fact_verified.iter().enumerate() {
+        for (i, checked) in evidence
+            .requirement_fact_verified
+            .iter()
+            .take(first_requirements)
+            .enumerate()
+        {
             let actual = source_subject(checked)?;
             let valid = if i < arguments.len() {
                 matches!(&actual, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir() == arguments[i].ir()
@@ -602,7 +577,7 @@ impl LitexToLeanCompiler {
                 self.compile_verify(
                     checked,
                     &SourcePosition {
-                        before: arguments.len() + i,
+                        before: total_args + i,
                         ..cursor
                     },
                 )?
@@ -612,7 +587,7 @@ impl LitexToLeanCompiler {
         Ok((terms, proofs))
     }
 
-    fn compile_general_recursive_domain_member(
+    pub(super) fn compile_general_recursive_domain_member(
         &self,
         signature: &FnSet,
         objects: &[String],
@@ -659,6 +634,46 @@ impl LitexToLeanCompiler {
         let equality = self.compile_function_packed_application_equality(&template, &values)?;
         let proof=format!("(Litex.SetSemantics.sep_members (M := M) _ _ _).mpr ⟨{base_member}, Eq.mpr {equality} ({guard} : {template} {})⟩",values.join(" "));
         Ok((packed, format!("({proof})")))
+    }
+
+    pub(super) fn compile_recursive_published_conclusion(
+        &self,
+        declaration: &ExecHaveFnByInducStmtSuccessResult,
+        source: &ForallFact,
+        site: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        let Some(index) = declaration
+            .store_and_infer_result
+            .case_defining_fact_ids
+            .iter()
+            .position(|id| *id == source.fact_id)
+        else {
+            return Ok(None);
+        };
+        self.validate_store(
+            &declaration.store_and_infer_result.case_defining[index].store,
+            &Fact::ForallFact(source.clone()),
+        )?;
+        let [ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(eq))] =
+            source.then_facts.as_slice()
+        else {
+            return Err(general_error("EquationConclusion"));
+        };
+        let paths = recursive_leaf_paths(&declaration.statement.cases);
+        let path = paths
+            .get(index)
+            .ok_or_else(|| general_error("EquationPath"))?;
+        let scope = SourcePosition::new(Some(site), SourceOwner::RecursiveFunction(declaration), 8);
+        let left = self.compile_function_raw_expression_bound(&eq.left, &scope, bindings)?;
+        let right = self.compile_recursive_leaf_value(
+            &declaration.statement.cases,
+            &declaration.case_checks,
+            path,
+            &scope,
+            bindings,
+        )?;
+        Ok(Some(format!("{left} = {right}")))
     }
 
     fn compile_general_recursive_equation(
@@ -844,9 +859,20 @@ impl LitexToLeanCompiler {
         for ((param, _), value) in parameters.iter().zip(&packed_values) {
             packed_bindings.insert(param.id, value.clone());
         }
-        let raw_body =
-            self.compile_general_recursive_body(&p.statement.cases, site, &packed_bindings)?;
-        let leaf = self.compile_function_raw_expression_bound(body, site, &bindings)?;
+        let scope = SourcePosition::new(Some(parent), SourceOwner::RecursiveFunction(p), 8);
+        let raw_body = self.compile_general_recursive_body(
+            &p.statement.cases,
+            &p.case_checks,
+            &scope,
+            &packed_bindings,
+        )?;
+        let leaf = self.compile_recursive_leaf_value(
+            &p.statement.cases,
+            &p.case_checks,
+            path,
+            &scope,
+            &bindings,
+        )?;
         lines.push(format!("change {raw_body} = {leaf}"));
         // Decode the packed argument once, before selecting the recorded case.
         for law in self.compile_function_packed_reduction_laws(
@@ -858,7 +884,6 @@ impl LitexToLeanCompiler {
             lines.push(format!("rw [{law}]"));
         }
         // Select the exact original root-to-leaf path using its disjointness proofs.
-        let scope = SourcePosition::new(Some(parent), SourceOwner::RecursiveFunction(p), 8);
         lines.extend(self.compile_recursive_equation_path(
             &p.statement.cases,
             &p.case_checks,
@@ -879,7 +904,10 @@ impl LitexToLeanCompiler {
             "{keyword} h_{}{context} : ∀ {}, {} := {}",
             fact.fact_id.value(),
             binders.join(" "),
-            self.compile_function_raw_predicate(&conclusion, site, &bindings)?,
+            format!(
+                "{} = {leaf}",
+                self.compile_function_raw_expression_bound(&eq.left, site, &bindings)?
+            ),
             lean_by(lines)
         ))
     }

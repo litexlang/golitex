@@ -17,6 +17,7 @@ pub(super) fn project_atomic_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match proof {
+        AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(br::less_equal::LessEqualFactSearchProofByBuiltinRule::NativeMatrixProperty(p)) | AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(br::in_fact::InFactSearchProofByBuiltinRule::NativeMatrixProperty(p)) => super::matrix_property::project_matrix_property(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::IsMatrixInvFact(p) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("IsMatrixInvSelected")), ("determinant_nonzero", project_verify_fact(&p.determinant_nonzero, runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::MatrixInversibleFact(p) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("MatrixInversibleFromDeterminant")), ("determinant_nonzero", project_verify_fact(&p.determinant_nonzero, runtime))]),
         AtomicExceptEqualityFactSearchProofByBuiltinRule::NotMatrixInversibleFact(p) => object_for(runtime, vec![("type", string("builtin_rule")), ("rule", string("NotMatrixInversibleFromDeterminant")), ("determinant_zero", project_verify_fact(&p.determinant_zero, runtime))]),

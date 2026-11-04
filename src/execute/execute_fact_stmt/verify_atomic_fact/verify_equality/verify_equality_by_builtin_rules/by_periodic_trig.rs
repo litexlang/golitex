@@ -35,7 +35,7 @@ impl PeriodicTrigNonzeroBuiltinRuleProof {
     }
 }
 
-enum TrigKind {
+pub(crate) enum TrigKind {
     Sin,
     Cos,
     Tan,
@@ -43,9 +43,9 @@ enum TrigKind {
 }
 
 // A local linear view of the pi coefficient, not a new mathematical atom/store.
-struct CoefficientTerms {
-    constant: EvalRational,
-    terms: Vec<(EvalRational, Obj)>,
+pub(crate) struct CoefficientTerms {
+    pub(crate) constant: EvalRational,
+    pub(crate) terms: Vec<(EvalRational, Obj)>,
 }
 impl CoefficientTerms {
     fn new(constant: EvalRational, terms: Vec<(EvalRational, Obj)>) -> Self {
@@ -154,7 +154,7 @@ impl Runtime {
     }
 }
 
-fn split_terms(obj: &Obj, depth: usize) -> Option<CoefficientTerms> {
+pub(crate) fn split_terms(obj: &Obj, depth: usize) -> Option<CoefficientTerms> {
     if depth > 64 {
         return None;
     }
@@ -243,7 +243,7 @@ fn quotient(left: Obj, right: Obj) -> Obj {
     }))
 }
 
-fn exact_trig_value(kind: TrigKind, constant: &EvalRational) -> Option<(i128, Obj)> {
+pub(crate) fn exact_trig_value(kind: TrigKind, constant: &EvalRational) -> Option<(i128, Obj)> {
     let reduced = constant.modulo_integer(if matches!(kind, TrigKind::Sin | TrigKind::Cos) {
         2
     } else {

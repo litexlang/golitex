@@ -26,6 +26,7 @@ use crate::runtime::FactId;
 impl EqualitySearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::English),
             Self::NativeMatrixLaw(p) => native_operations::text(p.rule_name(), "Finite matrix law with checked complete dimensions and all required premises.", OutputLanguage::English),
             Self::HomogeneousCartesianEqualsFiniteSequence(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianEqualsFiniteSequence".into(), message: "A flat homogeneous Cartesian product is the finite sequence space of the same length.".into() },
             Self::ElementaryIdentity(p) => {
@@ -310,6 +311,11 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Chinese,
+            ),
             Self::NativeMatrixLaw(p) => native_operations::text(
                 p.rule_name(),
                 "Finite matrix law with checked complete dimensions and all required premises.",
@@ -612,6 +618,11 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::ChineseTraditional,
+            ),
             Self::NativeMatrixLaw(p) => native_operations::text(
                 p.rule_name(),
                 "Finite matrix law with checked complete dimensions and all required premises.",
@@ -918,6 +929,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::French),
             Self::NativeMatrixLaw(p) => native_operations::text(p.rule_name(), "Finite matrix law with checked complete dimensions and all required premises.", OutputLanguage::French),
             Self::HomogeneousCartesianEqualsFiniteSequence(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianEqualsFiniteSequence".into(), message: "Un produit cartésien homogène plat est l’espace des suites finies de même longueur.".into() },
             Self::ElementaryIdentity(p) => {
@@ -1217,6 +1229,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Russian),
             Self::NativeMatrixLaw(p) => native_operations::text(p.rule_name(), "Finite matrix law with checked complete dimensions and all required premises.", OutputLanguage::Russian),
             Self::HomogeneousCartesianEqualsFiniteSequence(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianEqualsFiniteSequence".into(), message: "Однородное плоское декартово произведение равно пространству конечных последовательностей той же длины.".into() },
             Self::ElementaryIdentity(p) => {
@@ -1515,6 +1528,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Spanish),
             Self::NativeMatrixLaw(p) => native_operations::text(p.rule_name(), "Finite matrix law with checked complete dimensions and all required premises.", OutputLanguage::Spanish),
             Self::HomogeneousCartesianEqualsFiniteSequence(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianEqualsFiniteSequence".into(), message: "Un producto cartesiano homogéneo plano es el espacio de sucesiones finitas de la misma longitud.".into() },
             Self::ElementaryIdentity(p) => {
@@ -1814,6 +1828,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Arabic),
             Self::NativeMatrixLaw(p) => native_operations::text(p.rule_name(), "Finite matrix law with checked complete dimensions and all required premises.", OutputLanguage::Arabic),
             Self::HomogeneousCartesianEqualsFiniteSequence(_) => BuiltinRuleText { rule_name: "HomogeneousCartesianEqualsFiniteSequence".into(), message: "الجداء الديكارتي المتجانس المسطح يساوي فضاء المتتاليات المنتهية ذات الطول نفسه.".into() },
             Self::ElementaryIdentity(p) => {
@@ -2111,6 +2126,11 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Japanese,
+            ),
             Self::NativeMatrixLaw(p) => native_operations::text(
                 p.rule_name(),
                 "Finite matrix law with checked complete dimensions and all required premises.",
@@ -2415,6 +2435,11 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Korean,
+            ),
             Self::NativeMatrixLaw(p) => native_operations::text(
                 p.rule_name(),
                 "Finite matrix law with checked complete dimensions and all required premises.",
@@ -2719,6 +2744,11 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Vietnamese,
+            ),
             Self::NativeMatrixLaw(p) => native_operations::text(
                 p.rule_name(),
                 "Finite matrix law with checked complete dimensions and all required premises.",
@@ -3040,6 +3070,7 @@ impl EqualitySearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::NativeMatrixProperty(_) => None,
             Self::DvdZeroRemainder(_) => None,
             Self::FiniteSeqReconstruction(p) => Some(p.membership.fact_id),
             Self::EqualFromKnownDifferenceZero(p) => Some(p.cite_fact_id),

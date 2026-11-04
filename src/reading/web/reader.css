@@ -140,6 +140,17 @@
 .lr-manuscript .lr-latex-unit.lr-selected { background:var(--reading-select); }
 .lr-manuscript .lr-latex-rejected { text-decoration:underline wavy #c62828; text-underline-offset:4px; }
 .lr-manuscript .lr-latex-unchecked { color:var(--reading-muted); }
+.lr-manuscript .lr-math-reason { display:inline-block; margin-inline:5px; font:12px/1.8 system-ui,sans-serif; }
+.lr-manuscript .lr-math-reason[open] { display:inline; }
+.lr-math-reason>summary { display:inline; cursor:pointer; color:var(--reading-accent); white-space:nowrap; border-radius:3px; padding:2px 4px; }
+.lr-math-reason>summary::before { content:"▸ "; }
+.lr-math-reason[open]>summary::before { content:"▾ "; }
+.lr-math-reason>summary:hover,.lr-math-reason>summary:focus-visible { background:var(--reading-soft); outline:1px solid var(--reading-line); }
+.lr-math-reason-body { display:block; margin:8px 0 12px; padding:12px 16px; border-inline-start:2px solid var(--reading-accent); background:var(--reading-hover); border-radius:0 5px 5px 0; min-width:0; overflow-wrap:anywhere; }
+.lr-math-reason-body .lr-proof-summary { margin:0 0 8px; font-size:14px; line-height:1.9; }
+.lr-premise-conclusion>.lr-formula { display:inline; margin:0; white-space:normal; font:inherit; }
+.lr-math-reason-body .lr-empty-note { margin:8px 0; }
+.lr-math-reason-source { margin-top:10px; border:0; padding:0; background:transparent; color:var(--reading-accent); font:inherit; cursor:pointer; }
 .lr-manuscript .lr-empty-note { margin-top:1.5em; font:12px/1.8 system-ui,sans-serif; }
 .lr-formal-source { margin:0 0 16px; }
 .lr-formal-source pre,.lr-latex-original pre { max-height:210px; overflow:auto; margin:7px 0; padding:12px; border-radius:4px; background:var(--reading-hover); white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.8 var(--reading-code); }
@@ -155,6 +166,11 @@
 .lr-code-row[data-statement] .lr-line-number { color:#2e7d32!important; }
 .lr-code-content { display:flex; align-items:baseline; }
 .lr-source-code { display:block; white-space:pre; padding:4px 0; font:inherit; }
+.lr-proof-toggle { flex-shrink:0; min-width:24px; margin-left:5px; padding:0 4px; border:0; border-radius:3px; background:transparent; color:var(--reading-muted); font:12px/24px var(--reading-code); user-select:none; }
+.lr-proof-toggle:hover,.lr-proof-toggle[aria-expanded="true"] { color:var(--reading-accent); background:var(--reading-soft); }
+.lr-help-anchor { position:relative; display:inline; }
+.lr-help-toggle { position:absolute; left:100%; top:-9px; z-index:1; width:11px; height:11px; padding:0; border:0; border-radius:2px; background:transparent; color:var(--reading-muted); font:9px/11px var(--reading-code); user-select:none; }
+.lr-help-toggle:hover,.lr-help-toggle[aria-expanded="true"] { color:var(--reading-accent); background:var(--reading-soft); }
 .lr-definition-references { display:inline-flex; align-items:baseline; gap:10px; margin-left:16px; white-space:nowrap; }
 .lr-reference-count { border:0; border-radius:3px; padding:0 3px; background:var(--reading-soft); color:var(--reading-accent)!important; font:10.5px/1.8 var(--reading-code)!important; }
 .lr-reference-count:hover { background:var(--reading-premise); }

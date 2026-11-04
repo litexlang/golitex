@@ -143,7 +143,10 @@ pub(super) fn project_equal_searched(
     }
 }
 
-fn project_they_are_the_same(proof: &TheyAreTheSameProof, runtime: &Runtime) -> JsonValue {
+pub(super) fn project_they_are_the_same(
+    proof: &TheyAreTheSameProof,
+    runtime: &Runtime,
+) -> JsonValue {
     let mut fields = vec![("type", string("by_they_are_the_same"))];
     match proof {
         TheyAreTheSameProof::SameIr(_) => fields.push(("kind", string("same_ir"))),

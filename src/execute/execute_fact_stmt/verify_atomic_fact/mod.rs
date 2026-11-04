@@ -40,3 +40,5 @@ mod verify_requirement_with_checked_arguments;
 
 mod search_structural_real_sign;
 pub mod structural_real_sign_proof;
+
+pub mod search_native_matrix_property;

@@ -40,7 +40,7 @@ fn delta_expression(object: &Obj, value: &Obj, epsilon: &Obj, plus: bool) -> boo
         _ => false,
     }
 }
-fn validate_extremum_clauses(
+pub(super) fn validate_extremum_clauses(
     upper: bool,
     sequence: &Obj,
     value: &Obj,

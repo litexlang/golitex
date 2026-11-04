@@ -116,7 +116,7 @@ impl LitexToLeanCompiler {
                     return Err(invalid("ExistenceProof"));
                 }
                 let (ty, term) = self.compile_verify(proof, position)?;
-                format!("(by obtain ⟨v,hv,hc⟩ := (show {ty} from {term}); exact ⟨v,hv,hc⟩)")
+                format!("(by\n  have _original_partial_exists : {ty} := {term}\n  obtain ⟨v,hv,hc⟩ := _original_partial_exists\n  exact ⟨v,hv,hc⟩\n)")
             }
         };
         lines.push(format!(

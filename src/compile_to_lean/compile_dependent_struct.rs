@@ -34,19 +34,10 @@ impl LitexToLeanCompiler {
                 if has_dependent_fields(&declaration.statement) {
                     let mut subst = header_substitution(&declaration.statement, &layer.struct_obj)?;
                     subst.extend(field_substitution(&declaration.statement, &layer.obj));
+                    // Every field carrier comes from this dependent record,
+                    // including a constant carrier before its dependent fields.
                     if let Some(index) = declaration.statement.fields.iter().position(|field| {
-                        let mut free = std::collections::HashSet::new();
-                        crate::instantiate::collect_free_plain_ids(
-                            &field.field_type,
-                            &std::collections::HashSet::new(),
-                            &mut free,
-                        );
-                        declaration
-                            .statement
-                            .fields
-                            .iter()
-                            .any(|f| free.contains(&f.binding.id))
-                            && instantiated_object_matches(&field.field_type, object, &subst)
+                        instantiated_object_matches(&field.field_type, object, &subst)
                     }) {
                         let (receiver_carrier, member) =
                             self.compile_struct_receiver(&layer.obj, current)?;

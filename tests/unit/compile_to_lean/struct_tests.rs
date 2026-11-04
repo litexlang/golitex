@@ -138,13 +138,120 @@ fn struct_release_checks_all_ordered_stores() {
 
 #[test]
 fn struct_dependencies_and_local_scope_are_not_discarded() {
-    for source in [
-        "struct ConstantLawPair:\n    x R\n    y R\n    <=>:\n        forall z R:\n            z = z\n",
-        "sketch:\n    struct LocalPair:\n        x R\n        y R\n",
-    ] {
+    for source in ["sketch:\n    struct LocalPair:\n        x R\n        y R\n"] {
         let (run, compiler) = super::execute(source);
         assert!(compiler.compile_run(&run, "unsupported_structure").is_err());
     }
+}
+
+#[test]
+fn quantified_struct_laws_replay_fields_domains_and_publications() {
+    for source in [
+        include_str!("../../../lean/examples/struct_universal_function_law/statement.lit"),
+        include_str!("../../../lean/examples/struct_dependent_universal_law/statement.lit"),
+        include_str!("../../../lean/examples/struct_guarded_universal_law/statement.lit"),
+        include_str!("../../../lean/examples/struct_generic_universal_law/statement.lit"),
+        "struct ConstantLawPair:\n    x R\n    y R\n    <=>:\n        forall z R:\n            z = z\n",
+    ] {
+        let (run, compiler) = super::execute(source);
+        let lean = compiler.compile_run(&run, "universal_struct").expect(source);
+        assert_eq!(lean, compiler.compile_run(&run, "universal_struct").unwrap());
+    }
+}
+
+#[test]
+fn quantified_struct_laws_retain_formation_and_flattened_publication() {
+    let source = include_str!("../../../lean/examples/struct_guarded_universal_law/statement.lit");
+    for mutation in 0..8 {
+        let (mut run, compiler) = super::execute(source);
+        let p = declaration(&mut run);
+        match mutation {
+            0 => p.field_scope.equivalent_facts.clear(),
+            1 => {
+                let FactWellDefinedProof::ForallFact(wd) =
+                    &mut p.field_scope.equivalent_facts[0].well_defined
+                else {
+                    panic!("universal formation")
+                };
+                wd.as_detailed_mut().unwrap().then.clear();
+            }
+            2 => p.definition_facts[0].source_fact_id = FactId::new(u64::MAX),
+            _ => {
+                let StoreFactResult::ForallFact(stored) =
+                    &mut p.definition_facts[0].store_and_infer.store
+                else {
+                    panic!("published universal")
+                };
+                match mutation {
+                    3 => {
+                        stored.fact.typed_parameters.groups.pop();
+                    }
+                    4 => {
+                        stored.fact.dom_facts.remove(0);
+                    }
+                    5 => {
+                        stored.fact.dom_facts.pop();
+                    }
+                    6 => stored.fact.then_facts.clear(),
+                    7 => {
+                        stored
+                            .fact
+                            .typed_parameters
+                            .groups
+                            .last_mut()
+                            .unwrap()
+                            .param_type = ParamType::Obj(Obj::StandardSet(StandardSet::Z));
+                    }
+                    _ => unreachable!(),
+                }
+            }
+        }
+        compiler
+            .compile_run(&run, "changed_universal_struct")
+            .expect_err(
+                "original law formation, binders, guard, type facts and conclusion must remain",
+            );
+    }
+}
+
+#[test]
+fn quantified_struct_laws_keep_private_scope_and_invalid_call_boundaries() {
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let source = include_str!("../../../lean/examples/struct_guarded_universal_law/statement.lit");
+    let (run, compiler) = super::execute(source);
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
+        crate::execute::ExecDefStructStmtResult::Success(p),
+    )) = &run.statement_results[0]
+    else {
+        panic!("struct declaration")
+    };
+    let outside = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    let condition = &p.field_scope.equivalent_facts[0];
+    assert!(outside
+        .visible_fact(condition.store.primary_fact_id(), &compiler.runtime)
+        .is_err());
+    assert!(outside
+        .visible_fact(
+            p.definition_facts[0].store_and_infer.primary_fact_id(),
+            &compiler.runtime
+        )
+        .is_ok());
+    let invalid =
+        format!("{source}\nforall p &GuardedInverseFunctionPair:\n    p.reciprocal(0) $in R\n");
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
+    let run = runtime.run_litex_code(&invalid).unwrap();
+    assert!(!run.success);
+    crate::compile_to_lean::LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "invalid_guarded_record")
+        .expect_err("the field's nonzero guard still applies");
 }
 
 #[test]
@@ -908,4 +1015,285 @@ fn struct_specialization_cannot_erase_the_instantiated_field_carrier() {
     assert!(crate::compile_to_lean::LitexToLeanCompiler::new(runtime)
         .compile_run(&run, "invalid_natural_pair")
         .is_err());
+}
+
+const SUBSET_RETURN: &str =
+    include_str!("../../../lean/examples/struct_subset_function_return/statement.lit");
+
+#[test]
+fn struct_signature_constructors_replay_headers_and_dependent_fields() {
+    for source in [
+        SUBSET_RETURN,
+        include_str!("../../../lean/examples/struct_subset_function_input/statement.lit"),
+        include_str!("../../../lean/examples/struct_guarded_subset_function/statement.lit"),
+        include_str!("../../../lean/examples/struct_dependent_subset_function/statement.lit"),
+        include_str!("../../../lean/examples/struct_nested_subset_function/statement.lit"),
+    ] {
+        let (run, compiler) = super::execute(source);
+        let lean = compiler.compile_run(&run, "field_signature").expect(source);
+        assert_eq!(lean, compiler.compile_run(&run, "field_signature").unwrap());
+        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
+    }
+}
+
+#[test]
+fn struct_signature_constructors_require_original_field_formation() {
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
+    for mutation in 0..4 {
+        let (mut run, compiler) = super::execute(SUBSET_RETURN);
+        let p = declaration(&mut run);
+        let DetailedObjWellDefinedProof::ByDef {
+            proof:
+                ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::FnSet(
+                    wd,
+                )),
+            ..
+        } = p.field_scope.fields[0]
+            .well_defined
+            .as_detailed_mut()
+            .unwrap()
+        else {
+            panic!("original function field formation");
+        };
+        match mutation {
+            0 => super::replace_wd_subject(
+                &mut wd.ret_set_well_defined,
+                Obj::StandardSet(StandardSet::R),
+            ),
+            1 => wd.param_type_well_defined.clear(),
+            2 => wd.defined_params.store_and_infer_results.clear(),
+            3 => std::mem::swap(
+                &mut wd.ret_set_well_defined,
+                &mut wd.param_type_well_defined[0],
+            ),
+            _ => unreachable!(),
+        }
+        compiler
+            .compile_run(&run, "changed_field_signature")
+            .expect_err("original field constructor evidence is required");
+    }
+}
+
+#[test]
+fn struct_signature_constructor_lookup_respects_parameter_and_publication_scope() {
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let (run, compiler) = super::execute(SUBSET_RETURN);
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(result)) = &run.statement_results[1]
+    else {
+        panic!("forall statement");
+    };
+    let VerifyFactResult::ForallFact(result) = &result.verify_result else {
+        panic!("forall proof");
+    };
+    let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(p)) =
+        result.as_ref()
+    else {
+        panic!("local forall");
+    };
+    let layer = &p
+        .introduced_params
+        .auto_opened_struct_layers
+        .as_ref()
+        .unwrap()[0];
+    let carrier = layer
+        .store_and_infer
+        .iter()
+        .find_map(|store| {
+            let StoreFactResult::AtomicFact(stored) = &store.store else {
+                return None;
+            };
+            let AtomicFact::InFact(member) = &stored.fact else {
+                return None;
+            };
+            if !matches!(
+                member.element,
+                Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_))
+            ) {
+                return None;
+            }
+            let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) = &member.set else {
+                return None;
+            };
+            Some(signature.ret_set.as_ref().clone())
+        })
+        .expect("released function-field carrier");
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    assert!(compiler
+        .compile_struct_field_constructor_reference(&carrier, &root)
+        .unwrap()
+        .is_none());
+    // Automatic field release follows completion of the parameter header.
+    let before_record = SourcePosition::new(Some(&root), SourceOwner::Forall(p), 3);
+    assert!(compiler
+        .compile_struct_field_constructor_reference(&carrier, &before_record)
+        .unwrap()
+        .is_none());
+    let after_record = SourcePosition {
+        before: 4,
+        ..before_record
+    };
+    assert!(compiler
+        .compile_struct_field_constructor_reference(&carrier, &after_record)
+        .unwrap()
+        .is_some());
+    let after_forall = SourcePosition { before: 2, ..root };
+    assert!(compiler
+        .compile_struct_field_constructor_reference(&carrier, &after_forall)
+        .unwrap()
+        .is_none());
+}
+
+#[test]
+fn struct_signature_constructors_retain_field_guards() {
+    let valid = include_str!("../../../lean/examples/struct_guarded_subset_function/statement.lit");
+    let invalid = format!("{valid}\nforall Carrier set, p &GuardedRecordOfSubsets<Carrier>:\n    $is_set(p.subsets(0))\n");
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
+    let run = runtime.run_litex_code(&invalid).unwrap();
+    assert!(!run.success);
+    crate::compile_to_lean::LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "missing_field_guard")
+        .expect_err("an undefined call cannot be compiled");
+}
+
+const NAMED_IDENTITY_LAW: &str =
+    include_str!("../../../lean/examples/struct_named_identity_law/statement.lit");
+const NESTED_GUARDED_IDENTITY_LAW: &str =
+    include_str!("../../../lean/examples/struct_nested_guarded_identity_law/statement.lit");
+
+#[test]
+fn concrete_universal_record_predicates_replay_original_declarations() {
+    for source in [
+        NAMED_IDENTITY_LAW,
+        NESTED_GUARDED_IDENTITY_LAW,
+        include_str!("../../../lean/examples/struct_nonidentity_law/statement.lit"),
+        include_str!("../../../lean/examples/struct_finite_subset_transfer/statement.lit"),
+        include_str!("../../../lean/examples/category_identity_and_composition/statement.lit"),
+        include_str!("../../../lean/examples/named_identity_function_domain/statement.lit"),
+    ] {
+        let (run, compiler) = super::execute(source);
+        let lean = compiler
+            .compile_run(&run, "named_record_law")
+            .expect(source);
+        assert_eq!(
+            lean,
+            compiler.compile_run(&run, "named_record_law").unwrap()
+        );
+    }
+}
+
+#[test]
+fn concrete_universal_record_predicates_keep_canonical_binders_and_declaration_scope() {
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let (run, compiler) = super::execute(NAMED_IDENTITY_LAW);
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+        crate::execute::ExecDefPropStmtResult::Success(declaration),
+    )) = &run.statement_results[0]
+    else {
+        panic!("predicate declaration");
+    };
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
+        crate::execute::ExecDefStructStmtResult::Success(record),
+    )) = &run.statement_results[1]
+    else {
+        panic!("record declaration");
+    };
+    let Fact::AtomicFact(fact) = &record.statement.equivalent_facts[0] else {
+        panic!("named record law");
+    };
+    let Fact::ForallFact(law) = &declaration.statement.iff_facts[0] else {
+        panic!("universal clause");
+    };
+    let id = law.typed_parameters.ordered_param_ids()[0].value();
+    let before = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+    let visible = SourcePosition {
+        before: 1,
+        ..before
+    };
+    let args = ["selected_mapping".into()];
+    assert!(compiler
+        .compile_atomic_raw_proposition(fact, &args, &before)
+        .is_err());
+    let meaning = compiler
+        .compile_atomic_raw_proposition(fact, &args, &visible)
+        .unwrap();
+    assert!(meaning.contains(&format!("∀ (_value_i{id} : Litex.Obj (M := M) M.Value)")));
+    assert!(!meaning.contains(&format!("∀ (_raw_i{id} : M.Value)")));
+    compiler
+        .compile_atomic_raw_proposition(fact, &[], &visible)
+        .expect_err("the original predicate arity remains mandatory");
+    let collisions = std::collections::HashMap::from([(
+        law.typed_parameters.ordered_param_ids()[0],
+        "captured_outer".into(),
+    )]);
+    compiler
+        .compile_canonical_predicate_value(
+            &declaration.statement.iff_facts[0],
+            &visible,
+            &collisions,
+        )
+        .expect_err("inner binders cannot capture an enclosing source identity");
+}
+
+#[test]
+fn concrete_universal_record_predicates_require_original_guard_and_formation() {
+    for mutation in 0..4 {
+        let (mut run, compiler) = super::execute(NESTED_GUARDED_IDENTITY_LAW);
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+            crate::execute::ExecDefPropStmtResult::Success(p),
+        )) = &mut run.statement_results[0]
+        else {
+            panic!("guarded predicate declaration");
+        };
+        if mutation == 0 {
+            p.assumed_iff_facts.clear();
+        } else {
+            let FactWellDefinedProof::ForallFact(wd) = &mut p.assumed_iff_facts[0].well_defined
+            else {
+                panic!("universal formation");
+            };
+            let wd = wd.as_detailed_mut().unwrap();
+            match mutation {
+                1 => wd.then.clear(),
+                2 => wd.assumed_dom_facts.clear(),
+                3 => wd
+                    .introduced_params
+                    .defined_params
+                    .store_and_infer_results
+                    .clear(),
+                _ => unreachable!(),
+            }
+        }
+        compiler
+            .compile_run(&run, "changed_predicate_formation")
+            .expect_err("canonical rendering cannot replace original formation evidence");
+    }
+}
+
+#[test]
+fn concrete_universal_record_predicates_do_not_remove_call_domains() {
+    let invalid = format!(
+        "{NESTED_GUARDED_IDENTITY_LAW}\nforall p &GuardedIdentityRecord:\n    p.mapping(0) = 0\n"
+    );
+    let mut runtime = Runtime::new_with_result_detail(
+        LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        },
+        crate::result_detail::OutputDetail::Detailed,
+    );
+    let run = runtime.run_litex_code(&invalid).unwrap();
+    assert!(!run.success);
+    crate::compile_to_lean::LitexToLeanCompiler::new(runtime)
+        .compile_run(&run, "invalid_predicate_call")
+        .expect_err("the named law retains its function's nonzero domain");
 }

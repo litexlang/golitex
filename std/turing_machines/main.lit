@@ -1,0 +1,310 @@
+# A unary increment Turing machine on an entire two-way binary tape.
+# Configuration coordinates are state, head position and tape. State 1 is absorbing.
+
+# Unary increment on a two-way tape. State 0 scans right; state 1 is halted.
+let Symbol = {0,1}
+
+let Configuration = cart(Symbol,Z,fn(pos Z) Symbol)
+
+have fn write_symbol(t fn(pos Z) Symbol,h Z,b Symbol,pos Z) Symbol by cases:
+    case pos=h: b
+    case pos!=h: t(pos)
+
+have fn write_tape(t fn(pos Z) Symbol,h Z,b Symbol) fn(pos Z) Symbol = fn(pos Z) Symbol {write_symbol(t,h,b,pos)}
+
+release obj def Symbol
+
+release obj def Configuration
+
+claim:
+    ? forall state Symbol,h Z,t fn(pos Z) Symbol:
+        (state,h,t) $in Configuration
+    state $in Symbol
+    h $in Z
+    t $in fn(pos Z) Symbol
+    (state,h,t) $in cart(Symbol,Z,fn(pos Z) Symbol)
+    (state,h,t) $in Configuration
+
+have fn configuration(state Symbol,h Z,t fn(pos Z) Symbol) Configuration = (state,h,t)
+
+have fn scan_step(h Z,t fn(pos Z) Symbol) Configuration by cases:
+    case t(h)=1: configuration(0,h+1,t)
+    case t(h)!=1: configuration(1,h,write_tape(t,h,1))
+
+have fn increment_step(c Configuration) Configuration by cases:
+    case c(1)=1: c
+    case c(1)!=1: scan_step(c(2),c(3))
+
+have fn run(steps N,c Configuration) Configuration by induc steps from 0:
+    case steps=0: c
+    case steps>=1: increment_step(run(steps-1,c))
+
+prop is_unary_position(n N,pos Z):
+    0<=pos
+    pos<n
+
+have fn unary_symbol(n N,pos Z) Symbol by cases:
+    case $is_unary_position(n,pos): 1
+    case not $is_unary_position(n,pos): 0
+
+have fn unary_tape(n N) fn(pos Z) Symbol = fn(pos Z) Symbol {unary_symbol(n,pos)}
+
+have fn unary_initial(n N) Configuration = configuration(0,0,unary_tape(n))
+
+thm configuration_coordinates:
+    ? forall state Symbol,h Z,t fn(pos Z) Symbol:
+        configuration(state,h,t)(1)=state
+        configuration(state,h,t)(2)=h
+        configuration(state,h,t)(3)=t
+    configuration(state,h,t)=(state,h,t)
+
+thm increment_scan:
+    ? forall h Z,t fn(pos Z) Symbol:
+        t(h)=1
+        =>:
+            increment_step(configuration(0,h,t))=configuration(0,h+1,t)
+    release thm configuration_coordinates(0,h,t)
+    configuration(0,h,t)(1)!=1
+    increment_step(configuration(0,h,t))=scan_step(configuration(0,h,t)(2),configuration(0,h,t)(3))
+    scan_step(configuration(0,h,t)(2),configuration(0,h,t)(3))=scan_step(h,t)
+    increment_step(configuration(0,h,t))=scan_step(h,t)=configuration(0,h+1,t)
+
+thm increment_write_and_halt:
+    ? forall h Z,t fn(pos Z) Symbol:
+        t(h)=0
+        =>:
+            increment_step(configuration(0,h,t))=configuration(1,h,write_tape(t,h,1))
+    release thm configuration_coordinates(0,h,t)
+    t(h)!=1
+    configuration(0,h,t)(1)!=1
+    increment_step(configuration(0,h,t))=scan_step(configuration(0,h,t)(2),configuration(0,h,t)(3))
+    scan_step(configuration(0,h,t)(2),configuration(0,h,t)(3))=scan_step(h,t)
+    increment_step(configuration(0,h,t))=scan_step(h,t)=configuration(1,h,write_tape(t,h,1))
+
+release obj def increment_step
+
+thm halted_configuration_is_fixed:
+    ? forall c Configuration:
+        c(1)=1
+        =>:
+            increment_step(c)=c
+    increment_step(c)=c
+
+thm increment_halted:
+    ? forall h Z,t fn(pos Z) Symbol:
+        increment_step(configuration(1,h,t))=configuration(1,h,t)
+    release thm configuration_coordinates(1,h,t)
+    release thm halted_configuration_is_fixed(configuration(1,h,t))
+
+thm unary_tape_inside:
+    ? forall n N,pos Z:
+        0<=pos
+        pos<n
+        =>:
+            unary_tape(n)(pos)=1
+    by def $is_unary_position(n,pos)
+    unary_tape(n)(pos)=unary_symbol(n,pos)=1
+
+thm unary_tape_outside:
+    ? forall n N,pos Z:
+        pos<0 or pos>=n
+        =>:
+            unary_tape(n)(pos)=0
+    by cases:
+        ? not $is_unary_position(n,pos)
+        case pos<0:
+            by contra:
+                ? not $is_unary_position(n,pos)
+                by def $is_unary_position(n,pos)
+                impossible 0<=pos
+        case pos>=n:
+            by contra:
+                ? not $is_unary_position(n,pos)
+                by def $is_unary_position(n,pos)
+                impossible pos<n
+    unary_tape(n)(pos)=unary_symbol(n,pos)=0
+
+prop is_unary_scan_prefix(steps N):
+    forall length N:
+        steps<=length
+        =>:
+            run(steps,unary_initial(length))=configuration(0,steps,unary_tape(length))
+
+claim:
+    ? forall steps N,c Configuration:
+        run(steps+1,c)=increment_step(run(steps,c))
+    steps+1>=1
+    steps+1-1=steps
+    run(steps+1,c)=increment_step(run(steps+1-1,c))=increment_step(run(steps,c))
+
+thm unary_scan_prefix:
+    ? forall steps,n N:
+        steps<=n
+        =>:
+            run(steps,unary_initial(n))=configuration(0,steps,unary_tape(n))
+    by induc steps from 0:
+        ? $is_unary_scan_prefix(steps)
+        ? from steps=0:
+            claim:
+                ? forall length N:
+                    0<=length
+                    =>:
+                        run(0,unary_initial(length))=configuration(0,0,unary_tape(length))
+                run(0,unary_initial(length))=unary_initial(length)=configuration(0,0,unary_tape(length))
+            by def $is_unary_scan_prefix(0)
+        ? induc:
+            claim:
+                ? forall length N:
+                    steps+1<=length
+                    =>:
+                        run(steps+1,unary_initial(length))=configuration(0,steps+1,unary_tape(length))
+                steps+1-steps=1>0
+                steps<steps+1<=length
+                steps<length
+                steps<=length
+                run(steps,unary_initial(length))=configuration(0,steps,unary_tape(length))
+                release thm unary_tape_inside(length,steps)
+                release thm increment_scan(steps,unary_tape(length))
+                run(steps+1,unary_initial(length))=increment_step(run(steps,unary_initial(length)))
+                increment_step(run(steps,unary_initial(length)))=increment_step(configuration(0,steps,unary_tape(length)))
+                run(steps+1,unary_initial(length))=configuration(0,steps+1,unary_tape(length))
+            by def $is_unary_scan_prefix(steps+1)
+    $is_unary_scan_prefix(steps)
+    run(steps,unary_initial(n))=configuration(0,steps,unary_tape(n))
+
+thm unary_tape_append:
+    ? forall n N:
+        write_tape(unary_tape(n),n,1)=unary_tape(n+1)
+    claim:
+        ? forall pos Z:
+            write_tape(unary_tape(n),n,1)(pos)=unary_tape(n+1)(pos)
+        by cases:
+            ? write_tape(unary_tape(n),n,1)(pos)=unary_tape(n+1)(pos)
+            case pos=n:
+                release thm unary_tape_inside(n+1,pos)
+                write_tape(unary_tape(n),n,1)(pos)=write_symbol(unary_tape(n),n,1,pos)=1=unary_tape(n+1)(pos)
+            case pos!=n:
+                by cases:
+                    ? unary_tape(n)(pos)=unary_tape(n+1)(pos)
+                    case pos<0:
+                        release thm unary_tape_outside(n,pos)
+                        release thm unary_tape_outside(n+1,pos)
+                        unary_tape(n)(pos)=0=unary_tape(n+1)(pos)
+                    case pos>=0:
+                        by cases:
+                            ? unary_tape(n)(pos)=unary_tape(n+1)(pos)
+                            case pos<n:
+                                pos<n+1
+                                release thm unary_tape_inside(n,pos)
+                                release thm unary_tape_inside(n+1,pos)
+                                unary_tape(n)(pos)=1=unary_tape(n+1)(pos)
+                            case pos>=n:
+                                by contra:
+                                    ? pos>n
+                                    pos<=n
+                                    pos=n
+                                    impossible pos!=n
+                                pos>=n+1
+                                release thm unary_tape_outside(n,pos)
+                                release thm unary_tape_outside(n+1,pos)
+                                unary_tape(n)(pos)=0=unary_tape(n+1)(pos)
+                write_tape(unary_tape(n),n,1)(pos)=write_symbol(unary_tape(n),n,1,pos)=unary_tape(n)(pos)=unary_tape(n+1)(pos)
+    by fn_extension write_tape(unary_tape(n),n,1)=unary_tape(n+1)
+
+thm unary_increment_correct:
+    ? forall n N:
+        run(n+1,unary_initial(n))=configuration(1,n,unary_tape(n+1))
+    release thm unary_scan_prefix(n,n)
+    n>=n
+    release thm unary_tape_outside(n,n)
+    release thm increment_write_and_halt(n,unary_tape(n))
+    release thm unary_tape_append(n)
+    run(n+1,unary_initial(n))=increment_step(run(n,unary_initial(n)))
+    increment_step(run(n,unary_initial(n)))=increment_step(configuration(0,n,unary_tape(n)))
+    run(n+1,unary_initial(n))=configuration(1,n,write_tape(unary_tape(n),n,1))=configuration(1,n,unary_tape(n+1))
+
+thm unary_increment_first_halt:
+    ? forall n,steps N:
+        steps<=n
+        =>:
+            run(steps,unary_initial(n))(1)=0
+            run(n+1,unary_initial(n))(1)=1
+    release thm unary_scan_prefix(steps,n)
+    release thm configuration_coordinates(0,steps,unary_tape(n))
+    release thm unary_increment_correct(n)
+    release thm configuration_coordinates(1,n,unary_tape(n+1))
+
+prop is_halted(c Configuration):
+    c(1)=1
+
+prop halts(c Configuration):
+    exist steps N st {$is_halted(run(steps,c))}
+
+thm unary_increment_halts:
+    ? forall n N:
+        $halts(unary_initial(n))
+    release thm unary_increment_correct(n)
+    release thm configuration_coordinates(1,n,unary_tape(n+1))
+    run(n+1,unary_initial(n))(1)=1
+    by def $is_halted(run(n+1,unary_initial(n)))
+    witness $halts(unary_initial(n)) from n+1
+
+thm halted_runs_are_fixed:
+    ? forall steps N,c Configuration:
+        $is_halted(c)
+        =>:
+            run(steps,c)=c
+    c(1)=1
+    release thm halted_configuration_is_fixed(c)
+    by induc steps from 0:
+        ? run(steps,c)=c
+        ? from steps=0:
+            run(0,c)=c
+        ? induc:
+            run(steps+1,c)=increment_step(run(steps,c))=increment_step(c)=c
+
+have ones_tape fn(pos Z) Symbol=fn(pos Z) Symbol {1}
+
+release obj def run
+
+thm run_zero:
+    ? forall c Configuration:
+        run(0,c)=c
+
+thm run_successor:
+    ? forall steps N,c Configuration:
+        run(steps+1,c)=increment_step(run(steps,c))
+    steps+1>=1
+    steps+1-1=steps
+    run(steps+1,c)=increment_step(run(steps+1-1,c))=increment_step(run(steps,c))
+
+thm ones_tape_scan:
+    ? forall steps N,head Z:
+        run(steps,configuration(0,head,ones_tape))=configuration(0,head+steps,ones_tape)
+    by induc steps from 0:
+        ? run(steps,configuration(0,head,ones_tape))=configuration(0,head+steps,ones_tape)
+        ? from steps=0:
+            head+0=head
+            release thm run_zero(configuration(0,head,ones_tape))
+            run(0,configuration(0,head,ones_tape))=configuration(0,head,ones_tape)=configuration(0,head+0,ones_tape)
+        ? induc:
+            ones_tape(head+steps)=1
+            release thm increment_scan(head+steps,ones_tape)
+            release thm run_successor(steps,configuration(0,head,ones_tape))
+            run(steps+1,configuration(0,head,ones_tape))=increment_step(run(steps,configuration(0,head,ones_tape)))
+            increment_step(run(steps,configuration(0,head,ones_tape)))=increment_step(configuration(0,head+steps,ones_tape))=configuration(0,head+steps+1,ones_tape)
+            head+steps+1=head+(steps+1)
+            run(steps+1,configuration(0,head,ones_tape))=configuration(0,head+steps+1,ones_tape)=configuration(0,head+(steps+1),ones_tape)
+
+thm ones_tape_does_not_halt:
+    ? forall head Z:
+        not $halts(configuration(0,head,ones_tape))
+    by contra:
+        ? not $halts(configuration(0,head,ones_tape))
+        obtain steps from $halts(configuration(0,head,ones_tape))
+        run(steps,configuration(0,head,ones_tape))(1)=1
+        release thm ones_tape_scan(steps,head)
+        release thm configuration_coordinates(0,head+steps,ones_tape)
+        run(steps,configuration(0,head,ones_tape))(1)=0
+        impossible 0=1
+

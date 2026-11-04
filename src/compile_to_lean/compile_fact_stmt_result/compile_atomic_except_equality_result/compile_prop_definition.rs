@@ -199,6 +199,16 @@ impl LitexToLeanCompiler {
                 ),
             ) => self.compile_function_continuity_definition(f, wd, p, position),
             (
+                AtomicFact::FunctionLipschitzFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(BuiltinPropDefinitionProof::FunctionLipschitz(p)),
+            ) => self.compile_lipschitz_definition(f, wd, p, position),
+            (
+                AtomicFact::FunctionContinuousFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(BuiltinPropDefinitionProof::FunctionContinuous(p)),
+            ) => if f.property == FunctionContinuityProperty::UniformContinuous {
+                self.compile_uniform_continuity_definition(f, wd, p, position)
+            } else { self.compile_global_continuity_definition(f, wd, p, position) },
+            (
                 AtomicFact::RealAccumulationFact(f),
                 AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
                     BuiltinPropDefinitionProof::RealAccumulation(p),
@@ -209,6 +219,46 @@ impl LitexToLeanCompiler {
                 &p.proof_of_requirement_facts,
                 position,
             ),
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarContinuousAt(p)),
+                ),
+            ) => {
+                if !matches!(&f.relation,MultivariableAnalysisRelation::ScalarContinuousAt(_)) {return Err(LeanCompileError::unsupported("MultivariableContinuity/DefinitionFamily"));}
+                self.compile_multivariable_continuity_definition(&f.relation,wd,&p.requirement_facts,&p.proof_of_requirement_facts,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::VectorContinuousAt(p)),
+                ),
+            ) => {
+                if !matches!(&f.relation,MultivariableAnalysisRelation::VectorContinuousAt(_)) {return Err(LeanCompileError::unsupported("MultivariableContinuity/DefinitionFamily"));}
+                self.compile_multivariable_continuity_definition(&f.relation,wd,&p.requirement_facts,&p.proof_of_requirement_facts,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarDifferentiableAt(p)),
+                ),
+            ) => {
+                if !matches!(&f.relation,MultivariableAnalysisRelation::ScalarDifferentiableAt(_)) {return Err(LeanCompileError::unsupported("MultivariableDifferentiability/DefinitionFamily"));}
+                self.compile_multivariable_differentiability_definition(&f.relation,&p.requirement_facts,&p.proof_of_requirement_facts,position)
+            },
+            (
+                AtomicFact::MultivariableAnalysisFact(f),
+                AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(
+                    BuiltinPropDefinitionProof::MultivariableAnalysis(
+                        crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::TotalDifferentiableAt(p)),
+                ),
+            ) => {
+                if !matches!(&f.relation,MultivariableAnalysisRelation::TotalDifferentiableAt(_)) {return Err(LeanCompileError::unsupported("MultivariableDifferentiability/DefinitionFamily"));}
+                self.compile_multivariable_differentiability_definition(&f.relation,&p.requirement_facts,&p.proof_of_requirement_facts,position)
+            },
             (
                 AtomicFact::MultivariableAnalysisFact(f),
                 AtomicExceptEqualityFactSearchProofByDefinition::BuiltinProp(

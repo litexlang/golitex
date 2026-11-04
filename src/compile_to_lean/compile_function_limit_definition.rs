@@ -448,10 +448,11 @@ impl LitexToLeanCompiler {
         let raw_domain =
             self.compile_function_raw_expression_bound(domain, position, &HashMap::new())?;
         let function = self.compile_object_reference(function_obj, position)?;
-        let base = self.compile_object_reference(
+        let base_term = self.compile_object_reference(
             &signature_source.set_bound_parameters.groups[0].param_type,
             position,
         )?;
+        let base = format!("_{name_prefix}base");
         let domain_set = if signature_source.dom_facts.is_empty() {
             format!("(Litex.isSet {base})")
         } else {
@@ -469,7 +470,7 @@ impl LitexToLeanCompiler {
                 .map(|i| format!("_domain_guard_{i}"))
                 .collect::<Vec<_>>()
                 .join(", ");
-            format!("change M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _)\n    rw [Litex.SetSemantics.sep_members, Litex.SetSemantics.sep_members]\n    exact ⟨fun ⟨hx, _, {guards}⟩ => ⟨hx, {guards}⟩, fun ⟨hx, {guards}⟩ => ⟨hx, hx, {guards}⟩⟩")
+            format!("change M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _) ↔ M.mem x (Litex.SetSemantics.sepValue (Litex.denote {base}) _)\n    constructor\n    · intro hx\n      obtain ⟨hx, _, {guards}⟩ := (Litex.SetSemantics.sep_members _ _ _).mp hx\n      exact (Litex.SetSemantics.sep_members _ _ _).mpr ⟨hx, {guards}⟩\n    · intro hx\n      obtain ⟨hx, {guards}⟩ := (Litex.SetSemantics.sep_members _ _ _).mp hx\n      exact (Litex.SetSemantics.sep_members _ _ _).mpr ⟨hx, hx, {guards}⟩")
         };
         let sig = format!("_{name_prefix}signature");
         let mem = format!("_{name_prefix}member");
@@ -477,8 +478,8 @@ impl LitexToLeanCompiler {
         let set = format!("_{name_prefix}domain_set");
         let matched = format!("_{name_prefix}domain_match");
         let object = format!("_{name_prefix}domain");
-        let prefix = format!("  let {sig} := {signature}\n  have {mem} : Litex.In {function} (Litex.fnSet {sig}) := {member}\n  let {raw} := {raw_domain}\n  have {set} : M.isSet {raw} := {domain_set}\n  have {matched} : {raw} = {sig}.domain := by\n    apply Litex.SetSemantics.ext _ _ {set} {sig}.domain_isSet\n    intro x\n    {compare}\n  let {object} := Litex.semanticObject {raw} {set}");
-        Ok((prefix, format!("({matched}.trans (Litex.FunctionSemantics.domainValue_eq {sig}.domain_isSet {mem}).symm)")))
+        let prefix = format!("  let {sig} := {signature}\n  have {mem} : Litex.In {function} (Litex.fnSet {sig}) := {member}\n  let {base} := {base_term}\n  let {raw} := {raw_domain}\n  have {set} : M.isSet {raw} := {domain_set}\n  have {matched} : {raw} = {sig}.domain := by\n    apply Litex.SetSemantics.ext _ _ {set} {sig}.domain_isSet\n    intro x\n    {compare}\n  let {object} := Litex.semanticObject {raw} {set}");
+        Ok((prefix, format!("({matched}.trans (Litex.FunctionSemantics.domainValue_eq (M := M) (D := {sig}.domain) (B := {sig}.target) {sig}.domain_isSet {mem}).symm)")))
     }
 
     fn compile_positive_input_domain_comparison(

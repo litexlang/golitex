@@ -1,0 +1,83 @@
+release obj def lc::Term
+
+release obj def lc::variable
+
+release obj def lc::abstraction
+
+release obj def lc::application
+
+release obj def lc::shift
+
+release obj def lc::instantiate
+
+release obj def lc::beta_contract
+
+release obj def lc::duplicator
+
+release obj def lc::omega
+
+claim:
+    ? forall argument lc::Term:
+        lc::beta_contract(lc::variable(0),argument)=argument
+    release thm lc::beta_identity(argument)
+
+release thm lc::beta_avoids_capture
+
+release thm lc::capture_result_is_distinct
+
+release thm lc::variables_are_normal(0,lc::variable(1))
+
+release thm lc::omega_self_step
+
+release thm lc::beta_under_abstraction(lc::omega,lc::omega)
+
+release thm lc::beta_in_function(lc::omega,lc::omega,lc::variable(0))
+
+release thm lc::beta_in_argument(lc::omega,lc::omega,lc::variable(0))
+
+
+claim:
+    ? forall term lc::Term,cutoff N:
+        lc::shift(term,cutoff,0)=term
+    release thm lc::shift_zero(term,cutoff)
+
+claim:
+    ? forall index,depth N,argument lc::Term:
+        index<depth
+        =>:
+            lc::instantiate(lc::variable(index),depth,argument)=lc::variable(index)
+    release thm lc::instantiate_variable_below(index,depth,argument)
+
+claim:
+    ? forall depth N,argument lc::Term:
+        lc::instantiate(lc::variable(depth),depth,argument)=lc::shift(argument,0,depth)
+    release thm lc::instantiate_variable_at(depth,argument)
+
+claim:
+    ? forall index,depth N,argument lc::Term:
+        index>depth
+        =>:
+            lc::instantiate(lc::variable(index),depth,argument)=lc::variable(index-1)
+    release thm lc::instantiate_variable_above(index,depth,argument)
+
+claim:
+    ? forall body,argument lc::Term,depth N:
+        lc::instantiate(lc::abstraction(body),depth,argument)=lc::abstraction(lc::instantiate(body,depth+1,argument))
+    release thm lc::instantiate_abstraction(body,argument,depth)
+
+claim:
+    ? forall left,right,argument lc::Term,depth N:
+        lc::instantiate(lc::application(left,right),depth,argument)=lc::application(lc::instantiate(left,depth,argument),lc::instantiate(right,depth,argument))
+    release thm lc::instantiate_application(left,right,argument,depth)
+
+claim:
+    ? forall body,argument lc::Term:
+        $lc::is_beta_step(lc::application(lc::abstraction(body),argument),lc::beta_contract(body,argument))
+    release thm lc::beta_root_rule(body,argument)
+    release thm lc::root_beta_is_beta(lc::application(lc::abstraction(body),argument),lc::beta_contract(body,argument))
+
+release thm lc::variable_shape(0)
+
+release thm lc::variable_not_abstraction(lc::variable(0))
+
+release thm lc::variable_not_application(lc::variable(0))

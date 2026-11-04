@@ -381,6 +381,18 @@ theorem semanticDerivativeNeg {M : Semantics.{u}} (raw : ℝ → M.Value) (p : �
   · rw [hs,M.neg_numbers,←Complex.ofReal_neg]
   · exact hf.mono fun x hx => by dsimp only; rw [hx,M.neg_numbers,←Complex.ofReal_neg]
 
+theorem semanticDerivativeScale {M : Semantics.{u}} (raw : ℝ → M.Value) (p : ℝ)
+    (c d : M.Value) (hc : M.mem c (M.standard .real))
+    (h : SemanticDerivativeAtValue M raw p d) :
+    SemanticDerivativeAtValue M (fun x => M.mulValue c (raw x)) p (M.mulValue c d) := by
+  obtain ⟨s,hs,f,hf,hd⟩ := h
+  obtain ⟨r,hr⟩ := (M.real_members c).mp hc
+  refine ⟨r*s,?_,fun x => r*f x,?_,hd.const_mul r⟩
+  · rw [hr,hs,M.mul_numbers,←Complex.ofReal_mul]
+  · exact hf.mono fun x hx => by
+      dsimp only
+      rw [hr,hx,M.mul_numbers,←Complex.ofReal_mul]
+
 theorem semanticDerivativeAdd {M : Semantics.{u}} (raw other : ℝ → M.Value)
     (p : ℝ) (d e : M.Value)
     (h : SemanticDerivativeAtValue M raw p d) (k : SemanticDerivativeAtValue M other p e) :
@@ -803,6 +815,23 @@ theorem semanticDerivativeCompose {M : Semantics.{u}} [F : FunctionSemantics M]
   · filter_upwards [hf,hg.comp_tendsto hd.continuousAt] with x hx houter
     rw [hx]
     exact houter
+
+theorem semanticDerivativeComposeCandidates {M : Semantics.{u}} [F : FunctionSemantics M]
+    (f g point a b : M.Value) (p : ℝ) (hp : point=M.number (p : ℂ))
+    (hf : RealFunctionValue M f) (hg : RealFunctionValue M g)
+    (first : HasDerivativeAtValue M f point a)
+    (second : HasDerivativeAtValue M g (F.callValue f point) b) :
+    SemanticDerivativeAtValue M
+      (fun x => F.callValue g (F.callValue f (M.number (x : ℂ)))) p (M.mulValue b a) := by
+  let raw : ℝ → M.Value := fun x => F.callValue f (M.number (x : ℂ))
+  have inner : SemanticDerivativeAtValue M raw p a :=
+    semanticDerivativeOfCandidate f point a p hp hf first
+  have image : F.callValue f point=M.number (observeRealValue (raw p) : ℂ) := by
+    rw [hp]
+    exact semanticDerivativeValuePoint raw p a inner
+  have outer := semanticDerivativeOfCandidate g (F.callValue f point) b
+    (observeRealValue (raw p)) image hg second
+  exact semanticDerivativeCompose raw g p a b inner outer
 
 theorem semanticDerivativeDropLeftUnit {M : Semantics.{u}} (raw : ℝ → M.Value) (p : ℝ)
     (coefficient : M.Value) (real : M.mem coefficient (M.standard .real))

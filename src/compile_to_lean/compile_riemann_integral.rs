@@ -215,13 +215,15 @@ impl LitexToLeanCompiler {
             if source_subject(p)? != r.requirement {
                 return Err(invalid("WDRequirementProof"));
             }
-            let (ty, term) = self.compile_verify(
-                p,
-                &SourcePosition {
-                    before: 3 + i,
-                    ..*position
-                },
-            )?;
+            let prior = SourcePosition {
+                before: 3 + i,
+                ..*position
+            };
+            let (_checked_type, term) = self.compile_verify(p, &prior)?;
+            // Keep the original proof/WD term, but fix its semantic proposition
+            // independently of proof-consuming object constructors in its type.
+            let ty =
+                self.compile_function_raw_predicate(&r.requirement, &prior, &HashMap::new())?;
             lines.push(format!(
                 "have h_{} : {ty} := {term}",
                 r.requirement.fact_id().value()
@@ -352,7 +354,7 @@ impl LitexToLeanCompiler {
                 before: args.len() + i,
                 ..*position
             };
-            let (ty, term) = match &r.result {
+            let (_checked_type, term) = match &r.result {
                 PredicateDomainRequirementProof::Verified(p) => {
                     if source_subject(p)? != r.requirement {
                         return Err(invalid("PredicateRequirementProof"));
@@ -363,6 +365,18 @@ impl LitexToLeanCompiler {
                     self.compile_function_raw_predicate(&r.requirement, &prior, &HashMap::new())?,
                     self.compile_checked_domain_argument(&r.requirement, p, &args, i, &prior)?,
                 ),
+            };
+            // A guarded function carrier repeats its complete formation inside
+            // dependent enclosure hypotheses. Bind that fixed semantic carrier
+            // while retaining its original proof. Keep other checked types,
+            // including intervals, at their already-formed constructors.
+            let ty = if matches!(&r.requirement,
+                Fact::AtomicFact(AtomicFact::InFact(member))
+                if matches!(&member.set, Obj::FunctionSpace(FunctionSpace::FnSet(_))))
+            {
+                self.compile_function_raw_predicate(&r.requirement, &prior, &HashMap::new())?
+            } else {
+                _checked_type
             };
             lines.push(format!(
                 "have h_{} : {ty} := {term}",

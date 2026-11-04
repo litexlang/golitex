@@ -81,6 +81,37 @@ impl LitexToLeanCompiler {
             SourceOwner::WD(&p.source_well_defined),
             usize::MAX,
         );
+        // The recorded empty determinant expands directly to one. There is
+        // no child aggregate to consume; unrelated aggregate cursors stay put.
+        if matches!(object, Obj::MatrixOperator(MatrixOperator::Determinant(d))
+            if matches!(d.order.as_ref(), Obj::Literal(Literal::Number(_)))
+                && closed_integer(&d.order) == Some(0))
+        {
+            if !matches!(&p.expression, Obj::Literal(Literal::Number(_)))
+                || closed_integer(&p.expression) != Some(1)
+            {
+                return Err(LeanCompileError::unsupported(
+                    "Eval/EmptyDeterminantOriginalExpansion",
+                ));
+            }
+            *remaining_matrices = index;
+            let (value, calculated, cites) = self.compile_eval_value(
+                &p.expression,
+                functions,
+                remaining_functions,
+                aggregates,
+                remaining_aggregates,
+                matrices,
+                remaining_matrices,
+                &formed,
+            )?;
+            if EvalRational::from_obj(&p.value).as_ref() != Some(&value) {
+                return Err(LeanCompileError::unsupported("Eval/MatrixValue"));
+            }
+            return Ok((value, format!(
+                "(by\n  let _matrix_scalar := {original}\n  exact (Litex.matrixDeterminantZero (Litex.denote _matrix_scalar.val.matrix)).trans {calculated})"
+            ), cites));
+        }
         let aggregate_index = remaining_aggregates
             .checked_sub(1)
             .ok_or_else(|| LeanCompileError::unsupported("Eval/MatrixAggregateMissing"))?;

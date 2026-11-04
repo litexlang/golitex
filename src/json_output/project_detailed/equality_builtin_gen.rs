@@ -12,6 +12,9 @@ pub(super) fn project_equality_builtin_rule(
     runtime: &Runtime,
 ) -> JsonValue {
     match rule {
+        EqualitySearchProofByBuiltinRule::NativeMatrixProperty(p) => {
+            super::matrix_property::project_matrix_property(p, runtime)
+        }
         EqualitySearchProofByBuiltinRule::NativeMatrixLaw(p) => {
             let a = p.application();
             object_for(runtime, vec![

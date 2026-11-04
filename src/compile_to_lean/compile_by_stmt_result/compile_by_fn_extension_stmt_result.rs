@@ -246,7 +246,10 @@ impl LitexToLeanCompiler {
                 let object = self.compile_object_reference(&literal, position)?;
                 let same =
                     self.compile_equality_path(subject, &literal, subject_equal, position)?;
-                Ok(format!("(Litex.inOfSame {object} {target} (Litex.fnSet {signature}) (Litex.fnSet {signature}) ({same}).symm (Litex.sameRefl _) (Litex.formulaFnInFnSet {object}))"))
+                // Finish the checked carrier before transporting membership.
+                // Inlining it twice can leave distinct predicate metavariables
+                // when a parameter's domain is itself a bounded builder.
+                Ok(format!("(by\n  let _domain_space := Litex.fnSet {signature}\n  exact Litex.inOfSame {object} {target} _domain_space _domain_space ({same}).symm (Litex.sameRefl _) (Litex.formulaFnInFnSet {object}))"))
             }
             CompleteFunctionDomainSourceProof::Membership {
                 membership,

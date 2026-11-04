@@ -441,7 +441,17 @@ impl LitexToLeanCompiler {
                 Err(LeanCompileError::unsupported("Infer/CommRing"))
             }
             InferAtomicFactResult::MultivariableAnalysisFact(_) => {
-                if matches!(seed,Fact::AtomicFact(a) if super::compile_total_differential::parts(a).is_some())
+                if matches!(seed,Fact::AtomicFact(a) if super::compile_multivariable_continuity::parts(a).is_some())
+                {
+                    self.compile_multivariable_continuity_inferences(
+                        infer, seed, compiled, position,
+                    )
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_multivariable_differentiability::parts(a).is_some())
+                {
+                    self.compile_multivariable_differentiability_inferences(
+                        infer, seed, compiled, position,
+                    )
+                } else if matches!(seed,Fact::AtomicFact(a) if super::compile_total_differential::parts(a).is_some())
                 {
                     self.compile_total_differential_inferences(infer, seed, compiled, position)
                 } else if matches!(seed,Fact::AtomicFact(a) if super::compile_scalar_differential::parts(a).is_some())
@@ -514,17 +524,18 @@ impl LitexToLeanCompiler {
             }
             InferAtomicFactResult::NotFunctionContinuousAtFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::FunctionContinuousFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+                if matches!(seed, Fact::AtomicFact(AtomicFact::FunctionContinuousFact(f)) if f.property == FunctionContinuityProperty::UniformContinuous)
+                {
+                    self.compile_uniform_continuity_inferences(infer, seed, compiled, position)
+                } else {
+                    self.compile_global_continuity_inferences(infer, seed, compiled, position)
+                }
             }
-            InferAtomicFactResult::NotFunctionContinuousFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
-            }
+            InferAtomicFactResult::NotFunctionContinuousFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::FunctionLipschitzFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
+                self.compile_lipschitz_inferences(infer, seed, compiled, position)
             }
-            InferAtomicFactResult::NotFunctionLipschitzFact(_) => {
-                Err(LeanCompileError::unsupported("Inference/RealAnalysis"))
-            }
+            InferAtomicFactResult::NotFunctionLipschitzFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::HasFunctionLimitFact(_)
             | InferAtomicFactResult::NotHasFunctionLimitFact(_) => Ok(Vec::new()),
             InferAtomicFactResult::HasSequenceLimitFact(_)

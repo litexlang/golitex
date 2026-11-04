@@ -148,6 +148,21 @@ impl LitexToLeanCompiler {
                 format!("(Litex.numberInC (M := M) {value})"),
             ));
         }
+        if let Obj::TrigOperator(operator @ (TrigOperator::Sin(_) | TrigOperator::Cos(_))) = object
+        {
+            let (kind, arg) = match operator {
+                TrigOperator::Sin(x) => ("sin", &*x.arg),
+                TrigOperator::Cos(x) => ("cos", &*x.arg),
+                _ => unreachable!(),
+            };
+            let input = self.compile_object_reference(arg, position)?;
+            let real = self.compile_real_membership_certificate(arg, position)?;
+            let term = format!("(Litex.{kind} {input} {real})");
+            return Ok((
+                term.clone(),
+                format!("(Litex.realToComplex {term} (Litex.{kind}InR {term}))"),
+            ));
+        }
         if let Obj::ArithmeticOperator(ArithmeticOperator::Pow(power)) = object {
             let (arguments, _) = self.inferred_nat_power_arguments(power, position)?;
             return Ok((

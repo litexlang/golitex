@@ -1,9 +1,64 @@
-use super::source_position::SourcePosition;
+use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
 use std::collections::{HashMap, HashSet};
 
 impl LitexToLeanCompiler {
+    /// Render a literal's body where its original formation was checked. This
+    /// makes nested constructors available only inside that body's binders.
+    pub(super) fn with_function_body_position<T>(
+        &self,
+        function: &AnonymousFn,
+        position: &SourcePosition<'_>,
+        mut emit: impl FnMut(&SourcePosition<'_>) -> Result<T, LeanCompileError>,
+    ) -> Result<T, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
+        let literal = Obj::FunctionSpace(FunctionSpace::AnonymousFn(function.clone()));
+        // During construction this literal is the current owner, not a
+        // preceding visible constructor. Its body still has its own prefix.
+        if let SourceOwner::WD(wd) = position.owner {
+            if wd.obj() == &literal {
+                return emit(&SourcePosition {
+                    before: self.function_header_stages(&function.body) + 2,
+                    ..*position
+                });
+            }
+        }
+        if let Some(value) = position.with_visible_wd(&literal, &mut |wd, original| {
+            let DetailedObjWellDefinedProof::ByDef {
+                obj,
+                proof:
+                    ObjWellDefinedProofByDef::FunctionSpace(
+                        FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(body),
+                    ),
+            } = wd.detailed_ref()
+            else {
+                return Err(LeanCompileError::unsupported("Function/OriginalBodyWD"));
+            };
+            // Visibility also matches alpha-equivalent literals. Their local
+            // binder IDs are not this literal's parameters: do not open that
+            // other scope merely to render a semantic substitution endpoint.
+            if obj != &literal {
+                return emit(position);
+            }
+            if body.body_well_defined.obj().ir() != function.equal_to.ir() {
+                return Err(LeanCompileError::unsupported(
+                    "Function/OriginalBodySubject",
+                ));
+            }
+            emit(&SourcePosition::new(
+                Some(original),
+                SourceOwner::WD(wd),
+                self.function_header_stages(&function.body) + 2,
+            ))
+        })? {
+            return Ok(value);
+        }
+        // Semantic substitution endpoints have no new formation registration.
+        // Their callers still retain the original call and domain evidence.
+        emit(position)
+    }
+
     /// Interpret a nested literal under the source's lexical parameter IDs.
     /// This is only its graph value: construction and beta consumers retain
     /// the original literal/call WD and checked return-membership proof.
@@ -36,8 +91,9 @@ impl LitexToLeanCompiler {
             .flat_map(|g| &g.params)
             .map(|parameter| format!("(_raw_i{} : M.Value)", parameter.id.value()))
             .collect::<Vec<_>>();
-        let body =
-            self.compile_function_raw_expression_bound(&function.equal_to, position, &bindings)?;
+        let body = self.with_function_body_position(function, position, |body_position| {
+            self.compile_function_raw_expression_bound(&function.equal_to, body_position, &bindings)
+        })?;
         let values = self
             .compile_function_packed_values(signature, "_captured_input")?
             .join(" ");

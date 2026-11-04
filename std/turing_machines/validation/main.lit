@@ -1,0 +1,78 @@
+release obj def tm::Symbol
+
+release obj def tm::Configuration
+
+release obj def tm::configuration
+
+release obj def tm::run
+
+release obj def tm::unary_tape
+
+release obj def tm::unary_initial
+
+claim:
+    ? forall n N:
+        tm::run(n+1,tm::unary_initial(n))=tm::configuration(1,n,tm::unary_tape(n+1))
+    release thm tm::unary_increment_correct(n)
+
+release thm tm::unary_increment_first_halt(7,3)
+
+release thm tm::unary_increment_correct(0)
+
+
+claim:
+    ? forall n N:
+        $tm::halts(tm::unary_initial(n))
+    release thm tm::unary_increment_halts(n)
+
+claim:
+    ? forall steps N,c tm::Configuration:
+        $tm::is_halted(c)
+        =>:
+            tm::run(steps,c)=c
+    release thm tm::halted_runs_are_fixed(steps,c)
+
+claim:
+    ? forall n,steps N:
+        steps<=n
+        =>:
+            tm::run(steps,tm::unary_initial(n))(1)=0
+            tm::run(n+1,tm::unary_initial(n))(1)=1
+    release thm tm::unary_increment_first_halt(n,steps)
+
+release thm tm::unary_tape_inside(3,0)
+
+release thm tm::unary_tape_outside(3,3)
+
+release thm tm::unary_increment_correct(3)
+
+release thm tm::configuration_coordinates(1,3,tm::unary_tape(4))
+
+release thm tm::unary_tape_inside(4,3)
+
+have output tm::Configuration=tm::run(4,tm::unary_initial(3))
+
+3+1=4
+
+output=tm::run(4,tm::unary_initial(3))=tm::run(3+1,tm::unary_initial(3))=tm::configuration(1,3,tm::unary_tape(3+1))=tm::configuration(1,3,tm::unary_tape(4))
+
+output(3)=tm::unary_tape(4)
+
+have output_tape fn(pos Z) tm::Symbol=output(3)
+
+output_tape=tm::unary_tape(4)
+
+output_tape(3)=tm::unary_tape(4)(3)=1
+
+release obj def tm::ones_tape
+
+claim:
+    ? forall steps N,head Z:
+        tm::run(steps,tm::configuration(0,head,tm::ones_tape))=tm::configuration(0,head+steps,tm::ones_tape)
+    release thm tm::ones_tape_scan(steps,head)
+
+claim:
+    ? forall head Z:
+        not $tm::halts(tm::configuration(0,head,tm::ones_tape))
+    release thm tm::ones_tape_does_not_halt(head)
+

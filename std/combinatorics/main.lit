@@ -350,6 +350,7 @@ thm binomial_beyond_row_zero:
                     col > row+1
                     =>:
                         binomial_coefficient(row+1,col) = 0
+                1 <= row+1 < col
                 col >= 1
                 col-1 > (row+1)-1 = row
                 col-1 $in N

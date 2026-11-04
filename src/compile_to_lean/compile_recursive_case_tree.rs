@@ -15,27 +15,77 @@ impl LitexToLeanCompiler {
     pub(super) fn compile_general_recursive_body(
         &self,
         cases: &[HaveFnByInducCase],
+        checks: &InducCaseListSuccess,
         site: &SourcePosition<'_>,
         bindings: &HashMap<IdentifierId, String>,
     ) -> Result<String, LeanCompileError> {
         let mut result = "M.number 0".to_string();
-        for case in cases.iter().rev() {
+        if cases.len() != checks.cases.len() {
+            return Err(general_error("CaseCapture"));
+        }
+        for (case, evidence) in cases.iter().zip(&checks.cases).rev() {
+            let branch = SourcePosition::new(Some(site), SourceOwner::RecursiveCase(evidence), 2);
             let guard = self.compile_function_raw_predicate(
                 &and_chain_as_fact(&case.case_fact),
                 site,
                 bindings,
             )?;
-            let value = match &case.body {
-                HaveFnByInducCaseBody::EqualTo(body) => {
-                    self.compile_function_raw_expression_bound(body, site, bindings)?
+            let value = match (&case.body, &evidence.body) {
+                (
+                    HaveFnByInducCaseBody::EqualTo(body),
+                    InducCaseBodySuccess::EqualTo { well_defined, .. },
+                ) => {
+                    success_object_wd(well_defined, body)?;
+                    self.compile_function_raw_expression_bound(body, &branch, bindings)?
                 }
-                HaveFnByInducCaseBody::NestedCases(children) => {
-                    self.compile_general_recursive_body(children, site, bindings)?
+                (
+                    HaveFnByInducCaseBody::NestedCases(children),
+                    InducCaseBodySuccess::NestedCases(child_checks),
+                ) => {
+                    self.compile_general_recursive_body(children, child_checks, &branch, bindings)?
                 }
+                _ => return Err(general_error("CaseCapture")),
             };
             result = format!("(if {guard} then {value} else {result})");
         }
         Ok(result)
+    }
+
+    pub(super) fn compile_recursive_leaf_value(
+        &self,
+        cases: &[HaveFnByInducCase],
+        checks: &InducCaseListSuccess,
+        path: &[usize],
+        site: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<String, LeanCompileError> {
+        let (index, tail) = path
+            .split_first()
+            .ok_or_else(|| general_error("EquationPath"))?;
+        let case = cases
+            .get(*index)
+            .ok_or_else(|| general_error("EquationPath"))?;
+        let evidence = checks
+            .cases
+            .get(*index)
+            .ok_or_else(|| general_error("CaseCapture"))?;
+        let branch = SourcePosition::new(Some(site), SourceOwner::RecursiveCase(evidence), 2);
+        match (&case.body, &evidence.body) {
+            (
+                HaveFnByInducCaseBody::EqualTo(body),
+                InducCaseBodySuccess::EqualTo { well_defined, .. },
+            ) if tail.is_empty() => {
+                success_object_wd(well_defined, body)?;
+                self.compile_function_raw_expression_bound(body, &branch, bindings)
+            }
+            (
+                HaveFnByInducCaseBody::NestedCases(children),
+                InducCaseBodySuccess::NestedCases(child_checks),
+            ) if !tail.is_empty() => {
+                self.compile_recursive_leaf_value(children, child_checks, tail, &branch, bindings)
+            }
+            _ => Err(general_error("CaseCapture")),
+        }
     }
 
     pub(super) fn compile_recursive_case_tree(

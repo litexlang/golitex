@@ -319,6 +319,37 @@ theorem minMaxMember {M : Semantics.{u}} {maximum : Bool}
   unfold minMaxValue
   split <;> cases maximum <;> first | exact ha | exact hb
 
+theorem naturalMaxDifference {M : Semantics.{u}} {α β γ : Type*}
+    [Representation M α] [Representation M β] [Representation M γ]
+    (p : Obj (M := M) (SubObj (M := M) (MinMaxObj (M := M) true α β) γ))
+    (rightOperand : Bool)
+    (hselected : denote p.val.right =
+      if rightOperand then denote p.val.left.val.right else denote p.val.left.val.left)
+    (hmax : In p.val.left N) (hsub : In p.val.right N) : In p N := by
+  obtain ⟨r, hr⟩ := (M.real_members _).mp p.val.left.wd.1
+  obtain ⟨s, hs⟩ := (M.real_members _).mp p.val.left.wd.2
+  have hmaxReal : denote p.val.left = M.number ((Max.max r s : ℝ) : ℂ) := by
+    change minMaxValue true (denote p.val.left.val.left) (denote p.val.left.val.right) = _
+    rw [hr, hs, minMaxValue_number]
+    rfl
+  have hbound : Le p.val.right p.val.left := by
+    cases rightOperand
+    · refine ⟨r, Max.max r s, ?_, hmaxReal, le_max_left r s⟩
+      exact hselected.trans hr
+    · refine ⟨s, Max.max r s, ?_, hmaxReal, le_max_right r s⟩
+      exact hselected.trans hs
+  obtain ⟨m, hm⟩ := (M.natural_members _).mp hmax
+  obtain ⟨n, hn⟩ := (M.natural_members _).mp hsub
+  have hmr : denote p.val.left = M.number ((m : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_natCast] using hm
+  have hnr : denote p.val.right = M.number ((n : ℝ) : ℂ) := by
+    simpa only [Complex.ofReal_natCast] using hn
+  have hnm : n ≤ m := by
+    exact_mod_cast (NativeBridge.le_iff_ofDenoteReal _ _ _ _ hnr hmr).mp hbound
+  refine (M.natural_members _).mpr ⟨m - n, ?_⟩
+  change M.subValue (denote p.val.left) (denote p.val.right) = _
+  rw [hm, hn, M.sub_numbers, Nat.cast_sub hnm]
+
 theorem minMaxIdempotent {M : Semantics.{u}} {maximum : Bool}
     {α : Type v} {β : Type w} [Representation M α] [Representation M β]
     (p : Obj (M := M) (MinMaxObj (M := M) maximum α β))

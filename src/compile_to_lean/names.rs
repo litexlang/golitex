@@ -994,11 +994,44 @@ impl LitexToLeanCompiler {
             AtomicFact::CommRingFact(_) | AtomicFact::NotCommRingFact(_) => {
                 Err(LeanCompileError::unsupported("Atomic/CommRing"))
             }
-            AtomicFact::FunctionContinuousFact(_)
-            | AtomicFact::NotFunctionContinuousFact(_)
-            | AtomicFact::FunctionLipschitzFact(_)
-            | AtomicFact::NotFunctionLipschitzFact(_)
-            | AtomicFact::InjectiveFact(_)
+            fact @ (AtomicFact::FunctionContinuousFact(_)
+            | AtomicFact::NotFunctionContinuousFact(_)) => {
+                let (function, negative) = super::compile_global_continuity::parts(fact)
+                    .ok_or_else(|| LeanCompileError::unsupported("GlobalContinuity/Property"))?;
+                let property = match fact {
+                    AtomicFact::FunctionContinuousFact(f) => f.property,
+                    AtomicFact::NotFunctionContinuousFact(f) => f.property,
+                    _ => unreachable!(),
+                };
+                let name = match property {
+                    FunctionContinuityProperty::Continuous => "FunctionContinuous",
+                    FunctionContinuityProperty::UniformContinuous => "FunctionUniformContinuous",
+                };
+                let term = format!(
+                    "Litex.{name} {}",
+                    self.compile_object_reference(function, position)?
+                );
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
+            fact @ (AtomicFact::FunctionLipschitzFact(_)
+            | AtomicFact::NotFunctionLipschitzFact(_)) => {
+                let (function, constant, negative) = super::compile_lipschitz::parts(fact).unwrap();
+                let term = format!(
+                    "Litex.FunctionLipschitz {} {}",
+                    self.compile_object_reference(function, position)?,
+                    self.compile_object_reference(constant, position)?
+                );
+                Ok(if negative {
+                    format!("¬ ({term})")
+                } else {
+                    term
+                })
+            }
+            AtomicFact::InjectiveFact(_)
             | AtomicFact::SurjectiveFact(_)
             | AtomicFact::BijectiveFact(_)
             | AtomicFact::NotInjectiveFact(_)
@@ -1129,6 +1162,9 @@ impl LitexToLeanCompiler {
             return Ok(term);
         }
         if let Some(term) = self.compile_obtain_constructor_reference(object, position)? {
+            return Ok(term);
+        }
+        if let Some(term) = self.compile_struct_field_constructor_reference(object, position)? {
             return Ok(term);
         }
         if let Some(term) = self.compile_template_search_reference(object, position)? {

@@ -78,6 +78,10 @@ impl LitexToLeanCompiler {
                 },
             )?;
             if let Some(found) = found { return Ok(Some(found)); }
+            if let Some(found) = self.compile_recursive_callee_constructor(
+                source, then_index, pattern, application, caller, observe_numeric)? {
+                return Ok(Some(found));
+            }
             self.compile_template_callee_constructor(source, then_index,
                 pattern, application, caller, observe_numeric)?
                 .map(Some).ok_or_else(|| LeanCompileError::new("WD/CalleeProducer", &format!("The selected forall h_{} has no original constructor for `{}` instantiated as `{}` at this exact argument stage.", source.fact_id.value(), pattern.readable_string(), object.readable_string())))
@@ -302,9 +306,10 @@ fn constructor_pattern<'a>(
     if (matches!(
         pattern,
         Obj::ArithmeticOperator(_)
+            | Obj::MatrixOperator(_)
             | Obj::FnObj(_)
             | Obj::InstantiatedTemplateObj(_)
-            | Obj::SetFormer(SetFormer::ListSet(_))
+            | Obj::SetFormer(SetFormer::ListSet(_) | SetFormer::MatrixSet(_))
     ) || numeric_leaves
         && (matches!(pattern, Obj::Literal(Literal::Number(_)))
             || arithmetic_constructor_pairs(pattern, pattern).is_some()))
@@ -323,6 +328,10 @@ fn constructor_pattern<'a>(
     }
     let children: Vec<&Obj> = match pattern {
         Obj::SetFormer(SetFormer::ListSet(set)) => set.list.iter().map(Box::as_ref).collect(),
+        Obj::SetFormer(SetFormer::MatrixSet(set)) => vec![&set.set, &set.rows, &set.cols],
+        Obj::MatrixOperator(_) => arithmetic_constructor_pairs(pattern, pattern)
+            .map(|(_, children)| children.into_iter().map(|(child, _)| child).collect())
+            .unwrap_or_default(),
         Obj::SetFormer(SetFormer::Range(p)) if numeric_leaves => vec![&p.start, &p.end],
         Obj::SetFormer(SetFormer::ClosedRange(p)) if numeric_leaves => vec![&p.start, &p.end],
         Obj::SetFormer(SetFormer::IntervalObj(p)) if numeric_leaves => {

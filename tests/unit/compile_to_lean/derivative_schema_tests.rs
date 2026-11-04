@@ -679,19 +679,45 @@ fn coordinate_definition_laplacian_retains_defining_witness_and_inference() {
 
 #[test]
 fn coordinate_definition_curl_retains_defining_witness_and_inference() {
-    for (source,law) in [
-        ("# Curl's defining witness keeps all six partial derivatives and their orientation.\nthm checked_curl_builtin_from_definition:\n    ? forall f fn(x cart_n(R,3)) cart_n(R,3), p cart_n(R,3), c cart_n(R,3):\n        exist v cart_n(R,6) st {$has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(3)},p,3,2,v(1)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(2)},p,3,3,v(2)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(1)},p,3,3,v(3)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(3)},p,3,1,v(4)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(2)},p,3,1,v(5)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(1)},p,3,2,v(6)), c(1)=v(1)-v(2), c(2)=v(3)-v(4), c(3)=v(5)-v(6)}\n        =>:\n            $has_curl_at(f,p,c)\n    release thm curl_at_from_definition(f,p,c)\n","curlOfCoordinatePartials"),
-        ("# Expanding curl recovers the same ordered six partials and three signed coordinate differences.\nthm checked_curl_builtin_to_definition:\n    ? forall f fn(x cart_n(R,3)) cart_n(R,3), p cart_n(R,3), c cart_n(R,3):\n        $has_curl_at(f,p,c)\n        =>:\n            exist v cart_n(R,6) st {$has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(3)},p,3,2,v(1)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(2)},p,3,3,v(2)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(1)},p,3,3,v(3)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(3)},p,3,1,v(4)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(2)},p,3,1,v(5)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(1)},p,3,2,v(6)), c(1)=v(1)-v(2), c(2)=v(3)-v(4), c(3)=v(5)-v(6)}\n    release thm curl_at_to_definition(f,p,c)\n","curlCoordinatePartials"),
+    for (source, law) in [
+        (
+            include_str!("../../../lean/examples/curl_builtin_from_definition/statement.lit"),
+            "curlOfCoordinatePartials",
+        ),
+        (
+            include_str!("../../../lean/examples/curl_builtin_to_definition/statement.lit"),
+            "curlCoordinatePartials",
+        ),
     ] {
-        let (run,compiler) = super::execute(source);
-        assert!(compiler.compile_run(&run,"curl_definition").unwrap().contains(&format!("Litex.{law}")));
+        let (mut run, compiler) = super::execute(source);
+        let original = invocation(&mut run);
+        let expected = if law == "curlOfCoordinatePartials" {
+            crate::builtin_theorem::BuiltinTheoremId::CurlAtFromDefinition
+        } else {
+            crate::builtin_theorem::BuiltinTheoremId::CurlAtToDefinition
+        };
+        assert_eq!(original.builtin.as_ref().unwrap().theorem, expected);
+        assert!(matches!(
+            original.theorem_derivation,
+            crate::execute::execute_by_stmt::TheoremDerivationProof::NativeSchema
+        ));
+        assert_eq!(original.dom_proofs.len(), 7);
+        assert_eq!(original.dom_stores.len(), 7);
+        assert!(compiler
+            .compile_run(&run, "curl_definition")
+            .unwrap()
+            .contains(&format!("Litex.{law}")));
     }
-    let (mut run,compiler) = super::execute("# Curl's defining witness keeps all six partial derivatives and their orientation.\nthm checked_curl_builtin_from_definition:\n    ? forall f fn(x cart_n(R,3)) cart_n(R,3), p cart_n(R,3), c cart_n(R,3):\n        exist v cart_n(R,6) st {$has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(3)},p,3,2,v(1)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(2)},p,3,3,v(2)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(1)},p,3,3,v(3)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(3)},p,3,1,v(4)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(2)},p,3,1,v(5)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(1)},p,3,2,v(6)), c(1)=v(1)-v(2), c(2)=v(3)-v(4), c(3)=v(5)-v(6)}\n        =>:\n            $has_curl_at(f,p,c)\n    release thm curl_at_from_definition(f,p,c)\n");
+    let (mut run, compiler) = super::execute(include_str!(
+        "../../../lean/examples/curl_builtin_from_definition/statement.lit"
+    ));
     invocation(&mut run).dom_proofs.swap(0, 6);
     compiler
         .compile_run(&run, "curl_reordered_witness")
         .expect_err("the defining witness remains after the original context proofs");
-    let (mut run,compiler) = super::execute("# Expanding curl recovers the same ordered six partials and three signed coordinate differences.\nthm checked_curl_builtin_to_definition:\n    ? forall f fn(x cart_n(R,3)) cart_n(R,3), p cart_n(R,3), c cart_n(R,3):\n        $has_curl_at(f,p,c)\n        =>:\n            exist v cart_n(R,6) st {$has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(3)},p,3,2,v(1)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(2)},p,3,3,v(2)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(1)},p,3,3,v(3)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(3)},p,3,1,v(4)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(2)},p,3,1,v(5)), $has_partial_derivative_at(fn(x cart_n(R,3)) R {f(x)(1)},p,3,2,v(6)), c(1)=v(1)-v(2), c(2)=v(3)-v(4), c(3)=v(5)-v(6)}\n    release thm curl_at_to_definition(f,p,c)\n");
+    let (mut run, compiler) = super::execute(include_str!(
+        "../../../lean/examples/curl_builtin_to_definition/statement.lit"
+    ));
     let p = invocation(&mut run);
     let Some(InferResult::AtomicFact(InferAtomicFactResult::MultivariableAnalysisFact(rules))) =
         &mut p.dom_stores[6].infer

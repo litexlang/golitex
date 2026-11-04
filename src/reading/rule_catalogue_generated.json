@@ -6782,6 +6782,13 @@
     "labels": {}
   },
   {
+    "id": "builtin.EqualitySearchProofByBuiltinRule::NativeMatrixProperty",
+    "category": "builtin",
+    "family": "EqualitySearchProofByBuiltinRule",
+    "variant": "NativeMatrixProperty",
+    "labels": {}
+  },
+  {
     "id": "builtin.EqualitySearchProofByBuiltinRule::NegativeIntegerPowerReciprocal",
     "category": "builtin",
     "family": "EqualitySearchProofByBuiltinRule",
@@ -13565,6 +13572,13 @@
     "labels": {}
   },
   {
+    "id": "builtin.InFactSearchProofByBuiltinRule::NativeMatrixProperty",
+    "category": "builtin",
+    "family": "InFactSearchProofByBuiltinRule",
+    "variant": "NativeMatrixProperty",
+    "labels": {}
+  },
+  {
     "id": "builtin.InFactSearchProofByBuiltinRule::NativeScalarCodomain",
     "category": "builtin",
     "family": "InFactSearchProofByBuiltinRule",
@@ -18885,6 +18899,13 @@
         "message": "\u0110\u1ea3o th\u1ee9 t\u1ef1 v\u1edbi th\u1eeba s\u1ed1 chung \u00e2m ho\u1eb7c kh\u00f4ng d\u01b0\u01a1ng: c<=0; b<=a => a*c<=b*c"
       }
     }
+  },
+  {
+    "id": "builtin.LessEqualFactSearchProofByBuiltinRule::NativeMatrixProperty",
+    "category": "builtin",
+    "family": "LessEqualFactSearchProofByBuiltinRule",
+    "variant": "NativeMatrixProperty",
+    "labels": {}
   },
   {
     "id": "builtin.LessEqualFactSearchProofByBuiltinRule::NegationWeakOrder",

@@ -168,8 +168,16 @@ impl LitexToLeanCompiler {
                     | AtomicFact::NotHasSequenceLimitFact(_)
                     | AtomicFact::HasFunctionLimitFact(_)
                     | AtomicFact::NotHasFunctionLimitFact(_)
+                    | AtomicFact::HasRiemannIntegralFact(_)
+                    | AtomicFact::NotHasRiemannIntegralFact(_)
+                    | AtomicFact::FunctionRiemannIntegrableFact(_)
+                    | AtomicFact::NotFunctionRiemannIntegrableFact(_)
                     | AtomicFact::FunctionContinuousAtFact(_)
                     | AtomicFact::NotFunctionContinuousAtFact(_)
+                    | AtomicFact::FunctionContinuousFact(_)
+                    | AtomicFact::NotFunctionContinuousFact(_)
+                    | AtomicFact::FunctionLipschitzFact(_)
+                    | AtomicFact::NotFunctionLipschitzFact(_)
                     | AtomicFact::RealAccumulationFact(_)
                     | AtomicFact::NotRealAccumulationFact(_)
                     | AtomicFact::RealSetBoundFact(_)
@@ -178,13 +186,7 @@ impl LitexToLeanCompiler {
                     | AtomicFact::NotRealSetBoundedFact(_)
             ) =>
             {
-                self.compile_raw_known_atomic_transport(
-                    cited,
-                    goal,
-                    &arguments,
-                    &registered.1,
-                    position,
-                )
+                self.compile_raw_atomic_transport(cited, goal, &arguments, &registered.1, position)
             }
             _ => Err(LeanCompileError::unsupported(
                 "KnownAtomic/PredicateTransport",
@@ -195,7 +197,7 @@ impl LitexToLeanCompiler {
     // Same is equality of M.Value denotations, not equality of the host Obj
     // carriers. The preceding dispatcher has checked the original predicate,
     // polarity, ordered arity, citation and every selected equality winner.
-    fn compile_raw_known_atomic_transport(
+    pub(in crate::compile_to_lean) fn compile_raw_atomic_transport(
         &self,
         cited: &AtomicFact,
         goal: &AtomicFact,
@@ -203,6 +205,17 @@ impl LitexToLeanCompiler {
         citation: &str,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if !same_atomic_family(cited, goal)
+            || atomic_fact_args_ref(cited).len() != arguments.len()
+            || atomic_fact_args_ref(goal).len() != arguments.len()
+        {
+            return Err(LeanCompileError::unsupported(
+                "AtomicTransport/FamilyOrArity",
+            ));
+        }
+        if arguments.is_empty() {
+            return Ok(citation.into());
+        }
         let variables = (0..arguments.len())
             .map(|index| format!("_known_argument_{index}"))
             .collect::<Vec<_>>();
@@ -219,8 +232,23 @@ impl LitexToLeanCompiler {
             atomic_fact_args_ref(fact)
                 .iter()
                 .map(|argument| {
-                    self.compile_object_reference(argument, position)
-                        .map(|object| format!("(Litex.denote {object})"))
+                    // Consume the original formed object before choosing its
+                    // value representation. A range's fixed semantic value
+                    // avoids copying a closed function's WD into every use of
+                    // the transported predicate. If that value renderer cannot
+                    // express this already-checked object, retain its original
+                    // representation; no source WD or equality is reconstructed.
+                    let object = self.compile_object_reference(argument, position)?;
+                    if matches!(argument, Obj::FunctionSpace(FunctionSpace::FnRange(_))) {
+                        if let Ok(value) = self.compile_function_raw_expression_bound(
+                            argument,
+                            position,
+                            &std::collections::HashMap::new(),
+                        ) {
+                            return Ok(value);
+                        }
+                    }
+                    Ok(format!("(Litex.denote {object})"))
                 })
                 .collect::<Result<Vec<_>, LeanCompileError>>()
         };
@@ -229,19 +257,26 @@ impl LitexToLeanCompiler {
         let apply = |values: &[String]| format!("({predicate} {})", values.join(" "));
         let mut current = cited_values.clone();
         let mut equality = format!("(Eq.refl {})", apply(&current));
+        let mut checked_equalities = Vec::new();
         for (index, argument_equality) in arguments.iter().enumerate() {
+            let name = format!("_known_argument_eq_{index}");
+            checked_equalities.push(format!(
+                "have {name} : {} = {} := {argument_equality}",
+                cited_values[index], goal_values[index]
+            ));
             let mut changed = current.clone();
             changed[index] = "_known_value".to_string();
             let lifted = format!(
-                "(congrArg (fun (_known_value : M.Value) => {}) {argument_equality})",
+                "(congrArg (fun (_known_value : M.Value) => {}) {name})",
                 apply(&changed),
             );
             equality = format!("(({equality}).trans {lifted})");
             current[index] = goal_values[index].clone();
         }
         Ok(format!(
-            "(show {} from by\n  have _known_citation : {} := {citation}\n  exact Eq.mp {equality} _known_citation\n)",
+            "(show {} from by\n  {}\n  have _known_citation : {} := {citation}\n  exact Eq.mp {equality} _known_citation\n)",
             apply(&goal_values),
+            checked_equalities.join("\n").replace('\n', "\n  "),
             apply(&cited_values),
         ))
     }

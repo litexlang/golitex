@@ -53,6 +53,7 @@ impl LitexToLeanCompiler {
                         &original,
                         &component.callable,
                         &component.body,
+                        None,
                         wd,
                         producer,
                     )?;

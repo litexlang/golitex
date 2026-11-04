@@ -130,6 +130,7 @@ impl LitexToLeanCompiler {
                     function,
                     Some(&expansion.function_equal),
                     &expansion.expanded_body,
+                    None,
                     position,
                 )
             }

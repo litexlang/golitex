@@ -550,6 +550,9 @@
         if(escaped){container().append(unit(element("span",null,escaped[1]||{textbackslash:"\\",textasciicircum:"^",textasciitilde:"~"}[escaped[2]]),i,i+escaped[0].length));i+=escaped[0].length;continue;}
         if(content[i]==="\\")throw new Error("Unsupported document typography");
         let end=i+1;while(end<limit&&content[end]!=="\\"&&content[end]!=="$")end++;
+        // A case's punctuation and its first proof step share one paragraph.
+        // Split plain text at compiler boundaries before assigning its owner.
+        for(const span of spans){if(span.start>i&&span.start<end)end=span.start;if(span.end>i&&span.end<end)end=span.end;}
         const original=content.slice(i,end),text=original.replace(/\s+/g," ");
         if(text.trim())container().append(unit(element("span",null,text),i+original.search(/\S/),i+original.trimEnd().length));else if(frame().paragraph)container().append(document.createTextNode(" "));
         i=end;
@@ -618,7 +621,7 @@
       const editor=element("div","lr-ide"),canvas=element("div","lr-ide-canvas"),input=element("textarea","lr-editor-input lr-ide-input");
       input.dataset.sourcePath=source.path;input.value=draftContent(source);input.spellcheck=false;input.wrap="off";input.setAttribute("aria-label",editText("Litex 编辑器","Litex editor"));input.setAttribute("autocapitalize","off");input.setAttribute("autocomplete","off");input.setAttribute("autocorrect","off");
       codePane.classList.add("lr-ide-code");codePane.scrollTop=0;codePane.scrollLeft=0;
-      canvas.append(codePane,input);editor.append(canvas);sourcePane.append(editor,element("div","lr-editor-hint",editText("悬浮查看定义与证明 · ⌘ / Ctrl + 点击跳转或固定 · ⌘ / Ctrl + Enter 检查","Hover for definitions and proof · ⌘ / Ctrl + click to follow or keep open · ⌘ / Ctrl + Enter to check")));
+      canvas.append(codePane,input);editor.append(canvas);sourcePane.append(editor,element("div","lr-editor-hint",editText("点击词旁或句尾 ▸ 固定说明 · 悬浮查看定义与证明 · ⌘ / Ctrl + Enter 检查","Click ▸ beside a term or sentence to keep its explanation open · Hover for definitions and proof · ⌘ / Ctrl + Enter to check")));
       const drawDraft=()=>{
         codePane.replaceChildren();
         // Unchecked text receives lexical colors only, never old symbol identities.
@@ -650,7 +653,7 @@
       input.addEventListener("pointerleave",()=>{hideTokenHelp();leaveProof();leaveInferences();});
       input.addEventListener("pointerdown",event=>{
         if(pending())return;
-        const target=underneath(event),action=target?.closest(".lr-inference-toggle,.lr-reference-count,.lr-inline-failure,.lr-logical-action");
+        const target=underneath(event),action=target?.closest(".lr-explanation-toggle,.lr-inference-toggle,.lr-reference-count,.lr-inline-failure,.lr-logical-action");
         const token=target?.closest(".lr-token,[data-keyword],.lr-chain-equality");
         if(action||((event.ctrlKey||event.metaKey)&&token)){event.preventDefault();event.stopPropagation();remember();(action||token).click();}
       });
@@ -691,7 +694,7 @@
       root.querySelectorAll('[data-layout="latex"]').forEach(control=>{control.disabled=pending();});
       closeInferences();closeExplanation();closeProof();
       state={...state,statement:null,symbol:null,fact:null,wd:null,chainStep:null,issue:null,keyword:null,reference:null};
-      root.querySelectorAll(".lr-inline-inferences,.lr-definition-references,.lr-diagnostics:not(.lr-operation-status),.lr-inline-failure,.lr-editor-error,.lr-service-diagnostics").forEach(node=>node.remove());
+      root.querySelectorAll(".lr-explanation-toggle,.lr-inline-inferences,.lr-definition-references,.lr-diagnostics:not(.lr-operation-status),.lr-inline-failure,.lr-editor-error,.lr-service-diagnostics,.lr-math-reason").forEach(node=>node.remove());
       root.querySelectorAll(".lr-book-heading .lr-badge,.lr-book-heading .lr-origin-note").forEach(node=>node.remove());
       const heading=root.querySelector(".lr-book-heading");
       if(heading&&!heading.querySelector(".lr-pending"))heading.append(element("span","lr-pending",editText("待检查","Not checked")));
@@ -868,7 +871,11 @@
       while(pending.length){const node=pending.pop();if(!node||typeof node!=="object")continue;callback(node);
         if(node.kind==="evidence_reference"){const key="evidence:"+node.evidence_id;if(!seen.has(key)){seen.add(key);pending.push(evidenceNodes.get(node.evidence_id));}}
         else if(node.kind==="statement_reference"){const key="statement:"+node.statement_id;if(!seen.has(key)){seen.add(key);pending.push(statements.get(node.statement_id)?.evidence);}}
-        else pending.push(...(Array.isArray(node)?node:Object.values(node)).slice().reverse());
+        else{
+          const values=Array.isArray(node)?node:Object.values(node);
+          // Preserve DFS order without passing a whole book as call arguments.
+          for(let index=values.length-1;index>=0;index--)pending.push(values[index]);
+        }
       }
     }
     function statementRules(statement){if(Array.isArray(statement.rule_ids))return new Set(statement.rule_ids);const applied=new Set();walkEvidence(statement.evidence,node=>{if(node.rule_id)applied.add(node.rule_id);});return applied;}
@@ -1008,19 +1015,25 @@
           for(const id of ids){const fact=facts.get(id);if(fact?.producer_statement_id===statement.id&&!array(statement.produced_fact_ids).includes(id))facts.set(id,{...fact,is_primary:false});}
         }
       };
-      const quantified=(statement,goal,body,scope,closingProofs=null)=>{
+      const quantified=(statement,goal,body,scope,closingProofs=null,sourceVisible=true)=>{
         const universal=proofResult(goal),scopeId=resolveEvidence(scope).scope_id;if(universal.type!=="ForallFact"||scopes.get(scopeId)?.statement_id!==statement.id)return;
-        const context=add(statement,"arbitrary",logicalSourceLocation(goal,statement),{value:goal,scopeId,factIds:[]});
+        const context=add(statement,"arbitrary",logicalSourceLocation(goal,statement),{value:goal,scopeId,sourceVisible,factIds:[],componentIds:[]});
         if(context)logicalContexts.set(scopeId,context);
+        if(context&&!sourceVisible)for(const entry of parameters(body.fields?.introduced_params)){
+          const output=storedConclusion(entry.store),native=output&&facts.get(output.id);
+          if(native?.producer_statement_id!==statement.id||native.scope_id!==scopeId)continue;
+          context.componentIds.push(output.id);facts.set(output.id,{...native,role:"hypothesis",is_primary:false});logicalFactLocations.set(output.id,{sourceId:context.sourceId,line:context.line});
+          for(const id of inferIds(entry.store,statement.id)){const inferred=facts.get(id);if(inferred?.scope_id===scopeId){facts.set(id,{...inferred,is_primary:false});logicalFactLocations.set(id,{sourceId:context.sourceId,line:context.line});}}
+        }
         if(context)automaticOpenings(statement,body.fields?.introduced_params,scopeId,{sourceId:context.sourceId,line:context.line},context);
         for(const value of array(body.fields?.assumed_dom_facts)){
           const assumed=resolveEvidence(value),store=assumed.fields?.store_and_infer,output=storedConclusion(store);if(!output)continue;
           const action=assume(statement,"premise",output.subject,{fact_id:output.id},[],assumed.fields.well_defined,store,scope,goal);
-          if(action&&context)context.factIds.push(...action.factIds);
+          if(action&&context){context.factIds.push(...action.factIds);if(!sourceVisible){context.componentIds.push(...array(action.componentIds));action.sourceVisible=false;}}
         }
         if(context)logicalContexts.set(scopeId,context);
         const proofs=closingProofs!==null?closingProofs:Array.isArray(body.fields?.conclusion_proofs)?body.fields.conclusion_proofs:array(body.fields?.proved_then_facts).map(value=>resolveEvidence(value).fields?.verify_result);
-        for(const [clauseIndex,proof] of proofs.entries()){const value=proofResult(proof).fields?.fact;if(value)add(statement,"local-conclusion",logicalSourceLocation(value,statement),{value,proof,scopeId,goal,clauseIndex});}
+        for(const [clauseIndex,proof] of proofs.entries()){const value=proofResult(proof).fields?.fact;if(value)add(statement,"local-conclusion",logicalSourceLocation(value,statement),{value,proof,scopeId,goal,clauseIndex,sourceVisible});}
       };
       const chainCheck=(statement,goal,proof,scopeId,clauseIndex=null)=>{
         const record=proofResult(proof),original=proofResult(goal),value=original.type==="ForallFact"?array(original.fields?.then_facts)[clauseIndex]:goal;
@@ -1097,6 +1110,8 @@
           for(const goal of uncheckedLocalGoals(statement,claim))add(statement,"unchecked-goal",goal.at,{value:goal.value,scopeId:claim.scopeId,stopIssueId:goal.stopIssueId,pendingReason:goal.reason,factIds:[],inferredIds:[]});
           const universal=failedUniversalDetails(statement);
           if(universal)quantified(statement,universal.goal,universal.record,universal.record.fields.local_env,universal.proofs||[]);
+          const witness=failedWitnessDetails(statement),uniqueness=witness?.uniqueness;
+          if(uniqueness&&uniqueness.proofs!==null)quantified(statement,uniqueness.goal,uniqueness.record,uniqueness.record.fields.local_env,uniqueness.proofs,false);
           if(universal?.failed)chainCheck(statement,universal.goal,universal.failed,universal.scopeId,retainedIndex(universal.record.fields.failed_then_index));
           const trusted=trustHaveFailureDetails(statement);
           if(trusted?.complete){
@@ -1114,6 +1129,7 @@
               walkEvidence(resolveEvidence(stored).fields?.store,entry=>{const id=resolveEvidence(entry.fields?.fact_id||entry.fields?.whole_fact_id).fact_id,native=facts.get(id);if(!entry.type?.startsWith("Store")||retainedFactId(entry.fields?.fact)!==id||native?.producer_statement_id!==statement.id||native.scope_id!==data.scopeId)return;context.componentIds.push(id);context.factIds.push(id);facts.set(id,{...native,role:"hypothesis",is_primary:false});logicalFactLocations.set(id,data.at);});
               for(const id of inferIds(stored,statement.id)){const native=facts.get(id);if(native?.scope_id===data.scopeId&&native.producer_statement_id===statement.id){facts.set(id,{...native,is_primary:false});logicalFactLocations.set(id,data.at);}}
             }
+            if(data.introduced)automaticOpenings(statement,data.introduced,data.scopeId,data.at,{sourceVisible:false},data.formationOnly?"formation-parameter":"parameter");
             const progress=(value,kind,index,state)=>{const at=logicalSourceLocation(value,statement);if(!at)return;add(statement,"quantifier-check-progress",at,{record:node,scopeId:data.scopeId,quantifierStep:{kind,index,state},factIds:[],inferredIds:[],inlineVisible:false});const checked=data.checked.find(item=>item.kind===kind&&item.index===index);if(checked?.id){const ids=checked.adoptedIds||[checked.id];ids.forEach(id=>logicalFactLocations.set(id,at));for(const batch of inferences.values())if(ids.includes(batch.source_fact_id)&&batch.scope_id===data.scopeId)for(const id of array(batch.fact_ids))if(facts.get(id)?.scope_id===data.scopeId&&facts.get(id)?.producer_statement_id===statement.id)logicalFactLocations.set(id,at);}};
             add(statement,"quantifier-check-progress",data.at,{record:node,scopeId:data.scopeId,factIds:[],inferredIds:[],inlineVisible:false});
             for(const check of data.checked)progress(check.value,check.kind,check.index,check.id?"checked":"formed");
@@ -1346,11 +1362,11 @@
         }
         }
         if(block){
-          const outputs=(record.type==="ExecByCasesStmtSuccess"?array(fields.stored):[witness?fields.store_and_infer_result:fields.stored]).map(storedConclusion).filter(output=>output&&facts.get(output.id)?.producer_statement_id===statement.id);
+          const execution=witness?witnessExecutionDetails(statement,record):record.type==="ExecClaimStmtSuccess"?claimExecutionDetails(statement,record):null,outputs=(record.type==="ExecByCasesStmtSuccess"?array(fields.stored):[witness?fields.store_and_infer_result:fields.stored]).map(storedConclusion).filter(output=>output&&(facts.get(output.id)?.producer_statement_id===statement.id||execution?.output?.id===output.id));
           if(outputs.length){
             const location={sourceId:statement.source_id,line:statement.line};
-            for(const output of outputs){const fact=facts.get(output.id);facts.set(output.id,{...fact,role:"verified",is_primary:true,evidence:statement.evidence});logicalFactLocations.set(output.id,location);}
-            add(statement,witness?"witness":"conclusion",location,{factIds:outputs.map(output=>output.id),record});
+            for(const output of outputs){const fact=facts.get(output.id);if(fact?.producer_statement_id!==statement.id)continue;facts.set(output.id,{...fact,role:"verified",is_primary:true,evidence:statement.evidence});logicalFactLocations.set(output.id,location);}
+            add(statement,witness?"witness":"conclusion",location,{factIds:outputs.map(output=>output.id),record,...(witness||record.type==="ExecClaimStmtSuccess"?{scopeId:statement.scope_id}:{})});
           }
         }
         if(induction){
@@ -1369,6 +1385,8 @@
           if(goal)add(statement,"enumeration-goal",goal,{record,factIds:[],value:output.subject});
         }else if(witness){
           if(record.type!=="ExecWitnessNonemptySetStmtSuccessResult")frame(statement,"witness-bindings",record,fields.local_env,[...parameters(fields.introduced_params),...array(fields.witness_equalities).map(store=>({store,kind:"binding"}))],{sourceId:statement.source_id,line:statement.line});
+          const uniqueness=witnessUniquenessDetails(statement,record);
+          if(uniqueness&&uniqueness.proofs!==null)quantified(statement,uniqueness.goal,uniqueness.record,uniqueness.record.fields.local_env,uniqueness.proofs,false);
         }else if(record.type==="ExecByContraStmtSuccess"){
           assume(statement,"contra-assumption",fields.reverse_assumption,fields.reverse_assumption_fact_id,fields.assumption_components,fields.reverse_assumption_wd,fields.negation_assumed,fields.local_env,fields.goal);
           const closing=resolveEvidence(fields.closing),scopeId=resolveEvidence(fields.local_env).scope_id;if(closing.type==="ByContradictionClosingSuccess"&&scopes.get(scopeId)?.statement_id===statement.id)add(statement,"contradiction",logicalSourceLocation(closing.fields.impossible_fact,statement,"impossible"),{closing:fields.closing,scopeId});
@@ -1666,7 +1684,7 @@
         pending.push(...(Array.isArray(value)?value:Object.values(value)));
       }
       if(checks.length||cited.size){
-        const conditions=element("details","lr-inference-requirements");conditions.append(element("summary",null,editText("本规则使用的条件","Conditions used by this rule")));let shown=false;conditions.addEventListener("toggle",()=>{if(conditions.open&&!shown){shown=true;for(const check of checks)appendProofRequirement(conditions,{...fact,id:null},check.subject,check.value,0);for(const key of cited)if(!checks.some(check=>retainedFactId(check.subject)===key))conditions.append(factButton(key));positionOverlays();}});row.append(conditions);
+        const conditions=element("details","lr-inference-requirements");conditions.append(element("summary",null,editText("本规则使用的条件","Conditions used by this rule")));let shown=false;conditions.addEventListener("toggle",()=>{if(conditions.open&&!shown){shown=true;for(const check of checks)appendProofRequirement(conditions,{...fact,id:null},check.subject,check.value,0);for(const key of cited)if(!checks.some(check=>retainedFactId(check.subject)===key))conditions.append(factButton(key,null,fact));positionOverlays();}});row.append(conditions);
       }
     }
     function inferenceSource(batch,fact){
@@ -1689,7 +1707,7 @@
       appendProofContext(target,fact);
       for(const {batch,data}of entries){
         const part=element("section","lr-inference-proof");part.dataset.sourceFact=data.seed.id;part.dataset.fact=fact.id;part.dataset.scope=fact.scope_id;target.append(part);appendOrigin(part,data.producer);
-        part.append(element("h4","lr-proof-section-title",editText("推导起点","Inference source")),factButton(data.seed.id));
+        part.append(element("h4","lr-proof-section-title",editText("推导起点","Inference source")),factButton(data.seed.id,null,fact));
         const applied=inferenceRules(batch,fact.id);if(!applied.length)part.append(element("p","lr-empty-note",editText("此推论的规则记录未完整导出。","The rule record for this consequence was not fully exported.")));
         for(const entry of applied)appendInferenceRule(part,fact,batch,data.source,entry);
         part.append(element("h4","lr-proof-section-title",editText("由此得到","Therefore")),factFormula(fact));
@@ -1733,7 +1751,41 @@
         target.append(note);
       }
     }
-    function factSelection(id,chainStep=null){const fact=facts.get(id);if(!fact)return null;const producer=statements.get(fact.producer_statement_id),location=factLocation(fact);return {statement:producer?.id||null,source:producer?.source_id||(sources.has(location.sourceId)?location.sourceId:state.source),symbol:null,fact:id,chainStep,wd:null,issue:null,focusLine:producer?(location.sourceId===producer.source_id?location.line:producer.line):(sources.has(location.sourceId)?location.line:null),explanationOpen:true};}
+    function sourceExecutionFact(id,statementId){
+      // A shared Native FactId does not identify one runtime execution.
+      // Use only the actual checked/store pair or witness return at the same
+      // canonical source statement; never change the projected fact's owner.
+      const native=facts.get(id),statement=statements.get(statementId),owner=statements.get(native?.producer_statement_id);
+      if(!native||!statement||statement.status!=="accepted"||!owner||statement.source_id!==owner.source_id||(statement.source_statement_id||statement.id)!==(owner.source_statement_id||owner.id)||!scopes.has(statement.scope_id))return null;
+      const actions=(logicalActionsByLine.get(statement.source_id+":"+statement.line)||[]).filter(action=>action.statementId===statement.id),record=proofResult(statement.evidence);let evidence;
+      if(statement.statement_kind==="Fact"){
+        const action=actions.find(action=>action.kind==="verified-step"&&retainedFactId(action.value)===id),proof=proofResult(record.fields?.verify_result),output=storedConclusion(record.fields?.store_and_infer_result),at=action&&logicalSourceLocation(action.value,statement);
+        if(record.type!=="ExecFactStmtSuccessResult"||!action||action.scopeId!==statement.scope_id||at?.sourceId!==statement.source_id||at.line!==statement.line||proofResult(action.proof)!==proof||!(proof.type?.endsWith("Success")||["VerifyKnownForallFactProof","VerifyEmptyParameterDomainForallProof"].includes(proof.type))||output?.id!==id||statement.mathematics?.subject_fact_id!==id||!sameRetainedFact(output.subject,proof.fields?.fact))return null;
+        evidence=action.proof;
+      }else if(["ExecByDefStmtSuccess","ExecByThmStmtSuccess","ExecReleaseThmStmtSuccess"].includes(record.type)){
+        const invocation=proofInvocation(statement),action=actions.find(action=>action.kind==="proof-invocation"&&action.factIds.includes(id));
+        if(!invocation||!invocation.outputs.some(output=>output.id===id)||!action||resolveEvidence(action.record)!==record||action.scopeId!==statement.scope_id)return null;
+        evidence=invocation.definition?record.fields.proof:statement.evidence;
+      }else if(record.type==="ExecClaimStmtSuccess"){
+        const execution=claimExecutionDetails(statement,record),action=actions.find(action=>action.kind==="conclusion"&&action.factIds.includes(id));
+        if(!execution||execution.output.id!==id||!action||resolveEvidence(action.record)!==record||action.scopeId!==statement.scope_id)return null;
+        evidence=statement.evidence;
+      }else{
+        const execution=witnessExecutionDetails(statement,record),action=actions.find(action=>action.kind==="witness"&&action.factIds.includes(id));
+        if(!execution||execution.output.id!==id||!action||resolveEvidence(action.record)!==record||action.scopeId!==statement.scope_id)return null;
+        evidence=statement.evidence;
+      }
+      return {...native,role:"verified",scope_id:statement.scope_id,producer_statement_id:statement.id,source_id:statement.source_id,line:statement.line,evidence};
+    }
+    function citedExecutionFact(id,scopeId){
+      // Resolve a reference in its consumer's retained scope. Equal-distance
+      // competing executions remain ambiguous and keep the Native address.
+      const native=facts.get(id),owner=statements.get(native?.producer_statement_id);if(!owner||!scopes.has(scopeId))return null;
+      const distance=new Map();let current=scopeId;while(current&&!distance.has(current)){distance.set(current,distance.size);current=scopes.get(current)?.parent_id;}
+      const candidates=new Map();for(const action of logicalActionsByLine.get(owner.source_id+":"+owner.line)||[]){if(!["verified-step","witness","conclusion","proof-invocation"].includes(action.kind)||!distance.has(action.scopeId))continue;const view=sourceExecutionFact(id,action.statementId);if(view)candidates.set(action.statementId,view);}
+      const views=[...candidates.values()].sort((a,b)=>distance.get(a.scope_id)-distance.get(b.scope_id));return views.length&&(!views[1]||distance.get(views[0].scope_id)!==distance.get(views[1].scope_id))?views[0]:null;
+    }
+    function factSelection(id,chainStep=null,scopeId=null){const fact=scopeId&&citedExecutionFact(id,scopeId)||facts.get(id);if(!fact)return null;const producer=statements.get(fact.producer_statement_id),location=factLocation(fact);return {statement:producer?.id||null,source:producer?.source_id||(sources.has(location.sourceId)?location.sourceId:state.source),symbol:null,fact:id,chainStep,wd:null,issue:null,focusLine:producer?(location.sourceId===producer.source_id?location.line:producer.line):(sources.has(location.sourceId)?location.line:null),explanationOpen:true};}
     function selectFact(id,chainStep=null){if(pending())return false;const selection=factSelection(id,chainStep);return selection?navigate(selection):false;}
     function selectWellDefinedness(id){if(pending())return false;const record=wellDefinedness.get(id);if(!record)return false;const producer=statements.get(record.producer_statement_id);return navigate({statement:producer?.id||null,source:producer?.source_id||state.source,symbol:null,fact:null,wd:id,focusLine:producer?.line||null,explanationOpen:true});}
     function wdCitations(record){const cited=new Set(factCitations({evidence:record?.evidence}));if(facts.has(record?.source_fact_id))cited.add(record.source_fact_id);return [...cited];}
@@ -2579,7 +2631,7 @@
       }
       if(!Object.hasOwn(contracts,record.type))return null;
       const [shape,goalType,stageType]=contracts[record.type],formationOnly=shape!=="proof",f=record.fields||{},goal=proofResult(f.fact),inner=shape==="iff"?resolveEvidence(goal.fields?.forall_fact):goal,tag=resolveEvidence(f.fact),surface=shape==="existential"?{Exist:"exist",ExistUnique:"unique",NotExist:"not-exist"}[tag.variant]:shape,stage=resolveEvidence(f.failure),v=stage.fields||{},scopeId=resolveEvidence(f.local_env).scope_id,at=logicalSourceLocation(f.fact,statement),groups=introductionParameterGroups(inner.fields?.typed_parameters),premises=inner.fields?.[shape==="existential"?"facts":"dom_facts"],conclusions=shape==="existential"?[]:inner.fields?.then_facts,right=shape==="iff"?goal.fields?.iff_facts:[];
-      const d={record,goal:f.fact,shape,surface,formationOnly,scopeId,at,stage:stage.variant,complete:false,parameters:[],temporary:[],stores:[],checked:[],unchecked:[],wd:[],failed:null,failedSource:null,failedKind:null,failedConditions:[]};
+      const d={record,goal:f.fact,shape,surface,formationOnly,scopeId,at,stage:stage.variant,complete:false,introduced:null,parameters:[],temporary:[],stores:[],checked:[],unchecked:[],wd:[],failed:null,failedSource:null,failedKind:null,failedConditions:[]};
       const parents=new Set(),visited=new Map();
       function parentScope(value,inherited){const node=resolveEvidence(value);if(!node||typeof node!=="object")return;if(node===record){parents.add(inherited);return;}let scopesSeen=visited.get(node);if(!scopesSeen){scopesSeen=new Set();visited.set(node,scopesSeen);}if(scopesSeen.has(inherited))return;scopesSeen.add(inherited);if(Array.isArray(node)){node.forEach(child=>parentScope(child,inherited));return;}const environments=Object.values(node.fields||{}).map(resolveEvidence).filter(child=>child?.kind==="scope"&&typeof child.scope_id==="string");if(environments.length>1)return;const current=environments[0]?.scope_id||inherited;Object.values(node.fields||{}).forEach(child=>parentScope(child,current));}
       parentScope(statement.evidence,statement.scope_id);
@@ -2614,7 +2666,12 @@
         d.unchecked.push(...groups.slice(count+1).map((value,i)=>({kind:"parameter",value,index:count+1+i})),...phases.flatMap(phase=>phase.values.map((value,index)=>({kind:phase.kind,value,index}))));
       }else{
         const introduced=resolveEvidence(v.introduced_params),opened=introduced.fields?.auto_opened_struct_layers,stops=shape==="existential"?{Body:["body","failed_body"]}:shape==="iff"?{Premise:["premise","failed_dom"],LeftSide:["left","failed_then"],RightSide:["right","failed_iff"]}:{Premise:["premise","failed_dom"],...(formationOnly?{Conclusion:["conclusion","failed_then"]}:{})},stop=Object.hasOwn(stops,stage.variant)?stops[stage.variant]:null;
-        if(introduced.type!=="IntroduceTypedParametersResult"||!parameters(introduced.fields?.param_type_well_defined,introduced.fields?.defined_params,groups)||opened!==null&&(!Array.isArray(opened)||opened.length>0)||!stop)return d;
+        if(introduced.type!=="IntroduceTypedParametersResult"||!parameters(introduced.fields?.param_type_well_defined,introduced.fields?.defined_params,groups)||opened!==null&&!Array.isArray(opened)||!stop)return d;
+        if(array(opened).length){
+          const layers=structOpeningLayers(statement,v.introduced_params,scopeId),expected=groups.flatMap(group=>{const type=resolveEvidence(group.fields?.param_type);return type.variant==="Obj"&&proofResult(type.fields?.["0"]).type==="StructObj"?array(introductionGroupNames(group)):[];});
+          if(!layers||layers.length!==expected.length||layers.some((layer,i)=>proofResult(resolveEvidence(layer.value).fields?.obj).symbol_id!==expected[i].symbol_id))return d;
+          d.introduced=v.introduced_params;
+        }else if(["ForallIntroductionFormationFailure","ForallWellDefinedLocalFailure"].includes(record.type)&&groups.some(group=>{const type=resolveEvidence(group.fields?.param_type);return type.variant==="Obj"&&proofResult(type.fields?.["0"]).type==="StructObj";}))return d;
         const [kind,failedField]=stop,index=retainedIndex(v.failed_index),assumed=shape==="existential"?v.assumed_body_facts:v.assumed_dom_facts,count=kind==="body"||kind==="premise"?index:premises.length;
         if(index===null||count===null||!Array.isArray(assumed)||assumed.length!==count||count>premises.length)return d;
         for(const [i,value]of assumed.entries()){
@@ -2662,6 +2719,7 @@
       if(selected){const check=d.checked.find(item=>item.kind===selected.kind&&item.index===selected.index),value=check?.value||(selected.state==="failed"?d.failedSource:d.unchecked.find(item=>item.kind===selected.kind&&item.index===selected.index)?.value);const chosen=element("div","lr-quantifier-selected-stage");chosen.dataset.state=selected.state;chosen.append(element("h4","lr-proof-section-title",selected.state==="unchecked"?editText("本条尚未检查","This clause has not been checked"):selected.state==="failed"?editText("本条的有定义检查未通过","Formation of this clause failed"):check?.id?editText("本条作为检查范围内的局部条件采用","This clause is adopted locally for these checks"):editText("本条表达式已检查有定义","This expression was checked for formation")));if(value)chosen.append(formula(quantifiedText(value,statement.source_id)||resolveEvidence(value).text,statement.source_id));part.append(chosen);}
       const parameterGroupText=group=>{const type=resolveEvidence(group.fields.param_type),kind={Obj:"element",Set:"set",NonemptySet:"nonempty_set",FiniteSet:"finite_set"}[type.variant],domain=resolveEvidence(type.fields?.["0"]);return parameterText({names:array(introductionGroupNames(group)).map(p=>p.name),kind,domain:domain.text},statement.source_id);};
       fold("lr-quantifier-checked-parameters",d.shape==="proof"?editText("已引入的任意参数 · ","Introduced arbitrary parameters · "):editText("检查时的临时参数 · ","Temporary parameters for checking · "),d.parameters,(panel,group)=>panel.append(formula(parameterGroupText(group),statement.source_id)));
+      if(d.introduced)appendScopeStructOpenings(part,statement.id,d.scopeId,"lr-quantifier-struct-openings");
       fold("lr-quantifier-checked-prefix",editText("此前的检查 · ","Earlier checks · "),d.checked,(panel,check)=>{const item=element("div","lr-quantifier-checked-clause");item.dataset.kind=check.kind;item.append(element("small",null,check.id?(check.kind==="body"?editText("候选条件，仅供局部检查","Candidate condition, local to formation checks"):editText("局部前提","Local premise")):check.kind==="left"?editText("等价式左侧：有定义；未证明成立","Left side: well-defined; truth not proved"):check.kind==="right"?editText("等价式右侧：有定义；未证明成立","Right side: well-defined; truth not proved"):editText("有定义检查；未证明成立","Formation checked; truth not proved")));item.append(check.id?factButton(check.id):formula(quantifiedText(check.value,statement.source_id)||resolveEvidence(check.value).text,statement.source_id));if(check.id){const ids=[...inferences.values()].filter(batch=>(check.adoptedIds||[check.id]).includes(batch.source_fact_id)&&batch.scope_id===d.scopeId&&batch.producer_statement_id===statement.id).flatMap(batch=>array(batch.fact_ids)).filter(id=>facts.get(id)?.scope_id===d.scopeId&&facts.get(id)?.producer_statement_id===statement.id);if(ids.length){const more=element("details","lr-quantifier-local-inferences");more.append(element("summary",null,editText("此局部前提的推论 · ","Consequences of this local premise · ")+ids.length));for(const id of ids)more.append(factButton(id));item.append(more);}}panel.append(item);});
       const stopped=element("div","lr-quantifier-failed-stage");stopped.dataset.kind=d.failedKind;stopped.append(element("h4","lr-proof-section-title",editText("尚未满足的有定义条件","Formation condition not established")));for(const condition of d.failedConditions)stopped.append(formula(quantifiedText(condition,statement.source_id)||resolveEvidence(condition).text,statement.source_id));if(!d.failedConditions.length&&statement.failure?.obligation)stopped.append(formula(statement.failure.obligation,statement.source_id));part.append(stopped);if(!selected||selected.state==="failed")appendCompoundFormationFailure(part,d.failedCompound,statement.source_id);
       fold("lr-quantifier-unchecked",editText("尚未检查 · ","Unchecked clauses · "),d.unchecked,(panel,item)=>panel.append(formula(item.kind==="parameter"?parameterGroupText(item.value):quantifiedText(item.value,statement.source_id)||resolveEvidence(item.value).text,statement.source_id)));
@@ -2681,16 +2739,25 @@
       if(property==="reflexive"?(ids.length!==1||premises.length!==0||!same(args[0],[0,0])):property==="transitive"?(ids.length!==3||premises.length!==2||!same(args[0],[0,1])||!same(args[1],[1,2])||!same(args[2],[0,2])):(ids.length<2||premises.length!==1||!args.every(values=>values.length===ids.length&&new Set(values).size===ids.length)||args[0].every((value,index)=>value===args[1][index])))return null;
       return {property,record,goal,at};
     }
+    function scopedUniversalContext(statement,record,parentScopeId=statement.scope_id){
+      const f=record.fields||{},goal=proofResult(f.fact),scopeId=resolveEvidence(f.local_env).scope_id,scope=scopes.get(scopeId),at=logicalSourceLocation(f.fact,statement),introduced=resolveEvidence(f.introduced_params),defined=resolveEvidence(introduced.fields?.defined_params),stores=defined.fields?.store_and_infer_results,groups=resolveEvidence(goal.fields?.typed_parameters).fields?.groups;
+      const success=record.type==="VerifyForallFactSuccess";
+      if(!success&&(record.type!=="VerifyForallFactFailed"||record.variant!=="FailToSearchProof")||goal.type!=="ForallFact"||at?.sourceId!==statement.source_id||scope?.statement_id!==statement.id||scope.parent_id!==parentScopeId||introduced.type!=="IntroduceTypedParametersResult"||defined.type!=="StoreHaveObjAndInferResult"||!Array.isArray(stores)||!Array.isArray(groups)||stores.length!==groups.reduce((n,g)=>n+array(resolveEvidence(g).fields?.params).length,0))return null;
+      const local=value=>{const output=storedConclusion(value);return output&&retainedFactId(output.subject)===output.id&&facts.get(output.id)?.producer_statement_id===statement.id&&facts.get(output.id)?.scope_id===scopeId?output:null;};
+      if(!introductionTemporaryStores(introduced.fields.defined_params,groups.map(resolveEvidence),scopeId)||!stores.every(local)||!Array.isArray(f.assumed_dom_facts)||!Array.isArray(goal.fields.dom_facts)||f.assumed_dom_facts.length!==goal.fields.dom_facts.length||!f.assumed_dom_facts.every((value,index)=>{const assumed=resolveEvidence(value),output=local(assumed.fields?.store_and_infer);return assumed.type==="AssumeDomFactResult"&&output?.id===retainedFactId(goal.fields.dom_facts[index]);}))return null;
+      const targets=goal.fields.then_facts,index=success&&Array.isArray(targets)?targets.length:retainedIndex(f.failed_then_index),checked=f.proved_then_facts,failed=proofResult(f.failed_then),matched=Array.isArray(targets)&&index!==null&&(success||index<targets.length&&retainedFactId(failed.fields?.fact)===retainedFactId(targets[index]));
+      const complete=matched&&Array.isArray(checked)&&checked.length===index&&checked.every((value,i)=>{const step=resolveEvidence(value),proof=proofResult(step.fields?.verify_result),output=local(step.fields?.store_and_infer);return step.type==="ProveAndStoreThenFactResult"&&proof.type?.endsWith("Success")&&output?.id===retainedFactId(targets[i])&&retainedFactId(proof.fields?.fact)===output.id;});
+      return {record,goal:f.fact,scopeId,proofs:complete?checked.map(value=>resolveEvidence(value).fields.verify_result):null,failed:!success&&matched?f.failed_then:null};
+    }
+    function scopedUniversalFailure(statement,record){
+      return record.type==="VerifyForallFactFailed"?scopedUniversalContext(statement,record):null;
+    }
     function failedUniversalDetails(statement){
       const registration=failedRegistrationLaw(statement);
       if(statement?.status!=="rejected"||statement.statement_kind!=="Fact"&&!registration)return null;
-      const record=proofResult(statement.evidence),f=record.fields||{},goal=proofResult(f.fact),scopeId=resolveEvidence(f.local_env).scope_id,scope=scopes.get(scopeId),at=logicalSourceLocation(f.fact,statement),introduced=resolveEvidence(f.introduced_params),defined=resolveEvidence(introduced.fields?.defined_params),stores=defined.fields?.store_and_infer_results,groups=resolveEvidence(goal.fields?.typed_parameters).fields?.groups;
-      if(record.type!=="VerifyForallFactFailed"||record.variant!=="FailToSearchProof"||goal.type!=="ForallFact"||(registration?record!==registration.record||goal!==registration.goal||at?.line!==registration.at.line:retainedFactId(f.fact)!==statement.mathematics?.subject_fact_id||at?.line!==statement.line)||scope?.statement_id!==statement.id||scope.parent_id!==statement.scope_id||introduced.type!=="IntroduceTypedParametersResult"||defined.type!=="StoreHaveObjAndInferResult"||!Array.isArray(stores)||!Array.isArray(groups)||stores.length!==groups.reduce((n,g)=>n+array(resolveEvidence(g).fields?.params).length,0))return null;
-      const local=value=>{const output=storedConclusion(value);return output&&retainedFactId(output.subject)===output.id&&facts.get(output.id)?.producer_statement_id===statement.id&&facts.get(output.id)?.scope_id===scopeId?output:null;};
-      if(!stores.every(local)||!Array.isArray(f.assumed_dom_facts)||!Array.isArray(goal.fields.dom_facts)||f.assumed_dom_facts.length!==goal.fields.dom_facts.length||!f.assumed_dom_facts.every((value,index)=>{const assumed=resolveEvidence(value),output=local(assumed.fields?.store_and_infer);return assumed.type==="AssumeDomFactResult"&&output?.id===retainedFactId(goal.fields.dom_facts[index]);}))return null;
-      const index=retainedIndex(f.failed_then_index),targets=goal.fields.then_facts,checked=f.proved_then_facts,failed=proofResult(f.failed_then),matched=Array.isArray(targets)&&index!==null&&index<targets.length&&retainedFactId(failed.fields?.fact)===retainedFactId(targets[index]);
-      const complete=matched&&Array.isArray(checked)&&checked.length===index&&checked.every((value,i)=>{const step=resolveEvidence(value),proof=proofResult(step.fields?.verify_result),output=local(step.fields?.store_and_infer);return step.type==="ProveAndStoreThenFactResult"&&proof.type?.endsWith("Success")&&output?.id===retainedFactId(targets[i])&&retainedFactId(proof.fields?.fact)===output.id;});
-      return {record,goal:f.fact,scopeId,proofs:complete?checked.map(value=>resolveEvidence(value).fields.verify_result):null,failed:matched?f.failed_then:null,registration:registration?.property||null};
+      const record=proofResult(statement.evidence),goal=proofResult(record.fields?.fact),at=logicalSourceLocation(record.fields?.fact,statement);
+      if(registration?record!==registration.record||goal!==registration.goal||at?.line!==registration.at.line:retainedFactId(record.fields?.fact)!==statement.mathematics?.subject_fact_id||at?.line!==statement.line)return null;
+      const data=scopedUniversalFailure(statement,record);return data?{...data,registration:registration?.property||null}:null;
     }
     function appendUniversalProgress(target,statement){
       const data=failedUniversalDetails(statement);if(!data)return;
@@ -2734,10 +2801,11 @@
     function appendFailedStatementHeader(target,issue){
       const statement=statements.get(issue.statementId),canonical=sourceIssues.get(issue.canonicalIssueId||issue.id),part=element("section","lr-failed-statement-header");part.dataset.statement=issue.statementId;target.append(part);
       if(!statement||statement.status!=="rejected"||canonical?.statementId!==statement.id){part.append(element("p","lr-empty-note",editText("语句与未通过记录的对应关系不完整。","The statement and its rejection record do not fully correspond.")));return;}
+      if(appendFailedExpansion(part,statement)||appendFailedFoundation(part,statement)||appendFailedProcess(part,statement)||appendFailedFunctionDefinition(part,statement))return;
       if(failedContraDetails(statement)||["GoalWd","NegationUnsupported","Negation","Closing"].includes(contraFailureEnvelope(statement)?.variant)){appendFailureContext(part,statement);appendContraFailure(part,statement);const body=failedBodyStep(statement),actual=body&&sourceIssues.get("statement:"+body.child.id)||canonical;if(actual&&actual.id!==issue.id){const link=button(editText("查看实际失败处","View the failing location"),"lr-text-link lr-failed-header-link",()=>selectSourceIssue(actual.id));link.dataset.issue=actual.id;if(actual.statementId)link.dataset.failedStatement=actual.statementId;part.append(link);}return;}
       const caseClosing=failedCaseDetails(statement);if(caseClosing?.context&&caseClosing.stage.variant==="ClosingImpossible"){appendCaseProgress(part,statement);appendFailureContext(part,statement);appendContradictionFailure(part,{id:null,role:"rejected",source_id:statement.source_id,scope_id:resolveEvidence(caseClosing.context?.fields?.local_env).scope_id,producer_statement_id:statement.id},caseClosing.stage.fields.failed);if(canonical?.id!==issue.id)part.append(button(editText("查看实际失败处","View the failing location"),"lr-text-link lr-failed-header-link",()=>selectSourceIssue(canonical.id)));return;}
       if(legacyContraFailure(statement))appendLegacyContraContext(part);
-      if(failedIntroductionDetails(statement)){appendFailureContext(part,statement);appendFailedIntroduction(part,statement);return;}
+      if(failedIntroductionDetails(statement)||failedConstructionDetails(statement)){appendFailureContext(part,statement);if(!appendFailedIntroduction(part,statement))appendFailedConstruction(part,statement);return;}
       const registration=failedUniversalDetails(statement);
       if(registration?.registration){appendUniversalProgress(part,statement);appendFailureContext(part,statement);if(registration.failed)part.append(formula(quantifiedText(proofResult(registration.failed).fields?.fact,statement.source_id)||"",statement.source_id));if(issue.canonicalIssueId&&issue.confirmedLocation){const link=button(editText("查看实际失败处","View the failing location"),"lr-text-link lr-failed-header-link",()=>selectSourceIssue(canonical.id));link.dataset.issue=canonical.id;part.append(link);}return;}
       appendCaseProgress(part,statement);appendLocalProofProgress(part,statement);appendUniversalProgress(part,statement);appendChainProgress(part,statement);appendFailureContext(part,statement);
@@ -2796,13 +2864,17 @@
     function sourceIssueIsHeader(issue){return !!(issue.canonicalIssueId||issue.statementStart&&failedBodyStep(statements.get(issue.statementId)));}
     function sourceIssueLabel(issue){
       if(sourceIssueIsHeader(issue))return editText("本段检查未完成","Block verification unfinished");
+      if(unsupportedClaimGoal(statements.get(issue.statementId)))return editText("此类目标暂不支持","This goal is not supported");
+      if(failedEvaluationDetails(statements.get(issue.statementId)))return editText("求值未完成","Evaluation unfinished");
       const subject=issue.obligation?mathText(issue.obligation,issue.sourceId):issue.subject&&quantifiedText(issue.subject,issue.sourceId);
       return issue.phase==="parse"?editText("本行无法解析","This line could not be parsed"):subject?editText("尚未证明：","Not established: ")+subject:editText("此语句尚未通过","This statement was not accepted");
     }
     function appendSourceIssue(target,issue,includeDefinition=true){
       if(!issue){target.append(element("p","lr-empty-note",t("unavailable")));return;}
-      if(sourceIssueIsHeader(issue)){appendFailedStatementHeader(target,issue);return;}
-      const statement=statements.get(issue.statementId);if(statement&&(appendTrustHaveFailure(target,statement)||appendQuantifierFormation(target,statement)||appendFailedInterface(target,statement)))return;if(statement){appendCaseProgress(target,statement);appendLocalProofProgress(target,statement);appendUniversalProgress(target,statement);appendChainProgress(target,statement);appendFailureContext(target,statement);if(appendFailedIntroduction(target,statement)||appendContraFailure(target,statement)||appendCaseContradictionFailure(target,statement)||appendDefinitionFailure(target,statement)||appendTheoremFailure(target,statement))return;}if(includeDefinition&&statement&&appendPredicateDefinition(target,{source_id:issue.sourceId,evidence:statement.evidence}))target.append(element("h4","lr-proof-section-title",editText("检查结果","Check result")));
+      if(appendFailedWitness(target,statements.get(issue.statementId))||appendUnsupportedClaimGoal(target,statements.get(issue.statementId)))return;
+      if(sourceIssueIsHeader(issue)){appendFailedStatementHeader(target,issue);appendClaimFailureFormation(target,statements.get(issue.statementId));return;}
+      if(appendFailedEvaluation(target,statements.get(issue.statementId))||appendFailedExpansion(target,statements.get(issue.statementId))||appendFailedFoundation(target,statements.get(issue.statementId))||appendFailedProcess(target,statements.get(issue.statementId))||appendFailedFunctionDefinition(target,statements.get(issue.statementId)))return;
+      const statement=statements.get(issue.statementId);if(statement&&(appendTrustHaveFailure(target,statement)||appendQuantifierFormation(target,statement)||appendFailedInterface(target,statement)))return;if(statement){appendCaseProgress(target,statement);appendLocalProofProgress(target,statement);appendUniversalProgress(target,statement);appendChainProgress(target,statement);appendFailureContext(target,statement);if(appendFailedIntroduction(target,statement)||appendFailedConstruction(target,statement)||appendContraFailure(target,statement)||appendCaseContradictionFailure(target,statement)||appendDefinitionFailure(target,statement)||appendTheoremFailure(target,statement))return;}if(includeDefinition&&statement&&appendPredicateDefinition(target,{source_id:issue.sourceId,evidence:statement.evidence}))target.append(element("h4","lr-proof-section-title",editText("检查结果","Check result")));
       if(statement&&legacyContraFailure(statement))appendLegacyContraContext(target);
       const formation=issue.phase==="well_defined"||issue.category==="well_defined";
       const localFailure=statement&&failedLocalProofDetails(statement),rootFailure=statement&&proofResult(localFailure?.failed||statement.evidence),universalFailure=statement&&failedUniversalDetails(statement),nested=universalFailure&&universalFailure.proofs!==null&&proofResult(universalFailure.failed),nestedAt=nested&&logicalSourceLocation(nested.fields?.fact,statement),mappedChains=statement?[...logicalActions.values()].filter(action=>action.statementId===statement.id&&action.kind==="chain-check"&&action.sourceId===issue.sourceId&&action.line===issue.line).map(sourceEqualityFact).filter(Boolean):[],mappedChain=mappedChains.length===1?mappedChains[0]:null;
@@ -2823,6 +2895,8 @@
       }
       if(issue.phase!=="parse")target.append(element("p","lr-empty-note",t("notFalse")));
       if(issue.statementStart)target.append(element("small","lr-failure-location",editText("此标记位于所属语句起点；记录未提供更精确的位置。","This marker is at the enclosing statement's start; no more precise location is retained.")));
+      if(appendClaimFailureFormation(target,statement))return;
+      if(existentialFormation(failed,failureFact)){appendAtomicWellDefinedness(target,failureFact,failed,0);return;}
       const atomic=statement&&failedAtomicVerification(statement.evidence);
       if(atomic?.variant==="FailToSearchProof"&&atomic.fields?.well_defined_proof)appendAtomicWellDefinedness(target,{role:"rejected",source_id:issue.sourceId},atomic,0);
       else if(failed?.type==="VerifyNotForallFactFailed"&&!formation)appendAtomicWellDefinedness(target,{role:"rejected",source_id:issue.sourceId,producer_statement_id:statement.id},failed,0);
@@ -2831,7 +2905,9 @@
     function sourceIssueSelection(id){const issue=sourceIssues.get(id);return issue?{source:issue.sourceId,statement:statements.get(issue.statementId)?.source_id===issue.sourceId?issue.statementId:null,fact:null,symbol:null,wd:null,issue:id,focusLine:issue.line,explanationOpen:true}:null;}
     function selectSourceIssue(id){if(pending())return false;const selection=sourceIssueSelection(id);return selection?navigate(selection):false;}
     function openSourceIssue(owner,ids){
-      closeExplanation();openSourcePreview(owner,editText("这里为什么没有通过","Why this step was not accepted"),body=>{for(const id of ids)appendSourceIssue(body,sourceIssues.get(id),false);},{factPreview:true,selection:ids.length===1?sourceIssueSelection(ids[0]):null,select:ids.length===1?()=>selectSourceIssue(ids[0]):null});
+      const evaluation=ids.length===1&&failedEvaluationDetails(statements.get(sourceIssues.get(ids[0])?.statementId));
+      const unsupported=ids.length===1&&unsupportedClaimGoal(statements.get(sourceIssues.get(ids[0])?.statementId));
+      closeExplanation();openSourcePreview(owner,unsupported?editText("此类目标暂不支持","This goal is not supported"):evaluation?editText("求值未完成","Evaluation unfinished"):editText("这里为什么没有通过","Why this step was not accepted"),body=>{for(const id of ids)appendSourceIssue(body,sourceIssues.get(id),false);},{factPreview:true,selection:ids.length===1?sourceIssueSelection(ids[0]):null,select:ids.length===1?()=>selectSourceIssue(ids[0]):null});
     }
     function attachSourceIssue(token,issue){
       token.classList.add("lr-diagnostic-point");token.dataset.issue=issue.id;token.tabIndex=0;token.setAttribute("aria-label",sourceIssueLabel(issue));
@@ -2937,7 +3013,7 @@
     function closeProof(restoreFocus=false){
       clearTimeout(proofTimer);clearTimeout(proofCloseTimer);proofTimer=null;proofCandidate=null;proofHoverToken=null;
       const owner=proofPopover?.owner;
-      if(proofPopover){proofPopover.owner.removeAttribute("aria-describedby");if(proofPopover.owner.dataset.latexStatement)proofPopover.owner.setAttribute("aria-expanded","false");proofPopover.symbolOwner?.removeAttribute("aria-describedby");proofPopover.node.remove();proofPopover=null;}
+      if(proofPopover){proofPopover.owner.removeAttribute("aria-describedby");if(proofPopover.owner.dataset.latexStatement)proofPopover.owner.setAttribute("aria-expanded","false");if(proofPopover.owner.matches(".lr-explanation-toggle")){proofPopover.owner.setAttribute("aria-expanded","false");proofPopover.owner.removeAttribute("aria-controls");proofPopover.owner.textContent="▸";}proofPopover.symbolOwner?.removeAttribute("aria-describedby");proofPopover.node.remove();proofPopover=null;}
       codePane?.querySelectorAll(".lr-proof-target,.lr-proof-premise,.lr-citation-peek,.lr-context-active").forEach(row=>row.classList.remove("lr-proof-target","lr-proof-premise","lr-citation-peek","lr-context-active"));
       if(restoreFocus)restoreSourceFocus(owner);
     }
@@ -2953,7 +3029,7 @@
       const equality=target?.closest(".lr-chain-equality"),row=target?.closest(".lr-code-row"),token=target?.closest(".lr-token,[data-syntax]"),issueIds=equality?null:row?.dataset.issues,ids=equality&&!equality.dataset.chainAction?JSON.stringify([equality.dataset.chainFact]):issueIds||(!equality?row?.dataset.proofFacts:null),actions=equality?.dataset.chainAction?JSON.stringify([equality.dataset.chainAction]):!equality&&!issueIds?row?.dataset.logicalActions:null,owner=equality||row;
       // Sentence evidence and symbol documentation are independent: a token
       // change must not replace the proof or restart the sentence dwell timer.
-      if(pending()||state.explanationOpen&&!equality&&!issueIds||!ids&&!actions||target?.closest(".lr-inference-toggle,.lr-reference-count")){
+      if(pending()||state.explanationOpen&&!equality&&!issueIds||!ids&&!actions||target?.closest(".lr-explanation-toggle,.lr-inference-toggle,.lr-reference-count")){
         if(proofPopover||proofCandidate)leaveProof();return false;
       }
       clearTimeout(proofCloseTimer);hideTokenHelp();
@@ -2994,7 +3070,10 @@
     function proofSubject(fact){
       const result=proofResult(fact.evidence);let node=resolveEvidence(result.fields?.fact||result.fields?.goal),seen=new Set();
       while(node&&["Fact","AtomicFact"].includes(node.type)&&!seen.has(node)){seen.add(node);node=resolveEvidence(node.fields?.["0"]);}
-      return node?.type?node:factSubjects.get(fact.id);
+      // A published chain component can retain the whole chain's execution
+      // evidence. Its own FactId still identifies the cited atomic statement.
+      if(node?.type&&(!fact.id||retainedFactId(node)===fact.id))return node;
+      const indexed=factSubjects.get(fact.id);return indexed&&retainedFactId(indexed)===fact.id?indexed:null;
     }
     function appendPredicateDefinition(target,fact){
       const subject=proofSubject(fact),sourceId=factLocation(fact).sourceId;
@@ -3020,11 +3099,11 @@
       if(subject.type==="NotInFact")section.append(element("p","lr-proof-summary",editText("x ∉ A 是 x ∈ A 的否定。","x ∉ A is the negation of x ∈ A.")));
       target.append(section);return true;
     }
-    function appendProofRequirement(target,fact,requirement,evidence,depth){
+    function appendProofRequirement(target,fact,requirement,evidence,depth,renderProof=appendProofBody){
       const text=quantifiedText(requirement,factLocation(fact).sourceId)||proofRelation(evidence);if(!text){target.append(element("p","lr-empty-note",editText("此条件及其证明记录未完整导出。","This condition and its proof record were not fully exported.")));return;}
       if(!evidence||resolveEvidence(evidence).kind==="unavailable"){target.append(formula(text,factLocation(fact).sourceId),element("p","lr-empty-note",editText("此条件的证明记录未完整导出。","The proof record for this condition was not fully exported.")));return;}
       const step=element("details","lr-proof-step"),summary=element("summary");summary.append(formula(text,factLocation(fact).sourceId));step.append(summary);let rendered=false;
-      step.addEventListener("toggle",()=>{if(step.open&&!rendered){rendered=true;const expected=retainedFactId(requirement),actual=retainedFactId(proofResult(evidence).fields?.fact);if(!expected||expected!==actual)step.append(element("p","lr-empty-note",editText("没有可与此条件准确对应的证明记录。","No proof record can be matched exactly to this condition.")));else appendProofBody(step,{...fact,id:null,role:"verified",evidence},evidence,false,depth+1);positionOverlays();}});target.append(step);
+      step.addEventListener("toggle",()=>{if(step.open&&!rendered){rendered=true;const expected=retainedFactId(requirement),actual=retainedFactId(proofResult(evidence).fields?.fact);if(!expected||expected!==actual)step.append(element("p","lr-empty-note",editText("没有可与此条件准确对应的证明记录。","No proof record can be matched exactly to this condition.")));else renderProof(step,{...fact,id:null,role:"verified",evidence},evidence,false,depth+1);positionOverlays();}});target.append(step);
     }
     function failedDefinitionDetails(statement){
       if(statement?.status!=="rejected"||String(statement.statement_kind||"").split(".").at(-1)!=="ByDefStmt")return null;
@@ -3267,11 +3346,43 @@
       const paired=!!retainedFactId(whole)&&exist?.type==="PlainExistFact"&&!!retainedFactId(exist)&&goal===wrapper&&parameterShape&&resolveEvidence(exist.fields?.typed_parameters)===parameters&&Array.isArray(whole.fields?.dom_facts)&&Array.isArray(whole.fields?.then_facts)&&conclusions.length>0&&Array.isArray(exist.fields?.facts)&&body.length>common.length&&common.every((value,index)=>retainedFactId(value)&&retainedFactId(value)===retainedFactId(body[index])&&proofResult(value)===proofResult(body[index]));
       return {record,whole,wrapper,exist,proof,verified,common,conclusions,paired,complete:paired&&record.type==="VerifyNotForallFactSuccess"&&verified.type==="VerifyPlainExistFactSuccess"};
     }
-    function counterexampleFormation(record,ownerId){
+    function existentialFormation(record,fact){
+      const variants={VerifyPlainExistFactSuccess:"Exist",VerifyExistUniqueFactSuccess:"ExistUnique",VerifyNotExistFactSuccess:"NotExist"},success=Object.prototype.hasOwnProperty.call(variants,record?.type),failed=record?.type==="VerifyExistShapedFactFailed"&&record.variant==="FailToSearchProof";
+      if(!success&&!failed)return null;
+      const fields=record.fields||{},wrapper=resolveEvidence(fields.fact),goal=proofResult(fields.fact),id=retainedFactId(fields.fact),statement=statements.get(fact.producer_statement_id),wd=proofResult(fields.well_defined_proof),scopeId=resolveEvidence(wd.fields?.local_env).scope_id,scope=scopes.get(scopeId);
+      const formation={proofs:[],complete:false,existential:true,goalId:id,goalKind:wrapper.variant,outcome:success?"established":"not-established",note:editText("量化目标与表达式检查的对应记录不完整，无法恢复这些检查。","The quantified goal and its formation record do not fully correspond; these checks cannot be reconstructed.")};
+      if(!statement||!["accepted","rejected"].includes(statement.status)||statement.origin!=="checked"||resolveEvidence(statement.evidence).type!=="ExecStmtResult"||resolveEvidence(statement.evidence).variant!==String(statement.statement_kind).split(".")[0]||wrapper.type!=="ExistShapedFact"||!['Exist','ExistUnique','NotExist'].includes(wrapper.variant)||success&&variants[record.type]!==wrapper.variant||goal.type!=="PlainExistFact"||!id||fact.id&&fact.id!==id||fact.source_id&&fact.source_id!==statement.source_id)return formation;
+      const source=statements.get(statement.source_statement_id||statement.id),code=sources.get(statement.source_id),offsets=typeof code?.content==="string"?bytePositions(code.content):null,start=offsets?.get(statement.start_byte),end=offsets?.get(statement.end_byte),tokens=array(code?.tokens).filter(token=>token.start_byte>=statement.start_byte&&token.end_byte<=statement.end_byte),at=logicalSourceLocation(fields.fact,statement);
+      if(!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte||start===undefined||end===undefined||start>=end||code.content.slice(0,start).split("\n").length!==statement.line||tokens[0]?.start_byte!==statement.start_byte||tokens.at(-1)?.end_byte!==statement.end_byte||!at)return formation;
+      // The certificate belongs to this occurrence in the retained execution
+      // tree. Its checking scope is not selected by a shared source FactId.
+      const parents=new Set(),visited=new Map();
+      function locate(value,inherited){
+        const node=resolveEvidence(value);if(!node||typeof node!=="object")return;
+        if(node.type==="VerifyExistShapedFactResult"){
+          const route={PlainExistFact:["Exist","VerifyPlainExistFactResult"],ExistUniqueFact:["ExistUnique","VerifyExistUniqueFactResult"],NotExistFact:["NotExist","VerifyNotExistFactResult"]}[node.variant],arm=resolveEvidence(node.fields?.["0"]);
+          if(resolveEvidence(arm.fields?.["0"])===record){if(route&&route[0]===wrapper.variant&&arm.type===route[1]&&arm.variant===(success?"Success":"Failed"))parents.add(inherited);return;}
+        }
+        if(node.type==="ObtainExistVerifySuccess"&&resolveEvidence(node.fields?.["0"])===record){if(success&&["Exist","ExistUnique"].includes(node.variant)&&node.variant===wrapper.variant)parents.add(inherited);return;}
+        if(node.type==="ExecHaveObjByExistFactsStmtSuccessResult"&&resolveEvidence(node.fields?.verify_exist)===record){if(success&&wrapper.variant==="Exist"&&record.type==="VerifyPlainExistFactSuccess")parents.add(inherited);return;}
+        if(node===record)return;
+        let seen=visited.get(node);if(!seen){seen=new Set();visited.set(node,seen);}if(seen.has(inherited))return;seen.add(inherited);
+        if(Array.isArray(node)){node.forEach(child=>locate(child,inherited));return;}
+        const environments=Object.values(node.fields||{}).map(resolveEvidence).filter(child=>child?.kind==="scope"&&typeof child.scope_id==="string");if(environments.length>1)return;
+        const current=environments[0]?.scope_id||inherited;Object.values(node.fields||{}).forEach(child=>locate(child,current));
+      }
+      locate(statement.evidence,statement.scope_id);
+      const introduced=resolveEvidence(wd.fields?.introduced_params),groups=introductionParameterGroups(goal.fields?.typed_parameters),checks=introduced.fields?.param_type_well_defined,body=goal.fields?.facts,assumed=wd.fields?.assumed_body_facts;
+      if(wd.type!=="DetailedExistShapedFactWellDefinedProof"||parents.size!==1||!parents.has(scope?.parent_id)||scope?.statement_id!==statement.id||!statementOwnsScope(statement,scopeId)||fact.scope_id&&fact.scope_id!==scope.parent_id||!factFormationMatches(fields.fact,fields.well_defined_proof)||introduced.type!=="IntroduceTypedParametersResult"||!groups||groups.some(group=>!introductionGroupNames(group)?.length)||!Array.isArray(checks)||checks.length!==groups.length||checks.some((check,i)=>!introductionTypeFormation(groups[i].fields?.param_type,check))||!introductionTemporaryStores(introduced.fields?.defined_params,groups,scopeId)||!Array.isArray(body)||!Array.isArray(assumed)||assumed.length!==body.length)return formation;
+      if(assumed.some((value,i)=>{const check=resolveEvidence(value),output=storedConclusion(check.fields?.store_and_infer);return check.type!=="AssumeDomFactResult"||!output||!sameRetainedFact(body[i],output.subject)||!factFormationMatches(body[i],check.fields?.well_defined);}))return formation;
+      const note=editText("候选参数及条件只在本次表达式检查中采用，并非已选出的见证；存在性、唯一性或不存在性须由各自的证明建立。","Candidate parameters and conditions are used only for this formation check, not as chosen witnesses; existence, uniqueness or nonexistence requires its own proof.");
+      return {...formation,proofs:[fields.well_defined_proof],complete:true,scopeId,note:success?note:note+editText(" 本句尚未成立，这些检查不表示目标已被证明。"," This statement remains unestablished; these checks do not prove the goal.")};
+    }
+    function counterexampleFormation(record,fact){
       const data=counterexampleContract(record);if(!data)return null;
       if(!data.paired&&record.type==="VerifyNotForallFactFailed")return null;
-      const wd=proofResult(data.verified.fields?.well_defined_proof),introduced=resolveEvidence(wd.fields?.introduced_params),types=introduced.fields?.param_type_well_defined,body=wd.fields?.assumed_body_facts,scopeId=resolveEvidence(wd.fields?.local_env).scope_id,proofs=[...array(types),...array(body).map(value=>resolveEvidence(value).fields?.well_defined)];
-      return {proofs,complete:data.paired&&wd.type==="DetailedExistShapedFactWellDefinedProof"&&Array.isArray(types)&&Array.isArray(body)&&body.length===array(data.exist?.fields?.facts).length&&proofs.every(Boolean)&&(!ownerId||scopes.get(scopeId)?.statement_id===ownerId),note:editText("这些检查针对反例条件中的表达式，与反例存在性的证明是不同的步骤。","These checks concern expressions in the counterexample conditions, separately from proving that a counterexample exists.")};
+      const formation=data.paired&&existentialFormation(data.verified,{...fact,id:null});
+      return {...(formation||{proofs:[],complete:false}),note:editText("这些检查针对反例条件中的表达式，与反例存在性的证明是不同的步骤。","These checks concern expressions in the counterexample conditions, separately from proving that a counterexample exists.")};
     }
     function appendCounterexampleProof(target,fact,record,depth){
       const data=counterexampleContract(record);if(!data)return false;
@@ -3282,7 +3393,8 @@
       part.append(element("p","lr-proof-summary",data.common.length?editText("要否定此全称命题，需要证明存在声明范围内的参数，满足全部前提，但使至少一项结论不成立。","To refute this universal statement, establish parameters in the declared domains that satisfy all premises but violate at least one conclusion."):editText("要否定此全称命题，需要证明存在声明范围内的参数，使至少一项结论不成立。","To refute this universal statement, establish parameters in the declared domains that violate at least one conclusion.")),element("div","lr-counterexample-formula lr-formula",condition));
       if(!data.complete){part.append(element("p","lr-failure-summary",editText("当前证明尚未建立这样的反例，因此尚不能否定这个全称命题。","The current proof has not established such a counterexample, so it has not refuted the universal statement.")));return true;}
       part.append(element("h4","lr-proof-section-title",editText("反例存在性的依据","Justification of the counterexample's existence")));
-      appendProofBody(part,{...fact,id:null,role:"verified"},data.proof,false,depth+1);return true;
+      // The enclosing counterexample owns the same formation certificate.
+      appendProofMain(part,{...fact,id:null,role:"verified"},data.proof,false,depth+1);return true;
     }
     function counterexampleInference(fact){
       for(const batch of factInferences(fact?.id)){
@@ -3699,7 +3811,18 @@
     }
     function factFormationStages(value){
       const proofs=[];let complete=true;const keep=proof=>{if(proof)proofs.push(proof);else complete=false;};
-      const visit=value=>{const proof=proofResult(value);if(proof.fields?.well_defined_proof)keep(proof.fields.well_defined_proof);else if(["VerifyKnownForallFactProof","VerifyEmptyParameterDomainForallProof"].includes(proof.type))keep(proof.fields?.well_defined);else if(proof.type==="VerifyForallFactSuccess"){const introduced=resolveEvidence(proof.fields?.introduced_params);if(!Array.isArray(introduced.fields?.param_type_well_defined)||!Array.isArray(proof.fields?.assumed_dom_facts)||!Array.isArray(proof.fields?.proved_then_facts)){complete=false;return;}introduced.fields.param_type_well_defined.forEach(keep);proof.fields.assumed_dom_facts.forEach(value=>keep(resolveEvidence(value).fields?.well_defined));proof.fields.proved_then_facts.forEach(value=>visit(resolveEvidence(value).fields?.verify_result));}else complete=false;};visit(value);return {proofs,complete};
+      const visit=value=>{
+        const proof=proofResult(value),f=proof.fields||{};
+        if(f.well_defined_proof){keep(f.well_defined_proof);return;}
+        if(["VerifyKnownForallFactProof","VerifyEmptyParameterDomainForallProof"].includes(proof.type)){keep(f.well_defined);return;}
+        if(["VerifyForallFactSuccess","VerifyForallFactFailed"].includes(proof.type)){
+          const introduced=resolveEvidence(f.introduced_params),failed=proof.type==="VerifyForallFactFailed",index=retainedIndex(f.failed_then_index),goal=proofResult(f.fact),child=proofResult(f.failed_then);
+          if(!Array.isArray(introduced.fields?.param_type_well_defined)||!Array.isArray(f.assumed_dom_facts)||!Array.isArray(f.proved_then_facts)||failed&&(proof.variant!=="FailToSearchProof"||index!==f.proved_then_facts.length||!sameRetainedFact(array(goal.fields?.then_facts)[index],child.fields?.fact))){complete=false;return;}
+          introduced.fields.param_type_well_defined.forEach(keep);f.assumed_dom_facts.forEach(value=>keep(resolveEvidence(value).fields?.well_defined));f.proved_then_facts.forEach(value=>visit(resolveEvidence(value).fields?.verify_result));
+          if(failed){if(/^FailToVerify.*FactWellDefinedResult$/.test(child.type||""))keep(f.failed_then);else visit(f.failed_then);}return;
+        }
+        complete=false;
+      };visit(value);return {proofs,complete};
     }
     function contextChangeFormation(record){
       const contract=contextChangeContract(record),fields=record.fields||{},declaration=resolveEvidence(fields.statement);if(!contract||contract.route==="sketch")return null;
@@ -3872,7 +3995,7 @@
     function appendAutomaticStructOpening(target,fact,action,context=true){
       const part=element("section","lr-automatic-struct-opening");part.dataset.scope=action.scopeId;part.dataset.membership=action.membershipId;part.dataset.origin=action.origin||"parameter";target.append(part);
       if(context)appendProofContext(part,fact);
-      const origins={parameter:["由参数的结构定义得到","From the parameter's structural definition","本段参数采用下面的结构成员关系。由该结构的定义，得到字段范围及本层定义条件；这些性质依赖本段参数，不能直接作为外层结论。","This scope takes the parameter in the structure shown below. Its definition supplies the field domains and conditions of this layer. These properties depend on the local parameter and are not conclusions in the enclosing scope."],"verified-object":["由对象的结构成员关系得到","From the object's structural membership","对象由已通过的声明引入。下面的成员关系与结构定义给出字段范围及本层条件；成员关系的引用可以继续追踪对象的取值或存在性依据。","The object was introduced by an accepted declaration. Its membership and the structure definition supply the field domains and conditions of this layer. Follow the membership to inspect the value or existence evidence."],"trusted-object":["由假设的结构成员关系得到","From assumed structural membership","对象及其结构成员关系由 trust have 显式假设。字段范围和本层条件由该成员关系及结构定义推出；没有因此证明这种对象存在。","trust have explicitly assumes the object and its structural membership. The field domains and conditions follow from that membership and the structure definition; existence of such an object has not thereby been proved."],"temporary-trusted-object":["检查期间的临时结构性质","Temporary structural properties during checking","检查正文前，临时对象已按声明的结构成员关系展开。下面的性质只在本次检查中可用；正文假设尚未引入，失败的声明没有向后文发布对象或性质。","Before body checking, the temporary object was opened using its declared structural membership. These properties are available only during this check. No body assumptions were introduced, and the rejected declaration published no objects or properties."],"temporary-parameter":["模板检查中的局部结构条件","Local structural conditions during template checking","模板参数在本次局部检查中满足声明的结构成员条件，因此可展开这一层定义。这不证明存在一个具体参数，也没有向外发布这些局部性质。","The template parameter satisfies its declared structural membership during this local check, allowing this definition layer to open. This proves neither existence of a concrete parameter nor these local properties in the enclosing context."]},words=origins[action.origin||"parameter"]||origins.parameter;
+      const origins={parameter:["由参数的结构定义得到","From the parameter's structural definition","本段参数采用下面的结构成员关系。由该结构的定义，得到字段范围及本层定义条件；这些性质依赖本段参数，不能直接作为外层结论。","This scope takes the parameter in the structure shown below. Its definition supplies the field domains and conditions of this layer. These properties depend on the local parameter and are not conclusions in the enclosing scope."],"verified-object":["由对象的结构成员关系得到","From the object's structural membership","对象由已通过的声明引入。下面的成员关系与结构定义给出字段范围及本层条件；成员关系的引用可以继续追踪对象的取值或存在性依据。","The object was introduced by an accepted declaration. Its membership and the structure definition supply the field domains and conditions of this layer. Follow the membership to inspect the value or existence evidence."],"trusted-object":["由假设的结构成员关系得到","From assumed structural membership","对象及其结构成员关系由 trust have 显式假设。字段范围和本层条件由该成员关系及结构定义推出；没有因此证明这种对象存在。","trust have explicitly assumes the object and its structural membership. The field domains and conditions follow from that membership and the structure definition; existence of such an object has not thereby been proved."],"temporary-trusted-object":["检查期间的临时结构性质","Temporary structural properties during checking","检查正文前，临时对象已按声明的结构成员关系展开。下面的性质只在本次检查中可用；正文假设尚未引入，失败的声明没有向后文发布对象或性质。","Before body checking, the temporary object was opened using its declared structural membership. These properties are available only during this check. No body assumptions were introduced, and the rejected declaration published no objects or properties."],"formation-parameter":["表达式检查中的局部结构性质","Local structural properties for formation checking","这里只临时采用参数的结构成员关系，以检查后续表达式。字段范围与结构条件由这一成员关系及结构定义给出；它们没有提供存在见证，也没有证明正在检查的命题。","The parameter's structural membership is adopted temporarily to check subsequent expressions. It and the structure definition supply field domains and conditions; they supply neither an existence witness nor a proof of the statement being checked."],"temporary-parameter":["模板检查中的局部结构条件","Local structural conditions during template checking","模板参数在本次局部检查中满足声明的结构成员条件，因此可展开这一层定义。这不证明存在一个具体参数，也没有向外发布这些局部性质。","The template parameter satisfies its declared structural membership during this local check, allowing this definition layer to open. This proves neither existence of a concrete parameter nor these local properties in the enclosing context."]},words=origins[action.origin||"parameter"]||origins.parameter;
       part.append(element("h4","lr-proof-section-title",words[lang()==="zh"?0:1]),element("p",action.origin?.includes("trusted")?"lr-proof-summary lr-explicit-assumption":"lr-proof-summary",words[lang()==="zh"?2:3]));
       part.append(factButton(action.membershipId,action.origin==="parameter"?"hypothesis":undefined));const structure=resolveEvidence(resolveEvidence(action.record).fields?.struct_obj),definition=symbolDefinitions.get(resolveEvidence(structure.fields?.name).symbol_id);if(definition)part.append(button(editText("查看结构定义","View struct definition"),"lr-definition-link",()=>selectStatement(definition.id,definition.line)));
       appendStructExpansionProperties(part,fact,action);return part;
@@ -4064,8 +4187,8 @@
       });return data;
     }
     function appendFunctionDomainFailure(target,fact,record,depth=0){
-      if(record.type!=="ExecReleaseThmStmtFailed"||record.variant!=="FunctionDomain")return false;
-      const reason=resolveEvidence(record.fields?.result),part=element("section","lr-function-domain-failure");part.dataset.stage=reason.variant||"missing";target.append(part);part.append(element("h4","lr-proof-section-title",editText("完整输入范围尚未匹配","Complete input domains have not been matched")));
+      if(record.type!=="FunctionDomainMatchFailure"&&(record.type!=="ExecReleaseThmStmtFailed"||record.variant!=="FunctionDomain"))return false;
+      const reason=record.type==="FunctionDomainMatchFailure"?record:resolveEvidence(record.fields?.result),part=element("section","lr-function-domain-failure");part.dataset.stage=reason.variant||"missing";target.append(part);part.append(element("h4","lr-proof-section-title",editText("完整输入范围尚未匹配","Complete input domains have not been matched")));
       const incomplete=()=>part.append(element("p","lr-empty-note",editText("此处的定义域检查记录不完整。","The domain-check record is incomplete here.")));
       if(reason.type!=="FunctionDomainMatchFailure"){incomplete();return true;}
       if(reason.variant==="NoCompleteDomain"){part.append(element("p","lr-proof-summary",editText("当前证明上下文中，检查器尚未确定这个表达式的完整函数输入范围。","The checker has not established a complete function input domain for this expression in the current proof context.")));return true;}
@@ -4254,6 +4377,475 @@
         const list=data.route==="cases"?data.execution:resolveEvidence(fields.case_checks),conditions=array(data.declaration.fields?.cases).map(value=>data.route==="recursive"?resolveEvidence(value).fields?.case_fact:value);appendFunctionChecks(part,local,data,list,conditions,depth);appendFunctionBranches(part,local,action.topBranches,depth);
       }
       appendFunctionProperties(part,action,fact.id);return true;
+    }
+    function rejectedCommandSource(statement,command,origin="checked"){
+      const source=sources.get(statement?.source_id),scope=scopes.get(statement?.scope_id);
+      if(statement?.status!=="rejected"||statement.origin!==origin||typeof source?.content!=="string"||!scope||!Array.isArray(statement.produced_fact_ids)||statement.produced_fact_ids.length||!Array.isArray(statement.inferred_fact_ids)||statement.inferred_fact_ids.length)return false;
+      const offsets=bytePositions(source.content),start=offsets.get(statement.start_byte),end=offsets.get(statement.end_byte);
+      if(start===undefined||end===undefined||end<=start||source.content.slice(0,start).split("\n").length!==statement.line)return false;
+      const tokens=array(source.tokens).filter(token=>token.start_byte>=statement.start_byte&&token.end_byte<=statement.end_byte);
+      if(tokens[0]?.start_byte!==statement.start_byte||tokens.at(-1)?.end_byte!==statement.end_byte||!command.every((word,i)=>tokens[i]?.text===word&&source.content.slice(offsets.get(tokens[i].start_byte),offsets.get(tokens[i].end_byte))===word))return false;
+      const seen=new Set();let enclosing=scope;while(enclosing&&!enclosing.source_id&&!seen.has(enclosing.id)){seen.add(enclosing.id);enclosing=scopes.get(enclosing.parent_id);}return enclosing?.source_id===statement.source_id;
+    }
+    function failedEvaluationDetails(statement){
+      if(statement?.status!=="rejected"||statement.statement_kind!=="Command.EvalStmt")return null;
+      const data={complete:false,stage:null,payload:null},source=statements.get(statement.source_statement_id||statement.id);
+      if(!rejectedCommandSource(statement,["eval"])||!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte)return data;
+      let node=resolveEvidence(statement.evidence);
+      for(const[type,variant]of[["ExecStmtResult","Command"],["ExecCommandStmtResult","Eval"],["ExecEvalStmtResult","Failed"]]){if(node.type!==type||node.variant!==variant)return data;node=resolveEvidence(node.fields?.["0"]);}
+      const stages={WellDefined:"object",AlgorithmEquation:"equation",EvaluatedEqualityWellDefined:"equality",UnsupportedExpression:"leaf",EvaluationFailed:"leaf",AlgoDispatchFailed:"leaf",DepthExceeded:"leaf",CyclicAlgoCall:"leaf",AggregateBudgetExceeded:"leaf",AggregateRangeOverflow:"leaf"};
+      if(node.type!=="ExecEvalStmtFailed"||typeof node.variant!=="string"||!Object.prototype.hasOwnProperty.call(stages,node.variant))return data;
+      const stage=node.variant,kind=stages[stage],payload=resolveEvidence(node.fields?.["0"]),fields=payload.fields||{};
+      if(kind==="leaf"&&(!node.fields||Object.keys(node.fields).length))return data;
+      if(kind==="object"&&(payload.type!=="VerifyObjWellDefinedResult"||payload.variant!=="Failed"||resolveEvidence(fields.obj).type!=="Obj"||resolveEvidence(fields.reason).type!=="FailToVerifyObjWellDefinedResult"))return data;
+      if(kind==="equality"){
+        const failure=resolveEvidence(fields["0"]);
+        if(payload.type!=="VerifyEqualFactWellDefinedResult"||payload.variant!=="Failed"||failure.type!=="FailToVerifyEqualFactWellDefinedResult"||proofResult(failure.fields?.fact).type!=="EqualFact"||!retainedFactId(failure.fields?.fact)||resolveEvidence(failure.fields?.failed_obj).type!=="Obj"||resolveEvidence(failure.fields?.reason).type!=="FailToVerifyObjWellDefinedResult")return data;
+      }
+      if(kind==="equation"){
+        const result=resolveEvidence(fields["0"]),outer=resolveEvidence(result.fields?.["0"]),formation=outer.variant==="FailToVerifyWellDefined",failure=formation?resolveEvidence(outer.fields?.["0"]):outer,goal=proofResult(failure.fields?.fact),application=recordedFunctionApplication(goal.fields?.left),head=resolveEvidence(application?.fields?.head);
+        if(payload.type!=="VerifyFactResult"||payload.variant!=="Equality"||result.type!=="VerifyEqualityResult"||result.variant!=="Failed"||outer.type!=="VerifyEqualityFailed"||!["FailToSearchProof","FailToVerifyWellDefined"].includes(outer.variant)||goal.type!=="EqualFact"||!retainedFactId(goal)||resolveEvidence(goal.fields?.right).type!=="Obj"||head.type!=="FnObjHead"||head.variant!=="Identifier"||resolveEvidence(head.fields?.["0"]).kind!=="symbol_reference"||formation&&!retainedEqualityFormationFailure(failure))return data;
+      }
+      return {complete:true,stage,payload:kind==="leaf"?null:node.fields["0"]};
+    }
+    function evaluationFailureFormation(fact,evidence){
+      if(fact.id||fact.role!=="rejected")return null;
+      const statement=statements.get(fact.producer_statement_id),data=failedEvaluationDetails(statement);
+      if(!data?.complete||!data.payload||resolveEvidence(evidence)!==resolveEvidence(statement.evidence))return null;
+      const formation=data.stage==="AlgorithmEquation"&&proofResult(data.payload).type!=="FailToVerifyEqualFactWellDefinedResult"?factFormationStages(data.payload):{proofs:[data.payload],complete:true};
+      return {...formation,failedConditions:failedFormationConditions(data.payload),note:editText("这里只展示当前失败项保留的表达式与定义域检查；此前全部计算步骤未完整保留。","Only expression and domain checks retained with this failure are shown; the full preceding computation history was not recorded.")};
+    }
+    function appendFailedEvaluation(target,statement){
+      const data=failedEvaluationDetails(statement);if(!data)return false;
+      const part=element("section","lr-evaluation-failure");part.dataset.statement=statement.id;part.dataset.stage=data.stage||"";part.dataset.status=data.complete?"stage-retained":"incomplete";target.append(part);
+      appendFailureContext(part,statement);part.append(element("h4","lr-proof-section-title",editText("求值未完成","Evaluation unfinished")));
+      if(!data.complete){part.append(element("p","lr-empty-note",editText("此处的求值失败记录或其源码对应关系不完整，无法确定失败阶段。","The evaluation-failure record or its source correspondence is incomplete; the failing stage cannot be determined.")));return true;}
+      const messages={
+        WellDefined:["待求值表达式的有定义检查未完成；所需的定义域条件见下方。","The expression's formation check did not complete; its required domain conditions are below."],
+        AlgorithmEquation:["本次算法调用所用定义方程的验证未完成，因此没有发布计算结果。","Verification of a defining equation used by this algorithm call did not complete, so no computation result was published."],
+        EvaluatedEqualityWellDefined:["计算所得等式的有定义检查未完成，因此没有发布该等式。","Formation checking of the evaluated equality did not complete, so that equality was not published."],
+        UnsupportedExpression:["当前求值器不支持计算这个表达式；这不表示它在数学上没有定义。","The current evaluator does not support computing this expression; this does not mean it is mathematically undefined."],
+        EvaluationFailed:["本次数值求值未取得结果；记录未保留更具体的计算失败原因。","This numerical evaluation obtained no result; the record retains no more specific computation-failure reason."],
+        AlgoDispatchFailed:["未找到与本次调用匹配的可执行算法定义或分支。","No executable algorithm definition or branch matching this call was found."],
+        DepthExceeded:["本次计算达到求值器的深度限制；这不证明该算法在数学上不终止。","This computation reached the evaluator's depth limit; this does not prove mathematical nontermination."],
+        CyclicAlgoCall:["本次计算再次进入了正在求值的同一算法调用，求值器已停止此次计算。","The computation re-entered the same algorithm call already being evaluated; the evaluator stopped this computation."],
+        AggregateBudgetExceeded:["本次有限聚合计算超过求值器的计算预算；这不表示该聚合在数学上没有值。","This finite aggregate exceeded the evaluator's computation budget; this does not mean the aggregate has no mathematical value."],
+        AggregateRangeOverflow:["本次有限聚合的索引范围超出求值器可表示的计算范围。","This finite aggregate's index range exceeded the evaluator's representable computation range."]
+      };
+      const equationFormation=data.stage==="AlgorithmEquation"&&proofResult(data.payload).type==="FailToVerifyEqualFactWellDefinedResult";
+      part.append(element("p","lr-failure-summary",equationFormation?editText("定义等式的有定义检查未通过；相等性证明尚未进行。","The defining equation failed formation checking; its equality proof has not been attempted."):messages[data.stage][lang()==="zh"?0:1]));
+      if(data.stage==="AlgorithmEquation"){
+        const goal=proofResult(proofResult(data.payload).fields.fact),section=element("div","lr-evaluation-failed-equation"),application=recordedFunctionApplication(goal.fields.left),head=resolveEvidence(application?.fields?.head),name=resolveEvidence(head.fields?.["0"]),definition=name.kind==="symbol_reference"&&symbolDefinitions.get(name.symbol_id);
+        section.dataset.phase=equationFormation?"well-defined":"search-proof";section.dataset.fact=retainedFactId(goal);section.append(element("h4","lr-proof-section-title",equationFormation?editText("待验证的定义等式","Defining equation to check"):editText("未能证明的定义等式","Defining equation not established")),formula(quantifiedText(goal,statement.source_id)||goal.text,statement.source_id));part.append(section);
+        if(head.type==="FnObjHead"&&head.variant==="Identifier"&&definition?.status==="accepted"&&["DefAlgoByCasesStmt","DefAlgoByInducStmt"].includes(String(definition.statement_kind||"").split(".").at(-1)))section.append(button(editText("查看算法定义","View algorithm definition"),"lr-definition-link",()=>selectStatement(definition.id,definition.line)));
+      }
+      part.append(element("p","lr-empty-note",editText("本句没有引入计算结果等式。","This command introduced no result equality.")));
+      if(!data.payload)part.append(element("p","lr-evaluation-history lr-empty-note",editText("此失败记录未保留此前完整的改写、参数代入及定义域检查历史。","This failure record does not retain the full preceding rewrite, argument-substitution or domain-check history.")));
+      appendAtomicWellDefinedness(part,{id:null,role:"rejected",source_id:statement.source_id,scope_id:statement.scope_id,producer_statement_id:statement.id},statement.evidence,0);return true;
+    }
+    function retainedEqualityFormationFailure(value){
+      const record=resolveEvidence(value),f=record.fields||{},goal=proofResult(f.fact),object=resolveEvidence(f.failed_obj),reason=resolveEvidence(f.reason);
+      return record.type==="FailToVerifyEqualFactWellDefinedResult"&&goal.type==="EqualFact"&&!!retainedFactId(goal)&&object.type==="Obj"&&reason.type==="FailToVerifyObjWellDefinedResult"&&reason.variant===object.variant&&[goal.fields?.left,goal.fields?.right].some(value=>sameRecordedObject(value,f.failed_obj));
+    }
+    function failedExpansionDetails(statement){
+      const routes={"ReleaseAndExpand.ReleaseTupleDefStmt":["tuple","TupleDef","ExecReleaseTupleDefStmt",["release","tuple","def"]],"ReleaseAndExpand.ReleaseStructDefStmt":["struct","StructDef","ExecReleaseStructDefStmt",["release","struct","def"]],"ReleaseAndExpand.ReleaseObjDefStmt":["object","ObjDef","ExecReleaseObjDefStmt",["release","obj","def"]],"ReleaseAndExpand.ReleaseCartDefStmt":["cart","CartDef","ExecReleaseCartDefStmt",["release","cart","def"]],"ReleaseAndExpand.ExpandRangeStmt":["range","ExpandRange","ExecExpandRangeStmt",["expand",":"]],"By.ByExtensionStmt":["set","Extension","ExecByExtensionStmt",["by","extension"]],"By.ByFnExtensionStmt":["function","FnExtension","ExecByFnExtensionStmt",["by","fn_extension"]]};
+      if(statement?.status!=="rejected"||!Object.prototype.hasOwnProperty.call(routes,statement.statement_kind))return null;
+      const[route,variant,type,tokens]=routes[statement.statement_kind],data={route,complete:false,stage:null,mode:null,record:null,payload:null,goal:null,body:null,domains:[]},source=statements.get(statement.source_statement_id||statement.id),family=statement.statement_kind.startsWith("By.")?"By":"ReleaseAndExpand";
+      if(!rejectedCommandSource(statement,tokens)||!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte)return data;
+      let node=resolveEvidence(statement.evidence);for(const[t,v]of[["ExecStmtResult",family],["Exec"+family+"StmtResult",variant],[type+"Result","Failed"]]){if(node.type!==t||node.variant!==v)return data;node=resolveEvidence(node.fields?.["0"]);}
+      if(node.type!==(route==="cart"?"VerifyEqualityFailed":type+"Failed"))return data;
+      const stages={tuple:{Shape:"leaf",Domain:"domain",Requirements:"message",Return:"fact",MembershipWd:"wd",Coordinate:"fact"},struct:{NoDefinitionOwnedCarrier:"object",Membership:"proof",Release:"release"},object:{DefinitionNotFound:"name",ParamTypeNotReleasable:"name",NameNotInDefinition:"name",FlattenInduc:"name",Instantiate:"name"},cart:{FailToVerifyWellDefined:"cart",FailToSearchProof:"cart"},range:{Domain:"message",Membership:"proof",Store:"message"},set:{GoalWd:"wd",ProofBody:"body",LeftToRight:"proof",RightToLeft:"proof",Store:"message"},function:{GoalWd:"wd",NoCompatibleFnSet:"leaf",DomainMatch:"domains",ProofBody:"body",Pointwise:"proof",Store:"message"}};
+      if(!Object.prototype.hasOwnProperty.call(stages[route],node.variant))return data;
+      const mode=stages[route][node.variant],f=node.fields||{},payload=f["0"],resolved=resolveEvidence(payload),d={...data,stage:node.variant,mode,record:node,payload,complete:true};
+      const goal=(value,expected=null)=>{const proof=proofResult(value),subject=proof.fields?.fact,at=subject&&logicalSourceLocation(subject,statement);return failedFactRecord(proof)&&(!expected||sameRetainedFact(expected,subject))&&(!at||at.sourceId===statement.source_id&&at.line===statement.line)?subject:null;};
+      if(mode==="leaf")d.complete=!Object.keys(f).length;
+      if(mode==="message")d.complete=typeof payload==="string"&&!!payload.trim();
+      if(mode==="object")d.complete=resolveEvidence(f.obj).type==="Obj";
+      if(mode==="name"){const name=resolveEvidence(f.name);d.complete=name.kind==="symbol_reference"&&typeof name.symbol_id==="string"&&typeof name.name==="string"&&(!["FlattenInduc","Instantiate"].includes(d.stage)||typeof f.reason==="string");}
+      if(mode==="proof"||mode==="fact"){d.payload=mode==="fact"?f.result:payload;d.goal=goal(d.payload,mode==="fact"?f.fact:null);d.complete=resolveEvidence(d.payload).type==="VerifyFactResult"&&!!d.goal&&(mode!=="fact"||!!retainedFactId(f.fact)&&sameRetainedFact(f.fact,d.goal));}
+      if(mode==="cart"){d.payload=node;d.goal=goal(node);d.complete=!!d.goal&&(node.variant!=="FailToVerifyWellDefined"||retainedEqualityFormationFailure(proofResult(node)));}
+      if(mode==="wd"){const failed=proofResult(payload);d.goal=goal(payload);d.complete=resolved.type==="VerifyFactWellDefinedResult"&&resolved.variant==="Failed"&&!!d.goal&&(failed.type!=="FailToVerifyEqualFactWellDefinedResult"||retainedEqualityFormationFailure(failed));}
+      if(mode==="domain")d.complete=resolved.type==="FunctionDomainMatchFailure";
+      if(mode==="domains"){d.domains=Array.isArray(payload)?payload.map(resolveEvidence):[];d.complete=Array.isArray(payload)&&d.domains.every(value=>value.type==="FnExtensionDomainCandidateFailure"&&resolveEvidence(value.fields?.right_source).type==="CompleteFunctionDomainProof"&&resolveEvidence(value.fields?.result).type==="FunctionDomainMatchFailure");}
+      if(mode==="body"){
+        d.body=retainedBodyFailure(statement,payload);d.complete=!!d.body&&d.body.steps.every(value=>value?.kind==="statement_reference"&&statements.get(value.statement_id)?.status==="accepted");
+      }
+      if(mode==="release")d.complete=resolved.type==="FailToReleaseOneStructLayer";
+      return d;
+    }
+    function expansionFailureFormation(fact,evidence){
+      if(fact.id||fact.role!=="rejected")return null;const statement=statements.get(fact.producer_statement_id),data=failedExpansionDetails(statement);if(!data?.complete||resolveEvidence(evidence)!==resolveEvidence(statement.evidence))return null;
+      const wd=value=>{const root=resolveEvidence(value),failed=proofResult(value);return root.type==="VerifyFactWellDefinedResult"&&root.variant==="Failed"||root.type==="VerifyObjWellDefinedResult"&&root.variant==="Failed"||/^FailToVerify.*FactWellDefinedResult$/.test(failed.type||"")?{proofs:[value],complete:true}:factFormationStages(value);};
+      let formation=null;if(["proof","fact","cart","wd"].includes(data.mode))formation=wd(data.payload);
+      if(data.mode==="domain"){const failed=resolveEvidence(data.payload);if(["FunctionWd","TargetWd"].includes(failed.variant))formation=wd(failed.fields?.["0"]);}
+      if(!formation||!formation.proofs.length&&!formation.complete)return null;
+      return {...formation,failedConditions:failedFormationConditions(data.payload),note:editText("这里保留的是当前失败项的表达式检查；此前完整的展开与验证过程未保留。","These are the expression checks retained for the current failure; the complete preceding expansion and verification history was not retained.")};
+    }
+    function appendFailedExpansion(target,statement){
+      const data=failedExpansionDetails(statement);if(!data)return false;const part=element("section","lr-expansion-failure");part.dataset.statement=statement.id;part.dataset.route=data.route;part.dataset.stage=data.stage||"";part.dataset.status=data.complete?"stage-retained":"incomplete";target.append(part);appendFailureContext(part,statement);part.append(element("h4","lr-proof-section-title",["set","function"].includes(data.route)?editText("外延性证明未完成","Extensionality proof unfinished"):editText("展开检查未完成","Expansion check unfinished")));
+      if(!data.complete){part.append(element("p","lr-empty-note",editText("本次指令的失败记录或源码对应关系不完整，无法恢复其检查过程。","The command's failure record or source correspondence is incomplete; its checking history cannot be recovered.")));return true;}
+      const messages={tuple:{Shape:["此指令需要元组值，或已有明确有限坐标个数的函数接口；当前记录尚未建立这样的结构。","This command requires a tuple value or a function interface with an established finite coordinate count; that structure has not been established here."],Domain:["尚未完成元组的完整输入范围检查。","The tuple's complete input-domain check did not complete."],Requirements:["未能构造全部返回范围检查条件。","The complete list of return-domain checks could not be formed."],Return:["尚未证明全部坐标值属于展开所要求的返回范围。","The required return-domain bounds for all coordinates have not been established."],MembershipWd:["展开所得有限函数归属表达式尚未通过有定义检查。","The resulting finite-function membership failed formation checking."],Coordinate:["尚未完成以下坐标性质的检查，因此没有发布本次展开结果。","The coordinate check below did not complete, so this expansion published no results."]},struct:{NoDefinitionOwnedCarrier:["当前范围中未找到此对象对应的结构定义，无法展开字段及定义条件。","No structural definition associated with this object was found in the current scope; its fields and defining conditions cannot be expanded."],Membership:["尚未建立对象属于所声明结构的归属事实。","The object's membership in the declared structure has not been established."],Release:["结构的字段或定义条件未能完成展开。","Expansion of the structure's fields or defining conditions did not complete."]},object:{DefinitionNotFound:["当前范围中没有保留这个名称可释放的定义。","No releasable definition for this name was retained in the current scope."],ParamTypeNotReleasable:["这是当前证明中的参数；它的范围由参数声明给出，没有可在此释放的对象定义。","This is a parameter of the current proof. Its domain comes from its parameter declaration; it has no object definition to release here."],NameNotInDefinition:["请求的名称与保留的定义对象未能对应。","The requested name could not be matched to an object in the retained definition."],FlattenInduc:["未能取得递归定义的完整分支形式。","The complete case form of the recursive definition could not be obtained."],Instantiate:["未能取得按本次实参实例化的定义性质。","The defining properties could not be instantiated for this application."]},cart:{FailToVerifyWellDefined:["笛卡尔积定义等式的有定义检查未通过；相等性证明尚未进行。","The Cartesian-product defining equation failed formation checking; its equality proof has not been attempted."],FailToSearchProof:["尚未证明笛卡尔积与所展开函数集合之间的定义等式。","The defining equality between the Cartesian product and the expanded function set has not been established."]},range:{Domain:["尚未取得这个整数区间可展开的有限取值列表。","A finite list of values for expanding this integer interval could not be obtained."],Membership:["展开前需要证明对象属于指定区间；以下归属检查尚未完成。","Expansion requires membership in the specified interval; the membership check below did not complete."],Store:["结论未能完成发布；此记录未保留此前完整的检查过程。","Publication of the conclusion did not complete; this record does not retain the full preceding checks."]},set:{GoalWd:["集合等式的有定义检查未通过，两个包含方向的证明尚未开始。","The set equality failed formation checking; neither inclusion proof has been entered."],ProofBody:["辅助证明在下面的语句处中断，集合外延性证明尚未完成。","The auxiliary proof stopped at the statement below; the set-extensionality proof is unfinished."],LeftToRight:["集合外延性需要两个包含方向；尚未证明左集合包含于右集合。","Set extensionality requires both inclusions; inclusion of the left set in the right set has not been established."],RightToLeft:["集合外延性的反向包含尚未建立：右集合的每个元素也须属于左集合。","The reverse inclusion remains unproved: every element of the right set must also belong to the left set."],Store:["集合相等的结论未能完成发布。","Publication of the set-equality conclusion did not complete."]},function:{GoalWd:["函数等式的有定义检查未通过，逐点相等的证明尚未开始。","The function equality failed formation checking; its pointwise proof has not been entered."],NoCompatibleFnSet:["未能构造适用于本次比较的逐点相等检查目标。","A pointwise equality check suitable for this comparison could not be constructed."],DomainMatch:["两个函数的完整输入范围尚未匹配，逐点相等的证明尚未开始。","The complete input domains have not been matched; the pointwise equality proof has not been entered."],ProofBody:["辅助证明在下面的语句处中断，函数外延性证明尚未完成。","The auxiliary proof stopped at the statement below; the function-extensionality proof is unfinished."],Pointwise:["尚未证明两函数在每个允许输入上取值相等。","Pointwise equality at every admissible input has not been established."],Store:["函数相等的结论未能完成发布。","Publication of the function-equality conclusion did not complete."]}};
+      part.append(element("p","lr-failure-summary",messages[data.route][data.stage][lang()==="zh"?0:1]));const local={id:null,role:"rejected",source_id:statement.source_id,scope_id:statement.scope_id,producer_statement_id:statement.id};
+      if(data.goal){const goal=element("div","lr-expansion-failed-goal");goal.dataset.fact=retainedFactId(data.goal);goal.append(formula(quantifiedText(data.goal,statement.source_id)||resolveEvidence(data.goal).text,statement.source_id));part.append(goal);}
+      if(data.mode==="domain"){const reason=resolveEvidence(data.payload);if(!["FunctionWd","TargetWd"].includes(reason.variant))appendFunctionDomainFailure(part,local,reason);}
+      if(data.mode==="domains")for(const[index,candidate]of data.domains.entries()){const detail=element("details","lr-domain-candidate");detail.open=data.domains.length===1;detail.append(element("summary",null,editText("本次比较的函数接口 · ","Function interfaces compared here · ")+(index+1)));appendCompleteDomain(detail,local,candidate.fields.right_source,editText("右侧函数的已有完整接口","Established complete interface of the right function"));appendFunctionDomainFailure(detail,local,resolveEvidence(candidate.fields.result));part.append(detail);}
+      if(data.mode==="domains"&&!data.domains.length)part.append(element("p","lr-empty-note",editText("此记录没有可展示的候选函数接口比较。","This record contains no candidate function-interface comparisons to display.")));
+      if(data.mode==="body"){const body=data.body;if(body.steps.length){const prefix=element("details","lr-expansion-checked-prefix");prefix.append(element("summary",null,editText("此前检查的局部步骤 · ","Earlier checked local steps · ")+body.steps.length));for(const ref of body.steps){const child=statements.get(ref.statement_id);prefix.append(button(displayText(child.source_text,child.source_id),"lr-math-link",()=>selectStatement(child.id,child.line)));}part.append(prefix);}const link=button(editText("查看中断的语句","View the statement where checking stopped"),"lr-text-link lr-expansion-stop",()=>selectSourceIssue("statement:"+body.child.id));link.dataset.statement=body.child.id;part.append(link);}
+      if(data.mode==="message"&&data.payload||data.mode==="name"&&data.record.fields?.reason){const details=element("details","lr-failure-details");details.append(element("summary",null,editText("检查说明","Check details")),element("p","lr-failure-message",data.mode==="message"?data.payload:data.record.fields.reason));part.append(details);}
+      part.append(element("p","lr-empty-note",["set","function"].includes(data.route)?editText("本次没有向外建立所求等式。","The requested equality was not established in the enclosing scope."):editText("本次没有向外发布展开所得性质。","This command published no expansion properties to the enclosing scope.")));
+      if(data.route==="function"&&data.stage==="NoCompatibleFnSet")part.append(element("p","lr-expansion-history lr-empty-note",editText("此记录没有可展示的接口匹配证明。","This record contains no interface-matching proof to display.")));
+      if(!expansionFailureFormation(local,statement.evidence)&&!["leaf","object","name"].includes(data.mode)&&!(data.route==="range"&&data.stage==="Domain"))part.append(element("p","lr-expansion-history lr-empty-note",editText("此失败记录未完整保留此前的表达式检查与局部证明依据。","This failure record does not retain the complete preceding expression checks and local proof evidence.")));
+      appendAtomicWellDefinedness(part,local,statement.evidence,0);return true;
+    }
+    function failedFoundationDetails(statement){
+      const routes={"ReleaseAndExpand.ReleaseRegularityAxiomStmt":["regularity","RegularityAxiom","regularity_axiom"],"ReleaseAndExpand.ReleaseAxiomOfChoiceStmt":["choice","AxiomOfChoice","axiom_of_choice"],"ReleaseAndExpand.ReleaseZornLemmaStmt":["zorn","ZornLemma","zorn_lemma"]};
+      if(statement?.status!=="rejected"||!Object.prototype.hasOwnProperty.call(routes,statement.statement_kind))return null;
+      const[route,variant,keyword]=routes[statement.statement_kind],type="ExecRelease"+variant+"Stmt",data={route,stage:null,mode:null,complete:false,record:null,payload:null,goal:null,body:null},source=statements.get(statement.source_statement_id||statement.id);
+      if(!rejectedCommandSource(statement,["release",keyword],"axiom_release")||!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte)return data;
+      let node=resolveEvidence(statement.evidence);for(const[t,v]of[["ExecStmtResult","ReleaseAndExpand"],["ExecReleaseAndExpandStmtResult",variant],[type+"Result","Failed"]]){if(node.type!==t||node.variant!==v)return data;node=resolveEvidence(node.fields?.["0"]);}
+      const stages={regularity:{SetWd:"wd",Nonempty:"proof",Store:"message"},choice:{FamilyWd:"wd",ProofBody:"body",Obligation:"obligation",Store:"message"},zorn:{SetWd:"wd",PropInterface:"message",ProofBody:"body",Obligation:"obligation",Store:"message"}};
+      if(node.type!==type+"Failed"||!Object.prototype.hasOwnProperty.call(stages[route],node.variant))return data;
+      const f=node.fields||{},mode=stages[route][node.variant],payload=mode==="obligation"?f.result:f["0"],resolved=resolveEvidence(payload),d={...data,stage:node.variant,mode,record:node,payload,complete:true,index:mode==="obligation"?retainedIndex(f.index):null};
+      if(mode==="message")d.complete=typeof payload==="string"&&!!payload.trim();
+      if(mode==="wd"){const object=resolveEvidence(resolved.fields?.obj),reason=resolveEvidence(resolved.fields?.reason);d.complete=resolved.type==="VerifyObjWellDefinedResult"&&resolved.variant==="Failed"&&object.type==="Obj"&&reason.type==="FailToVerifyObjWellDefinedResult"&&reason.variant===object.variant;}
+      if(mode==="proof"||mode==="obligation"){
+        const proof=proofResult(payload),goal=proof.fields?.fact,at=goal&&logicalSourceLocation(goal,statement);d.goal=goal;
+        const goalType=mode==="proof"||route==="zorn"&&d.index===0?"IsNonemptySetFact":route==="choice"&&d.index===0?"IsSetFact":"ForallFact";
+        d.complete=resolved.type==="VerifyFactResult"&&failedFactRecord(proof)&&proofResult(goal).type===goalType&&at?.sourceId===statement.source_id&&at.line===statement.line&&(mode!=="obligation"||d.index!==null&&d.index<(route==="choice"?2:5));
+      }
+      if(mode==="body"){
+        d.body=retainedBodyFailure(statement,payload);d.complete=!!d.body;
+      }
+      return d;
+    }
+    function foundationFailureFormation(fact,evidence){
+      if(fact.id||fact.role!=="rejected")return null;const statement=statements.get(fact.producer_statement_id),data=failedFoundationDetails(statement);if(!data?.complete||resolveEvidence(evidence)!==resolveEvidence(statement.evidence))return null;
+      let formation=null;if(data.mode==="wd")formation={proofs:[data.payload],complete:true};else if(["proof","obligation"].includes(data.mode)){
+        const root=resolveEvidence(data.payload),failed=proofResult(data.payload);formation=root.type==="VerifyFactWellDefinedResult"&&root.variant==="Failed"||/^FailToVerify.*FactWellDefinedResult$/.test(failed.type||"")?{proofs:[data.payload],complete:true}:factFormationStages(data.payload);
+      }
+      if(!formation||!formation.proofs.length&&!formation.complete)return null;
+      return {...formation,failedConditions:failedFormationConditions(data.payload),note:editText("这些是当前失败项保留的表达式检查；本条原理应用此前的完整检查与局部存储历史未保留。","These are the expression checks retained for the current failure; the complete earlier checks and local storage history of this principle application were not retained.")};
+    }
+    function appendFailedFoundation(target,statement){
+      const data=failedFoundationDetails(statement);if(!data)return false;const titles={regularity:["正则公理","Axiom of Regularity"],choice:["选择公理","Axiom of Choice"],zorn:["佐恩引理","Zorn's lemma"]},title=titles[data.route][lang()==="zh"?0:1],part=element("section","lr-foundation-failure");part.dataset.statement=statement.id;part.dataset.route=data.route;part.dataset.stage=data.stage||"";part.dataset.status=data.complete?"stage-retained":"incomplete";target.append(part);part.append(element("h4","lr-proof-section-title",title+editText("的应用未完成"," application unfinished")));
+      if(!data.complete){part.append(element("p","lr-empty-note",editText("本次原理应用的失败记录或源码对应关系不完整，无法恢复其检查过程。","The failed principle application or its source correspondence is incomplete; its checking history cannot be recovered.")));return true;}
+      appendFailureContext(part,statement);
+      const messages={SetWd:["输入集合的表达式未通过有定义检查，适用前提的验证尚未开始。","The input set failed formation checking; verification of the applicability premises has not begun."],FamilyWd:["集合族的表达式未通过有定义检查，适用前提的验证尚未开始。","The family expression failed formation checking; verification of the applicability premises has not begun."],Nonempty:["应用正则公理需要先证明输入集合非空；下面的前提尚未建立。","Applying regularity requires the input set to be nonempty; the premise below has not been established."],PropInterface:["指定的关系、上界或极大元谓词未满足此指令要求的接口，偏序及链上界条件尚未开始验证。","The specified relation, upper-bound or maximality predicate does not meet this command's interface requirements; the order and chain-upper-bound premises have not been checked."],ProofBody:["辅助证明在下面的语句处中断，尚未完成这次原理应用的前提验证。","The auxiliary proof stopped at the statement below; the prerequisites for this principle application have not been fully checked."],Obligation:["下面的适用前提尚未证明，因此不能完成本次原理应用。","The applicability premise below has not been established, so this principle application cannot be completed."],Store:["存在结论未能完成发布；当前记录没有保留此前完整的检查过程。","Publication of the existence conclusion did not complete; this record does not retain the complete preceding checks."]};
+      part.append(element("p","lr-failure-summary",messages[data.stage][lang()==="zh"?0:1]),element("p","lr-foundation-origin",editText("这里检查的是集合论基础原理在本次输入下的适用条件，并非证明该基础原理本身。","These checks concern the applicability of a set-theoretic foundation principle to these inputs; they do not prove the foundation principle itself.")));
+      if(data.goal){const goal=element("div","lr-foundation-failed-goal");goal.dataset.fact=retainedFactId(data.goal);if(data.index!==null)goal.dataset.obligationIndex=String(data.index);goal.append(element("h4","lr-proof-section-title",editText("尚未证明的前提","Premise not established")),formula(quantifiedText(data.goal,statement.source_id)||proofResult(data.goal).text,statement.source_id));part.append(goal);}
+      if(data.mode==="body")appendBodyFailureProgress(part,statement,data.body,"foundation");
+      if(data.mode==="message"){const detail=element("details","lr-failure-details");detail.append(element("summary",null,editText("检查说明","Check details")),element("p","lr-failure-message",data.payload));part.append(detail);}
+      part.append(element("p","lr-empty-note",editText("本次没有向外发布该原理的存在结论。","This application published no existence conclusion to the enclosing scope.")));
+      if(data.mode!=="wd"&&data.stage!=="PropInterface")part.append(element("p","lr-foundation-history lr-empty-note",editText("此失败记录未完整保留此前指令级检查、适用前提的通过记录与局部存储历史。","This failure record does not retain the complete earlier command-level checks, verified-prerequisite records or local storage history.")));
+      appendAtomicWellDefinedness(part,{id:null,role:"rejected",source_id:statement.source_id,scope_id:statement.scope_id,producer_statement_id:statement.id},statement.evidence,0);return true;
+    }
+    function retainedBodyFailure(statement,value){
+      const body=resolveEvidence(value),f=body.fields||{},steps=f.prior_steps,index=retainedIndex(f.step_index),ref=f.result,child=ref?.kind==="statement_reference"&&statements.get(ref.statement_id),original=resolveEvidence(f.statement);
+      if(body.type!=="ProofBlockBodyFailed"||!Array.isArray(steps)||index!==steps.length||child?.status!=="rejected"||child.parent_statement_id!==statement.id||child.source_id!==statement.source_id||child.start_byte<statement.start_byte||child.end_byte>statement.end_byte||original.type!=="Stmt"||original.text!==child.source_text)return null;
+      const valid=value=>{if(value?.kind!=="statement_reference")return resolveEvidence(value).type==="ExecStmtResult"&&/Success(?:Result)?$/.test(proofResult(value).type||"");const s=statements.get(value.statement_id);return ["accepted","not_exported"].includes(s?.status)&&s.parent_statement_id===statement.id&&s.source_id===statement.source_id&&s.start_byte>statement.start_byte&&s.end_byte<=statement.end_byte;};
+      return steps.every(valid)?{steps,index,child}:null;
+    }
+    function appendBodyFailureProgress(target,statement,body,kind){
+      if(body.steps.length){const prefix=element("details","lr-"+kind+"-checked-prefix");prefix.append(element("summary",null,editText("此前检查的局部步骤 · ","Earlier checked local steps · ")+body.steps.length));let missing=false;for(const value of body.steps){const child=value?.kind==="statement_reference"&&statements.get(value.statement_id);if(child?.status==="accepted")prefix.append(button(displayText(child.source_text,child.source_id),"lr-math-link",()=>selectStatement(child.id,child.line)));else{missing=true;if(child)prefix.append(element("pre","lr-definition-source",displayText(child.source_text,child.source_id)));else{const result=proofResult(value),proof=result.type==="ExecFactStmtSuccessResult"?proofResult(result.fields?.verify_result):result,goal=proof.fields?.fact,text=goal&&quantifiedText(goal,statement.source_id);if(text)prefix.append(formula(text,statement.source_id));}}}if(missing){prefix.dataset.sourceStatus="not-exported";prefix.append(element("p","lr-empty-note",editText("此前完成步骤的源码或完整执行结果未全部导出，不能逐项追踪证明；这些步骤不是外层结论。","The source or full execution results of these earlier completed steps were not fully exported, so their proofs cannot all be followed; they are not enclosing-scope conclusions.")));}target.append(prefix);}
+      const stop=button(editText("查看中断的语句","View the statement where checking stopped"),"lr-text-link lr-"+kind+"-stop",()=>selectSourceIssue("statement:"+body.child.id));stop.dataset.statement=body.child.id;target.append(stop);
+    }
+    function failedProcessDetails(statement){
+      const routes={"By.ByInducStmt":["induction","Induc",["by","induc"]],"By.ByStrongInducStmt":["strong","StrongInduc",["by","strong_induc"]],"By.ByEnumerateFiniteSetStmt":["enumeration","EnumerateFiniteSet",["by","enumerate","finite_set"]],"By.ByForStmt":["for","For",["by","for"]]};
+      if(statement?.status!=="rejected"||!Object.prototype.hasOwnProperty.call(routes,statement.statement_kind))return null;
+      const[route,variant,tokens]=routes[statement.statement_kind],type="ExecBy"+variant+"Stmt",source=statements.get(statement.source_statement_id||statement.id),data={route,complete:false,stage:null,caseStage:null,mode:null,payload:null,goal:null,body:null,goalIndex:null,assignmentIndex:null};
+      if(!rejectedCommandSource(statement,tokens)||!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte)return data;
+      let node=resolveEvidence(statement.evidence);for(const[t,v]of[["ExecStmtResult","By"],["ExecByStmtResult",variant],[type+"Result","Failed"]]){if(node.type!==t||node.variant!==v)return data;node=resolveEvidence(node.fields?.["0"]);}
+      const induction=["induction","strong"].includes(route),stages=induction?{FromNotInteger:"proof",GoalDomain:"message",GoalWd:"indexed-wd",BodyShape:"message",BaseCase:"case",StepCase:"case",Store:"message",NotFullyWired:"message"}:{ProofBody:"body",GoalWd:"wd",Domain:"message",Assignment:"assignment",Instantiate:"message",Store:"message"};
+      if(node.type!==type+"Failed"||!Object.prototype.hasOwnProperty.call(stages,node.variant))return data;
+      let mode=stages[node.variant],f=node.fields||{},payload=mode==="indexed-wd"||mode==="assignment"?f.result:f["0"],caseStage=null;
+      if(mode==="case"){const failed=resolveEvidence(payload);if(failed.type!=="ByInducCaseFailed"||!["Assume","ProofBody","Goal"].includes(failed.variant))return {...data,stage:node.variant};caseStage=failed.variant;mode={Assume:"message",ProofBody:"body",Goal:"indexed-proof"}[caseStage];f=failed.fields||{};payload=mode==="indexed-proof"?f.result:f["0"];}
+      const d={...data,stage:node.variant,caseStage,mode,payload,complete:true},root=resolveEvidence(payload),proof=proofResult(payload);
+      if(mode==="message")d.complete=typeof payload==="string"&&!!payload.trim();
+      if(["indexed-wd","indexed-proof"].includes(mode))d.goalIndex=retainedIndex(f.index);
+      if(mode==="assignment"){d.goalIndex=retainedIndex(f.then_index);d.assignmentIndex=retainedIndex(f.index);}
+      if(["proof","indexed-proof","assignment","wd","indexed-wd"].includes(mode)){
+        d.goal=proof.fields?.fact;const at=d.goal&&logicalSourceLocation(d.goal,statement),goal=proofResult(d.goal),location=goal.fields?.line_file,quantified=proof.type==="ForallWellDefinedLocalFailure"?quantifierFormationDetails(statement,proof):null;
+        d.complete=(failedFactRecord(proof)||quantified?.complete&&sameRetainedFact(quantified.goal,d.goal))&&(!location||at?.sourceId===statement.source_id)&&(mode==="wd"||mode==="indexed-wd"?root.type==="VerifyFactWellDefinedResult"&&root.variant==="Failed":root.type==="VerifyFactResult")&&(!mode.startsWith("indexed")||d.goalIndex!==null)&&(mode!=="assignment"||d.goalIndex!==null&&d.assignmentIndex!==null);
+        if(mode==="proof"){const set=resolveEvidence(goal.fields?.set),name=resolveEvidence(set.fields?.["0"]);d.complete=d.complete&&goal.type==="InFact"&&set.type==="Obj"&&set.variant==="StandardSet"&&name.symbol_id==="builtin:set:Z";}
+        if(!induction&&mode==="wd")d.complete=d.complete&&goal.type==="ForallFact";
+        if(["wd","indexed-wd"].includes(mode)&&proof.type==="FailToVerifyEqualFactWellDefinedResult")d.complete=d.complete&&retainedEqualityFormationFailure(proof);
+      }
+      if(mode==="body"){d.body=retainedBodyFailure(statement,payload);d.complete=!!d.body;}
+      return d;
+    }
+    function processFailureFormation(fact,evidence){
+      if(fact.id||fact.role!=="rejected")return null;const statement=statements.get(fact.producer_statement_id),data=failedProcessDetails(statement);if(!data?.complete||resolveEvidence(evidence)!==resolveEvidence(statement.evidence))return null;
+      const formation=["wd","indexed-wd"].includes(data.mode)?{proofs:[data.payload],complete:true}:["proof","indexed-proof","assignment"].includes(data.mode)?factFormationStages(data.payload):null;if(!formation||!formation.proofs.length&&!formation.complete)return null;
+      return {...formation,failedConditions:failedFormationConditions(data.payload),note:editText("这些是当前失败项保留的表达式检查；此前完整的阶段检查、局部假设和取值绑定没有一并保留。","These are the expression checks retained for the current failure; the complete preceding phase checks, local assumptions and assignment bindings were not retained together.")};
+    }
+    function appendFailedProcess(target,statement){
+      const data=failedProcessDetails(statement);if(!data)return false;const titles={induction:["数学归纳证明未完成","Induction proof unfinished"],strong:["强归纳证明未完成","Strong-induction proof unfinished"],enumeration:["有限枚举证明未完成","Finite-enumeration proof unfinished"],for:["范围枚举证明未完成","Range-enumeration proof unfinished"]},part=element("section","lr-process-failure");part.dataset.statement=statement.id;part.dataset.route=data.route;part.dataset.stage=data.stage||"";part.dataset.caseStage=data.caseStage||"";part.dataset.status=data.complete?"stage-retained":"incomplete";target.append(part);part.append(element("h4","lr-proof-section-title",titles[data.route][lang()==="zh"?0:1]));
+      if(!data.complete){part.append(element("p","lr-empty-note",editText("本次证明过程的失败记录或源码对应关系不完整，无法恢复其检查过程。","The failed proof process or its source correspondence is incomplete; its checking history cannot be recovered.")));return true;}
+      appendFailureContext(part,statement);const messages={FromNotInteger:["尚未证明归纳起点属于整数集；基例与归纳步尚未开始检查。","The induction starting value has not been proved to be an integer; neither the base case nor the induction step has been checked."],GoalDomain:["归纳参数范围的局部条件尚未成功引入，目标与两个证明阶段尚未完成检查。","The induction parameter's local domain conditions could not be introduced; goal and phase checking are unfinished."],GoalWd:["目标表达式未通过有定义检查；这尚不是对目标真假的证明。","The goal failed formation checking; this is not a proof or refutation of the goal."],BodyShape:["基例和归纳步的证明结构未满足此指令的要求。","The base-case and induction-step proof structure does not satisfy this command's requirements."],BaseCase:["基例检查未通过：归纳起点处的目标尚未建立。","The base case was not established: the goal at the starting value remains unproved."],StepCase:["归纳步未完成：后继指标处的目标尚未建立。","The induction step is unfinished: the goal at the successor index remains unproved."],ProofBody:["本次取值的辅助证明在下面的语句处中断，枚举证明尚未完成。","The auxiliary proof for this assignment stopped at the statement below; the enumeration proof is unfinished."],Domain:["此指令所需的有限参数取值范围检查未完成。","The finite parameter-domain check required by this command did not complete."],Assignment:["下列取值实例的结论尚未建立，因此整个全称结论尚未证明。","The conclusion for the assignment instance below has not been established, so the universal conclusion remains unproved."],Instantiate:["未能完成本次参数取值的实例化；不能据此得到全称结论。","Instantiation for this parameter assignment did not complete; no universal conclusion follows from it."],Store:["全称结论未能完成发布，当前记录未保留完整的先前检查历史。","Publication of the universal conclusion did not complete; this record does not retain the complete preceding checks."],NotFullyWired:["当前执行器尚不能完成此形式的归纳证明。","The current executor cannot complete this induction form."]};
+      part.append(element("p","lr-failure-summary",data.caseStage==="ProofBody"?editText(data.stage==="BaseCase"?"基例的辅助证明在下面的语句处中断。":"归纳步的辅助证明在下面的语句处中断。",data.stage==="BaseCase"?"The base-case auxiliary proof stopped at the statement below.":"The induction-step auxiliary proof stopped at the statement below."):data.caseStage==="Assume"?editText("本阶段需要的局部假设未能完成引入。","The local assumptions required by this phase could not be introduced."):messages[data.stage][lang()==="zh"?0:1]));
+      if(data.assignmentIndex!==null)part.append(element("p","lr-process-assignment-index",editText("取值检查 · 第 "+(data.assignmentIndex+1)+" 组","Assignment check · group "+(data.assignmentIndex+1))));
+      if(data.goal){const goal=element("div","lr-process-failed-goal");goal.dataset.fact=retainedFactId(data.goal);if(data.goalIndex!==null)goal.dataset.goalIndex=String(data.goalIndex);goal.append(formula(quantifiedText(data.goal,statement.source_id)||proofResult(data.goal).text,statement.source_id));part.append(goal);}
+      if(data.mode==="body")appendBodyFailureProgress(part,statement,data.body,"process");
+      if(data.mode==="message"){const detail=element("details","lr-failure-details");detail.append(element("summary",null,editText("检查说明","Check details")),element("p","lr-failure-message",displayText(data.payload,statement.source_id)));part.append(detail);}
+      part.append(element("p","lr-empty-note",editText("本次没有向外建立所求的全称结论。","The requested universal conclusion was not established in the enclosing scope.")));
+      if(!["FromNotInteger","BodyShape","NotFullyWired"].includes(data.stage))part.append(element("p","lr-process-history lr-empty-note",["induction","strong"].includes(data.route)?editText("记录未完整保留参数范围、阶段假设及此前通过的目标检查，不能从失败目标恢复这些依据。","The record does not retain the complete parameter domains, phase assumptions or earlier successful goal checks; those grounds cannot be recovered from the failed goal."):editText("记录未完整保留取值绑定、局部前提及此前通过的取值检查，不能从失败目标反推这些记录。","The record does not retain the complete assignment bindings, local premises or earlier completed assignment checks; they cannot be inferred from the failed goal.")));
+      appendAtomicWellDefinedness(part,{id:null,role:"rejected",source_id:statement.source_id,scope_id:statement.scope_id,producer_statement_id:statement.id},statement.evidence,0);return true;
+    }
+    function failedFunctionDefinitionDetails(statement){
+      const routes={"Definition.HaveFnEqualStmt":["formula","HaveFnEqual","ExecHaveFnEqualStmt"],"Definition.HaveFnEqualCaseByCaseStmt":["cases","HaveFnEqualCaseByCase","ExecHaveFnEqualCaseByCaseStmt"],"Definition.HaveFnByInducStmt":["recursive","HaveFnByInduc","ExecHaveFnByInducStmt"],"Definition.HaveFnByForallExistUniqueStmt":["unique","HaveFnByForallExistUnique","ExecHaveFnByForallExistUniqueStmt"],"Definition.DefAlgoByCasesStmt":["cases","DefAlgoByCases","ExecDefAlgoByCasesStmt"],"Definition.DefAlgoByInducStmt":["recursive","DefAlgoByInduc","ExecDefAlgoByInducStmt"]};
+      if(statement?.status!=="rejected"||!Object.prototype.hasOwnProperty.call(routes,statement.statement_kind))return null;
+      const[route,variant,type]=routes[statement.statement_kind],algorithm=variant.startsWith("DefAlgo"),source=statements.get(statement.source_statement_id||statement.id),data={route,algorithm,complete:false,stage:null,substage:null,mode:null,payload:null,goal:null,object:null,path:[],pair:null};
+      if(!rejectedCommandSource(statement,algorithm?["algo"]:["have","fn"])||!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte)return data;
+      let node=resolveEvidence(statement.evidence);for(const[t,v]of[["ExecStmtResult","Definition"],["ExecDefinitionStmtResult",variant],[type+"Result","Failed"]]){if(node.type!==t||node.variant!==v)return data;node=resolveEvidence(node.fields?.["0"]);}
+      if(node.type!==type+"Failed")return data;
+      if(algorithm){if(node.variant==="AlgoAlreadyDefined")return {...data,stage:node.variant,mode:"leaf",complete:!Object.keys(node.fields||{}).length};if(node.variant!=="DefineFn")return data;node=resolveEvidence(node.fields?.["0"]);}
+      const expected="ExecHaveFn"+{formula:"Equal",cases:"EqualCaseByCase",recursive:"ByInduc",unique:"ByForallExistUnique"}[route]+"StmtFailed",path=[],seen=new Set();
+      while(route==="recursive"&&node.type===expected&&node.variant==="NestedCase"){if(seen.has(node))return data;seen.add(node);const index=retainedIndex(node.fields?.index);if(index===null)return data;path.push(index);node=resolveEvidence(node.fields?.failed);}
+      const stages={formula:{NameClash:"message",AnonymousFnWellDefined:"object-wd",FnSetWellDefined:"object-wd"},cases:{NameClash:"message",CaseCountMismatch:"leaf",EmptyCases:"leaf",FnSetWellDefined:"object-wd",Coverage:"proof",Disjoint:"pair",CaseBodyWellDefined:"indexed-object",CaseBodyInRetSet:"indexed-proof"},recursive:{NameClash:"message",EmptyCases:"leaf",FnSetWellDefined:"object-wd",MeasureWellDefined:"object-wd",LowerBoundWellDefined:"object-wd",MeasureNotInteger:"proof",LowerBoundNotInteger:"proof",MeasureBelowLower:"proof",Coverage:"proof",Disjoint:"pair",CaseBodyWellDefined:"indexed-object",CaseBodyInRetSet:"indexed-proof",Shape:"message"},unique:{NameClash:"message",SourceForall:"proof",FnSetWellDefined:"object-wd",PropertyWellDefined:"fact-wd"}};
+      if(node.type!==expected||!Object.prototype.hasOwnProperty.call(stages[route],node.variant))return data;
+      const mode=stages[route][node.variant],f=node.fields||{},indexed=mode.startsWith("indexed"),payload=indexed?f["1"]:f["0"],root=resolveEvidence(payload),proof=proofResult(payload),d={...data,stage:node.variant,mode,payload,path,complete:true};
+      if(indexed){const index=retainedIndex(f["0"]);if(index===null)return {...d,complete:false};d.path.push(index);}
+      if(mode==="message")d.complete=typeof payload==="string"&&!!payload.trim();
+      if(mode==="leaf")d.complete=!Object.keys(f).length;
+      if(mode==="pair"){const i=retainedIndex(f.i),j=retainedIndex(f.j);d.pair=[i,j];d.complete=i!==null&&j!==null&&i<j;}
+      if(["object-wd","indexed-object"].includes(mode)){
+        const object=resolveEvidence(root.fields?.obj),reason=resolveEvidence(root.fields?.reason);d.object=object;
+        d.complete=root.type==="VerifyObjWellDefinedResult"&&root.variant==="Failed"&&object.type==="Obj"&&reason.type==="FailToVerifyObjWellDefinedResult"&&reason.variant===object.variant;
+        if(d.stage==="FnSetWellDefined")d.complete=d.complete&&object.variant==="FunctionSpace"&&resolveEvidence(object.fields?.["0"]).type==="FunctionSpace"&&resolveEvidence(object.fields?.["0"]).variant==="FnSet";
+        if(d.stage==="AnonymousFnWellDefined"){
+          const family=resolveEvidence(reason.fields?.["0"]),failure=resolveEvidence(family.fields?.["0"]),allowed=["ParamTypeCitesEarlierBinder","ParamType","DomFact","RetSet","Body","BodyInRetSet","Others"];
+          d.substage=failure.variant;d.complete=d.complete&&object.variant==="FunctionSpace"&&family.type==="FailToVerifyFunctionSpaceObjWellDefinedResult"&&family.variant==="AnonymousFn"&&failure.type==="FailToVerifyAnonymousFnObjWellDefined"&&allowed.includes(failure.variant);d.object=resolveEvidence(failure.fields?.failed_obj);
+          const failed=proofResult(failure.fields?.[failure.variant==="DomFact"?"failed_dom":"failed"]);if(failedFactRecord(failed))d.goal=failed.fields.fact;
+          if(failure.variant==="BodyInRetSet")d.complete=d.complete&&resolveEvidence(failure.fields?.failed).type==="VerifyFactResult"&&!!d.goal;
+        }
+      }
+      if(["proof","indexed-proof","fact-wd"].includes(mode)){
+        d.goal=proof.fields?.fact;const at=d.goal&&logicalSourceLocation(d.goal,statement),location=proofResult(d.goal).fields?.line_file,quantified=["ForallIntroductionFormationFailure","ForallWellDefinedLocalFailure"].includes(proof.type)?quantifierFormationDetails(statement,proof):null;
+        d.complete=(failedFactRecord(proof)||quantified?.complete&&sameRetainedFact(quantified.goal,d.goal))&&(!location||at?.sourceId===statement.source_id)&&(mode==="fact-wd"?root.type==="FailToVerifyFactWellDefinedResult":root.type==="VerifyFactResult");
+      }
+      if(d.goal){const at=logicalSourceLocation(d.goal,statement),goal=proofResult(d.goal),location=goal.fields?.line_file,expected={CaseBodyInRetSet:"InFact",SourceForall:"ForallFact",Coverage:"OrFact",MeasureNotInteger:"InFact",LowerBoundNotInteger:"InFact",MeasureBelowLower:"GreaterEqualFact"}[d.stage];if(location&&at?.sourceId!==statement.source_id||expected&&goal.type!==expected)d.complete=false;}
+      return d;
+    }
+    function functionDefinitionFailureFormation(fact,evidence){
+      if(fact.id||fact.role!=="rejected")return null;const statement=statements.get(fact.producer_statement_id),data=failedFunctionDefinitionDetails(statement);if(!data?.complete||resolveEvidence(evidence)!==resolveEvidence(statement.evidence))return null;
+      let formation=null;if(["object-wd","indexed-object","fact-wd"].includes(data.mode))formation={proofs:[data.payload],complete:true};else if(["proof","indexed-proof"].includes(data.mode))formation=quantifierFailureFormation(proofResult(data.payload),fact)||connectiveFormation(proofResult(data.payload),fact)||factFormationStages(data.payload);
+      if(!formation||!formation.proofs.length&&!formation.complete)return null;
+      return {...formation,failedConditions:formation.failedConditions||failedFormationConditions(data.payload),note:editText("这些是当前失败项保留的表达式检查；此前完整的函数接口、分支条件和递归检查历史没有一并保留。","These are the expression checks retained for the current failure; the complete earlier function-interface,branch-condition and recursion-check histories were not retained together.")};
+    }
+    function appendFailedFunctionDefinition(target,statement){
+      const data=failedFunctionDefinitionDetails(statement);if(!data)return false;const part=element("section","lr-function-definition-failure");part.dataset.statement=statement.id;part.dataset.route=data.route;part.dataset.algorithm=String(data.algorithm);part.dataset.stage=data.stage||"";part.dataset.substage=data.substage||"";part.dataset.status=data.complete?"stage-retained":"incomplete";target.append(part);part.append(element("h4","lr-proof-section-title",data.algorithm?editText("算法定义未完成","Algorithm definition unfinished"):editText("函数定义未完成","Function definition unfinished")));
+      if(!data.complete){part.append(element("p","lr-empty-note",editText("本次定义的失败记录或源码对应关系不完整，无法恢复其检查过程。","The failed definition or its source correspondence is incomplete; its checking history cannot be recovered.")));return true;}
+      appendFailureContext(part,statement);const messages={NameClash:["当前范围中已有同名对象，本次定义没有引入新的函数。","The name is already occupied in the current scope; this definition introduced no new function."],AlgoAlreadyDefined:["该名称在当前执行中已有算法登记，本次没有登记新的算法。","An algorithm is already registered under this name in the current execution; this attempt registered no new algorithm."],CaseCountMismatch:["分支条件与返回表达式的数量不一致，无法建立逐分支定义。","The numbers of branch conditions and return expressions differ, so a branchwise definition cannot be established."],EmptyCases:["没有可用于定义函数值的分支。","There are no branches specifying the function values."],FnSetWellDefined:["声明的函数输入与返回接口尚未通过有定义检查。","The declared function input and return interface failed formation checking."],AnonymousFnWellDefined:["定义函数的表达式尚未满足声明接口的要求。","The defining function expression does not yet satisfy the declared interface."],Coverage:["尚未证明分支条件覆盖所有允许的输入。","The branch conditions have not been proved to cover every admissible input."],Disjoint:["尚未证明所列两个分支条件互不相容。","The two indicated branch conditions have not been proved mutually exclusive."],CaseBodyWellDefined:["该分支的返回表达式尚未通过有定义检查。","The return expression for this branch failed formation checking."],CaseBodyInRetSet:["尚未证明该分支的返回值属于声明的返回范围。","This branch's return value has not been proved to belong to the declared return domain."],MeasureWellDefined:["递归度量的表达式尚未通过有定义检查。","The recursion-measure expression failed formation checking."],LowerBoundWellDefined:["递归度量下界的表达式尚未通过有定义检查。","The recursion measure's lower-bound expression failed formation checking."],MeasureNotInteger:["尚未证明递归度量在允许输入上取整数值。","The recursion measure has not been proved integer-valued on admissible inputs."],LowerBoundNotInteger:["尚未证明递归度量的下界是整数。","The lower bound for the recursion measure has not been proved to be an integer."],MeasureBelowLower:["尚未证明递归度量在声明的输入范围上不小于给定下界。","The recursion measure has not been proved to lie above its lower bound throughout the declared input domain."],Shape:["递归定义的结构未满足此指令的要求。","The recursive definition's structure does not meet this command's requirements."],SourceForall:["须先证明每组允许输入都存在唯一输出；下列全称存在唯一命题尚未建立。","Each admissible input must first have exactly one output; the universal unique-existence statement below has not been established."],PropertyWellDefined:["由唯一存在性得到的函数性质尚未完成有定义检查。","Formation checking of the function property derived from unique existence did not complete."]},anonymous={ParamTypeCitesEarlierBinder:["当前函数接口不支持该参数范围中的依赖。","This function interface does not support the dependency in this parameter domain."],ParamType:["参数范围的表达式尚未通过有定义检查。","A parameter-domain expression failed formation checking."],DomFact:["输入条件的表达式尚未通过有定义检查。","An input-condition expression failed formation checking."],RetSet:["返回范围的表达式尚未通过有定义检查。","The return-domain expression failed formation checking."],Body:["函数体尚未在声明的输入范围和条件下通过有定义检查。","The function body failed formation checking under the declared input domains and conditions."],BodyInRetSet:["尚未证明函数体在允许输入上属于声明的返回范围。","The function body has not been proved to belong to the declared return domain at every admissible input."],Others:["当前函数表达式的检查未完成。","Checking of the defining function expression did not complete."]};
+      part.append(element("p","lr-failure-summary",(data.substage?anonymous[data.substage]:messages[data.stage])[lang()==="zh"?0:1]));
+      if(data.path.length)part.append(element("p","lr-function-failed-branch",editText("分支 · ","Branch · ")+data.path.map(i=>i+1).join(" → ")));
+      if(data.pair)part.append(element("p","lr-function-disjoint-pair",editText("分支 ","Branches ")+(data.pair[0]+1)+editText(" 与 "," and ")+(data.pair[1]+1)));
+      if(data.goal){const goal=element("div","lr-function-definition-failed-goal");goal.dataset.fact=retainedFactId(data.goal);goal.append(formula(quantifiedText(data.goal,statement.source_id)||proofResult(data.goal).text,statement.source_id));part.append(goal);}
+      else if(data.object?.type==="Obj"&&typeof data.object.text==="string")part.append(element("p","lr-proof-summary",editText("未完成检查的表达式：","Expression whose check did not complete:")),formula(data.object.text,statement.source_id));
+      if(data.mode==="message"){const detail=element("details","lr-failure-details");detail.append(element("summary",null,editText("检查说明","Check details")),element("p","lr-failure-message",displayText(data.payload,statement.source_id)));part.append(detail);}
+      part.append(element("p","lr-empty-note",data.algorithm?editText("本次没有发布新的函数接口或登记新的算法。","This attempt published no new function interface and registered no new algorithm."):editText("本次没有向外发布定义所得的新函数接口或性质。","This attempt published no new function interface or defining properties to the enclosing scope.")));
+      if(!["leaf","message"].includes(data.mode))part.append(element("p","lr-function-definition-history lr-empty-note",editText("完整的先前条件、参数绑定和已通过分支没有保留，不能据此恢复整段定义过程。","The complete preceding conditions, parameter bindings and successful branches were not retained; the full definition process cannot be recovered from this record.")));
+      appendAtomicWellDefinedness(part,{id:null,role:"rejected",source_id:statement.source_id,scope_id:statement.scope_id,producer_statement_id:statement.id},statement.evidence,0);return true;
+    }
+    function uniquenessCandidateContext(statement,record,parentScopeId=statement.scope_id){
+      const context=scopedUniversalContext(statement,record,parentScopeId),parameters=context&&recordedParameters(proofResult(context.goal).fields?.typed_parameters),count=parameters?.length,clauses=context&&proofResult(context.goal).fields?.then_facts,equal=Array.isArray(clauses)&&clauses.length===1?proofResult(clauses[0]):null;
+      const side=value=>{const node=proofResult(value);return count===2?[node.symbol_id]:node.type==="Tuple"?array(node.fields?.args).map(value=>proofResult(value).symbol_id):[];},left=equal&&side(equal.fields?.left),right=equal&&side(equal.fields?.right);
+      return count>=2&&count%2===0&&new Set(parameters.map(p=>p.symbol_id)).size===count&&equal?.type==="EqualFact"&&left.length===count/2&&right.length===count/2&&left.every((id,i)=>id&&id===parameters[i].symbol_id)&&right.every((id,i)=>id&&id===parameters[count/2+i].symbol_id)?context:null;
+    }
+    function claimExecutionDetails(statement,record){
+      if(statement?.status!=="accepted"||statement.statement_kind!=="ProofBlock.ClaimStmt"||record.type!=="ExecClaimStmtSuccess")return null;
+      let node=resolveEvidence(statement.evidence);
+      for(const [type,variant]of[["ExecStmtResult","ProofBlock"],["ExecProofBlockStmtResult","Claim"],["ExecClaimStmtResult","Success"]]){if(node.type!==type||node.variant!==variant)return null;node=resolveEvidence(node.fields?.["0"]);}
+      const f=record.fields||{},declaration=resolveEvidence(f.statement),goal=declaration.fields?.fact,subject=proofResult(goal),body=proofResult(f.body),scopeId=resolveEvidence(f.local_env).scope_id,scope=scopes.get(scopeId),at=logicalSourceLocation(f.statement,statement),output=storedConclusion(f.stored),owner=statements.get(facts.get(output?.id)?.producer_statement_id),source=statements.get(statement.source_statement_id||statement.id),wd=resolveEvidence(f.goal_wd);
+      if(!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte)return null;
+      const code=sources.get(statement.source_id),offsets=typeof code?.content==="string"?bytePositions(code.content):null,start=offsets?.get(statement.start_byte),end=offsets?.get(statement.end_byte),tokens=array(code?.tokens).filter(token=>token.start_byte>=statement.start_byte&&token.end_byte<=statement.end_byte);
+      if(start===undefined||end===undefined||start>=end||code.content.slice(0,start).split("\n").length!==statement.line||tokens[0]?.start_byte!==statement.start_byte||tokens[0]?.text!=="claim"||tokens[1]?.text!==":"||tokens.at(-1)?.end_byte!==statement.end_byte)return null;
+      if(node!==record||declaration.type!=="ClaimStmt"||scope?.statement_id!==statement.id||scope.parent_id!==statement.scope_id||at?.sourceId!==statement.source_id||at.line!==statement.line||wd.type!=="VerifyFactWellDefinedResult"||wd.variant!=="Success"||!output||output.id!==statement.mathematics?.subject_fact_id||!sameRetainedFact(goal,output.subject)||!owner||owner.status!=="accepted"||owner.source_id!==statement.source_id||(owner.source_statement_id||owner.id)!==(statement.source_statement_id||statement.id))return null;
+      const universal=subject.type==="ForallFact",values=universal?subject.fields?.then_facts:[goal],proofs=universal?body.fields?.conclusion_proofs:[body.fields?.conclusion_proof],steps=body.fields?.proof_steps,sourceSteps=declaration.fields?.proof;
+      if(body.type!==(universal?"ExecClaimForallProof":"ExecClaimNonForallProof")||!Array.isArray(values)||!Array.isArray(proofs)||values.length!==proofs.length||!Array.isArray(steps)||!Array.isArray(sourceSteps)||steps.length!==sourceSteps.length)return null;
+      if(proofs.some((value,index)=>{const proof=proofResult(value);return !(proof.type?.endsWith("Success")||["VerifyKnownForallFactProof","VerifyEmptyParameterDomainForallProof"].includes(proof.type))||!sameRetainedFact(values[index],proof.fields?.fact);}))return null;
+      const children=steps.map(value=>value?.kind==="statement_reference"&&statements.get(value.statement_id));
+      if(children.some((child,index)=>!child||child.status!=="accepted"||child.parent_statement_id!==statement.id||child.source_id!==statement.source_id||child.scope_id!==scopeId||child.start_byte<=statement.start_byte||child.end_byte>statement.end_byte||index&&child.start_byte<children[index-1].end_byte))return null;
+      return {declaration,goal,body,scopeId,output};
+    }
+    function claimFormation(record,fact){
+      const declaration=resolveEvidence(record.fields?.statement),goal=declaration.type==="ClaimStmt"?declaration.fields?.fact:null;
+      const kind=proofResult(goal).type,success=record.type==="ExecClaimStmtSuccess",localFailure=record.type==="ExecClaimLocalFailure"||record.type==="ExecClaimStmtFailed"&&record.variant==="Store";
+      if(!success&&!localFailure||!["ForallFact","PlainExistFact","NotForallFact","AndFact","OrFact","ChainFact"].includes(kind))return null;
+      const statement=statements.get(fact.producer_statement_id),envelope=localFailure&&claimFailureEnvelope(statement),failed=localFailure&&failedLocalProofDetails(statement),data=success?claimExecutionDetails(statement,record):failed?.context===record&&(envelope?.variant==="Local"&&resolveEvidence(envelope.fields?.["0"])===record||envelope===record&&envelope.variant==="Store")&&scopes.get(failed.scopeId)?.parent_id===statement.scope_id?failed:null,formation={proofs:[],complete:false,claim:true,goalKind:kind,outcome:"unknown",note:editText("目标与表达式检查的对应记录不完整，无法恢复这些检查。","The goal and its formation record do not fully correspond; these checks cannot be reconstructed.")};
+      if(!data||fact.id&&(success?data.output?.id:retainedFactId(data.goal))!==fact.id)return formation;
+      const wd=proofResult(record.fields.goal_wd),quantified=["ForallFact","PlainExistFact","NotForallFact"].includes(kind),scopeId=quantified?resolveEvidence(wd.fields?.local_env).scope_id:statement.scope_id,scope=scopes.get(scopeId),seen=new Set();
+      function matches(value,certificate){
+        const subject=proofResult(value),proof=proofResult(certificate),f=proof.fields||{};
+        if(seen.has(proof)||!factFormationMatches(value,certificate))return false;seen.add(proof);
+        try{
+          if(!["ForallFact","PlainExistFact","NotForallFact","ForallFactWithIff"].includes(subject.type))return true;
+          const base=subject.type==="ForallFactWithIff"?proofResult(subject.fields?.forall_fact):subject,local=resolveEvidence(f.local_env).scope_id,introduced=resolveEvidence(f.introduced_params),groups=resolveEvidence(base.fields?.typed_parameters).fields?.groups,checks=introduced.fields?.param_type_well_defined,existential=subject.type==="PlainExistFact",premises=existential?base.fields?.facts:base.fields?.dom_facts,assumptions=existential?f.assumed_body_facts:f.assumed_dom_facts;
+          if(!statementOwnsScope(statement,local)||!Array.isArray(groups)||!Array.isArray(checks)||checks.length!==groups.length||checks.some((check,i)=>!introductionTypeFormation(resolveEvidence(groups[i]).fields?.param_type,check))||!Array.isArray(premises)||!Array.isArray(assumptions)||premises.length!==assumptions.length)return false;
+          if(assumptions.some((value,i)=>{const assumed=resolveEvidence(value),output=storedConclusion(assumed.fields?.store_and_infer);return assumed.type!=="AssumeDomFactResult"||!output||!sameRetainedFact(premises[i],output.subject)||!matches(premises[i],assumed.fields?.well_defined);}))return false;
+          return existential||Array.isArray(f.then)&&f.then.length===base.fields?.then_facts?.length&&f.then.every((check,i)=>matches(base.fields.then_facts[i],check))&&(subject.type!=="ForallFactWithIff"||Array.isArray(f.iff)&&f.iff.length===subject.fields?.iff_facts?.length&&f.iff.every((check,i)=>matches(subject.fields.iff_facts[i],check)));
+        }finally{seen.delete(proof);}
+      }
+      if(!scope||quantified&&(scope.statement_id!==statement.id||scope.parent_id!==data.scopeId)||!matches(goal,record.fields.goal_wd))return formation;
+      const note=!success?editText("本段尚未把目标交给外层；这里保留的表达式检查不表示目标已被证明。","This block has not published its goal; the retained formation checking does not establish the goal."):kind==="ForallFact"?editText("以下检查保证全称目标中的表达式在声明的任意参数与前提下有定义；各项结论的成立性由上面的证明确立。","These checks establish formation of the universal goal under its declared arbitrary parameters and premises; the proofs above establish the conclusions."):kind==="PlainExistFact"?editText("存在参数及候选条件在此只用于检查表达式有定义；存在性及所要求的唯一性由上面的证明建立。","The existential parameter domains and candidate conditions serve formation checking only; existence and any required uniqueness follow from the proof above."):kind==="OrFact"?editText("析取的每个分支都须有定义；一个分支成立不允许跳过其他分支的表达式检查。","Every alternative of the disjunction must be well-defined; establishing one alternative does not permit skipping the others' formation checks."):editText("这里只展示目标各部分的表达式检查；目标的成立性由上面的证明建立。","These are the formation checks for each part of the goal; the proof above establishes the goal.");
+      return {...formation,proofs:[record.fields.goal_wd],complete:true,scopeId,outcome:success?"established":envelope.variant==="Store"?"not-published":"not-established",note};
+    }
+    function claimFailureEnvelope(statement){
+      if(statement?.statement_kind!=="ProofBlock.ClaimStmt"||!rejectedCommandSource(statement,["claim"]))return null;
+      const source=statements.get(statement.source_statement_id||statement.id);if(!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte)return null;
+      let node=resolveEvidence(statement.evidence);for(const[type,variant]of[["ExecStmtResult","ProofBlock"],["ExecProofBlockStmtResult","Claim"],["ExecClaimStmtResult","Failed"]]){if(node.type!==type||node.variant!==variant)return null;node=resolveEvidence(node.fields?.["0"]);}return node.type==="ExecClaimStmtFailed"?node:null;
+    }
+    function unsupportedClaimGoal(statement){return claimFailureEnvelope(statement)?.variant==="GoalUnsupported";}
+    function appendUnsupportedClaimGoal(target,statement){
+      if(!unsupportedClaimGoal(statement))return false;
+      const part=element("section","lr-claim-unsupported");part.dataset.statement=statement.id;part.append(element("h4","lr-proof-section-title",editText("当前 claim 不支持这个目标","This goal is not supported by claim")),element("p","lr-failure-summary",editText("本句未进入目标的表达式检查或证明体，没有建立或发布该目标。这是当前指令的支持范围，不是目标为假的证明。","This command did not enter goal formation or its proof body and did not establish or publish the goal. This is a command-support boundary, not a proof that the goal is false.")));target.append(part);return true;
+    }
+    function appendClaimFailureFormation(target,statement){
+      if(!statement||statement.status!=="rejected")return false;const fact={id:null,role:"rejected",source_id:statement.source_id,scope_id:statement.scope_id,producer_statement_id:statement.id},record=proofResult(statement.evidence);
+      if(!claimFormation(record,fact))return false;appendAtomicWellDefinedness(target,fact,statement.evidence,0);return true;
+    }
+    function witnessExecutionDetails(statement,record){
+      const leaf=String(statement?.statement_kind||"").split(".").at(-1),routes={WitnessExistFact:"ExistFact",WitnessAtomicFact:"AtomicFact",WitnessNonemptySet:"NonemptySet"},route=Object.prototype.hasOwnProperty.call(routes,leaf)&&routes[leaf];
+      if(statement?.status!=="accepted"||statement.statement_kind!=="Witness."+leaf||!route||record.type!=="ExecWitness"+route+"StmtSuccessResult")return null;
+      let node=resolveEvidence(statement.evidence);
+      for(const [type,variant]of[["ExecStmtResult","Witness"],["ExecWitnessStmtResult",leaf],["ExecWitness"+route+"StmtResult","Success"]]){if(node.type!==type||node.variant!==variant)return null;node=resolveEvidence(node.fields?.["0"]);}
+      const f=record.fields||{},declaration=resolveEvidence(f.statement),existential=route==="NonemptySet"?null:resolveEvidence(f.projected_exist||declaration.fields?.exist_shaped_fact_in_witness),scopeId=resolveEvidence(f.local_env).scope_id,scope=scopes.get(scopeId),at=logicalSourceLocation(f.statement,statement),obligations=resolveEvidence(f.obligations),output=storedConclusion(f.store_and_infer_result),owner=statements.get(facts.get(output?.id)?.producer_statement_id),subject=output&&proofResult(output.subject),source=statements.get(statement.source_statement_id||statement.id);
+      if(!source||source.statement_kind!==statement.statement_kind||source.source_id!==statement.source_id||source.line!==statement.line||source.start_byte!==statement.start_byte||source.end_byte!==statement.end_byte)return null;
+      // Repeated executions retain separate local environments, while their
+      // source fact and store can share an identity. Keep that fact's original
+      // owner; the invocation is addressed by the execution statement instead.
+      if(node!==record||declaration.type!==leaf||scope?.statement_id!==statement.id||scope.parent_id!==statement.scope_id||at?.sourceId!==statement.source_id||at.line!==statement.line||!output||output.id!==retainedFactId(output.subject)||!owner||owner.status!=="accepted"||owner.source_id!==statement.source_id||(owner.source_statement_id||owner.id)!==(statement.source_statement_id||statement.id))return null;
+      if(route==="NonemptySet"){
+        const checked=proofResult(f.membership_check),member=proofResult(checked.fields?.fact);
+        if(subject?.type!=="IsNonemptySetFact"||!sameRecordedObject(subject.fields?.set,declaration.fields?.set)||checked.type!=="VerifyAtomicExceptEqualityFactSuccess"||member.type!=="InFact"||!sameRecordedObject(member.fields?.element,declaration.fields?.obj)||!sameRecordedObject(member.fields?.set,declaration.fields?.set))return null;
+      }else if(existential.type!=="ExistShapedFact"||!(route==="ExistFact"?["Exist","ExistUnique"]:["Exist"]).includes(existential.variant)||obligations.type!=="WitnessExistObligationSuccess"||!sameRetainedFact(output.subject,route==="ExistFact"?existential:declaration.fields?.atomic_fact))return null;
+      return {declaration,existential,scopeId,obligations,output,route};
+    }
+    function witnessUniquenessDetails(statement,record){
+      const execution=witnessExecutionDetails(statement,record);if(!execution||execution.existential?.variant!=="ExistUnique")return null;
+      const {existential,scopeId,obligations}=execution,parameters=recordedParameters(proofResult(existential).fields?.typed_parameters),unique=proofResult(obligations.fields?.uniqueness_check);
+      if(!parameters?.length||unique.type!=="VerifyForallFactSuccess")return null;
+      const context=uniquenessCandidateContext(statement,unique,scopeId),candidates=context&&recordedParameters(proofResult(context.goal).fields?.typed_parameters);
+      return candidates?.length===parameters.length*2?context:null;
+    }
+    function failedWitnessDetails(statement){
+      const kind=String(statement?.statement_kind||"").split(".").at(-1),owners={WitnessExistFact:"ExistFact",WitnessAtomicFact:"AtomicFact",WitnessNonemptySet:"NonemptySet"};
+      if(statement?.status!=="rejected"||!Object.prototype.hasOwnProperty.call(owners,kind))return null;
+      const route=owners[kind],d={statement,route,stage:null,complete:false,proofs:[],formationComplete:false};if(!rejectedCommandSource(statement,["witness"]))return d;
+      let node=resolveEvidence(statement.evidence);
+      for(const [type,variant]of[["ExecStmtResult","Witness"],["ExecWitnessStmtResult",kind],["ExecWitness"+route+"StmtResult","Failed"]]){if(node.type!==type||node.variant!==variant)return d;node=resolveEvidence(node.fields?.["0"]);}
+      if(node.type!=="ExecWitness"+route+"StmtFailed")return d;
+      if(route==="AtomicFact"&&node.variant==="ExistCheck"){node=resolveEvidence(node.fields?.["0"]);if(node.type!=="ExecWitnessExistFactStmtFailed")return d;}
+      if(typeof node.variant!=="string")return d;d.stage=node.variant;d.record=node;
+      // The native enum owns this stage. The diagnostic phase can describe a
+      // deeper child (for example "requirement" inside existential formation).
+      const allowed={ExecWitnessExistFactStmtFailed:["WitnessCountMismatch","ExistFactWellDefined","WitnessObjWellDefined","WitnessTypeInstantiate","WitnessType","IntroduceBinders","ProofBody","BodyCheck","BodyInstantiate","Uniqueness"],ExecWitnessAtomicFactStmtFailed:["AbstractProp","PropNotFound","BadDefinition","Instantiate","PropArgumentType"],ExecWitnessNonemptySetStmtFailed:["ObjWd","SetWd","ProofBody","Membership"]};
+      if(!allowed[node.type]?.includes(d.stage))return d;
+      if(["WitnessCountMismatch","AbstractProp","PropNotFound","BodyInstantiate"].includes(d.stage)){d.complete=true;return d;}
+      if(["BadDefinition","Instantiate","WitnessTypeInstantiate"].includes(d.stage)){d.diagnostic=node.fields?.["0"];d.complete=typeof d.diagnostic==="string"&&d.diagnostic.length>0;return d;}
+      const payload=d.stage==="PropArgumentType"?node.fields?.result:node.fields?.["0"],record=resolveEvidence(payload);
+      if(d.stage==="ExistFactWellDefined"){
+        const context=proofResult(payload),formation=quantifierFormationDetails(statement,context);
+        if(formation?.shape!=="existential"||!formation.complete)return d;
+        d.formationContext=context;d.complete=true;return d;
+      }
+      if(d.stage==="ProofBody"){
+        const step=failedBodyStep(statement),index=retainedIndex(record.fields?.step_index),prefix=record.fields?.prior_steps,scope=step&&scopes.get(step.child.scope_id);
+        if(record.type!=="ProofBlockBodyFailed"||!step||index!==step.step||!Array.isArray(prefix)||prefix.length!==index||scope?.parent_id!==statement.scope_id)return d;
+        const prior=prefix.map(value=>value?.kind==="statement_reference"&&statements.get(value.statement_id));
+        if(prior.some((child,i)=>!child||child.status!=="accepted"||child.parent_statement_id!==statement.id||child.source_id!==statement.source_id||child.scope_id!==scope.id||child.start_byte<=statement.start_byte||child.end_byte>step.child.start_byte||i&&child.start_byte<=prior[i-1].start_byte))return d;
+        d.child=step.child;d.prior=prior;d.complete=true;return d;
+      }
+      if(["ObjWd","SetWd","WitnessObjWellDefined"].includes(d.stage)){
+        const object=resolveEvidence(record.fields?.obj);
+        if(record.type!=="VerifyObjWellDefinedResult"||record.variant!=="Failed"||object.type!=="Obj"||typeof object.text!=="string"||resolveEvidence(record.fields?.reason).type!=="FailToVerifyObjWellDefinedResult")return d;
+        d.subject=object;d.proofs=[payload];d.formationComplete=true;d.complete=true;return d;
+      }
+      if(!["WitnessType","BodyCheck","Uniqueness","Membership","PropArgumentType"].includes(d.stage))return d;
+      if(d.stage==="PropArgumentType"){d.argumentIndex=retainedIndex(node.fields?.index);if(d.argumentIndex===null)return d;}
+      const failed=proofResult(payload),goal=failed.fields?.fact;
+      if(record.type!=="VerifyFactResult"||!failedFactRecord(failed)||typeof proofResult(goal).type!=="string"||!proofResult(goal).type.endsWith("Fact"))return d;
+      const formation=/^FailToVerify.*FactWellDefinedResult$/.test(failed.type),wd=failed.fields?.well_defined_proof;
+      if(formation&&!resolveEvidence(failed.fields?.reason).type)return d;
+      d.subject=goal;d.failed=payload;d.formationRejected=formation;d.complete=true;if(d.stage==="Uniqueness")d.uniqueness=uniquenessCandidateContext(statement,failed);
+      if(formation){d.proofs=[payload];d.formationComplete=true;}
+      else if(wd&&factFormationMatches(goal,wd)){d.proofs=[wd];d.formationComplete=true;}
+      return d;
+    }
+    function appendWitnessUniquenessFailure(target,data){
+      const d=data.uniqueness,part=element("section","lr-witness-uniqueness"),sourceId=data.statement.source_id;target.append(part);part.dataset.status=d&&d.proofs!==null?"retained":"incomplete";
+      part.append(element("h4","lr-proof-section-title",editText("任取两组满足条件的候选对象","Take two arbitrary candidate tuples satisfying the conditions")));
+      if(!d||d.proofs===null){part.append(element("p","lr-empty-note",editText("候选参数、局部条件与失败结论的对应记录不完整，未补写缺失的证明。","The candidate parameters, local assumptions and failing conclusion do not fully correspond; missing proof history is not reconstructed.")));return;}
+      part.dataset.scope=d.scopeId;appendProofContext(part,{id:null,role:"rejected",source_id:sourceId,scope_id:scopes.get(d.scopeId)?.parent_id,producer_statement_id:data.statement.id});appendArbitraryParameters(part,d.goal,sourceId);
+      const assumptions=array(d.record.fields?.assumed_dom_facts).map(value=>storedConclusion(resolveEvidence(value).fields?.store_and_infer));
+      if(assumptions.length){const premises=element("details","lr-uniqueness-premises");premises.append(element("summary",null,editText("候选对象满足的条件 · ","Conditions assumed for the candidates · ")+assumptions.length),element("p","lr-proof-summary",editText("这些是唯一性证明中对任意候选对象采用的条件，不是对所给具体见证重新作出的断言。","These conditions are assumed for arbitrary candidates in the uniqueness proof; they are not new assertions about the supplied concrete witnesses.")));for(const output of assumptions)premises.append(factButton(output.id,"hypothesis"));part.append(premises);}
+      appendScopeStructOpenings(part,data.statement.id,d.scopeId,"lr-uniqueness-struct-openings");
+      const failed=proofResult(d.failed),goal=failed.fields?.fact,conclusion=formula(quantifiedText(goal,sourceId)||resolveEvidence(goal).text,sourceId);conclusion.classList.add("lr-uniqueness-goal");part.append(element("p","lr-failure-summary",editText("在这些任意参数与条件下，尚未证明：","Under these arbitrary parameters and conditions, the following remains unproved:")),conclusion);
+    }
+    function witnessFailureFormation(fact,evidence){
+      if(fact.id||fact.role!=="rejected")return null;const statement=statements.get(fact.producer_statement_id),d=failedWitnessDetails(statement);
+      if(!d||resolveEvidence(evidence)!==resolveEvidence(statement.evidence))return null;
+      if(d.uniqueness&&d.uniqueness.proofs!==null){const formation=factFormationStages(d.failed);return {...formation,failedConditions:formation.proofs.flatMap(failedFormationConditions),note:editText("以下只属于唯一性检查中两组任意候选对象的范围与条件检查；此前给定见证的全部检查历史仍未保留。","These domain and condition checks belong only to the two arbitrary candidate tuples in the uniqueness proof; the full earlier history for the supplied witnesses is still unavailable.")};}
+      return {proofs:d.complete?d.proofs:[],complete:d.complete&&d.formationComplete,failedConditions:d.complete?d.proofs.flatMap(failedFormationConditions):[],note:editText("这里只保留当前失败项随附的表达式检查；此前全部参数、范围及局部检查的历史并未完整保留。","Only expression checks accompanying the current failure are retained here; the full earlier argument, domain and local-check history was not recorded.")};
+    }
+    function appendFailedWitness(target,statement){
+      const d=failedWitnessDetails(statement);if(!d)return false;
+      const part=element("section","lr-witness-failure"),fact={id:null,role:"rejected",source_id:statement.source_id,scope_id:statement.scope_id,producer_statement_id:statement.id};target.append(part);part.dataset.route=d.route;part.dataset.stage=d.stage||"";part.dataset.status=d.complete?"stage-retained":"incomplete";part.dataset.statement=statement.id;
+      part.append(element("h4","lr-proof-section-title",editText("本次见证尚未建立结论","This witness did not establish the conclusion")));
+      const messages={ExistFactWellDefined:["存在命题本身未通过有定义检查；尚未检查所给见证是否满足它。","The existential statement failed formation checking; satisfaction by the supplied witnesses has not been checked."],WitnessCountMismatch:["需要为每个存在参数提供一个见证；本句给出的见证个数不符。","Provide one witness for each existential parameter; the supplied witness count does not match."],WitnessType:["给出的见证尚未被证明属于参数要求的范围。","The supplied witness has not been proved to belong to the parameter's required domain."],BodyCheck:["下面是代入见证后未通过的条件检查。","The following condition failed checking after substituting the supplied witnesses."],Uniqueness:["给出一个见证还不足以证明唯一性；以下唯一性条件尚未建立。","Supplying a witness does not establish uniqueness; the following uniqueness condition remains unproved."],Membership:["尚未证明该对象属于这个集合，因此不能据此证明集合非空。","This object has not been proved to belong to the set, so it does not establish nonemptiness."],ObjWd:["给出的见证表达式未通过有定义检查。","The witness expression failed formation checking."],SetWd:["所给集合表达式未通过有定义检查。","The supplied set expression failed formation checking."],WitnessObjWellDefined:["给出的见证表达式未通过有定义检查。","The witness expression failed formation checking."],AbstractProp:["抽象谓词没有可展开的定义，不能用本命令从定义中的存在条件建立实例。","An abstract predicate has no defining condition to unfold; this command cannot establish its instance from an existential definition."],PropNotFound:["未取得这个谓词的定义，无法确定所需的存在条件。","The predicate definition was not found, so its existential condition is unavailable."],BadDefinition:["此形式要求谓词定义仅含一条普通存在命题，并提供匹配的实参；本次调用不符合要求。","This form requires a predicate defined by one ordinary existential clause and matching arguments; this invocation does not meet that requirement."],Instantiate:["谓词参数代入未完成，尚未进入见证检查。","Predicate argument substitution did not complete; witness checking was not entered."],WitnessTypeInstantiate:["未能取得代入后的见证范围条件。","The instantiated witness-domain conditions could not be obtained."],BodyInstantiate:["存在命题的条件代入未完成，尚不能检查这些见证是否满足它。","Substitution into the existential condition did not complete, so satisfaction by these witnesses could not be checked."],PropArgumentType:["调用谓词的实参尚未被证明属于其声明的范围。","A predicate argument has not been proved to belong to its declared domain."],ProofBody:["局部证明在下面的源码语句处中断，尚未完成见证验证。","The local proof stopped at the source statement below; witness verification did not complete."]};
+      if(d.complete){part.append(element("p","lr-failure-summary",messages[d.stage][lang()==="zh"?0:1]));if(d.formationRejected)part.append(element("p","lr-witness-formation-note",editText("代入后的条件未通过有定义检查，尚未建立其成立性。","The substituted condition failed formation checking; its truth was not established.")));if(d.stage==="Uniqueness")appendWitnessUniquenessFailure(part,d);else if(d.subject)part.append(formula(quantifiedText(d.subject,statement.source_id)||resolveEvidence(d.subject).text,statement.source_id));
+        if(d.child){if(d.prior.length){const prefix=element("details","lr-witness-prefix");prefix.append(element("summary",null,editText("已通过的局部语句 · ","Accepted local statements · ")+d.prior.length));for(const child of d.prior)prefix.append(button(displayText(child.source_text,child.source_id),"lr-text-link lr-witness-prior-step",()=>selectStatement(child.id,child.line)));part.append(prefix);}const issue=sourceIssues.get("statement:"+d.child.id);if(issue?.statementId===d.child.id){const link=button(displayText(d.child.source_text,d.child.source_id),"lr-text-link lr-witness-failed-step",()=>selectSourceIssue(issue.id));link.dataset.statement=d.child.id;part.append(link);}}
+        if(d.diagnostic){const detail=element("details","lr-failure-details");detail.append(element("summary",null,editText("检查说明","Check details")),element("p","lr-failure-message",d.diagnostic));part.append(detail);}
+      }else part.append(element("p","lr-failure-summary",editText("现有记录不足以将本句与具体见证检查准确对应。","The available record cannot reliably associate this statement with a particular witness check.")));
+      part.append(element("p","lr-witness-history lr-empty-note",editText("这里只展示实际保留的失败项及其局部步骤；不能据此恢复此前完整的参数代入与检查过程。","Only the retained failure and local steps are shown; the full preceding substitution and checking history cannot be recovered.")),element("p","lr-introduction-rollback",editText("本句未向外层引入结论；检查未通过也不证明不存在合适的见证。","This statement introduced no conclusion into the enclosing scope; rejection does not prove that no suitable witness exists.")));
+      if(d.formationContext)appendQuantifierFormation(part,statement,d.formationContext);else appendAtomicWellDefinedness(part,fact,statement.evidence,0);return true;
+    }
+    function failedConstructionDetails(statement){
+      const kind=String(statement?.statement_kind||"").split(".").at(-1),preimage=kind==="HaveByPreimageStmt",replacement=kind==="HaveByReplacementAxiomStmt";
+      if(statement?.status!=="rejected"||!preimage&&!replacement)return null;
+      const d={statement,route:preimage?"preimage":"replacement",complete:false,stage:null,proofs:[],formationComplete:false};
+      // source_text can be the normalized IR (for example {(1 / 0)}).
+      // Native byte spans and lexer tokens validate the source address only.
+      if(!rejectedCommandSource(statement,["have","by",preimage?"fn_preimage":"replacement_axiom",":"]))return d;
+      // These legacy failures retain a stage, not the declaration or the
+      // preceding successful checks. Read their exact dispatcher path without
+      // parsing diagnostic strings or looking up a similarly named function.
+      let node=resolveEvidence(statement.evidence);const owner=preimage?"HaveByFnPreimage":"HaveByReplacementAxiom",result=preimage?"ExecHaveByFnPreimageStmtResult":"ExecHaveByReplacementAxiomStmtResult";
+      for(const [type,variant]of[["ExecStmtResult","Definition"],["ExecDefinitionStmtResult","DefineObj"],["ExecDefineObjStmtResult",owner],[result,"Failed"]]){if(node.type!==type||node.variant!==variant)return d;node=resolveEvidence(node.fields?.["0"]);}
+      if(node.type!==(preimage?"ExecHaveByFnPreimageStmtFailed":"ExecHaveByReplacementAxiomStmtFailed")||typeof node.variant!=="string")return d;
+      const stages=preimage?["NotFnRange","NoFnSetBody","ArityMismatch","SourceMembership"]:["PropArity","SourceWd","UniquenessMissing"];
+      if(!stages.includes(node.variant))return d;d.stage=node.variant;d.record=node;
+      if(node.variant==="ArityMismatch"){
+        d.expected=retainedIndex(node.fields?.expected);d.actual=retainedIndex(node.fields?.got);d.complete=d.expected!==null&&d.actual!==null&&d.expected!==d.actual;return d;
+      }
+      if(node.variant==="SourceMembership"){
+        const failed=proofResult(node.fields?.["0"]),subject=proofResult(failed.fields?.fact),at=logicalSourceLocation(subject,statement);
+        if(!failedFactRecord(failed)||subject.type!=="InFact"||proofResult(subject.fields?.set).type!=="FnRange"||at?.sourceId!==statement.source_id||at.line!==statement.line)return d;
+        d.subject=failed.fields.fact;d.complete=true;
+        if(failed.fields?.well_defined_proof&&factFormationMatches(subject,failed.fields.well_defined_proof)){d.proofs=[failed.fields.well_defined_proof];d.formationComplete=true;}
+        else if(formationFailureMatches(subject,failed)){d.proofs=[failed];d.formationComplete=true;}
+        return d;
+      }
+      if(node.variant==="SourceWd"){
+        const failed=resolveEvidence(node.fields?.["0"]),object=resolveEvidence(failed.fields?.obj);
+        if(failed.type!=="VerifyObjWellDefinedResult"||failed.variant!=="Failed"||object.type!=="Obj"||!object.text||resolveEvidence(failed.fields?.reason).type!=="FailToVerifyObjWellDefinedResult")return d;
+        d.subject=object;d.proofs=[node.fields["0"]];d.formationComplete=true;d.complete=true;return d;
+      }
+      d.complete=typeof node.fields?.["0"]==="string"&&node.fields["0"].length>0;return d;
+    }
+    function constructionFailureFormation(fact,evidence){
+      if(fact.id||fact.role!=="rejected")return null;const statement=statements.get(fact.producer_statement_id),d=failedConstructionDetails(statement);
+      if(!d||resolveEvidence(evidence)!==resolveEvidence(statement.evidence))return null;
+      return {proofs:d.complete?d.proofs:[],complete:d.complete&&d.formationComplete,failedConditions:d.complete?d.proofs.flatMap(failedFormationConditions):[],note:editText("这里只展示失败结果实际保留的表达式检查；记录未提供其他检查的完整历史。","Only expression checks retained in the failure result are shown; the complete history of other checks was not recorded.")};
+    }
+    function appendFailedConstruction(target,statement){
+      const d=failedConstructionDetails(statement);if(!d)return false;
+      const part=element("section","lr-construction-failure"),fact={id:null,role:"rejected",source_id:statement.source_id,scope_id:statement.scope_id,producer_statement_id:statement.id};target.append(part);part.dataset.route=d.route;part.dataset.stage=d.stage||"";part.dataset.status=d.complete?"stage-retained":"incomplete";part.dataset.statement=statement.id;
+      part.append(element("h4","lr-proof-section-title",d.route==="preimage"?editText("原像见证尚未取得","Preimage witnesses were not obtained"):editText("置换公理的像集尚未引入","The replacement image was not introduced")));
+      const messages={NotFnRange:["原像见证需要以函数值域中的成员关系为来源，即 z ∈ fn_range(f)。本次来源不符合这一形式。","Preimage witnesses require a membership statement z ∈ fn_range(f). The supplied source does not have this form."],NoFnSetBody:["尚未取得函数的输入接口，无法确定原像的参数个数及其范围。","No input interface for the function was obtained, so the number and domains of preimage parameters could not be determined."],ArityMismatch:["原像名称应与函数的输入参数一一对应；本次给出的个数不符。","Preimage names must correspond one-to-one with the function inputs; the supplied count does not match."],SourceMembership:["尚未证明下列成员关系，因而不能据此选取原像。","The following membership has not been established, so it cannot supply preimage witnesses."],PropArity:["此构造需要一个已声明的二元谓词，描述输入与输出之间的关系。本次未能取得所需的谓词接口。","This construction requires a declared binary predicate relating inputs and outputs. The required predicate interface was not obtained."],SourceWd:["来源集合中的表达式未通过有定义检查；未满足的条件保留在最后的检查记录中。","An expression in the source set failed formation checking; the unmet conditions are retained in the final check disclosure."],UniquenessMissing:["尚未取得所需的唯一性依据：在来源集合内，同一输入至多对应一个输出。这一依据须作为已知事实提供。","The required uniqueness fact was not found: each input in the source set must have at most one output. This must be supplied as a known fact."]};
+      if(d.complete){part.append(element("p","lr-failure-summary",messages[d.stage][lang()==="zh"?0:1]));if(d.stage==="ArityMismatch")part.append(element("p","lr-construction-count",editText("需要 ","Required: ")+d.expected+editText(" 个原像名称；本句给出 "," preimage names; supplied: ")+d.actual+(lang()==="zh"?" 个。":".")));if(d.subject)part.append(formula(quantifiedText(d.subject,statement.source_id)||resolveEvidence(d.subject).text,statement.source_id));}
+      else part.append(element("p","lr-failure-summary",editText("现有记录不足以将本句与具体失败阶段准确对应。","The available record cannot reliably associate this statement with a particular failure stage.")));
+      part.append(element("p","lr-construction-history lr-empty-note",editText("本次记录仅保留失败阶段，未完整保留此前的检查、参数代入或临时性质。","This record retains a failure stage, not the full preceding checks, parameter substitutions or temporary properties.")),element("p","lr-introduction-rollback",editText("本句未向外部上下文引入对象或性质；检查未通过也不证明所需对象不存在。","This statement introduced no objects or properties into the surrounding context; rejection does not prove that the required objects do not exist.")));
+      appendAtomicWellDefinedness(part,fact,statement.evidence,0);return true;
     }
     function introductionFailureContract(record){
       const entries={ExecHaveObjInNonemptySetLocalFailure:["HaveObjInNonemptySetStmt","HaveObjInNonemptySetOrParamTypeStmt","have"],ExecHaveObjEqualContextFailure:["HaveObjEqualStmt","HaveObjEqualStmt","equal"],ExecHaveObjEqualPreflightFailure:["HaveObjEqualStmt","HaveObjEqualStmt","equal"],ExecHaveObjEqualAfterPreflightFailure:["HaveObjEqualStmt","HaveObjEqualStmt","equal"],ExecHaveObjByExistFactsFailure:["HaveObjByExistFactsStmt","HaveObjByExistFactsStmt","have-exist"],ExecObtainObjFromExistFactContextFailure:["ObtainObjFromExistFact","ObtainObjFromExistFact","obtain-exist"],ExecObtainObjFromExistFactVerifiedFailure:["ObtainObjFromExistFact","ObtainObjFromExistFact","obtain-exist"],ExecObtainObjFromAtomicFactContextFailure:["ObtainObjFromAtomicFact","ObtainObjFromAtomicFact","obtain-atomic"],ExecObtainObjFromAtomicFactDefinitionFailure:["ObtainObjFromAtomicFact","ObtainObjFromAtomicFact","obtain-atomic"],ExecObtainObjFromAtomicFactProjectedFailure:["ObtainObjFromAtomicFact","ObtainObjFromAtomicFact","obtain-atomic"],ExecObtainObjFromAtomicFactVerifiedFailure:["ObtainObjFromAtomicFact","ObtainObjFromAtomicFact","obtain-atomic"]};
@@ -4450,11 +5042,29 @@
       params.forEach((param,index)=>mapping.append(element("code","lr-witness-name",mathematicalText(param.name,factLocation(fact).sourceId)+" ↦ "+mathematicalText(resolveEvidence(names[index]).name,factLocation(fact).sourceId))));
       mapping.append(element("p","lr-empty-note",functionInput?editText("左侧为函数的形式输入参数，右侧为由像集成员关系取得的原像名称。","The left side contains the function's formal input parameters; the right side names preimages obtained from range membership."):editText("左侧为存在命题的绑定变量，右侧为在当前上下文中引入的见证名称。","The left side contains the existential statement's bound variables; the right side names witnesses introduced into the current context.")));target.append(mapping);
     }
+    function introductionPropertyCorrespondence(action,id){
+      if(action?.introduction?.route!=="have-exist"||!array(action.propertyIds).includes(id))return null;
+      const subject=proofSubject(facts.get(id)),declared=introducedNames(resolveEvidence(action.record)),bound=new Set(array(declared).map(name=>name.symbol_id)),identifiers=new Set();let complete=!!subject&&!!declared;
+      // This inventory observes retained identities; it neither substitutes
+      // names nor determines whether a condition is mathematically true.
+      if(subject)walkEvidence(subject,node=>{
+        if(["TypedParameterGroup","SetBoundParameterGroup"].includes(node.type))for(const name of array(node.fields?.params))if(name.kind==="symbol_reference")bound.add(name.symbol_id);
+        if(node.type==="Obj"&&node.variant==="Identifier"){const name=resolveEvidence(node.fields?.["0"]);if(name.kind==="symbol_reference")identifiers.add(name.symbol_id);else complete=false;}
+        if(node.kind==="unavailable"||node.kind==="evidence_reference"&&!evidenceNodes.has(node.evidence_id))complete=false;
+      });
+      const missing=[];for(const id of identifiers){
+        const binding=symbolBindings.get(id),owner=statements.get(binding?.statement_id),definition=symbolDefinitions.get(id);
+        if(bound.has(id)||symbols.get(id)?.kind==="builtin"||binding?.definition===true&&owner?.source_id===binding.source_id||array(definition?.declaration_symbol_ids).includes(id))continue;
+        missing.push(id);
+      }
+      return {complete:complete&&!missing.length,missing};
+    }
     function appendIntroductionProperties(target,action,selected=null,symbolId=null,onlyAutomatic=false){
       const part=element("div","lr-introduction-properties");
-      let ids=onlyAutomatic?array(action.autoPropertyIds):action.factIds;
-      if(symbolId)ids=ids.filter(id=>{const subject=proofSubject(facts.get(id));let found=false;if(subject)walkEvidence(subject,node=>{if(node.kind==="symbol_reference"&&node.symbol_id===symbolId)found=true;});return found;});
-      if(!ids.length){if(!symbolId)part.append(element("p","lr-empty-note",editText("本次引入的性质未完整导出。","The properties introduced here were not fully exported.")));}
+      const all=onlyAutomatic?array(action.autoPropertyIds):action.factIds,unmatched=all.filter(id=>introductionPropertyCorrespondence(action,id)?.complete===false),mentions=id=>{const subject=proofSubject(facts.get(id));let found=false;if(subject)walkEvidence(subject,node=>{if(node.kind==="symbol_reference"&&node.symbol_id===symbolId)found=true;});return found;};
+      let ids=all.filter(id=>!unmatched.includes(id));
+      if(symbolId)ids=ids.filter(mentions);
+      if(!ids.length){if(!symbolId&&!unmatched.length)part.append(element("p","lr-empty-note",editText("本次引入的性质未完整导出。","The properties introduced here were not fully exported.")));}
       else{
         part.append(element("h4","lr-proof-section-title",action.change?.route==="trust-have"?editText("对象与显式假设","Objects and explicit assumptions"):editText("取得的性质","Properties introduced")));
         const automatic=ids.filter(id=>array(action.autoPropertyIds).includes(id)),openings=objectStructOpenings(action,automatic),classified=new Set(openings.flatMap(value=>value.factIds)),legacy=automatic.filter(id=>!classified.has(id)),disclosure=element("details","lr-auto-struct-properties");disclosure.open=legacy.includes(selected);
@@ -4466,6 +5076,12 @@
         if(legacy.length)part.append(disclosure);
         for(const opening of openings)appendStructExpansionProperties(part,{id:selected,producer_statement_id:action.statementId,source_id:action.sourceId,scope_id:opening.scopeId},opening);
       }
+      const unresolved=symbolId&&!array(introducedNames(resolveEvidence(action.record))).some(name=>name.symbol_id===symbolId)?unmatched.filter(mentions):unmatched;
+      if(unresolved.length){
+        part.dataset.correspondence="incomplete";
+        const detail=element("details","lr-introduction-unmatched-properties");detail.open=unresolved.includes(selected);detail.append(element("summary",null,editText("对象对应不完整的条件 · ","Conditions with incomplete object correspondence · ")+unresolved.length),element("p","lr-empty-note",editText("这些条件中的对象缺少对应的声明记录，暂不能将其列为所声明对象的性质；以下保留实际存储的条件。","Objects in these conditions lack corresponding declaration records. They cannot yet be listed as properties of the declared objects; the actual stored conditions are retained below.")));detail.addEventListener("toggle",positionOverlays);
+        for(const id of unresolved)detail.append(id===selected?factFormula(facts.get(id)):factButton(id));part.append(detail);
+      }
       if(!action.complete&&!symbolId)part.append(element("p","lr-empty-note",editText("这里只列出能够与实际存储逐项对应的性质；完整记录尚缺失。","Only properties matched to actual stores are listed here; the complete record is missing.")));
       if(part.childNodes.length)target.append(part);
     }
@@ -4473,7 +5089,7 @@
       const contract=introductionContract(record);if(!contract)return false;
       const action=introductionAction(fact.producer_statement_id,record),fields=record.fields||{},declaration=resolveEvidence(fields.statement),part=element("section","lr-introduction-proof");part.dataset.route=contract.route;target.append(part);
       if(!action||resolveEvidence(action.record)!==record){part.append(element("p","lr-empty-note",editText("本次对象引入与源码的对应记录不完整。","The correspondence between this object introduction and its source is incomplete.")));return true;}
-      const summaries={let:["以有定义的表达式定义新对象；随后可使用该定义等式。","Define a new object by a well-defined expression; its defining equality is then available."],have:["从声明的非空集合中取对象；集合种类参数按相应种类引入。各组依次处理，后面的范围可以依赖前面的对象。","Take objects from the declared nonempty sets; set-kind parameters are introduced with their declared kinds. Groups are processed in order, so later domains may depend on earlier objects."],equal:["给定对象满足声明范围后，以新名称指称它们；取得相应的类型性质和定义等式。","Once the given objects satisfy their declared domains, introduce their new names together with the type properties and defining equalities."],"have-exist":["先证明存在满足这些条件的对象，再取这样的对象。下面的性质由存在性保证。","First establish that objects satisfying these conditions exist, then choose such objects. Their properties follow from that existence result."],"obtain-exist":["从已证明的存在命题中取出见证，并为它们命名；存在体中的全部条件随之成立。","Extract and name witnesses from an established existential statement; every condition in its body then holds for those witnesses."],"obtain-atomic":["使用已成立的谓词实例，从其定义中的存在命题取出见证。外部实参与存在变量分开对应。","Use the established predicate instance to extract witnesses from its existential definition. External arguments and existential variables have separate correspondences."],preimage:["由像集成员关系保证原像存在，从中取一个原像。函数接口给出输入范围及附加条件。","Range membership guarantees a preimage; choose one. The function interface supplies its input domains and additional conditions."],replacement:["应用替换公理，构造给定关系在源集合上的像。单值性保证每个输入至多对应一个输出；所保存的引入与消去性质刻画这个像集。","Apply the Axiom of Replacement to construct the image of the relation on the source set. Single-valuedness guarantees at most one output per input; the stored introduction and elimination properties characterize the image."]};
+      const summaries={let:["以有定义的表达式定义新对象；随后可使用该定义等式。","Define a new object by a well-defined expression; its defining equality is then available."],have:["从声明的非空集合中取对象；集合种类参数按相应种类引入。各组依次处理，后面的范围可以依赖前面的对象。","Take objects from the declared nonempty sets; set-kind parameters are introduced with their declared kinds. Groups are processed in order, so later domains may depend on earlier objects."],equal:["给定对象满足声明范围后，以新名称指称它们；取得相应的类型性质和定义等式。","Once the given objects satisfy their declared domains, introduce their new names together with the type properties and defining equalities."],"have-exist":["先证明存在满足这些条件的对象，再取这样的对象。","First establish that objects satisfying these conditions exist, then choose such objects."],"obtain-exist":["从已证明的存在命题中取出见证，并为它们命名；存在体中的全部条件随之成立。","Extract and name witnesses from an established existential statement; every condition in its body then holds for those witnesses."],"obtain-atomic":["使用已成立的谓词实例，从其定义中的存在命题取出见证。外部实参与存在变量分开对应。","Use the established predicate instance to extract witnesses from its existential definition. External arguments and existential variables have separate correspondences."],preimage:["由像集成员关系保证原像存在，从中取一个原像。函数接口给出输入范围及附加条件。","Range membership guarantees a preimage; choose one. The function interface supplies its input domains and additional conditions."],replacement:["应用替换公理，构造给定关系在源集合上的像。单值性保证每个输入至多对应一个输出；所保存的引入与消去性质刻画这个像集。","Apply the Axiom of Replacement to construct the image of the relation on the source set. Single-valuedness guarantees at most one output per input; the stored introduction and elimination properties characterize the image."]};
       part.append(element("p","lr-proof-summary",summaries[contract.route][lang()==="zh"?0:1]));
       if(contract.route==="have"){
         if(!Array.isArray(fields.groups))part.append(element("p","lr-empty-note",editText("各参数组的非空依据未完整导出。","The nonemptiness evidence for the parameter groups was not fully exported.")));
@@ -4484,7 +5100,7 @@
           else row.append(element("p","lr-empty-note",editText("此参数组的引入依据未完整导出。","The introduction evidence for this parameter group was not fully exported.")));
         }
       }else if(["have-exist","obtain-exist"].includes(contract.route)){
-        const proof=fields.verify_exist,verified=proofResult(proof),existence=verified.fields?.fact;part.append(element("h4","lr-proof-section-title",editText("存在性依据","Existence evidence")));appendProofRequirement(part,fact,existence,proof,depth);
+        const proof=fields.verify_exist,verified=proofResult(proof),existence=verified.fields?.fact;part.append(element("h4","lr-proof-section-title",editText("存在性依据","Existence evidence")));appendProofRequirement(part,fact,existence,proof,depth,appendProofMain);
         if(contract.route==="obtain-exist"){const plain=proofResult(existence);appendWitnessNames(part,fact,plain.fields?.typed_parameters,declaration.fields?.equal_tos);}
       }else if(contract.route==="obtain-atomic"){
         const source=resolveEvidence(declaration.fields?.fact),predicate=resolveEvidence(source.fields?.predicate),definition=symbolDefinitions.get(predicate.symbol_id);let ast=null;
@@ -4604,7 +5220,7 @@
       const proof=resolveEvidence(path),edges=proof.type==="KnownEqualityPathProof"?proof.fields?.path:null;
       if(!Array.isArray(edges))return null;
       const source=element("div","lr-proof-definition-source"),cited=new Set();
-      for(const edge of edges){const id=resolveEvidence(edge?.[2]).fact_id;if(facts.has(id)&&!cited.has(id)){cited.add(id);source.append(factButton(id));}}
+      for(const edge of edges){const id=resolveEvidence(edge?.[2]).fact_id;if(facts.has(id)&&!cited.has(id)){cited.add(id);source.append(factButton(id,null,fact));}}
       if(cited.size)target.append(source);
       return edges.length?resolveEvidence(edges.at(-1)?.[1]):null;
     }
@@ -4612,17 +5228,23 @@
       const wrapper=resolveEvidence(value),step=resolveEvidence(wrapper.fields?.["0"]),application=resolveEvidence(step.fields?.application),body=resolveEvidence(step.fields?.expanded_body),part=element("div","lr-definition-expansion");target.append(part);
       if(wrapper.type!=="FunctionBodyExpansionProof"||!application.text||!body.text){part.append(element("p","lr-empty-note",editText("此步定义展开记录不完整。","This definition-expansion record is incomplete.")));return;}
       if(wrapper.variant==="Anonymous"){
-        const source=resolveEvidence(step.fields.function_body),path=source.variant==="KnownEquality"?source.fields?.["0"]:source.fields?.function_equal,endpoint=appendDefinitionSource(part,fact,path),call=recordedFunctionApplication(step.fields.application),head=resolveEvidence(call?.fields?.head);
-        const fn=source.variant==="Template"?anonymousFunction(source.fields?.instantiated_function):anonymousFunction(endpoint)||anonymousFunction(head.type==="FnObjHead"&&head.variant==="AnonymousFnLiteral"?head.fields?.["0"]:null),signature=resolveEvidence(fn?.fields?.body);
-        // The function value is the retained equality endpoint (or literal),
-        // not a same-named declaration found elsewhere in the source.
-        if(fn)appendDefinitionBindings(part,fact,recordedParameters(signature.fields?.set_bound_parameters),call?.fields?.body?.[0]);
-        else part.append(element("p","lr-empty-note",editText("此记录未提供被代入的函数体及其形参。","The applied function body and its parameters were not exported here.")));
+        appendAnonymousBodySource(part,fact,step);
       }else if(wrapper.variant==="Composition"){
         appendDefinitionSource(part,fact,step.fields.function_equal);part.append(element("p","lr-proof-summary",editText("按复合函数的定义，先应用内层函数，再应用外层函数。","By the definition of composition, apply the inner function and then the outer function.")));
       }else if(wrapper.variant==="FiniteCoordinate")part.append(element("p","lr-proof-summary",editText("取有限函数中指定坐标的值。","Select the specified coordinate of the finite function.")));
       else{part.append(element("p","lr-empty-note",editText("此种定义展开尚无专门解说。","This definition-expansion form has no dedicated explanation yet.")));return;}
       part.append(formula(application.text+" = "+body.text,factLocation(fact).sourceId));
+    }
+    function appendAnonymousBodySource(part,fact,step){
+      const application=resolveEvidence(step.fields?.application),body=resolveEvidence(step.fields?.expanded_body);
+      if(step.type!=="AnonymousFunctionBodyExpansionProof"||!application.text||!body.text){part.append(element("p","lr-empty-note",editText("此步定义展开记录不完整。","This definition-expansion record is incomplete.")));return;}
+      const source=resolveEvidence(step.fields.function_body),path=source.variant==="KnownEquality"?source.fields?.["0"]:source.fields?.function_equal,endpoint=appendDefinitionSource(part,fact,path),call=recordedFunctionApplication(step.fields.application),head=resolveEvidence(call?.fields?.head);
+      const fn=source.variant==="Template"?anonymousFunction(source.fields?.instantiated_function):anonymousFunction(endpoint)||anonymousFunction(head.type==="FnObjHead"&&head.variant==="AnonymousFnLiteral"?head.fields?.["0"]:null),signature=resolveEvidence(fn?.fields?.body);
+      // Both normalization and equality rewrites retain this same raw step.
+      // The function is the captured equality endpoint (or literal), never a
+      // same-named declaration or a synthetic normalization-proof wrapper.
+      if(fn)appendDefinitionBindings(part,fact,recordedParameters(signature.fields?.set_bound_parameters),call?.fields?.body?.[0]);
+      else part.append(element("p","lr-empty-note",editText("此记录未提供被代入的函数体及其形参。","The applied function body and its parameters were not exported here.")));
     }
     function appendObjectDefinitionApplication(target,fact,evidence,depth){
       const frames=proofFrames(evidence);if(!frames.some(node=>node.variant==="ByObjectDefinition"))return false;
@@ -4795,9 +5417,9 @@
       if(route.variant==="AlphaEndpoints"){
         const cited=resolveEvidence(detail.fields?.cited),id=cited.type==="EqualFact"&&cited.fields?.fact_id?.fact_id;
         if(detail.type!=="KnownEqualityAlphaEndpointsProof"||!facts.has(id)||!detail.fields?.left_identity||!detail.fields?.right_identity){part.append(element("p","lr-empty-note",editText("已知等式及其两端对应的记录未完整导出。","The known equality and endpoint correspondence were not fully exported.")));return true;}
-        part.append(factButton(id),element("p","lr-proof-summary",detail.fields.reversed?editText("反向使用此等式；两端按绑定变量的对应关系与当前目标相同。","Use this equality in reverse; its endpoints match the goal up to bound-variable correspondence."):editText("此等式的两端按绑定变量的对应关系与当前目标相同。","This equality's endpoints match the goal up to bound-variable correspondence.")));return true;
+        part.append(factButton(id,null,fact),element("p","lr-proof-summary",detail.fields.reversed?editText("反向使用此等式；两端按绑定变量的对应关系与当前目标相同。","Use this equality in reverse; its endpoints match the goal up to bound-variable correspondence."):editText("此等式的两端按绑定变量的对应关系与当前目标相同。","This equality's endpoints match the goal up to bound-variable correspondence.")));return true;
       }
-      function path(value){const node=resolveEvidence(value);if(node.type!=="KnownEqualityPathProof"||!Array.isArray(node.fields?.path)){part.append(element("p","lr-empty-note",editText("等式引用链未完整导出。","The cited equality path was not fully exported.")));return;}for(const edge of node.fields.path){const left=resolveEvidence(edge?.[0]),right=resolveEvidence(edge?.[1]),id=resolveEvidence(edge?.[2]).fact_id;if(left.text&&right.text)part.append(formula(left.text+" = "+right.text,factLocation(fact).sourceId));if(facts.has(id))part.append(factButton(id));}}
+      function path(value){const node=resolveEvidence(value);if(node.type!=="KnownEqualityPathProof"||!Array.isArray(node.fields?.path)){part.append(element("p","lr-empty-note",editText("等式引用链未完整导出。","The cited equality path was not fully exported.")));return;}for(const edge of node.fields.path){const left=resolveEvidence(edge?.[0]),right=resolveEvidence(edge?.[1]),id=resolveEvidence(edge?.[2]).fact_id;if(left.text&&right.text)part.append(formula(left.text+" = "+right.text,factLocation(fact).sourceId));if(facts.has(id))part.append(factButton(id,null,fact));}}
       if(route.variant==="KnownPath")path(detail);
       else{
         path(detail.fields?.left_path);const bridge=detail.fields?.bridge;
@@ -4807,8 +5429,30 @@
       }
       return true;
     }
-    function closedNumericRewriteInfo(fact,evidence){
-      const result=proofResult(evidence),record=proofRecord(evidence),route=resolveEvidence(record.fields?.["0"]);if(record.type!=="EqualFactSearchedProof"||record.variant!=="ByBuiltinRewrite"||route.type!=="EqualitySearchProofByBuiltinRewrite"||route.variant!=="ClosedNumericEqualSubstitution")return null;
+    function atomicRewriteInfo(fact,evidence){
+      const result=proofResult(evidence),record=proofRecord(evidence),route=resolveEvidence(record.fields?.["0"]),contracts={ClosedNumericEqualSubstitution:"AtomicExceptEqualityFactSearchProofByClosedNumericEqualSubstitution",KnownEqualObjSubstitution:"AtomicExceptEqualityFactSearchProofByKnownEqualObjSubstitution",FnApplicationUnfoldSubstitution:"AtomicExceptEqualityFactSearchProofByFnApplicationUnfoldSubstitution",OrderDual:"AtomicExceptEqualityFactSearchProofByBuiltinOrderDual"};
+      if(record.type!=="AtomicExceptEqualityFactSearchedProof"||record.variant!=="ByBuiltinRewrite"||route.type!=="AtomicExceptEqualityFactSearchProofByBuiltinRewrite"||!contracts[route.variant])return null;
+      const detail=resolveEvidence(route.fields?.["0"]),fields=detail.fields||{},goal=proofResult(result.fields?.fact),residualEvidence=route.variant==="OrderDual"?fields.proof_of_alternate_fact:fields.proof_of_rewritten_fact,residual=proofResult(route.variant==="OrderDual"?fields.alternate_fact:fields.rewritten_fact),checked=proofResult(residualEvidence),owner=statements.get(fact.producer_statement_id),at=owner&&logicalSourceLocation(goal,owner),after=owner&&logicalSourceLocation(residual,owner),target=facts.get(retainedFactId(goal));
+      let retained=false;if(owner)walkEvidence(owner.evidence,node=>{if(node===result)retained=true;});
+      const visible=new Set(),seen=new Set();let scope=fact.scope_id;while(scope&&!seen.has(scope)){seen.add(scope);visible.add(scope);scope=scopes.get(scope)?.parent_id;}
+      const references=fields.cited_equal_fact_ids,citations=Array.isArray(references)?references.map(resolveEvidence):[],ids=citations.map(value=>value.fact_id),sources=citations.map(value=>facts.get(value.fact_id)),beforeArgs=atomicArguments(goal),afterArgs=atomicArguments(residual);
+      const sameRelation=goal.type!=="EqualFact"&&goal.type===residual.type&&beforeArgs?.length>0&&afterArgs?.length===beforeArgs.length&&beforeArgs.concat(afterArgs).every(value=>resolveEvidence(value).type==="Obj")&&beforeArgs.some((value,i)=>!sameRecordedObject(value,afterArgs[i]))&&(!["NormalAtomicFact","NotNormalAtomicFact"].includes(goal.type)||resolveEvidence(goal.fields?.predicate).kind==="symbol_reference"&&resolveEvidence(goal.fields.predicate).symbol_id===resolveEvidence(residual.fields?.predicate).symbol_id);
+      const changed=sameRelation?beforeArgs.map((value,i)=>sameRecordedObject(value,afterArgs[i])?-1:i).filter(i=>i>=0):[],unfold=fields.unfold_equal_proofs;
+      const unfolded=sameRelation&&Array.isArray(unfold)&&unfold.length===changed.length&&new Set(unfold.map(value=>retainedFactId(proofResult(value).fields?.fact))).size===unfold.length&&unfold.every((value,i)=>{const proof=proofResult(value),equal=proofResult(proof.fields?.fact);return proof.type==="VerifyEqualitySuccess"&&resolveEvidence(proof.fields?.searched_proof).type==="EqualFactSearchedProof"&&!!retainedFactId(equal)&&equal.type==="EqualFact"&&recordedFunctionApplication(beforeArgs[changed[i]])&&sameRecordedObject(equal.fields?.left,beforeArgs[changed[i]])&&sameRecordedObject(equal.fields?.right,afterArgs[changed[i]]);});
+      const duals={LessFact:"GreaterFact",GreaterFact:"LessFact",LessEqualFact:"GreaterEqualFact",GreaterEqualFact:"LessEqualFact",NotLessFact:"NotGreaterFact",NotGreaterFact:"NotLessFact",NotLessEqualFact:"NotGreaterEqualFact",NotGreaterEqualFact:"NotLessEqualFact",ProperSubsetFact:"ProperSupersetFact",ProperSupersetFact:"ProperSubsetFact",NotProperSubsetFact:"NotProperSupersetFact",NotProperSupersetFact:"NotProperSubsetFact"};
+      const dual=duals[goal.type]===residual.type&&sameRecordedObject(goal.fields?.left,residual.fields?.right)&&sameRecordedObject(goal.fields?.right,residual.fields?.left);
+      const unlocated=!fact.id||!fact.source_id&&!fact.line&&!target?.source_id&&!target?.line;
+      const locations=goal.fields?.line_file||residual.fields?.line_file?at&&after&&at.sourceId===after.sourceId&&at.line===after.line:unlocated&&retained;
+      // Observe the producer's rewrite and checked residual. No term rewriting
+      // or replacement positions are inferred by the reader.
+      const equalityCitations=Array.isArray(references)&&references.length>0&&new Set(ids).size===ids.length&&citations.every((value,i)=>{const source=sources[i],producer=statements.get(source?.producer_statement_id),subject=source&&proofSubject(source),position=source&&factLocation(source),global=String(source?.scope_id).startsWith("file:");return value.kind==="fact_reference"&&source&&producer&&statementOwnsScope(producer,source.scope_id)&&scopes.has(source.scope_id)&&source.id!==retainedFactId(goal)&&source.id!==retainedFactId(residual)&&subject?.type==="EqualFact"&&retainedFactId(subject)===source.id&&(!source.source_id||source.source_id===subject.fields?.line_file?.source_id)&&(!source.line||source.line===subject.fields?.line_file?.line)&&array(owner?.cited_fact_ids).includes(source.id)&&(global?producer.status==="accepted"&&[...array(producer.produced_fact_ids),...array(producer.inferred_fact_ids)].includes(source.id)&&scopes.get(source.scope_id)?.source_id===source.source_id:visible.has(source.scope_id)&&statementOwnsScope(producer,source.scope_id))&&(!at||position?.sourceId!==at.sourceId||position.line<=at.line);});
+      const correspondence=route.variant==="OrderDual"?dual:route.variant==="FnApplicationUnfoldSubstitution"?unfolded:sameRelation&&equalityCitations;
+      const complete=result.type==="VerifyAtomicExceptEqualityFactSuccess"&&detail.type===contracts[route.variant]&&!!retainedFactId(goal)&&(!fact.id||retainedFactId(goal)===fact.id)&&retained&&locations&&(!target||(!target.source_id||target.source_id===at?.sourceId)&&(!target.line||target.line===at?.line)&&target.text===resolveEvidence(result.fields?.fact).text)&&scopes.has(fact.scope_id)&&statementOwnsScope(owner,fact.scope_id)&&correspondence&&checked.type==="VerifyAtomicExceptEqualityFactSuccess"&&resolveEvidence(checked.fields?.searched_proof).type==="AtomicExceptEqualityFactSearchedProof"&&sameRetainedFact(residual,checked.fields?.fact)&&!!retainedFactId(residual)&&retainedFactId(residual)!==retainedFactId(goal);
+      return {complete,atomic:true,route,fields,goal,checked,residual,residualEvidence,sources};
+    }
+    function builtinRewriteInfo(fact,evidence){
+      const atomic=atomicRewriteInfo(fact,evidence);if(atomic)return atomic;
+      const result=proofResult(evidence),record=proofRecord(evidence),route=resolveEvidence(record.fields?.["0"]),contracts={ClosedNumericEqualSubstitution:"ClosedNumericEqualSubstitutionBuiltinRewriteProof",FnApplicationUnfoldSubstitution:"FnApplicationUnfoldSubstitutionBuiltinRewriteProof"};if(record.type!=="EqualFactSearchedProof"||record.variant!=="ByBuiltinRewrite"||route.type!=="EqualitySearchProofByBuiltinRewrite"||!contracts[route.variant])return null;
       const detail=resolveEvidence(route.fields?.["0"]),fields=detail.fields||{},goal=proofResult(result.fields?.fact),checked=proofResult(fields.residual_equal),residual=proofResult(checked.fields?.fact),owner=statements.get(fact.producer_statement_id),parent=proofResult(fact.evidence),chain=proofResult(parent.fields?.fact),members=array(parent.fields?.adjacent).map(proofResult),indices=members.map((member,i)=>member===result?i:-1).filter(i=>i>=0),index=indices.length===1?indices[0]:-1;
       const adjacent=parent.type==="VerifyChainFactSuccess"&&retainedFactId(chain)===fact.id&&chain.type==="ChainFact"&&Array.isArray(chain.fields?.objs)&&Array.isArray(chain.fields?.prop_names)&&chain.fields.objs.length===members.length+1&&chain.fields.prop_names.length===members.length&&index>=0&&resolveEvidence(chain.fields.prop_names[index]).name==="="&&sameRecordedObject(goal.fields?.left,chain.fields.objs[index])&&sameRecordedObject(goal.fields?.right,chain.fields.objs[index+1]);
       let retained=false;if(owner)walkEvidence(owner.evidence,node=>{if(node===result)retained=true;});
@@ -4816,19 +5460,48 @@
       const visible=new Set(),seen=new Set();let scope=fact.scope_id;while(scope&&!seen.has(scope)){seen.add(scope);visible.add(scope);scope=scopes.get(scope)?.parent_id;}
       const references=fields.cited_equal_fact_ids,citations=Array.isArray(references)?references.map(resolveEvidence):[],ids=citations.map(value=>value.fact_id),sources=citations.map(value=>facts.get(value.fact_id));
       const target=facts.get(retainedFactId(goal)),located=!target||(!target.source_id||target.source_id===at?.sourceId)&&(!target.line||target.line===at?.line);
-      const complete=result.type==="VerifyEqualitySuccess"&&detail.type==="ClosedNumericEqualSubstitutionBuiltinRewriteProof"&&goal.type==="EqualFact"&&!!retainedFactId(goal)&&(!fact.id||retainedFactId(goal)===fact.id||adjacent)&&retained&&locations&&located&&scopes.has(fact.scope_id)&&statementOwnsScope(owner,fact.scope_id)&&checked.type==="VerifyEqualitySuccess"&&resolveEvidence(checked.fields?.searched_proof).type==="EqualFactSearchedProof"&&residual.type==="EqualFact"&&!!retainedFactId(residual)&&retainedFactId(residual)!==retainedFactId(goal)&&sameRecordedObject(fields.rewritten_left,residual.fields?.left)&&sameRecordedObject(fields.rewritten_right,residual.fields?.right)&&Array.isArray(references)&&references.length>0&&new Set(ids).size===ids.length&&citations.every((value,i)=>{const source=sources[i],producer=statements.get(source?.producer_statement_id),subject=source&&proofSubject(source),position=source&&factLocation(source),global=String(source?.scope_id).startsWith("file:");return value.kind==="fact_reference"&&source&&producer&&scopes.has(source.scope_id)&&source.id!==retainedFactId(goal)&&source.id!==retainedFactId(residual)&&subject?.type==="EqualFact"&&retainedFactId(subject)===source.id&&(!source.source_id||source.source_id===subject.fields?.line_file?.source_id)&&(!source.line||source.line===subject.fields?.line_file?.line)&&array(owner?.cited_fact_ids).includes(source.id)&&(global?producer.status==="accepted"&&[...array(producer.produced_fact_ids),...array(producer.inferred_fact_ids)].includes(source.id):visible.has(source.scope_id)&&statementOwnsScope(producer,source.scope_id))&&(!at||position?.sourceId!==at.sourceId||position.line<=at.line);});
-      return {complete,route,fields,goal,checked,residual,sources};
+      const equalityUnfold=route.variant==="FnApplicationUnfoldSubstitution",expansions=Array.isArray(fields.expansions)?fields.expansions.map(resolveEvidence):null;
+      const citedEquality=(value)=>{const id=resolveEvidence(value),source=facts.get(id.fact_id),producer=statements.get(source?.producer_statement_id),position=source&&factLocation(source),global=String(source?.scope_id).startsWith("file:");return id.kind==="fact_reference"&&source&&producer&&scopes.has(source.scope_id)&&statementOwnsScope(producer,source.scope_id)&&array(owner?.cited_fact_ids).includes(source.id)&&(global?producer.status==="accepted"&&[...array(producer.produced_fact_ids),...array(producer.inferred_fact_ids)].includes(source.id):visible.has(source.scope_id))&&(!at||!source.source_id||source.source_id!==at.sourceId||!source.line||source.line<=at.line)&&(!at||position.sourceId!==at.sourceId||position.line<=at.line);};
+      // Only observe captured applications in the original operands. No terms
+      // are replaced and no path through the scalar expression is synthesized.
+      const calls=[];if(equalityUnfold)for(const side of [goal.fields?.left,goal.fields?.right])walkEvidence(side,node=>{if(node.type==="Obj"&&node.variant==="FnObj")calls.push(node);});
+      const wd=value=>{const proof=proofResult(value);return proof.type==="DetailedObjWellDefinedProof"&&(proof.variant==="ByDef"&&!!proof.fields?.proof||proof.variant==="ByKnown"&&typeof resolveEvidence(proof.fields?.wd_id).id==="string")?proof:null;};
+      const unfolded=expansions?.length>0&&expansions.every(step=>{
+        const f=step.fields||{},call=recordedFunctionApplication(f.application),source=resolveEvidence(f.function_body),path=resolveEvidence(source.fields?.["0"]),edges=path.fields?.path,head=resolveEvidence(call?.fields?.head),literal=head.type==="FnObjHead"&&head.variant==="AnonymousFnLiteral"?anonymousFunction(head.fields?.["0"]):null,fn=Array.isArray(edges)&&edges.length?anonymousFunction(edges[edges.length-1]?.[1]):literal,parameters=fn&&recordedParameters(resolveEvidence(fn.fields?.body).fields?.set_bound_parameters),applicationWD=wd(f.application_well_defined),bodyWD=wd(f.body_application_well_defined),bodyCall=recordedFunctionApplication(bodyWD?.fields?.obj),bodyHead=resolveEvidence(bodyCall?.fields?.head);
+        const sourcePath=Array.isArray(edges)&&(edges.length?callHeadMatches(call,edges[0]?.[0])&&retainedObjectPath(source.fields?.["0"],edges[0][0],end=>anonymousFunction(end)===fn)&&edges.every(edge=>citedEquality(edge?.[2])):!!literal);
+        return step.type==="AnonymousFunctionBodyExpansionProof"&&call&&Array.isArray(call.fields?.body)&&call.fields.body.length===1&&Array.isArray(call.fields.body[0])&&parameters&&parameters.length===call.fields.body[0].length&&call.fields.body[0].every(arg=>resolveEvidence(arg).type==="Obj")&&calls.some(value=>sameRecordedObject(value,f.application))&&source.type==="FunctionBodySourceProof"&&source.variant==="KnownEquality"&&path.type==="KnownEqualityPathProof"&&sourcePath&&sameRecordedObject(applicationWD?.fields?.obj,f.application)&&bodyCall&&bodyHead.type==="FnObjHead"&&bodyHead.variant==="AnonymousFnLiteral"&&JSON.stringify(resolveEvidence(bodyHead.fields?.["0"]))===JSON.stringify(fn)&&JSON.stringify(bodyCall.fields?.body)===JSON.stringify(call.fields.body)&&resolveEvidence(f.expanded_body).type==="Obj"&&sameRecordedObject(f.expanded_body,f.continued_body);
+      });
+      const numeric=Array.isArray(references)&&references.length>0&&new Set(ids).size===ids.length&&citations.every((value,i)=>{const source=sources[i],producer=statements.get(source?.producer_statement_id),subject=source&&proofSubject(source),position=source&&factLocation(source),global=String(source?.scope_id).startsWith("file:");return value.kind==="fact_reference"&&source&&producer&&scopes.has(source.scope_id)&&source.id!==retainedFactId(goal)&&source.id!==retainedFactId(residual)&&subject?.type==="EqualFact"&&retainedFactId(subject)===source.id&&(!source.source_id||source.source_id===subject.fields?.line_file?.source_id)&&(!source.line||source.line===subject.fields?.line_file?.line)&&array(owner?.cited_fact_ids).includes(source.id)&&(global?producer.status==="accepted"&&[...array(producer.produced_fact_ids),...array(producer.inferred_fact_ids)].includes(source.id):visible.has(source.scope_id)&&statementOwnsScope(producer,source.scope_id))&&(!at||position?.sourceId!==at.sourceId||position.line<=at.line);});
+      const complete=result.type==="VerifyEqualitySuccess"&&detail.type===contracts[route.variant]&&goal.type==="EqualFact"&&!!retainedFactId(goal)&&(!fact.id||retainedFactId(goal)===fact.id||adjacent)&&retained&&locations&&located&&scopes.has(fact.scope_id)&&statementOwnsScope(owner,fact.scope_id)&&checked.type==="VerifyEqualitySuccess"&&resolveEvidence(checked.fields?.searched_proof).type==="EqualFactSearchedProof"&&residual.type==="EqualFact"&&!!retainedFactId(residual)&&retainedFactId(residual)!==retainedFactId(goal)&&sameRecordedObject(fields.rewritten_left,residual.fields?.left)&&sameRecordedObject(fields.rewritten_right,residual.fields?.right)&&(equalityUnfold?unfolded:numeric);
+      return {complete,route,fields,goal,checked,residual,sources,equalityUnfold,expansions};
     }
-    function appendClosedNumericRewrite(target,fact,evidence,depth){
-      const data=closedNumericRewriteInfo(fact,evidence);if(!data)return false;
-      const part=element("section","lr-numeric-rewrite");part.dataset.rule=data.route.type+"::"+data.route.variant;part.dataset.status=data.complete?"retained":"incomplete";target.append(part);
-      part.append(element("h4","lr-proof-section-title",editText("数值等式代入","Substitute known numeric equalities")),element("code","lr-proof-rule-name",data.route.variant));
-      if(!data.complete){part.append(element("p","lr-empty-note",editText("所引用的等式、改写后的目标与剩余证明未完整对应，无法恢复这次改写。","The cited equalities, rewritten goal and residual proof do not fully correspond; this rewrite cannot be reconstructed.")));return true;}
-      part.append(element("p","lr-proof-summary",editText("利用已知等式作数值代入，再验证改写后的等式。","Substitute using established numeric equalities, then verify the resulting equality.")));
+    function appendBuiltinRewrite(target,fact,evidence,depth){
+      const data=builtinRewriteInfo(fact,evidence);if(!data)return false;
+      const part=element("section","lr-numeric-rewrite"+(data.atomic?" lr-atomic-rewrite":""));part.dataset.rule=data.route.type+"::"+data.route.variant;part.dataset.status=data.complete?"retained":"incomplete";if(data.atomic){part.dataset.targetFact=retainedFactId(data.goal)||"";part.dataset.residualFact=retainedFactId(data.residual)||"";}target.append(part);
+      const unfolding=data.route.variant==="FnApplicationUnfoldSubstitution",dual=data.route.variant==="OrderDual";
+      if(unfolding||dual)part.classList.add(unfolding?(data.atomic?"lr-atomic-unfold":"lr-equality-unfold"):"lr-order-dual");
+      part.append(element("h4","lr-proof-section-title",unfolding?editText("展开函数应用","Unfold function applications"):dual?editText("交换关系的两端","Reverse the relation's operands"):data.route.variant==="KnownEqualObjSubstitution"?editText("利用已知等式代入","Substitute established equal objects"):editText("数值等式代入","Substitute known numeric equalities")),element("code","lr-proof-rule-name",data.route.variant));
+      if(!data.complete){part.append(element("p","lr-empty-note",editText("目标、所用变换与剩余证明未完整对应，无法恢复这次改写。","The goal, recorded transformation and residual proof do not fully correspond; this rewrite cannot be reconstructed.")));return true;}
+      if(data.equalityUnfold){
+        part.dataset.targetFact=retainedFactId(data.goal);part.dataset.residualFact=retainedFactId(data.residual);
+        part.append(element("p","lr-proof-summary",editText("将实参代入所用函数体，得到下列等式；再验证改写后的目标。","Substitute the arguments into the selected function bodies to obtain the equalities below, then verify the rewritten goal.")));
+        const steps=element("div","lr-equality-unfold-steps");for(const [index,step]of data.expansions.entries()){
+          const disclosure=element("details","lr-definition-expansion lr-equality-unfold-expansion");disclosure.dataset.expansion=String(index);const summary=element("summary");summary.append(formula(resolveEvidence(step.fields.application).text+" = "+resolveEvidence(step.fields.expanded_body).text,factLocation(fact).sourceId));disclosure.append(summary);steps.append(disclosure);let shown=false;
+          disclosure.addEventListener("toggle",()=>{if(disclosure.open&&!shown){shown=true;appendAnonymousBodySource(disclosure,{...fact,id:null},step);positionOverlays();}});
+        }part.append(steps);
+        part.append(element("p","lr-proof-summary",editText("展开后验证：","Equality after unfolding:")));appendProofRequirement(part,{...fact,id:null},data.checked.fields.fact,data.fields.residual_equal,depth);return true;
+      }
+      if(unfolding||dual){
+        part.append(element("p","lr-proof-summary",unfolding?editText("用以下已验证的展开等式替换函数应用，再验证所得命题。","Replace the function applications using the following checked expansion equalities, then verify the resulting proposition."):editText("交换关系两端，同时换成对应的反向关系；下列命题的证明建立原目标。","Swap the operands and use the corresponding converse relation; the proof of the following proposition establishes the original goal.")));
+        if(unfolding){const equalities=element("div","lr-unfold-equalities");equalities.append(element("h4","lr-proof-section-title",editText("使用的展开等式","Expansion equalities used")));for(const proof of data.fields.unfold_equal_proofs)appendProofRequirement(equalities,{...fact,id:null},proofResult(proof).fields.fact,proof,depth);part.append(equalities);}
+        part.append(element("p","lr-proof-summary",dual?editText("转为证明：","It suffices to prove:"):editText("展开后证明：","Proposition after unfolding:")));appendProofRequirement(part,{...fact,id:null},data.checked.fields.fact,data.residualEvidence,depth);return true;
+      }
+      part.append(element("p","lr-proof-summary",data.atomic?editText("利用已知等式代入，再验证改写后的命题。","Substitute using established equalities, then verify the resulting proposition."):editText("利用已知等式作数值代入，再验证改写后的等式。","Substitute using established numeric equalities, then verify the resulting equality.")));
       const inputs=element("div","lr-proof-grounds lr-numeric-rewrite-inputs");inputs.append(element("h4","lr-proof-section-title",editText("使用的等式","Equalities used")));let listed=false;
-      for(const source of data.sources){const existing=[...target.querySelectorAll(".lr-proof-context .lr-fact-link")].filter(link=>link.dataset.fact===source.id);if(existing.length){for(const link of existing){if(!link.querySelector(".lr-rewrite-use-note"))link.append(element("small","lr-rewrite-use-note",editText("用于本次代入","Used in this substitution")));}}else{inputs.append(factButton(source.id));listed=true;}}
-      if(listed)part.append(inputs);part.append(element("p","lr-proof-summary",editText("改写后的等式：","Rewritten equality:")));appendProofRequirement(part,{...fact,id:null},data.checked.fields.fact,data.fields.residual_equal,depth);
-      const method=proofRecord(data.fields.residual_equal),label=method.type==="EqualFactSearchedProof"&&{ByClosedCalculation:editText("精确计算","Exact calculation"),ByTheyAreTheSame:editText("同一表达式","Same expression")}[method.variant],step=part.children[part.children.length-1];if(label&&step?.classList.contains("lr-proof-step"))step.querySelector("summary").append(document.createTextNode(" · "),element("small","lr-rewrite-residual-method",label));return true;
+      for(const source of data.sources){const existing=[...target.querySelectorAll(".lr-proof-context .lr-fact-link")].filter(link=>link.dataset.fact===source.id);if(existing.length){for(const link of existing){if(!link.querySelector(".lr-rewrite-use-note"))link.append(element("small","lr-rewrite-use-note",editText("用于本次代入","Used in this substitution")));}}else{inputs.append(factButton(source.id,null,fact));listed=true;}}
+      const residualEvidence=data.atomic?data.residualEvidence:data.fields.residual_equal;
+      if(listed)part.append(inputs);part.append(element("p","lr-proof-summary",data.atomic?editText("改写后的命题：","Rewritten proposition:"):editText("改写后的等式：","Rewritten equality:")));appendProofRequirement(part,{...fact,id:null},data.checked.fields.fact,residualEvidence,depth);
+      const method=proofRecord(residualEvidence),label=["EqualFactSearchedProof","AtomicExceptEqualityFactSearchedProof"].includes(method.type)&&{ByClosedCalculation:editText("精确计算","Exact calculation"),ByTheyAreTheSame:editText("同一表达式","Same expression")}[method.variant],step=part.children[part.children.length-1];if(label&&step?.classList.contains("lr-proof-step"))step.querySelector("summary").append(document.createTextNode(" · "),element("small","lr-rewrite-residual-method",label));return true;
     }
     function appendInstantiationRequirements(target,fact,application,depth){
       const requirements=instantiationDetail(application);
@@ -4886,7 +5559,7 @@
       if(symmetry){part.classList.add("lr-forall-symmetry");part.dataset.rule=record.variant;part.dataset.status=symmetry.complete?"retained":"incomplete";if(!symmetry.complete){part.append(element("p","lr-empty-note",editText("全称来源、参数对应与反向等式的记录未完整对应，无法恢复这次推导。","The universal source, argument correspondence and reversed equality do not fully correspond; this derivation cannot be reconstructed.")));return true;}}
       const source=element("div","lr-proof-grounds lr-forall-source");source.append(element("h4","lr-proof-section-title",named?editText("使用的策略","Strategy applied"):editText("使用的全称命题","Universal statement applied")));
       if(named){const name=application.fields?.strategy_name;if(typeof name==="string")source.append(element("code","lr-proof-rule-name",name));else source.append(element("p","lr-empty-note",editText("策略名称未完整导出。","The strategy name is incomplete.")));}
-      else if(universal.sourceFact)source.append(factButton(universal.sourceFact));else source.append(element("p","lr-empty-note",editText("当前记录没有可准确定位的全称命题。","The universal statement cannot be identified exactly in these records.")));
+      else if(universal.sourceFact)source.append(factButton(universal.sourceFact,null,fact));else source.append(element("p","lr-empty-note",editText("当前记录没有可准确定位的全称命题。","The universal statement cannot be identified exactly in these records.")));
       part.append(source);
       if(universal){
         if(universal.complete)appendSubstitutions(part,fact,universal.substitutions);
@@ -4920,7 +5593,7 @@
       const complete=detail.type===(registered?"AtomicExceptEqualityFactSearchProofByKnownTransitivity":"AtomicExceptEqualityFactSearchProofByBuiltinOrderTransitivity")&&application.type==="TransitiveRelationProof"&&(!registered||predicate.kind==="symbol_reference"&&symbols.has(predicate.symbol_id))&&result.type==="VerifyAtomicExceptEqualityFactSuccess"&&owner&&at?.sourceId===factLocation(fact).sourceId&&targetRecord?.source_id===at.sourceId&&targetRecord.line===at.line&&typeof targetRecord.text==="string"&&targetRecord.text===resolveEvidence(result.fields?.fact).text&&statementOwnsScope(owner,fact.scope_id)&&(!fact.id||retainedFactId(goal)===fact.id)&&left&&scopes.has(fact.scope_id)&&scopes.has(left.scope_id)&&(String(left.scope_id).startsWith("file:")?global:visible.has(left.scope_id)&&statementOwnsScope(source,left.scope_id))&&!(left.source_id===at.sourceId&&left.line>at.line)&&source&&["accepted","rejected"].includes(source.status)&&retainedFactId(known)===left.id&&relation(goal)&&relation(known)&&relation(residual)&&checked.type==="VerifyAtomicExceptEqualityFactSuccess"&&sameRetainedFact(residual,checked.fields?.fact)&&knownArgs?.length===2&&residualArgs?.length===2&&goalArgs?.length===2&&sameRecordedObject(knownArgs[0],goalArgs[0])&&sameRecordedObject(knownArgs[1],residualArgs[0])&&sameRecordedObject(residualArgs[1],goalArgs[1]);
       if(!complete){part.append(element("p","lr-empty-note",editText("关系、已知前提与另一关系的证明记录未完整对应，无法恢复这次传递性应用。","The relation, known premise and proof of the remaining relation do not fully correspond; this transitivity application cannot be reconstructed.")));return true;}
       part.dataset.status="retained";part.dataset.leftFact=left.id;part.dataset.targetFact=retainedFactId(goal);part.dataset.residualFact=retainedFactId(residual);
-      const knownPart=element("div","lr-proof-grounds");knownPart.append(element("p","lr-proof-summary",editText("引用前一关系：","Use the first relation:")),factButton(left.id));part.append(knownPart);
+      const knownPart=element("div","lr-proof-grounds");knownPart.append(element("p","lr-proof-summary",editText("引用前一关系：","Use the first relation:")),factButton(left.id,null,fact));part.append(knownPart);
       const remaining=element("div","lr-proof-requirements");remaining.append(element("p","lr-proof-summary",editText("再验证首尾相接的后一关系：","Verify the next relation with the same middle object:")));appendProofRequirement(remaining,fact,fields.residual_fact,fields.proof_of_residual_fact,depth);part.append(remaining);
       part.append(element("p","lr-proof-summary",editText("由此关系的传递性得到：","Transitivity of this relation then gives:")),formula(quantifiedText(goal,factLocation(fact).sourceId)||"",factLocation(fact).sourceId));return true;
     }
@@ -4929,7 +5602,7 @@
       if(record.variant==="ByStructuralMembership"){const membership=resolveEvidence(record.fields?.["0"]),reason=resolveEvidence(membership.fields?.reason);if(membership.type==="StructuralMembershipProof"&&reason.type==="StructuralMembershipReason"&&reason.variant==="Known")application=resolveEvidence(reason.fields?.["0"]);}
       if(application?.type!=="AtomicExceptEqualityFactSearchProofByKnownAtomicFact")return false;
       const cite=application.fields?.cite_fact_id,id=cite?.kind==="fact_reference"?cite.fact_id:null,sourceFact=facts.get(id),part=element("section","lr-proof-application lr-known-application");part.dataset.route="known";target.append(part);
-      const source=element("div","lr-proof-grounds lr-known-source");source.append(element("h4","lr-proof-section-title",editText("引用已知事实","Known fact reused")));if(sourceFact)source.append(factButton(id));else source.append(element("p","lr-empty-note",editText("被引用事实的记录未完整导出。","The cited fact record is incomplete.")));part.append(source);
+      const source=element("div","lr-proof-grounds lr-known-source");source.append(element("h4","lr-proof-section-title",editText("引用已知事实","Known fact reused")));if(sourceFact)source.append(factButton(id,null,fact));else source.append(element("p","lr-empty-note",editText("被引用事实的记录未完整导出。","The cited fact record is incomplete.")));part.append(source);
       const knownSubject=sourceFact&&proofSubject(sourceFact),goalSubject=proofSubject({...fact,evidence});
       appendKnownArguments(part,fact,atomicArguments(knownSubject),atomicArguments(goalSubject),application.fields?.why_parameters_of_known_fact_are_equal_to_givens,depth);
       appendProofReferences(part,fact,evidence,new Set(id?[id]:[]));appendProofResult(part,fact,evidence);return true;
@@ -4942,7 +5615,7 @@
         for(const action of inherited){const context=element("div","lr-proof-context");context.dataset.scope=action.scopeId;
           context.append(button(action.kind==="equivalence-direction"?action.direction===0?editText("正向证明的前提","Forward-proof premises"):editText("反向证明的前提","Reverse-proof premises"):action.kind==="interface-context"?(action.interfaceFailurePart==="fields"?editText("字段检查的局部范围","Local field-check scope"):action.interfaceFailurePart==="type-preflight"?editText("定义体的类型预检范围","Body type-preflight scope"):editText("定义的局部范围","Definition scope")):action.kind==="context-change"&&action.change.route==="sketch"?editText("局部演算","Local scratch work"):action.kind==="or-assumptions"?editText("析取证明的临时假设","Temporary disjunction-proof assumptions"):action.kind==="case-assumption"?editText("本分支条件","Case condition"):action.kind==="contra-assumption"?editText("反证假设","Contradiction assumption"):["induction-base","induction-step","enumeration-assignment","witness-bindings"].includes(action.kind)?logicalActionLabel(action):editText("本段的任意参数与前提","Arbitrary parameters and premises"),"lr-math-link",()=>selectStatement(action.statementId,action.line)));
           if(action.kind==="interface-context"){if(!appendTemplateContext(context,action,fact.id))context.append(element("p","lr-proof-summary",editText("定义中的形式参数与条件仅用于当前定义的检查。","These formal parameters and conditions belong to the current definition checks.")));}
-          else if(action.kind==="arbitrary"){appendArbitraryParameters(context,action.value,action.sourceId);for(const id of action.factIds)if(id!==fact.id)context.append(factButton(id));}
+          else if(action.kind==="arbitrary"){appendArbitraryParameters(context,action.value,action.sourceId);for(const id of action.factIds)if(id!==fact.id)context.append(factButton(id,null,fact));}
           else if(action.kind==="context-change"&&action.change.route==="sketch")context.append(element("p","lr-proof-summary",editText("这些演算仅在当前局部范围内有效，不向外发布。","This scratch work is available in the current local scope only and is not published outside it.")));
           else if(["function-input","function-branch"].includes(action.kind))appendFunctionFrame(context,{...action,factIds:action.factIds.filter(id=>id!==fact.id)});
           else for(const id of action.factIds)if(id!==fact.id)context.append(factButton(id,action.kind==="equivalence-direction"?"hypothesis":null));target.append(context);
@@ -4984,10 +5657,12 @@
     }
     function appendUniversalProof(target,fact,goal,body,scope,depth){
       const sourceId=factLocation(fact).sourceId,scopeId=resolveEvidence(scope).scope_id;
+      target.dataset.scope=scopeId;
       appendArbitraryParameters(target,goal,sourceId);
       const premises=element("div","lr-proof-grounds");
       for(const value of array(body.fields?.assumed_dom_facts)){const store=resolveEvidence(value).fields?.store_and_infer,output=storedConclusion(store);if(output&&facts.has(output.id))premises.append(factButton(output.id,"hypothesis"));}
       if(premises.childNodes.length){premises.prepend(element("h4","lr-proof-section-title",editText("暂设前提","Assumed premises")));target.append(premises);}
+      if(logicalContexts.get(scopeId)?.sourceVisible===false)appendScopeStructOpenings(target,fact.producer_statement_id,scopeId,"lr-universal-struct-openings");
       target.append(element("p","lr-proof-summary",editText("在这些任意参数及前提下，验证各项结论；本段辅助对象与临时条件不向外导出。","Verify each conclusion for these arbitrary parameters under the premises; local auxiliary objects and assumptions are not exported.")));
       const proofs=Array.isArray(body.fields?.conclusion_proofs)?body.fields.conclusion_proofs:array(body.fields?.proved_then_facts).map(value=>resolveEvidence(value).fields?.verify_result);
       for(const proof of proofs)appendProofRequirement(target,{...fact,id:null,scope_id:scopeId},proofResult(proof).fields?.fact,proof,depth);
@@ -4998,9 +5673,9 @@
       part.append(element("h4","lr-proof-section-title",logicalActionLabel(action)));
       const summary={"induction-base":["将归纳参数取为起点，验证基例；此处没有归纳假设。","Set the induction parameter to the starting value and verify the base case; no induction hypothesis is assumed here."],"induction-step":["在以下局部条件下，验证后继整数处的全部结论。","Under the following local conditions, verify every conclusion at the successor integer."],"enumeration-assignment":["只在当前参数取值及已引入的前提下检查这个实例。","Check this instance only under the current parameter assignment and the premises introduced here."],"witness-bindings":["在本段将存在量词的参数绑定到所给见证；这些局部绑定不向外导出。","Bind the existential parameters to the supplied witnesses locally; these bindings are not exported."]}[action.kind];
       if(summary)part.append(element("p","lr-proof-summary",summary[lang()==="zh"?0:1]));
-      const context=element("div","lr-proof-grounds");action.factIds.forEach(id=>context.append(factButton(id)));if(context.childNodes.length)part.append(context);else part.append(element("p","lr-empty-note",editText("此处的局部条件未完整导出。","The local conditions were not fully exported here.")));
+      const context=element("div","lr-proof-grounds");action.factIds.forEach(id=>context.append(factButton(id,null,local)));if(context.childNodes.length)part.append(context);else part.append(element("p","lr-empty-note",editText("此处的局部条件未完整导出。","The local conditions were not fully exported here.")));
       if(!action.complete&&action.factIds.length)part.append(element("p","lr-empty-note",editText("以上仅列出已保留的局部条件，完整记录尚缺失。","Only the retained local conditions are listed above; the complete record is missing.")));
-      if(action.inferredIds.length){const inferred=element("details","lr-process-inferences");inferred.append(element("summary",null,editText("局部推论 ","Local consequences ")+action.inferredIds.length));action.inferredIds.forEach(id=>inferred.append(factButton(id)));part.append(inferred);}
+      if(action.inferredIds.length){const inferred=element("details","lr-process-inferences");inferred.append(element("summary",null,editText("局部推论 ","Local consequences ")+action.inferredIds.length));action.inferredIds.forEach(id=>inferred.append(factButton(id,null,local)));part.append(inferred);}
       appendScopeStructOpenings(part,action.statementId,action.scopeId,"lr-process-struct-openings");
       if(stage.type==="ByInducCaseSuccess"){
         if(!Array.isArray(stage.fields?.goals_verified)||!stage.fields.goals_verified.length)part.append(element("p","lr-empty-note",editText("此阶段的结论证明未完整导出。","The conclusion proofs for this stage were not fully exported.")));
@@ -5021,6 +5696,9 @@
       const fields=record.fields||{},induction=["ExecByInducStmtSuccess","ExecByStrongInducStmtSuccess"].includes(record.type),enumeration=["ExecByEnumerateFiniteSetStmtSuccess","ExecByForStmtSuccess"].includes(record.type),witness=["ExecWitnessExistFactStmtSuccessResult","ExecWitnessAtomicFactStmtSuccessResult","ExecWitnessNonemptySetStmtSuccessResult"].includes(record.type);
       if(!induction&&!enumeration&&!witness)return false;
       const part=element("section",induction?"lr-induction-proof":enumeration?"lr-enumeration-proof":"lr-witness-proof");target.append(part);
+      if(witness&&!witnessExecutionDetails(statements.get(fact.producer_statement_id),record)){
+        part.dataset.status="incomplete";part.append(element("p","lr-empty-note",editText("本次见证的语句、局部范围或返回事实未完整对应。","The witness statement, local scope or returned fact for this execution do not fully correspond.")));return true;
+      }
       const show=(value,kind)=>{
         const stage=resolveEvidence(value),action=logicalContexts.get(resolveEvidence(stage.fields?.local_env).scope_id);
         if(action&&action.statementId===fact.producer_statement_id&&(!kind||action.kind===kind)&&resolveEvidence(action.record)===stage)appendProcessFrame(part,fact,action,depth);
@@ -5055,7 +5733,12 @@
       if(!Array.isArray(body)||!body.length)part.append(element("p","lr-empty-note",editText("见证所需的条件证明未完整导出。","The required witness-condition proofs were not fully exported.")));
       for(const proof of array(body))appendProofRequirement(part,local,proofResult(proof).fields?.fact,proof,depth);
       const existential=resolveEvidence(fields.projected_exist||declaration.fields?.exist_shaped_fact_in_witness),unique=obligations.fields?.uniqueness_check;
-      if(unique){part.append(element("h4","lr-proof-section-title",editText("唯一性","Uniqueness")));appendProofRequirement(part,local,proofResult(unique).fields?.fact,unique,depth);}
+      if(unique){
+        part.append(element("h4","lr-proof-section-title",editText("唯一性","Uniqueness")));
+        const owner=statements.get(fact.producer_statement_id),generated=proofResult(unique).type==="VerifyForallFactSuccess",context=generated&&witnessUniquenessDetails(owner,record);
+        if(generated&&(!context||context.proofs===null))part.append(element("p","lr-empty-note lr-uniqueness-unavailable",editText("唯一性证明中候选参数、局部条件与结论的对应记录不完整。","The candidate parameters, local assumptions and conclusions of the uniqueness proof do not fully correspond.")));
+        else appendProofRequirement(part,local,proofResult(unique).fields?.fact,unique,depth);
+      }
       else if(existential.variant==="ExistUnique")part.append(element("p","lr-empty-note",editText("唯一性证明未完整导出。","The uniqueness proof was not fully exported.")));
       return true;
     }
@@ -5164,14 +5847,20 @@
       if(action.kind==="object-introduction"){appendProofBody(target,{...local,scope_id:action.executionScope||statement.scope_id},action.record);return;}
       if(action.kind==="introduced-property"){for(const id of action.factIds)if(facts.has(id))appendProofBody(target,facts.get(id));return;}
       if(["induction-base","induction-step","enumeration-assignment","witness-bindings"].includes(action.kind)){appendProofContext(target,{...local,scope_id:scopes.get(action.scopeId)?.parent_id});appendProcessFrame(target,local,action);return;}
-      if(action.kind==="witness"){const fact=facts.get(action.factIds[0]);if(fact)appendProofBody(target,fact);return;}
+      if(action.kind==="witness"){
+        const fact=facts.get(action.factIds[0]);
+        if(fact?.producer_statement_id===statement.id)appendProofBody(target,fact);
+        else if(witnessExecutionDetails(statement,resolveEvidence(action.record)))appendProofBody(target,{...local,evidence:statement.evidence});
+        return;
+      }
       if(["induction-goal","enumeration-goal"].includes(action.kind)){appendProcessProof(target,local,action.record,0);appendAtomicWellDefinedness(target,local,action.record,0);return;}
       if(action.kind==="verified-step"){
         const proof=element("div","lr-logical-proof");proof.dataset.statement=action.statementId;target.append(proof);appendProofBody(proof,local,action.proof);return;
       }
       if(action.kind==="conclusion"){
-        for(const id of action.factIds)target.append(factButton(id));
-        const fact=facts.get(action.factIds[0]);if(fact)appendProofBody(target,fact);return;
+        const claim=resolveEvidence(action.record).type==="ExecClaimStmtSuccess";
+        for(const id of action.factIds)target.append(factButton(id,null,claim?{scope_id:statement.scope_id}:null));
+        const fact=claim?sourceExecutionFact(action.factIds[0],statement.id):facts.get(action.factIds[0]);if(fact)appendProofBody(target,fact);return;
       }
       if(["contra-assumption","case-assumption","premise"].includes(action.kind)){
         appendProofContext(target,{...local,id:action.kind==="premise"?action.factIds[0]:null,scope_id:action.kind==="premise"?action.scopeId:scopes.get(action.scopeId)?.parent_id});
@@ -5193,6 +5882,7 @@
       }
       if(action.kind==="contradiction"){appendProofContext(target,local);appendContradiction(target,local,action.closing,0);return;}
       if(action.kind==="arbitrary"){
+        if(action.sourceVisible===false)appendProofContext(target,{...local,scope_id:scopes.get(action.scopeId)?.parent_id});
         appendArbitraryParameters(target,action.value,action.sourceId);
         if(action.factIds.length){target.append(element("h4","lr-proof-section-title",editText("本段前提","Local premises")));action.factIds.forEach(id=>target.append(factButton(id)));}
         target.append(element("p","lr-empty-note",editText("参数是任意选取的；下面的结论在这些参数和前提下验证。","The parameters are arbitrary; the conclusions below are verified under these parameters and premises.")));return;
@@ -5215,7 +5905,7 @@
         openSourcePreview(owner,failure?editText("这个等式为何未通过","Why this equality was not accepted"):editText("这个等式为何成立","Why this equality holds"),body=>appendEqualityStep(body,fact,chainStep),{factPreview:true,select:()=>navigate(selection),selection});highlightProofPremises(owner,evidence?[evidence]:[]);highlightLogicalScope(action.scopeId);return;
       }
       const verified=actions.find(action=>action.kind==="verified-step");if(verified)actions=[verified];
-      if(actions.length===1&&actions[0].kind==="conclusion"&&actions[0].factIds.length===1){openProof(owner,actions[0].factIds);return;}
+      if(actions.length===1&&actions[0].kind==="conclusion"&&actions[0].factIds.length===1&&resolveEvidence(actions[0].record).type!=="ExecClaimStmtSuccess"){openProof(owner,actions[0].factIds);return;}
       const action=actions[0],selection={source:action.sourceId,statement:action.statementId,symbol:null,fact:null,wd:null,focusLine:action.line,explanationOpen:true};
       if(actions.length===1&&["local-conclusion","arbitrary","claim-goal","case-goal"].includes(action.kind)){
         const id=retainedFactId(action.value),mapped=lineProofFacts(action.sourceId,action.line,statements.get(action.statementId)).find(fact=>fact.id===id&&fact.producer_statement_id===action.statementId);
@@ -5232,6 +5922,8 @@
       }
     }
     function inspectorTitle(){
+      if(!state.fact&&!state.symbol&&!state.keyword&&!state.wd&&unsupportedClaimGoal(statements.get(state.statement)))return editText("此类目标暂不支持","This goal is not supported");
+      if(!state.fact&&!state.symbol&&!state.keyword&&!state.wd&&failedEvaluationDetails(statements.get(state.statement)))return editText("求值未完成","Evaluation unfinished");
       if(state.issue)return editText("这里为什么没有通过","Why this step was not accepted");
       if(state.keyword)return editText("参考说明","Reference");
       if(state.symbol)return editText("定义与用法","Definition and use");
@@ -5277,7 +5969,7 @@
     }
     function appendProofReferences(target,fact,evidence,omitted=new Set()){
       const cited=proofGrounds(evidence).filter(id=>id!==fact.id),main=cited.filter(id=>!omitted.has(id));
-      if(main.length){const premises=element("div","lr-proof-grounds");premises.append(element("h4","lr-proof-section-title",editText("上下文","Context")));main.forEach(id=>premises.append(factButton(id)));target.append(premises);}
+      if(main.length){const premises=element("div","lr-proof-grounds");premises.append(element("h4","lr-proof-section-title",editText("上下文","Context")));main.forEach(id=>premises.append(factButton(id,null,fact)));target.append(premises);}
       return appendProofApplication(target,fact,evidence)||main.length;
     }
     function appendProofApplication(target,fact,evidence){
@@ -5306,11 +5998,11 @@
     }
     function appendAtomicWellDefinedness(target,fact,evidence,depth,adjacentIndex=null,theoremPart=null){
       const result=proofResult(evidence);
-      const automatic=automaticStructAction(fact),openingInput=automatic&&structOpeningInputs(automatic.introduced),automaticFormation=automatic?{proofs:openingInput?.proofs||[],complete:automatic.complete&&!!openingInput,note:automatic.origin==="parameter"?editText("参数范围检查用于引入本段参数；上面的结构性质由其成员关系与结构定义给出。","The parameter-domain checks support introduction of the local parameters; the structural properties above follow from membership and the structure's definition."):editText("这里保留的是实际对象引入时的范围及表达式检查；上面的结构性质依赖该对象的成员关系与结构定义。临时检查或显式假设不因展开而成为无假设的证明。","These are the retained domain and expression checks for the actual introduction. The structural properties above depend on the object's membership and structure definition. Opening a temporary or explicitly assumed membership does not turn it into an assumption-free proof.")}:null;
+      const automatic=automaticStructAction(fact),openingInput=automatic&&structOpeningInputs(automatic.introduced),automaticFormation=automatic?{proofs:openingInput?.proofs||[],complete:automatic.complete&&!!openingInput,note:automatic.origin==="formation-parameter"?editText("这些参数范围与结构性质仅供本次表达式检查使用，没有给出存在见证或证明原命题。","These parameter domains and structural properties are local to formation checking; they supply no existence witness or proof of the original statement."):automatic.origin==="parameter"?editText("参数范围检查用于引入本段参数；上面的结构性质由其成员关系与结构定义给出。","The parameter-domain checks support introduction of the local parameters; the structural properties above follow from membership and the structure's definition."):editText("这里保留的是实际对象引入时的范围及表达式检查；上面的结构性质依赖该对象的成员关系与结构定义。临时检查或显式假设不因展开而成为无假设的证明。","These are the retained domain and expression checks for the actual introduction. The structural properties above depend on the object's membership and structure definition. Opening a temporary or explicitly assumed membership does not turn it into an assumption-free proof.")}:null;
       const chain=wholeChainForallInfo(result,fact),chainFormation=chain?{proofs:adjacentIndex===null?(chain.wd?[chain.wd]:[]):chain.adjacent?.[adjacentIndex]?[chain.adjacent[adjacentIndex]]:[],complete:chain.complete&&(adjacentIndex===null?chain.validWD.length>0&&chain.validWD.every(Boolean):chain.validWD[adjacentIndex]===true)}:null;
       const iff=result.type==="VerifyForallFactWithIffSuccess"?equivalenceContract(result.fields?.fact,result,fact.producer_statement_id):null,iffAction=iff?equivalenceAction(fact.producer_statement_id):null,selectedDirection=iffAction?.equivalence.directions.find(direction=>direction.storedId===fact.id);
-      const compoundFailure=factFailureFormation(result,fact,adjacentIndex);
-      const introduction=introductionContract(result),contextualFormation=automaticFormation||chainFormation||trustHaveFailureFormation(result,fact)||quantifierFailureFormation(result,fact)||failedInterfaceFormation(result,fact)||failedIntroductionFormation(result,fact)||contradictionFailureFormation(result,fact,evidence)||definitionFailureFormation(result,fact)||commandResultFormation(result)||interfaceFormation(result)||contextChangeFormation(result)||functionFormation(result)||expansionFormation(result)||counterexampleFormation(result,fact.producer_statement_id)||connectiveFormation(result,fact)||(iff?(selectedDirection?factFormationStages(selectedDirection.proof):{proofs:[],complete:iff.complete,directions:iff.directions}):["VerifyForallFactSuccess","VerifyKnownForallFactProof","VerifyEmptyParameterDomainForallProof"].includes(result.type)?factFormationStages(result):null),formation=compoundFailure?{...contextualFormation,...compoundFailure,note:contextualFormation?.note||compoundFailure.note}:contextualFormation,fields=result.fields||{},existProof=proofResult(fields.verify_exist),atomicProof=proofResult(fields.verify_atomic),membershipProof=proofResult(fields.source_membership),preflight=resolveEvidence(fields.type_preflight);
+      const commandFormation=evaluationFailureFormation(fact,evidence)||expansionFailureFormation(fact,evidence)||foundationFailureFormation(fact,evidence)||processFailureFormation(fact,evidence)||functionDefinitionFailureFormation(fact,evidence),compoundFailure=commandFormation?null:factFailureFormation(result,fact,adjacentIndex);
+      const fields=result.fields||{},introduction=introductionContract(result),introductionExistential=introduction&&["have-exist","obtain-exist"].includes(introduction.route)?existentialFormation(proofResult(fields.verify_exist),{...fact,id:null}):null,contextualFormation=automaticFormation||chainFormation||introductionExistential||trustHaveFailureFormation(result,fact)||quantifierFailureFormation(result,fact)||failedInterfaceFormation(result,fact)||failedIntroductionFormation(result,fact)||constructionFailureFormation(fact,evidence)||witnessFailureFormation(fact,evidence)||contradictionFailureFormation(result,fact,evidence)||definitionFailureFormation(result,fact)||commandFormation||claimFormation(result,fact)||commandResultFormation(result)||interfaceFormation(result)||contextChangeFormation(result)||functionFormation(result)||expansionFormation(result)||counterexampleFormation(result,fact)||existentialFormation(result,fact)||connectiveFormation(result,fact)||(iff?(selectedDirection?factFormationStages(selectedDirection.proof):{proofs:[],complete:iff.complete,directions:iff.directions}):["VerifyForallFactSuccess","VerifyKnownForallFactProof","VerifyEmptyParameterDomainForallProof"].includes(result.type)?factFormationStages(result):null),formation=compoundFailure?{...contextualFormation,...compoundFailure,note:contextualFormation?.note||compoundFailure.note}:contextualFormation,existProof=proofResult(fields.verify_exist),atomicProof=proofResult(fields.verify_atomic),membershipProof=proofResult(fields.source_membership),preflight=resolveEvidence(fields.type_preflight);
       let introductionProofs=null,introductionComplete=true;
       if(introduction){
         const route=introduction.route;
@@ -5330,7 +6022,10 @@
       const blockAtomic=block&&output>=0&&atomicArguments(subject)!==null;
       if(fact.role==="hypothesis"||!(formation||introduction||process||theorem&&output>=0||blockAtomic||["VerifyEqualitySuccess","VerifyAtomicExceptEqualityFactSuccess","PeerEqualitySuccess"].includes(result.type)||["VerifyEqualityFailed","VerifyAtomicExceptEqualityFactFailed"].includes(result.type)&&result.variant==="FailToSearchProof"))return;
       const processProofs=induction?[result.fields?.from_in_z,...array(result.fields?.goals_wd)]:enumeration?[result.fields?.goal_wd]:result.type==="ExecWitnessNonemptySetStmtSuccessResult"?[result.fields?.obj_well_defined,result.fields?.set_well_defined]:[ambient.exist_fact_well_defined,...array(ambient.witness_obj_well_defined),...array(ambient.witness_type_checks),...array(result.fields?.prop_argument_type_checks)];
-      const proof=formation?formation.proofs:introduction?introductionProofs:process?processProofs:theorem?(theoremFragment&&theoremPart==="arguments"?[]:theoremWD):blockAtomic?(result.type==="ExecByCasesStmtSuccess"?result.fields?.stored_wd?.[output]:result.fields?.stored_wd||result.fields?.goal_wd):result.fields?.well_defined_proof,tail=element(theoremFragment?"section":"details",theoremFragment?"lr-theorem-wd-part":"lr-proof-formation lr-atomic-wd"),summary=element(theoremFragment?"h4":"summary",theoremFragment?"lr-proof-section-title":null,theoremFragment?(theoremPart==="arguments"?editText("本次调用的参数与定义域","Arguments and domains of this call"):editText("结论的表达式检查","Conclusion formation")):automatic?(automatic.origin==="parameter"?editText("参数范围检查","Parameter-domain checks"):editText("对象引入检查","Object introduction checks")):editText("表达式有定义","Well-defined expressions"));tail.append(summary);target.append(tail);let rendered=false;
+      const proof=formation?formation.proofs:introduction?introductionProofs:process?processProofs:theorem?(theoremFragment&&theoremPart==="arguments"?[]:theoremWD):blockAtomic?(result.type==="ExecByCasesStmtSuccess"?result.fields?.stored_wd?.[output]:result.fields?.stored_wd||result.fields?.goal_wd):result.fields?.well_defined_proof,tail=element(theoremFragment?"section":"details",theoremFragment?"lr-theorem-wd-part":"lr-proof-formation lr-atomic-wd"),summary=element(theoremFragment?"h4":"summary",theoremFragment?"lr-proof-section-title":null,theoremFragment?(theoremPart==="arguments"?editText("本次调用的参数与定义域","Arguments and domains of this call"):editText("结论的表达式检查","Conclusion formation")):automatic?(automatic.origin==="formation-parameter"?editText("检查时的参数范围","Parameter domains for checking"):automatic.origin==="parameter"?editText("参数范围检查","Parameter-domain checks"):editText("对象引入检查","Object introduction checks")):editText("表达式有定义","Well-defined expressions"));tail.append(summary);target.append(tail);let rendered=false;
+      const formationFact=formation?.scopeId?{...fact,id:null,scope_id:formation.scopeId}:fact;
+      if(formation?.existential){tail.classList.add("lr-existential-formation");tail.dataset.status=formation.complete?"retained":"incomplete";tail.dataset.goal=formation.goalId;tail.dataset.goalKind=formation.goalKind;tail.dataset.outcome=formation.outcome;if(formation.scopeId)tail.dataset.scope=formation.scopeId;}
+      if(formation?.claim){tail.classList.add("lr-claim-formation");tail.dataset.status=formation.complete?"retained":"incomplete";tail.dataset.outcome=formation.outcome;tail.dataset.goalKind=formation.goalKind;if(formation.scopeId)tail.dataset.scope=formation.scopeId;}
       if(theoremFragment){tail.dataset.part=theoremPart;if(theoremPart==="conclusion"){tail.dataset.fact=fact.id;tail.append(factFormula(fact));}}
       const render=()=>{
         if((!theoremFragment&&!tail.open)||rendered)return;rendered=true;
@@ -5357,8 +6052,9 @@
           if(node.type==="DetailedAtomicFactWellDefinedProof"&&(!Array.isArray(node.fields?.well_defined_of_each_parameter)||!node.fields?.predicate_signature||!node.fields?.predicate_domain))unavailable=true;
           if(node.type==="DetailedEqualFactWellDefinedProof"&&(!node.fields?.left||!node.fields?.right))unavailable=true;
           if(node.type==="DetailedObjWellDefinedProof"){
-            const object=resolveEvidence(node.fields?.obj),reference=resolveEvidence(node.fields?.wd_id);
-            if(object.text)objects.push({text:object.text,reference:reference.id});
+            const object=resolveEvidence(node.fields?.obj),reference=resolveEvidence(node.fields?.wd_id),missing=!!node.fields?.wd_id&&(reference.kind!=="well_definedness_reference"||!wellDefinedness.has(reference.id));
+            if(missing||!node.fields?.proof&&!node.fields?.wd_id)unavailable=true;
+            if(object.text)objects.push({text:object.text,reference:reference.id,missing});
           }
           for(const [key,child] of Object.entries(node.fields||{})){if(!["obj","fact","requirement"].includes(key))visit(child);}
         }
@@ -5373,9 +6069,10 @@
         // callable's outer signature. Keep those retained checks in this same
         // final disclosure, rather than presenting them as truth-search steps.
         if(!theoremFragment)for(const frame of proofFrames(evidence))for(const key of ["normalization","left_normalization","right_normalization"]){const normalization=resolveEvidence(frame.fields?.[key]);if(normalization.type==="FunctionBodyNormalizationProof")for(const value of array(normalization.fields?.expansions)){const expansion=resolveEvidence(resolveEvidence(value).fields?.["0"]);if(expansion.fields?.application_well_defined)visit(expansion.fields.application_well_defined);if(expansion.fields?.body_application_well_defined)visit(expansion.fields.body_application_well_defined);}}
-        if(objects.length){const list=element("div","lr-wd-objects");list.append(element("p","lr-empty-note",editText("本句中的对象与运算：","Objects and operations in this statement:")));for(const object of objects){const item=element("div","lr-wd-object");item.append(formula(object.text,factLocation(fact).sourceId));if(object.reference&&wellDefinedness.has(object.reference))item.append(button(editText("已有定义","Previously established"),"lr-text-link",()=>selectWellDefinedness(object.reference)));list.append(item);}tail.append(list);}
+        const rewrite=builtinRewriteInfo(fact,evidence);if(!theoremFragment&&rewrite?.equalityUnfold){if(!rewrite.complete)unavailable=true;else for(const step of rewrite.expansions){visit(step.fields.application_well_defined);visit(step.fields.body_application_well_defined);}}
+        if(objects.length){const list=element("div","lr-wd-objects");list.append(element("p","lr-empty-note",editText("本句中的对象与运算：","Objects and operations in this statement:")));for(const object of objects){const item=element("div","lr-wd-object");item.append(formula(object.text,factLocation(fact).sourceId));if(object.reference&&wellDefinedness.has(object.reference))item.append(button(editText("已有定义","Previously established"),"lr-text-link",()=>selectWellDefinedness(object.reference)));else if(object.missing)item.append(element("small","lr-wd-unavailable-reference",editText("本次记录未保留此前检查的依据。","The evidence for the earlier check was not retained in this record.")));list.append(item);}tail.append(list);}
         if(conditions.length){tail.append(element("p","lr-empty-note",editText("定义域条件及其证明：","Domain conditions and their proofs:")));for(const condition of conditions){
-          if(!condition.structural){appendProofRequirement(tail,fact,condition.requirement,condition.evidence,depth);continue;}
+          if(!condition.structural){appendProofRequirement(tail,formationFact,condition.requirement,condition.evidence,depth);continue;}
           const text=resolveEvidence(condition.requirement).text,step=element("details","lr-proof-step");step.append(element("summary",null,text?mathText(text,factLocation(fact).sourceId):editText("参数属于声明域","Argument in its declared domain")));let shown=false;step.addEventListener("toggle",()=>{if(step.open&&!shown){shown=true;appendProofBody(step,{...fact,id:null,role:"verified",evidence:condition.evidence},condition.evidence,false,depth+1);positionOverlays();}});tail.append(step);
         }}else if(!unavailable&&!formation?.note)tail.append(element("p","lr-empty-note",theoremFragment&&theoremPart==="arguments"?editText("此调用记录没有额外的参数定义域条件。","This call records no additional argument-domain conditions."):editText("本句的对象及谓词签名已检查；此记录没有额外的定义域条件。","The objects and predicate signature were checked; this record contains no additional domain conditions.")));
         if(cited.size){const context=element("div","lr-proof-grounds");context.append(element("p","lr-empty-note",editText("引用的定义域依据：","Cited domain evidence:")));for(const id of cited)context.append(factButton(id));tail.append(context);}
@@ -5387,6 +6084,26 @@
     function appendProofBody(target,fact,evidence=fact.evidence,steps=true,depth=0){
       appendProofMain(target,fact,evidence,steps,depth);
       appendAtomicWellDefinedness(target,fact,evidence,depth);
+    }
+    function appendPositiveNaturalLowerBound(target,fact,evidence,depth){
+      const rule=proofFrames(evidence).find(node=>node.type==="GreaterEqualFactSearchProofByBuiltinRule"&&node.variant==="FromKnownInPositiveNatural");
+      if(!rule)return false;
+      const result=proofResult(evidence),goal=proofResult(result.fields?.fact),payload=resolveEvidence(rule.fields?.["0"]),premiseProof=payload.fields?.premise_proof,premise=proofResult(proofResult(premiseProof).fields?.fact);
+      const right=resolveEvidence(goal.fields?.right),literal=resolveEvidence(right.fields?.["0"]),number=resolveEvidence(literal.fields?.["0"]),set=resolveEvidence(premise.fields?.set),identity=resolveEvidence(set.fields?.["0"]);
+      // Explain only this actual typed application, with its own paired goal
+      // and membership premise. A rule elsewhere in a premise tree is not ours.
+      const complete=result.type==="VerifyAtomicExceptEqualityFactSuccess"&&(!rule.rule_id||rule.rule_id==="builtin.GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural")&&payload.type==="FromKnownInPositiveNaturalBuiltinRuleProof"
+        &&goal.type==="GreaterEqualFact"&&retainedFactId(goal)&&(!fact.id||retainedFactId(goal)===fact.id)
+        &&right.type==="Obj"&&right.variant==="Literal"&&literal.type==="Literal"&&literal.variant==="Number"&&number.type==="Number"&&number.fields?.normalized_value==="1"
+        &&proofResult(premiseProof).type==="AtomicExceptEqualityFactKnownProof"&&premise.type==="InFact"&&retainedFactId(premise)&&sameRecordedObject(goal.fields?.left,premise.fields?.element)
+        &&set.type==="Obj"&&set.variant==="StandardSet"&&identity.kind==="symbol_reference"&&identity.symbol_id==="builtin:set:N+";
+      const part=element("section","lr-positive-natural-bound");part.dataset.status=complete?"verified":"incomplete";target.append(part);
+      const sourceId=factLocation(fact).sourceId,member=resolveEvidence(premise.fields?.element),from=complete&&member.text&&mathText(member.text,sourceId)+" ∈ ℕ₊",to=complete&&quantifiedText(goal,sourceId);
+      if(!from||!to){part.dataset.status="incomplete";part.append(element("p","lr-empty-note",editText("此规则的前提与结论未完整对应，无法恢复这一步的推导。","The rule's premise and conclusion do not fully correspond; this derivation cannot be reconstructed.")));return true;}
+      const sentence=element("p","lr-proof-summary lr-premise-conclusion");
+      sentence.append(document.createTextNode(editText("由 ","From ")),formula(from,sourceId),document.createTextNode(editText("，且正自然数至少为 1，推出 ",", since every positive natural number is at least 1, we obtain ")),formula(to,sourceId),document.createTextNode(editText("。",".")));part.append(sentence);
+      appendProofRequirement(part,fact,proofResult(premiseProof).fields.fact,premiseProof,depth);
+      return true;
     }
     function appendEmptyUniversalProof(target,fact,record,depth){
       if(record.type!=="VerifyEmptyParameterDomainForallProof")return false;
@@ -5402,7 +6119,7 @@
       if(record.type!=="VerifyKnownForallFactProof")return false;
       const fields=record.fields||{},reference=resolveEvidence(fields.cite_fact_id),id=reference.kind==="fact_reference"&&reference.fact_id,source=quantifiedFacts.get(id),goal=proofResult(fields.fact),part=element("section","lr-forall-identity"),grounds=element("div","lr-proof-grounds"),targetId=retainedFactId(goal);if(targetId)part.dataset.targetFact=targetId;target.append(part);
       part.append(element("h4","lr-proof-section-title",source?editText("引用全称命题","Use a universal statement"):editText("引用的命题","Cited statement")));
-      if(facts.has(id))grounds.append(factButton(id));else grounds.append(element("p","lr-empty-note",editText("所引用的全称命题未完整导出。","The cited universal statement was not fully exported.")));part.append(grounds);
+      if(facts.has(id))grounds.append(factButton(id,null,fact));else grounds.append(element("p","lr-empty-note",editText("所引用的全称命题未完整导出。","The cited universal statement was not fully exported.")));part.append(grounds);
       const left=source&&recordedParameters(source.fields?.typed_parameters),right=goal.type==="ForallFact"&&recordedParameters(goal.fields?.typed_parameters),renamings=fields.parameter_renamings;
       // The verifier records ordered outer-binder IDs. This is alpha-renaming,
       // not argument substitution and not an equality between the objects.
@@ -5458,6 +6175,7 @@
       if(!evidence||record.kind==="unavailable"){
         target.append(element("p","lr-empty-note",editText("这条事实已验证，但此处没有导出它的逐步证明记录。","This fact was verified, but its proof steps were not exported here.")));return;
       }
+      if(appendPositiveNaturalLowerBound(target,fact,evidence,depth))return;
       if(appendTheoremApplication(target,fact,evidence,record,depth))return;
       if(appendWholeChainForall(target,fact,proofResult(evidence),depth))return;
       if(appendExpansionProof(target,fact,proofResult(evidence),depth))return;
@@ -5472,7 +6190,7 @@
       if(appendFunctionMembershipProof(target,fact,evidence,depth))return;
       if(appendMatrixMembershipProof(target,fact,evidence,depth))return;
       if(appendFunctionPropertyProof(target,fact,evidence,depth))return;
-      if(appendTransitivityApplication(target,fact,evidence,depth)||appendUniversalApplication(target,fact,evidence,record,depth)||appendKnownApplication(target,fact,evidence,record,depth)||appendObjectDefinitionApplication(target,fact,evidence,depth)||appendSpecialPropertyApplication(target,fact,evidence,depth)||appendEqualityTransport(target,fact,evidence,depth)||appendClosedNumericRewrite(target,fact,evidence,depth))return;
+      if(appendTransitivityApplication(target,fact,evidence,depth)||appendUniversalApplication(target,fact,evidence,record,depth)||appendKnownApplication(target,fact,evidence,record,depth)||appendObjectDefinitionApplication(target,fact,evidence,depth)||appendSpecialPropertyApplication(target,fact,evidence,depth)||appendEqualityTransport(target,fact,evidence,depth)||appendBuiltinRewrite(target,fact,evidence,depth))return;
       if(record.type==="ExecByCasesStmtSuccess"){
         const part=element("section","lr-cases-proof");target.append(part);
         part.append(element("p","lr-proof-summary",editText("先证明各情况覆盖全部可能，再在每个分支中验证共同目标。分类证明不要求各情况互斥。","First establish that the cases cover all possibilities, then verify the common goals in every branch. The cases need not be disjoint.")));
@@ -5486,6 +6204,9 @@
       }
       if(record.type==="ExecClaimStmtSuccess"){
         const declaration=resolveEvidence(record.fields?.statement),goal=declaration.type==="ClaimStmt"?declaration.fields?.fact:null,body=proofResult(record.fields?.body),part=element("section","lr-claim-proof");target.append(part);
+        if(!claimExecutionDetails(statements.get(fact.producer_statement_id),record)){part.dataset.status="incomplete";part.append(element("p","lr-empty-note",editText("本次局部证明的源码、范围、结束证明或返回事实未完整对应。","The source, scope, closing proof or returned fact for this local claim do not fully correspond.")));return;}
+        const stored=storedConclusion(record.fields?.stored);
+        if(!stored||stored.id!==retainedFactId(goal)||!sameRetainedFact(goal,stored.subject)||fact.id&&fact.id!==stored.id){part.append(element("p","lr-empty-note",editText("局部证明的目标与最终交给外层的事实未完整对应，无法恢复这段证明。","The local proof goal and its exported fact do not fully correspond; this proof cannot be reconstructed.")));return;}
         if(body.type==="ExecClaimForallProof")appendUniversalProof(part,fact,goal,body,record.fields.local_env,depth);
         else if(body.type==="ExecClaimNonForallProof"){
           part.append(element("p","lr-proof-summary",editText("在局部证明中验证目标，完成后仅将该目标交给外层；辅助对象与中间事实保留在本段。","Verify the goal in a local proof, then export only that goal to the enclosing scope; auxiliary objects and intermediate facts remain local.")));
@@ -5577,12 +6298,12 @@
       }
     }
     function openSourcePreview(owner,title,renderBody,settings={}){
-      const {select,selection=null,persistent=false}=settings;
+      const {select,selection=null,persistent=owner.matches(".lr-explanation-toggle")}=settings;
       closeProof();hideTokenHelp();
       const node=element("section","lr-proof-popover"),header=element("div","lr-proof-header"),body=element("div","lr-proof-body");
       node.id="lr-proof-"+Math.random().toString(36).slice(2);node.setAttribute("role","region");node.setAttribute("aria-label",title);
       header.append(element("strong",null,title));
-      if(select){const pin=button(editText("固定","Keep open"),"lr-proof-pin",async()=>{if(await select()){detailPane.tabIndex=-1;detailPane.focus({preventScroll:true});}});header.append(pin);}
+      if(select){const pin=button(persistent?editText("查看语句详情","Statement details"):editText("固定","Keep open"),"lr-proof-pin",async()=>{if(await select()){detailPane.tabIndex=-1;detailPane.focus({preventScroll:true});}});header.append(pin);}
       const close=button("×","lr-explanation-close",()=>closeProof(true));close.setAttribute("aria-label",editText("关闭源码说明","Close source explanation"));header.append(close);node.append(header,body);
       body.addEventListener("toggle",positionProof,true);
       if(settings.factPreview){
@@ -5591,6 +6312,7 @@
       node.addEventListener("pointerenter",keepProofOpen);node.addEventListener("pointerleave",leaveProof);
       node.addEventListener("focusin",keepProofOpen);node.addEventListener("focusout",event=>{if(!node.contains(event.relatedTarget))leaveProof();});
       root.append(node);owner.setAttribute("aria-describedby",node.id);proofPopover={node,owner,selection,persistent};owner.classList.add("lr-proof-target");
+      if(owner.matches(".lr-explanation-toggle")){owner.setAttribute("aria-expanded","true");owner.setAttribute("aria-controls",node.id);owner.textContent="▾";}
       positionProof();return node;
     }
     function openProof(owner,ids,chainStep=null){
@@ -5654,6 +6376,8 @@
     }
     function attachTokenHelp(token,heading,meaning,symbolId,builtin,referenceKey=heading){
       token.setAttribute("aria-label",heading+" · "+meaning);
+      // Named catalogue entries get a separate control; resolved symbols keep their navigation.
+      if(!symbolId&&/^[\p{L}_]/u.test(heading)&&referenceCard(referenceKey))token.dataset.helpDisclosure=heading;
       function render(tip){
         tip.append(element("strong",null,heading),element("span",null,meaning));
         const reference=symbolId?theoremReference(symbolId)||(symbolId.startsWith("builtin:set:")?referenceCard(symbolId.slice("builtin:set:".length)):null):referenceCard(referenceKey);if(reference){tip.replaceChildren(element("strong",null,heading));appendReference(tip,reference,true);}
@@ -5681,7 +6405,7 @@
       }
       tokenHelpRenderers.set(token,render);
       function show(){
-        if(proofFocusSuppression===token)return;
+        if(proofFocusSuppression===token||proofPopover?.persistent)return;
         if(hoverProofTarget(token))return;
         if(tokenHelp?.owner===token)return;hideTokenHelp();
         const tip=element("div","lr-token-help"),id="lr-token-help-"+Math.random().toString(36).slice(2);tip.id=id;tip.setAttribute("role","tooltip");
@@ -5711,7 +6435,7 @@
       openSourcePreview(owner,editText("源码与证明依据","Source and proof grounds"),body=>{
         appendFormalSource(body,statement);renderStatement(body,statement,selection);
       },{selection,persistent,select:()=>selectStatement(statement.id,statement.line)});
-      owner.setAttribute("aria-expanded","true");
+      if(owner.dataset.latexStatement)owner.setAttribute("aria-expanded","true");
       if(persistent){const pin=proofPopover.node.querySelector(".lr-proof-pin");if(pin)pin.textContent=editText("查看语句详情","Statement details");}
     }
     function renderManuscript(source){
@@ -5719,8 +6443,11 @@
       if(!blocks.length||pending()){
         codePane.append(element("p","lr-empty-note",editText("数学正文暂不可用，以下保留完整 Litex 源码。","Mathematical presentation is unavailable; the complete Litex source is retained below.")));return false;
       }
+      const lastUnits=new Map(),instances=new Map(),recordedFacts=new Map(array(bundle.facts).map(fact=>[fact.id,fact]));
+      for(const statement of statements.values()){const id=statement.source_statement_id||statement.id;instances.set(id,(instances.get(id)||0)+1);}
       try{
         for(const block of blocks)paper.append(compiledLatex(block,statements,source,(control,statement)=>{
+          lastUnits.set(statement.id,{control,statement});
           if(statement.status==="rejected")control.classList.add("lr-latex-rejected");
           else if(statement.status==="not_exported")control.classList.add("lr-latex-unchecked");
           const selected=statements.get(state.statement)||statements.get(facts.get(state.fact)?.producer_statement_id);
@@ -5737,6 +6464,19 @@
         }));
       }catch(error){
         codePane.append(element("p","lr-empty-note",editText("数学排版或源码对应暂不可用，以下保留原文。","Typesetting or source correspondence is unavailable; the original source is retained below.")));return false;
+      }
+      for(const {control,statement} of lastUnits.values()){
+        const fact=facts.get(statement.mathematics?.subject_fact_id),recorded=recordedFacts.get(fact?.id);
+        if(statement.statement_kind!=="Fact"||statement.status!=="accepted"||statement.origin!=="checked"||instances.get(statement.id)!==1||!fact?.is_primary||fact.role!=="verified"||fact.producer_statement_id!==statement.id||fact.source_id!==source.id||fact.scope_id!==statement.scope_id||!recorded?.is_primary||recorded.role!=="verified"||recorded.producer_statement_id!==statement.id||recorded.source_id!==source.id||recorded.scope_id!==statement.scope_id||!array(statement.produced_fact_ids).includes(fact.id))continue;
+        const disclosure=element("details","lr-math-reason"),summary=element("summary",null,editText("推导","Derivation")),body=element("div","lr-math-reason-body");disclosure.dataset.statement=statement.id;disclosure.dataset.fact=fact.id;
+        summary.setAttribute("aria-label",editText("展开或收起推导：","Expand or collapse derivation: ")+mathText(fact.text,source.id));disclosure.append(summary);let rendered=false;
+        disclosure.addEventListener("toggle",()=>{
+          if(!disclosure.open||rendered||pending()||destroyed||!disclosure.isConnected)return;
+          rendered=true;closeProof();appendProofBody(body,fact,fact.evidence,false);
+          const original=button(editText("查看 Litex 源码","View Litex source"),"lr-math-reason-source",()=>openMathStatement(original,statement,true));original.setAttribute("aria-haspopup","dialog");body.append(original);disclosure.append(body);
+        });
+        disclosure.addEventListener("click",event=>event.stopPropagation());
+        const parent=control.parentNode,next=parent.childNodes[Array.from(parent.childNodes).indexOf(control)+1]||null;parent.insertBefore(disclosure,next);
       }
       codePane.classList.add("lr-mathematical-source");codePane.append(paper);
       const uncovered=array(source.tokens).some(token=>!blocks.some(block=>block.start_byte<=token.start_byte&&block.end_byte>=token.end_byte));
@@ -5803,7 +6543,17 @@
         const appendToken=(token,occurrence)=>{
           if(token.textContent==="="&&!token.dataset.symbol&&equalityTargets.has(occurrence.start_byte))attachEqualityProof(token,equalityTargets.get(occurrence.start_byte));
           const point=issuePoints.find(point=>point.offset>=occurrence.start&&point.offset<occurrence.end);if(point)attachSourceIssue(token,point.issue);
-          code.append(token);
+          const help=tokenHelpRenderers.get(token),heading=token.dataset.helpDisclosure;
+          if(help&&heading){
+            const anchor=element("span","lr-help-anchor"),toggle=button("▸","lr-help-toggle lr-explanation-toggle",event=>{
+              event.stopPropagation();if(pending())return;toggle.focus({preventScroll:true});
+              if(proofPopover?.owner===toggle){closeProof();return;}
+              closeExplanation();closeInferences();openSourcePreview(toggle,editText(heading+" 的说明",heading+" help"),help);
+            });
+            toggle.dataset.help=heading;toggle.setAttribute("aria-label",editText("展开或收起 "+heading+" 的说明","Expand or collapse help for "+heading));toggle.setAttribute("aria-expanded","false");
+            toggle.addEventListener("keydown",event=>{if((event.key==="ArrowRight"||event.key==="Tab"&&!event.shiftKey)&&proofPopover?.owner===toggle){event.preventDefault();proofPopover.node.querySelector(".lr-explanation-close")?.focus();}});
+            anchor.append(token,toggle);code.append(anchor);
+          }else code.append(token);
         };
         const lineTokens=[...mentions.filter(value=>value.start>=lineStart&&value.end<=lineEnd),...lexical.filter(value=>value.start>=lineStart&&value.end<=lineEnd)].sort((a,b)=>a.start-b.start||Number(!!b.symbol_id)-Number(!!a.symbol_id)||Number(a.text==="$")-Number(b.text==="$"));
         const grouped=[];
@@ -5838,6 +6588,20 @@
         }
         appendTrivia(code,content.slice(cursor,lineEnd)||(!line?" ":""));
         lineContent.append(code);code.addEventListener("click",()=>selectLine(owning,lineNumber));
+        if(rowFacts.length||actions.length||lineIssues.length){
+          const toggle=button("▸","lr-proof-toggle lr-explanation-toggle",event=>{
+            event.stopPropagation();if(pending())return;
+            toggle.focus({preventScroll:true});
+            if(proofPopover?.owner===toggle){closeProof();return;}
+            closeExplanation();closeInferences();
+            if(lineIssues.length)openSourceIssue(toggle,lineIssues.map(issue=>issue.id));
+            else if(actions.length)openLogicalActions(toggle,actions.map(action=>action.id));
+            else openProof(toggle,rowFacts.map(fact=>fact.id));
+          });
+          toggle.setAttribute("aria-label",editText("展开或收起本句说明","Expand or collapse sentence explanation"));toggle.setAttribute("aria-expanded","false");
+          toggle.addEventListener("keydown",event=>{if((event.key==="ArrowRight"||event.key==="Tab"&&!event.shiftKey)&&proofPopover?.owner===toggle){event.preventDefault();proofPopover.node.querySelector(".lr-proof-pin,.lr-explanation-close")?.focus();}});
+          lineContent.append(toggle);
+        }
         if(lineIssues.length){const issue=lineIssues[0],note=button("↳ "+sourceIssueLabel(issue),"lr-inline-failure"+(headerIssues?" lr-header-failure":""),event=>{event.stopPropagation();selectSourceIssue(issue.id);});note.dataset.issue=issue.id;note.addEventListener("mouseenter",()=>hoverProofTarget(note));note.addEventListener("focus",()=>hoverProofTarget(note));note.addEventListener("pointerleave",leaveProof);lineContent.append(note);}
         const declarations=declarationsAt.get(lineNumber)||[];
         if(declarations.length){const counts=element("span","lr-definition-references");for(const declaration of declarations){const uses=referenceUses(declaration.symbol_id,source.id),name=symbols.get(declaration.symbol_id)?.name||"",label=t("referenceCount").replace("{count}",uses.length);const count=button((declarations.length>1?name+" · ":"")+label,"lr-reference-count",()=>openReferences(declaration.symbol_id,source.id,count));count.dataset.symbol=declaration.symbol_id;count.setAttribute("aria-label",t("referenceFor").replace("{name}",name)+" · "+label);counts.append(count);}lineContent.append(counts);}
@@ -5864,12 +6628,13 @@
       const selectedInference=codePane.querySelector(".lr-inferred-selected"),selectedMarker=selectedInference||codePane.querySelector(".lr-reference-selected"),selectedRow=selectedMarker||codePane.querySelector(".lr-selected");if(selectedRow){const rowBounds=selectedRow.getBoundingClientRect(),paneBounds=codePane.getBoundingClientRect();if(rowBounds.bottom>paneBounds.bottom||rowBounds.top<paneBounds.top)codePane.scrollTop+=rowBounds.top-paneBounds.top-codePane.clientHeight/3;if(selectedMarker&&(rowBounds.right>paneBounds.right||rowBounds.left<paneBounds.left))codePane.scrollLeft+=rowBounds.left-paneBounds.left-64;}
     }
 
-    function factButton(id,role=null){
-      const fact=facts.get(id),node=button("","lr-fact-link"+(factInferences(id).length?" lr-inferred-link":""),()=>selectFact(id));node.append(fact?factFormula(fact):formula(id));
+    function factButton(id,role=null,consumer=null){
+      const fact=consumer&&citedExecutionFact(id,consumer.scope_id)||facts.get(id),node=button("","lr-fact-link"+(factInferences(id).length?" lr-inferred-link":""),()=>{if(!consumer)return selectFact(id);if(pending())return false;const selection=factSelection(id,null,consumer.scope_id);return selection?navigate(selection):false;});node.append(fact?factFormula(fact):formula(id));
       node.dataset.fact=id;
       if(fact){
         const location=factLocation(fact),source=sources.get(location.sourceId);if(source&&location.line)node.title=sourceTitle(source)+" · "+t("referenceLine").replace("{line}",location.line);
         const show=()=>peekCitation(id),clear=()=>peekCitation(null);node.addEventListener("mouseenter",show);node.addEventListener("focus",show);node.addEventListener("mouseleave",clear);node.addEventListener("blur",clear);
+        if(introductionPropertyCorrespondence(introductionAction(fact.producer_statement_id),id)?.complete===false){node.dataset.correspondence="incomplete";node.append(element("small","lr-property-correspondence-note",editText("对象对应未完成","Object correspondence incomplete")));}
       }
       if((role||fact?.role)==="hypothesis")node.append(element("small",null,t("hypothesis")));if(!fact)node.disabled=true;return node;
     }
@@ -5899,7 +6664,7 @@
     }
 
     function renderFact(){
-      const fact=facts.get(state.fact);if(!fact)return;if(failedIntroductionLocalProperty(fact)?.root){detailPane.append(factFormula(fact));appendFailedIntroductionLocalProperty(detailPane,fact);return;}if(appendCaseInference(detailPane,fact))return;if(Number.isInteger(state.chainStep)){appendEqualityStep(detailPane,fact,state.chainStep);return;}
+      const native=facts.get(state.fact),fact=native?.producer_statement_id!==state.statement?sourceExecutionFact(state.fact,state.statement)||native:native;if(!fact)return;if(failedIntroductionLocalProperty(fact)?.root){detailPane.append(factFormula(fact));appendFailedIntroductionLocalProperty(detailPane,fact);return;}if(appendCaseInference(detailPane,fact))return;if(Number.isInteger(state.chainStep)){appendEqualityStep(detailPane,fact,state.chainStep);return;}
       if(automaticStructAction(fact)||equivalenceFactAction(fact)){appendProofBody(detailPane,fact);return;}
       if((interfaceContract(proofResult(fact.evidence))||contextChangeContract(proofResult(fact.evidence))||introductionContract(proofResult(fact.evidence))||functionDefinitionContract(proofResult(fact.evidence))||expansionContract(proofResult(fact.evidence)))&&!factInferences(fact.id).length){appendProofBody(detailPane,fact);return;}
       if(["verified","hypothesis"].includes(fact.role)){if(appendPredicateDefinition(detailPane,fact))detailPane.append(element("h4","lr-proof-section-title",fact.role==="hypothesis"?t("hypothesis"):editText("证明","Proof")));appendProofBody(detailPane,fact);return;}
@@ -6057,7 +6822,7 @@
     }
     function showRule(id){activeRule=id;rulebookState={query:id,usedOnly:false,open:true,category:"all"};rulebook.open=true;ruleSearch.value=id;usedOnly.checked=false;rulebook.querySelector("select").value="all";rulePage=0;renderRules();rulebook.scrollIntoView({block:"nearest",behavior:"smooth"});}
 
-    const dismissPanels=event=>{if(proofPopover&&!proofPopover.node.contains(event.target))closeProof();const explanation=root.querySelector(".lr-context-explanation");if(explanation&&!explanation.hidden&&!explanation.contains(event.target)&&!codePane?.contains(event.target)&&!event.target.closest?.(".lr-ide-input"))closeExplanation();if(inferencePopover&&!inferencePopover.node.contains(event.target)&&!inferencePopover.owner.contains(event.target))closeInferences();const records=root.querySelector(".lr-records");if(records?.open&&!records.contains(event.target))records.open=false;const menu=root.querySelector(".lr-book-nav");if(menu?.open&&!menu.contains(event.target))menu.open=false;};
+    const dismissPanels=event=>{if(proofPopover&&!proofPopover.node.contains(event.target)&&!proofPopover.owner.contains(event.target))closeProof();const explanation=root.querySelector(".lr-context-explanation");if(explanation&&!explanation.hidden&&!explanation.contains(event.target)&&!codePane?.contains(event.target)&&!event.target.closest?.(".lr-ide-input"))closeExplanation();if(inferencePopover&&!inferencePopover.node.contains(event.target)&&!inferencePopover.owner.contains(event.target))closeInferences();const records=root.querySelector(".lr-records");if(records?.open&&!records.contains(event.target))records.open=false;const menu=root.querySelector(".lr-book-nav");if(menu?.open&&!menu.contains(event.target))menu.open=false;};
     const dismissInferences=event=>{if(event.key==="Escape"){closeProof(!!proofPopover?.node.contains(document.activeElement));closeExplanation(true);}if(event.key==="Escape"&&inferencePopover){event.preventDefault();event.stopPropagation();closeInferences(true);}};
     document.addEventListener("pointerdown",dismissPanels);
     root.addEventListener("keydown",dismissInferences);

@@ -573,6 +573,64 @@ impl LitexToLeanCompiler {
         match &wd.detailed_ref().predicate_domain {
             PredicateDomainProof::MultivariableAnalysis(p) => {
                 if let Some((r, _)) =
+                    crate::compile_to_lean::compile_multivariable_continuity::parts(fact)
+                {
+                    match r {
+                        MultivariableAnalysisRelation::ScalarContinuousAt(r) => {
+                            bindings.extend(self.compile_scalar_differential_domain(
+                                &r.function,
+                                &r.point,
+                                &r.dimension,
+                                None,
+                                &p.function_domain,
+                                &p.requirements,
+                                position,
+                            )?);
+                        }
+                        MultivariableAnalysisRelation::VectorContinuousAt(r) => {
+                            bindings.extend(self.compile_jacobian_domain(
+                                &r.function,
+                                &r.point,
+                                &r.input_dimension,
+                                &r.output_dimension,
+                                None,
+                                &p.function_domain,
+                                &p.requirements,
+                                position,
+                            )?);
+                        }
+                        _ => unreachable!(),
+                    }
+                } else if let Some((r, _)) =
+                    crate::compile_to_lean::compile_multivariable_differentiability::parts(fact)
+                {
+                    match r {
+                        MultivariableAnalysisRelation::ScalarDifferentiableAt(r) => {
+                            bindings.extend(self.compile_scalar_differential_domain(
+                                &r.function,
+                                &r.point,
+                                &r.dimension,
+                                None,
+                                &p.function_domain,
+                                &p.requirements,
+                                position,
+                            )?);
+                        }
+                        MultivariableAnalysisRelation::TotalDifferentiableAt(r) => {
+                            bindings.extend(self.compile_jacobian_domain(
+                                &r.function,
+                                &r.point,
+                                &r.input_dimension,
+                                &r.output_dimension,
+                                None,
+                                &p.function_domain,
+                                &p.requirements,
+                                position,
+                            )?);
+                        }
+                        _ => unreachable!(),
+                    }
+                } else if let Some((r, _)) =
                     crate::compile_to_lean::compile_multivariable_scalar_limit::parts(fact)
                 {
                     bindings.extend(self.compile_multivariable_limit_domain(
@@ -748,6 +806,16 @@ impl LitexToLeanCompiler {
                     .is_some() =>
             {
                 bindings.extend(self.compile_riemann_domain(fact, p, position)?);
+            }
+            PredicateDomainProof::FunctionAnalysis(p)
+                if crate::compile_to_lean::compile_global_continuity::parts(fact).is_some() =>
+            {
+                bindings.extend(self.compile_global_continuity_domain(fact, p, position)?);
+            }
+            PredicateDomainProof::FunctionAnalysis(p)
+                if crate::compile_to_lean::compile_lipschitz::parts(fact).is_some() =>
+            {
+                bindings.extend(self.compile_lipschitz_domain(fact, p, position)?);
             }
             PredicateDomainProof::FunctionAnalysis(_) => {
                 return Err(LeanCompileError::unsupported("WD/RealAnalysisPredicate"))

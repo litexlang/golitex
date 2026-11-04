@@ -289,24 +289,27 @@ pub(super) fn reduction(
                                     ],
                                 )
                             }
-                            MultivariableReductionStep::NativeMatrixBeta { source, arguments } => {
-                                object_for(
-                                    rt,
-                                    vec![
-                                        ("kind", string("native_matrix_beta")),
-                                        ("source", super::native_matrix::callable(source, rt)),
-                                        (
-                                            "arguments",
-                                            JsonValue::Array(
-                                                arguments
-                                                    .iter()
-                                                    .map(|a| string(a.readable_string()))
-                                                    .collect(),
-                                            ),
+                            MultivariableReductionStep::NativeMatrixBeta {
+                                source,
+                                arguments,
+                                expanded,
+                            } => object_for(
+                                rt,
+                                vec![
+                                    ("kind", string("native_matrix_beta")),
+                                    ("source", super::native_matrix::callable(source, rt)),
+                                    ("expanded", string(expanded.readable_string())),
+                                    (
+                                        "arguments",
+                                        JsonValue::Array(
+                                            arguments
+                                                .iter()
+                                                .map(|a| string(a.readable_string()))
+                                                .collect(),
                                         ),
-                                    ],
-                                )
-                            }
+                                    ),
+                                ],
+                            ),
                             MultivariableReductionStep::FiniteSetEvaluation {
                                 source,
                                 left,
@@ -325,10 +328,12 @@ pub(super) fn reduction(
                             MultivariableReductionStep::AnonymousBeta {
                                 function,
                                 arguments,
+                                expanded,
                             } => object_for(
                                 rt,
                                 vec![
                                     ("kind", string("anonymous_beta")),
+                                    ("expanded", string(expanded.readable_string())),
                                     (
                                         "function",
                                         string(

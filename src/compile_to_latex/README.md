@@ -60,29 +60,38 @@ Theorem, definition, claim, axiom and trust labels remain explicit. A theorem or
 claim with a source proof has one proof caption and an end marker; a bodyless
 theorem receives neither. Proof methods introduce their bodies directly, so
 nesting a case split or contradiction does not add another generic proof caption.
-Sketches and template declarations retain their distinct scoped quotations.
+Sketches retain their distinct label and no completion marker. Top-level
+template declarations retain their scoped quotations.
 
-Case splits and induction phases use native `description` items. For example,
-`by cases` with `case n = 1` and `case n != 1` produces two separately labelled
-items, each containing its own assumption and proof body. A contradiction has
-a method heading, a separate goal, an indented contrary assumption and source
-derivation, and a separate conflicting-fact paragraph. No additional inference
-is generated.
+Proof bodies are continuous paragraphs. Cases and induction phases use bold
+run-in labels; a contradiction's goal, contrary assumption, steps and closing
+conclusion remain in that same paragraph. Nested definitions, local claims,
+witnesses and explicit theorem applications inherit the inline flow. The end
+marker follows the final sentence. Line wrapping is left to the typesetter or
+the reader's viewport; there is no forced one-line horizontal strip.
 
-Inside a proof, each source statement ends its own paragraph. Outside proof
-blocks, adjacent atomic facts, disjunctions and short chains may flow in a
-paragraph, separated by semicolons. Chains with at least three relations use an aligned display.
-Equality chains continue at the equality sign; mixed relations repeat each
-original adjacent left operand, so `1 < 4 > 3 < 5` renders as `1 < 4`, `4 > 3`,
-and `3 < 5`, preserving the source comparisons. Multiclause predicates, guarded
-universal facts and existential facts display their quantifiers, domains and
-conjunctions in structured rows. Formula-only Reading projections keep their
-existing independent layout.
+For example, a case reads “假设 $n = 1$，则 $n = 1 \lor n > 1$。” / “Suppose
+$n = 1$. Then $n = 1 \lor n > 1$.” Later steps retain localized transitions,
+and the split closes by restating its common conclusion. These transitions
+come from the source structure, without adding inferred reasons or proof steps.
 
-The document wrapper sets paragraph/display spacing, disables paragraph
-indentation, and avoids stretching short pages to their full height. It uses the
-existing package set. Fragment consumers need to preserve paragraphs, displays
-and list boundaries; flattening them to inline text loses the branch structure.
+The private `layout::Flow` owns block versus inline typography. Top-level
+declarations and assertions retain their headings, field lists and display
+math. Within a proof, formulas use inline mathematics with all comparisons,
+quantifiers, domains and clauses intact. Intrinsic mathematical layouts such
+as a matrix or piecewise function retain their mathematical rows inside the
+formula. Formula-only Reading projections keep their independent layout.
+
+Outside proof blocks, adjacent atomic facts, disjunctions and short chains may
+flow in a paragraph separated by semicolons. Chains with at least three
+relations use an aligned display. Equality chains continue at the equality
+sign; mixed relations repeat each original adjacent left operand. Multiclause
+predicates, guarded universals and existential assertions retain structured
+rows. Bodyless theorems and sketches acquire no invented completion proof.
+
+The document wrapper controls paragraph/display spacing and uses the existing
+package set. The official reader renders the same compiler-owned paragraph and
+formula boundaries; it does not flatten block output with CSS.
 
 ## Data flow and API
 
@@ -161,10 +170,12 @@ The layout tracer is
 [`structured_proof_layout.lit`](../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit),
 a checked positive-integer proof combining cases and contradiction. It retains
 the original mathematics while replacing repeated proof captions and displays
-with a single proof and distinct branches. Its generated
+with a single proof and distinct branches. The earlier generated
 [Chinese PDF](../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.zh.pdf)
 and [English PDF](../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.en.pdf)
-have editable `.tex` companions. Parameterized structures without additional
+have editable `.tex` companions and preserve the earlier layout snapshot;
+use the current compiler or `-reading -latex` for the connected prose.
+Parameterized structures without additional
 guards use a plain introduction, avoiding empty `$$` math in conditional prose.
 
 ## Per-type format contract
@@ -179,8 +190,11 @@ their parser context is not a mathematical verification certificate.
 `catalog_kinds.rs` exhaustively classifies the actual AST variants. Catalog tests
 compare the exact declared type sets, parse each specimen, check its actual
 variant, and render it through the production compiler. New variants, omitted
-rows, duplicate rows and samples of the wrong type fail. A separate operand
-retention check uses unique sentinels for every matrix and multivariable
+rows, duplicate rows and samples of the wrong type fail.
+Statement fragments are selected using exact compiler-owned spans in their
+original context, so a nested proof's inline typography is retained; each
+selected fragment must occur byte for byte in the full compiled source.
+A separate operand retention check uses unique sentinels for every matrix and multivariable
 selector argument, including explicit dimensions. Export the compiler-owned
 specimens for a native rendered gallery with:
 
@@ -210,6 +224,8 @@ cargo test --release --lib compile_to_latex -- --nocapture
 cargo test --release --lib launch_command_tests -- --nocapture
 cargo test --release --lib latex_command_tests -- --nocapture
 cargo test --release --test compile_to_latex_cli -- --nocapture
+cargo test --release --test reading_latex -- --nocapture
+node src/reading/web/tests/latex-mode.cjs --compiler target/release/litex
 cargo build --release
 target/release/litex -f examples/stmt_nodes/compile_to_latex/identity.lit
 ```
@@ -221,6 +237,13 @@ actual binary, all language/document modes, error envelopes, manifest order,
 file-prefix selection and module identity; intentionally invalid dependency
 source demonstrates that imports are not executed. Generated document syntax,
 fonts and typography are checked separately with XeLaTeX.
+
+Connected prose has an exact bilingual regression in
+`proof_prose_connects_assumptions_steps_and_structural_conclusions`.
+Reading contracts compare compiler bytes and native evidence in all ten locales.
+The live shared-viewer check renders all 52 statement fixtures in memory and
+checks that the joined case's transition word still belongs to its original
+proof-body statement, with unchanged source/proof navigation.
 
 The optional native typography gate converts the current statement and
 object fixtures in every locale and rejects TeX errors or missing glyphs:

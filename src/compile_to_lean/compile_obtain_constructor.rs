@@ -29,7 +29,10 @@ impl LitexToLeanCompiler {
     ) -> Result<Option<String>, LeanCompileError> {
         if !matches!(
             object,
-            Obj::ArithmeticOperator(_) | Obj::FnObj(_) | Obj::SetFormer(SetFormer::ListSet(_))
+            Obj::ArithmeticOperator(_)
+                | Obj::MatrixOperator(_)
+                | Obj::FnObj(_)
+                | Obj::SetFormer(SetFormer::ListSet(_) | SetFormer::MatrixSet(_))
         ) {
             return Ok(None);
         }
@@ -289,14 +292,10 @@ impl LitexToLeanCompiler {
             original_parent,
         )?;
         let constructor = self.compile_wd(checked, site)?;
-        let body = if definitions.is_empty() {
-            constructor
-        } else {
-            format!(
-                "(show Litex.Obj (M := M) _ from by\n  {}\n  exact {constructor}\n)",
-                definitions.join("\n").replace('\n', "\n  ")
-            )
-        };
+        // Keep only required original producer bindings, as callee factories do.
+        // Independent matrix carriers remain direct constructor values instead
+        // of acquiring fresh tactic-local Obj metavariables at every use.
+        let body = self.scope_proposition(constructor, &definitions);
         let body = if observe_numeric {
             // The same retained WD factory supplies the scalar observation;
             // obtained names have renamed stores, not a second WD proof tree.

@@ -55,7 +55,9 @@ fn annotated_statements_keep_exact_latex_and_distinguish_identical_nested_facts(
             .unwrap();
         assert!(root.start_byte < inner.start_byte && inner.end_byte < root.end_byte);
         assert!(repeated.start_byte > root.end_byte);
-        assert_eq!(&ordinary[inner.start_byte..inner.end_byte], "$1 = 1$;");
+        let proof_fact =
+            super::language::sentence(language, super::language::Phrase::WeHave, "$1 = 1$", "", "");
+        assert_eq!(&ordinary[inner.start_byte..inner.end_byte], proof_fact);
         assert_eq!(
             &ordinary[repeated.start_byte..repeated.end_byte],
             "$1 = 1$;"
@@ -310,7 +312,7 @@ fn localized_trust_axioms_and_nested_proofs_are_retained() {
             lang,
             super::language::Phrase::Sketch
         )));
-        assert!(text.contains(r"\begin{quote}"));
+        assert!(!text.contains(r"\begin{quote}"));
     }
 }
 
@@ -367,17 +369,17 @@ fn single_conclusions_and_calls_omit_redundant_parentheses() {
 }
 
 #[test]
-fn structured_proofs_keep_case_boundaries_and_one_outer_proof_caption() {
+fn proofs_keep_inline_case_labels_and_one_continuous_proof_paragraph() {
     let source =
         include_str!("../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit");
     for language in OutputLanguage::ALL {
         let text = to_latex_from_source(source, language).unwrap();
         let case = super::language::phrase(language, super::language::Phrase::Case);
         let proof = super::language::phrase(language, super::language::Phrase::Proof);
-        assert!(text.contains(r"\begin{description}"), "{text}");
+        assert!(!text.contains(r"\begin{description}"), "{text}");
         for index in [1, 2] {
             assert!(
-                text.contains(&format!(r"\item[\textbf{{{case} {index}.}}]")),
+                text.contains(&format!(r"\textbf{{{case} {index}.}}")),
                 "{text}"
             );
         }
@@ -386,14 +388,65 @@ fn structured_proofs_keep_case_boundaries_and_one_outer_proof_caption() {
             1,
             "{text}"
         );
-        assert!(text.contains(r"\begin{quote}"), "{text}");
+        assert!(!text.contains(r"\begin{quote}"), "{text}");
         assert!(text.contains(r"\neg\left(n > 1\right)"), "{text}");
-        assert!(
-            text.contains(concat!(r"$n \leq 1$;", "\n\\par\n$n = 1$;")),
-            "{text}"
+        let then = super::language::sentence(
+            language,
+            super::language::Phrase::Then,
+            r"$n \leq 1$",
+            "",
+            "",
         );
+        let also =
+            super::language::sentence(language, super::language::Phrase::Also, "$n = 1$", "", "");
+        assert!(text.contains(&format!("{then}\n {also}")), "{text}");
+        let start = text.find(&format!(r"\textbf{{{proof}.}}")).unwrap();
+        let end = text.find(r"\square").unwrap();
+        let body = &text[start..end];
+        for forbidden in [r"\par", r"\item", r"\[", r"\hfill"] {
+            assert!(!body.contains(forbidden), "{language:?}: {body}");
+        }
         assert_eq!(text.matches(r"\square").count(), 1, "{text}");
         assert!(text.contains(r"n\in \mathbb{N}_{>0}"), "{text}");
+    }
+}
+
+#[test]
+fn proof_prose_connects_assumptions_steps_and_structural_conclusions() {
+    let source =
+        include_str!("../../examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit");
+    let chinese = to_latex_from_source(source, OutputLanguage::Chinese).unwrap();
+    for prose in [
+        r"可得 $n \geq 1$。",
+        r"假设 $n = 1$， 则 $n = 1 \lor n > 1$。",
+        r"假设 $n \ne 1$。",
+        r"则 $n \leq 1$。",
+        r"又有 $n = 1$。",
+        r"这与 $n \ne 1$ 矛盾，因此 $n > 1$。",
+        r"综上，$n = 1 \lor n > 1$。",
+    ] {
+        assert!(chinese.contains(prose), "missing {prose}: {chinese}");
+    }
+    let english = to_latex_from_source(source, OutputLanguage::English).unwrap();
+    assert!(english.contains(r"Suppose $n = 1$. Then $n = 1 \lor n > 1$."));
+    assert!(english.contains(r"This contradicts $n \ne 1$, so $n > 1$."));
+    assert!(english.contains(r"In all cases, $n = 1 \lor n > 1$."));
+    // Prose transitions belong to proof steps, never to a top-level assertion.
+    assert_eq!(
+        to_latex_from_source("1 = 1", OutputLanguage::Chinese).unwrap(),
+        "$1 = 1$;\n"
+    );
+    for language in OutputLanguage::ALL {
+        let text = to_latex_from_source(source, language).unwrap();
+        assert!(!text.contains("@a@") && !text.contains("@b@"));
+        let closing = super::language::sentence(
+            language,
+            super::language::Phrase::CasesConclusion,
+            r"$n = 1 \lor n > 1$",
+            "",
+            "",
+        );
+        assert!(text.contains(&closing), "{text}");
     }
 }
 
@@ -439,16 +492,49 @@ fn multiclause_statements_and_definitions_retain_every_clause_and_domain() {
 }
 
 #[test]
-fn induction_phases_are_distinct_list_items_without_nested_proof_quotations() {
+fn induction_phases_have_inline_labels_without_forced_breaks() {
     let source =
         include_str!("../../examples/stmt_nodes/by/induction_domain_and_proof_actions.lit");
     let text = to_latex_from_source(source, OutputLanguage::English).unwrap();
     assert!(
-        text.contains(r"\item[\textbf{Base case.}]")
-            && text.contains(r"\item[\textbf{Induction step.}]"),
+        text.contains(r"\textbf{Base case.}") && text.contains(r"\textbf{Induction step.}"),
         "{text}"
     );
     assert!(!text.contains(r"\begin{quote}"), "{text}");
+    let start = text.find(r"We aim to show $\mathit{same}(m)$").unwrap();
+    let remainder = &text[start..];
+    let proof = &remainder[..remainder.find(r"\par").unwrap()];
+    assert!(
+        !proof.contains(r"\item") && !proof.contains(r"\["),
+        "{proof}"
+    );
+    assert!(proof.contains(r"\textbf{Base case.}") && proof.contains(r"\textbf{Induction step.}"));
+}
+
+#[test]
+fn nested_proof_definitions_calculations_and_quantifiers_stay_inline() {
+    // Parse-only typography control; these facts are not a verification claim.
+    let source = "sketch:\n    let a = 1\n    1 < 4 > 3 < 5 <= 6\n    forall x R:\n        x >= 0\n        x <= 1\n        =>:\n            x^2 >= 0\n            x^2 <= 1\n    claim:\n        ? 1 = 1\n        1 = 1\n";
+    let text = to_latex_from_source(source, OutputLanguage::English).unwrap();
+    for forbidden in [r"\par", r"\begin{quote}", r"\begin{description}", r"\["] {
+        assert!(!text.contains(forbidden), "{text}");
+    }
+    for retained in [
+        r"a = 1",
+        "1 < 4 > 3 < 5 ",
+        r"\leq 6",
+        r"\forall x\in \mathbb{R}",
+        r"x \geq 0",
+        r"x \leq 1",
+        r"x^{2} \geq 0",
+        r"x^{2} \leq 1",
+        r"\Rightarrow",
+        r"\land",
+        r"\textbf{Claim.}",
+        r"\square",
+    ] {
+        assert!(text.contains(retained), "missing {retained}: {text}");
+    }
 }
 
 #[test]

@@ -184,6 +184,15 @@ theorem sequenceCauchyOfForall {M : Semantics.{u}} [FunctionSemantics M]
       In epsilon RPos → ∃ cutoff : Obj (M := M) M.Value, ∃ _ : In cutoff NPos,
         SequenceCauchyTailValue M (denote a) (denote epsilon) (denote cutoff)) :
     SequenceCauchy a := forallMembersOfRepresentations RPos h
+
+theorem sequenceCauchyTail {M : Semantics.{u}} [FunctionSemantics M]
+    {α : Type v} {β : Type w} [Representation M α] [Representation M β]
+    (a : Obj (M := M) α) (epsilon : Obj (M := M) β)
+    (h : SequenceCauchy a) (hepsilon : In epsilon RPos) :
+    ∃ cutoff : Obj (M := M) M.Value, ∃ _ : In cutoff NPos,
+      SequenceCauchyTailValue M (denote a) (denote epsilon) (denote cutoff) :=
+  h (denote epsilon) hepsilon
+
 end Litex
 
 namespace Litex

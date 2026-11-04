@@ -10,6 +10,7 @@ fn trig_examples_compile_original_wd_and_selected_rules() {
         include_str!("../../../lean/examples/trigonometric_pythagorean/statement.lit"),
         include_str!("../../../lean/examples/tangent_quotient/statement.lit"),
         include_str!("../../../lean/examples/trigonometric_functions/statement.lit"),
+        include_str!("../../../lean/examples/trigonometric_cotangent_values/statement.lit"),
     ] {
         let (run, compiler) = super::execute(source);
         compiler.compile_run(&run, "trig").unwrap();
@@ -77,7 +78,7 @@ fn trig_wd_rejects_missing_or_altered_evidence() {
 
 #[test]
 fn trig_source_domains_reject_complex_and_tangent_poles() {
-    for source in ["sin(i) $in R", "tan(pi/2) $in R"] {
+    for source in ["sin(i) $in R", "tan(pi/2) $in R", "cot(pi) $in R"] {
         let command =
             parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
         let mut runtime =
@@ -89,8 +90,11 @@ fn trig_source_domains_reject_complex_and_tangent_poles() {
 #[test]
 fn trig_periodic_certificate_rejects_changed_coefficient_and_value() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof;
-    for change_value in [false, true] {
-        let (mut run, compiler) = super::execute("sin(pi/2)=1");
+    for (source, change_value) in ["sin(pi/2)=1", "cot(pi/3)=sqrt(3)/3"]
+        .into_iter()
+        .flat_map(|source| [false, true].map(|change| (source, change)))
+    {
+        let (mut run, compiler) = super::execute(source);
         let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) = &mut run.statement_results[0]
         else {
             panic!()
@@ -138,4 +142,188 @@ fn tangent_wd_rejects_wrong_nonzero_subject() {
     };
     f.right = EvalRational::new(1, 1).unwrap().to_obj();
     assert!(compiler.compile_run(&run, "bad_tangent").is_err());
+}
+
+#[test]
+fn integer_periodic_examples_replay_recorded_memberships() {
+    for source in [
+        include_str!("../../../lean/examples/partial_derivative_integer_period/statement.lit"),
+        include_str!("../../../lean/examples/partial_derivative_integer_period_beta/statement.lit"),
+        include_str!("../../../lean/examples/partial_derivative_integer_period_linear_combination/statement.lit"),
+        include_str!("../../../lean/examples/integer_periodic_values/statement.lit"),
+        include_str!("../../../lean/examples/integer_periodic_linear_combination/statement.lit"),
+        include_str!("../../../lean/examples/integer_periodic_product/statement.lit"),
+        include_str!("../../../lean/examples/integer_periodic_repeated_terms/statement.lit"),
+        include_str!("../../../lean/examples/integer_periodic_cancellation/statement.lit"),
+        include_str!("../../../lean/examples/integer_periodic_tangent/statement.lit"),
+        include_str!("../../../lean/examples/integer_periodic_cotangent/statement.lit"),
+    ] {
+        let (run, compiler) = super::execute(source);
+        let lean = compiler.compile_run(&run, "integer_period").unwrap_or_else(|e| panic!("{source}: {e}"));
+        assert!(lean.contains("_period_angle"));
+        assert_eq!(lean, compiler.compile_run(&run, "integer_period").unwrap());
+    }
+}
+
+#[test]
+fn integer_periodic_source_rejects_noninteger_offsets_and_poles() {
+    for source in [
+        "forall k R:\n    sin(2*k*pi+pi/6)=1/2",
+        "forall k Z:\n    sin(k*pi+pi/6)=1/2",
+        "forall k Z:\n    tan(k*pi+pi/2) $in R",
+        "forall k Z:\n    cot(k*pi) $in R",
+    ] {
+        let command =
+            parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
+        assert!(!runtime.run_litex_code(source).unwrap().success, "{source}");
+    }
+}
+
+#[test]
+fn integer_periodic_nonzero_requires_original_integer_facts() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule;
+    for operation in ["tan", "cot", "sec", "csc"] {
+        for mutation in 0..4 {
+            let source = format!("have k Z\nlet value={operation}(k*pi+pi/7)");
+            let (mut run, compiler) = super::execute(&source);
+            let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+                ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(p)),
+            )) = &mut run.statement_results[1]
+            else {
+                panic!()
+            };
+            let Some(DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::TrigOperator(p),
+                ..
+            }) = p.value_well_defined.as_detailed_success_mut().unwrap()
+            else {
+                panic!()
+            };
+            let requirements = match p {
+                TrigOperatorObjWellDefinedProofByDef::Tan(p) => &mut p.requirement_fact_verified,
+                TrigOperatorObjWellDefinedProofByDef::Cot(p) => &mut p.requirement_fact_verified,
+                TrigOperatorObjWellDefinedProofByDef::Sec(p) => &mut p.requirement_fact_verified,
+                TrigOperatorObjWellDefinedProofByDef::Csc(p) => &mut p.requirement_fact_verified,
+                _ => panic!(),
+            };
+            let atomic = super::atomic_proof_mut(&mut requirements[1]);
+            let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(p),
+                ),
+            ) = &mut atomic.searched_proof
+            else {
+                panic!("original periodic nonzero route")
+            };
+            if mutation == 0 {
+                p.integer_requirements.clear();
+            } else if mutation == 3 {
+                p.coefficient = EvalRational::new(0, 1).unwrap().to_obj();
+            } else {
+                let AtomicFact::InFact(fact) =
+                    &mut super::atomic_proof_mut(&mut p.integer_requirements[0]).fact
+                else {
+                    panic!()
+                };
+                if mutation == 1 {
+                    fact.set = Obj::StandardSet(StandardSet::R);
+                } else {
+                    fact.element = EvalRational::new(7, 1).unwrap().to_obj();
+                }
+            }
+            compiler
+                .compile_run(&run, "bad_integer_nonzero")
+                .expect_err("nonzero WD must retain every original integer premise");
+        }
+    }
+}
+
+#[test]
+fn rational_angle_nonzero_examples_compile_original_certificates() {
+    for source in [
+        include_str!("../../../lean/examples/rational_angle_tangent_domain/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_cotangent_domain/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_reciprocal_domains/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_nonzero_facts/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_negative_offsets/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_multiple_periods/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_membership_premise/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_function_return/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_large_coefficients/statement.lit"),
+        include_str!(
+            "../../../lean/examples/partial_derivative_rational_angle_coefficient/statement.lit"
+        ),
+        include_str!("../../../lean/examples/rational_angle_formula_function/statement.lit"),
+        include_str!("../../../lean/examples/rational_angle_alias_reuse/statement.lit"),
+    ] {
+        let (run, compiler) = super::execute(source);
+        let lean = compiler
+            .compile_run(&run, "rational_angle")
+            .unwrap_or_else(|e| panic!("{source}: {e}"));
+        assert_eq!(lean, compiler.compile_run(&run, "rational_angle").unwrap());
+    }
+}
+
+#[test]
+fn rational_angle_closed_certificate_rejects_wrong_coefficient_or_extra_premise() {
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule;
+    for operation in ["sin", "cos"] {
+        for mutation in 0..3 {
+            let (mut run, compiler) = super::execute(&format!("{operation}(pi/7)!=0"));
+            let ExecStmtResult::Fact(ExecFactStmtResult::Success(result)) =
+                &mut run.statement_results[0]
+            else {
+                panic!()
+            };
+            let atomic = super::atomic_proof_mut(&mut result.verify_result);
+            let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+                AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(
+                    NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(proof),
+                ),
+            ) = &mut atomic.searched_proof
+            else {
+                panic!("original closed nonzero route")
+            };
+            assert!(proof.integer_requirements.is_empty());
+            if mutation == 2 {
+                let (mut unrelated, _) = super::execute("0 $in Z");
+                let ExecStmtResult::Fact(ExecFactStmtResult::Success(result)) =
+                    unrelated.statement_results.remove(0)
+                else {
+                    panic!()
+                };
+                proof.integer_requirements.push(result.verify_result);
+            } else {
+                proof.coefficient = EvalRational::new(1, if mutation == 0 { 2 } else { 3 })
+                    .unwrap()
+                    .to_obj();
+            }
+            compiler.compile_run(&run, "bad_closed_nonzero").expect_err(
+                "closed nonzero proof must match the original angle and empty period requirements",
+            );
+        }
+    }
+}
+
+#[test]
+fn rational_angle_source_rejects_poles_and_noninteger_periods() {
+    for source in [
+        "sin(pi)!=0",
+        "cos(pi/2)!=0",
+        "tan(pi/2) $in R",
+        "cot(pi) $in R",
+        "sec(pi/2) $in R",
+        "csc(pi) $in R",
+        "forall k R:\n    tan(k*pi+pi/7) $in R",
+        "forall k Z:\n    sec((2*k+1)*pi/2) $in R",
+        "forall k Z:\n    csc(k*pi) $in R",
+    ] {
+        let command =
+            parse_launch_command(&["-strict".into(), "-e".into(), source.into()]).unwrap();
+        let mut runtime =
+            Runtime::new_with_result_detail(command, crate::result_detail::OutputDetail::Detailed);
+        assert!(!runtime.run_litex_code(source).unwrap().success, "{source}");
+    }
 }

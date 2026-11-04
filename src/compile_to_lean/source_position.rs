@@ -2972,6 +2972,51 @@ impl<'a> SourcePosition<'a> {
         )
     }
 
+    /// Completed field WD or a released field membership identifies the
+    /// declaration that owns its type construction. Neither exports new facts.
+    pub fn with_visible_field_constructor<T>(
+        &self,
+        object: &Obj,
+        callback: &mut impl FnMut(
+            SourceConstructor<'_>,
+            &SourcePosition<'_>,
+        ) -> Result<Option<T>, LeanCompileError>,
+    ) -> Result<Option<T>, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef;
+        visit_visible(
+            self,
+            object,
+            false,
+            &|evidence, producer| match evidence {
+                SourceConstructor::Checked(wd) => matches!(
+                    wd.detailed_ref(),
+                    DetailedObjWellDefinedProof::ByDef {
+                        obj: Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(_)),
+                        proof: ObjWellDefinedProofByDef::Structish(
+                            StructishObjWellDefinedProofByDef::FieldAccess(_)
+                        ),
+                        ..
+                    }
+                ),
+                SourceConstructor::Inferred(StoreFactResult::AtomicFact(stored)) => {
+                    matches!(producer.owner, SourceOwner::StructLayer(_))
+                        && matches!(
+                            stored.fact,
+                            AtomicFact::InFact(InFact {
+                                element: Obj::StructAndFieldAccessObj(
+                                    StructAndFieldAccessObj::FieldAccess(_)
+                                ),
+                                ..
+                            })
+                        )
+                }
+                _ => false,
+            },
+            callback,
+            &mut |_, _| Ok(None),
+        )
+    }
+
     /// Borrow a completed original call that contains this exact proper prefix.
     /// The callback must replay that whole constructor before projecting it.
     pub fn with_visible_call_prefix<T>(
@@ -12072,6 +12117,78 @@ fn complete_domain_argument_scope(
 
 // Borrow the children retained by these selected search routes. No new proof,
 // wrapper result, or persistent lookup table is manufactured here.
+fn smooth_coordinate_search_stages<'a>(
+    proof: &'a crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof as C;
+    stages.push(AtomicSearchStage::WD(&proof.value_source_well_defined));
+    stages.push(AtomicSearchStage::Verify(&proof.value_real));
+    match &proof.constructor {
+        C::Constant => {}
+        C::Coordinate {
+            index_member,
+            axis_comparison,
+            ..
+        } => {
+            stages.push(AtomicSearchStage::Verify(index_member));
+            stages.push(AtomicSearchStage::Verify(axis_comparison));
+        }
+        C::Neg { argument } => smooth_coordinate_search_stages(argument, stages),
+        C::Add { left, right } | C::Subtract { left, right } | C::Multiply { left, right } => {
+            smooth_coordinate_search_stages(left, stages);
+            smooth_coordinate_search_stages(right, stages);
+        }
+        C::Divide {
+            left,
+            right,
+            nonzero,
+        } => {
+            smooth_coordinate_search_stages(left, stages);
+            smooth_coordinate_search_stages(right, stages);
+            stages.push(AtomicSearchStage::Verify(nonzero));
+        }
+        C::NaturalPower {
+            base,
+            exponent_natural,
+        } => {
+            stages.push(AtomicSearchStage::Verify(exponent_natural));
+            smooth_coordinate_search_stages(base, stages);
+        }
+        C::Elementary {
+            argument, domain, ..
+        } => {
+            smooth_coordinate_search_stages(argument, stages);
+            stages.push(AtomicSearchStage::Verify(domain));
+        }
+    }
+    stages.push(AtomicSearchStage::WD(&proof.derivative_source_well_defined));
+    stages.push(AtomicSearchStage::Verify(&proof.derivative_real));
+}
+
+fn multivariable_interior_search_stages<'a>(
+    proof: &'a crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof as P;
+    match proof {
+        P::FullEuclideanSpace { point_member, .. }
+        | P::ExactFiniteFunctionSpace { point_member, .. } => {
+            stages.push(AtomicSearchStage::Verify(point_member))
+        }
+        P::Known { proof, .. } => stages.push(AtomicSearchStage::Verify(proof)),
+        P::OpenGuards { base, guards, .. } => {
+            multivariable_interior_search_stages(base, stages);
+            for guard in guards {
+                for operand in &guard.operands {
+                    smooth_coordinate_search_stages(operand, stages);
+                }
+                stages.push(AtomicSearchStage::Verify(&guard.point_proof));
+            }
+        }
+    }
+}
+
 fn derivative_expression_search_stages<'a>(
     proof: &'a crate::execute::execute_fact_stmt::pointwise_derivative::DerivativeExpressionProof,
     stages: &mut Vec<AtomicSearchStage<'a>>,
@@ -12446,6 +12563,19 @@ fn atomic_searched_stages(
         AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(proof) => {
             stages.push(AtomicSearchStage::Searched(&proof.residual));
         }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(
+            crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::PartialDerivativeAt(p),
+        )) => {
+            let p = &p.stages;
+            complete_domain_source_stages(&p.function_domain, &mut stages);
+            multivariable_interior_search_stages(&p.geometry, &mut stages);
+            stages.push(AtomicSearchStage::WD(&p.body_well_defined));
+            for coordinate in &p.coordinates {
+                smooth_coordinate_search_stages(&coordinate.first, &mut stages);
+                if let Some(second) = &coordinate.second { smooth_coordinate_search_stages(second, &mut stages); }
+            }
+            stages.extend(p.conclusion_equalities.iter().map(|p| AtomicSearchStage::Verify(&p.equality)));
+        },
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p))=>{
             complete_domain_source_stages(&p.domain.source,&mut stages);
             stages.push(AtomicSearchStage::Verify(&p.domain.input_real));
@@ -12516,6 +12646,10 @@ fn atomic_searched_stages(
                 BuiltinPropDefinitionProof::SequenceAnalysis(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::SequenceLimit(p) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarLimit(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarContinuousAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::VectorContinuousAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarDifferentiableAt(p)) => &p.proof_of_requirement_facts,
+                BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::TotalDifferentiableAt(p)) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::HessianAt(p)) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::TotalDerivativeAt(p)) => &p.proof_of_requirement_facts,
                 BuiltinPropDefinitionProof::MultivariableAnalysis(crate::execute::execute_fact_stmt::multivariable::definition::MultivariableDefinitionProof::ScalarDifferentialAt(p)) => &p.proof_of_requirement_facts,

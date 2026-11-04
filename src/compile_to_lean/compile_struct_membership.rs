@@ -169,7 +169,7 @@ impl LitexToLeanCompiler {
             }
             let prior = position.atomic_search_prior(proof.carrier_obligations.len() + index)?;
             let checked = self.compile_verify(evidence, &prior)?;
-            let raw = self.compile_function_raw_predicate(source, &prior, &raw_bindings)?;
+            let raw = self.compile_canonical_predicate_value(source, &prior, &raw_bindings)?;
             let name = format!("h_{}", actual.fact_id().value());
             laws.push(format!("have {name} : {raw} := {}", checked.1));
             law_names.push(name);
@@ -186,7 +186,7 @@ impl LitexToLeanCompiler {
                 .equivalent_facts
                 .iter()
                 .map(|fact| {
-                    self.compile_function_raw_predicate(fact, position, &condition_bindings)
+                    self.compile_canonical_predicate_value(fact, position, &condition_bindings)
                 })
                 .collect::<Result<Vec<_>, _>>()?,
         )?;

@@ -380,6 +380,20 @@ impl LitexToLeanCompiler {
                 self.compile_function_limit_domain_view(&source.function, domain, position)?;
             let reductions =
                 self.compile_riemann_endpoint_reductions(&source.lower, &source.upper, position)?;
+            // Fix the semantic candidate type only when endpoint normalization
+            // will rewrite projections. Symbolic endpoints need no conversion
+            // of the complete Darboux certificate before its projections.
+            let projection_source = if reductions.is_some() {
+                let raw_source =
+                    self.compile_function_raw_predicate(seed, position, &HashMap::new())?;
+                lines.push(format!(
+                    "have _integral_source_candidate : {raw_source} := {}",
+                    compiled.1
+                ));
+                "_integral_source_candidate"
+            } else {
+                &compiled.1
+            };
             for (i, fact) in facts[..6].iter().enumerate() {
                 let ty = if i == 3 {
                     let Fact::AtomicFact(AtomicFact::RealSetBoundedFact(b)) = fact else {
@@ -400,7 +414,7 @@ impl LitexToLeanCompiler {
                 };
                 let projection = format!(
                     "({}).{}",
-                    compiled.1,
+                    projection_source,
                     match i {
                         0 => "2.1",
                         1 => "2.2.1",

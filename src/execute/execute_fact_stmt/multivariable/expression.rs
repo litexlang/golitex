@@ -64,9 +64,9 @@ pub struct MultivariableReductionProof {
 pub enum MultivariableReductionStep {
     ExactRational {source:Obj,value:Obj},
     PeriodicTrig {source:Obj,proof:crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_periodic_trig::PeriodicTrigBuiltinRuleProof},
-    NativeMatrixBeta {source:Box<super::super::native_matrix::MatrixCallableProof>,arguments:Vec<Obj>},
+    NativeMatrixBeta {source:Box<super::super::native_matrix::MatrixCallableProof>,arguments:Vec<Obj>,expanded:Obj},
     FiniteSetEvaluation {source:Obj,left:crate::rational_expression::exact_rational::EvalRational,right:crate::rational_expression::exact_rational::EvalRational,value:Obj},
-    AnonymousBeta {function:AnonymousFn,arguments:Vec<Obj>},
+    AnonymousBeta {function:AnonymousFn,arguments:Vec<Obj>,expanded:Obj},
     TupleProjection {tuple:Tuple,index:usize},
 }
 pub(crate) fn depends_on(expression: &Obj, parameter: IdentifierId) -> bool {
@@ -281,6 +281,7 @@ impl Runtime {
                         steps.push(MultivariableReductionStep::AnonymousBeta {
                             function: body.clone(),
                             arguments: args,
+                            expanded: result.clone(),
                         });
                         let Some(next) = self.reduce_multivariable_inner(
                             &result,
@@ -319,6 +320,7 @@ impl Runtime {
                             steps.push(MultivariableReductionStep::NativeMatrixBeta {
                                 source: Box::new(source),
                                 arguments: args.clone(),
+                                expanded: result.clone(),
                             });
                             let Some(next) = self.reduce_multivariable_inner(
                                 &result,

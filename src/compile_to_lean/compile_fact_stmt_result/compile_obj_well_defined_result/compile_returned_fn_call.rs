@@ -6,6 +6,14 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjOb
 use crate::prelude::*;
 use std::collections::HashMap;
 
+/// A borrowed view of the original flat WD stages, never a second proof log.
+pub(super) struct ReturnedCallLayer<'a> {
+    pub carrier: &'a Obj,
+    pub requirement_offset: usize,
+    pub refined: bool,
+    pub carrier_equality: Option<usize>,
+}
+
 impl LitexToLeanCompiler {
     /// Borrow one fixed return interface and count its original obligations.
     fn returned_call_layer<'a>(
@@ -53,12 +61,12 @@ impl LitexToLeanCompiler {
     /// Validate the selected flat record, including the shared verifier's
     /// checked prefix-interface refinement between two application groups.
     /// No membership or signature is searched for or manufactured here.
-    pub(super) fn returned_call_layout(
+    pub(super) fn returned_call_layout<'a>(
         application: &FnObj,
-        mut output: &Obj,
-        requirements: &[VerifyFactResult],
+        mut output: &'a Obj,
+        requirements: &'a [VerifyFactResult],
         mut offset: usize,
-    ) -> Result<(Vec<(usize, bool)>, usize), LeanCompileError> {
+    ) -> Result<(Vec<ReturnedCallLayer<'a>>, usize), LeanCompileError> {
         let mut layers = Vec::new();
         let mut needs_refinement = false;
         for (index, arguments) in application.body.iter().enumerate().skip(1) {
@@ -77,8 +85,34 @@ impl LitexToLeanCompiler {
                 }
                 offset += 1;
             }
+            let carrier_equality = match requirements.get(offset) {
+                Some(VerifyFactResult::Equality(result)) => {
+                    let VerifyEqualityResult::Success(equal) = result.as_ref() else {
+                        return Err(LeanCompileError::unsupported(
+                            "ReturnedFunction/CarrierEquality",
+                        ));
+                    };
+                    if equal.fact.left.ir() != output.ir()
+                        || equal.fact.left.ir() == equal.fact.right.ir()
+                    {
+                        return Err(LeanCompileError::unsupported(
+                            "ReturnedFunction/CarrierEquality",
+                        ));
+                    }
+                    output = &equal.fact.right;
+                    let original = offset;
+                    offset += 1;
+                    Some(original)
+                }
+                _ => None,
+            };
             let (count, next) = Self::returned_call_layer(output, arguments)?;
-            layers.push((offset, needs_refinement));
+            layers.push(ReturnedCallLayer {
+                carrier: output,
+                requirement_offset: offset,
+                refined: needs_refinement,
+                carrier_equality,
+            });
             // The native finite-function signature returns the union of all
             // factors. A further call through a multi-factor Cartesian result
             // therefore retains its checked, more precise prefix membership.
@@ -116,6 +150,68 @@ impl LitexToLeanCompiler {
         Ok(output)
     }
 
+    /// Read the selected return through the very same checked carrier equalities.
+    /// A different cited signature must still supply its own fixed interface.
+    pub(in crate::compile_to_lean) fn checked_function_call_output<'a>(
+        application: &FnObj,
+        signature: &'a FnSet,
+        evidence: &'a FnObjObjWellDefinedProof,
+    ) -> Result<&'a Obj, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDomainFnSetEvidence as E;
+        let selected = match &evidence.domain_fn_set {
+            Some(
+                E::InFunctionSet { fn_set, .. }
+                | E::AnonymousLiteral { fn_set }
+                | E::TemplateDefinition { fn_set, .. },
+            ) => fn_set,
+            Some(E::Matrix(p)) => &p.function.body,
+            Some(E::Composition(p)) => &p.function.body,
+            Some(E::MultivariableSelector(p)) => &p.signature,
+            Some(E::FiniteFunction(p)) if application.body.len() == 1 => {
+                super::compile_finite_function::validate_finite_signature(p)?;
+                &p.signature
+            }
+            _ => {
+                return Err(LeanCompileError::unsupported(
+                    "ReturnedFunction/DomainEvidence",
+                ))
+            }
+        };
+        if signature != selected || application.body.len() < 2 {
+            return Self::fixed_function_call_output(application, signature);
+        }
+        let first = application
+            .body
+            .first()
+            .ok_or_else(|| LeanCompileError::unsupported("ReturnedFunction/EmptyCall"))?;
+        if first.len()
+            != signature
+                .set_bound_parameters
+                .groups
+                .iter()
+                .map(|g| g.params.len())
+                .sum::<usize>()
+        {
+            return Err(LeanCompileError::unsupported("ReturnedFunction/LayerArity"));
+        }
+        let (layers, end) = Self::returned_call_layout(
+            application,
+            &signature.ret_set,
+            &evidence.requirement_fact_verified,
+            first.len() + signature.dom_facts.len(),
+        )?;
+        if end != evidence.requirement_fact_verified.len() {
+            return Err(LeanCompileError::unsupported(
+                "ReturnedFunction/RequirementStages",
+            ));
+        }
+        Self::returned_call_layer(
+            layers.last().unwrap().carrier,
+            application.body.last().unwrap(),
+        )
+        .map(|(_, output)| output)
+    }
+
     /// Continue the original call's actual child/requirement slices. The first
     /// call already supplies membership of its result in the next function set.
     pub(super) fn compile_returned_fn_calls(
@@ -147,9 +243,10 @@ impl LitexToLeanCompiler {
                 application.body[0].len() + p.signature.dom_facts.len(),
             _ => return Err(LeanCompileError::unsupported("ReturnedFunction/DomainEvidence")),
         };
+        let initial_output = output.clone();
         let (layers, end) = Self::returned_call_layout(
             application,
-            &output,
+            &initial_output,
             &evidence.requirement_fact_verified,
             first_requirements,
         )?;
@@ -158,10 +255,12 @@ impl LitexToLeanCompiler {
                 "ReturnedFunction/RequirementStages",
             ));
         }
-        for (layer_index, (arguments, (mut requirement_offset, refined))) in
+        for (layer_index, (arguments, layer)) in
             application.body[1..].iter().zip(layers).enumerate()
         {
-            if refined {
+            let mut requirement_offset = layer.requirement_offset;
+            if layer.refined {
+                let prefix_index = layer.carrier_equality.unwrap_or(requirement_offset) - 1;
                 let earlier_children = SourcePosition {
                     before: child_offset,
                     ..*position
@@ -169,14 +268,28 @@ impl LitexToLeanCompiler {
                 let prior = SourcePosition::new(
                     Some(&earlier_children),
                     SourceOwner::EqualityRequirements(&evidence.requirement_fact_verified),
-                    requirement_offset - 1,
+                    prefix_index,
                 );
                 member = self
-                    .compile_verify(
-                        &evidence.requirement_fact_verified[requirement_offset - 1],
-                        &prior,
-                    )?
+                    .compile_verify(&evidence.requirement_fact_verified[prefix_index], &prior)?
                     .1;
+            }
+            if let Some(index) = layer.carrier_equality {
+                let prior = SourcePosition {
+                    before: evidence.child_obj_well_defined.len() + index,
+                    ..*position
+                };
+                let equality = self
+                    .compile_verify(&evidence.requirement_fact_verified[index], &prior)?
+                    .1;
+                let from = self.compile_object_reference(&output, &prior)?;
+                let formed = SourcePosition {
+                    before: prior.before + 1,
+                    ..prior
+                };
+                let to = self.compile_object_reference(layer.carrier, &formed)?;
+                member = format!("(Litex.inOfSame {receiver} {receiver} {from} {to} (Litex.sameRefl {receiver}) {equality} {member})");
+                output = layer.carrier.clone();
             }
             if matches!(output, Obj::ProductShape(ProductShape::Cart(_))) {
                 let final_layer = layer_index + 2 == application.body.len();

@@ -70,7 +70,7 @@ pub(super) fn validate_derivative_interior(
     }
     Ok(())
 }
-fn validate_quotient<'a>(
+pub(super) fn validate_quotient<'a>(
     source: &HasDerivativeAtFact,
     domain: &Obj,
     fact: &'a Fact,
@@ -271,16 +271,37 @@ impl LitexToLeanCompiler {
         let (view, equal) = self.compile_function_limit_domain_view(function, domain, position)?;
         let real = self.compile_real_function_domain(function, domain, position)?;
         let function = self.compile_object_reference(function, position)?;
+        let (body, q) = self.compile_derivative_quotient_body_view(
+            &function,
+            point,
+            &domain.domain,
+            quotient,
+            position,
+        )?;
+        let prefix = format!("{view}\n  have _derivative_real : Litex.RealFunctionValue M (Litex.denote {function}) := {real}\n  have _derivative_domain_eq := {equal}\n{body}");
+        Ok((prefix, q))
+    }
+    pub(super) fn compile_derivative_quotient_body_view(
+        &self,
+        function: &str,
+        point: &Obj,
+        domain: &Obj,
+        quotient: &AnonymousFn,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
         let point = self.compile_object_reference(point, position)?;
         let (input, output, body) =
             self.compile_function_literal_parts(quotient, position, &HashMap::new())?;
-        let (base_set, compare) = if domain.domain == Obj::StandardSet(StandardSet::RPos) {
-            ("(M.standard_isSet .real)","dsimp only [_derivative_quotient_domain, _source_domain]\n    rw [Litex.SetSemantics.sep_members, Litex.positiveReal_members]\n    exact and_assoc.symm")
+        let (base_set, compare) = if domain == &Obj::StandardSet(StandardSet::RPos) {
+            ("(M.standard_isSet .real)", format!("change M.mem x _derivative_quotient_domain ↔ M.mem x (Litex.positiveReal (M := M)) ∧ M.subValue x (Litex.denote {point}) ≠ M.number 0\n    dsimp only [_derivative_quotient_domain]\n    rw [Litex.SetSemantics.sep_members, Litex.positiveReal_members]\n    exact and_assoc.symm"))
         } else {
-            ("_domain_set", "exact Litex.SetSemantics.sep_members _ _ _")
+            (
+                "_domain_set",
+                "exact Litex.SetSemantics.sep_members _ _ _".to_string(),
+            )
         };
         let q = format!("(Litex.FunctionSemantics.graphValue (M := M) {input} {output} {body})");
-        let prefix=format!("{view}\n  have _derivative_real : Litex.RealFunctionValue M (Litex.denote {function}) := {real}\n  let _derivative_quotient_domain := {input}\n  have _derivative_quotient_set : M.isSet _derivative_quotient_domain := Litex.SetSemantics.sep_isSet _ _ {base_set}\n  have _derivative_domain_eq := {equal}\n  have _derivative_quotient_spec : ∀ x, M.mem x _derivative_quotient_domain ↔ M.mem x (Litex.FunctionSemantics.domainValue (Litex.denote {function})) ∧ M.subValue x (Litex.denote {point}) ≠ M.number 0 := by\n    intro x\n    rw [← _derivative_domain_eq]\n    {compare}");
+        let prefix=format!("  let _derivative_quotient_domain := {input}\n  have _derivative_quotient_set : M.isSet _derivative_quotient_domain := Litex.SetSemantics.sep_isSet _ _ {base_set}\n  have _derivative_quotient_spec : ∀ x, M.mem x _derivative_quotient_domain ↔ M.mem x (Litex.FunctionSemantics.domainValue (Litex.denote {function})) ∧ M.subValue x (Litex.denote {point}) ≠ M.number 0 := by\n    intro x\n    rw [← _derivative_domain_eq]\n    {compare}");
         Ok((prefix, q))
     }
     pub(super) fn compile_derivative_definition(

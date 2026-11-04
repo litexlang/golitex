@@ -19028,6 +19028,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__search_equal_fact_builtin_rule_result__EqualitySearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::NativeMatrixProperty(f0) => {
+let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::NativeMatrixProperty");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__NativeMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinRule", "NativeMatrixProperty", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinRule::NativeMatrixLaw(f0) => {
 let rule_id = Some("builtin.EqualitySearchProofByBuiltinRule::NativeMatrixLaw");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__NativeMatrixLawProof(f0, capture, runtime))];
@@ -25137,6 +25145,142 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__NativeMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::RankRows(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__RankRowsMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "RankRows", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::RankCols(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__RankColsMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "RankCols", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::RankProductLeft(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__RankProductLeftMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "RankProductLeft", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::RankProductRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__RankProductRightMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "RankProductRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::InnerSelfReal(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InnerSelfRealMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "InnerSelfReal", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::InnerSelfNonnegative(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InnerSelfNonnegativeMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "InnerSelfNonnegative", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::InnerSelfImaginary(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InnerSelfImaginaryMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "InnerSelfImaginary", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::EuclideanNonnegative(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanNonnegativeMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "EuclideanNonnegative", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::FrobeniusNonnegative(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusNonnegativeMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "FrobeniusNonnegative", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::CauchySchwarz(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__CauchySchwarzMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "CauchySchwarz", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::EuclideanScale(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanScaleMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "EuclideanScale", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::EuclideanTriangle(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanTriangleMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "EuclideanTriangle", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::InnerLinearRight(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InnerLinearRightMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "InnerLinearRight", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::FrobeniusTriangle(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusTriangleMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "FrobeniusTriangle", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::EuclideanZeroElim(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanZeroElimMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "EuclideanZeroElim", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::EuclideanZeroIntro(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanZeroIntroMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "EuclideanZeroIntro", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::FrobeniusZeroElim(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusZeroElimMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "FrobeniusZeroElim", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::FrobeniusZeroIntro(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusZeroIntroMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "FrobeniusZeroIntro", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::EuclideanSquareSum(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanSquareSumMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "EuclideanSquareSum", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::FrobeniusSquareSum(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusSquareSumMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "FrobeniusSquareSum", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::ApplyAdjoint(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__ApplyAdjointMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "ApplyAdjoint", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::InverseFromCandidate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InverseFromCandidateMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "InverseFromCandidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::DetLowerTriangular(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__DetLowerTriangularMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "DetLowerTriangular", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::DetUpperTriangular(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__DetUpperTriangularMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "DetUpperTriangular", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::DetLaplaceColumn(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__DetLaplaceColumnMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "DetLaplaceColumn", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof::DetLaplaceRow(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__DetLaplaceRowMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("NativeMatrixPropertyProof", "DetLaplaceRow", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__NativeMatrixLawProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::NativeMatrixLawProof::MulAssociative(f0) => {
@@ -30286,6 +30430,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__less_equal__LessEqualFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NativeMatrixProperty(f0) => {
+let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::NativeMatrixProperty");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__NativeMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("LessEqualFactSearchProofByBuiltinRule", "NativeMatrixProperty", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::StructuralRealSign(f0) => {
 let rule_id = Some("builtin.LessEqualFactSearchProofByBuiltinRule::StructuralRealSign");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime))];
@@ -31428,6 +31580,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__InFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NativeMatrixProperty(f0) => {
+let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NativeMatrixProperty");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__NativeMatrixPropertyProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByBuiltinRule", "NativeMatrixProperty", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::SignedNumericMembership(f0) => {
 let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::SignedNumericMembership");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__SignedNumericMembershipProof(f0, capture, runtime))];
@@ -37873,6 +38033,292 @@ let output = match value {
 crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleValueProof { function_equal: f0, applicability: f1, value: f2 } => {
 let fields = vec![("function_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f0, capture, runtime)), ("applicability", capture_execute__execute_fact_stmt__known_tuple__KnownFunctionTupleApplicability(f1, capture, runtime)), ("value", capture_ast__obj__Tuple(f2, capture, runtime))];
 let mut output = node("KnownFunctionTupleValueProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__RankRowsMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::RankRowsMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::RankRowsMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("RankRowsMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__RankColsMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::RankColsMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::RankColsMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("RankColsMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__RankProductLeftMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::RankProductLeftMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::RankProductLeftMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("RankProductLeftMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__RankProductRightMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::RankProductRightMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::RankProductRightMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("RankProductRightMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InnerSelfRealMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InnerSelfRealMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InnerSelfRealMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("InnerSelfRealMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InnerSelfNonnegativeMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InnerSelfNonnegativeMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InnerSelfNonnegativeMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("InnerSelfNonnegativeMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InnerSelfImaginaryMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InnerSelfImaginaryMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InnerSelfImaginaryMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("InnerSelfImaginaryMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanNonnegativeMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanNonnegativeMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanNonnegativeMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("EuclideanNonnegativeMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusNonnegativeMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusNonnegativeMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusNonnegativeMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("FrobeniusNonnegativeMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__CauchySchwarzMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::CauchySchwarzMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::CauchySchwarzMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("CauchySchwarzMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanScaleMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanScaleMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanScaleMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("EuclideanScaleMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanTriangleMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanTriangleMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanTriangleMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("EuclideanTriangleMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InnerLinearRightMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InnerLinearRightMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InnerLinearRightMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("InnerLinearRightMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusTriangleMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusTriangleMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusTriangleMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("FrobeniusTriangleMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanZeroElimMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanZeroElimMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanZeroElimMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("EuclideanZeroElimMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanZeroIntroMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanZeroIntroMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanZeroIntroMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("EuclideanZeroIntroMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusZeroElimMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusZeroElimMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusZeroElimMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("FrobeniusZeroElimMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusZeroIntroMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusZeroIntroMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusZeroIntroMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("FrobeniusZeroIntroMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__EuclideanSquareSumMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanSquareSumMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::EuclideanSquareSumMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("EuclideanSquareSumMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__FrobeniusSquareSumMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusSquareSumMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::FrobeniusSquareSumMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("FrobeniusSquareSumMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__ApplyAdjointMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::ApplyAdjointMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::ApplyAdjointMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("ApplyAdjointMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__InverseFromCandidateMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InverseFromCandidateMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::InverseFromCandidateMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("InverseFromCandidateMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__DetLowerTriangularMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::DetLowerTriangularMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::DetLowerTriangularMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("DetLowerTriangularMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__DetUpperTriangularMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::DetUpperTriangularMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::DetUpperTriangularMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("DetUpperTriangularMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__DetLaplaceColumnMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::DetLaplaceColumnMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::DetLaplaceColumnMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("DetLaplaceColumnMatrixPropertyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__DetLaplaceRowMatrixPropertyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::DetLaplaceRowMatrixPropertyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::DetLaplaceRowMatrixPropertyProof { application: f0 } => {
+let fields = vec![("application", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(f0, capture, runtime))];
+let mut output = node("DetLaplaceRowMatrixPropertyProof", "", fields);
 output
 },
 };
@@ -48208,6 +48654,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyApplicationProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertyApplicationProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertyApplicationProof { arguments: f0, schema: f1, sum_form: f2, conclusion: f3, matching: f4, requirements: f5, requirement_proofs: f6 } => {
+let fields = vec![("arguments", JsonValue::Array((f0).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("schema", capture_ast__fact__fact__Fact(f1, capture, runtime)), ("sum_form", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertySumForm(f2, capture, runtime)), ("conclusion", capture_ast__fact__atomic__AtomicFact(f3, capture, runtime)), ("matching", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyGoalMatchProof(f4, capture, runtime)), ("requirements", JsonValue::Array((f5).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("requirement_proofs", JsonValue::Array((f6).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyRequirementProof(item, capture, runtime)).collect()))];
+let mut output = node("MatrixPropertyApplicationProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawApplicationProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawApplicationProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawApplicationProof { arguments: f0, requirements: f1, conclusion: f2, orientation: f3, left_equal: f4, right_equal: f5, requirement_proofs: f6 } => {
@@ -49778,6 +50235,49 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertySumForm(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertySumForm, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertySumForm::Original => {
+let fields = vec![];
+let mut output = node("MatrixPropertySumForm", "Original", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertySumForm::Natural { original: f0, natural: f1 } => {
+let fields = vec![("original", capture_ast__obj__Obj(f0, capture, runtime)), ("natural", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("MatrixPropertySumForm", "Natural", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyGoalMatchProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertyGoalMatchProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertyGoalMatchProof { reversed: f0, comparisons: f1 } => {
+let fields = vec![("reversed", JsonValue::Bool(*(f0))), ("comparisons", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__EqualFactSearchedProof(item, capture, runtime)).collect()))];
+let mut output = node("MatrixPropertyGoalMatchProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__MatrixPropertyRequirementProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertyRequirementProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertyRequirementProof::Verified(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("MatrixPropertyRequirementProof", "Verified", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::MatrixPropertyRequirementProof::ZeroVectorAlpha { source: f0, comparison: f1, alpha: f2 } => {
+let fields = vec![("source", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("comparison", capture_ast__fact__atomic__EqualFact(f1, capture, runtime)), ("alpha", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_they_are_the_same__result__TheyAreTheSameProof(f2, capture, runtime))];
+let mut output = node("MatrixPropertyRequirementProof", "ZeroVectorAlpha", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_native_matrix_laws__MatrixLawOrientation(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawOrientation, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::MatrixLawOrientation::Forward => {
@@ -49806,8 +50306,8 @@ let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("pro
 let mut output = node("MultivariableReductionStep", "PeriodicTrig", fields);
 output
 },
-crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::NativeMatrixBeta { source: f0, arguments: f1 } => {
-let fields = vec![("source", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime)), ("arguments", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::NativeMatrixBeta { source: f0, arguments: f1, expanded: f2 } => {
+let fields = vec![("source", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime)), ("arguments", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("expanded", capture_ast__obj__Obj(f2, capture, runtime))];
 let mut output = node("MultivariableReductionStep", "NativeMatrixBeta", fields);
 output
 },
@@ -49816,8 +50316,8 @@ let fields = vec![("source", capture_ast__obj__Obj(f0, capture, runtime)), ("lef
 let mut output = node("MultivariableReductionStep", "FiniteSetEvaluation", fields);
 output
 },
-crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::AnonymousBeta { function: f0, arguments: f1 } => {
-let fields = vec![("function", capture_ast__obj__AnonymousFn(f0, capture, runtime)), ("arguments", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect()))];
+crate::execute::execute_fact_stmt::multivariable::expression::MultivariableReductionStep::AnonymousBeta { function: f0, arguments: f1, expanded: f2 } => {
+let fields = vec![("function", capture_ast__obj__AnonymousFn(f0, capture, runtime)), ("arguments", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("expanded", capture_ast__obj__Obj(f2, capture, runtime))];
 let mut output = node("MultivariableReductionStep", "AnonymousBeta", fields);
 output
 },

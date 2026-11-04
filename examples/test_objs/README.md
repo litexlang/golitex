@@ -1,5 +1,13 @@
 # Obj regression corpus
 
+[Direct finite matrix properties](native_matrix_properties.lit) exercises 22
+rank, inner-product, norm and inverse-candidate conclusions without explicit BT
+calls. It adds rule acceptance coverage; it introduces no additional Obj path.
+
+[Direct determinant formulas](native_matrix_determinant_formulas.lit) exercises
+Laplace row/column expansion and upper/lower triangular determinant products
+without explicit BT calls. Domains and triangular guards remain checked.
+
 The current tuple/cart contract uses ordinary calls, including literal and nested
 heads: `(1,2)(1)=1`, `((1,2),3)(1)(2)=2`, and direct coordinate `eval`.
 The four retired AST shapes and four shape predicates have been deleted.

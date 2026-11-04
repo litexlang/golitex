@@ -1,14 +1,68 @@
 # Shared reader component acceptance
 
+Generate `--repeated-function-forms` fixtures and run
+`node src/reading/web/tests/repeated-claims.cjs <fixtures> [reader-source]` for
+repeated universal/atomic claims, their source-owned witness/`by def`/`by thm`
+steps, unique-existence function prerequisites, later reuse and inference
+origins. The 31 checks include bilingual editable/read-only pointer, keyword,
+keyboard, pin and exact Back events, plus 15 missing/foreign correspondence
+controls. They preserve Native fact owners and the default fact-selection API;
+atomic claim WD stays final and closed. The optional reader source supports a
+real old-reader loading-crash oracle and a guard-only source that still loses
+the second claim's proof. This is not browser geometry acceptance.
+
+The same fixture group includes recursive/algorithm forms and an actual
+`unsupported_expression` rejection when evaluating an algorithm that captures
+the local enumeration parameter. That rejection is retained, not repaired.
+Their repeated generated frame addresses and every quantified claim's final
+formation presentation are separate coverage boundaries; successful parsing
+or mounting must not be reported as complete proof-scope support.
+
 These tests run the unmodified public `LitexReading.mount` API and its actual
 DOM event handlers using real CLI-generated reading bundles. They need Node.js
 and Python, with no npm package installation or browser access.
+
+Run `node src/reading/web/tests/token-disclosures.cjs target/release/litex`
+for adjacent named-help buttons. It uses the actual square-root contradiction
+lesson and its domain-failure counterpart, with bilingual editable/read-only
+events. It checks exact existing help contents, complete phrase identity,
+repeated source occurrences, independent sentence proofs, focus/dismissal,
+caret preservation, edit invalidation and unchanged native records. Invalid
+function applications retain their rejection and gain no proof from help.
+The offline DOM does not certify raised-button geometry or pointer hit areas.
+
+Desktop native-preview acceptance clicked both the `by contra` and `sqrt`
+buttons, closed by Escape, placed the text caret immediately after `sqrt`,
+edited/restored the source and rechecked the actual lesson file. All source
+rows remained 24 pixels, and every help anchor had exactly its original
+token's width. The served editor, hover, source-preview and source-rendering
+sections and the complete CSS matched the working source. Concurrent witness
+uniqueness presentation edits outside these sections were preserved and are
+not certified by this interaction check. Narrow/touch geometry remains outside
+this desktop acceptance.
+
+Run `node src/reading/web/tests/sentence-toggles.cjs target/release/litex`
+for sentence-end proof buttons. The test generates actual native bundles in
+memory and exercises bilingual editable/read-only clicks, persistent display,
+repeat-click/Escape/outside/close dismissal, keyboard focus, exact citation and
+Back, switching rows, edit invalidation, and local/failure/chain/proof-command
+boundaries. It checks unchanged native data and source-only fallback. It does
+not simulate CSS geometry or certify every proof route; source alignment and
+actual editor hit targets require the separate browser check.
+
+The desktop native file preview was also checked with the tuple/sum tracer:
+direct pointer clicks, repeated clicks, initial-click Escape, citation/Back,
+edit invalidation and file recheck. Source rows measured 24 pixels before and
+after opening; served JS/CSS matched the current source bytes. This acceptance
+does not certify narrow-window geometry or every statement family. Inline
+`-e` preview recheck separately rejects its retained `<eval>` filename; the
+successful recheck uses an actual `.lit` file.
 
 Generate mathematical-view fixtures with
 `python3 src/reading/web/tests/latex-mode.py --output <directory>`, then run
 `node src/reading/web/tests/latex-mode.cjs <directory>`. All 52 current statement
 fixtures use real `-reading -latex -json` bundles and the bundled KaTeX engine.
-The tests check native block layout, exact nested/repeated source identities,
+The tests check compiler-owned typography, exact nested/repeated source identities,
 bilingual hover, original source, shared proof references, pinning, citation
 navigation, source editing, stale-evidence invalidation and malformed/missing
 mapping fallback. Native verdict/evidence identity, byte equality in all ten
@@ -16,6 +70,29 @@ locales, projects/file prefixes and actual CLI/static exports are covered by
 `cargo test --release --test reading_latex`; preview/upload is covered by
 `reading_http`. These checks do not model browser geometry or certify every
 proof explanation. Actual browser layout is a separate acceptance step.
+
+For a focused prose check without fixture files, run
+`node src/reading/web/tests/latex-mode.cjs --compiler <release-litex>`.
+It generates all 52 statement fixtures and its bilingual proof and
+failure/identity controls in memory from the actual executable, checks the
+single continuous proof paragraph, joined assumption/conclusion and
+structural closures, and follows a new transition word to its original source.
+This mode retains no generated fixture files.
+
+The same suite opens the primary `n >= 1` derivation, verifies its native
+positive-natural premise-to-conclusion explanation, expands the membership
+premise, follows its actual citation, opens the exact formal source, and
+collapses/reopens the same lazy proof body in both locales and editability
+modes. Twelve controls cover missing/failed evidence, foreign goal identity, wrong
+bound/member/set/rule, producer/scope/role/status and repeated execution. They
+must not fabricate a verified explanation or borrow another execution's proof.
+Formation evidence remains separately collapsed; manuscript text, native data
+and verifier verdicts are not rewritten by these presentation tests.
+The tracer was also checked in the actual native HTTP preview: keyboard
+expansion, premise citation/Back, exact source popup, continuous collapsed
+prose and a narrow viewport without document overflow. Closed disclosures
+use an inline-block box so the native details-content box cannot force a
+paragraph break. This browser check does not certify every proof family.
 
 Run `node src/reading/web/tests/latex-host.cjs <directory>/proof-en.json
 <release-litex> <scratch-directory>` to exercise the public upload host with
@@ -141,6 +218,102 @@ conflicting records must remain incomplete. Optional seven-source native
 exports exercise lazy chunks and resolved names through the public open API.
 These strict fixtures do not establish non-strict trust-origin coverage or
 browser geometry; source and native proof records remain unchanged.
+
+Run `node src/reading/web/tests/expansion-failures.cjs --binary <litex>` for
+typed failure stages of the seven release/expansion/extensionality forms.
+`--reader <reader.js>` selects an observer asset;
+`--endpoint http://127.0.0.1:<port>` instead uses actual compiler POSTs.
+The test compiles 27 actual sources in ordinary and registered contexts:
+54 source contexts, 208 bilingual editable/read-only views, 656 interactions
+and 30 malformed/legacy controls. It observes 17 route/stage pairs, checks
+unpublished failed targets, local completed-prefix/stopping-statement links and
+exact Back, final closed WD, repeated successful executions and edit
+invalidation. A quantified coordinate failure is a single rejected execution;
+it is not evidence of a successful execution followed by failure.
+
+The actual literal tuple equality succeeds as a fact while its
+`by fn_extension` form cannot construct the pointwise target. This is distinct
+from a valid empty `DomainMatch` comparison list. Unknown-object syntax rejects
+at parse, not at an invented execution stage. Missing prior certificates,
+environments, payloads or source correspondence cannot acquire guessed checks.
+Native documents stay in memory and tiny standalone source/config files are
+removed in `finally`. No fixture archive, binary build or browser geometry
+check is part of this test, and unobserved internal stages remain unverified.
+
+Run `node src/reading/web/tests/foundation-failures.cjs --binary <litex>` for
+failed regularity, choice and Zorn applications. `--reader <reader.js>` selects
+an observer; `--endpoint http://127.0.0.1:<port>` uses actual compiler POSTs.
+Twenty-four actual sources in ordinary and registered contexts give 48 source
+contexts, 184 bilingual editable/read-only views, 680 interactions and 30
+malformed/legacy controls. Nine observed route/stage pairs include input WD,
+regularity's nonempty premise, predicate-interface mismatch, auxiliary-body
+failure and applicability obligations. The Zorn sources reach all five
+obligation indices using explicit local hypotheses; they do not assume the
+result unconditionally. The numeric-family choice control actually fails at
+index 1 and is not evidence of an index-0 failure.
+
+Local partial applications keep their accepted and rejected commands distinct;
+the enumeration control selects two actual successful executions and their own
+published results. Failed commands publish no existence conclusion. Proof-body
+prefixes can retain native success results without navigable source execution
+records: the test requires that limitation to remain visible and checks only
+the real rejected child/Back link. Source origin `axiom_release` is preserved;
+`checked`, generated, foreign, malformed and legacy controls cannot acquire a
+valid foundation failure view. Current-failure WD stays last and closed; absent
+earlier WD is not fabricated. Input Native documents are unchanged, raw output
+stays in memory and temporary source/config files are removed. The three
+internal `Store` failure branches, other unexported prefix shapes, lazy static
+exports and browser geometry are not certified by this suite.
+
+Run `node src/reading/web/tests/process-failures.cjs --binary <litex>` for
+ordinary/strong induction and finite/range enumeration failures. The optional
+`--reader <reader.js>` and `--endpoint http://127.0.0.1:<port>` select an observer
+or actual local compiler POSTs. Thirty-five actual sources, including three
+parse controls, produce 70 ordinary/registered contexts, 272 bilingual
+editable/read-only views, 1104 interactions and 33 malformed/legacy controls.
+Twenty observed route/stage combinations distinguish base/step goal and body
+failures, integer-start and goal-formation checks, finite-domain failure and
+enumerated conclusion failure. Two-goal sources retain their real goal index;
+enumeration's tuple-shaped `GoalWd` has no index and must not acquire one.
+
+The suite covers a local accepted prefix followed by rejection, two same-line
+successful induction executions, structured step-body stops and exact Back,
+current-failure WD last/closed, source/keyword/focus/pin and edit invalidation.
+The reader preserves missing hypothesis, binding and earlier-case histories;
+failed internal targets are unpublished and input Native documents are
+unchanged. Quantified WD validates the actual `ForallWellDefinedLocalFailure`
+envelope using existing scope/formation matching. Unknown or conflicting source,
+dispatcher, case, goal, index, prefix and body-child records remain incomplete.
+Native output stays in memory and tiny source/config files are removed after
+each case. These checks do not certify assumption/goal-domain/storage/
+instantiation/unwired executor branches, lazy exports or browser geometry.
+Incomplete structured blocks and the wrong strong-induction block keyword
+are actual parse rejections, not executor `BodyShape` examples.
+
+Run `node src/reading/web/tests/function-definition-failures.cjs --binary <litex>`
+for the six expression/case/recursive/unique-existence function and algorithm
+definition forms. `--reader <reader.js>` or
+`--endpoint http://127.0.0.1:<port>` select a reader or actual compiler POSTs.
+Thirty-eight actual sources give 76 ordinary/registered contexts, 320 bilingual
+editable/read-only views, 1080 interactions and 34 malformed/legacy controls.
+Twenty-four observed route/stage combinations include anonymous-function
+parameter/condition/return/body checks, case coverage/disjointness, tuple-shaped
+branch WF/membership failures, recursive measure/lower-bound checks, nested
+paths, source unique-existence and actual algorithm `DefineFn` wrappers.
+
+The suite keeps a correct definition separate from a later arity error, rejects
+ordinary existence at parse, preserves a local accepted prefix and selects two
+actual executions of the same formula/algorithm source. Source, keyword, focus,
+pin, edit invalidation, unchanged Native and final closed WD are checked. Nested
+and disjoint paths come from recorded indices; the latter do not acquire proof
+certificates. Missing branch conditions, bindings and earlier successful checks
+are not regenerated. Foreign/malformed source, wrappers, goals, object families
+and nested records remain incomplete in the exercised controls. Native output
+stays in memory and tiny source/config files are removed. The actual ordinary
+source set does not certify name-clash, empty/mismatched-case, other FnSet/
+property/shape or algorithm-already-defined variants, every template/generated
+path, lazy static exports or browser geometry. A function failure without a
+retained body/source link is not given an invented stop/Back action.
 
 Generate `--state-changes` fixtures and run
 `node src/reading/web/tests/context-changes.cjs <fixture-directory> [namespaced-export]`
@@ -506,6 +679,70 @@ ignored local-store errors, lazy algorithm/function/fold computations, empty
 fold identities, final closed WD, navigation and missing/conflicting records.
 Computation tapes do not become invented proof Stmts. A source edit invalidates
 all old logical results. These component checks do not verify browser geometry.
+`fixtures.py <directory> --claim-formation` exports twelve strict sources:
+eight successes and four actual parse/proof/formation rejections. Run
+`node src/reading/web/tests/claim-formation.cjs <directory> [reader-source]`.
+The 46 focused checks cover bilingual editable/read-only quantified claims,
+dependent domains, guarded function calls, multiple/duplicate conclusions,
+nested and repeated executions, final closed goal formation, distinct WD/body
+scopes, source/fact/keyword/keyboard/pin navigation, citations and exact Back,
+edit invalidation, malformed/legacy evidence, and unchanged atomic controls. A failed body with successful goal formation
+retains those checks without establishing or publishing the goal. The certificate is observed rather than recomputed. This is not a
+claim about all statement/result branches or unavailable cached WD targets.
+
+
+`fixtures.py <directory> --compound-claim-formation` exports 27 strict sources:
+17 successful runs and ten actual proof, formation, unsupported-goal or parse
+rejections. Run
+`node src/reading/web/tests/compound-claim-formation.cjs <directory> [reader-source]`.
+The 119 focused checks cover every accepted non-atomic claim-goal kind,
+dependent/guarded parameters, unique existence, nested and repeated claims,
+valid formation after a failed body or closing proof, and helper non-escape.
+The final closed section uses the actual checking scope, which can differ
+from the proof-body scope. Unsupported equivalence goals are distinguished
+from unproved conclusions; standalone equivalence remains a positive control.
+Later uses include an actual stored-existence citation and a scalar existence
+proved independently by a builtin witness rule. Source hover, individual
+chain equalities, fact/keyword/keyboard/pinning, citation/Back, edit invalidation,
+legacy and malformed-record controls are covered in both languages and modes.
+These checks observe Native data without changing default fact ownership or
+adding a public navigation field. They do not establish full result coverage.
+
+
+`fixtures.py <directory> --existential-formation` exports 33 strict sources:
+23 successful runs and ten actual proof, formation or parse rejections, plus
+a registered replay of the same have-object source as a known producer
+boundary. Run
+`node src/reading/web/tests/existential-formation.cjs <directory> [reader-source]`.
+The 166 focused checks exercise 184 source-proof interactions across both
+languages and editable/read-only modes. Actual records cover all nine current
+existential builtin rules, known ordinary/unique/negative existence, universal
+instantiation, guarded and dependent domains, nested function alpha binders,
+structure laws and repeated executions. Candidate conditions remain local to
+their retained checking scope; a failed search does not establish its goal.
+The rational-denominator control follows the actual positive-candidate premise
+and returns exactly to the source. Introductions and counterexamples display
+an ancestor-owned certificate once. Typed wrappers, source/span, scopes,
+parameter/body correspondence, missing/compact/cyclic records and edit
+invalidation have negative controls. The authoring Session retains accepted
+context after ordinary rejections; four unchanged public sources are separate
+baseline verifications. These gates do not certify every cached/generated or
+original52 result variant, and they do not verify browser geometry.
+
+`fixtures.py <directory> --failed-evaluation` exports thirteen strict sources:
+seven observed native failure variants, domain-check examples, a nested command,
+and a successful stored-equality reuse control. Run
+`node src/reading/web/tests/failed-evaluation.cjs <directory> [reader-source]`.
+The bilingual editable/read-only checks cover typed stage descriptions, keyword
+and symbol help, keyboard/pinning, enclosing-scope navigation and exact Back,
+edit invalidation, no rejected publication, final closed domain conditions,
+and malformed/legacy records. A derived diagnostic label cannot override the
+typed command result. No earlier trace or numerical result is reconstructed.
+Cyclic-call, checked-algorithm-equation and evaluated-equality-WD failures have
+type-based descriptions, but ordinary-source reachability is not certified by
+these fixtures. The nested command retains its enclosing scope link; this does
+not certify the enclosing enumeration's complete parameter/assignment display.
+
 `cargo test --release --test reading_qualified_eval` separately runs actual
 exported/imported algorithm chapters and the out-of-domain rejection. Imported
 calls explicitly release their function interfaces and assert their actual
@@ -746,6 +983,20 @@ closed WD and edit invalidation. Missing or conflicting goal/scope/WD/prefix
 records do not acquire completed checks. Failed instances are not published.
 These are public DOM/content checks and do not establish browser geometry.
 
+Generate `--construction-failures` fixtures and run
+`node src/reading/web/tests/failed-constructions.cjs <fixtures> [reader-source]`
+for eight real preimage/replacement rejections. They cover native stage and
+count records, failed range membership, missing uniqueness, unknown or unary
+predicates, and a source-set division by zero. Bilingual editable/read-only
+source, keyword, keyboard and pin events retain the rejected command address,
+final closed formation checks and edit invalidation. The test checks that
+missing invocation histories acquire no bindings, completed prefixes, source
+links or published facts. Source spellings that differ from normalized IR are
+accepted through their native byte/token addresses. Corrupt dispatcher,
+status, source, scope, count and proof records fail closed. This gate does not
+certify generated/repeated/embedded construction histories, late storage or
+the replacement `Define` failure, or browser geometry.
+
 Generate `--failed-theorems` fixtures and run
 `node src/reading/web/tests/failed-theorem-invocations.cjs <fixtures> [old-fixtures]`
 for actual failed theorem lookup/call shape, dependent arguments, complete
@@ -839,6 +1090,20 @@ foreign/missing scope/source/subject/endpoint controls. The native producer gate
 is `cargo test --release --test reading_quantifier_formation`; its runtime
 checks verify rollback and absence of storage for the false consequent. These
 checks are file-backed and do not assert browser geometry.
+
+Generate `--formation-struct-openings` fixtures and run
+`node src/reading/web/tests/formation-struct-openings.cjs <fixtures> - <fixtures>/formation-struct-book`.
+The nine rejected inputs distinguish retained expansions in forall
+formation/proof introduction from the peer helpers that deliberately retain no
+expanded structural stores. The successful control keeps ordinary proof
+introduction. Bilingual editable/read-only events check folded local properties,
+actual memberships, multiple and parameterized binders, false-but-formed
+clauses, definition/field navigation and exact Back, final closed WD, keyboard,
+pinning and edit invalidation. Missing, reordered, partial or foreign evidence
+cannot supply a structural explanation. The qualified two-source book loads
+the real defining chapter lazily. These tests certify selected retained
+formation scopes, not actual opening failures, all generated/repeated histories
+or browser geometry.
 
 Generate explicit-assumption histories with
 `python3 src/reading/web/tests/fixtures.py <fixtures> --trust-have-history --binary target/release/litex`,
@@ -1291,3 +1556,298 @@ actual compiler output. The optional Mechanics export checks the four existing
 empty-loop body rows in Chapters 5, 7 and 9 without re-verifying or changing the
 book. The tests model no browser geometry and do not certify every unexecuted
 or partially recorded statement history.
+
+## Large native proof graphs
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --large-proof-graphs --statement-kinds
+node --max-old-space-size=4096 src/reading/web/tests/large-proof-graphs.cjs <output> <output>/large-proof-book - [maintained-homepage-export] [<output>]
+```
+
+The maintained finite-probability and orthogonal-projection sources supply real
+wide graphs, without synthetic padding or duplicated evidence IDs. A small
+entry chapter precedes them in the native three-source export. Bilingual
+editable/read-only events use the source menu, hover, keyboard focus, symbol
+help, pinning, universal citation and exact Back, repeated chapter navigation,
+final closed WD and edit invalidation. Full standalone Native bundles and a
+JSON book path are accepted too. The original reader fails when the actual
+large chapter is indexed; the repaired reader retains its full proof history.
+
+Missing arguments/parameter records remain incomplete, and a foreign manifest
+is still rejected before a valid retry. Optional existing homepage data checks
+the original source addresses. Optional 52-kind fixtures supply bilingual
+mount/selection and Native-immutability smoke checks for the shared walker;
+they do not certify every success/failure/result branch. These file-backed
+event checks model no browser geometry or unbounded memory capacity.
+
+
+### Atomic equality substitutions
+
+Generate the existing canonical and unchanged topology fixtures with
+`python3 src/reading/web/tests/fixtures.py --binary <litex> --statement-kinds --atomic-rewrites <fixtures>`,
+then run `node src/reading/web/tests/atomic-rewrites.cjs <fixtures>`. An optional
+second argument selects a reader source for the old-observer negative control.
+The suite consumes actual global, case, finite-enumeration and induction proof
+records from the maintained sources. It checks both locales and editability
+modes, actual rule/equality/residual correspondence, expanded residual proof,
+source pointer/focus/symbol/pin, citations and exact Back, final closed WD,
+nonpublication, edit invalidation and malformed ownership/proof controls.
+It neither authors another mathematical proof nor executes a rewrite. Run
+`numeric-rewrites.cjs` as the affected equality-renderer regression as well.
+
+### Atomic function unfolding and converse relations
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --atomic-unfold-dual
+node src/reading/web/tests/atomic-unfold-dual.cjs <output> [reader-source] [existing-native-document ...]
+```
+
+The unchanged group chapter supplies the actual `6 $in multiples(3)` claim
+closing proof. A retained-Session-checked inline source unfolds both arguments
+of `selected(alpha) $in singleton(alpha)` to `1 $in {1}`. Three unchanged
+public relation examples distinguish actual negated `OrderDual` from strict
+and weak examples whose native proof may use other routes. An optional
+existing Native document exercises its actual retained applications, including
+scope-owned contradiction closures; this does not re-verify the source book.
+
+Both locales and editable/read-only modes check source pointer, keyboard,
+symbol help and pinning; actual definitions/bindings, expansion equalities,
+converse proof, citations and exact Back; initially closed proof obligations
+and final child WD; nonpublication, edit invalidation and Native immutability.
+Corruption controls conflict with the target, owner, source, rewritten goal,
+proof identity, changed argument or expansion equality. Claim target/store
+mismatches are rejected before showing the child proof. These file-backed
+tests do not model browser geometry or certify all atomic proof branches.
+
+### Function-body substitutions in equalities
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --equality-unfold
+node --max-old-space-size=8192 --expose-gc src/reading/web/tests/equality-unfold.cjs <output> [reader-source] [existing-native-document ...]
+```
+
+The21 maintained source cases include the Newton, projection and linear-algebra
+chapters, public proof-node examples, the negative manifest and unchanged
+execute-unit-test inputs. They exercise16 actual equality-unfold applications,
+including6 theorem-goal clauses without separately stored proofs. Actual source
+and operator events distinguish adjacent chain steps. Repeated calls and both
+sides keep all captured expansions; the swapped-argument example checks both
+parameter correspondences explicitly. Narrower selected-body domains, missing
+guards, invalid calls and bounded-search failures remain separate controls.
+
+Bilingual editable/read-only checks cover real browser collection APIs,
+initially closed expansion details, source/parameter binding, residual proof,
+source-owned theorem goals, keyboard/symbol/pin, citation and exact Back,
+neighbor routes, final closed WD, nonpublication, edit invalidation and Native
+immutability.31 malformed-record controls cover payload, source, scope,
+application, argument, WD and residual correspondence. Optional original Native
+documents test their actual source addresses without re-verifying a source
+book. These file-backed tests do not certify browser geometry or every equality
+proof route.
+
+
+## Failed witness stages and local proof prefixes
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --failed-witnesses --processes --construction-failures
+node src/reading/web/tests/failed-witnesses.cjs <output> [reader-source]
+node src/reading/web/tests/proof-processes.cjs <output>
+node src/reading/web/tests/failed-constructions.cjs <output>
+```
+
+Twenty real sources distinguish the three witness owners, supplied argument and
+witness domains, object/set formation, substituted body conditions, uniqueness,
+unsupported predicate definitions, abstract predicates and local proof-body
+failures. Bilingual editable/read-only source, keyword, keyboard, symbol, pin,
+citation/Back and edit events keep actual child-prefix records separate from
+missing earlier context. Existential formation reuses its original scope-aware
+view. A derived diagnostic phase cannot replace the authoritative native stage.
+
+Malformed controls conflict with result ownership, source spans/tokens,
+publication, scopes, failure payloads, child identity and ordered prefixes.
+Retained failure checks are final and initially closed. No missing count,
+parameter substitution or successful outer conclusion is reconstructed.
+Neighboring successful witnesses and induction/enumeration stages use the
+existing process suite. These file-backed checks do not certify every internal
+witness failure path, cross-file lazy loading or browser geometry.
+
+
+## Retained uniqueness candidate contexts
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --witness-uniqueness --processes
+node src/reading/web/tests/witness-uniqueness.cjs <output> [reader-source]
+```
+
+Nine strict-Session-checked sources cover one/two-component candidates,
+dependent and structural domains, nested claim/theorem owners, a successful
+witness and failures before uniqueness checking. Bilingual editable/read-only
+source, keyboard, keyword, pin, structural-property, actual premise/Back and
+edit events keep generated candidates distinct from the supplied witnesses.
+The theorem control follows its actual outer nonzero premise without claiming
+that a missing cached WD certificate cited it. Source rows and Native records
+remain unchanged and failed witnesses publish no new outer result.
+
+Controls corrupt scopes, parameter stores, assumptions, target/prefix identity,
+candidate count/order, comparison kind and individual WD records. A real
+successful witness supplies the positive cache targets; removing those targets
+requires an explicit missing-evidence disclosure. These checks do not certify
+all internal witness failures, repeated generated candidate histories, lazy
+cross-file uniqueness navigation or browser geometry.
+
+## Successful and repeated uniqueness contexts
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --witness-uniqueness-success
+node src/reading/web/tests/witness-uniqueness-success.cjs <output> [reader-source]
+```
+
+Seven independently verified sources cover one/two-component, dependent and
+structural candidates, nested claim/theorem owners and two executions of one
+witness row. The 49 focused checks exercise bilingual editable/read-only
+source, keyword, keyboard, pin, candidate/structural/assignment citations,
+execution selection, exact Back and edit invalidation. A candidate premise
+retains its own arbitrary parameters and inherited witness/assignment scope.
+The later execution remains inspectable when its native store reuses the
+first execution's existential FactId. Neither the Native data nor that fact's
+original owner changes. Generated contexts add no permanent source controls;
+expression checks remain final and initially closed.
+
+Corruption controls remove or conflict with dispatch, source, local/candidate
+ownership, parameter/premise stores, completed conclusions, candidate endpoint
+order and another execution's payload. They must not yield a reconstructed
+successful candidate context. These checks cover retained local-introduction
+proofs and the demonstrated repeated store; they do not establish complete
+cross-file/generated-history coverage or browser geometry.
+
+## Qualified uniqueness and unopened definition sources
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --qualified-uniqueness
+node src/reading/web/tests/qualified-uniqueness.cjs <output>/qualified-unique-positive-book <reader-source> <output>/qualified-unique-negative-book <output>/qualified-unique-explicit-membership-negative-book
+```
+
+The three actual two-source exports include one successful project and two
+qualified-object membership rejections. In the successful project, two witness
+executions retain local candidate scopes and two reuse an earlier universal.
+The 53 focused checks distinguish these native routes, exercise bilingual
+editable/read-only definition-first/proof-first loading, follow candidate and
+field-definition citations with exact Back, and check the final closed WD
+disclosure. Pending definition responses are cancelled by edit/destroy. Missing
+chunks, foreign manifest IDs and mismatched source IDs are not adopted. The
+16 rejection scenarios retain `WitnessType` and do not introduce uniqueness
+candidates. Native records, source rows and mathematical identities are unchanged.
+
+The first argument may also be an actual compiler JSON file; optional rejection
+arguments may then be JSON files. This runs the inline-document path with 32
+checks for the demonstrated positive/two-negative responses; lazy source and
+cancellation controls belong to the export-manifest path. These tests do not
+claim a fix for the observed file/REPL membership difference or complete
+generated/qualified coverage, and do not certify browser geometry.
+
+## Repeated witness source and citation identity
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <release-litex> --repeated-witnesses
+node src/reading/web/tests/repeated-witnesses.cjs <output> [reader-source]
+```
+
+Eight independently verified sources cover repeated existential, predicate and
+nonempty-set witnesses; constant/dependent arguments; local proof bodies;
+nested theorem owners; and later reuse of a predicate fact. The 63 checks use
+bilingual editable/read-only source, keyword, keyboard, pin, execution pickers,
+local-body and inference-origin references, exact Back and edit invalidation.
+They follow actual FactIds while checking the selected execution's bindings
+and assignment. The exported Native fact owners and source rows remain intact.
+
+Corruption controls conflict with dispatch, canonical source, source line,
+local scope owner/parent, return identity, atomic target, existential projection,
+membership target and checked source/store correspondence. A missing checked
+correspondence cannot acquire the current source execution; unresolved links
+retain the original Native address. The prior deployed reader fails separate
+real-source oracles for the missing repeated predicate invocation and the
+proof-body citation returning to the first execution. These checks do not
+certify every generated/component/cache source address or browser geometry.
+
+The have-object source also has an explicit registered-file boundary: it passes
+as an unregistered file, but the same source under an `f0` export rejects the
+later equalities at lines 9 and 16 in the frozen producer. The old and new
+reader executables return identical proof data for both modes apart from
+executable/bundle identity. The registered replay checks the three successful
+existence introductions and the actual later failures; it does not claim that
+the intended mathematics passed. The producer boundary remains unresolved.
+
+### Have-object property identities
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <litex> --introduction-identities
+node src/reading/web/tests/introduction-property-identities.cjs <output> [reader-source]
+```
+
+The unchanged public have-object source and session-checked outer-object,
+constant, anonymous-function, independent-condition, comparison and natural
+membership sources run in ordinary and registered file contexts. An additional
+registered two-source case uses an actual imported definition. Registered
+rejections remain explicit producer boundaries, including rejected
+introductions and later failed reuse; they are not counted as mathematical
+successes. The natural-membership source also retains actual inferred
+consequences whose source property has an unresolved object identity.
+
+Checks cover bilingual editable/read-only source-body, object, fact and
+inference-source views, closed unmatched-condition disclosures, direct
+selection, source references and exact Back. Actual stores remain accessible;
+matched properties keep their usual display. Metadata controls remove free
+object definitions, introduce a conflicting owner or an unrelated parameter,
+omit source structure, remove all anonymous-bound-variable definition
+occurrences, and retain legacy source occurrences without declaration IDs.
+These are data controls, not additional verified mathematical examples.
+Rendering must preserve every Native record and source row. This suite does
+not repair the registered producer boundary or establish full-language or
+browser-layout coverage.
+
+### Failed algorithm-equation targets
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <litex> --eval-equations
+node src/reading/web/tests/eval-equation-failures.cjs <output> [reader-source]
+```
+
+Ten independently session-checked sources run in ordinary and registered
+contexts. A predicate-conditioned algorithm produces an actual
+`ExecEvalStmtFailed::AlgorithmEquation` target; an explicit `by def` condition
+repairs the call and remains a navigable citation of the successful proof.
+Other cases cover arithmetic and algorithm wrappers, failed/successful claim
+bodies, a failed command followed by successful checks in the same file,
+seven actual recursive trace entries with repeated equal calls, a depth
+limit, and a definition-stage self-reference rejection.
+
+The 102 focused scenarios use bilingual editable/read-only source, keyword,
+symbol, keyboard, pin, definition navigation and exact Back. Failed targets
+remain unpublished and formation remains final/closed. Data controls remove
+or conflict with the goal, equality/call/head shape, identity, typed failure,
+definition kind/status and legacy evidence. A diagnostic label cannot replace
+the actual typed stage. These controls are not ordinary mathematical runs.
+No synthetic cycle or result-equality-WD failure is counted as source coverage.
+
+### Formation failures of algorithm equations
+
+```sh
+python3 src/reading/web/tests/fixtures.py <output> --binary <litex> --eval-equation-formation
+node src/reading/web/tests/eval-equation-formation.cjs <output> [reader-source]
+```
+
+Seven real sources run as ordinary and registered files. A decimal argument
+normalizes to an exact fraction before defining-equation certification; the
+actual failure retains the fraction's unproved membership in a named singleton.
+Recording the original membership is a verified control, not an added
+mathematical assumption or a kernel repair. Partial, arithmetic, inner-call
+and failed/successful claim cases preserve their own execution scopes.
+
+The84 scenarios include40 actual failure views,24 successful views and20
+malformed/legacy/diagnostic controls. Both languages and editable/read-only
+modes check unpublished goals, distinct formation/search wording, final closed
+WD, exact inner definition/Back, checked membership citations/Back and edit
+invalidation. A failure object must be an actual side of the retained equality,
+and its object family must match the typed failure family. Presentation leaves
+the source rows and Native proof/publication records unchanged. These cases do
+not establish other rare eval-failure routes or browser geometry coverage.

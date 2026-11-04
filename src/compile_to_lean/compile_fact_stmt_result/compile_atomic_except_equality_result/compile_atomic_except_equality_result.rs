@@ -194,9 +194,12 @@ impl LitexToLeanCompiler {
                     },
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::PeriodicTrigNonzero(p)) => self.compile_periodic_trig_nonzero(goal,p,position)?,
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule::ListSetDifferentLength(_)) => self.compile_list_distinct_lengths(goal, position)?,
+                    AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule::NativeMatrixProperty(p)) => self.compile_native_matrix_property(goal,p,position)?,
                     rule @ (AtomicExceptEqualityFactSearchProofByBuiltinRule::LessFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::LessEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::GreaterEqualFact(_) | AtomicExceptEqualityFactSearchProofByBuiltinRule::NotEqualFact(_)) => self.compile_order_builtin(goal, rule, position)?,
                     AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(rule) => match goal {
                         AtomicFact::InFact(fact) => match rule {
+                            InFactSearchProofByBuiltinRule::PositiveIntegerInNPos(proof) => self.compile_positive_integer_member(fact, &proof.integer_proof, &proof.positive_proof, position)?,
+                            InFactSearchProofByBuiltinRule::NativeMatrixProperty(proof) => self.compile_native_matrix_property(goal,proof,position)?,
                             InFactSearchProofByBuiltinRule::SignedNumericMembership(proof) => self.compile_structural_signed_membership(fact, proof, position)?,
                             InFactSearchProofByBuiltinRule::StandardSetSubsetMembership(proof) => self.compile_standard_subset_member(fact, proof, position)?,
                             InFactSearchProofByBuiltinRule::IndexUnionMembershipFromIndex(p) => self.compile_index_union_member(fact,p.cite_index_in_index_set_fact_id,&p.element_in_fiber_proof,position)?,
@@ -390,6 +393,13 @@ impl LitexToLeanCompiler {
                     self.compile_finite_application_membership(goal, &proof.source, proof.index, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionMembershipFromRight(proof)) =>
                     self.compile_union_membership_strategy(goal, &proof.requirement_facts, &proof.proof_of_requirement_facts, false, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetBuilderMembership(proof)) => {
+                    let AtomicFact::InFact(fact) = goal else { return Err(LeanCompileError::unsupported("SetBuilder/StrategySubject")); };
+                    self.compile_builder_membership(fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?
+                }
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(
+                    crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::PartialDerivativeAt(p),
+                )) => self.compile_smooth_partial_derivative(goal, p, definition_wd, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p)) => self.compile_pointwise_derivative(goal,p,position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {
                     return Err(LeanCompileError::new("Atomic/BuiltinStrategy", &format!("Unsupported selected strategy for `{}`.", goal.readable_string())))

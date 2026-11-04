@@ -126,6 +126,7 @@ use super::by_power_laws::{
 // Each equality builtin rule gets its own variant and payload.
 // Definitional unfolds are EqualitySearchProofByObjectDefinition, not here.
 pub enum EqualitySearchProofByBuiltinRule {
+    NativeMatrixProperty(crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof),
     NativeMatrixLaw(super::by_native_matrix_laws::NativeMatrixLawProof),
     HomogeneousCartesianEqualsFiniteSequence(HomogeneousCartesianEqualsFiniteSequenceBuiltinRuleProof),
     ElementaryIdentity(super::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule),

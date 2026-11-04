@@ -219,7 +219,10 @@ impl LitexToLeanCompiler {
                 if declaration.contains("Nat.brecOn") {
                     rendered = format!("set_option smartUnfolding false in\n{rendered}");
                 }
-                if declaration.len() > 500_000 {
+                // Explicit dependent WD can exceed the default budget already
+                // around 200 KB (for example a complete Darboux definition).
+                // Keep the existing finite, declaration-local resource policy.
+                if declaration.len() > 128 * 1024 {
                     rendered = format!("set_option maxHeartbeats 1000000 in\n{rendered}");
                 }
                 rendered

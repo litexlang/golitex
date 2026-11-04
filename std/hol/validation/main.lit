@@ -1,0 +1,42 @@
+have fn successor(n N) N=n+1
+
+release thm hol::hol_beta(N,N,successor,3)
+
+fn(x N) N {successor(x)}(3)=4
+
+release obj def hol::False
+
+release obj def hol::True
+
+release obj def hol::Bool
+
+release thm hol::all_predicates_instantiate_at_zero
+
+release obj def hol::HolNat
+
+release obj def hol::hol_zero
+
+release obj def hol::hol_one
+
+release obj def hol::hol_two
+
+release obj def hol::hol_three
+
+release obj def hol::hol_four
+
+hol::hol_two $in hol::HolNat
+
+release obj def hol::plus
+
+release thm hol::hol_two_plus_two
+
+release obj def hol::hol_of_nat
+
+release thm hol::hol_two_plus_two_not_three
+
+hol::plus(hol::hol_two,hol::hol_two)=hol::hol_four
+
+hol::plus(hol::hol_of_nat(2),hol::hol_of_nat(2))!=hol::hol_of_nat(3)
+
+
+release thm hol::hol_false_not(hol::False)

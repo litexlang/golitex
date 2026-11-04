@@ -31,6 +31,12 @@ impl LitexToLeanCompiler {
     ) -> Result<(Vec<String>, String, Vec<Fact>), LeanCompileError> {
         use BuiltinTheoremId::*;
         let (upper, arity, count) = match builtin.theorem {
+            SequenceLimsupFromEpsilon => (true, 2, 4),
+            SequenceLiminfFromEpsilon => (false, 2, 4),
+            SequenceLimsupBound => (true, 3, 3),
+            SequenceLiminfBound => (false, 3, 3),
+            SequenceLimsupHit => (true, 4, 4),
+            SequenceLiminfHit => (false, 4, 4),
             SequenceLimsupConstant => (true, 2, 3),
             SequenceLiminfConstant => (false, 2, 3),
             SequenceLimsupFromLimit | SequenceLimsupExists => (true, 2, 2),
@@ -75,6 +81,41 @@ impl LitexToLeanCompiler {
             return Err(invalid("SequenceSignature"));
         }
         let selected = match builtin.theorem {
+            SequenceLimsupFromEpsilon | SequenceLiminfFromEpsilon => {
+                if !matches!(&req[1], Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==args[1].ir() && f.set==Obj::StandardSet(StandardSet::R))
+                    || !candidate(goal, &args[0], &args[1], upper)
+                {
+                    return Err(invalid("EpsilonCandidate"));
+                }
+                super::compile_sequence_extremum_definition::validate_extremum_clauses(
+                    upper,
+                    &args[0],
+                    &args[1],
+                    &req[2..],
+                )?;
+                None
+            }
+            SequenceLimsupBound | SequenceLiminfBound | SequenceLimsupHit | SequenceLiminfHit => {
+                if !candidate(&req[1], &args[0], &args[1], upper)
+                    || !matches!(&req[2],Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==args[2].ir() && f.set==Obj::StandardSet(StandardSet::RPos))
+                {
+                    return Err(invalid("OriginalEpsilonCandidate"));
+                }
+                if matches!(builtin.theorem, SequenceLimsupHit | SequenceLiminfHit) {
+                    if !matches!(&req[3],Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==args[3].ir() && f.set==Obj::StandardSet(StandardSet::NPos))
+                    {
+                        return Err(invalid("OriginalHitCutoff"));
+                    }
+                    super::compile_sequence_extrema_epsilon::validate_hit(
+                        upper, &args[0], &args[1], &args[2], &args[3], goal,
+                    )?;
+                } else {
+                    super::compile_sequence_extrema_epsilon::validate_bound(
+                        upper, &args[0], &args[1], &args[2], goal,
+                    )?;
+                }
+                None
+            }
             SequenceLimsupConstant | SequenceLiminfConstant => {
                 if !matches!(&req[1],Fact::AtomicFact(AtomicFact::InFact(f)) if f.element.ir()==args[1].ir()&&f.set==Obj::StandardSet(StandardSet::R))
                 {
@@ -156,6 +197,9 @@ impl LitexToLeanCompiler {
             .collect::<Result<Vec<_>, _>>()?;
         let hf=format!("(Litex.unguardedFunctionDomain {} (Litex.denote (Litex.NPos (M := M))) (Litex.denote (Litex.R (M := M))) (Litex.isSet (Litex.NPos (M := M))) (Litex.isSet (Litex.R (M := M))) {})",objects[0],refs[0]);
         let law=match builtin.theorem{
+            SequenceLimsupFromEpsilon|SequenceLiminfFromEpsilon=>format!("Litex.sequenceExtremumOfForall {upper} {} {} {} {}",objects[0],objects[1],refs[2],refs[3]),
+            SequenceLimsupBound|SequenceLiminfBound=>format!("Litex.sequenceExtremumBound {upper} {} {} {}",objects.join(" "),refs[1],refs[2]),
+            SequenceLimsupHit|SequenceLiminfHit=>format!("Litex.sequenceExtremumHit {upper} {} {} {} {}",objects.join(" "),refs[1],refs[2],refs[3]),
             SequenceLimsupConstant|SequenceLiminfConstant=>format!("Litex.sequenceExtremumConstant {upper} {} {} {hf} {} (by intro n hn; exact {} (Litex.semanticObject n (M.member_isSet hn)) hn)",objects[0],objects[1],refs[1],refs[2]),
             SequenceLimsupFromLimit|SequenceLiminfFromLimit=>format!("Litex.sequenceExtremumOfLimit {upper} {} {} {hf} {} {}",objects[0],objects[1],self.compile_real_membership_certificate(&args[1],&scope)?,refs[1]),
             SequenceLimsupExists|SequenceLiminfExists=>format!("Litex.sequenceExtremumExistsOfCandidate {upper} {} {} {} {}",objects[0],objects[1],self.compile_real_membership_certificate(&args[1],&scope)?,refs[1]),

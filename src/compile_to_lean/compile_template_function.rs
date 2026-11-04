@@ -278,6 +278,16 @@ impl LitexToLeanCompiler {
                 self.compile_function_raw_predicate(premise, position, &raw)?
             ));
         }
+        if let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
+            crate::execute::ExecHaveFnByInducStmtResult::Success(body),
+        )) = declaration.body.as_ref()
+        {
+            if let Some(conclusion) =
+                self.compile_recursive_published_conclusion(body, source, position, &raw)?
+            {
+                return Ok((format!("({}{conclusion})", prefix.join("")), arguments));
+            }
+        }
         let conclusions = source
             .then_facts
             .iter()

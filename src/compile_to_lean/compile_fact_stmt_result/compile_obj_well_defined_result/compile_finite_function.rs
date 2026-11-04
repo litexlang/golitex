@@ -4,11 +4,73 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::finite_function::FiniteFunctionSignatureProof;
 use crate::execute::execute_fact_stmt::known_tuple::{literal_positive_usize, KnownTupleShapeProof};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::TupleCoordinateKnownProof;
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{HomogeneousTupleCoordinateKnownProof, TupleCoordinateKnownProof};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    pub(in crate::compile_to_lean) fn compile_homogeneous_tuple_coordinate(
+        &self,
+        goal: &InFact,
+        proof: &HomogeneousTupleCoordinateKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let Obj::FnObj(application) = &goal.element else {
+            return Err(LeanCompileError::unsupported("HomogeneousCoordinate/Call"));
+        };
+        let (receiver, argument) = finite_call_parts(application)?;
+        let cart = proof
+            .shape
+            .cart()
+            .ok_or_else(|| LeanCompileError::unsupported("HomogeneousCoordinate/Shape"))?;
+        let n = cart.args.len();
+        if n == 0 || proof.carrier_equals.len() != n {
+            return Err(LeanCompileError::unsupported(
+                "HomogeneousCoordinate/CarrierArity",
+            ));
+        }
+        let call = position
+            .with_visible_wd(&goal.element, &mut |wd, producer| {
+                let DetailedObjWellDefinedProof::ByDef {
+                    proof: ObjWellDefinedProofByDef::FnObj(evidence),
+                    ..
+                } = wd.detailed_ref()
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "HomogeneousCoordinate/CallWD",
+                    ));
+                };
+                let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) =
+                    &evidence.domain_fn_set
+                else {
+                    return Err(LeanCompileError::unsupported(
+                        "HomogeneousCoordinate/FiniteDomain",
+                    ));
+                };
+                if finite.source.dimension() != n {
+                    return Err(LeanCompileError::unsupported(
+                        "HomogeneousCoordinate/Dimension",
+                    ));
+                }
+                let ctor = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
+                self.compile_finite_fn_call(application, evidence, finite, &ctor)
+            })?
+            .ok_or_else(|| LeanCompileError::unsupported("HomogeneousCoordinate/Producer"))?;
+        let (carrier, member) =
+            self.compile_cart_shape_member(&receiver, &proof.shape, position)?;
+        let receiver = self.compile_object_reference(&receiver, position)?;
+        let argument = self.compile_object_reference(argument, position)?;
+        let target = self.compile_object_reference(&goal.set, position)?;
+        let mut coordinates = Vec::new();
+        for (index, (factor, equal)) in cart.args.iter().zip(&proof.carrier_equals).enumerate() {
+            let equality = self.compile_fn_return_set_match(factor, &goal.set, equal, position)?;
+            let factor = self.compile_object_reference(factor, position)?;
+            coordinates.push(format!("(show M.mem (Litex.FunctionSemantics.callValue (M := M) (Litex.denote _receiver) (Litex.FiniteFunction.index ({index} : Fin {n}))) (Litex.denote _target) from (by\n  have h : Litex.Same {factor} _target := {equality}\n  exact h ▸ Litex.FiniteFunction.coordinate_mem _source_member ({index} : Fin {n})))"));
+        }
+        let returns = finite_vector_proof(&coordinates);
+        Ok(format!("(by\n  let _receiver := {receiver}\n  let _argument := {argument}\n  let _target := {target}\n  let _call := {call}\n  let _source_cart := {carrier}\n  have _source_member : Litex.In _receiver _source_cart := {member}\n  have _returns : ∀ i : Fin {n}, M.mem (Litex.FunctionSemantics.callValue (M := M) (Litex.denote _receiver) (Litex.FiniteFunction.index i)) (Litex.denote _target) := {returns}\n  have _input : M.mem (Litex.denote _argument) (Litex.FiniteFunction.indexSet (M := M) {n}) := _call.wd.2\n  have _result : M.mem (Litex.FunctionSemantics.callValue (M := M) (Litex.denote _receiver) (Litex.denote _argument)) (Litex.denote _target) := by\n    obtain ⟨i,hi⟩ := (Litex.FiniteFunction.indexSet_members (M := M) (n := {n}) (Litex.denote _argument)).mp _input\n    rw [hi]\n    exact _returns i\n  exact _result)"))
+    }
+
     pub(in crate::compile_to_lean) fn compile_finite_application_membership(
         &self,
         fact: &AtomicFact,

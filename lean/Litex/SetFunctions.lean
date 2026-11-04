@@ -1072,6 +1072,18 @@ theorem call_graphValue (D B : M.Value) (body : M.Value → M.Value)
   have hpoint := F.call_graph D B _ x (graph_isFunction D B body hbody) hx
   exact ((pair_mem_graph D B body x _).mp hpoint).2.2
 
+theorem call_graphValue_of_fnSet (D B : M.Value) (body : M.Value → M.Value)
+    (E C x : M.Value) (hf : M.mem (F.graphValue D B body) (F.fnSetValue E C))
+    (hx : M.mem x E) : F.callValue (F.graphValue D B body) x = body x := by
+  have hgraph := (F.fnSet_members E C _).mp hf
+  have hpoint := F.call_graph E C _ x hgraph hx
+  exact ((pair_mem_graph D B body x _).mp hpoint).2.2
+
+theorem call_graphValue_of_mem (D B : M.Value) (body : M.Value → M.Value)
+    (x : M.Value) (hf : M.mem (F.graphValue D B body) (F.fnSetValue D B))
+    (hx : M.mem x D) : F.callValue (F.graphValue D B body) x = body x :=
+  call_graphValue_of_fnSet D B body D B x hf hx
+
 end FunctionSemantics
 
 namespace NumericFunctionModel

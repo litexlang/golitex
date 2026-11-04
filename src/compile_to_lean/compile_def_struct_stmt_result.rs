@@ -18,7 +18,7 @@ pub(super) fn has_dependent_fields(source: &crate::ast::stmt::DefStructStmt) -> 
 }
 
 /// Field carriers may refer only to earlier fields; conditions retain the
-/// existing atomic/conjunction/chain boundary and their original capture.
+/// atomic/conjunction/chain/universal forms and their original capture.
 pub(super) fn validate_struct(
     proof: &ExecDefStructStmtSuccessResult,
 ) -> Result<(), LeanCompileError> {
@@ -56,7 +56,7 @@ pub(super) fn validate_struct(
     if source.equivalent_facts.iter().any(|f| {
         !matches!(
             f,
-            Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_)
+            Fact::AtomicFact(_) | Fact::AndFact(_) | Fact::ChainFact(_) | Fact::ForallFact(_)
         )
     }) {
         return Err(LeanCompileError::unsupported("Struct/QuantifiedCondition"));

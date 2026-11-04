@@ -1,0 +1,30 @@
+# Direct determinant formulas reuse the existing native mathematical contracts.
+# Previously the first theorem needed this proof statement:
+#     release thm matrix_det_upper_triangular(A,n)
+# Focused check: target/release/litex -strict -lang en -f examples/test_objs/native_matrix_determinant_formulas.lit
+
+thm direct_det_upper:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            col<row
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+
+thm direct_det_lower:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            row<col
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+
+thm direct_det_row:
+    ? forall n N+, A matrix(C,n,n), row closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(row,k)*matrix_cofactor(A,n,row,k)})
+
+thm direct_det_column:
+    ? forall n N+, A matrix(C,n,n), col closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,col)*matrix_cofactor(A,n,k,col)})

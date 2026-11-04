@@ -4,9 +4,11 @@ Every current leaf type has a format below. Mathematical precedence, domains, di
 
 ## Statements
 
+The table describes top-level presentation. Inside a proof, all nested statements inherit inline flow: headings and branch labels run into the prose, field lists become inline field/type pairs, and formulas remain inline with their full mathematical content. Proof bodies have one paragraph and wrap naturally.
+
 | AST leaf | Layout | Source fixture |
 | --- | --- | --- |
-| `Fact` | Relation/conjunction/quantifier-specific mathematics; long calculations aligned; proof-step paragraph boundaries. | `examples/test_statements/fact.lit` |
+| `Fact` | Relation/conjunction/quantifier-specific mathematics; top-level long calculations aligned; proof facts inline. | `examples/test_statements/fact.lit` |
 | `Trust.TrustStmt` | Explicit trust heading; assumption paragraph with all supplied facts. | `examples/test_statements/trust_stmt.lit` |
 | `Trust.TrustHaveStmt` | Explicit trust heading; typed bindings and their assumed conditions. | `examples/test_statements/trust_have_stmt.lit` |
 | `Definition.DefineObj.LetObjStmt` | Let sentence with a named equality; expression precedence preserved. | `examples/test_statements/let_obj_stmt.lit` |
@@ -39,12 +41,12 @@ Every current leaf type has a format below. Mathematical precedence, domains, di
 | `ReleaseAndExpand.ReleaseZornLemmaStmt` | Zorn application with set and all three named predicates; scoped hypothesis-checking proof. | `examples/test_statements/release_zorn_lemma_stmt.lit` |
 | `ReleaseAndExpand.ReleaseAxiomOfChoiceStmt` | Choice application with the family; scoped hypothesis-checking proof. | `examples/test_statements/release_axiom_of_choice_stmt.lit` |
 | `ReleaseAndExpand.ReleaseRegularityAxiomStmt` | Regularity-application paragraph naming the original set. | `examples/test_statements/release_regularity_axiom_stmt.lit` |
-| `By.ByCasesStmt` | Goal paragraph; separately labelled case items with assumptions and structured proof steps. | `examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit` |
-| `By.ByContraStmt` | Contradiction heading; separate goal; indented negated assumption and proof steps; separate contradiction closure. | `examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit` |
-| `By.ByEnumerateFiniteSetStmt` | Finite-enumeration goal paragraph followed by a scoped proof body. | `examples/test_statements/by_enumerate_finite_set_stmt.lit` |
-| `By.ByInducStmt` | Goal and induction/base paragraph; separate base/step items when supplied; structured common-body steps. | `examples/test_statements/by_induc_stmt.lit` |
-| `By.ByStrongInducStmt` | Goal and strong-induction/base paragraph; separate supplied base/step items. | `examples/test_statements/by_strong_induc_stmt.lit` |
-| `By.ByForStmt` | Finite-iteration goal paragraph followed by a scoped proof body. | `examples/test_statements/by_for_stmt.lit` |
+| `By.ByCasesStmt` | Continuous goal, labelled cases, assumptions, proof steps and common conclusion in one paragraph. | `examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit` |
+| `By.ByContraStmt` | Run-in contradiction label, goal, contrary assumption, derivation and explicit conclusion in one paragraph. | `examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit` |
+| `By.ByEnumerateFiniteSetStmt` | Finite-enumeration goal followed by inline proof steps. | `examples/test_statements/by_enumerate_finite_set_stmt.lit` |
+| `By.ByInducStmt` | Inline goal and induction/base introduction; run-in base/step labels and common proof steps. | `examples/test_statements/by_induc_stmt.lit` |
+| `By.ByStrongInducStmt` | Inline goal and strong-induction/base introduction; run-in base/step labels. | `examples/test_statements/by_strong_induc_stmt.lit` |
+| `By.ByForStmt` | Finite-iteration goal followed by inline proof steps. | `examples/test_statements/by_for_stmt.lit` |
 | `By.ByExtensionStmt` | Set-extensionality target equality followed by a scoped proof body. | `examples/test_statements/by_extension_stmt.lit` |
 | `By.ByFnExtensionStmt` | Function-extensionality target equality followed by a scoped proof body. | `examples/test_statements/by_fn_extension_stmt.lit` |
 | `By.ByDefStmt` | Definition-unfolding paragraph showing the exact predicate instance. | `examples/test_statements/by_def_stmt.lit` |
@@ -52,11 +54,11 @@ Every current leaf type has a format below. Mathematical precedence, domains, di
 | `Register.RegisterTransitivePropStmt` | Transitivity-registration paragraph with the complete universal law. | `examples/test_statements/register_transitive_prop_stmt.lit` |
 | `Register.RegisterSymmetricPropStmt` | Symmetry-registration paragraph with the complete universal law. | `examples/test_statements/register_symmetric_prop_stmt.lit` |
 | `Register.RegisterReflexivePropStmt` | Reflexivity-registration paragraph with the complete universal law. | `examples/test_statements/register_reflexive_prop_stmt.lit` |
-| `Witness.WitnessExistFact` | Witness values and existential goal; indented source proof steps. | `examples/test_statements/witness_exist_fact.lit` |
-| `Witness.WitnessAtomicFact` | Witness values and named atomic goal; indented source proof steps. | `examples/test_statements/witness_atomic_fact.lit` |
-| `Witness.WitnessNonemptySet` | Witness and nonempty-set goal; indented source proof steps. | `examples/test_statements/witness_nonempty_set.lit` |
-| `ProofBlock.ClaimStmt` | Claim heading and full assertion; one proof caption with structured steps and closing square. | `examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit` |
-| `ProofBlock.SketchStmt` | Explicit sketch heading and indented local statements; no proof-completion claim. | `examples/test_statements/sketch_stmt.lit` |
+| `Witness.WitnessExistFact` | Witness values, existential goal and inline proof steps. | `examples/test_statements/witness_exist_fact.lit` |
+| `Witness.WitnessAtomicFact` | Witness values, named atomic goal and inline proof steps. | `examples/test_statements/witness_atomic_fact.lit` |
+| `Witness.WitnessNonemptySet` | Witness, nonempty-set goal and inline proof steps. | `examples/test_statements/witness_nonempty_set.lit` |
+| `ProofBlock.ClaimStmt` | Claim heading and full assertion; one continuous proof paragraph with an inline closing square. | `examples/stmt_nodes/compile_to_latex/structured_proof_layout.lit` |
+| `ProofBlock.SketchStmt` | Explicit run-in sketch label and inline local statements; no proof-completion claim. | `examples/test_statements/sketch_stmt.lit` |
 | `Command.EvalStmt` | Evaluation-request paragraph; the expression is shown without an invented computed result. | `examples/test_statements/eval_stmt.lit` |
 
 ## Objects

@@ -8,12 +8,13 @@ use crate::execute::execute_fact_stmt::native_matrix::{
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
-    pub(super) fn compile_matrix_component_step(
+    pub(in crate::compile_to_lean) fn compile_matrix_component_step(
         &self,
         subject: &Obj,
         call_object: &str,
         callable: &MatrixCallableProof,
         body: &Obj,
+        reduced_arguments: Option<(&[Box<Obj>], &[String])>,
         wd: &ObjWellDefinedProof,
         producer: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
@@ -30,6 +31,12 @@ impl LitexToLeanCompiler {
         if call.body.len() != 1 || call.body[0].len() != arity {
             return Err(LeanCompileError::unsupported("Matrix/ComponentArity"));
         }
+        let arguments = reduced_arguments.map_or(call.body[0].as_slice(), |(args, _)| args);
+        if arguments.len() != arity
+            || reduced_arguments.is_some_and(|(_, proofs)| proofs.len() != arity)
+        {
+            return Err(LeanCompileError::unsupported("Matrix/ReducedArguments"));
+        }
         let substitution = callable
             .function
             .body
@@ -37,7 +44,7 @@ impl LitexToLeanCompiler {
             .groups
             .iter()
             .flat_map(|g| &g.params)
-            .zip(&call.body[0])
+            .zip(arguments)
             .map(|(p, a)| (p.id, a.as_ref().clone()))
             .collect();
         if !instantiated_object_matches(&callable.function.equal_to, body, &substitution) {
@@ -65,26 +72,64 @@ impl LitexToLeanCompiler {
             &callable.function_equal,
             &scope,
         )?;
-        let (input, domain) = self.compile_fn_return_domain(
+        let (mut input, mut domain) = self.compile_fn_return_domain(
             call,
             p,
             &callable.function.body,
             &SourcePosition { before: 0, ..scope },
         )?;
-        let transport = format!(
+        let mut transport = format!(
             "(congrArg (fun f => Litex.FunctionSemantics.callValue (M := M) f {input}) {same})"
         );
+        if let Some((arguments, equalities)) = reduced_arguments {
+            let values = arguments
+                .iter()
+                .map(|arg| self.compile_normalization_value(arg, &scope))
+                .collect::<Result<Vec<_>, _>>()?;
+            let normalized = if let [value] = values.as_slice() {
+                value.clone()
+            } else {
+                format!(
+                    "(Litex.FiniteFunction.tupleValue (M := M) ![{}])",
+                    values.join(", ")
+                )
+            };
+            let congruence = if let [equal] = equalities {
+                equal.clone()
+            } else {
+                format!(
+                    "(congrArg (Litex.FiniteFunction.tupleValue (M := M)) {})",
+                    finite_vector_equality(equalities)
+                )
+            };
+            // Normalize the original checked input, then transport its domain
+            // proof. No WD is requested for a newly substituted call object.
+            let packed =
+                self.compile_normalization_packed_argument_denotation(&call.body[0], &scope)?;
+            let input_equal = format!("(({packed}).trans {congruence})");
+            transport = format!("({transport}.trans (congrArg (Litex.FunctionSemantics.callValue (M := M) (Litex.denote {root})) {input_equal}))");
+            domain = format!("((congrArg (fun _matrix_input => M.mem _matrix_input _) {input_equal}).mp {domain})");
+            input = normalized;
+        }
+        let argument_value = |index: usize| -> Result<String, LeanCompileError> {
+            if let Some((arguments, _)) = reduced_arguments {
+                self.compile_normalization_value(&arguments[index], &scope)
+            } else {
+                self.compile_object_reference(&call.body[0][index], &scope)
+                    .map(|object| format!("(Litex.denote {object})"))
+            }
+        };
         match &callable.operator {
             MatrixOperator::Add(_) | MatrixOperator::Subtract(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
                 let operation = if matches!(callable.operator, MatrixOperator::Add(_)) {
                     "add"
                 } else {
                     "sub"
                 };
                 let pair = format!(
-                    "(Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col}))"
+                    "(Litex.FiniteFunction.pack2 {row} {col})"
                 );
                 let value = format!(
                     "(M.{operation}Value (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.left) {pair}) (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.right) {pair}))"
@@ -106,26 +151,26 @@ impl LitexToLeanCompiler {
                 Ok((value, proof))
             }
             MatrixOperator::Inverse(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
-                let pair = format!("(Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col}))");
-                let value = format!("(M.divValue (Litex.matrixCofactorValue (Litex.denote ({root}).val.matrix) ({root}).val.order (Litex.denote {col}) (Litex.denote {row})) (Litex.matrixDeterminantValue (Litex.denote ({root}).val.matrix) ({root}).val.order))");
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
+                let pair = format!("(Litex.FiniteFunction.pack2 {row} {col})");
+                let value = format!("(M.divValue (Litex.matrixCofactorValue (Litex.denote ({root}).val.matrix) ({root}).val.order {col} {row}) (Litex.matrixDeterminantValue (Litex.denote ({root}).val.matrix) ({root}).val.order))");
                 let proof = format!("(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.matrixInverseCall {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.matrixInverseBody (Litex.denote ({root}).val.matrix) ({root}).val.order {pair} at h\n  unfold Litex.matrixInverseBody Litex.matrixAdjugateBody at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)");
                 Ok((value, proof))
             }
             MatrixOperator::Adjugate(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
-                let pair = format!("(Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col}))");
-                let value = format!("(Litex.matrixCofactorValue (Litex.denote ({root}).val.matrix) ({root}).val.order (Litex.denote {col}) (Litex.denote {row}))");
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
+                let pair = format!("(Litex.FiniteFunction.pack2 {row} {col})");
+                let value = format!("(Litex.matrixCofactorValue (Litex.denote ({root}).val.matrix) ({root}).val.order {col} {row})");
                 let proof = format!("(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.matrixAdjugateCall {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.matrixAdjugateBody (Litex.denote ({root}).val.matrix) ({root}).val.order {pair} at h\n  unfold Litex.matrixAdjugateBody at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)");
                 Ok((value, proof))
             }
             MatrixOperator::Minor(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
                 let pair = format!(
-                    "(Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col}))"
+                    "(Litex.FiniteFunction.pack2 {row} {col})"
                 );
                 let value = self.compile_function_raw_expression_bound(
                     body,
@@ -138,10 +183,10 @@ impl LitexToLeanCompiler {
                 Ok((value, proof))
             }
             MatrixOperator::Multiply(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
                 let pair = format!(
-                    "(Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col}))"
+                    "(Litex.FiniteFunction.pack2 {row} {col})"
                 );
                 let value = self.compile_function_raw_expression_bound(
                     body,
@@ -154,10 +199,10 @@ impl LitexToLeanCompiler {
                 Ok((value, proof))
             }
             MatrixOperator::Scale(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
                 let pair = format!(
-                    "(Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col}))"
+                    "(Litex.FiniteFunction.pack2 {row} {col})"
                 );
                 let value = format!(
                     "(M.mulValue (Litex.denote ({root}).val.scalar) (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.matrix) {pair}))"
@@ -168,13 +213,13 @@ impl LitexToLeanCompiler {
                 Ok((value, proof))
             }
             MatrixOperator::OuterProduct(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
                 let pair = format!(
-                    "(Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col}))"
+                    "(Litex.FiniteFunction.pack2 {row} {col})"
                 );
                 let value = format!(
-                    "(M.mulValue (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.left) (Litex.denote {row})) (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.right) (Litex.denote {col})))"
+                    "(M.mulValue (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.left) {row}) (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.right) {col}))"
                 );
                 let proof = format!(
                     "(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.matrixOuterCall {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.matrixOuterBody (Litex.denote ({root}).val.left) (Litex.denote ({root}).val.right) {pair} at h\n  dsimp only [Litex.matrixOuterBody] at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)"
@@ -182,13 +227,13 @@ impl LitexToLeanCompiler {
                 Ok((value, proof))
             }
             MatrixOperator::Diagonal(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
                 let pair = format!(
-                    "(Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col}))"
+                    "(Litex.FiniteFunction.pack2 {row} {col})"
                 );
                 let value = format!(
-                    "(M.mulValue (Litex.matrixIdentityEntry (Litex.denote {row}) (Litex.denote {col})) (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.vector) (Litex.denote {row})))"
+                    "(M.mulValue (Litex.matrixIdentityEntry {row} {col}) (Litex.FunctionSemantics.callValue (Litex.denote ({root}).val.vector) {row}))"
                 );
                 let proof = format!(
                     "(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.matrixDiagonalCall {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.matrixDiagonalBody (Litex.denote ({root}).val.vector) {pair} at h\n  dsimp only [Litex.matrixDiagonalBody] at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)"
@@ -202,21 +247,21 @@ impl LitexToLeanCompiler {
                 ),
             )),
             MatrixOperator::IdentityMatrix(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
                 let value = format!(
-                    "(Litex.matrixIdentityEntry (Litex.denote {row}) (Litex.denote {col}))"
+                    "(Litex.matrixIdentityEntry {row} {col})"
                 );
                 let proof = format!(
-                    "(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.identityMatrixCall {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.matrixIdentityBody (Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col})) at h\n  dsimp only [Litex.matrixIdentityBody] at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)"
+                    "(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.identityMatrixCall {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.matrixIdentityBody (Litex.FiniteFunction.pack2 {row} {col}) at h\n  dsimp only [Litex.matrixIdentityBody] at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)"
                 );
                 Ok((value, proof))
             }
             MatrixOperator::Transpose(_) | MatrixOperator::ConjugateTranspose(_) => {
-                let row = self.compile_object_reference(&call.body[0][0], &scope)?;
-                let col = self.compile_object_reference(&call.body[0][1], &scope)?;
+                let row = argument_value(0)?;
+                let col = argument_value(1)?;
                 let value = format!(
-                    "(Litex.FunctionSemantics.callValue (M := M) (Litex.denote ({root}).val.matrix) (Litex.FiniteFunction.pack2 (Litex.denote {col}) (Litex.denote {row})))"
+                    "(Litex.FunctionSemantics.callValue (M := M) (Litex.denote ({root}).val.matrix) (Litex.FiniteFunction.pack2 {col} {row}))"
                 );
                 let (name, body_name, value) = match &callable.operator {
                     MatrixOperator::ConjugateTranspose(_) => (
@@ -227,7 +272,7 @@ impl LitexToLeanCompiler {
                     _ => ("transpose", "matrixTransposeBody", value),
                 };
                 let proof = format!(
-                    "(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.{name}Call {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.{body_name} (Litex.denote ({root}).val.matrix) (Litex.FiniteFunction.pack2 (Litex.denote {row}) (Litex.denote {col})) at h\n  dsimp only [Litex.matrixConjugateTransposeBody, Litex.matrixTransposeBody] at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)"
+                    "(show Litex.denote {call_object} = {value} from by\n  have h := {transport}.trans (Litex.{name}Call {root} {input} {domain})\n  change Litex.denote {call_object} = Litex.{body_name} (Litex.denote ({root}).val.matrix) (Litex.FiniteFunction.pack2 {row} {col}) at h\n  dsimp only [Litex.matrixConjugateTransposeBody, Litex.matrixTransposeBody] at h\n  rw [Litex.FiniteFunction.unpack_pack2] at h\n  exact h)"
                 );
                 Ok((value, proof))
             }
@@ -270,6 +315,7 @@ impl LitexToLeanCompiler {
                     "_matrix_reduction_call",
                     &p.callable,
                     &p.body,
+                    None,
                     &p.application_well_defined,
                     position,
                 )?;

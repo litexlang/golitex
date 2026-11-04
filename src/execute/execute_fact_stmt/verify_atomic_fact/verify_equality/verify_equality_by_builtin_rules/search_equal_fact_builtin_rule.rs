@@ -56,6 +56,14 @@ impl Runtime {
                 proof,
             )));
         }
+        if let Some(proof) = self.search_native_matrix_property(
+            &crate::ast::fact::AtomicFact::EqualFact(fact.clone()),
+            verify_state,
+        )? {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinRule::NativeMatrixProperty(proof),
+            ));
+        }
         if let Some(proof) = super::by_elementary_definitions::elementary_definition(fact) {
             return Ok(Some(proof));
         }

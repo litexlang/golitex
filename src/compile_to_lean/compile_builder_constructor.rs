@@ -18,6 +18,28 @@ impl LitexToLeanCompiler {
         let Some(step) = position.inferred_builder_step(store) else {
             return Ok(None);
         };
+        if step.projections.iter().any(|p| {
+            matches!(p, crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(s)
+                if std::ptr::eq(&s.store, store))
+        }) && object.ir() == step.builder.param_set.ir() {
+            // Base membership publishes the exact bound already formed as a
+            // child of this source builder. Replay that original child at its
+            // original stage; no new constructor or membership is discovered.
+            let builder = Obj::SetFormer(SetFormer::SetBuilder(step.builder.clone()));
+            return position.with_visible_wd(&builder, &mut |wd, declaration| {
+                let DetailedObjWellDefinedProof::ByDef {
+                    obj: Obj::SetFormer(SetFormer::SetBuilder(actual)),
+                    proof: ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(captured)),
+                } = wd.detailed_ref() else {
+                    return Err(LeanCompileError::unsupported("SetBuilder/BoundConstructorFormation"));
+                };
+                if captured.param_set_well_defined.obj().ir() != object.ir() {
+                    return Err(LeanCompileError::unsupported("SetBuilder/BoundConstructorSubject"));
+                }
+                let scope = SourcePosition::new(Some(declaration), SourceOwner::SetBuilder(actual, captured), 0);
+                self.compile_wd(&captured.param_set_well_defined, &scope)
+            });
+        }
         let Some(crate::store_fact_and_infer::InferSetBuilderProjectionResult::Condition {
             condition_index,
             ..
@@ -49,7 +71,7 @@ impl LitexToLeanCompiler {
                 ))
             }
         };
-        let Some(pattern) = roots
+        let Some(_) = roots
             .into_iter()
             .find_map(|r| exact_constructor_pattern(r, object, &substitution))
         else {
@@ -58,11 +80,30 @@ impl LitexToLeanCompiler {
         let builder = Obj::SetFormer(SetFormer::SetBuilder(step.builder.clone()));
         position.with_visible_wd(&builder, &mut |wd, declaration| {
             let DetailedObjWellDefinedProof::ByDef {
-                proof: ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(captured)), ..
+                obj: Obj::SetFormer(SetFormer::SetBuilder(actual)),
+                proof: ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(captured)),
             } = (wd).detailed_ref() else { return Err(LeanCompileError::unsupported("SetBuilder/ConstructorFormation")) };
-            let scope = SourcePosition::new(Some(declaration), SourceOwner::SetBuilder(&step.builder, captured), 0);
+            // An alpha-equivalent builder may supply the visible WD. Its
+            // introductions and clause captures belong to its own binder IDs.
+            if !crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(wd.obj(), &builder) {
+                return Err(LeanCompileError::unsupported("SetBuilder/ConstructorAlphaSubject"));
+            }
+            let original_clause = actual.facts.get(index)
+                .ok_or_else(|| LeanCompileError::unsupported("SetBuilder/ConstructorOriginalClause"))?;
+            let original_clause = crate::instantiate::quantifier_free_fact_to_fact(original_clause.clone());
+            let original_substitution = HashMap::from([(actual.param_binding.id, step.source_membership.element.clone())]);
+            let original_roots: Vec<&Obj> = match &original_clause {
+                Fact::AtomicFact(f) => atomic_fact_args_ref(f),
+                Fact::AndFact(f) => f.facts.iter().flat_map(atomic_fact_args_ref).collect(),
+                Fact::ChainFact(f) => f.objs.iter().collect(),
+                _ => return Err(LeanCompileError::unsupported("SetBuilder/ConstructorOriginalClauseFamily")),
+            };
+            let pattern = original_roots.into_iter()
+                .find_map(|root| exact_constructor_pattern(root, object, &original_substitution))
+                .ok_or_else(|| LeanCompileError::unsupported("SetBuilder/ConstructorOriginalPattern"))?;
+            let scope = SourcePosition::new(Some(declaration), SourceOwner::SetBuilder(actual, captured), 0);
             self.validate_parameter_store_capture(&captured.defined_params)?;
-            if captured.defined_params.store_and_infer_results.len() != 1 || captured.assumed_facts.len() != step.builder.facts.len() {
+            if captured.defined_params.store_and_infer_results.len() != 1 || captured.assumed_facts.len() != actual.facts.len() {
                 return Err(LeanCompileError::unsupported("SetBuilder/ConstructorStages"));
             }
             let introduced = SourcePosition { before: 2, ..scope };
@@ -70,7 +111,7 @@ impl LitexToLeanCompiler {
             let binder_fact = self.resolve_fact(binder.primary_fact_id(), &introduced)?;
             let binder_name = format!("h_{}", binder_fact.fact_id().value());
             self.compile_wd(&captured.param_set_well_defined, &scope)?;
-            let mut binders = vec![format!("(_value_i{} : Litex.Obj (M := M) M.Value)", step.builder.param_binding.id.value()),
+            let mut binders = vec![format!("(_value_i{} : Litex.Obj (M := M) M.Value)", actual.param_binding.id.value()),
                 format!("({binder_name} : {})", self.fact_proposition(&binder_fact, &introduced)?)];
             let mut definitions = self.compile_parameter_inferences(binder, &binder_fact,
                 &(self.fact_proposition(&binder_fact, &introduced)?, binder_name), &introduced)?;
@@ -92,7 +133,7 @@ impl LitexToLeanCompiler {
             };
             arguments.push(base_member);
             for i in 0..index {
-                let clause = crate::instantiate::quantifier_free_fact_to_fact(step.builder.facts[i].clone());
+                let clause = crate::instantiate::quantifier_free_fact_to_fact(actual.facts[i].clone());
                 let captured_clause = &captured.assumed_facts[i];
                 let prior = SourcePosition { before: 2 + i, ..scope };
                 self.compile_fact_wd(&captured_clause.well_defined, &clause, &prior)?;

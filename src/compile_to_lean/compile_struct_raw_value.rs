@@ -94,7 +94,7 @@ impl LitexToLeanCompiler {
                     SourceOwner::StructFields(declaration),
                     declaration.statement.fields.len() + index,
                 );
-                clauses.push(self.compile_function_raw_predicate(fact, &prior, &bound)?);
+                clauses.push(self.compile_canonical_predicate_value(fact, &prior, &bound)?);
             }
             let condition = conjunction_proposition(clauses)?;
             // Preserve SetBuilderObj.condition's certified bound member.

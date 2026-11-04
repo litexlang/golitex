@@ -126,7 +126,7 @@ impl LitexToLeanCompiler {
             definition
                 .equivalent_facts
                 .iter()
-                .map(|fact| self.compile_function_raw_predicate(fact, position, &bindings))
+                .map(|fact| self.compile_canonical_predicate_value(fact, position, &bindings))
                 .collect::<Result<Vec<_>, _>>()?,
         )
     }
@@ -245,7 +245,20 @@ impl LitexToLeanCompiler {
                 return Err(LeanCompileError::unsupported("Struct/PublishedLawFamily"));
             };
             let target = &stored.fact;
-            if target.typed_parameters.groups.len() != groups.len() + 1
+            let universal = match source {
+                Fact::ForallFact(f) => Some(f),
+                _ => None,
+            };
+            let extra_groups = universal.map_or(0, |f| f.typed_parameters.groups.len());
+            let domain_offset = universal.map_or(0, |f| f.dom_facts.len());
+            let extra_parameters = universal.map_or(0, |f| {
+                f.typed_parameters
+                    .groups
+                    .iter()
+                    .map(|g| g.params.len())
+                    .sum::<usize>()
+            });
+            if target.typed_parameters.groups.len() != groups.len() + 1 + extra_groups
                 || target.typed_parameters.groups[..groups.len()] != *groups
             {
                 return Err(LeanCompileError::unsupported(
@@ -273,11 +286,13 @@ impl LitexToLeanCompiler {
                 return Err(LeanCompileError::unsupported("Struct/PublishedLawCarrier"));
             }
             let instance = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
-            if target.dom_facts.len() != parameters.len() + 1 {
+            if target.dom_facts.len() != domain_offset + parameters.len() + 1 + extra_parameters {
                 return Err(LeanCompileError::unsupported("Struct/PublishedLawDomain"));
             }
             let mut premises = Vec::new();
-            for ((parameter, kind), fact) in parameters.iter().zip(&target.dom_facts) {
+            for ((parameter, kind), fact) in
+                parameters.iter().zip(&target.dom_facts[domain_offset..])
+            {
                 let obj = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
                 let valid = match (kind, fact) {
                     (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f))) => {
@@ -297,19 +312,46 @@ impl LitexToLeanCompiler {
                 }
                 premises.push(self.fact_proposition(fact, &header)?);
             }
-            let dom = target.dom_facts.last().unwrap();
+            let dom = &target.dom_facts[domain_offset + parameters.len()];
             if !matches!(dom, Fact::AtomicFact(AtomicFact::InFact(m)) if m.element.ir()==instance.ir() && m.set.ir()==Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier.clone())).ir())
             {
                 return Err(LeanCompileError::unsupported("Struct/PublishedLawDomain"));
             }
-            let [then] = target.then_facts.as_slice() else {
-                return Err(LeanCompileError::unsupported(
-                    "Struct/PublishedLawConclusion",
-                ));
+            let instantiated_law = if universal.is_some() {
+                // Publication flattens header, instance and law binders. Restore
+                // only a view of that captured inner law for exact shape checking.
+                let mut inner = target.clone();
+                inner.typed_parameters.groups.drain(..groups.len() + 1);
+                inner.dom_facts.truncate(domain_offset);
+                for (group, facts) in inner
+                    .typed_parameters
+                    .groups
+                    .iter()
+                    .flat_map(|g| g.params.iter().map(move |p| (p, &g.param_type)))
+                    .zip(&target.dom_facts[domain_offset + parameters.len() + 1..])
+                {
+                    let object = Obj::Identifier(IdentifierObj::from_bound_name(group.0));
+                    if !super::helper::parameter_type_fact_matches(
+                        group.1,
+                        &object,
+                        facts,
+                        &HashMap::new(),
+                    ) {
+                        return Err(LeanCompileError::unsupported("Struct/PublishedLawDomain"));
+                    }
+                }
+                Fact::ForallFact(inner)
+            } else {
+                let [then] = target.then_facts.as_slice() else {
+                    return Err(LeanCompileError::unsupported(
+                        "Struct/PublishedLawConclusion",
+                    ));
+                };
+                then.clone().into()
             };
             if !instantiated_fact_matches(
                 source,
-                &then.clone().into(),
+                &instantiated_law,
                 &field_substitution(&proof.statement, &instance),
             ) {
                 return Err(LeanCompileError::unsupported(
@@ -323,17 +365,78 @@ impl LitexToLeanCompiler {
             let member = format!("h_{}", dom.fact_id().value());
             let bindings =
                 coordinate_bindings(&proof.statement, &format!("(Litex.denote {value})"));
-            let conclusion = self.compile_function_raw_predicate(source, &header, &bindings)?;
             premises.push(format!("Litex.In {value} {structure}"));
-            premises.push(conclusion);
-            let proposition = format!("∀ {}{{_Host_i{id} : Type _}} [_rep_i{id} : Litex.Representation M _Host_i{id}] ({value} : Litex.Obj (M := M) _Host_i{id}) ({member} : Litex.In {value} {structure}), {}", if header_binders.is_empty() { String::new() } else { format!("{} ", header_binders.join(" ")) }, premises.join(" → "));
+            let mut inner_binders = Vec::new();
+            let mut inner_intros = Vec::new();
+            let mut law_arguments = Vec::new();
+            let mut law_domains = Vec::new();
+            let conclusion = if let Some(universal) = universal {
+                let (law_parameters, bound) = self.compile_canonical_predicate_binders(
+                    &universal.typed_parameters,
+                    &header,
+                    &bindings,
+                )?;
+                for ((name, carrier), type_fact) in law_parameters
+                    .iter()
+                    .zip(&target.dom_facts[domain_offset + parameters.len() + 1..])
+                {
+                    let member = format!("h_{}", type_fact.fact_id().value());
+                    inner_binders.push(format!(
+                        "({name} : Litex.Obj (M := M) M.Value) ({member} : {carrier})"
+                    ));
+                    inner_intros.extend([name.clone(), member.clone()]);
+                    law_arguments.extend([name.clone(), member]);
+                    premises.push(carrier.clone());
+                }
+                for domain in &universal.dom_facts {
+                    let name = format!("h_{}", domain.fact_id().value());
+                    law_domains
+                        .push(self.compile_canonical_predicate_value(domain, &header, &bound)?);
+                    inner_intros.push(name.clone());
+                    law_arguments.push(name);
+                }
+                conjunction_proposition(
+                    universal
+                        .then_facts
+                        .iter()
+                        .map(|f| {
+                            self.compile_canonical_predicate_value(
+                                &f.clone().into(),
+                                &header,
+                                &bound,
+                            )
+                        })
+                        .collect::<Result<Vec<_>, _>>()?,
+                )?
+            } else {
+                self.compile_canonical_predicate_value(source, &header, &bindings)?
+            };
+            // The actual producer appends all type facts after the source domains.
+            law_domains.extend(premises);
+            law_domains.push(conclusion);
+            let inner = if inner_binders.is_empty() {
+                String::new()
+            } else {
+                format!("∀ {}, ", inner_binders.join(" "))
+            };
+            let proposition = format!("∀ {}{{_Host_i{id} : Type _}} [_rep_i{id} : Litex.Representation M _Host_i{id}] ({value} : Litex.Obj (M := M) _Host_i{id}) ({member} : Litex.In {value} {structure}), {inner}{}", if header_binders.is_empty() { String::new() } else { format!("{} ", header_binders.join(" ")) }, law_domains.join(" → "));
             let selected = conjunction_projection(
                 &format!("(({bridge} {value}).mp {member}).2"),
                 law_index,
                 proof.statement.equivalent_facts.len(),
             );
-            let ignores = vec!["_"; target.dom_facts.len()].join(" ");
-            let evidence = format!("(by\n  intro {}_Host_i{id} _rep_i{id} {value} {member} {ignores}\n  exact {selected})", if header_intros.is_empty() { String::new() } else { format!("{} ", header_intros.join(" ")) });
+            let ignores = vec!["_"; parameters.len() + 1 + extra_parameters].join(" ");
+            let inner_intros = if inner_intros.is_empty() {
+                String::new()
+            } else {
+                format!("{} ", inner_intros.join(" "))
+            };
+            let law_arguments = if law_arguments.is_empty() {
+                String::new()
+            } else {
+                format!(" {}", law_arguments.join(" "))
+            };
+            let evidence = format!("(by\n  intro {}_Host_i{id} _rep_i{id} {value} {member} {inner_intros}{ignores}\n  exact {selected}{law_arguments})", if header_intros.is_empty() { String::new() } else { format!("{} ", header_intros.join(" ")) });
             let compiled = (proposition, evidence);
             output.push(self.emit_internal_fact(&fact, &compiled, position)?);
             let completed = SourcePosition {

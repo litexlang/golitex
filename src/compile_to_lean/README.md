@@ -190,7 +190,35 @@ Examples also cover [positive points](../../lean/examples/positive_point_conditi
 [chain conditions](../../lean/examples/ordered_coordinate_conditions/),
 [conjunctions](../../lean/examples/first_quadrant_conditions/) and
 [global/local choice](../../lean/examples/chosen_positive_points/).
-Conditions currently use supported atomic, flat conjunction and chain facts.
+Conditions support atomic, flat conjunction, chain and universal facts. Universal
+laws retain their own bound variables and premises. Their predicate uses the
+same canonical object representation as stored `forall` facts, so automatic
+field release and later citations consume the original law. Publication checks
+the Runtime's flattened header, instance and law parameters, including its
+appended type premises. See [a universal identity law](../../lean/examples/struct_universal_function_law/),
+[a dependent field carrier](../../lean/examples/struct_dependent_universal_law/),
+[a nonzero function domain](../../lean/examples/struct_guarded_universal_law/) and
+[an arbitrary header set](../../lean/examples/struct_generic_universal_law/).
+Concrete predicates keep this same quantified-object representation when expanded
+inside other predicates, record laws or function domains. Their ordered parameter
+and clause witnesses remain part of the predicate. See
+[a named identity law](../../lean/examples/struct_named_identity_law/),
+[nested guarded laws](../../lean/examples/struct_nested_guarded_identity_law/),
+[a negated law](../../lean/examples/struct_nonidentity_law/),
+[finite-subset transfer](../../lean/examples/struct_finite_subset_transfer/) and
+[a function with a universal domain condition](../../lean/examples/named_identity_function_domain/).
+The [category example](../../lean/examples/category_identity_and_composition/)
+combines dependent function fields, identity and associativity laws, named
+theorems and a guarded composition call.
+Function-field input and return carriers reuse the constructor WD recorded in
+the field declaration. The compiler substitutes the checked header arguments and
+earlier field coordinates, retaining their original membership evidence. For
+example, `subsets fn(x A) power_set(B)` keeps its checked `power_set(B)` when
+called through a record field. See [subset-valued functions](../../lean/examples/struct_subset_function_return/),
+[subset inputs](../../lean/examples/struct_subset_function_input/),
+[nonzero guards](../../lean/examples/struct_guarded_subset_function/),
+[dependent carriers](../../lean/examples/struct_dependent_subset_function/) and
+[nested fields](../../lean/examples/struct_nested_subset_function/).
 Structure headers also support set, nonempty-set and object parameters, including later
 parameters typed by an earlier set. The [header consumer](compile_struct_header.rs)
 replays their original introductions, argument WD and instantiated type proofs.
@@ -233,10 +261,10 @@ per declaration. See [element pairs](../../lean/examples/member_coordinate_pairs
 [choice and local aliases](../../lean/examples/chosen_repeated_coordinates/).
 
 Structures require at least two fields. Self/forward field dependencies,
-finite-set header kinds, quantified conditions, nested field paths,
-function-call receivers and local/qualified structure definitions remain
-unsupported. Field access and release require a directly declared structure
-parameter or typed alias.
+finite-set header kinds, structure-header guards, and local/qualified structure
+definitions remain unsupported. Standalone existential and disjunctive defining
+conditions are also outside this consumer's current boundary. Further field-path
+and function-receiver cases are described below.
 
 The [additive-shift consumer](compile_fact_stmt_result/compile_atomic_except_equality_result/compile_additive_shift.rs)
 shows how a selected strategy becomes a Core theorem application. For
@@ -427,6 +455,15 @@ membership equivalence. It publishes the original equality FactId after the
 verification stages. [Examples](../../lean/examples/released_cartesian_definition/)
 include subsequent citations; the [coverage notes](../../docs/Litex_To_Lean_Coverage_Plan.md#cartesian-definition-release-2026-10-24)
 also cover empty products and arbitrary set parameters.
+
+Finite-coordinate return proofs retain the original complete index domain.
+`HomogeneousTupleCoordinate` replays the recorded carrier equality for every
+coordinate, then uses the call's original index membership to select one.
+A cited function signature with a stronger return bound can reuse that input
+only when its complete domain matches the finite constructor's domain.
+See [symbolic indices](../../lean/examples/finite_coordinate_symbolic_index/),
+[integer return bounds](../../lean/examples/finite_coordinate_integer_return/)
+and [computed indices in a formula](../../lean/examples/finite_coordinate_formula/).
 
 ### Original identities and source visibility
 
@@ -1060,6 +1097,208 @@ check consumes the generated square-derivative theorem and exports ordinary
 `HasDerivAt (fun x : ℝ => x ^ 2) 6 3` and `deriv (fun x : ℝ => x ^ 2) 3 = 6`.
 Explicit differentiation theorem calls and exhaustive constructor/WD context
 coverage remain separate work.
+
+The [coordinate partial-derivative consumer](compile_smooth_partial_derivative.rs)
+replays constants, coordinate projections, negation, addition, subtraction,
+multiplication, division, natural powers and the five elementary functions
+`exp`, `sin`, `cos`, `ln`, `sqrt` on a full finite real vector space or a domain
+with recorded open-guard interior evidence. It checks the recorded
+point evaluations, derivative formulas and final equality. Core proves that
+this coordinate-path derivative satisfies Litex's interior and difference-quotient
+limit definition. See the [multistep polynomial](../../lean/examples/partial_derivative_polynomial_path/),
+[arbitrary dimension](../../lean/examples/partial_derivative_arbitrary_dimension/)
+and [generic real coefficient](../../lean/examples/partial_derivative_parameter_scale/)
+examples. [Natural powers](../../lean/examples/partial_derivative_natural_power/)
+include exponent zero; [nested powers](../../lean/examples/partial_derivative_nested_powers/)
+compose the original child derivative proofs. The
+[reduction consumer](compile_multivariable_reduction.rs) consumes the recorded
+exact-rational steps in order, using congruence under arithmetic and function
+calls. It rejects unconsumed records and mismatched endpoints. No new Runtime
+search is performed. Quotients pass the original denominator-nonzero proof to
+the proved division derivative rule. Checked examples include a
+[nonzero parameter](../../lean/examples/partial_derivative_parameter_quotient/)
+and a [positive polynomial denominator](../../lean/examples/partial_derivative_positive_denominator/).
+The [computed-coordinate example](../../lean/examples/partial_derivative_reduced_coordinate/)
+also consumes finite-call WD and carrier equalities for `q(1+1)`.
+Elementary chain rules retain the original child derivative and point-domain
+fact: `ln` and `sqrt` require a strictly positive argument for differentiation.
+See [nested composition](../../lean/examples/partial_derivative_nested_elementary/),
+[logarithm of an exponential](../../lean/examples/partial_derivative_log_exponential/),
+[square root of an exponential](../../lean/examples/partial_derivative_sqrt_exponential/)
+and [subsequent selector use](../../lean/examples/partial_derivative_elementary_selector/).
+The reduction consumer also replays recorded child reductions under these
+operations. The [guard interior consumer](compile_multivariable_interior.rs)
+proves that a neighbourhood along the requested coordinate stays in the source
+domain. It retains the original guard expressions, point proofs, reductions and
+WD. Guards support comparisons, nonzero conditions and membership in R/R+/R-/R*;
+a non-strict guard requires the recorded strict point inequality. The producer's
+axis-one guard derivatives are retained as evidence, while their expression trees
+establish continuity along the actual requested axis. They are not treated as
+derivatives along another axis or as total differentiability.
+
+See [a guarded logarithm](../../lean/examples/partial_derivative_guarded_log/),
+[another coordinate](../../lean/examples/partial_derivative_guarded_log_other_axis/),
+[nested domains](../../lean/examples/partial_derivative_guarded_nested_domains/),
+[a variable axis](../../lean/examples/partial_derivative_guarded_variable_axis/)
+and [selector reuse](../../lean/examples/partial_derivative_guarded_selector/).
+Separate [logarithm](../../lean/examples/partial_derivative_guarded_logarithm_condition/)
+and [square-root](../../lean/examples/partial_derivative_guarded_sqrt_condition/)
+conditions have checked generated pairs. A combined condition
+`ln(q(1)) * sqrt(q(1)) > 0` currently compiles, but its Lean check has not
+finished within the recorded limits. That composition is not counted as
+verified coverage.
+The same consumer handles [exact finite function spaces](../../lean/examples/partial_derivative_finite_function_domain/)
+using the recorded signature equality and point membership. This includes
+[arbitrary dimension and coordinate](../../lean/examples/partial_derivative_finite_function_dimension/)
+and an [open guard on that base](../../lean/examples/partial_derivative_finite_function_guard/).
+An [explicit interior ball](../../lean/examples/partial_derivative_known_interior/)
+is consumed through its original existential proof: the radius is positive,
+the distance bound is strict, and the ball is contained in the exact source
+domain. A proved Core lemma restricts that ball to the requested coordinate path.
+[Selector reuse](../../lean/examples/partial_derivative_known_interior_selector/)
+retains this evidence. No new assumption or total-differentiability claim is
+introduced.
+
+Recorded anonymous beta steps retain the substituted `expanded` object before
+any later calculation. The compiler validates the ordered arguments and that
+endpoint, then uses the original call WD and domain proof. For a symbolic
+function body, it first proves the reduction under the original parameter and
+guard FactIds, then applies that equality to the coordinate path.
+Examples include [an anonymous square](../../lean/examples/partial_derivative_beta_square/),
+[a calculated argument](../../lean/examples/partial_derivative_beta_reduced_argument/),
+[nested argument calls](../../lean/examples/partial_derivative_beta_nested_argument/),
+[a captured coordinate](../../lean/examples/partial_derivative_beta_capture/),
+[a positive-real argument](../../lean/examples/partial_derivative_beta_positive/),
+and [three packed arguments](../../lean/examples/partial_derivative_beta_three_arguments/).
+The same call elimination handles [a beta step in the stated derivative value](../../lean/examples/partial_derivative_beta_target/).
+Calls exposed by substituting a body reuse that body's original local WD.
+The compiler closes the continuation over the original parameters and domain
+facts, then applies the recorded argument equalities. Nested constructors stay
+inside their source binders; the compiler neither registers substituted WD nor
+searches for new membership proofs. Examples cover
+[a nested square](../../lean/examples/partial_derivative_nested_body_square/),
+[captured parameters](../../lean/examples/partial_derivative_nested_body_capture/),
+[binary calls](../../lean/examples/partial_derivative_nested_body_binary/),
+[three levels](../../lean/examples/partial_derivative_nested_body_three_levels/),
+[calculation after substitution](../../lean/examples/partial_derivative_nested_body_calculation/),
+[positive inputs](../../lean/examples/partial_derivative_nested_body_positive/),
+and [vector inputs](../../lean/examples/partial_derivative_nested_body_vector/).
+Recorded tuple projections validate the original tuple and one-based index,
+then apply `FiniteFunction.call_tuple`. The index conversion changes only the
+call argument, including when a tuple entry itself contains that same number.
+Examples cover [the first component](../../lean/examples/partial_derivative_tuple_first/),
+[a calculated index](../../lean/examples/partial_derivative_tuple_calculated_index/),
+[the third component](../../lean/examples/partial_derivative_tuple_third/),
+[an applied function body](../../lean/examples/partial_derivative_tuple_in_beta_body/)
+and [composition with sine](../../lean/examples/partial_derivative_tuple_in_sine/).
+Uniform tuple return membership consumes every recorded component proof and
+the original call's valid-index WD; it also supports
+[a function with a variable coordinate](../../lean/examples/tuple_uniform_function_body/).
+Projection selects the recorded component without introducing an extra reduction.
+Recorded `PeriodicTrig` reductions validate the original angle coefficient and
+replay the verifier's exact-angle table for closed rational multiples of pi. Intermediate
+angles use raw denotation laws rather than fresh WD registrations. Examples
+include [a complete sine turn](../../lean/examples/partial_derivative_periodic_sine/),
+[a fractional angle](../../lean/examples/partial_derivative_periodic_fraction/),
+[nested reductions](../../lean/examples/partial_derivative_periodic_nested/),
+[an exact radical value](../../lean/examples/partial_derivative_periodic_radical/),
+[tangent](../../lean/examples/partial_derivative_periodic_tangent/),
+[cotangent](../../lean/examples/partial_derivative_periodic_cotangent/),
+[cotangent with a radical value](../../lean/examples/partial_derivative_periodic_cotangent_radical/),
+[an applied body](../../lean/examples/partial_derivative_periodic_beta/)
+and [a reduced target value](../../lean/examples/partial_derivative_periodic_target/).
+The same angle adapter checks [ordinary cotangent values in each quadrant](../../lean/examples/trigonometric_cotangent_values/).
+Integral period offsets consume the recorded ordered `integer_requirements`.
+The compiler shares the producer's pure coefficient decomposition, checks exact
+subjects and scale divisibility, and retains the original FactIds. Native integer
+observations certify the angle's raw denotation; they do not retype source objects
+or register WD for intermediate expressions. A fixed linear combination handles
+[multiple offsets](../../lean/examples/integer_periodic_linear_combination/),
+[reordered product factors](../../lean/examples/integer_periodic_product/),
+[repeated terms](../../lean/examples/integer_periodic_repeated_terms/) and
+[canceled real terms](../../lean/examples/integer_periodic_cancellation/).
+An integer premise can also come from a
+[function's declared codomain](../../lean/examples/integer_periodic_function_return/)
+or an [explicit membership premise for a real parameter](../../lean/examples/integer_periodic_membership_premise/).
+The bridge also handles [pi-periodic zero values](../../lean/examples/integer_periodic_values/),
+the original [tangent](../../lean/examples/integer_periodic_tangent/) and
+[cotangent](../../lean/examples/integer_periodic_cotangent/) nonzero requirements,
+and a [captured period inside an applied body](../../lean/examples/partial_derivative_integer_period_beta/).
+Value reductions retain the existing exact-angle table boundary. Nonzero WD
+uses the separate rational-angle certificate: a sine zero would require
+`q ∣ p`, and a cosine zero would require `2*q ∣ 2*p+q`. The proved
+`Litex.sinRationalPiNonzero` and `Litex.cosRationalPiNonzero` bridges discharge
+those conditions without evaluating the trigonometric value. This covers
+[tangent at pi/7 with integral offsets](../../lean/examples/rational_angle_tangent_domain/),
+[secant and cosecant domains](../../lean/examples/rational_angle_reciprocal_domains/),
+[closed nonzero facts](../../lean/examples/rational_angle_nonzero_facts/),
+[large exact coefficients](../../lean/examples/rational_angle_large_coefficients/),
+[expression aliases](../../lean/examples/rational_angle_alias_reuse/) and
+[a guarded partial-derivative coefficient](../../lean/examples/partial_derivative_rational_angle_coefficient/).
+Every integral offset still consumes its original membership proof. Scalar
+zero-set proofs live in named Core theorems; constructor WD cites them.
+`FiniteSetEvaluation` validates and replays exact rational singleton-intersection
+cardinalities through proved Core set laws. The
+[equal-singleton coefficient](../../lean/examples/partial_derivative_singleton_intersection_equal/)
+and [distinct-singleton coefficient](../../lean/examples/partial_derivative_singleton_intersection_different/)
+examples retain an explicit real-membership fact before the derivative proof.
+`NativeMatrixBeta` now retains the producer's already-computed `expanded` object,
+also exposed in detailed JSON and reading output. Its consumer reuses the checked
+matrix component expansion and original call WD; examples cover a
+[zero matrix](../../lean/examples/partial_derivative_zero_matrix_entry/), an
+[identity diagonal](../../lean/examples/partial_derivative_identity_diagonal/) and
+an [off-diagonal identity entry](../../lean/examples/partial_derivative_identity_off_diagonal/).
+These native reductions currently require the original unchanged call head and
+arguments, independent of local raw binders. Changed heads/arguments and native
+reductions inside substituted anonymous bodies remain open.
+
+Grouped anonymous calls borrow each typed receiver from the original complete
+call. The preceding result's function membership and the next input's domain
+proof justify `FunctionSemantics.call_graphValue_of_fnSet`; a substituted returned
+literal needs no new WD registration. Ordered beta records still validate the
+exact function, argument group, binder substitution and final tape endpoint.
+Checked examples include a [curried product](../../lean/examples/partial_derivative_curried_product/),
+[three groups](../../lean/examples/partial_derivative_curried_three_groups/) and
+[two parameters in the first group](../../lean/examples/partial_derivative_curried_packed_arguments/)
+and a [reduced captured first argument](../../lean/examples/partial_derivative_curried_reduced_capture/).
+A [guarded curried constant](../../lean/examples/partial_derivative_guarded_curried_constant/)
+retains its recorded route when no beta step was selected. The consumer starts
+at the actual beta record after the first argument reductions; it does not force
+every function-shaped source through beta elimination. Selected beta literals
+must be unguarded and returned function signatures must have fixed matching
+domains. Dependent returned signatures remain open.
+
+Ordinary and grouped beta share the same original-call resolver under an
+enclosing recorded substitution. Each later argument keeps this substitution
+context, while denotation proofs use its original argument constructor. This
+avoids asking for new WD for a substituted nested call. The original typed
+receiver supplies each stage's checked signature; its function membership and
+input-domain proofs are transported through the recorded equalities. Examples
+cover a [captured coefficient](../../lean/examples/partial_derivative_applied_curried_capture/),
+a [nested later argument](../../lean/examples/partial_derivative_applied_curried_argument/),
+[packed inputs](../../lean/examples/partial_derivative_applied_curried_packed/),
+[three call groups](../../lean/examples/partial_derivative_applied_curried_three_groups/),
+a [function parameter](../../lean/examples/partial_derivative_applied_curried_function_parameter/)
+and [two outer captures](../../lean/examples/partial_derivative_applied_curried_nested_captures/).
+These paths consume the existing typed results without Runtime changes or new
+Core laws. The largest of these generated files is about 576 KB. The generator's
+existing finite declaration-local elaboration budget is retained; separate
+in-memory checks of these six proof terms also pass with that option removed.
+Generation time for nested captures and longer call groups remains an
+optimization target; bounded file size does not establish fast compilation.
+
+Function arguments can change the head of a call inside a substituted body.
+The shared beta adapter retains that call's original function membership and
+input-domain proofs. It does not project formula-body evidence from an ordinary
+function parameter's WD. `FunctionSemantics.call_graphValue_of_fnSet` proves
+the selected graph's value using the original checked interface, even when its
+declared output is narrower. Examples cover a [square function argument](../../lean/examples/partial_derivative_function_parameter_square/),
+a [binary function argument](../../lean/examples/partial_derivative_function_parameter_binary/),
+[three inputs with a calculated argument](../../lean/examples/partial_derivative_function_parameter_three_inputs/)
+and a [positive-valued function used through a proved real-valued interface](../../lean/examples/partial_derivative_function_parameter_positive_return/).
+Original binder identities, ordered substitutions, beta records and endpoints
+are still checked. This support uses the existing typed results; it introduces
+no Runtime search, WD registry, native function coercion or new model law.
 
 ## Current mathematical reach
 
@@ -2012,6 +2251,33 @@ uses its own original positive-natural or bounded-range membership evidence.
 function application and sequence or finite-vector indexing. Each function
 layer retains its own parameter membership and domain guards.
 
+Return carriers can also be aliases. The original call result records a carrier
+equality between argument groups; the compiler replays that equality, transports
+the preceding return-membership proof, and then consumes the next group's WD.
+Examples cover a [finite sequence](../../lean/examples/returned_finite_sequence_alias/),
+[two sequence layers](../../lean/examples/returned_nested_sequence_alias/),
+a [guarded function](../../lean/examples/returned_guarded_function_alias/), and a
+[matrix](../../lean/examples/returned_matrix_alias/). The compiler reads these
+stages directly from the existing result; no Runtime or result-schema change is
+needed.
+
+The same complete function-membership consumer now accepts `seq(A)`, preserving
+its positive-natural index domain and the recorded pointwise return proof.
+Examples construct a [constant sequence through an alias](../../lean/examples/constant_sequence_carrier_alias/),
+a [constant sequence in an arbitrary set](../../lean/examples/constant_sequence_generic_carrier/),
+and [widen integer sequence values to reals](../../lean/examples/sequence_carrier_widening/).
+A [positive integer index](../../lean/examples/positive_integer_sequence_index/)
+uses its original integer and strict-order proofs; the
+[refinement example](../../lean/examples/positive_integer_refinement/) also covers
+both order orientations and a guarded function returning `N+`.
+
+Recorded equality substitutions reuse the existing semantic predicate transport.
+This supplies nonemptiness across aliases when constructing
+[finite extrema](../../lean/examples/finite_extrema_carrier_alias/) and
+[a family intersection](../../lean/examples/family_intersection_carrier_alias/).
+The original equality citations, residual proof, polarity and argument order
+remain required.
+
 [Curried integer-window functions](../../lean/examples/returned_integer_window_beta/)
 can evaluate an anonymous function returned by an earlier call. The compiler
 replays the recorded receiver equality and original call WD, including guarded
@@ -2135,6 +2401,15 @@ The object and its published facts use the same chosen witness; a function
 witness retains its declared signature. All four pairs pass Lean with unchanged
 Core. This covers single-witness obtain bodies; induction remains a separate
 compiler route.
+
+For a template with several outputs, each `\name<args>` selects its component
+of the same witness group. The compiler replays the original body result and
+publishes its facts with all output names substituted together. Later witnesses
+are selected with the earlier witnesses fixed, preserving their joint conditions
+even without uniqueness. The [adjacent-pair example](../../lean/examples/multi_output_adjacent_pair/)
+uses both named outputs, and the [nonunique-pair example](../../lean/examples/correlated_template_witnesses/)
+checks their relation without fixing either value independently. Both directories
+contain the Litex source and its generated Lean.
 
 A unique witness may be a [record field](../../lean/examples/unique_record_field/),
 and a [record-valued witness](../../lean/examples/unique_record_with_field/) may
@@ -2269,6 +2544,64 @@ cancelled using its own nonzero premise; the compiler does not add a nonzero
 premise for its base. These changes do not alter Runtime, the result schema or
 the underlying object representations. Self-dependent guards continue to
 reject compilation.
+
+
+Recursive bodies compose the same scalar and matrix constructor laws used by
+ordinary equality replay. For example, [recursive rounding](../../lean/examples/recursive_rounding/)
+compiles both the definition and its evaluation:
+
+```litex
+have fn rounded_sequence(n, b Z: n >= b) R by induc n from b:
+    case n = b: 1 / 2
+    case n > b: floor(rounded_sequence(n - 1, b))
+
+rounded_sequence(0, 0) = 1 / 2
+rounded_sequence(1, 0) = floor(rounded_sequence(0, 0)) = floor(1 / 2) = 0
+```
+
+The original child WD, domain conditions and smaller-call evidence remain
+required. Further pairs cover [nested min/max](../../lean/examples/recursive_clamping/),
+[a guarded square root](../../lean/examples/recursive_radical/),
+[logarithms](../../lean/examples/recursive_logarithm/),
+[integer quotient and remainder](../../lean/examples/recursive_integer_quotient/),
+[matrix transposition](../../lean/examples/recursive_matrix_transpose/),
+[rectangular matrix addition](../../lean/examples/recursive_rectangular_sum/),
+and [a captured rounding seed](../../lean/examples/template_recursive_rounding/).
+
+The compact natural-number representation uses the same constructor catalog.
+Examples cover [floor iteration](../../lean/examples/natural_recursive_rounding/),
+[nested clamping](../../lean/examples/natural_recursive_clamping/),
+[a captured real seed](../../lean/examples/template_natural_recursive_rounding/),
+and [a recursive witness inside a theorem](../../lean/examples/local_natural_recursive_rounding/).
+These retain `RecursiveNatFn`, the original zero/successor cases and the checked
+predecessor calls.
+
+Recursive declarations can also return literal functions. The compiler enters
+the original case and literal scopes, retaining the inner parameters, domain
+guards and return proof. `functionGraphValueCongr` proves that the resulting
+graphs agree on their declared domain. In successive calls such as
+`f(n - 1)(x)`, the first application consumes the recursive decrease evidence;
+each subsequent application keeps its own argument WD and domain conditions.
+
+Examples cover [real translations](../../lean/examples/recursive_function_translation/),
+[a nonzero domain](../../lean/examples/recursive_guarded_functions/),
+[binary functions](../../lean/examples/recursive_binary_functions/),
+[a captured translation step](../../lean/examples/template_recursive_functions/),
+and [functions on an arbitrary set](../../lean/examples/recursive_functions_on_set/).
+Published equations retain the branch's original WD context, including inside
+templates. This route requires the returned literal's signature to be independent
+of recursive self. The translation example uses the recorded `1 - 1` argument
+in its successor equation; simplifying that argument or evaluating the returned
+function also requires a source proof route accepted by Litex.
+
+A cited recursive equation can also supply the WD of its instantiated
+subexpressions. The compiler resolves the exact stored equation, replays its
+parameter and branch assumptions, and instantiates the original WD. Where
+that WD uses the restricted recursive function, it constructs the restriction
+of the completed graph and proves agreement on the original smaller inputs.
+That equality transports both sethood and numeric observations. The helper
+lives in `compile_recursive_callee_constructor.rs`; it uses the existing
+`RecursiveFn` or `RecursiveNatFn` graph laws and the original result tree.
 
 
 Function images and both inverse-image constructors now retain their original

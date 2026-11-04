@@ -30,6 +30,10 @@ impl LitexToLeanCompiler {
                 Self::validate_finite_seq_signature(sequence, target)?;
                 true
             }
+            Obj::SetFormer(SetFormer::SeqSet(sequence)) => {
+                Self::validate_seq_signature(sequence, target)?;
+                true
+            }
             _ => member.set.ir() == target_obj.ir(),
         };
         if !target_matches {

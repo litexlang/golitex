@@ -3,6 +3,23 @@ import Litex.FiniteSets
 universe u
 namespace Litex
 
+/-- A function graph depends only on body values inside its declared domain.
+The original return certificate also certifies the pointwise equal body. -/
+theorem functionGraphValueCongr {M : Semantics.{u}} [F : FunctionSemantics M]
+    (D B : M.Value) (f g : M.Value → M.Value)
+    (hf : ∀ x, M.mem x D → M.mem (f x) B)
+    (h : ∀ x, M.mem x D → f x = g x) :
+    F.graphValue D B f = F.graphValue D B g := by
+  apply F.graph_ext D B _ _ (FunctionSemantics.graph_isFunction D B f hf)
+    (FunctionSemantics.graph_isFunction D B g (fun x hx => (h x hx) ▸ hf x hx))
+  intro x y
+  rw [FunctionSemantics.pair_mem_graph, FunctionSemantics.pair_mem_graph]
+  constructor
+  · rintro ⟨hx, hy, he⟩
+    exact ⟨hx, hy, he.trans (h x hx)⟩
+  · rintro ⟨hx, hy, he⟩
+    exact ⟨hx, hy, he.trans (h x hx).symm⟩
+
 /-- Range interpretation respects the original function denotation equality. -/
 theorem functionRangeValueCongr {M : Semantics.{u}} [FunctionSemantics M]
     {f g : M.Value} (h : f = g) :

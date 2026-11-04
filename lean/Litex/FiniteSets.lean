@@ -1442,6 +1442,32 @@ theorem finiteCardInsert {M : Semantics.{u}} [S : SetSemantics M]
   rw [memberSet_insert]
   exact Set.ncard_insert_of_notMem (s := memberSet (denote p.val.tail)) (a := denote p.val.element) p.wd h
 
+theorem memberSetSingletonIntersection {M : Semantics.{u}} [S : SetSemantics M]
+    (a b : M.Value) :
+    memberSet (S.sepValue (S.insertValue a S.emptyValue)
+      (fun x => M.mem x (S.insertValue b S.emptyValue))) = ({a} ∩ {b} : Set M.Value) := by
+  ext x
+  simp only [memberSet, Set.mem_setOf_eq, S.sep_members, S.insert_members,
+    S.empty_members, or_false, Set.mem_inter_iff, Set.mem_singleton_iff]
+
+theorem finiteCardSingletonIntersectionSame {M : Semantics.{u}} [S : SetSemantics M]
+    (a : M.Value) :
+    finiteCard (S.sepValue (S.insertValue a S.emptyValue)
+      (fun x => M.mem x (S.insertValue a S.emptyValue))) = 1 := by
+  rw [finiteCard, memberSetSingletonIntersection, Set.inter_self, Set.ncard_singleton]
+
+theorem finiteCardSingletonIntersectionDifferent {M : Semantics.{u}} [S : SetSemantics M]
+    (a b : M.Value) (h : a ≠ b) :
+    finiteCard (S.sepValue (S.insertValue a S.emptyValue)
+      (fun x => M.mem x (S.insertValue b S.emptyValue))) = 0 := by
+  rw [finiteCard, memberSetSingletonIntersection]
+  have empty : ({a} ∩ {b} : Set M.Value) = ∅ := by
+    ext x
+    simp only [Set.mem_inter_iff, Set.mem_singleton_iff, Set.mem_empty_iff_false, iff_false]
+    rintro ⟨rfl, hab⟩
+    exact h hab
+  rw [empty, Set.ncard_empty]
+
 theorem finiteSetSizeDenote {M : Semantics.{u}} {α : Type v} [Representation M α]
     (p : Obj (M := M) (FiniteSetSizeObj (M := M) α)) (n : ℕ)
     (h : finiteCard (denote p.val.set) = n) : denote p = M.number (n : ℂ) := by

@@ -30,8 +30,15 @@ fn riemann_integral_candidate_replays() {
         include_str!("../../../lean/examples/renamed_range_binders/statement.lit"),
     ] {
         let (run, c) = super::execute(source);
-        c.compile_run(&run, "riemann_integral_selection")
+        let compiled = c
+            .compile_run(&run, "riemann_integral_selection")
             .expect(source);
+        if source.contains("thm integral_from_darboux_definition:") {
+            // The full statement remains intact; a finite local option lets
+            // ordinary Lean check it without changing its importer's options.
+            assert!(compiled.contains("set_option maxHeartbeats 1000000 in\ntheorem "));
+            assert!(!compiled.contains("set_option maxHeartbeats 0"));
+        }
     }
 }
 

@@ -10,6 +10,117 @@ use crate::prelude::*;
 const NAMED: &str = "have fn return_pair(x R, y R: y != 0) R = x / y\nreturn_pair(3, 2) $in C\n";
 const ANONYMOUS: &str = "fn(x R) R {x}(2) $in C\n";
 const WEAKER: &str = "have fn call_weak_return(x R) C = x\n$is_set(call_weak_return(2))\nforall call_unused R:\n    call_weak_return $in fn(y R) R\n    =>:\n        call_weak_return(2) $in R\n";
+const FINITE_COORDINATE: &str =
+    include_str!("../../lean/examples/finite_coordinate_symbolic_index/statement.lit");
+
+#[test]
+fn function_return_finite_domain_replays_declared_and_stronger_codomains() {
+    for source in [
+        FINITE_COORDINATE,
+        include_str!("../../lean/examples/finite_coordinate_integer_return/statement.lit"),
+        include_str!("../../lean/examples/finite_coordinate_formula/statement.lit"),
+        include_str!("../../lean/examples/finite_coordinate_refined_return/statement.lit"),
+        include_str!("../../lean/examples/partial_derivative_reduced_coordinate/statement.lit"),
+    ] {
+        let (run, c) = checked(source);
+        let lean = c
+            .compile_run(&run, "finite_return")
+            .unwrap_or_else(|e| panic!("{source}: {e}"));
+        assert!(
+            lean.contains("Litex.FunctionSemantics.call_mem")
+                || lean.contains("Litex.FiniteFunction.indexSet_members")
+        );
+        assert_eq!(lean, c.compile_run(&run, "finite_return").unwrap());
+    }
+}
+
+#[test]
+fn function_return_finite_domain_rejects_changed_signature_and_requirements() {
+    for source in [
+        FINITE_COORDINATE,
+        include_str!("../../lean/examples/finite_coordinate_refined_return/statement.lit"),
+        include_str!("../../lean/examples/finite_coordinate_integer_return/statement.lit"),
+    ] {
+        for change in 0..6 {
+            let (mut run, c) = checked(source);
+            let ExecStmtResult::Fact(ExecFactStmtResult::Success(root)) =
+                &mut run.statement_results[0]
+            else {
+                panic!("forall")
+            };
+            let VerifyFactResult::ForallFact(root) = &mut root.verify_result else {
+                panic!("forall result")
+            };
+            let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(root)) =
+                root.as_mut()
+            else {
+                panic!("forall introduction")
+            };
+            let p = atomic_mut(&mut root.proved_then_facts[0].verify_result);
+            let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
+                AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(return_proof),
+            ) = &mut p.searched_proof
+            else {
+                panic!("recorded codomain")
+            };
+            if change == 0 {
+                match return_proof {
+                    InFactSearchProofByKnownSpecialProperty::HomogeneousTupleCoordinate(p) => {
+                        p.carrier_equals.clear()
+                    }
+                    InFactSearchProofByKnownSpecialProperty::FnApplicationInCodomain(p) => {
+                        p.signature_uses.clear()
+                    }
+                    InFactSearchProofByKnownSpecialProperty::FnApplicationInStandardSuperset(p) => {
+                        p.signature_returns.clear()
+                    }
+                    _ => panic!("original homogeneous/cited return rule"),
+                }
+            } else {
+                let DetailedObjWellDefinedProof::ByDef {
+                    proof: ObjWellDefinedProofByDef::FnObj(wd),
+                    ..
+                } = p
+                    .well_defined_proof
+                    .as_detailed_mut()
+                    .unwrap()
+                    .well_defined_of_each_parameter[0]
+                    .as_detailed_mut()
+                    .unwrap()
+                else {
+                    panic!("original call WD")
+                };
+                let Some(FnObjDomainFnSetEvidence::FiniteFunction(finite)) = &mut wd.domain_fn_set
+                else {
+                    panic!("finite constructor")
+                };
+                match change {
+                    1 => {
+                        finite.signature.set_bound_parameters.groups[0].param_type =
+                            Box::new(Obj::StandardSet(StandardSet::R))
+                    }
+                    2 => finite.signature.ret_set = Box::new(Obj::StandardSet(StandardSet::C)),
+                    3 => wd.requirement_fact_verified.clear(),
+                    4 => {
+                        wd.child_obj_well_defined.remove(0);
+                    }
+                    _ => {
+                        let AtomicFact::InFact(f) =
+                            &mut atomic_mut(&mut wd.requirement_fact_verified[0]).fact
+                        else {
+                            panic!("index membership")
+                        };
+                        f.set = Obj::StandardSet(StandardSet::R);
+                    }
+                }
+            }
+            assert!(
+                c.compile_run(&run, "changed_finite_return").is_err(),
+                "mutation {change}"
+            );
+        }
+    }
+}
 
 #[test]
 fn function_return_template_standard_superset_replays_original_local_wd() {

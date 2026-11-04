@@ -103,3 +103,19 @@ fn tuple_coordinate_inference_rejects_missing_or_reordered_capture() {
         );
     }
 }
+
+#[test]
+fn tuple_uniform_membership_replays_arbitrary_valid_index() {
+    for source in [
+        include_str!("../../../lean/examples/tuple_uniform_variable_index/statement.lit"),
+        include_str!("../../../lean/examples/tuple_uniform_function_body/statement.lit"),
+    ] {
+        let (run, compiler) = checked(source);
+        let generated = compiler.compile_run(&run, "uniform_tuple").unwrap();
+        assert!(generated.contains("Litex.FiniteFunction.indexSet_members"));
+        assert_eq!(
+            generated,
+            compiler.compile_run(&run, "uniform_tuple").unwrap()
+        );
+    }
+}

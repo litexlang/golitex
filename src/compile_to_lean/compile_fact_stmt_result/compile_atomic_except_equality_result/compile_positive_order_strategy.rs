@@ -156,4 +156,49 @@ impl LitexToLeanCompiler {
         let term = self.compile_object_reference(&goal.right, position)?;
         Ok(format!("(by\n  let _litex_positive_result := {term}\n  exact Litex.addPositive _litex_positive_result.val.left _litex_positive_result.val.right _litex_positive_result.wd.1 _litex_positive_result.wd.2 {} {}\n)", compiled[0], compiled[1]))
     }
+
+    pub(in crate::compile_to_lean) fn compile_mixed_positive_sum(
+        &self,
+        goal: &AtomicFact,
+        left: &VerifyFactResult,
+        right: &VerifyFactResult,
+        left_strict: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (zero, result, strict) = source_order_oriented(goal)?;
+        let Obj::ArithmeticOperator(ArithmeticOperator::Add(sum)) = result else {
+            return Err(LeanCompileError::unsupported(
+                "MixedPositiveSum/Constructor",
+            ));
+        };
+        if !strict || !is_exact_zero(zero) {
+            return Err(LeanCompileError::unsupported("MixedPositiveSum/Goal"));
+        }
+        let mut compiled = Vec::new();
+        for (index, ((child, operand), expected_strict)) in [left, right]
+            .into_iter()
+            .zip([sum.left.as_ref(), sum.right.as_ref()])
+            .zip([left_strict, !left_strict])
+            .enumerate()
+        {
+            let Fact::AtomicFact(subject) = source_subject(child)? else {
+                return Err(LeanCompileError::unsupported(
+                    "MixedPositiveSum/ChildFamily",
+                ));
+            };
+            let (zero, actual, strict) = source_order_oriented(&subject)?;
+            if !is_exact_zero(zero) || actual.ir() != operand.ir() || strict != expected_strict {
+                return Err(LeanCompileError::unsupported(
+                    "MixedPositiveSum/ChildSubject",
+                ));
+            }
+            compiled.push(
+                self.compile_verify(child, &position.atomic_search_prior(index)?)?
+                    .1,
+            );
+        }
+        let term = self.compile_object_reference(result, position)?;
+        let side = if left_strict { "Left" } else { "Right" };
+        Ok(format!("(by\n  let _litex_positive_result := {term}\n  exact Litex.addPositive{side} _litex_positive_result.val.left _litex_positive_result.val.right _litex_positive_result.wd.1 _litex_positive_result.wd.2 {} {}\n)", compiled[0], compiled[1]))
+    }
 }

@@ -292,7 +292,7 @@ impl LitexToLeanCompiler {
                     return Err(invalid("ExistenceProof"));
                 }
                 let (ty, term) = self.compile_verify(proof, position)?;
-                format!("(by obtain ⟨v,hv,hc⟩ := (show {ty} from {term}); exact ⟨v,hv,hc⟩)")
+                format!("(by\n  have _original_scalar_limit_exists : {ty} := {term}\n  obtain ⟨v,hv,hc⟩ := _original_scalar_limit_exists\n  exact ⟨v,hv,hc⟩\n)")
             }
         };
         lines.push(format!(
@@ -405,6 +405,41 @@ fn order(fact: &QuantifierFreeFact) -> Result<(&Obj, &Obj), LeanCompileError> {
     }
     Ok((a, b))
 }
+pub(super) fn validate_accumulation(
+    fact: &Fact,
+    domain: &Obj,
+    point: &Obj,
+    dimension: &Obj,
+    protected: &[&Obj],
+) -> Result<(), LeanCompileError> {
+    let Fact::ForallFact(acc) = fact else {
+        return Err(invalid("AccumulationForall"));
+    };
+    if !acc.dom_facts.is_empty() || acc.typed_parameters.groups.len() != 1 {
+        return Err(invalid("AccumulationPremises"));
+    }
+    let radius = parameter(&acc.typed_parameters, &Obj::StandardSet(StandardSet::RPos))?;
+    fresh(radius, protected, &[])?;
+    let [ExistOrAndChainAtomicFact::ExistFact(witness)] = acc.then_facts.as_slice() else {
+        return Err(invalid("AccumulationWitness"));
+    };
+    let x = parameter(&witness.typed_parameters, domain)?;
+    fresh(x, protected, &[radius.id])?;
+    let [lower, upper] = witness.facts.as_slice() else {
+        return Err(invalid("AccumulationBounds"));
+    };
+    let (z, d) = order(lower)?;
+    if !matches!(z,Obj::Literal(Literal::Number(n)) if n.normalized_value=="0") {
+        return Err(invalid("AccumulationPuncture"));
+    }
+    distance(d, &ident(x), point, dimension)?;
+    let (d, b) = order(upper)?;
+    distance(d, &ident(x), point, dimension)?;
+    if b.ir() != ident(radius).ir() {
+        return Err(invalid("AccumulationRadius"));
+    }
+    Ok(())
+}
 pub(super) fn validate_clauses(
     function: &Obj,
     point: &Obj,
@@ -424,26 +459,7 @@ pub(super) fn validate_clauses(
             return Err(invalid("DefinitionPremises"));
         }
     }
-    let radius = parameter(&acc.typed_parameters, &Obj::StandardSet(StandardSet::RPos))?;
-    fresh(radius, &protected, &[])?;
-    let [ExistOrAndChainAtomicFact::ExistFact(witness)] = acc.then_facts.as_slice() else {
-        return Err(invalid("AccumulationWitness"));
-    };
-    let x = parameter(&witness.typed_parameters, domain)?;
-    fresh(x, &protected, &[radius.id])?;
-    let [lower, upper] = witness.facts.as_slice() else {
-        return Err(invalid("AccumulationBounds"));
-    };
-    let (z, d) = order(lower)?;
-    if !matches!(z,Obj::Literal(Literal::Number(n)) if n.normalized_value=="0") {
-        return Err(invalid("AccumulationPuncture"));
-    }
-    distance(d, &ident(x), point, dimension)?;
-    let (d, b) = order(upper)?;
-    distance(d, &ident(x), point, dimension)?;
-    if b.ir() != ident(radius).ir() {
-        return Err(invalid("AccumulationRadius"));
-    }
+    validate_accumulation(&facts[0], domain, point, dimension, &protected)?;
     let epsilon = parameter(&eps.typed_parameters, &Obj::StandardSet(StandardSet::RPos))?;
     fresh(epsilon, &protected, &[])?;
     let [ExistOrAndChainAtomicFact::ExistFact(exists)] = eps.then_facts.as_slice() else {

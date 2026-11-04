@@ -31,7 +31,10 @@ const SOURCES: [&str; 4] = [
 fn sequence_cauchy_and_convergence_certificates_replay() {
     for source in SOURCES {
         let (run, c) = super::execute(source);
-        c.compile_run(&run, "sequence_certificate").unwrap();
+        let output = c.compile_run(&run, "sequence_certificate").unwrap();
+        if source == SOURCES[1] {
+            assert!(output.contains("Litex.sequenceCauchyTail"));
+        }
     }
 }
 #[test]

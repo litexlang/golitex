@@ -215,6 +215,7 @@ impl LitexToLeanCompiler {
                                 &call_object,
                                 callable,
                                 &p.body,
+                                None,
                                 wd,
                                 producer,
                             )?;

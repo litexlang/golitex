@@ -5,6 +5,7 @@ mod compile;
 mod fact;
 mod helper;
 mod language;
+mod layout;
 mod math_display;
 mod matrix;
 mod obj;

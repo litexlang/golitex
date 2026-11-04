@@ -802,6 +802,15 @@ impl LitexToLeanCompiler {
         if !contains_identifier(object, declaration.statement.name.id) {
             return Ok("rfl".into());
         }
+        if let Some((operation, children)) = arithmetic_constructor_pairs(object, object) {
+            let equalities = children
+                .iter()
+                .map(|(child, _)| {
+                    self.compile_recursive_body_congruence(child, declaration, position, bindings)
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            return curried_value_congruence(&arithmetic_operation_term(operation), &equalities);
+        }
         match object {
             Obj::FnObj(application) => {
                 if application.body.len() != 1 || application.body[0].len() != 1 {
@@ -867,37 +876,6 @@ impl LitexToLeanCompiler {
                     )?;
                     Ok(format!("(congrArg (Litex.FunctionSemantics.callValue (M := M) (Litex.denote {head})) {child})"))
                 }
-            }
-            Obj::ArithmeticOperator(operator) => {
-                let (name, left, right) = match operator {
-                    ArithmeticOperator::Add(v) => ("M.addValue", &v.left, Some(&v.right)),
-                    ArithmeticOperator::Sub(v) => ("M.subValue", &v.left, Some(&v.right)),
-                    ArithmeticOperator::Mul(v) => ("M.mulValue", &v.left, Some(&v.right)),
-                    ArithmeticOperator::Div(v) => ("M.divValue", &v.left, Some(&v.right)),
-                    ArithmeticOperator::Pow(v) => ("M.powValue", &v.base, Some(&v.exponent)),
-                    ArithmeticOperator::Neg(v) => ("M.negValue", &v.arg, None),
-                    ArithmeticOperator::Abs(v) => ("(Litex.absValue (M := M))", &v.arg, None),
-                    _ => {
-                        return Err(LeanCompileError::unsupported(
-                            "RecursiveFunction/CongruenceOperator",
-                        ))
-                    }
-                };
-                let left =
-                    self.compile_recursive_body_congruence(left, declaration, position, bindings)?;
-                Ok(if let Some(right) = right {
-                    format!(
-                        "(congrArg₂ {name} {left} {})",
-                        self.compile_recursive_body_congruence(
-                            right,
-                            declaration,
-                            position,
-                            bindings
-                        )?
-                    )
-                } else {
-                    format!("(congrArg {name} {left})")
-                })
             }
             _ => Err(LeanCompileError::unsupported(
                 "RecursiveFunction/CongruenceObject",

@@ -52,6 +52,31 @@ INFERRED_RULE_CASES = {
     'template': 'examples/infer/atomic/template_set_builder_carrier.lit',
     'injective': 'examples/infer/atomic/injective_definition.lit',
 }
+FORMATION_STRUCT_PREFIX = 'struct ReadingFormationPoint:\n    x R\n    y R\n\nstruct ReadingFormationPair<S nonempty_set>:\n    x S\n    y S\n\n'
+# Verified in one persistent strict Session, including retained-context checks.
+FORMATION_STRUCT_CASES = {
+    'claim': {'body': 'claim:\n    ? forall p &ReadingFormationPoint:\n        p.x = 0\n        1 / 0 = 0\n        p.y = 0\n    1 = 1\n', 'shape': 'forall', 'surface': 'forall', 'layers': 1},
+    'multiple': {'body': 'claim:\n    ? forall p, q &ReadingFormationPoint:\n        p.x = q.x\n        1 / 0 = 0\n        p.y = q.y\n    1 = 1\n', 'shape': 'forall', 'surface': 'forall', 'layers': 2},
+    'parameterized': {'body': 'claim:\n    ? forall A nonempty_set, p &ReadingFormationPair<A>:\n        p.x $in A\n        1 / 0 = 0\n        p.y $in A\n    1 = 1\n', 'shape': 'forall', 'surface': 'forall', 'layers': 1},
+    'exist': {'body': 'prop point_exists_bad(t R):\n    exist p &ReadingFormationPoint st {p.x = 0, 1 / 0 = 0, p.y = 0}\n', 'shape': 'existential', 'surface': 'exist', 'layers': 0},
+    'unique': {'body': 'prop point_unique_bad(t R):\n    exist! p &ReadingFormationPoint st {p.x = 0, 1 / 0 = 0, p.y = 0}\n', 'shape': 'existential', 'surface': 'unique', 'layers': 0},
+    'notexist': {'body': 'prop point_absent_bad(t R):\n    not exist p &ReadingFormationPoint st {p.x = 0, 1 / 0 = 0, p.y = 0}\n', 'shape': 'existential', 'surface': 'not-exist', 'layers': 0},
+    'notforall': {'body': 'prop point_notforall_bad(t R):\n    not forall p &ReadingFormationPoint:\n        p.x = 0\n        =>:\n            p.y = 0\n            1 / 0 = 0\n            p.x = p.x\n', 'shape': 'not-forall', 'surface': 'not-forall', 'layers': 0},
+    'iff': {'body': 'prop point_iff_bad(t R):\n    forall p &ReadingFormationPoint:\n        =>:\n            p.x = 0\n        <=>:\n            p.y = 0\n            1 / 0 = 0\n            p.x = p.x\n', 'shape': 'iff', 'surface': 'iff', 'layers': 0},
+    'proof-premise': {'body': 'forall p &ReadingFormationPoint:\n    p.x > 0\n    1 / 0 > 0\n    =>:\n        p.y = p.y\n', 'shape': 'proof', 'surface': 'proof', 'layers': 1},
+    'good': {'body': 'forall p &ReadingFormationPoint:\n    p.x $in R\n', 'success': True},
+}
+CONSTRUCTION_FAILURE_CASES = {
+    'preimage-wrong-arity': {'path': 'examples/test_statements/negative/have_by_preimage_stmt/wrong-arity.lit'},
+    'preimage-non-range-target': {'path': 'examples/test_statements/negative/have_by_preimage_stmt/non-range-target.lit'},
+    'replacement-wrong-prop-arity': {'path': 'examples/test_statements/negative/have_by_replacement_axiom_stmt/wrong-prop-arity.lit'},
+    'replacement-unknown-prop': {'path': 'examples/test_statements/negative/have_by_replacement_axiom_stmt/unknown-prop.lit'},
+    # Checked in one persistent strict Session before checkpoint export.
+    'preimage-no-signature': {'source': 'have by fn_preimage: no_signature from 1 $in fn_range(0)\n'},
+    'preimage-source-membership': {'source': 'have fn zero(x R) R = 0\nhave by fn_preimage: absent from 1 $in fn_range(zero)\n'},
+    'replacement-uniqueness': {'source': 'prop image_rel(x, y set):\n    y = x\nhave by replacement_axiom: UncheckedImage from prop image_rel, set {1}\n'},
+    'replacement-source-wd': {'source': 'prop image_rel(x, y set):\n    y = x\nhave by replacement_axiom: InvalidImage from prop image_rel, set {1 / 0}\n'},
+}
 # Actual object-introduction probes and existing public rejection boundaries.
 FAILED_INTRODUCTION_CASES = {'membership-unchecked-suffix': ('have first, second, third N = 1, -1, 2\n', False),
  'dependent-product-membership-failure': ('have product_A set, product_x cart(product_A, product_A) = R, (1, {})\n', False),
@@ -1953,6 +1978,318 @@ LOGICAL_CASES = {
     'logic-cases-false': ('examples/test_statements/release_basics/fixtures/P/cases-false-goal.lit', False),
     'logic-contra-false': ('examples/test_statements/negative/by_contra_stmt/fake-contradiction.lit', False),
 }
+WITNESS_UNIQUENESS_CASES = {'one': ('witness exist! x {0, 1} st {x = x} from 0\n', False),
+ 'pair': ('witness exist! x {0}, y {0, 1} st {x = x, y = y} from 0, 0\n',
+          False),
+ 'dependent': ('witness exist! x {0, 1}, y {x} st {y = x} from 0, 0\n', False),
+ 'struct': ('struct ReadingUniquenessPoint:\n'
+            '    x R\n'
+            '    y R\n'
+            'have uniqueness_point &ReadingUniquenessPoint = (0, 1)\n'
+            'witness exist! candidate &ReadingUniquenessPoint st {candidate = '
+            'candidate} from uniqueness_point\n',
+            False),
+ 'good': ('witness exist! x {0} st {x = x} from 0\n', True),
+ 'type': ('witness exist! x {1} st {x = 1} from 0\n', False),
+ 'body': ('witness exist! x {0} st {x = 1} from 0\n', False),
+ 'claim': ('claim:\n    ? 1=1\n    witness exist! x {0,1} st {x=x} from 0\n',
+           False),
+ 'theorem': ('thm reading_unique_from_parameter:\n'
+             '    ? forall a R:\n'
+             '        0 != a\n'
+             '        =>:\n'
+             '            exist! x {0,a} st {x=x}\n'
+             '    witness exist! x {0,a} st {x=x} from 0\n',
+             False)}
+
+REPEATED_FUNCTION_CASES = {'unique': ('by for:\n'
+            '    ? forall n range(0, 2) => n = n\n'
+            '    claim:\n'
+            '        ? forall x R:\n'
+            '            exist! y R st {y = x + n}\n'
+            '        witness exist! y R st {y = x + n} from x + n\n'
+            '    have fn reading_unique by exist!:\n'
+            '        ? forall x R:\n'
+            '            exist! y R st {y = x + n}\n'
+            '    reading_unique(2) = 2 + n\n',
+            True),
+ 'unique-predicate': ('prop reading_shift_relation(a, x, y R):\n'
+                      '    y = x + a\n'
+                      'by for:\n'
+                      '    ? forall n range(0, 2) => n = n\n'
+                      '    claim:\n'
+                      '        ? forall x R:\n'
+                      '            exist! y R st {$reading_shift_relation(n, x, y)}\n'
+                      '        witness exist! y R st {$reading_shift_relation(n, x, y)} from x + '
+                      'n:\n'
+                      '            by def $reading_shift_relation(n, x, x + n)\n'
+                      '    have fn reading_unique_relation by exist!:\n'
+                      '        ? forall x R:\n'
+                      '            exist! y R st {$reading_shift_relation(n, x, y)}\n'
+                      '    $reading_shift_relation(n, 2, reading_unique_relation(2))\n',
+                      True),
+ 'recursive': ('by for:\n'
+               '    ? forall n range(0, 2) => n = n\n'
+               '    have fn reading_count(k N) R by induc k from 0:\n'
+               '        case k = 0: n\n'
+               '        case k >= 1: reading_count(k - 1)\n'
+               '    reading_count(0) = n\n'
+               '    reading_count(1) = reading_count(1 - 1)\n',
+               True),
+ 'recursive-nested': ('by for:\n'
+                      '    ? forall n range(0, 2) => n = n\n'
+                      '    have fn reading_nested_count(k N) R by induc k from 0:\n'
+                      '        case k = 0: n\n'
+                      '        case k >= 1:\n'
+                      '            case k = 1: n\n'
+                      '            case k != 1: reading_nested_count(k - 1)\n'
+                      '    reading_nested_count(0) = n\n'
+                      '    reading_nested_count(1) = n\n',
+                      True),
+ 'algo-cases': ('by for:\n'
+                '    ? forall n range(0, 2) => n = n\n'
+                '    algo reading_algo_flag(x R) N by cases:\n'
+                '        case x = 0: 0\n'
+                '        case x != 0: 1\n'
+                '    reading_algo_flag(2) = 1\n'
+                '    eval reading_algo_flag(0)\n',
+                True),
+ 'algo-captured': ('by for:\n'
+                   '    ? forall n range(0, 2) => n = n\n'
+                   '    algo reading_algo_shift(x R) R by cases:\n'
+                   '        case x = 0: n\n'
+                   '        case x != 0: x + n\n'
+                   '    reading_algo_shift(0) = n\n'
+                   '    eval reading_algo_shift(0)\n',
+                   False),
+ 'algo-recursive': ('by for:\n'
+                    '    ? forall n range(0, 2) => n = n\n'
+                    '    algo reading_algo_count(k N) N by induc k from 0:\n'
+                    '        case k = 0: 0\n'
+                    '        case k >= 1: reading_algo_count(k - 1)\n'
+                    '    reading_algo_count(0) = 0\n'
+                    '    eval reading_algo_count(2)\n',
+                    True),
+ 'claim-predicate': ('prop reading_repeated_nonnegative(x R):\n'
+                     '    x >= 0\n'
+                     'by for:\n'
+                     '    ? forall n range(0, 2) => n = n\n'
+                     '    claim:\n'
+                     '        ? $reading_repeated_nonnegative(n)\n'
+                     '        by def $reading_repeated_nonnegative(n)\n'
+                     '    $reading_repeated_nonnegative(n)\n',
+                     True),
+ 'claim-theorem': ('prop reading_repeated_nonnegative(x R):\n'
+                   '    x >= 0\n'
+                   'thm reading_repeated_square:\n'
+                   '    ? forall x R:\n'
+                   '        $reading_repeated_nonnegative(x ^ 2)\n'
+                   '    x ^ 2 >= 0\n'
+                   'by for:\n'
+                   '    ? forall n range(0, 2) => n = n\n'
+                   '    claim:\n'
+                   '        ? $reading_repeated_nonnegative(n ^ 2)\n'
+                   '        by thm reading_repeated_square(n) => $reading_repeated_nonnegative(n ^ '
+                   '2)\n'
+                   '    $reading_repeated_nonnegative(n ^ 2)\n',
+                   True)}
+
+REPEATED_WITNESS_CASES = {'atomic': 'prop reading_has_copy(a R):\n'
+           '    exist x R st {x = a}\n'
+           'by for:\n'
+           '    ? forall n range(0, 2) => n = n\n'
+           '    witness $reading_has_copy(n) from n\n',
+ 'atomic-body': 'prop reading_has_copy(a R):\n'
+                '    exist x R st {x = a}\n'
+                'by for:\n'
+                '    ? forall n range(0, 2) => n = n\n'
+                '    witness $reading_has_copy(n) from n:\n'
+                '        n = n\n',
+ 'atomic-constant': 'prop reading_has_copy(a R):\n'
+                    '    exist x R st {x = a}\n'
+                    'by for:\n'
+                    '    ? forall n range(0, 2) => n = n\n'
+                    '    witness $reading_has_copy(2) from 2\n',
+ 'atomic-reuse': 'prop reading_has_copy(a R):\n'
+                 '    exist x R st {x = a}\n'
+                 'by for:\n'
+                 '    ? forall n range(0, 2) => n = n\n'
+                 '    witness $reading_has_copy(n) from n\n'
+                 '    $reading_has_copy(n)\n',
+ 'exist': 'by for:\n    ? forall n range(0, 2) => n = n\n    witness exist x R st {x = n} from n\n',
+ 'nested': 'thm reading_repeated_witnesses:\n'
+           '    ? forall a R:\n'
+           '        a = a\n'
+           '    by for:\n'
+           '        ? forall n range(0, 2) => n = n\n'
+           '        witness $is_nonempty_set({a}) from a:\n'
+           '            a $in {a}\n',
+ 'nonempty': 'by for:\n'
+             '    ? forall n range(0, 2) => n = n\n'
+             '    witness $is_nonempty_set({n}) from n\n',
+ 'nonempty-body': 'by for:\n'
+                  '    ? forall n range(0, 2) => n = n\n'
+                  '    witness $is_nonempty_set({n}) from n:\n'
+                  '        n $in {n}\n'}
+
+QUALIFIED_UNIQUENESS_BOOK_CASES = {'explicit-membership-negative': {'run_result': 'failure',
+                                  'sourceCount': 2,
+                                  'sources': {'01-definitions.lit': 'struct '
+                                                                    'ReadingUniqueCrossPoint:\n'
+                                                                    '    x R\n'
+                                                                    '    y R\n'
+                                                                    'have unique_anchor '
+                                                                    '&ReadingUniqueCrossPoint = '
+                                                                    '(0, 1)\n',
+                                              '02-applications.lit': 'definitions::unique_anchor '
+                                                                     '$in '
+                                                                     '&definitions::ReadingUniqueCrossPoint\n'
+                                                                     '\n'
+                                                                     'witness exist! candidate '
+                                                                     '&definitions::ReadingUniqueCrossPoint '
+                                                                     'st {candidate = '
+                                                                     'definitions::unique_anchor} '
+                                                                     'from '
+                                                                     'definitions::unique_anchor\n'
+                                                                     '\n'
+                                                                     'by for:\n'
+                                                                     '    ? forall n range(0, 2) '
+                                                                     '=> n = n\n'
+                                                                     '    witness exist! candidate '
+                                                                     '&definitions::ReadingUniqueCrossPoint '
+                                                                     'st {candidate = '
+                                                                     'definitions::unique_anchor} '
+                                                                     'from '
+                                                                     'definitions::unique_anchor\n'
+                                                                     '\n'
+                                                                     'thm '
+                                                                     'reading_unique_cross_from_parameter:\n'
+                                                                     '    ? forall point '
+                                                                     '&definitions::ReadingUniqueCrossPoint:\n'
+                                                                     '        exist! candidate '
+                                                                     '&definitions::ReadingUniqueCrossPoint '
+                                                                     'st {candidate = point}\n'
+                                                                     '    witness exist! candidate '
+                                                                     '&definitions::ReadingUniqueCrossPoint '
+                                                                     'st {candidate = point} from '
+                                                                     'point\n',
+                                              'litex.config': '[export]\n'
+                                                              'definitions = '
+                                                              '"./01-definitions.lit"\n'
+                                                              'applications = '
+                                                              '"./02-applications.lit"\n'}},
+ 'negative': {'run_result': 'failure',
+              'sourceCount': 2,
+              'sources': {'01-definitions.lit': 'struct ReadingUniqueCrossPoint:\n'
+                                                '    x R\n'
+                                                '    y R\n'
+                                                'have unique_anchor &ReadingUniqueCrossPoint = (0, '
+                                                '1)\n',
+                          '02-applications.lit': 'witness exist! candidate '
+                                                 '&definitions::ReadingUniqueCrossPoint st '
+                                                 '{candidate = definitions::unique_anchor} from '
+                                                 'definitions::unique_anchor\n'
+                                                 '\n'
+                                                 'by for:\n'
+                                                 '    ? forall n range(0, 2) => n = n\n'
+                                                 '    witness exist! candidate '
+                                                 '&definitions::ReadingUniqueCrossPoint st '
+                                                 '{candidate = definitions::unique_anchor} from '
+                                                 'definitions::unique_anchor\n'
+                                                 '\n'
+                                                 'thm reading_unique_cross_from_parameter:\n'
+                                                 '    ? forall point '
+                                                 '&definitions::ReadingUniqueCrossPoint:\n'
+                                                 '        exist! candidate '
+                                                 '&definitions::ReadingUniqueCrossPoint st '
+                                                 '{candidate = point}\n'
+                                                 '    witness exist! candidate '
+                                                 '&definitions::ReadingUniqueCrossPoint st '
+                                                 '{candidate = point} from point\n',
+                          'litex.config': '[export]\n'
+                                          'definitions = "./01-definitions.lit"\n'
+                                          'applications = "./02-applications.lit"\n'}},
+ 'positive': {'run_result': 'success',
+              'sourceCount': 2,
+              'sources': {'01-definitions.lit': 'struct ReadingUniqueCrossPoint:\n'
+                                                '    x R\n'
+                                                '    y R\n'
+                                                'have unique_anchor &ReadingUniqueCrossPoint = (0, '
+                                                '1)\n',
+                          '02-applications.lit': 'witness exist! candidate '
+                                                 '&definitions::ReadingUniqueCrossPoint st '
+                                                 '{candidate = (0,1)} from (0,1)\n'
+                                                 '\n'
+                                                 'by for:\n'
+                                                 '    ? forall n range(0, 2) => n = n\n'
+                                                 '    witness exist! candidate '
+                                                 '&definitions::ReadingUniqueCrossPoint st '
+                                                 '{candidate = (0,1)} from (0,1)\n'
+                                                 '\n'
+                                                 'thm reading_unique_cross_from_parameter:\n'
+                                                 '    ? forall point '
+                                                 '&definitions::ReadingUniqueCrossPoint:\n'
+                                                 '        exist! candidate '
+                                                 '&definitions::ReadingUniqueCrossPoint st '
+                                                 '{candidate = point}\n'
+                                                 '    witness exist! candidate '
+                                                 '&definitions::ReadingUniqueCrossPoint st '
+                                                 '{candidate = point} from point\n',
+                          'litex.config': '[export]\n'
+                                          'definitions = "./01-definitions.lit"\n'
+                                          'applications = "./02-applications.lit"\n'},
+              'witnessExecutions': 4}}
+
+WITNESS_UNIQUENESS_SUCCESS_CASES = {'claim': ('claim:\n    ? exist! x {0} st {x=0}\n    witness exist! x {0} st {x=0} from 0\n', True),
+ 'dependent': ('witness exist! x {0}, y {x} st {y = x} from 0, 0\n', True),
+ 'one': ('witness exist! x {0} st {x = 0} from 0\n', True),
+ 'pair': ('witness exist! x {0}, y {0} st {x = 0, y = 0} from 0, 0\n', True),
+ 'repeated': ('by for:\n'
+              '    ? forall n range(0, 2) => n = n\n'
+              '    witness exist! x {n} st {x = n} from n\n',
+              True),
+ 'struct': ('struct ReadingUniqueSuccessPoint:\n'
+            '    x R\n'
+            '    y R\n'
+            'have unique_success_point &ReadingUniqueSuccessPoint = (0, 1)\n'
+            'witness exist! candidate &ReadingUniqueSuccessPoint st {candidate = '
+            'unique_success_point} from unique_success_point\n',
+            True),
+ 'theorem': ('thm reading_unique_success_from_parameter:\n'
+             '    ? forall a R:\n'
+             '        exist! x {a} st {x=a}\n'
+             '    witness exist! x {a} st {x=a} from a\n',
+             True)}
+
+WITNESS_FAILURE_PATHS = {'exist-body': 'examples/test_statements/negative/witness_exist_fact/false-witness-body.lit',
+ 'exist-count': 'examples/test_statements/negative/witness_exist_fact/wrong-witness-arity.lit',
+ 'exist-type': 'examples/test_statements/negative/witness_exist_fact/wrong-witness-carrier.lit',
+ 'atomic-type': 'examples/test_statements/negative/witness_atomic_fact/wrong-predicate-witness-type.lit',
+ 'atomic-definition': 'examples/test_statements/negative/witness_atomic_fact/nonexistential-predicate-witness.lit',
+ 'atomic-unique': 'examples/test_statements/negative/witness_atomic_fact/unique-exist-predicate-is-unsupported.lit',
+ 'nonempty-member': 'examples/test_statements/negative/witness_nonempty_set/nonmember-witness.lit',
+ 'uniqueness': 'examples/test_statements/release_basics/fixtures/L/not-unique-witness.lit'}
+
+WITNESS_FAILURE_INLINE = {'atomic-body': 'prop has_copy(a R):\n'
+                '    exist x R st {x = a}\n'
+                'witness $has_copy(2) from 3\n',
+ 'nonempty-object-wd': 'witness $is_nonempty_set({1}) from 1/0\n',
+ 'nonempty-set-wd': 'witness $is_nonempty_set({1/0}) from 1\n',
+ 'nonempty-proof': 'witness $is_nonempty_set({1}) from 1:\n    1=1\n    0=1\n',
+ 'exist-wd': 'witness exist x R st {1/0 = x} from 1\n',
+ 'exist-object-wd': 'witness exist x R st {x=x} from 1/0\n',
+ 'atomic-argument': 'prop witness_real_copy(a R):\n'
+                    '    exist x R st {x = a}\n'
+                    'witness $witness_real_copy({1}) from 1\n',
+ 'atomic-abstract': 'abstract_prop witness_marked(x)\n'
+                    'witness $witness_marked(1) from 1\n',
+ 'exist-proof': 'witness exist x R st {x=0} from 0:\n    1=1\n    0=1\n',
+ 'atomic-proof': 'prop witness_real_copy(a R):\n'
+                 '    exist x R st {x = a}\n'
+                 'witness $witness_real_copy(2) from 2:\n'
+                 '    1=1\n'
+                 '    0=1\n'}
+
 PROCESS_CASES = {
     'induction': ('examples/stmt_nodes/by/by_induc_order.lit', True),
     'induction-actions': ('examples/stmt_nodes/by/induction_domain_and_proof_actions.lit', True),
@@ -1993,6 +2330,467 @@ INTERFACE_CASES = {
                                 ('struct', 'def_struct_stmt'), ('template', 'def_template_stmt')]
        for source in sorted((ROOT/'examples/test_statements/negative'/directory).glob('*.lit'))},
 }
+# Actual strict eval failures and a retained-equality success control.
+EXISTENTIAL_FORMATION_CASES = {'scalar': ('exist x R st {x = 9}\n', True),
+ 'membership': ('2 $in {1, 2}\n\nexist x {1, 2} st {x = 2}\n', True),
+ 'nonempty': ('$is_nonempty_set({1})\n\nexist x {1} st {x $in {1}}\n', True),
+ 'integer-multiple': ('6 % 3 = 0\n\nexist k Z st {6 = 3 * k}\n', True),
+ 'archimedean': ('0.5 $in R+\n\nexist n N+ st {1 / n < 0.5}\n', True),
+ 'density': ('0 < 1\n\nexist r R st {0 < r < 1}\n', True),
+ 'rational-nonzero': ('1 / 2 $in Q\n\nexist a Z, b Z* st {1 / 2 = a / b}\n', True),
+ 'bijective': ('forall A, B set, f fn(x A)B, y B:\n'
+               '    $bijective(A, B, f)\n'
+               '    =>:\n'
+               '        exist! x A st {f(x) = y}\n',
+               True),
+ 'rational-positive': ('1 / 2 $in Q\n\nexist a, b Z st {b > 0, 1 / 2 = a / b}\n', True),
+ 'unique-known': ('witness exist! x R st {x = 0} from 0\n\nexist! y R st {y = 0}\n', True),
+ 'known': ('prop reading_exist_stamped(t R):\n'
+           '    t = 9\n'
+           '    t = t\n'
+           '\n'
+           'claim:\n'
+           '    ? exist t R st {$reading_exist_stamped(t)}\n'
+           '    witness exist t R st {$reading_exist_stamped(t)} from 9:\n'
+           '        by def $reading_exist_stamped(9)\n'
+           '\n'
+           'exist z R st {$reading_exist_stamped(z)}\n',
+           True),
+ 'known-forall': ('prop reading_exist_pair(a, b R):\n'
+                  '    a = b\n'
+                  '    a = a\n'
+                  '\n'
+                  'claim:\n'
+                  '    ? forall a R:\n'
+                  '        exist b R st {$reading_exist_pair(b, a)}\n'
+                  '    witness exist z R st {$reading_exist_pair(z, a)} from a:\n'
+                  '        by def $reading_exist_pair(a, a)\n'
+                  '\n'
+                  'exist t R st {$reading_exist_pair(t, 2)}\n',
+                  True),
+ 'nonexist-known': ('by contra:\n'
+                    '    ? not exist x R st {x != x}\n'
+                    '    obtain reading_noexist_value from exist x R st {x != x}\n'
+                    '    impossible reading_noexist_value = reading_noexist_value\n'
+                    '\n'
+                    'not exist y R st {y != y}\n',
+                    True),
+ 'dependent': ('claim:\n'
+               '    ? exist a R, b {a} st {b = a}\n'
+               '    witness exist a R, b {a} st {b = a} from 3, 3\n'
+               '\n'
+               'exist x R, y {x} st {y = x}\n',
+               True),
+ 'guarded': ('have fn reading_exist_reciprocal(x R: x != 0) R = 1 / x\n'
+             '\n'
+             'claim:\n'
+             '    ? exist t R st {t != 0, reading_exist_reciprocal(t) = 1}\n'
+             '    witness exist t R st {t != 0, reading_exist_reciprocal(t) = 1} from 1\n'
+             '\n'
+             'exist z R st {z != 0, reading_exist_reciprocal(z) = 1}\n',
+             True),
+ 'repeated': ('by for:\n    ? forall n range(0, 2) => n = n\n    exist x R st {x = n}\n', True),
+ 'counterexample': ('witness exist z R st {not z > 0} from 0\n\nnot forall x R:\n    x > 0\n',
+                    True),
+ 'nested-and': ('claim:\n'
+                '    ? exist t R st {t = 1 and t >= 0}\n'
+                '    witness exist t R st {t = 1 and t >= 0} from 1\n'
+                '\n'
+                'exist z R st {z = 1 and z >= 0}\n',
+                True),
+ 'nested-or': ('claim:\n'
+               '    ? exist t R st {t = 1 or t = 2}\n'
+               '    witness exist t R st {t = 1 or t = 2} from 1\n'
+               '\n'
+               'exist z R st {z = 1 or z = 2}\n',
+               True),
+ 'plain-unproved': ('exist x R st {x = x + 1}\n', False),
+ 'unique-unproved': ('exist! x R st {x = x}\n', False),
+ 'nonexist-unproved': ('not exist x R st {x = x}\n', False),
+ 'plain-wd': ('exist x R st {1 / 0 = 0}\n', False),
+ 'unique-wd': ('exist! x R st {1 / 0 = 0}\n', False),
+ 'nonexist-wd': ('not exist x R st {1 / 0 = 0}\n', False),
+ 'guard-order': ('have fn reading_exist_order_reciprocal(x R: x != 0) R = 1 / x\n'
+                 '\n'
+                 'exist z R st {reading_exist_order_reciprocal(z) = 1, z != 0}\n',
+                 False),
+ 'binder-parse': ('exist a {b}, b R st {b = a}\n', False),
+ 'scope-escape': ('exist x R st {x = 9}\n\nx = 9\n', False),
+ 'rational-order': ('exist a, b Z st {1 / 2 = a / b, b > 0}\n', False),
+ 'struct-law': ('# Struct law publication and alpha-aware existential application.\n'
+                '# Run: target/release/litex -strict -f '
+                'examples/proof_nodes/exist/by_known_forall/struct_existential_law.lit\n'
+                '# Previously rejected even after `release struct def s`:\n'
+                '# thm use_law:\n'
+                '#     ? forall A nonempty_set, s &RightZero<A>, x A:\n'
+                '#         exist y A st {s.add(x, y) = s.zero}\n'
+                '# Wrong carriers/guards/laws are executable negative regressions in '
+                'sequence_struct_contract_tests.\n'
+                '\n'
+                'struct RightZero<A nonempty_set>:\n'
+                '    zero A\n'
+                '    add fn(x, y A) A\n'
+                '    <=>:\n'
+                '        forall x A:\n'
+                '            exist y A st {add(x, y) = zero}\n'
+                '\n'
+                'thm use_law:\n'
+                '    ? forall A nonempty_set, s &RightZero<A>, x A:\n'
+                '        exist y A st {s.add(x, y) = s.zero}\n'
+                '\n'
+                'thm obtain_from_law:\n'
+                '    ? forall s &RightZero<R>, x R:\n'
+                '        exist z R st {s.add(x, z) = s.zero}\n'
+                '    obtain inverse from exist y R st {s.add(x, y) = s.zero}\n'
+                '    witness exist z R st {s.add(x, z) = s.zero} from inverse\n'
+                '\n'
+                '# The consumer also works when the source is an ordinary forall premise.\n'
+                'forall f fn(x, y R) R, zero R:\n'
+                '    forall x R:\n'
+                '        exist y R st {f(x, y) = zero}\n'
+                '    =>:\n'
+                '        exist z R st {f(2, z) = zero}\n',
+                True),
+ 'nested-binder': ('# Before: the final existential soft-failed at search_proof even after the\n'
+                   '# equivalent witness had been checked. Its inner function binder was compared\n'
+                   '# by raw IR after renaming only the outer existential binder.\n'
+                   '# Old failing goal (now active below):\n'
+                   '# exist z R st {$fixed(fn(b R) R {b}, z)}\n'
+                   '# After: existing structural alpha comparison checks all nested binders,\n'
+                   '# preserving free owners, parameter carriers, function bodies and predicates.\n'
+                   '# Run: target/release/litex -strict -f '
+                   'examples/proof_nodes/exist/by_known/nested_binder_alpha.lit\n'
+                   '# Negative controls: tests/unit/execute/known_exist_nested_binders/tests.rs\n'
+                   '\n'
+                   'prop fixed(g fn(a R) R, x R):\n'
+                   '    g(x) = x\n'
+                   '\n'
+                   'witness exist x R st {$fixed(fn(y R) R {y}, x)} from 0:\n'
+                   '    by def $fixed(fn(t R) R {t}, 0)\n'
+                   '\n'
+                   'exist z R st {$fixed(fn(b R) R {b}, z)}\n',
+                   True),
+ 'nested-function': ('# Before: the claim below failed to infer f inside the anonymous function;\n'
+                     '# textual existential keys also treated its renamed local t as a '
+                     'difference.\n'
+                     '# claim:\n'
+                     '#     ? forall f fn(x R) R:\n'
+                     '#         exist w R st {fn(t R) R {f(t)}(0) = f(0), w = 0}\n'
+                     '#     exist w R st {fn(t R) R {f(t)}(0) = f(0), w = 0}\n'
+                     '\n'
+                     '# Establish the universal source with a real witness and checked beta '
+                     'equality.\n'
+                     'thm function_literal_has_zero_witness:\n'
+                     '    ? forall f fn(x R) R:\n'
+                     '        exist value R st {fn(s R) R {f(s)}(0) = f(0), value = 0}\n'
+                     '    witness exist value R st {fn(s R) R {f(s)}(0) = f(0), value = 0} from '
+                     '0:\n'
+                     '        fn(s R) R {f(s)}(0) = f(0)\n'
+                     '        0 = 0\n'
+                     '\n'
+                     '# Now: recover the free callback while keeping the local binder rigid, then\n'
+                     '# compare the complete instantiated existential structurally modulo alpha.\n'
+                     'claim:\n'
+                     '    ? forall f fn(x R) R:\n'
+                     '        exist w R st {fn(t R) R {f(t)}(0) = f(0), w = 0}\n'
+                     '    exist w R st {fn(t R) R {f(t)}(0) = f(0), w = 0}\n'
+                     '\n'
+                     '# Release remains executable and the released conclusion keeps nested '
+                     'alpha.\n'
+                     'have fn step(x R) R = x + 1\n'
+                     'release thm function_literal_has_zero_witness(step)\n'
+                     'exist output R st {fn(renamed R) R {step(renamed)}(0) = step(0), output = '
+                     '0}\n'
+                     '\n'
+                     '# Gate: target/release/litex -strict -f '
+                     'examples/proof_nodes/exist/by_known_forall/nested_function_alpha.lit\n'
+                     '# Negative carriers/kinds/bodies/guards/capture and provenance:\n'
+                     '# cargo test --release --locked --lib forall_exist_instantiation_tests -- '
+                     '--nocapture\n',
+                     True),
+ 'have-object': ('# Stmt: HaveObjByExistFactsStmt\n'
+                 '# AST: Stmt::Definition::DefineObj::HaveObjByExistFactsStmt\n'
+                 '# Run all scenarios and boundaries: python3 examples/test_statements/run.py '
+                 '--leaf HaveObjByExistFactsStmt\n'
+                 '\n'
+                 '# case: known-existence\n'
+                 'witness exist u R st {u = 4} from 4\n'
+                 'have existing_a R:\n'
+                 '    existing_a = 4\n'
+                 'existing_a = 4\n'
+                 '\n'
+                 '# case: two-witnesses\n'
+                 'witness exist u, v R st {u = 1, v = 2} from 1, 2\n'
+                 'have existing_b, existing_c R:\n'
+                 '    existing_b = 1\n'
+                 '    existing_c = 2\n'
+                 'existing_b + existing_c = 3\n'
+                 '\n'
+                 '# case: natural-witness\n'
+                 'witness exist n N st {n = 0} from 0\n'
+                 'have existing_n N:\n'
+                 '    existing_n = 0\n'
+                 'existing_n $in N\n',
+                 True)}
+
+COMPOUND_CLAIM_CASES = {'exists': ('claim:\n'
+            '    ? exist x R st {x = 9}\n'
+            '    witness exist x R st {x = 9} from 9\n'
+            '\n'
+            'exist x R st {x = 9}\n',
+            True),
+ 'unique': ('claim:\n    ? exist! x R st {x = 0}\n    witness exist! x R st {x = 0} from 0\n',
+            True),
+ 'and': ('claim:\n    ? 1 < 2 and 2 < 3\n    1 < 2\n    2 < 3\n', True),
+ 'chain': ('claim:\n    ? 1 < 2 <= 3\n    1 < 2\n    2 <= 3\n', True),
+ 'or': ('claim:\n    ? 1 = 1 or 1 = 2\n    1 = 1\n', True),
+ 'not-forall': ('claim:\n'
+                '    ? not forall x R:\n'
+                '        x > 0\n'
+                '    witness exist z R st {not z > 0} from 0\n',
+                True),
+ 'dependent': ('claim:\n'
+               '    ? exist a R, b {a} st {b = a}\n'
+               '    witness exist a R, b {a} st {b = a} from 3, 3\n',
+               True),
+ 'guarded-exists': ('have fn compound_reciprocal(x R: x != 0) R = 1 / x\n'
+                    '\n'
+                    'claim:\n'
+                    '    ? exist x R st {x != 0, compound_reciprocal(x) = 1}\n'
+                    '    witness exist x R st {x != 0, compound_reciprocal(x) = 1} from 1\n',
+                    True),
+ 'guarded-and': ('have compound_a R = 1\n'
+                 '\n'
+                 'claim:\n'
+                 '    ? compound_a / compound_a = 1 and compound_a > 0\n'
+                 '    compound_a / compound_a = 1\n'
+                 '    compound_a > 0\n',
+                 True),
+ 'nested': ('claim:\n'
+            '    ? exist x R st {x = 9}\n'
+            '    claim:\n'
+            '        ? exist z R st {z = 9}\n'
+            '        witness exist z R st {z = 9} from 9\n',
+            True),
+ 'repeated': ('by for:\n'
+              '    ? forall n range(0, 2) => n = n\n'
+              '    claim:\n'
+              '        ? exist y R st {y = n}\n'
+              '        witness exist y R st {y = n} from n\n',
+              True),
+ 'atomic-equality': ('claim:\n    ? 1 = 1\n    1 = 1\n', True),
+ 'atomic-predicate': ('prop reading_compound_nonnegative(t R):\n'
+                      '    t >= 0\n'
+                      '\n'
+                      'claim:\n'
+                      '    ? $reading_compound_nonnegative(3)\n'
+                      '    by def $reading_compound_nonnegative(3)\n',
+                      True),
+ 'forall': ('claim:\n'
+            '    ? forall good_x R:\n'
+            '        good_x > 0\n'
+            '        =>:\n'
+            '            good_x >= 0\n'
+            '    good_x > 0\n',
+            True),
+ 'iff-unsupported': ('claim:\n'
+                     '    ? forall x, y R:\n'
+                     '        =>:\n'
+                     '            x = y\n'
+                     '        <=>:\n'
+                     '            y = x\n'
+                     '    1 = 1\n',
+                     False),
+ 'iff-standalone': ('forall x, y R:\n    =>:\n        x = y\n    <=>:\n        y = x\n', True),
+ 'or-wd': ('claim:\n    ? 1 = 1 or 1 / 0 = 0\n    1 = 1\n', False),
+ 'exists-wd': ('claim:\n    ? exist x R st {1 / 0 = 0}\n    1 = 1\n', False),
+ 'exists-unproved': ('claim:\n    ? exist x R st {x = x + 1}\n    1 = 1\n', False),
+ 'not-forall-unproved': ('claim:\n    ? not forall x R:\n        x = x\n    1 = 1\n', False),
+ 'and-unproved': ('claim:\n    ? 1 = 1 and 1 = 2\n    1 = 1\n', False),
+ 'body-failed': ('claim:\n'
+                 '    ? exist x R st {x = 9}\n'
+                 '    2 = 3\n'
+                 '    witness exist x R st {x = 9} from 9\n',
+                 False),
+ 'helper-escape': ('claim:\n'
+                   '    ? exist x R st {x = 9}\n'
+                   '    have reading_compound_helper R = 9\n'
+                   '    witness exist x R st {x = 9} from reading_compound_helper\n'
+                   '\n'
+                   'reading_compound_helper = 9\n',
+                   False),
+ 'and-chain-unsupported': ('claim:\n    ? 1 < 2 <= 3 and 2 = 2\n    1 < 2\n    2 <= 3\n    2 = 2\n',
+                           False),
+ 'not-forall-shadowing': ('claim:\n'
+                          '    ? not forall x R:\n'
+                          '        x > 0\n'
+                          '    witness exist x R st {not x > 0} from 0\n',
+                          False),
+ 'known-exists': ('prop reading_stamped_nine(t R):\n'
+                  '    t = 9\n'
+                  '    t = t\n'
+                  '\n'
+                  'claim:\n'
+                  '    ? exist t R st {$reading_stamped_nine(t)}\n'
+                  '    witness exist t R st {$reading_stamped_nine(t)} from 9:\n'
+                  '        by def $reading_stamped_nine(9)\n'
+                  '\n'
+                  'exist t R st {$reading_stamped_nine(t)}\n',
+                  True),
+ 'equality-chain': ('claim:\n    ? 1 = 1 = 1\n    1 = 1\n\n1 = 1 = 1\n', True)}
+
+CLAIM_FORMATION_CASES = {'simple': ('claim:\n'
+            '    ? forall good_x R:\n'
+            '        good_x > 0\n'
+            '        =>:\n'
+            '            good_x >= 0\n'
+            '    good_x > 0\n',
+            True),
+ 'guarded': ('have fn reciprocal(x R: x != 0) R = 1 / x\n'
+             '\n'
+             'reciprocal(2) = 1 / 2\n'
+             '\n'
+             'claim:\n'
+             '    ? forall x R:\n'
+             '        x != 0\n'
+             '        =>:\n'
+             '            reciprocal(x) * x = 1\n'
+             '    reciprocal(x) = 1 / x\n'
+             '    reciprocal(x) * x = (1 / x) * x = 1\n'
+             '\n'
+             'reciprocal(2) * 2 = 1\n',
+             True),
+ 'dependent': ('claim:\n'
+               '    ? forall reading_A nonempty_set, reading_x reading_A:\n'
+               '        reading_x $in reading_A\n'
+               '    reading_x $in reading_A\n',
+               True),
+ 'multiple': ('claim:\n'
+              '    ? forall reading_x R:\n'
+              '        reading_x != 0\n'
+              '        =>:\n'
+              '            1 / reading_x = 1 / reading_x\n'
+              '            reading_x / reading_x = 1\n'
+              '    reading_x / reading_x = 1\n',
+              True),
+ 'nested': ('claim:\n'
+            '    ? forall reading_x R:\n'
+            '        reading_x + 0 = 0 + reading_x\n'
+            '    claim:\n'
+            '        ? forall reading_y R:\n'
+            '            reading_x + reading_y = reading_y + reading_x\n'
+            '        reading_x + reading_y = reading_y + reading_x\n'
+            '    reading_x + 0 = 0 + reading_x\n',
+            True),
+ 'bodyless': ('claim:\n    ? forall reading_x R:\n        reading_x = reading_x\n', False),
+ 'atomic': ('claim:\n    ? 1 = 1\n    1 = 1\n', True),
+ 'failed': ('claim:\n'
+            '    ? forall reading_x R:\n'
+            '        reading_x > 0\n'
+            '        =>:\n'
+            '            reading_x >= 0\n'
+            '    reading_x > 0\n'
+            '    2 = 3\n'
+            '    reading_x >= 0\n',
+            False),
+ 'goal-wd': ('claim:\n'
+             '    ? forall reading_x R:\n'
+             '        1 / reading_x = 1 / reading_x\n'
+             '    reading_x = reading_x\n',
+             False),
+ 'repeated': ('prop reading_shift_relation(a, x, y R):\n'
+              '    y = x + a\n'
+              'by for:\n'
+              '    ? forall n range(0, 2) => n = n\n'
+              '    claim:\n'
+              '        ? forall x R:\n'
+              '            exist! y R st {$reading_shift_relation(n, x, y)}\n'
+              '        witness exist! y R st {$reading_shift_relation(n, x, y)} from x + n:\n'
+              '            by def $reading_shift_relation(n, x, x + n)\n'
+              '    have fn reading_unique_relation by exist!:\n'
+              '        ? forall x R:\n'
+              '            exist! y R st {$reading_shift_relation(n, x, y)}\n'
+              '    $reading_shift_relation(n, 2, reading_unique_relation(2))\n',
+              True),
+ 'nested-unsupported': ('claim:\n'
+                        '    ? forall reading_x R:\n'
+                        '        forall reading_y R:\n'
+                        '            reading_x + reading_y = reading_y + reading_x\n'
+                        '    claim:\n'
+                        '        ? forall reading_y R:\n'
+                        '            reading_x + reading_y = reading_y + reading_x\n'
+                        '        reading_x + reading_y = reading_y + reading_x\n',
+                        False),
+ 'duplicate': ('claim:\n'
+               '    ? forall reading_x R:\n'
+               '        reading_x = reading_x\n'
+               '        reading_x = reading_x\n'
+               '    reading_x = reading_x\n',
+               True)}
+
+EVAL_EQUATION_PREFIX = ('prop reading_nonnegative(x R):\n    x >= 0\n\n'
+                        'algo reading_predicated(x R) N by cases:\n'
+                        '    case $reading_nonnegative(x): 1\n'
+                        '    case not $reading_nonnegative(x): 0')
+EVAL_EQUATION_CASES = {
+    'equation': (EVAL_EQUATION_PREFIX + '\n\neval reading_predicated(3)\n', False),
+    'repair': (EVAL_EQUATION_PREFIX + '\n\nby def $reading_nonnegative(3)\n\neval reading_predicated(3)\n', True),
+    'partial': (EVAL_EQUATION_PREFIX + '\n\neval reading_predicated(3)\n\nby def $reading_nonnegative(3)\n\neval reading_predicated(3)\n', False),
+    'arithmetic': (EVAL_EQUATION_PREFIX + '\n\neval reading_predicated(0) + 7\n', False),
+    'wrapper': (EVAL_EQUATION_PREFIX + '\n\nalgo reading_wrapper(x R) N by cases:\n    case x = x: reading_predicated(x)\n\neval reading_wrapper(0)\n', False),
+    'claim-failure': (EVAL_EQUATION_PREFIX + '\n\nclaim:\n    ? reading_predicated(0) = 1\n    eval reading_predicated(0)\n', False),
+    'claim-repair': (EVAL_EQUATION_PREFIX + '\n\nclaim:\n    ? reading_predicated(0) = 1\n    by def $reading_nonnegative(0)\n    eval reading_predicated(0)\n', True),
+    'binary': ('algo reading_binary(n N) N by induc n from 0:\n    case n = 0: 1\n    case n >= 1: reading_binary(n - 1) + reading_binary(n - 1)\n\neval reading_binary(2)\n', True),
+    'depth': ('algo reading_recursive(n N) N by induc n from 0:\n    case n = 0: 0\n    case n >= 1: reading_recursive(n - 1)\n\neval reading_recursive(10000000000000000000000000000000000000000)\n', False),
+    'self-definition': ('algo reading_self(x R) R by cases:\n    case x = x: reading_self(x)\n', False),
+}
+EVAL_EQUATION_FORMATION_PREFIX = ('have reading_decimal_half R = 0.5\n\n'
+                                'have reading_decimal_singleton nonempty_set = {reading_decimal_half}\n\n'
+                                'algo reading_decimal_constant(x reading_decimal_singleton) N by cases:\n'
+                                '    case x = x: 1')
+EVAL_EQUATION_FORMATION_CASES = {
+    'wd-equation': (EVAL_EQUATION_FORMATION_PREFIX + '\n\neval reading_decimal_constant(0.5)\n', False),
+    'wd-repair': (EVAL_EQUATION_FORMATION_PREFIX + '\n\n0.5 $in reading_decimal_singleton\n\neval reading_decimal_constant(0.5)\n', True),
+    'wd-partial': (EVAL_EQUATION_FORMATION_PREFIX + '\n\neval reading_decimal_constant(0.5)\n\n0.5 $in reading_decimal_singleton\n\neval reading_decimal_constant(0.5)\n', False),
+    'wd-arithmetic': (EVAL_EQUATION_FORMATION_PREFIX + '\n\neval reading_decimal_constant(0.5) + 2\n', False),
+    'wd-wrapper': (EVAL_EQUATION_FORMATION_PREFIX + '\n\nalgo reading_decimal_wrapper(x R) N by cases:\n    case x = x: reading_decimal_constant(0.5)\n\neval reading_decimal_wrapper(0)\n', False),
+    'wd-claim': (EVAL_EQUATION_FORMATION_PREFIX + '\n\nclaim:\n    ? reading_decimal_constant(0.5) = 1\n    eval reading_decimal_constant(0.5)\n', False),
+    'wd-claim-repair': (EVAL_EQUATION_FORMATION_PREFIX + '\n\nclaim:\n    ? reading_decimal_constant(0.5) = 1\n    0.5 $in reading_decimal_singleton\n    eval reading_decimal_constant(0.5)\n', True),
+}
+EVAL_FAILURE_CASES = {'unsupported-set': ('eval N\n', 'UnsupportedExpression'),
+ 'unsupported-object': ('have reading_eval_object R\neval reading_eval_object\n', 'UnsupportedExpression'),
+ 'power-limit': ('eval 2^100000\n', 'EvaluationFailed'),
+ 'unknown-function': ('have reading_eval_function fn(x R) R\neval reading_eval_function(2)\n',
+                      'AlgoDispatchFailed'),
+ 'recursion-limit': ('algo reading_eval_count(k N) N by induc k from 0:\n'
+                     '    case k = 0: 0\n'
+                     '    case k >= 1: reading_eval_count(k - 1)\n'
+                     'eval reading_eval_count(100)\n',
+                     'DepthExceeded'),
+ 'aggregate-budget': ('eval sum(1,1025,fn(k Z) Z {1})\n', 'AggregateBudgetExceeded'),
+ 'aggregate-nested-budget': ('eval sum(1,32,fn(k Z) Z {sum(1,32,fn(j Z) Z {1})})\n',
+                             'AggregateBudgetExceeded'),
+ 'aggregate-range': ('eval '
+                     'sum(-170141183460469231731687303715884105727,170141183460469231731687303715884105727,fn(k '
+                     'Z) Z {1})\n',
+                     'AggregateRangeOverflow'),
+ 'division-wd': ('eval 1 / 0\n', 'WellDefined'),
+ 'argument-wd': ('algo reading_eval_identity(x N) N by cases:\n'
+                 '    case x = x: x\n'
+                 'eval reading_eval_identity(-1)\n',
+                 'WellDefined'),
+ 'aggregate-wd': ('eval sum(-1,2,fn(k N) N {k})\n', 'WellDefined'),
+ 'success': ('have reading_eval_value R = 10\neval reading_eval_value + 1\nreading_eval_value + 1 = 11\n',
+             None),
+ 'captured': ('by for:\n'
+              '    ? forall n range(0, 2) => n = n\n'
+              '    algo reading_algo_shift(x R) R by cases:\n'
+              '        case x = 0: n\n'
+              '        case x != 0: x + n\n'
+              '    reading_algo_shift(0) = n\n'
+              '    eval reading_algo_shift(0)\n',
+              'UnsupportedExpression')}
+
 FOUNDATION_EVAL_CASES = {
     **{name: (f'examples/test_statements/{leaf}_stmt.lit', True, strict)
        for name, leaf, strict in [('zorn', 'release_zorn_lemma', False),
@@ -2107,6 +2905,15 @@ FUNCTION_CASES = {
     'algo-result': ('examples/test_statements/negative/def_algo_by_cases_stmt/bad-algorithm-result.lit', False),
     'algo-base': ('examples/test_statements/negative/def_algo_by_induc_stmt/wrong-base-value.lit', False),
     'algo-recursion': ('examples/test_statements/negative/def_algo_by_induc_stmt/nondecreasing-algorithm-recursion.lit', False),
+}
+INTRODUCTION_IDENTITY_CASES = {
+    'original': None,  # Keep the unchanged public source as the primary tracer.
+    'outer': 'have reading_outside R = 4\n\nwitness exist outer_w R st {outer_w = reading_outside} from 4\n\nhave reading_chosen R:\n    reading_chosen = reading_outside\n\nreading_chosen = 4\n',
+    'constant': 'witness exist unused R st {1 = 1} from 0\n\nhave reading_unused R:\n    1 = 1\n',
+    'lambda': 'witness exist lambda_w R st {fn(t R) R {t}(lambda_w) = lambda_w} from 0\n\nhave reading_lambda R:\n    fn(t R) R {t}(reading_lambda) = reading_lambda\n',
+    'comparison': 'witness exist positive_w R st {positive_w > 0, positive_w < 2} from 1\n\nhave reading_positive R:\n    reading_positive > 0\n    reading_positive < 2\n\nreading_positive >= 0\n',
+    'independent': 'have reading_outside R = 4\n\nwitness exist irrelevant R st {reading_outside = 4} from 0\n\nhave reading_independent R:\n    reading_outside = 4\n',
+    'natural': 'witness exist natural_w R st {natural_w $in N} from 0\n\nhave reading_natural R:\n    reading_natural $in N\n\nreading_natural >= 0\n',
 }
 INTRODUCTION_CASES = {
     'let': ('examples/test_statements/let_obj_stmt.lit', True),
@@ -4698,14 +5505,29 @@ def main():
     parser.add_argument('--logic', action='store_true', help='Also export local assumptions, case scopes and block conclusions from public proofs.')
     parser.add_argument('--processes', action='store_true', help='Also export induction stages, enumeration assignments and witness obligations.')
     parser.add_argument('--introductions', action='store_true', help='Also export object introductions, existential elimination and their boundaries.')
+    parser.add_argument('--introduction-identities', action='store_true', help='Export unchanged ordinary/registered have-object sources and identity-correspondence boundaries.')
     parser.add_argument('--functions', action='store_true', help='Also export function and algorithm definitions, obligations and rejection boundaries.')
     parser.add_argument('--expansions', action='store_true', help='Also export extensionality, explicit definition release and range expansion.')
     parser.add_argument('--state-changes', action='store_true', help='Also export checked registrations, explicit assumptions and scratch scopes, including strict-policy boundaries.')
     parser.add_argument('--interfaces', action='store_true', help='Also export six mathematical interface definitions and their actual native publication/proof boundaries.')
     parser.add_argument('--foundations-eval', action='store_true', help='Also export foundational principle applications and exact evaluation traces, including native rejections.')
+    parser.add_argument('--failed-evaluation', action='store_true', help='Export actual strict eval failure stages, retained domain checks and a successful result-reuse control.')
+    parser.add_argument('--eval-equations', action='store_true', help='Export real failed algorithm-equation targets, explicit repairs, partial/local contexts and recursion controls.')
+    parser.add_argument('--eval-equation-formation', action='store_true', help='Export actual algorithm-equation formation failures after numeric argument normalization, with checked repairs and local/partial controls.')
+    parser.add_argument('--claim-formation', action='store_true', help='Export successful quantified claim formation and actual atomic, parse and verification boundaries.')
+    parser.add_argument('--compound-claim-formation', action='store_true', help='Export checked compound claim goals, retained formation after failed proofs and actual unsupported/syntax boundaries.')
+    parser.add_argument('--existential-formation', action='store_true', help='Export actual existential verification routes, source-owned candidate checks and real proof/formation boundaries.')
     parser.add_argument('--empty-domains', action='store_true', help='Also export real vacuous universals, non-publication and WD boundaries.')
     parser.add_argument('--equivalences', action='store_true', help='Also export both quantified-equivalence directions, partial failures and WD boundaries.')
     parser.add_argument('--failed-introductions', action='store_true', help='Export actual partial object-introduction and witness-source failure records.')
+    parser.add_argument('--witness-uniqueness', action='store_true', help='Export actual generated uniqueness scopes, dependent/structural candidates and earlier-stage controls.')
+    parser.add_argument('--witness-uniqueness-success', action='store_true', help='Export actual successful candidate scopes, scoped proofs and repeated witness executions.')
+    parser.add_argument('--qualified-uniqueness', action='store_true', help='Export qualified two-source uniqueness proofs, known-universal reuse and actual membership-rejection controls.')
+    parser.add_argument('--repeated-witnesses', action='store_true', help='Export actual repeated existential, predicate and nonempty witnesses with proof-body citations and later reuse.')
+    parser.add_argument('--repeated-function-forms', action='store_true', help='Export actual repeated unique-existence, recursive and algorithm definitions, claim reuse and a captured-evaluation rejection.')
+    parser.add_argument('--failed-witnesses', action='store_true', help='Export actual witness failure stages, retained substituted goals and local proof prefixes.')
+    parser.add_argument('--construction-failures', action='store_true', help='Export actual preimage/replacement failure stages without reconstructing missing histories.')
+    parser.add_argument('--formation-struct-openings', action='store_true', help='Export retained local structural properties in quantified formation failures and their qualified book.')
     parser.add_argument('--declaration-status', action='store_true', help='Export attempted, completed and scoped declaration hover controls.')
     parser.add_argument('--quantifier-formation', action='store_true', help='Export retained forall proof-introduction and formation-only failures, including a false consequent and actual local inference.')
     parser.add_argument('--failed-interfaces', action='store_true', help='Export actual failed prop/struct/template stage prefixes and local scopes.')
@@ -4721,6 +5543,10 @@ def main():
     parser.add_argument('--tuple-coordinates', action='store_true', help='Export actual one-layer tuple coordinate inference, local/reversed/empty/alias boundaries and a qualified two-source book.')
     parser.add_argument('--numeric-rewrites', action='store_true', help='Export actual closed-numeric equality rewrites, residual proofs, local/chain/route controls and a qualified two-source book.')
     parser.add_argument('--unexecuted-loops', action='store_true', help='Export actual empty/all-skipped enumeration bodies, nested/repeated/local histories and rejection controls.')
+    parser.add_argument('--large-proof-graphs', action='store_true', help='Export maintained probability/projection proofs and a three-source book with a wide native evidence graph.')
+    parser.add_argument('--atomic-rewrites', action='store_true', help='Export the unchanged topology source for chain-cited equalities and source-free function-domain rewrite checks.')
+    parser.add_argument('--atomic-unfold-dual', action='store_true', help='Export unchanged function-set membership and strict, weak and negated relation-dual proof sources.')
+    parser.add_argument('--equality-unfold', action='store_true', help='Export maintained scalar/tuple function-unfold equalities, exact chain steps and rejection boundaries.')
     parser.add_argument('--case-consequences', action='store_true', help='Also export successful case-target inference batches and outer-publication boundaries.')
     parser.add_argument('--completed-case-prefix', action='store_true', help='Also export actual completed case prefixes, coverage and closing-target prefixes before later failures.')
     parser.add_argument('--failed-case-context', action='store_true', help='Also export actual failed case assumptions, completed body prefixes, nested scopes and non-leakage boundaries.')
@@ -5321,6 +6147,37 @@ def main():
                 raise RuntimeError(f'{name}: matrix-membership source snapshot mismatch')
             (args.output / f'matrix-membership-{name}.json').write_text(run.stdout)
             report[f'matrix-membership-{name}'] = {'source': '<session-verified fixture>', 'exit': run.returncode, 'run_result': expected}
+    if args.formation_struct_openings:
+        for name, case in FORMATION_STRUCT_CASES.items():
+            content = FORMATION_STRUCT_PREFIX + case['body']
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-strict', '-json', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if case.get('success') else 'failure'
+            if run.returncode != (0 if case.get('success') else 1) or bundle.get('run_result') != expected or bundle['sources'][0]['content'] != content:
+                raise RuntimeError(f'{name}: unexpected structural-formation result\n{run.stderr}')
+            (args.output / f'formation-struct-{name}.json').write_text(run.stdout)
+            report[f'formation-struct-{name}'] = {'exit': run.returncode, 'run_result': expected, 'strict': True, 'source': '<session-verified>'}
+        (args.output / 'formation-struct-cases.json').write_text(json.dumps(FORMATION_STRUCT_CASES, indent=2) + '\n')
+        project = args.output / 'formation-struct-book-source'
+        project.mkdir(exist_ok=True)
+        files = {'litex.config': '[export]\ndefinitions = "./01-definitions.lit"\napplications = "./02-applications.lit"\n', '01-definitions.lit': FORMATION_STRUCT_PREFIX, '02-applications.lit': FORMATION_STRUCT_CASES['parameterized']['body'].replace('&ReadingFormationPair<A>', '&definitions::ReadingFormationPair<A>')}
+        for name, content in files.items():
+            (project / name).write_text(content)
+        exported = args.output / 'formation-struct-book'
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-strict', '-lang', 'en', '-r', str(project), '-export', str(exported)], capture_output=True, text=True)
+        bundle = json.loads((exported / 'reading.json').read_text())
+        if run.returncode != 1 or bundle.get('run_result') != 'failure' or len(bundle['sources']) != 2:
+            raise RuntimeError(f'formation-struct-book: unexpected result\n{run.stderr}')
+        report['formation-struct-book'] = {'exit': 1, 'run_result': 'failure', 'strict': True, 'sources': 2}
+    if args.construction_failures:
+        for name, case in CONSTRUCTION_FAILURE_CASES.items():
+            content = (ROOT / case['path']).read_text() if 'path' in case else case['source']
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-strict', '-json', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            if run.returncode != 1 or bundle.get('run_result') != 'failure' or bundle['sources'][0]['content'] != content:
+                raise RuntimeError(f'{name}: unexpected construction-failure result\n{run.stderr}')
+            (args.output / f'construction-{name}.json').write_text(run.stdout)
+            report[f'construction-{name}'] = {'exit': 1, 'run_result': 'failure', 'strict': True, 'source': case.get('path', '<session-verified>')}
     if args.failed_introductions:
         for name, (content, succeeds) in FAILED_INTRODUCTION_CASES.items():
             run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
@@ -5583,6 +6440,115 @@ def main():
             raise RuntimeError(f'later empty group: source/result mismatch\n{run.stderr}')
         (args.output / 'empty-domain-later-group.json').write_text(run.stdout)
         report['empty-domain-later-group'] = {'source': '<inline: earlier real parameter, later empty carrier>', 'strict': True, 'exit': 0, 'run_result': 'success'}
+    if args.existential_formation:
+        for name, (content, succeeds) in EXISTENTIAL_FORMATION_CASES.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected or not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: existential formation source/result mismatch\n{run.stderr}')
+            (args.output / f'existential-formation-{name}.json').write_text(run.stdout)
+            report[f'existential-formation-{name}'] = {'source': '<checked existential verification/control>', 'strict': True, 'exit': run.returncode, 'run_result': expected}
+        project = args.output / 'existential-formation-registered-source'
+        project.mkdir(exist_ok=True)
+        source = project / 'input.lit'
+        source.write_text(EXISTENTIAL_FORMATION_CASES['have-object'][0])
+        (project / 'litex.config').write_text('[export]\nf0 = "./input.lit"\n')
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-f', str(source)], capture_output=True, text=True)
+        bundle = json.loads(run.stdout)
+        if run.returncode != 1 or bundle.get('run_result') != 'failure' or [item['line'] for item in bundle['statements'] if item['status'] == 'rejected'] != [9, 16]:
+            raise RuntimeError('registered have-object producer boundary changed; update its mathematical-success qualification')
+        (args.output / 'existential-formation-registered-have-object.json').write_text(run.stdout)
+        report['existential-formation-registered-have-object'] = {'source': '<same have-object source, registered f0 file>', 'strict': True, 'exit': 1, 'run_result': 'failure', 'intended_mathematical_result': 'success', 'known_preexisting_producer_boundary': True}
+    if args.introduction_identities:
+        for name, content in INTRODUCTION_IDENTITY_CASES.items():
+            if content is None:
+                content = (ROOT / 'examples/test_statements/have_obj_by_exist_facts_stmt.lit').read_text()
+            for mode in ('ordinary', 'registered'):
+                key = name + '-' + mode
+                project = args.output / ('intro-identity-' + key + '-source')
+                project.mkdir(exist_ok=True)
+                source = project / 'candidate.lit'
+                source.write_text(content)
+                if mode == 'registered':
+                    (project / 'litex.config').write_text('[export]\nf0 = "./candidate.lit"\n')
+                run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-f', str(source.resolve())], capture_output=True, text=True)
+                bundle = json.loads(run.stdout)
+                boundary = mode == 'registered' and name in ('original', 'outer', 'lambda', 'comparison', 'natural')
+                expected = 'failure' if boundary else 'success'
+                if run.returncode != (1 if boundary else 0) or bundle.get('run_result') != expected or [s['content'] for s in bundle['sources']] != [content]:
+                    raise RuntimeError(f'{key}: have-object identity boundary changed; audit before updating the qualification\n{run.stderr}')
+                (args.output / ('intro-identity-' + key + '.json')).write_text(run.stdout)
+                report['intro-identity-' + key] = {'strict': True, 'exit': run.returncode, 'run_result': expected, 'intended_mathematical_result': 'success', 'known_preexisting_producer_boundary': boundary}
+        project = args.output / 'intro-identity-external-source'
+        project.mkdir(exist_ok=True)
+        (project / 'defs.lit').write_text('have reading_outside R = 4\n')
+        external = 'witness exist external_w R st {defs::reading_outside = 4} from 0\n\nhave reading_external R:\n    defs::reading_outside = 4\n'
+        (project / 'candidate.lit').write_text(external)
+        (project / 'litex.config').write_text('[export]\ndefs = "./defs.lit"\ninput = "./candidate.lit"\n')
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-f', str((project / 'candidate.lit').resolve())], capture_output=True, text=True)
+        bundle = json.loads(run.stdout)
+        if run.returncode != 0 or bundle.get('run_result') != 'success' or len(bundle['sources']) != 2:
+            raise RuntimeError(f'external have-object correspondence: unexpected result\n{run.stderr}')
+        (args.output / 'intro-identity-external-registered.json').write_text(run.stdout)
+        report['intro-identity-external-registered'] = {'strict': True, 'exit': 0, 'run_result': 'success', 'sources': 2}
+    if args.compound_claim_formation:
+        for name, (content, succeeds) in COMPOUND_CLAIM_CASES.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected or not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: compound claim source/result mismatch\n{run.stderr}')
+            (args.output / f'compound-claim-{name}.json').write_text(run.stdout)
+            report[f'compound-claim-{name}'] = {'source': '<inline: checked compound claim/control>', 'strict': True, 'exit': run.returncode, 'run_result': expected}
+    if args.claim_formation:
+        for name, (content, succeeds) in CLAIM_FORMATION_CASES.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected or not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: quantified claim source/result mismatch\n{run.stderr}')
+            (args.output / f'claim-formation-{name}.json').write_text(run.stdout)
+            report[f'claim-formation-{name}'] = {'source': '<inline: checked quantified claim/control>', 'strict': True, 'exit': run.returncode, 'run_result': expected}
+    if args.eval_equations or args.eval_equation_formation:
+        cases = {**(EVAL_EQUATION_CASES if args.eval_equations else {}), **(EVAL_EQUATION_FORMATION_CASES if args.eval_equation_formation else {})}
+        for name, (content, succeeds) in cases.items():
+            for mode in ('ordinary', 'registered'):
+                key = name + '-' + mode
+                project = args.output / ('eval-equation-' + key + '-source')
+                project.mkdir(exist_ok=True)
+                source = project / 'candidate.lit'
+                source.write_text(content)
+                if mode == 'registered':
+                    (project / 'litex.config').write_text('[export]\nf0 = "./candidate.lit"\n')
+                run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-f', str(source.resolve())], capture_output=True, text=True)
+                bundle = json.loads(run.stdout)
+                expected = 'success' if succeeds else 'failure'
+                if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected or [s['content'] for s in bundle['sources']] != [content]:
+                    raise RuntimeError(f'{key}: algorithm-equation source/result mismatch\n{run.stderr}')
+                (args.output / ('eval-equation-' + key + '.json')).write_text(run.stdout)
+                report['eval-equation-' + key] = {'strict': True, 'exit': run.returncode, 'run_result': expected}
+    if args.failed_evaluation:
+        for name, (content, stage) in EVAL_FAILURE_CASES.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if stage is None else 'failure'
+            if run.returncode != (0 if stage is None else 1) or bundle.get('run_result') != expected or not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: eval source/result mismatch\n{run.stderr}')
+            statement = next(value for value in bundle['statements'] if value['statement_kind'] == 'Command.EvalStmt')
+            if stage is not None:
+                nodes = {value['id']: value['node'] for value in bundle['evidence_nodes']}
+                node = statement['evidence']
+                for kind, variant in [('ExecStmtResult', 'Command'), ('ExecCommandStmtResult', 'Eval'), ('ExecEvalStmtResult', 'Failed'), ('ExecEvalStmtFailed', stage)]:
+                    while node.get('kind') == 'evidence_reference':
+                        node = nodes[node['evidence_id']]
+                    if node.get('type') != kind or node.get('variant') != variant:
+                        raise RuntimeError(f'{name}: unexpected actual eval failure stage')
+                    node = node.get('fields', {}).get('0', {})
+                if statement['produced_fact_ids'] or statement['inferred_fact_ids']:
+                    raise RuntimeError(f'{name}: failed eval unexpectedly published facts')
+            (args.output / f'eval-failure-{name}.json').write_text(run.stdout)
+            report[f'eval-failure-{name}'] = {'source': '<inline: checked eval failure/control>', 'strict': True, 'exit': run.returncode, 'run_result': expected, 'eval_failure_stage': stage}
     if args.foundations_eval:
         for name, (relative, succeeds, strict) in FOUNDATION_EVAL_CASES.items():
             content = (ROOT / relative).read_text()
@@ -5844,6 +6810,83 @@ def main():
         if bundle.get('run_result') != 'success' or [item['content'] for item in bundle['sources']] != [value for name, value in FORALL_EQUALITY_SYMMETRY_BOOK.items() if name.endswith('.lit')]:
             raise RuntimeError('forall symmetry book: unexpected result or source mismatch')
         report['forall-symmetry-book'] = {'exit': 0, 'run_result': 'success', 'sources': 2, 'strict': True}
+    if args.atomic_rewrites:
+        source = ROOT / 'examples/reading/homepage/10-topology.lit'
+        content = source.read_text()
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+        bundle = json.loads(run.stdout)
+        if run.returncode != 0 or bundle.get('run_result') != 'success' or len(bundle['sources']) != 1 or bundle['sources'][0]['content'] != content:
+            raise RuntimeError(f'atomic-rewrite topology: unexpected result or source mismatch\n{run.stderr}')
+        (args.output / 'atomic-rewrite-topology.json').write_text(run.stdout)
+        report['atomic-rewrite-topology'] = {'exit': 0, 'run_result': 'success', 'strict': True, 'source': str(source.relative_to(ROOT)), 'evidence_nodes': len(bundle['evidence_nodes'])}
+    if args.atomic_unfold_dual:
+        paths = {'groups': 'examples/reading/homepage/08-groups-and-homomorphisms.lit',
+                 'strict': 'examples/proof_nodes/atomic/by_builtin_rewrite/order_dual.lit',
+                 'weak': 'examples/proof_nodes/atomic/by_builtin_rewrite/order_dual_weak.lit',
+                 'negated': 'examples/proof_nodes/atomic/by_builtin_rewrite/order_dual_not.lit'}
+        sources = {name: (ROOT / relative).read_text() for name, relative in paths.items()}
+        sources['both-applications'] = ('have fn selected(alpha {1}) {1} = 1\n'
+                                        'have fn singleton(alpha {1}) power_set({1}) = {1}\n'
+                                        'forall alpha {1}:\n'
+                                        '    selected(alpha) $in singleton(alpha)\n')
+        for name, content in sources.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            if run.returncode != 0 or bundle.get('run_result') != 'success' or len(bundle['sources']) != 1 or bundle['sources'][0]['content'] != content:
+                raise RuntimeError(f'atomic-unfold-dual {name}: unexpected result or source mismatch\n{run.stderr}')
+            (args.output / f'atomic-unfold-dual-{name}.json').write_text(run.stdout)
+            report[f'atomic-unfold-dual-{name}'] = {'exit': 0, 'run_result': 'success', 'strict': True, 'source': paths.get(name, 'retained-session-accepted inline source'), 'evidence_nodes': len(bundle['evidence_nodes'])}
+    if args.equality_unfold:
+        paths = {'newton': 'examples/reading/homepage/03-newton-error.lit',
+                 'projection': 'examples/reading/homepage/13-orthogonal-projection.lit',
+                 'linear-algebra': 'examples/reading/homepage/09-linear-algebra.lit'}
+        family = 'examples/proof_nodes/equal/by_builtin_rewrite/'
+        for name in ['base', 'multiple_calls', 'forall_equality', 'scalar_arithmetic', 'exact_arguments', 'guarded', 'duplicate_sources']:
+            suffix = '' if name == 'base' else '_' + name
+            paths[name.replace('_', '-')] = family + 'fn_application_unfold_substitution' + suffix + '.lit'
+        cases = {name: ((ROOT / relative).read_text(), True, relative) for name, relative in paths.items()}
+        # Exact unchanged source cases from the existing execute unit tests.
+        unit = 'tests/unit/execute/fn_application_unfold_substitution/tests.rs'
+        cases['body-domain'] = ('forall f fn(t R) R,x R:\n    f=fn(t R: t>0) R {t+1}\n    x>0\n    =>:\n        2*f(x)=2*x+2', True, unit)
+        cases['missing-body-domain'] = ('forall f fn(t R) R,x R:\n    f=fn(t R: t>0) R {t+1}\n    =>:\n        2*f(x)=2*x+2', False, unit)
+        cases['reversed-head'] = ('forall f fn(t R) R,x R:\n    fn(t R) R {t+1}=f\n    =>:\n        2*f(x)=2*x+2', True, unit)
+        cases['anonymous-alias'] = ('let f=fn(t R) R {t+1}\nhave x R\n2*f(x)=2*x+2', True, unit)
+        negative = ROOT / 'examples/negative/fn_application_unfold_substitution'
+        for case in json.loads((negative / 'manifest.json').read_text()):
+            path = negative / case['file']
+            cases['negative-' + path.stem.replace('_', '-')] = (path.read_text(), False, str(path.relative_to(ROOT)))
+        for name, (content, success, origin) in cases.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if success else 'failure'
+            if run.returncode != (0 if success else 1) or bundle.get('run_result') != expected or len(bundle['sources']) != 1 or bundle['sources'][0]['content'] != content:
+                raise RuntimeError(f'equality-unfold {name}: unexpected result or source mismatch\n{run.stderr}')
+            (args.output / f'equality-unfold-{name}.json').write_text(run.stdout)
+            report[f'equality-unfold-{name}'] = {'exit': run.returncode, 'run_result': expected, 'strict': True, 'source': origin, 'evidence_nodes': len(bundle['evidence_nodes'])}
+    if args.large_proof_graphs:
+        sources = {'small': 'examples/stmt_nodes/by/by_for.lit',
+                   'probability': 'examples/reading/homepage/11-finite-probability.lit',
+                   'projection': 'examples/reading/homepage/13-orthogonal-projection.lit'}
+        contents = {name: (ROOT / path).read_text() for name, path in sources.items()}
+        for name, content in contents.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            if run.returncode != 0 or bundle.get('run_result') != 'success' or bundle['sources'][0]['content'] != content:
+                raise RuntimeError(f'{name}: unexpected large-proof source result\n{run.stderr}')
+            (args.output / f'large-proof-{name}.json').write_text(run.stdout)
+            report[f'large-proof-{name}'] = {'exit': 0, 'run_result': 'success', 'strict': True, 'source': sources[name], 'evidence_nodes': len(bundle['evidence_nodes'])}
+        project = args.output / 'large-proof-book-source'
+        project.mkdir(exist_ok=True)
+        files = {'small': '01-small.lit', 'probability': '02-probability.lit', 'projection': '03-projection.lit'}
+        for name, filename in files.items():
+            (project / filename).write_text(contents[name])
+        (project / 'litex.config').write_text('[export]\n' + ''.join(f'{name} = "./{filename}"\n' for name, filename in files.items()))
+        exported = args.output / 'large-proof-book'
+        run = subprocess.run([str(args.binary.resolve()), '-reading', '-strict', '-lang', 'en', '-r', str(project), '-export', str(exported)], capture_output=True, text=True)
+        bundle = json.loads((exported / 'reading.json').read_text())
+        if run.returncode != 0 or bundle.get('run_result') != 'success' or [item['content'] for item in bundle['sources']] != list(contents.values()):
+            raise RuntimeError('large-proof book: unexpected result or source mismatch')
+        report['large-proof-book'] = {'exit': 0, 'run_result': 'success', 'strict': True, 'sources': 3, 'evidence_nodes': len(bundle['evidence_nodes'])}
     if args.unexecuted_loops:
         for name, case in UNEXECUTED_LOOP_CASES.items():
             run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', case['source']], capture_output=True, text=True)
@@ -5983,6 +7026,71 @@ def main():
             (args.output / f'{name}.json').write_text(run.stdout)
             report[name] = {'source': '<glossary-control>', 'exit': run.returncode,
                             'run_result': bundle['run_result']}
+    for enabled, prefix, cases in [(args.witness_uniqueness, 'witness-unique-', WITNESS_UNIQUENESS_CASES),
+                                   (args.witness_uniqueness_success, 'witness-unique-success-', WITNESS_UNIQUENESS_SUCCESS_CASES)]:
+        if not enabled:
+            continue
+        for name, (content, succeeds) in cases.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected or not any(
+                    item.get('content') == content for item in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: unexpected witness uniqueness result\n{run.stderr}')
+            (args.output / f'{prefix}{name}.json').write_text(run.stdout)
+            report[f'{prefix}{name}'] = {'source': '<session-verified>', 'exit': run.returncode, 'run_result': expected}
+    if args.repeated_function_forms:
+        for name, (content, succeeds) in REPEATED_FUNCTION_CASES.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            expected = 'success' if succeeds else 'failure'
+            if run.returncode != (0 if succeeds else 1) or bundle.get('run_result') != expected:
+                raise RuntimeError(f'{name}: unexpected repeated function-form result\n{run.stderr}')
+            if not any(source.get('content') == content for source in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: repeated function-form source snapshot mismatch')
+            (args.output / f'repeated-function-{name}.json').write_text(run.stdout)
+            report[f'repeated-function-{name}'] = {'source': '<session-verified fixture>', 'exit': run.returncode, 'run_result': expected}
+    if args.repeated_witnesses:
+        for name, content in REPEATED_WITNESS_CASES.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json', '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            if run.returncode != 0 or bundle.get('run_result') != 'success' or not any(source['content'] == content for source in bundle['sources']):
+                raise RuntimeError(f'{name}: unexpected repeated witness result\n{run.stderr}')
+            (args.output / f'repeated-witness-{name}.json').write_text(run.stdout)
+            report[f'repeated-witness-{name}'] = {'exit': 0, 'run_result': 'success', 'strict': True, 'source': '<session-verified-clean-checkpoint>'}
+    if args.qualified_uniqueness:
+        for name, case in QUALIFIED_UNIQUENESS_BOOK_CASES.items():
+            project = args.output / f'qualified-unique-{name}-source'
+            project.mkdir(exist_ok=True)
+            for filename, content in case['sources'].items():
+                (project / filename).write_text(content)
+            exported = args.output / f'qualified-unique-{name}-book'
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-strict', '-lang', 'en',
+                                  '-r', str(project), '-export', str(exported)], capture_output=True, text=True)
+            bundle = json.loads((exported / 'reading.json').read_text())
+            expected = case['run_result']
+            contents = [content for filename, content in case['sources'].items() if filename.endswith('.lit')]
+            if run.returncode != (0 if expected == 'success' else 1) or bundle.get('run_result') != expected or len(bundle['sources']) != 2 or [source['content'] for source in bundle['sources']] != contents:
+                raise RuntimeError(f'{name}: unexpected qualified uniqueness export\n{run.stderr}')
+            report[f'qualified-unique-{name}'] = {'exit': run.returncode, 'run_result': expected,
+                                                'sources': 2, 'strict': True, 'source': '<session-reviewed-clean-checkpoint>'}
+    if args.failed_witnesses:
+        cases = {name: (ROOT / relative).read_text() for name, relative in WITNESS_FAILURE_PATHS.items()}
+        cases.update(WITNESS_FAILURE_INLINE)
+        for name in ['witness-with-structure', 'witness-uses-automatic-field-domain']:
+            cases[name] = AUTOMATIC_STRUCT_ORIGIN_CASES[name]['source']
+        for name, content in cases.items():
+            run = subprocess.run([str(args.binary.resolve()), '-reading', '-json',
+                                  '-strict', '-lang', 'en', '-e', content], capture_output=True, text=True)
+            bundle = json.loads(run.stdout)
+            if run.returncode != 1 or bundle.get('run_result') != 'failure' or not any(
+                    item.get('content') == content for item in bundle.get('sources', [])):
+                raise RuntimeError(f'{name}: unexpected witness failure result\n{run.stderr}')
+            (args.output / f'witness-failure-{name}.json').write_text(run.stdout)
+            report[f'witness-failure-{name}'] = {'source': WITNESS_FAILURE_PATHS.get(name, '<session-verified>'),
+                                               'exit': run.returncode, 'run_result': 'failure'}
     if args.definitions:
         # Isolate these public files from their containing project's exports;
         # the CLI still verifies and retains every exact source byte.

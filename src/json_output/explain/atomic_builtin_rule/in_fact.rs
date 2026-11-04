@@ -45,6 +45,7 @@ use crate::json_output::explain::text::text;
 impl InFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_en(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::English),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::English),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Transport known membership between a homogeneous Cartesian product and its equal finite sequence carrier."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::English),
@@ -107,6 +108,11 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(
+                p.rule_name(),
+                "Finite matrix property with complete domains and checked premises",
+                OutputLanguage::Chinese,
+            ),
             Self::SignedNumericMembership(p) => {
                 super::structural_real_sign::membership_text(p, OutputLanguage::Chinese)
             }
@@ -236,6 +242,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_zh_hant(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::ChineseTraditional),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::ChineseTraditional),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "在同質笛卡爾積與相等的有限數列空間之間傳遞已知成員關係。"),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::ChineseTraditional),
@@ -338,6 +345,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_fr(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::French),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::French),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Transporte une appartenance connue entre un produit homogène et son espace de suites finies égal."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::French),
@@ -401,6 +409,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ru(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Russian),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Russian),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Переносит известную принадлежность между однородным произведением и равным пространством конечных последовательностей."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Russian),
@@ -464,6 +473,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_es(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Spanish),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Spanish),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Transporta la pertenencia conocida entre un producto homogéneo y su espacio igual de sucesiones finitas."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Spanish),
@@ -527,6 +537,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ar(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Arabic),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Arabic),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "ينقل الانتماء المعروف بين الجداء المتجانس وفضاء المتتاليات المنتهية المساوي له."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Arabic),
@@ -590,6 +601,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ja(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Japanese),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Japanese),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "同質直積と等しい有限列空間の間で既知の所属関係を移します。"),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Japanese),
@@ -671,6 +683,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_ko(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Korean),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Korean),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "동질 직적과 같은 유한 수열 공간 사이에서 알려진 원소 관계를 전달합니다."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Korean),
@@ -734,6 +747,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn rule_name_and_message_vi(&self) -> BuiltinRuleText {
         match self {
+            Self::NativeMatrixProperty(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_name(), "Finite matrix property with complete domains and checked premises", OutputLanguage::Vietnamese),
             Self::SignedNumericMembership(p) => super::structural_real_sign::membership_text(p, OutputLanguage::Vietnamese),
             Self::HomogeneousCartesianSequenceMembership(_) => text("HomogeneousCartesianSequenceMembership", "Chuyển quan hệ thuộc đã biết giữa tích đồng nhất và không gian dãy hữu hạn bằng nó."),
             Self::NativeMatrix(p) => crate::json_output::explain::text::native_matrix_rule(p.rule_id(),p.law(),OutputLanguage::Vietnamese),
@@ -812,6 +826,7 @@ impl InFactSearchProofByBuiltinRule {
 
     pub fn cite_fact_id(&self) -> Option<FactId> {
         match self {
+            Self::NativeMatrixProperty(_) => None,
             Self::SignedNumericMembership(_) => None,
             Self::HomogeneousCartesianSequenceMembership(p) => p.membership.cite_fact_id(),
             Self::NativeMatrix(_) => None,

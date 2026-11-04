@@ -23,6 +23,34 @@ impl LitexToLeanCompiler {
         conclusions_wd: &[FactWellDefinedProof],
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, String, Vec<Fact>), LeanCompileError> {
+        if builtin.theorem == BuiltinTheoremId::MatrixRankFromFactorization {
+            return self.compile_builtin_matrix_rank_factorization(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::MatrixRankProduct {
+            return self.compile_builtin_matrix_rank_product(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if builtin.theorem == BuiltinTheoremId::MatrixRankInvertible {
             return self.compile_builtin_rank_invertible_theorem(
                 call,

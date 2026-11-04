@@ -1,0 +1,903 @@
+# Finite de Bruijn lambda terms, capture-avoiding binder instantiation and beta reduction.
+# Natural codes are an implementation of syntax; no host lambda represents an object-language term.
+
+# Natural encodings of finite de Bruijn syntax, not host function values.
+have fn variable_code(index N) N=3*index
+
+have fn abstraction_code(body N) N=3*body+1
+
+have fn pair_code(left,right N) N=(left+right)^2+left
+
+have fn application_code(left,right N) N=3*pair_code(left,right)+2
+
+prop is_lambda_closed(S power_set(N)):
+    forall index N:
+        variable_code(index) $in S
+    forall body S:
+        abstraction_code(body) $in S
+    forall left,right S:
+        application_code(left,right) $in S
+
+prop is_lambda_term(code N):
+    forall S power_set(N):
+        $is_lambda_closed(S)
+        =>:
+            code $in S
+
+have Term power_set(N)={code N:$is_lambda_term(code)}
+
+thm variable_code_is_term:
+    ? forall index N:
+        $is_lambda_term(variable_code(index))
+    claim:
+        ? forall S power_set(N):
+            $is_lambda_closed(S)
+            =>:
+                variable_code(index) $in S
+        variable_code(index) $in S
+    by def $is_lambda_term(variable_code(index))
+
+release obj def Term
+
+Term={code N:$is_lambda_term(code)}
+
+forall body Term:
+    $is_lambda_term(body)
+
+thm abstraction_code_is_term:
+    ? forall body Term:
+        $is_lambda_term(abstraction_code(body))
+    $is_lambda_term(body)
+    claim:
+        ? forall S power_set(N):
+            $is_lambda_closed(S)
+            =>:
+                abstraction_code(body) $in S
+        body $in S
+        abstraction_code(body) $in S
+    by def $is_lambda_term(abstraction_code(body))
+
+thm application_code_is_term:
+    ? forall left,right Term:
+        $is_lambda_term(application_code(left,right))
+    $is_lambda_term(left)
+    $is_lambda_term(right)
+    claim:
+        ? forall S power_set(N):
+            $is_lambda_closed(S)
+            =>:
+                application_code(left,right) $in S
+        left $in S
+        right $in S
+        application_code(left,right) $in S
+    by def $is_lambda_term(application_code(left,right))
+
+claim:
+    ? forall index N:
+        variable_code(index) $in Term
+    release thm variable_code_is_term(index)
+    release thm set_builder_member(variable_code(index),{code N:$is_lambda_term(code)})
+
+claim:
+    ? forall body Term:
+        abstraction_code(body) $in Term
+    release thm abstraction_code_is_term(body)
+    release thm set_builder_member(abstraction_code(body),{code N:$is_lambda_term(code)})
+
+claim:
+    ? forall left,right Term:
+        application_code(left,right) $in Term
+    release thm application_code_is_term(left,right)
+    release thm set_builder_member(application_code(left,right),{code N:$is_lambda_term(code)})
+
+have fn variable(index N) Term=variable_code(index)
+
+have fn abstraction(body Term) Term=abstraction_code(body)
+
+have fn application(left,right Term) Term=application_code(left,right)
+
+thm lambda_term_induction:
+    ? forall S power_set(Term),term Term:
+        forall index N:
+            variable(index) $in S
+        forall body Term:
+            body $in S
+            =>:
+                abstraction(body) $in S
+        forall left,right Term:
+            left $in S
+            right $in S
+            =>:
+                application(left,right) $in S
+        =>:
+            term $in S
+    S $subset Term
+    Term $subset N
+    S $subset N
+    S $in power_set(N)
+    claim:
+        ? forall index N:
+            variable_code(index) $in S
+        variable_code(index)=variable(index)
+        variable_code(index) $in S
+    claim:
+        ? forall body S:
+            abstraction_code(body) $in S
+        body $in Term
+        abstraction_code(body)=abstraction(body)
+        abstraction(body) $in S
+        abstraction_code(body) $in S
+    claim:
+        ? forall left,right S:
+            application_code(left,right) $in S
+        left $in Term
+        right $in Term
+        application_code(left,right)=application(left,right)
+        application(left,right) $in S
+        application_code(left,right) $in S
+    by def $is_lambda_closed(S)
+    $is_lambda_term(term)
+    term $in S
+
+prop is_variable(term N):
+    exist index N st {term=variable_code(index)}
+
+prop is_abstraction(term N):
+    exist body Term st {term=abstraction_code(body)}
+
+prop is_application(term N):
+    exist left,right Term st {term=application_code(left,right)}
+
+prop has_lambda_root(term Term):
+    $is_variable(term) or $is_abstraction(term) or $is_application(term)
+
+have RootShapes power_set(Term)={term Term:$has_lambda_root(term)}
+
+claim:
+    ? forall index N:
+        variable(index) $in RootShapes
+    variable(index)=variable_code(index)
+    witness $is_variable(variable(index)) from index
+    $is_variable(variable(index)) or $is_abstraction(variable(index)) or $is_application(variable(index))
+    by def $has_lambda_root(variable(index))
+    release thm set_builder_member(variable(index),{term Term:$has_lambda_root(term)})
+
+claim:
+    ? forall body Term:
+        abstraction(body) $in RootShapes
+    abstraction(body)=abstraction_code(body)
+    witness $is_abstraction(abstraction(body)) from body
+    $is_variable(abstraction(body)) or $is_abstraction(abstraction(body)) or $is_application(abstraction(body))
+    by def $has_lambda_root(abstraction(body))
+    release thm set_builder_member(abstraction(body),{term Term:$has_lambda_root(term)})
+
+claim:
+    ? forall left,right Term:
+        application(left,right) $in RootShapes
+    application(left,right)=application_code(left,right)
+    witness $is_application(application(left,right)) from left,right
+    $is_variable(application(left,right)) or $is_abstraction(application(left,right)) or $is_application(application(left,right))
+    by def $has_lambda_root(application(left,right))
+    release thm set_builder_member(application(left,right),{term Term:$has_lambda_root(term)})
+
+thm lambda_term_root_cases:
+    ? forall term Term:
+        $is_variable(term) or $is_abstraction(term) or $is_application(term)
+    release thm lambda_term_induction(RootShapes,term)
+    term $in RootShapes
+    term $in {t Term:$has_lambda_root(t)}
+    $has_lambda_root(term)
+
+thm constructor_tags:
+    ? forall index N,body,left,right Term:
+        variable_code(index)%3=0
+        abstraction_code(body)%3=1
+        application_code(left,right)%3=2
+    variable_code(index)=3*index
+    abstraction_code(body)=3*body+1
+    application_code(left,right)=3*pair_code(left,right)+2
+
+thm natural_square_bound:
+    ? forall n N:
+        n<=n^2
+    by cases:
+        ? n<=n^2
+        case n=0:
+            n=n^2=0
+        case n>=1:
+            n-1>=0
+            n*(n-1)>=0
+            n^2-n=n*(n-1)>=0
+            n<=n^2
+
+thm pair_code_bounds:
+    ? forall left,right N:
+        left<=pair_code(left,right)
+        right<=pair_code(left,right)
+    release thm natural_square_bound(left+right)
+    left<=left+right<=(left+right)^2
+    right<=left+right<=(left+right)^2
+    pair_code(left,right)=(left+right)^2+left
+    left<=pair_code(left,right)
+    right<=pair_code(left,right)
+
+thm pair_code_row_order:
+    ? forall a,b,c,d N:
+        a+b<c+d
+        =>:
+            pair_code(a,b)<pair_code(c,d)
+    a+b+1<=c+d
+    c+d-(a+b+1)>=0
+    c+d+a+b+1>=0
+    (c+d-(a+b+1))*(c+d+a+b+1)>=0
+    (c+d)^2-(a+b+1)^2=(c+d-(a+b+1))*(c+d+a+b+1)>=0
+    (a+b+1)^2<=(c+d)^2
+    (a+b+1)^2-((a+b)^2+a+b)=a+b+1>0
+    (a+b)^2+a+b<(a+b+1)^2
+    pair_code(a,b)=(a+b)^2+a<=(a+b)^2+a+b<(a+b+1)^2<=(c+d)^2<=(c+d)^2+c=pair_code(c,d)
+
+thm pair_code_injective:
+    ? forall a,b,c,d N:
+        pair_code(a,b)=pair_code(c,d)
+        =>:
+            a=c
+            b=d
+    claim:
+        ? a+b=c+d
+        by cases:
+            ? a+b=c+d
+            case a+b=c+d:
+                a+b=c+d
+            case a+b<c+d:
+                release thm pair_code_row_order(a,b,c,d)
+                impossible pair_code(a,b)=pair_code(c,d)
+            case a+b>c+d:
+                release thm pair_code_row_order(c,d,a,b)
+                impossible pair_code(a,b)=pair_code(c,d)
+    a=pair_code(a,b)-(a+b)^2=pair_code(c,d)-(c+d)^2=c
+    b=(a+b)-a=(c+d)-c=d
+
+thm variable_tag:
+    ? forall term N:
+        $is_variable(term)
+        =>:
+            term%3=0
+    obtain index from $is_variable(term)
+    term=variable_code(index)=3*index
+    release thm constructor_tags(index,variable(0),variable(0),variable(0))
+    term%3=variable_code(index)%3=0
+
+thm abstraction_tag:
+    ? forall term N:
+        $is_abstraction(term)
+        =>:
+            term%3=1
+    obtain body from $is_abstraction(term)
+    term=abstraction_code(body)=3*body+1
+    release thm constructor_tags(0,body,body,body)
+    term%3=abstraction_code(body)%3=1
+
+thm application_tag:
+    ? forall term N:
+        $is_application(term)
+        =>:
+            term%3=2
+    obtain left,right from $is_application(term)
+    term=application_code(left,right)=3*pair_code(left,right)+2
+    release thm constructor_tags(0,left,left,right)
+    term%3=application_code(left,right)%3=2
+
+thm variable_injective:
+    ? forall a,b N:
+        variable(a)=variable(b)
+        =>:
+            a=b
+    3*a=variable_code(a)=variable(a)=variable(b)=variable_code(b)=3*b
+    a=(3*a)/3=(3*b)/3=b
+
+thm abstraction_injective:
+    ? forall a,b Term:
+        abstraction(a)=abstraction(b)
+        =>:
+            a=b
+    3*a+1=abstraction_code(a)=abstraction(a)=abstraction(b)=abstraction_code(b)=3*b+1
+    3*a=(3*a+1)-1=(3*b+1)-1=3*b
+    a=(3*a)/3=(3*b)/3=b
+
+thm application_injective:
+    ? forall a,b,c,d Term:
+        application(a,b)=application(c,d)
+        =>:
+            a=c
+            b=d
+    have p N=pair_code(a,b)
+    have q N=pair_code(c,d)
+    application_code(a,b)=3*p+2
+    application_code(c,d)=3*q+2
+    3*p+2=application_code(a,b)=application(a,b)=application(c,d)=application_code(c,d)=3*q+2
+    3*p=(3*p+2)-2=(3*q+2)-2=3*q
+    p=(3*p)/3=(3*q)/3=q
+    pair_code(a,b)=p=q=pair_code(c,d)
+    release thm pair_code_injective(a,b,c,d)
+
+thm variable_index_exists_unique:
+    ? forall term Term:
+        $is_variable(term)
+        =>:
+            exist! index N st {term=variable(index)}
+    obtain index from $is_variable(term)
+    term=variable_code(index)=variable(index)
+    claim:
+        ? forall a,b N:
+            term=variable(a)
+            term=variable(b)
+            =>:
+                a=b
+        variable(a)=term=variable(b)
+        release thm variable_injective(a,b)
+    witness exist! other N st {term=variable(other)} from index
+
+have fn variable_index by exist!:
+    ? forall term Term:
+        $is_variable(term)
+        =>:
+            exist! index N st {term=variable(index)}
+
+thm abstraction_body_exists_unique:
+    ? forall term Term:
+        $is_abstraction(term)
+        =>:
+            exist! body Term st {term=abstraction(body)}
+    obtain body from $is_abstraction(term)
+    term=abstraction_code(body)=abstraction(body)
+    claim:
+        ? forall a,b Term:
+            term=abstraction(a)
+            term=abstraction(b)
+            =>:
+                a=b
+        abstraction(a)=term=abstraction(b)
+        release thm abstraction_injective(a,b)
+    witness exist! other Term st {term=abstraction(other)} from body
+
+have fn abstraction_body by exist!:
+    ? forall term Term:
+        $is_abstraction(term)
+        =>:
+            exist! body Term st {term=abstraction(body)}
+
+thm application_parts_exists_unique:
+    ? forall term Term:
+        $is_application(term)
+        =>:
+            exist! parts cart(Term,Term) st {term=application(parts(1),parts(2))}
+    obtain left,right from $is_application(term)
+    (left,right) $in cart(Term,Term)
+    (left,right)(1)=left
+    (left,right)(2)=right
+    term=application_code(left,right)=application(left,right)
+    claim:
+        ? forall p,q cart(Term,Term):
+            term=application(p(1),p(2))
+            term=application(q(1),q(2))
+            =>:
+                p=q
+        application(p(1),p(2))=term=application(q(1),q(2))
+        release thm application_injective(p(1),p(2),q(1),q(2))
+        p=(p(1),p(2))=(q(1),q(2))=q
+    witness exist! parts cart(Term,Term) st {term=application(parts(1),parts(2))} from (left,right)
+
+have fn application_parts by exist!:
+    ? forall term Term:
+        $is_application(term)
+        =>:
+            exist! parts cart(Term,Term) st {term=application(parts(1),parts(2))}
+
+have fn application_left(term Term:$is_application(term)) Term=application_parts(term)(1)
+
+have fn application_right(term Term:$is_application(term)) Term=application_parts(term)(2)
+
+thm variable_not_abstraction:
+    ? forall term Term:
+        $is_variable(term)
+        =>:
+            not $is_abstraction(term)
+    release thm variable_tag(term)
+    by contra:
+        ? not $is_abstraction(term)
+        release thm abstraction_tag(term)
+        0=term%3=1
+        impossible 0=1
+
+thm variable_not_application:
+    ? forall term Term:
+        $is_variable(term)
+        =>:
+            not $is_application(term)
+    release thm variable_tag(term)
+    by contra:
+        ? not $is_application(term)
+        release thm application_tag(term)
+        0=term%3=2
+        impossible 0=2
+
+thm abstraction_not_application:
+    ? forall term Term:
+        $is_abstraction(term)
+        =>:
+            not $is_application(term)
+    release thm abstraction_tag(term)
+    by contra:
+        ? not $is_application(term)
+        release thm application_tag(term)
+        1=term%3=2
+        impossible 1=2
+
+Term $subset N
+
+have fn syntax_rank(term Term) N=term
+
+thm abstraction_body_smaller:
+    ? forall term Term:
+        $is_abstraction(term)
+        =>:
+            syntax_rank(abstraction_body(term))<syntax_rank(term)
+    have body Term=abstraction_body(term)
+    term=abstraction(abstraction_body(term))=abstraction(body)=abstraction_code(body)=3*body+1
+    2*body>=0
+    term-body=(3*body+1)-body=2*body+1>0
+    body<term
+    syntax_rank(abstraction_body(term))=body<term=syntax_rank(term)
+
+thm application_children_smaller:
+    ? forall term Term:
+        $is_application(term)
+        =>:
+            syntax_rank(application_left(term))<syntax_rank(term)
+            syntax_rank(application_right(term))<syntax_rank(term)
+    have left Term=application_left(term)
+    have right Term=application_right(term)
+    application_parts(term)(1)=application_left(term)=left
+    application_parts(term)(2)=application_right(term)=right
+    term=application(application_parts(term)(1),application_parts(term)(2))=application(left,right)=application_code(left,right)
+    have code N=pair_code(left,right)
+    release thm pair_code_bounds(left,right)
+    left<=code
+    right<=code
+    application_code(left,right)=3*pair_code(left,right)+2=3*code+2
+    term=3*code+2
+    term-code=(3*code+2)-code=2*code+2>0
+    left<=code<term
+    right<=code<term
+    syntax_rank(application_left(term))=left<term=syntax_rank(term)
+    syntax_rank(application_right(term))=right<term=syntax_rank(term)
+
+have fn shift(term Term,cutoff,amount N) Term by induc syntax_rank(term) from 0:
+    case $is_variable(term):
+        case variable_index(term)<cutoff: term
+        case variable_index(term)>=cutoff: variable(variable_index(term)+amount)
+    case $is_abstraction(term): abstraction(shift(abstraction_body(term),cutoff+1,amount))
+    case $is_application(term): application(shift(application_left(term),cutoff,amount),shift(application_right(term),cutoff,amount))
+
+thm variable_shape:
+    ? forall index N:
+        $is_variable(variable(index))
+    variable(index)=variable_code(index)
+    witness $is_variable(variable(index)) from index
+
+thm abstraction_shape:
+    ? forall body Term:
+        $is_abstraction(abstraction(body))
+    abstraction(body)=abstraction_code(body)
+    witness $is_abstraction(abstraction(body)) from body
+
+thm application_shape:
+    ? forall left,right Term:
+        $is_application(application(left,right))
+    application(left,right)=application_code(left,right)
+    witness $is_application(application(left,right)) from left,right
+
+thm variable_index_of_variable:
+    ? forall index N:
+        variable_index(variable(index))=index
+    release thm variable_shape(index)
+    variable(variable_index(variable(index)))=variable(index)
+    release thm variable_injective(variable_index(variable(index)),index)
+
+thm abstraction_body_of_abstraction:
+    ? forall body Term:
+        abstraction_body(abstraction(body))=body
+    release thm abstraction_shape(body)
+    abstraction(abstraction_body(abstraction(body)))=abstraction(body)
+    release thm abstraction_injective(abstraction_body(abstraction(body)),body)
+
+thm application_children_of_application:
+    ? forall left,right Term:
+        application_left(application(left,right))=left
+        application_right(application(left,right))=right
+    release thm application_shape(left,right)
+    application_parts(application(left,right))(1)=application_left(application(left,right))
+    application_parts(application(left,right))(2)=application_right(application(left,right))
+    application(left,right)=application(application_parts(application(left,right))(1),application_parts(application(left,right))(2))
+    application(application_left(application(left,right)),application_right(application(left,right)))=application(application_parts(application(left,right))(1),application_parts(application(left,right))(2))=application(left,right)
+    release thm application_injective(application_left(application(left,right)),application_right(application(left,right)),left,right)
+
+have fn instantiate(term Term,depth N,argument Term) Term by induc syntax_rank(term) from 0:
+    case $is_variable(term):
+        case variable_index(term)<depth: term
+        case variable_index(term)=depth: shift(argument,0,depth)
+        case variable_index(term)>depth: variable(variable_index(term)-1)
+    case $is_abstraction(term): abstraction(instantiate(abstraction_body(term),depth+1,argument))
+    case $is_application(term): application(instantiate(application_left(term),depth,argument),instantiate(application_right(term),depth,argument))
+
+have fn beta_contract(body,argument Term) Term=instantiate(body,0,argument)
+
+prop is_root_beta_step(source,target Term):
+    exist body,argument Term st {source=application(abstraction(body),argument),target=beta_contract(body,argument)}
+
+thm beta_root_rule:
+    ? forall body,argument Term:
+        $is_root_beta_step(application(abstraction(body),argument),beta_contract(body,argument))
+    witness $is_root_beta_step(application(abstraction(body),argument),beta_contract(body,argument)) from body,argument
+
+thm shift_variable_below:
+    ? forall index,cutoff,amount N:
+        index<cutoff
+        =>:
+            shift(variable(index),cutoff,amount)=variable(index)
+    release thm variable_shape(index)
+    release thm variable_index_of_variable(index)
+    variable_index(variable(index))<cutoff
+    shift(variable(index),cutoff,amount)=variable(index)
+
+thm shift_variable_above:
+    ? forall index,cutoff,amount N:
+        index>=cutoff
+        =>:
+            shift(variable(index),cutoff,amount)=variable(index+amount)
+    release thm variable_shape(index)
+    release thm variable_index_of_variable(index)
+    variable_index(variable(index))>=cutoff
+    shift(variable(index),cutoff,amount)=variable(variable_index(variable(index))+amount)=variable(index+amount)
+
+thm shift_abstraction:
+    ? forall body Term,cutoff,amount N:
+        shift(abstraction(body),cutoff,amount)=abstraction(shift(body,cutoff+1,amount))
+    release thm abstraction_shape(body)
+    release thm abstraction_body_of_abstraction(body)
+    shift(abstraction(body),cutoff,amount)=abstraction(shift(abstraction_body(abstraction(body)),cutoff+1,amount))=abstraction(shift(body,cutoff+1,amount))
+
+thm shift_application:
+    ? forall left,right Term,cutoff,amount N:
+        shift(application(left,right),cutoff,amount)=application(shift(left,cutoff,amount),shift(right,cutoff,amount))
+    release thm application_shape(left,right)
+    release thm application_children_of_application(left,right)
+    shift(application(left,right),cutoff,amount)=application(shift(application_left(application(left,right)),cutoff,amount),shift(application_right(application(left,right)),cutoff,amount))=application(shift(left,cutoff,amount),shift(right,cutoff,amount))
+
+thm instantiate_variable_below:
+    ? forall index,depth N,argument Term:
+        index<depth
+        =>:
+            instantiate(variable(index),depth,argument)=variable(index)
+    release thm variable_shape(index)
+    release thm variable_index_of_variable(index)
+    variable_index(variable(index))<depth
+    instantiate(variable(index),depth,argument)=variable(index)
+
+thm instantiate_variable_at:
+    ? forall depth N,argument Term:
+        instantiate(variable(depth),depth,argument)=shift(argument,0,depth)
+    release thm variable_shape(depth)
+    release thm variable_index_of_variable(depth)
+    variable_index(variable(depth))=depth
+    instantiate(variable(depth),depth,argument)=shift(argument,0,depth)
+
+thm instantiate_variable_above:
+    ? forall index,depth N,argument Term:
+        index>depth
+        =>:
+            instantiate(variable(index),depth,argument)=variable(index-1)
+    index>=1
+    index-1 $in N
+    release thm variable_shape(index)
+    release thm variable_index_of_variable(index)
+    variable_index(variable(index))>depth
+    instantiate(variable(index),depth,argument)=variable(variable_index(variable(index))-1)=variable(index-1)
+
+thm instantiate_abstraction:
+    ? forall body,argument Term,depth N:
+        instantiate(abstraction(body),depth,argument)=abstraction(instantiate(body,depth+1,argument))
+    release thm abstraction_shape(body)
+    release thm abstraction_body_of_abstraction(body)
+    instantiate(abstraction(body),depth,argument)=abstraction(instantiate(abstraction_body(abstraction(body)),depth+1,argument))=abstraction(instantiate(body,depth+1,argument))
+
+thm instantiate_application:
+    ? forall left,right,argument Term,depth N:
+        instantiate(application(left,right),depth,argument)=application(instantiate(left,depth,argument),instantiate(right,depth,argument))
+    release thm application_shape(left,right)
+    release thm application_children_of_application(left,right)
+    instantiate(application(left,right),depth,argument)=application(instantiate(application_left(application(left,right)),depth,argument),instantiate(application_right(application(left,right)),depth,argument))=application(instantiate(left,depth,argument),instantiate(right,depth,argument))
+
+prop has_zero_shift(term Term):
+    forall cutoff N:
+        shift(term,cutoff,0)=term
+
+have ZeroShiftTerms power_set(Term)={term Term:$has_zero_shift(term)}
+
+claim:
+    ? forall index N:
+        variable(index) $in ZeroShiftTerms
+    claim:
+        ? forall cutoff N:
+            shift(variable(index),cutoff,0)=variable(index)
+        by cases:
+            ? shift(variable(index),cutoff,0)=variable(index)
+            case index<cutoff:
+                release thm shift_variable_below(index,cutoff,0)
+            case index>=cutoff:
+                release thm shift_variable_above(index,cutoff,0)
+                index+0=index
+                shift(variable(index),cutoff,0)=variable(index+0)=variable(index)
+    by def $has_zero_shift(variable(index))
+    release thm set_builder_member(variable(index),{term Term:$has_zero_shift(term)})
+
+claim:
+    ? forall body Term:
+        body $in ZeroShiftTerms
+        =>:
+            abstraction(body) $in ZeroShiftTerms
+    body $in {term Term:$has_zero_shift(term)}
+    $has_zero_shift(body)
+    claim:
+        ? forall cutoff N:
+            shift(abstraction(body),cutoff,0)=abstraction(body)
+        release thm shift_abstraction(body,cutoff,0)
+        shift(body,cutoff+1,0)=body
+        shift(abstraction(body),cutoff,0)=abstraction(shift(body,cutoff+1,0))=abstraction(body)
+    by def $has_zero_shift(abstraction(body))
+    release thm set_builder_member(abstraction(body),{term Term:$has_zero_shift(term)})
+
+claim:
+    ? forall left,right Term:
+        left $in ZeroShiftTerms
+        right $in ZeroShiftTerms
+        =>:
+            application(left,right) $in ZeroShiftTerms
+    left $in {term Term:$has_zero_shift(term)}
+    right $in {term Term:$has_zero_shift(term)}
+    $has_zero_shift(left)
+    $has_zero_shift(right)
+    claim:
+        ? forall cutoff N:
+            shift(application(left,right),cutoff,0)=application(left,right)
+        release thm shift_application(left,right,cutoff,0)
+        shift(left,cutoff,0)=left
+        shift(right,cutoff,0)=right
+        shift(application(left,right),cutoff,0)=application(shift(left,cutoff,0),shift(right,cutoff,0))=application(left,right)
+    by def $has_zero_shift(application(left,right))
+    release thm set_builder_member(application(left,right),{term Term:$has_zero_shift(term)})
+
+thm shift_zero:
+    ? forall term Term,cutoff N:
+        shift(term,cutoff,0)=term
+    release thm lambda_term_induction(ZeroShiftTerms,term)
+    term $in ZeroShiftTerms
+    term $in {t Term:$has_zero_shift(t)}
+    $has_zero_shift(term)
+    shift(term,cutoff,0)=term
+
+thm beta_identity:
+    ? forall argument Term:
+        beta_contract(variable(0),argument)=argument
+    release thm instantiate_variable_at(0,argument)
+    release thm shift_zero(argument,0)
+    beta_contract(variable(0),argument)=instantiate(variable(0),0,argument)=shift(argument,0,0)=argument
+
+thm beta_avoids_capture:
+    ? beta_contract(abstraction(variable(1)),variable(0))=abstraction(variable(1))
+    release thm instantiate_abstraction(variable(1),variable(0),0)
+    release thm instantiate_variable_at(1,variable(0))
+    release thm shift_variable_above(0,0,1)
+    shift(variable(0),0,1)=variable(1)
+    instantiate(variable(1),1,variable(0))=shift(variable(0),0,1)=variable(1)
+    instantiate(abstraction(variable(1)),0,variable(0))=abstraction(instantiate(variable(1),1,variable(0)))=abstraction(variable(1))
+    beta_contract(abstraction(variable(1)),variable(0))=instantiate(abstraction(variable(1)),0,variable(0))=abstraction(variable(1))
+
+thm beta_removes_binder:
+    ? forall argument Term:
+        beta_contract(variable(1),argument)=variable(0)
+    release thm instantiate_variable_above(1,0,argument)
+    beta_contract(variable(1),argument)=instantiate(variable(1),0,argument)=variable(1-1)=variable(0)
+
+prop is_beta_closed(relation power_set(cart(Term,Term))):
+    forall source,target Term:
+        $is_root_beta_step(source,target)
+        =>:
+            (source,target) $in relation
+    forall source,target Term:
+        (source,target) $in relation
+        =>:
+            (abstraction(source),abstraction(target)) $in relation
+    forall source,target,context Term:
+        (source,target) $in relation
+        =>:
+            (application(source,context),application(target,context)) $in relation
+            (application(context,source),application(context,target)) $in relation
+
+prop is_beta_step(source,target Term):
+    forall relation power_set(cart(Term,Term)):
+        $is_beta_closed(relation)
+        =>:
+            (source,target) $in relation
+
+thm root_beta_is_beta:
+    ? forall source,target Term:
+        $is_root_beta_step(source,target)
+        =>:
+            $is_beta_step(source,target)
+    claim:
+        ? forall relation power_set(cart(Term,Term)):
+            $is_beta_closed(relation)
+            =>:
+                (source,target) $in relation
+        (source,target) $in relation
+    by def $is_beta_step(source,target)
+
+thm beta_under_abstraction:
+    ? forall source,target Term:
+        $is_beta_step(source,target)
+        =>:
+            $is_beta_step(abstraction(source),abstraction(target))
+    claim:
+        ? forall relation power_set(cart(Term,Term)):
+            $is_beta_closed(relation)
+            =>:
+                (abstraction(source),abstraction(target)) $in relation
+        (source,target) $in relation
+        (abstraction(source),abstraction(target)) $in relation
+    by def $is_beta_step(abstraction(source),abstraction(target))
+
+thm beta_in_function:
+    ? forall source,target,context Term:
+        $is_beta_step(source,target)
+        =>:
+            $is_beta_step(application(source,context),application(target,context))
+    claim:
+        ? forall relation power_set(cart(Term,Term)):
+            $is_beta_closed(relation)
+            =>:
+                (application(source,context),application(target,context)) $in relation
+        (source,target) $in relation
+        (application(source,context),application(target,context)) $in relation
+    by def $is_beta_step(application(source,context),application(target,context))
+
+thm beta_in_argument:
+    ? forall source,target,context Term:
+        $is_beta_step(source,target)
+        =>:
+            $is_beta_step(application(context,source),application(context,target))
+    claim:
+        ? forall relation power_set(cart(Term,Term)):
+            $is_beta_closed(relation)
+            =>:
+                (application(context,source),application(context,target)) $in relation
+        (source,target) $in relation
+        (application(context,source),application(context,target)) $in relation
+    by def $is_beta_step(application(context,source),application(context,target))
+
+thm beta_identity_step:
+    ? forall argument Term:
+        $is_beta_step(application(abstraction(variable(0)),argument),argument)
+    release thm beta_identity(argument)
+    witness $is_root_beta_step(application(abstraction(variable(0)),argument),argument) from variable(0),argument
+    release thm root_beta_is_beta(application(abstraction(variable(0)),argument),argument)
+
+have duplicator Term=abstraction(application(variable(0),variable(0)))
+
+have omega Term=application(duplicator,duplicator)
+
+thm omega_self_step:
+    ? $is_beta_step(omega,omega)
+    release thm instantiate_application(variable(0),variable(0),duplicator,0)
+    release thm instantiate_variable_at(0,duplicator)
+    release thm shift_zero(duplicator,0)
+    instantiate(variable(0),0,duplicator)=shift(duplicator,0,0)=duplicator
+    instantiate(application(variable(0),variable(0)),0,duplicator)=application(instantiate(variable(0),0,duplicator),instantiate(variable(0),0,duplicator))=application(duplicator,duplicator)=omega
+    beta_contract(application(variable(0),variable(0)),duplicator)=instantiate(application(variable(0),variable(0)),0,duplicator)=omega
+    omega=application(duplicator,duplicator)=application(abstraction(application(variable(0),variable(0))),duplicator)
+    witness $is_root_beta_step(omega,omega) from application(variable(0),variable(0)),duplicator
+    release thm root_beta_is_beta(omega,omega)
+
+thm capture_result_is_distinct:
+    ? beta_contract(abstraction(variable(1)),variable(0))!=abstraction(variable(0))
+    release thm beta_avoids_capture
+    by contra:
+        ? beta_contract(abstraction(variable(1)),variable(0))!=abstraction(variable(0))
+        abstraction(variable(1))=beta_contract(abstraction(variable(1)),variable(0))=abstraction(variable(0))
+        release thm abstraction_injective(variable(1),variable(0))
+        release thm variable_injective(1,0)
+        impossible 1=0
+
+thm abstraction_is_not_variable:
+    ? forall body Term:
+        not $is_variable(abstraction(body))
+    release thm abstraction_shape(body)
+    by contra:
+        ? not $is_variable(abstraction(body))
+        release thm variable_not_abstraction(abstraction(body))
+        impossible $is_abstraction(abstraction(body))
+
+thm application_is_not_variable:
+    ? forall left,right Term:
+        not $is_variable(application(left,right))
+    release thm application_shape(left,right)
+    by contra:
+        ? not $is_variable(application(left,right))
+        release thm variable_not_application(application(left,right))
+        impossible $is_application(application(left,right))
+
+have NonVariableTerms power_set(Term)={term Term:not $is_variable(term)}
+
+have NonVariableSourcePairs power_set(cart(Term,Term))=cart(NonVariableTerms,Term)
+
+claim:
+    ? forall body Term:
+        abstraction(body) $in NonVariableTerms
+    release thm abstraction_is_not_variable(body)
+    release thm set_builder_member(abstraction(body),{term Term:not $is_variable(term)})
+
+claim:
+    ? forall left,right Term:
+        application(left,right) $in NonVariableTerms
+    release thm application_is_not_variable(left,right)
+    release thm set_builder_member(application(left,right),{term Term:not $is_variable(term)})
+
+thm beta_step_has_nonvariable_source:
+    ? $is_beta_closed(NonVariableSourcePairs)
+    claim:
+        ? forall source,target Term:
+            $is_root_beta_step(source,target)
+            =>:
+                (source,target) $in NonVariableSourcePairs
+        obtain body,argument from $is_root_beta_step(source,target)
+        application(abstraction(body),argument) $in NonVariableTerms
+        source=application(abstraction(body),argument)
+        source $in NonVariableTerms
+        (source,target) $in cart(NonVariableTerms,Term)
+        (source,target) $in NonVariableSourcePairs
+    claim:
+        ? forall source,target Term:
+            (source,target) $in NonVariableSourcePairs
+            =>:
+                (abstraction(source),abstraction(target)) $in NonVariableSourcePairs
+        abstraction(source) $in NonVariableTerms
+        (abstraction(source),abstraction(target)) $in cart(NonVariableTerms,Term)
+        (abstraction(source),abstraction(target)) $in NonVariableSourcePairs
+    claim:
+        ? forall source,target,context Term:
+            (source,target) $in NonVariableSourcePairs
+            =>:
+                (application(source,context),application(target,context)) $in NonVariableSourcePairs
+                (application(context,source),application(context,target)) $in NonVariableSourcePairs
+        application(source,context) $in NonVariableTerms
+        application(context,source) $in NonVariableTerms
+        (application(source,context),application(target,context)) $in cart(NonVariableTerms,Term)
+        (application(context,source),application(context,target)) $in cart(NonVariableTerms,Term)
+        (application(source,context),application(target,context)) $in NonVariableSourcePairs
+        (application(context,source),application(context,target)) $in NonVariableSourcePairs
+    by def $is_beta_closed(NonVariableSourcePairs)
+
+thm variables_are_normal:
+    ? forall index N,target Term:
+        not $is_beta_step(variable(index),target)
+    release thm variable_shape(index)
+    release thm beta_step_has_nonvariable_source
+    by contra:
+        ? not $is_beta_step(variable(index),target)
+        (variable(index),target) $in NonVariableSourcePairs
+        (variable(index),target) $in cart(NonVariableTerms,Term)
+        variable(index) $in NonVariableTerms
+        variable(index) $in {term Term:not $is_variable(term)}
+        not $is_variable(variable(index))
+        impossible $is_variable(variable(index))
+
