@@ -1,13 +1,8 @@
 name: Deploy
 
+# Manual validation only. Branch and tag pushes must not deploy or publish.
 on:
   workflow_dispatch:
-  push:
-    tags:
-      # Release tags are the exact Cargo version, without a leading `v`.
-      # Keep the filter broad enough for both stable and prerelease semver;
-      # the validate job below enforces the exact package-version match.
-      - "*.*.*"
 
 env:
   CARGO_TERM_COLOR: always
