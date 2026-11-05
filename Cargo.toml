@@ -21,6 +21,8 @@ exclude = [
     "litex_semantics_in_lean/*",
     "**/.draft/**",
     "**/.drafts/**",
+    "**/.session-litex",
+    "std/**/validation/**/*.json",
     "doc/*",
     ".github/*",
 ]

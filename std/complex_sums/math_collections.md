@@ -44,9 +44,9 @@ No trust or axiom is used.
 
 ## Verification
 
-validation/.ladr/acceptance.json records 10 strict source declarations,
+validation/.ladr/check.py checks 10 strict source declarations,
 45 independent imported statements and four retained-context refusals.
-The pinned binary SHA-256 is
+Earlier verification used binary SHA-256
 acbc6e6d9bdb9188bf2fb57bdbac22b8981486df925a53cf1154ab2c80d6de2e.
 Examples cover nonreal coefficients (i,2i), norm sum 3 and bound 4, the empty
 coefficient vector, zero-index sums and a finite zero tail. Invalid bound and
@@ -116,7 +116,7 @@ The same-bound theorem is reused after padding both representations to n+m.
 
 ## Growth and comparison verification
 
-validation/.ladr/power_use/acceptance.json records the strict 9-statement source
+validation/.ladr/power_use/check.py checks the strict 9-statement source
 target, with registered main10/growth15 predecessors, 64 independent imported
 statements and seven retained-context refusals. All consumed source/configuration
 and executable hashes are recorded and checked by power_use/check.py.

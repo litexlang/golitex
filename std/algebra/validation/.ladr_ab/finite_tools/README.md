@@ -9,15 +9,14 @@ zero extension and length zero.
 
 Four expected refusals check an independent empty list, a false direct sum,
 false infinite dimension for the plane and a false nonzero extension tail.
-The valid tail remains available after each refusal. See acceptance.json.
+The valid tail remains available after each refusal. See check.py.
 
-Run check.py with LITEX_CHECK_BINARY set to the task-pinned executable. Each
+Run check.py with LITEX_CHECK_BINARY set to the current release executable. Each
 clean file requires strict exit 0 and successful Normal JSON, with all target
 statements accepted and no errors or hard termination. Source snapshots include
-the executable, algebra manifest and registered source files. Cache reuse checks
-only consumed dependencies: changing the main caller does not invalidate a
-source or subspace checkpoint that does not execute that caller. The final
-receipt retains the full current snapshot and the dependency subsets used.
+the executable, algebra manifest and registered source files. Every invocation
+executes the source, subspace, imported-caller and refusal checks. No disk JSON
+cache or receipt is read or written.
 
 The initial main-caller failure lacked an explicit scalar_space tuple equality
 before projecting its zero; the corrected caller adds that equality. No source

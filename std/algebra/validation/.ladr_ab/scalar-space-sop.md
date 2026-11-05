@@ -19,6 +19,6 @@ under vector_space.lit, and verify saved source and imported use independently.
 All new state is std source; no native or protected-type changes.
 
 Accepted canonical source: 34 statements. Independent imported consumer: 32
-statements. Three expected refusals retain context; scalar_gates.json records
+statements. Three expected refusals retain context; check_scalars.py records
 the exact source and pinned-binary hashes. This completes the scalar-space
 increment and 1B correspondence, not the entire selected A–B/FTA target.

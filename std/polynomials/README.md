@@ -35,7 +35,7 @@ The separate clean boundary replay also passes.
 See [source receipt](validation/.ladr/source_gate.json),
 [imported receipt](validation/.ladr/use/imported_gate.json) and
 [checker](validation/.ladr/check_coefficients.py). The per-increment
-[acceptance](validation/.ladr/coefficient_acceptance.json) records the source
+[checker](validation/.ladr/check_coefficients.py) records the source
 snapshot before the following degree exports were registered.
 
 ## Exact degree
@@ -77,7 +77,7 @@ statements and ten retained-context refusals. Examples include degree-2 real
 and complex quadratics, nonzero constants represented through bound 3, zero,
 and bounds 0/2/5/7. Refusals cover false degrees, too-small bounds, confusing
 representation bounds with exact degree, a natural degree for zero and inputs
-without polynomial evidence. See [acceptance](validation/.ladr/degree_acceptance.json).
+without polynomial evidence. See [checker](validation/.ladr/check_degree.py).
 
 No axiom, trust, new native mathematical operation or kernel change is introduced.
 LADR 2.11 and 2.12 are accepted. General root count and complete fundamental
@@ -98,5 +98,5 @@ and four retained-context refusals. It calls degree directly on values declared
 in the original named polynomial sets, including -3 and i, and checks the generic
 zero specification. The refusals reject original-function inputs lacking the
 required polynomial-set or selector-domain evidence. See the
-[acceptance](validation/.ladr/membership_acceptance.json).
+[checker](validation/.ladr/check_membership.py).
 

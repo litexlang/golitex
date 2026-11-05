@@ -2,7 +2,7 @@
 
 This fixture imports only Algebra. Its 33 checked claims and three retained-
 context refusals accept 3.1/3.4/3.7/3.10/3.11/3.13/3.14/3.15/3.16/3.18/3.19/3.21/3.22/3.24.
-See [acceptance](../existing_acceptance.json) and [checker](../check_existing.py).
+See [checker](../check_existing.py) and [checker](../check_existing.py).
 There is no new public mathematical declaration or native rule in this increment.
 
 The source correspondence uses the existing linearity predicate, composition,

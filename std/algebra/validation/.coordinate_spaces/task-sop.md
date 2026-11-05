@@ -26,6 +26,6 @@ Status: complete for the native coordinate-space increment, 2026-10-31.
 
 ## Completion evidence
 
-Strict source: 43 accepted statements. Independent std-imported consumer: 39 accepted statements, including R/C computations, native matrix use, n=0 and generic theorem reuse. Three expected scalar/index/wrong-value refusals retain context. See gates.json and acceptance.json. No new assumptions, native changes or payload paths.
+Strict source: 43 accepted statements. Independent std-imported consumer: 39 accepted statements, including R/C computations, native matrix use, n=0 and generic theorem reuse. Three expected scalar/index/wrong-value refusals retain context. See check.py and check.py. No new assumptions, native changes or payload paths.
 
-Concurrent builds replaced the shared release executable during the task. All three increments receive final revalidation with `LITEX_CHECK_BINARY` selecting the same task-owned snapshot. See binary_snapshot.json. The snapshot is temporary; normal checker invocations default to target/release/litex and reject binary changes during verification.
+Concurrent builds replaced the shared release executable during the task. All three increments receive final revalidation with `LITEX_CHECK_BINARY` selecting the same task-owned snapshot. See check.py. The snapshot is temporary; normal checker invocations default to target/release/litex and reject binary changes during verification.

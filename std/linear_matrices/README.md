@@ -33,7 +33,7 @@ an incorrect calculated value. Each refusal is followed by a valid retained
 conclusion.
 
 The final saved-file and clean imported boundary gates pass; see
-`validation/.ladr/acceptance.json`. The accepted correspondence is
+`validation/.ladr/check.py`. The accepted correspondence is
 LADR 3.29, 3.34, 3.36 and 3.39. The selected A-B ledger is now 88/119. The vector-space
 part of 3.40 is available, but its dimension formula remains unproved.
 
@@ -42,15 +42,16 @@ row/column rank correspondence, linear systems and changes of basis remain
 future source work. Full FTA is also unfinished. There are no new native rules,
 trust declarations or mathematical assumptions.
 
-Run the task-owned checker from the repository root with the pinned executable:
+Build the current release executable, then run the checker from the repository root:
 
 ```sh
 LITEX_STD_PATH="$PWD/std" \
-LITEX_CHECK_BINARY="$PWD/std/algebra/validation/.ladr_ab/.session-litex" \
+LITEX_CHECK_BINARY="$PWD/target/release/litex" \
 python3 std/linear_matrices/validation/.ladr/check.py
 ```
 
-The checker reuses the polynomial validation helpers, records the executable
-and recursively consumed source hashes, and skips a saved gate only when its
-snapshot and planned cases match. See `validation/.ladr/source_session.json`,
-`use/prefix_session.json` and `use/session.json` for proof iterations.
+The checker reuses the polynomial validation helpers and checks that the
+executable and consumed sources remain unchanged during each run. It always
+executes the source, imported consumer and refusal checks. Positive statements
+come from `validation/.ladr/use/main.lit`; refusal cases are explicit in
+`validation/.ladr/check.py`. No saved JSON receipt is read or written.

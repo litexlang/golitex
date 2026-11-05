@@ -33,7 +33,7 @@ Use one pinned current-release executable to avoid concurrent release-build repl
 
 ## Vector inverse checkpoint
 
-The selected-inverse increment passes 31 strict source statements, 43 imported statements and three refusal controls, all on the pinned binary. The wider A–B and FTA target remains active; finite-family sums are next. See acceptance.json and gates.json.
+The selected-inverse increment passes 31 strict source statements, 43 imported statements and three refusal controls, all on the pinned binary. The wider A–B and FTA target remains active; finite-family sums are next. See check.py and check.py.
 
 ## Later checkpoints and current dependency
 

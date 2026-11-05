@@ -775,7 +775,7 @@ Scalar distributivity, F.one+F.neg(F.one)=F.zero and the existing zero-scalar
 theorem show that multiplying x by negative one is an inverse candidate.
 Selection uniqueness yields LADR 1.32. A proof-local V-valued name exposes the
 candidate before using congruence; no verifier change is needed.
-Evidence: validation/.ladr_ab/acceptance.json (31 source, 43 imported statements,
+Evidence: validation/.ladr_ab/check.py (31 source, 43 imported statements,
 three refusal controls, actual R/C coordinates and zero dimension).
 
 ## Native finite coordinate spaces
@@ -873,8 +873,8 @@ scalar_space<K,F> is the actual VectorSpace<K,F,K> value
 Field laws and field::add_mul; scalar_space_carrier publishes its membership.
 No scalar arithmetic, Field or VectorSpace field is replaced. The standard R/C
 instances compute with their native arithmetic; a generic imported caller uses
-identity/inverse uniqueness and both zero-action theorems. Receipt:
-validation/.ladr_ab/scalar_acceptance.json (34 source, 32 imported statements,
+identity/inverse uniqueness and both zero-action theorems. Validation:
+validation/.ladr_ab/check_scalars.py (34 source, 32 imported statements,
 three expected refusals).
 
 inherited_space_is_subspace is the converse to the existing restricted_space
@@ -889,7 +889,7 @@ specialize the finite-family criterion to length two. The intersection equals
 is_internal_direct_sum still includes that additional ambient exhaustion
 condition. The pair consumer constructs the sum of two zero subspaces in a
 nonzero real plane, proves it is proper, and constructs its inherited space.
-Receipts: validation/.ladr_ab/pair_acceptance.json and its referenced gates.
+Validation: validation/.ladr_ab/check_pairs.py and the invoked source/import checks.
 
 ## Real and complex polynomial functions
 
@@ -933,7 +933,7 @@ The imported law consumer reuses existing finite_span add_coefficients and
 smul_coefficients over the standard fields. New coefficient operations, a
 second sum implementation and polynomial normalization are not introduced.
 The source checkpoint passes 40 statements, 26 independent imported statements
-and three refusal controls. Receipt: validation/.ladr_ab/polynomial_laws_acceptance.json.
+and three refusal controls. Validation: validation/.ladr_ab/check_polynomial_laws.py.
 
 ## First-class unary function evaluation
 
@@ -952,7 +952,7 @@ premise, extra vector-space record, native rule or protected shape is added.
 This supplies the evaluation transport needed before the polynomial-to-span
 correspondence. Four declarations are appended to vector_space. The checkpoint passes 38
 source and 9 imported statements plus three fresh domain/value refusals.
-Receipt: validation/.ladr_ab/evaluation_acceptance.json.
+Validation: validation/.ladr_ab/check_evaluation.py.
 
 ## Monomial lists and polynomial linear combinations
 
@@ -976,7 +976,7 @@ These 18 declarations and two explicit openings of the standard Field values
 extend polynomial.lit from 40 to 60 statements. Four existing space-carrier
 publications complete a 64-statement source checkpoint, which passes cleanly;
 the independent caller passes 22 statements with three monomial refusal
-controls. Receipt: validation/.ladr_ab/polynomial_bridge_acceptance.json. Exact degree, coefficient
+controls. Validation: validation/.ladr_ab/check_polynomial_bridge.py. Exact degree, coefficient
 uniqueness, whole polynomial-space closure and FTA remain outside this checkpoint.
 
 ## Polynomial subspaces and vector-space values
@@ -1000,7 +1000,7 @@ The expanded polynomial source passes 96 statements; the independent caller
 passes 30. Three retained-context controls reject a complex scalar in the real
 space, an application without its coefficient-witness premise, and a false
 equality between zero and a nonconstant polynomial. See
-validation/.ladr_ab/polynomial_full_acceptance.json. LADR 2.10 is accepted.
+validation/.ladr_ab/check_polynomial_full.py. LADR 2.10 is accepted.
 Exact degree, coefficient uniqueness, a dimension formula and full FTA remain
 unfinished. Refusing a missing witness is not a proof of nonpolynomiality.
 
@@ -1010,8 +1010,8 @@ The zero-evaluation checkpoint extends polynomial.lit to 105 accepted
 statements. Its independent caller passes 22 statements; three controls
 reject a missing nonzero-leading-coefficient premise, a false value at zero,
 and an unproved whole-function equality from equal constant coefficients.
-The valid context survives each refusal. Receipt:
-validation/.ladr_ab/polynomial_zero_acceptance.json.
+The valid context survives each refusal. Validation:
+validation/.ladr_ab/check_polynomial_zero.py.
 
 complex_zero_tail_sum and real_zero_tail_sum prove the ordinary sum identity
 when every positive-index term is zero. They support the real/complex
@@ -1041,7 +1041,7 @@ spanning list. Induction reuses dependence and span-preserving removal;
 composition of increasing maps retains original order. The independent caller
 passes 37 statements. The three negative controls specifically fail increasing
 order, the upper index bound and the spanning premise, with context retained.
-Receipt: validation/.ladr_ab/ordered_basis_acceptance.json; LADR 2.30 accepted.
+Validation: validation/.ladr_ab/check_ordered_basis.py; LADR 2.30 accepted.
 No existing extraction contract was changed and no native interface was added.
 
 ## Basis characterization converse checkpoint
@@ -1057,8 +1057,8 @@ The independent caller passes 37 statements. It proves that (0,1,2,3) spans
 the actual real scalar space but has a nontrivial zero relation. Three controls
 reject the unique-representation converse without uniqueness, a nontrivial
 relation for the independent empty list, and false independence for the
-dependent real list. Context is retained. Receipt:
-validation/.ladr_ab/basis_characterization_acceptance.json; LADR 2.17 and 2.28
+dependent real list. Context is retained. Validation:
+validation/.ladr_ab/check_basis_characterization.py; LADR 2.17 and 2.28
 are accepted. These converse proofs add no new assumptions or native rules.
 
 ## Standard coordinate basis checkpoint
@@ -1088,14 +1088,14 @@ uses a trace from the supplied zero-value relation to identify its selected
 combination before applying reconstruction. No kernel, BT, strategy, trust or
 axiom changed; no new BT name/arity is reserved.
 
-Receipt: validation/.ladr_ab/coordinate_basis_acceptance.json, 20 strict source
+Validation: validation/.ladr_ab/check_coordinate_basis.py, 20 strict source
 statements, 33 independent imported statements and three retained-context
 refusals. Actual R/C examples and dimensions 0/2 pass. Projection index 0,
 false nonreal coordinates and false dimension 3 for the plane are refused.
 The source-owned isolated validation manifest avoids replaying all historical
 consumer batches. Broader A–B and FTA remain unfinished.
 
-Native complex scalar reuse: validation/.ladr_ab/complex_scalar/acceptance.json
+Native complex scalar reuse: validation/.ladr_ab/complex_scalar/check.py
 accepts source items 1.1/1.3/1.5 via nine independent strict claims and three
 refusals. Native C has a proved unique coordinate-pair correspondence to R × R;
 literal equality of those carrier sets is not asserted. No new Obj/prop was
@@ -1151,7 +1151,7 @@ The independent subspace caller proves the source hypotheses of 2.25/2.37/
 2.39/2.43 without adding finite-dimensional intersection/sum premises. It
 publishes the derived carrier and finite-dimensional facts before selector WD.
 
-Verification: validation/.ladr_ab/finite_tools/acceptance.json records a strict
+Verification: validation/.ladr_ab/finite_tools/check.py records a strict
 13-statement final source target, its registered predecessors, 15 subspace
 reuse claims, 66 independent use statements and four retained-context refusals.
 The receipt includes executable, manifest and consumed module hashes; cache

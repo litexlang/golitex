@@ -14,6 +14,6 @@ mathematical interface, native rule, axiom or trust was introduced.
 The strict independent file gate accepts nine general claims with exit 0.
 Three Session controls reject division by zero, an incorrect imaginary
 coordinate and a false nonreal product; a valid product remains available
-after every refusal. See acceptance.json and run check.py with
-LITEX_CHECK_BINARY set to the task's pinned executable.
+after every refusal. Run check.py with LITEX_CHECK_BINARY set to the current
+release executable. The checker always executes these cases and uses no saved receipts.
 

@@ -20,7 +20,8 @@ The already checked consumer uses these concrete interfaces:
 It also instantiates actual real and complex fields, typed vector lists, finite
 coordinates and zero-length lists. The full imported gate accepts 66 statements;
 its four refusal controls are retained evidence from the preceding increment.
-See [acceptance](acceptance.json) for the exact source snapshot and correspondence.
+Run the [finite-space checker](../finite_tools/check.py) to verify those
+executable consumers with the current release binary.
 
 Item 1.8 is independently deferred. This notation audit does not prove equality
 of the complete input domains of two equal function objects, or equality of

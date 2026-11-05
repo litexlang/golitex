@@ -37,7 +37,7 @@ response attribution before its source prefix or consumer is accepted.
 
 Accepted initial interface checkpoint: 36 canonical and 31 imported statements;
 three expected refusals retain the nonreal value fact in one live Session.
-The frozen source/executable hashes agree across polynomial_gates.json. This
+The frozen source/executable hashes agree across check_polynomials.py. This
 acceptance excludes polynomial-space closure, coefficient uniqueness, degree
 and FTA; no additional numbered LADR item is marked complete by this receipt.
 

@@ -18,24 +18,23 @@ identity_compositions export connects the pointwise definition to both compositi
 equalities and proves both one-sided implications under the original equal finite
 dimension hypotheses. Dimension zero is included. ST acts on V and TS on W.
 
-The [acceptance](validation/.ladr/acceptance.json) records a strict four-statement
+The [checker](validation/.ladr/check.py) executes a strict four-statement
 final target after ten inverse and five dimension predecessors, 72 independent
 imported statements and five retained-context refusals. Examples include x -> 2x
 on R with inverse x -> x/2, x -> ix on C with inverse x -> x/i, and both
 zero-dimensional coordinate spaces. Controls reject missing inverse, bijectivity
 and equal-dimension premises, retaining valid complex inverse evaluation.
-Run [check.py](validation/.ladr/check.py) with LITEX_CHECK_BINARY set to the pinned
-executable recorded in the receipts. A metadata note preserves a corrected
-helper-default executable hash; both actual gate commands used the unchanged pin.
+Run [check.py](validation/.ladr/check.py) with LITEX_CHECK_BINARY set to the current
+release executable. Every invocation executes the checks; saved JSON receipts
+are neither inputs nor outputs.
 
 LADR 3.59/3.60/3.61/3.63/3.65/3.68/3.69/3.70 are accepted. The
-[source concordance](validation/.ladr/source_concordance.json) records the
-[author PDF](https://linear.axler.net/LADR4e.pdf) and
+source comparison used the [author PDF](https://linear.axler.net/LADR4e.pdf) and
 [errata](https://linear.axler.net/LADRErrata4e.html), including the 3.68 domains.
-Historical catalogue IDs and line anchors are retained. The original local text
-path is absent; the supplementary online check does not replace that pinned source.
+Historical catalogue IDs and scope qualifications are retained here; the raw
+concordance and execution logs are no longer repository inputs.
 
-The [existing-interface audit](validation/.ladr/existing_acceptance.json) also
+The [existing-interface audit](validation/.ladr/check_existing.py) also
 passes 33 Algebra-only claims and three refusals. It accepts fourteen 3A/3B IDs,
 including actual unique basis extension and the direct kernel/image dimension
 formula under finite source dimension alone. Both surjectivity/full-range
@@ -65,7 +64,7 @@ independent caller passes 121 statements and five refusals, including actual
 real/complex sums, scaling, zero, both zero-dimensional coordinate spaces, empty
 ambient function domains, and general VectorSpace theorem reuse on the new object.
 The saved file and clean retained-context replay pass. LADR 3.2/3.5/3.6 are
-accepted in [space acceptance](validation/.ladr/space_acceptance.json).
+accepted in [checker](validation/.ladr/check_space.py).
 
 composition.lit passes its four-statement target after 65 predecessors, 67
 independent imported statements and three retained-context refusals. It proves
@@ -73,7 +72,7 @@ whole-function associativity, both identities and both sum distributions.
 Inner-sum distribution requires the outer function linear; outer-sum distribution
 holds for arbitrary supplied functions. The caller checks the original all-linear
 hypotheses, actual R/C values and zero-dimensional spaces. LADR 3.8 is accepted
-in [composition acceptance](validation/.ladr/composition_acceptance.json).
+in [checker](validation/.ladr/check_composition.py).
 
 Representing matrices, rank correspondence, systems and change of basis remain
 unfinished. Complete FTA is also unfinished.

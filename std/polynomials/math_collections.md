@@ -129,7 +129,7 @@ range theorems are released before claims requiring those refined carriers.
 All are source proofs consumed by the shared verification mechanism; no
 scenario-specific WD or native branch is added.
 
-validation/.ladr/degree_acceptance.json records a strict 33-statement final
+validation/.ladr/check_degree.py checks a strict 33-statement final
 target, its 54 registered predecessor statements, an independent 163-statement
 caller and ten retained-context refusals. The whole module snapshot, caller
 configuration/source and fixed executable hashes are checked by check_degree.py.

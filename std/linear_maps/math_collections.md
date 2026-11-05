@@ -5,7 +5,7 @@
 The public module registers inverse.lit (10 statements), dimension.lit (5)
 and identity_compositions.lit (4). The strict final target replays all 15
 predecessors. The independent caller passes 72 statements and five required-
-premise refusals in a fresh Session. See validation/.ladr/acceptance.json.
+premise refusals in a fresh Session. See validation/.ladr/check.py.
 
 - inverse::is_two_sided_inverse(V,W set,T FnV W,S FnW V)/4 means both identities.
   Empty sets are permitted subject to the supplied function carriers.
@@ -58,14 +58,14 @@ injectivity/surjectivity definitions, both full-range directions, rank-nullity
 and dimension barriers. Only the source is assumed finite dimensional for the
 direct kernel/image dimension formula; the target may be infinite dimensional.
 No new public Obj, predicate or theorem is added by this reuse fixture. See
-validation/.ladr/existing_acceptance.json. The A-B ledger is 84/119.
+validation/.ladr/check_existing.py. The A-B ledger is 84/119.
 
 ## Accepted source space interfaces
 
 space.lit registers 46 statements after 19 inverse/dimension predecessors.
 The strict canonical gate, 121-statement independent saved caller and five
 retained-context refusals all pass. Items 3.2/3.5/3.6 are accepted in
-validation/.ladr/space_acceptance.json. This checkpoint has 65 source statements;
+validation/.ladr/check_space.py. This checkpoint has 65 source statements;
 the four registered composition declarations bring the current module to 69.
 
 Eight new source Obj families, all with fixed mathematical contracts:
@@ -117,7 +117,7 @@ between the supplied spaces. These general contracts include the original
 all-linear-map book hypotheses. No Obj, prop, native operation or reserved
 name is introduced here. The four-statement canonical target passes after 65 predecessors. The independent
 67-statement caller and three clean retained-context refusals also pass; 3.8 is
-accepted in validation/.ladr/composition_acceptance.json. The module has 69 source
+accepted in validation/.ladr/check_composition.py. The module has 69 source
 statements. Section 3A is complete; the A-B ledger is 84/119.
 
 Remaining: representing matrices, reconstruction, rank correspondence, systems

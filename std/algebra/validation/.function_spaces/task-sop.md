@@ -27,4 +27,4 @@ Status: complete for scalar-valued function spaces, 2026-10-31.
 
 ## Checkpoint
 
-Completed: compact constructor proof replayed in a fresh Session; 25 strict source and 32 imported statements passed; three refusal controls retain context. One carrier theorem supplies imported membership. Raw-function-record to native finite_seq-record retargeting remains outside this increment. The following native coordinate construction was completed separately using existing finite_span coefficient operations; see ../.coordinate_spaces/acceptance.json.
+Completed: compact constructor proof replayed in a fresh Session; 25 strict source and 32 imported statements passed; three refusal controls retain context. One carrier theorem supplies imported membership. Raw-function-record to native finite_seq-record retargeting remains outside this increment. The following native coordinate construction was completed separately using existing finite_span coefficient operations; see ../.coordinate_spaces/check.py.

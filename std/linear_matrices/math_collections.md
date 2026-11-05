@@ -50,9 +50,9 @@ and retains the valid complex calculation after each.
 
 Final saved-file/imported-boundary receipts pass: 38 source statements,
 126 independent imported statements and five retained-context refusals.
-See validation/.ladr/acceptance.json. The checker hashes the executable and
-recursively consumed source modules, and records failures separately from
-accepted canonical source.
+See validation/.ladr/check.py. The checker hashes the executable and
+recursively consumed source modules, and checks refusals while retaining the
+accepted context. It does not read or write saved JSON receipts.
 
 The earlier matrix-alias result prototype did not make template calls
 well-defined. Literal callable signatures resolved it within std, with the

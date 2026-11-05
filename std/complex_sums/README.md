@@ -38,7 +38,7 @@ The [check](validation/.ladr/check.py) passes 10 strict source declarations,
 valid context. Actual nonreal coefficients, a computed norm sum 3 and bound 4,
 zero-length vectors, n=0 sums and nonzero zero-tail examples pass. Invalid
 termwise bounds, a false zero-tail premise, a wrong sum and index 0 are refused.
-See [acceptance](validation/.ladr/acceptance.json).
+See [checker](validation/.ladr/check.py).
 
 ## Growth and coefficient uniqueness
 
@@ -76,7 +76,7 @@ Examples cover i+x with bounds 1 and 3, the zero function at bounds 0 and 3,
 nonreal coefficients and empty padding. Shrinking a padding, index zero, a
 missing nonzero leading term, a missing zero-function premise, incompatible
 representations, an invalid head index and a false entry are rejected while
-retaining valid context. See [acceptance](validation/.ladr/power_use/acceptance.json).
+retaining valid context. See [checker](validation/.ladr/power_use/check.py).
 
 No axiom, trust, native rule, strategy, kernel, parser or compiler change is
 introduced. These are polynomial dependencies. Exact polynomial degree, a

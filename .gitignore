@@ -106,3 +106,13 @@ docs/soundness-audit.md
 /experiments
 
 /harness
+
+# Generated verification artifacts and accidental executable copies.
+**/.session-litex
+**/__debug_bin*
+/main
+/golitex
+/litex/target/
+__pycache__/
+*.pyc
+/std/**/validation/**/*.json

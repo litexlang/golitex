@@ -26,7 +26,7 @@ source/imported gate will validate the evaluation increment independently.
 
 Accepted evaluation checkpoint: vector_space 38 statements, independent caller
 9 statements, three expected refusals with valid evaluation facts retained.
-See evaluation_acceptance.json for exact hashes and current boundaries.
+See check_evaluation.py for exact hashes and current boundaries.
 
 Monomial lists and their evaluated value lists have passed root Session
 construction/entry/carrier probes, with ordinal j representing power j-1.

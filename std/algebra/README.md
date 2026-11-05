@@ -1685,7 +1685,7 @@ callers cover arbitrary complex coefficients, including nonreal ones.
 
 This checkpoint passes 36 source and 31 imported statements plus three
 refusal controls with retained context; see
-[acceptance](validation/.ladr_ab/polynomial_acceptance.json). Polynomial-space closure,
+[checker](validation/.ladr_ab/check_polynomials.py). Polynomial-space closure,
 coefficient uniqueness, degree (with minus infinity for zero), division and FTA
 remain unfinished. The full LADR 2.10–2.12 correspondence is not yet accepted.
 No axiom, trust, native rule or protected data shape was added.
@@ -1700,7 +1700,7 @@ linear from function_space<K,F,X> to scalar_space<K,F> over a supplied Field.
 The [imported consumer](validation/.ladr_ab/evaluation_use.lit) evaluates the
 square function at real 3 and complex i, and applies the generic linearity law.
 This increment passes 38 source statements, 9 imported statements and three
-refusal controls; see [acceptance](validation/.ladr_ab/evaluation_acceptance.json).
+refusal controls; see [checker](validation/.ladr_ab/check_evaluation.py).
 
 ## Polynomial spaces
 
@@ -1719,12 +1719,12 @@ finite-span and restricted-space proofs.
 
 The [focused check](validation/.ladr_ab/check_polynomial_full.py) passes 96 source
 and 30 independent imported statements, plus three refusals with context
-retained. See [acceptance](validation/.ladr_ab/polynomial_full_acceptance.json).
+retained. See [checker](validation/.ladr_ab/check_polynomial_full.py).
 This accepts LADR 2.10. Coefficient uniqueness, degree, dimension and full FTA
 remain unfinished; no new axiom or kernel rule was added.
 
 The next checkpoint passes 105 source and 22 imported statements, with three
-retained-context refusals; see [acceptance](validation/.ladr_ab/polynomial_zero_acceptance.json).
+retained-context refusals; see [checker](validation/.ladr_ab/check_polynomial_zero.py).
 `real_polynomial_value_at_zero` and `complex_polynomial_value_at_zero` expose
 the constant coefficient. The corresponding `_first_coefficient_unique`
 theorems prove that equal functions have equal constant coefficients, even
@@ -1748,7 +1748,7 @@ The [check](validation/.ladr_ab/check_ordered_basis.py) passes 6 source and 37
 independent imported statements, including an actual spanning real list,
 an empty selection and the nonadjacent positions 1 and 3. Three controls reject
 decreasing indices, an out-of-range index and a missing spanning premise while
-retaining the valid context. See [acceptance](validation/.ladr_ab/ordered_basis_acceptance.json).
+retaining the valid context. See [checker](validation/.ladr_ab/check_ordered_basis.py).
 This accepts LADR 2.30. The existing range-inclusion extraction theorem remains
 available. No canonical basis selector or new assumption was introduced.
 
@@ -1767,7 +1767,7 @@ The [check](validation/.ladr_ab/check_basis_characterization.py) passes 2 source
 and 37 imported statements, plus three refusals with context retained. The
 actual real list (0,1,2,3) spans but is dependent: existence of representations
 alone does not satisfy the uniqueness premise. See
-[acceptance](validation/.ladr_ab/basis_characterization_acceptance.json).
+[checker](validation/.ladr_ab/check_basis_characterization.py).
 
 ## Standard coordinate bases and dimension
 
@@ -1783,7 +1783,7 @@ source declarations, 33 independent imported statements and three refusals
 with context retained. The caller explicitly publishes existing carrier and
 finite-dimension theorems before checking selectors. Invalid index 0, a false
 complex coordinate and a false dimension are rejected. See
-[acceptance](validation/.ladr_ab/coordinate_basis_acceptance.json).
+[checker](validation/.ladr_ab/check_coordinate_basis.py).
 
 ## Native complex scalar correspondence
 
@@ -1828,7 +1828,7 @@ passes the strict final 13-statement source target, 15 independent subspace
 reuse claims and 66 imported use statements. Four controls reject dependence
 removal from an independent empty list, a false direct sum, false infinite
 dimension for the plane and a false nonzero tail. Context is retained.
-The same [receipt](validation/.ladr_ab/finite_tools/acceptance.json) covers
+The same [checker](validation/.ladr_ab/finite_tools/check.py) covers
 actual R/C cases, zero and whole subspaces, exact source hypotheses for
 subspace dimensions and Grassmann's formula, and the consumed source hashes.
 
