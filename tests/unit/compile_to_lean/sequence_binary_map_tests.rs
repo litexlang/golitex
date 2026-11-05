@@ -1,28 +1,44 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
-const ADD: &str = include_str!("../../../lean/examples/sequence_limit_add_theorem/statement.lit");
-const SUB: &str =
-    include_str!("../../../lean/examples/sequence_limit_subtract_theorem/statement.lit");
-const MUL: &str =
-    include_str!("../../../lean/examples/sequence_limit_multiply_theorem/statement.lit");
-const DIV: &str =
-    include_str!("../../../lean/examples/sequence_limit_divide_theorem/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/sequence_limit_divide_selected/statement.lit");
-#[test]
-fn sequence_binary_map_replays_original_two_limits_and_selected_division() {
-    for source in [ADD, SUB, MUL, DIV, SELECTED] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "binary_map").unwrap();
-        let law = if source == DIV || source == SELECTED {
-            "Litex.sequenceLimitDivide"
-        } else {
-            "Litex.sequenceLimitMapTwo"
-        };
-        assert!(output.contains(law));
-        assert_eq!(output, compiler.compile_run(&run, "binary_map").unwrap());
-    }
-}
+const ADD: &str = r#"# The add operation preserves the limits of two real sequences.
+thm checked_sequence_limit_add:
+    ? forall a, b seq(R), L, K R:
+        $has_seq_limit(a, L)
+        $has_seq_limit(b, K)
+        =>:
+            $has_seq_limit(fn(n N+) R{a(n) + b(n)}, L + K)
+    release thm seq_limit_add(a, b, L, K)
+"#;
+const SUB: &str = r#"# The subtract operation preserves the limits of two real sequences.
+thm checked_sequence_limit_subtract:
+    ? forall a, b seq(R), L, K R:
+        $has_seq_limit(a, L)
+        $has_seq_limit(b, K)
+        =>:
+            $has_seq_limit(fn(n N+) R{a(n) - b(n)}, L - K)
+    release thm seq_limit_subtract(a, b, L, K)
+"#;
+const MUL: &str = r#"# The multiply operation preserves the limits of two real sequences.
+thm checked_sequence_limit_multiply:
+    ? forall a, b seq(R), L, K R:
+        $has_seq_limit(a, L)
+        $has_seq_limit(b, K)
+        =>:
+            $has_seq_limit(fn(n N+) R{a(n) * b(n)}, L * K)
+    release thm seq_limit_multiply(a, b, L, K)
+"#;
+const DIV: &str = r#"# A quotient limit retains nonzero denominator terms and a nonzero denominator limit.
+thm checked_sequence_limit_divide:
+    ? forall a, b seq(R), L, K R:
+        $has_seq_limit(a, L)
+        $has_seq_limit(b, K)
+        K != 0
+        forall n N+:
+            b(n) != 0
+        =>:
+            $has_seq_limit(fn(n N+) R{a(n) / b(n)}, L / K)
+    release thm seq_limit_divide(a, b, L, K)
+"#;
 #[test]
 fn sequence_binary_map_preserves_each_original_stage_store_and_wd() {
     for source in [ADD, SUB, MUL, DIV] {

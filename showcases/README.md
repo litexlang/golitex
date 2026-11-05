@@ -27,6 +27,9 @@ lecture a chapter-by-chapter adaptation.
 | [From derivatives to definite integrals](analysis/calculus/README.md) | Point derivatives → antiderivatives → Newton–Leibniz → substitution and integration by parts | A standalone strict calculus lecture using native analysis interfaces; separate from the Tao chapter adaptation. |
 | [Topology in Litex](topology/README.md) | Open and closed sets → continuous maps → homeomorphisms | Two chapters with discrete and indiscrete two-point spaces, continuous composition and the closed-preimage criterion. |
 | [Abstract Algebra in Litex](abstract_algebra/README.md) | Groups and subgroups → homomorphisms → kernels and injectivity | Two chapters on group theory, using integer addition, multiples, doubling and the zero map. |
+| [A unary increment Turing machine](turing_machines/README.md) | Complete tapes and transitions → scanning invariant → exact output and first halting time | A fixed two-way machine proved correct for every finite unary input length, plus a constant-one tape that never halts. |
+| [Finite untyped lambda calculus](lambda_calculus/README.md) | Finite de Bruijn syntax → capture-avoiding instantiation → compatible beta reduction | Constructor and parsing proofs, a capture-sensitive contraction, normal variables and an Omega self-step. |
+| [A shallow HOL interpretation](hol/README.md) | Boolean values and predicates → higher-order quantifiers → choice, infinity and constructed arithmetic | The development provided by chegnxuan huang, checked within Litex's native mathematical foundation; not a full HOL Light checker. |
 | [Mathematical Concepts in Litex](math_concepts_in_litex/README.md) | Subject-specific slices from elementary constructions to undergraduate structures | A collection of checked vertical slices, rather than a complete curriculum. |
 
 ## Textbook adaptations

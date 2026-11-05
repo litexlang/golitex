@@ -10,11 +10,30 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/absolute_value_nonzero/statement.lit");
-const REVERSED: &str =
-    include_str!("../../../lean/examples/absolute_value_nonzero_reversed/statement.lit");
-const COMPUTED_ZERO: &str =
-    include_str!("../../../lean/examples/absolute_value_nonzero_computed_zero/statement.lit");
+const SOURCE: &str = r#"# A nonzero real number has nonzero absolute value.
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            |x| != 0
+    |x| != 0
+"#;
+const REVERSED: &str = r#"# Absolute value of a nonzero real is nonzero, reversed.
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            0 != |x|
+    0 != |x|
+"#;
+const COMPUTED_ZERO: &str = r#"# The absolute value of a nonzero real differs from computed zero.
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            |x| != 1-1
+    |x| != 1-1
+"#;
 
 fn selected_rule(run: &mut RunLitexCodeResult) -> &mut AbsNonzeroFromArgBuiltinRuleProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

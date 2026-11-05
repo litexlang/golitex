@@ -145,7 +145,8 @@ impl LitexToLeanCompiler {
             "(show Litex.Obj (M := M) (Litex.PiecewiseFn M) from by\n  {})",
             lines.join("\n").replace('\n', "\n  ")
         );
-        let object = Obj::Identifier(IdentifierObj::from_bound_name(&p.statement.name));
+        let object =
+            Obj::Identifier(position.defining_identifier(&p.statement.name, &self.runtime)?);
         let mut declarations =
             vec![self.bind_alias(&p.statement.name, &object, &object, &value, local, position)?];
         let name = format!("_object_i{}", p.statement.name.id.value());
@@ -307,7 +308,8 @@ impl LitexToLeanCompiler {
                 "PiecewiseFunction/EquationCall",
             ));
         };
-        if !matches!(call.head.as_ref(), FnObjHead::Identifier(IdentifierObj::Plain {id,..}) if *id == p.statement.name.id)
+        let expected_head = parent.defining_identifier(&p.statement.name, &self.runtime)?;
+        if !matches!(call.head.as_ref(), FnObjHead::Identifier(identifier) if identifier == &expected_head)
             || call.body.len() != 1
             || call.body[0].len() != parameters.len()
             || call.body[0].iter().zip(&parameters).any(|(a, (p, _))| {

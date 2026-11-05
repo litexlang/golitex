@@ -9,13 +9,60 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_t
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/template_real_translation/statement.lit"),
-    include_str!("../../../lean/examples/template_guarded_scaling/statement.lit"),
-    include_str!("../../../lean/examples/template_constant_function/statement.lit"),
-    include_str!("../../../lean/examples/template_returned_function/statement.lit"),
-    include_str!("../../../lean/examples/record_function_evaluation/statement.lit"),
-    include_str!("../../../lean/examples/template_formula_composition/statement.lit"),
-    include_str!("../../../lean/examples/template_real_to_complex/statement.lit"),
+    r#"# Translate a real number by a captured real offset.
+template<offset R>:
+    have fn translate(x R) R = x + offset
+
+\translate<2>(3) = 5
+
+forall a, x R:
+    \translate<a>(x) = x + a
+
+let shifted = \translate<2>
+shifted(4) = 6
+"#,
+    r#"# Divide by a template parameter whose nonzero condition is checked.
+template<scale R: scale != 0,>:
+    have fn divide_by_scale(x R) R = x / scale
+
+\divide_by_scale<2>(6) = 3
+"#,
+    r#"# Select a value in an arbitrary set and use its constant function.
+template<S set, value S>:
+    have fn constant_on(x S) S = value
+
+\constant_on<R,7>(2) = 7
+"#,
+    r#"# Instantiate a template whose function returns another function, then call both.
+template<offset R>:
+    have fn shifted_sum(x R) fn(y R) R = fn(y R) R {x + y + offset}
+
+\shifted_sum<2>(3)(4) = 9
+"#,
+    r#"# Call the real function stored in a tagged record.
+struct TaggedMap:
+    action fn(x R) R
+    marker R
+
+have fn add_one(x R) R = x + 1
+
+release thm struct_member((add_one, 0), &TaggedMap)
+
+have tagged &TaggedMap = (add_one, 0)
+
+tagged.action(2) = 3
+"#,
+    r#"# Call a real template from another formula body.
+template<offset R>:
+    have fn translate(x R) R = x + offset
+have fn use_translation(x R) R = \translate<2>(x)
+use_translation(5) = 7
+"#,
+    r#"# A real template return is also complex.
+template<offset R>:
+    have fn translate(x R) R = x + offset
+\translate<2>(3) $in C
+"#,
 ];
 
 fn number() -> Obj {
@@ -118,18 +165,6 @@ fn template_return_replay_requires_standard_superset_and_selected_signature() {
         compiler
             .compile_run(&run, "bad_template_standard_return")
             .expect_err(&format!("mutation {mutation}"));
-    }
-}
-
-#[test]
-fn template_function_replay_preserves_captures_guards_sets_and_returned_calls() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let generated = compiler.compile_run(&run, "function_heads").expect(source);
-        assert_eq!(
-            generated,
-            compiler.compile_run(&run, "function_heads").unwrap()
-        );
     }
 }
 

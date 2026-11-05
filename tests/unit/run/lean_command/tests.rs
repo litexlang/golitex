@@ -72,7 +72,7 @@ fn lean_spelling_in_an_operand_is_not_a_mode() {
 
 #[test]
 fn lean_dispatch_returns_a_complete_artifact_or_an_error() {
-    let path = "lean/examples/one_equals_itself/statement.lit";
+    let path = "tests/fixtures/compile_to_lean/identity.lit";
     let command = parse(&["-lean", "-strict", "-f", path]).unwrap();
     let outcome = run_command(command).unwrap();
     assert!(!outcome.process_failed());
@@ -82,7 +82,7 @@ fn lean_dispatch_returns_a_complete_artifact_or_an_error() {
     };
     assert_eq!(
         result.source,
-        std::fs::read_to_string("lean/examples/one_equals_itself/statement.lean").unwrap()
+        std::fs::read_to_string("tests/fixtures/compile_to_lean/identity.lean").unwrap()
     );
 
     let command = parse(&[

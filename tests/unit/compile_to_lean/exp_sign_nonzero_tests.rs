@@ -7,19 +7,22 @@ use crate::execute::execute_proof_block_stmt::{
     ExecClaimBodyProof, ExecClaimStmtResult, ExecProofBlockStmtResult,
 };
 use crate::prelude::*;
-
-const EXP: &str = include_str!("../../../lean/examples/real_exponential_nonzero/statement.lit");
-const EXP_REVERSED: &str =
-    include_str!("../../../lean/examples/real_exponential_nonzero_reversed/statement.lit");
-const SIGN: &str = include_str!("../../../lean/examples/real_sign_nonzero/statement.lit");
-const SIGN_REVERSED: &str =
-    include_str!("../../../lean/examples/real_sign_nonzero_reversed/statement.lit");
-const REFLECT: &str =
-    include_str!("../../../lean/examples/real_sign_reflects_nonzero/statement.lit");
-const REFLECT_REVERSED: &str =
-    include_str!("../../../lean/examples/real_sign_reflects_nonzero_reversed/statement.lit");
-const COMPUTED_ZERO: &str =
-    include_str!("../../../lean/examples/real_sign_nonzero_computed_zero/statement.lit");
+const SIGN: &str = r#"# The sign of a nonzero real is nonzero.
+claim:
+    ? forall x R:
+        x != 0
+        =>:
+            sign(x) != 0
+    sign(x) != 0
+"#;
+const REFLECT: &str = r#"# A real with nonzero sign is nonzero.
+claim:
+    ? forall x R:
+        sign(x) != 0
+        =>:
+            x != 0
+    x != 0
+"#;
 
 fn selected_rule(run: &mut RunLitexCodeResult) -> &mut NotEqualFactSearchProofByBuiltinRule {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
@@ -48,29 +51,6 @@ fn selected_rule(run: &mut RunLitexCodeResult) -> &mut NotEqualFactSearchProofBy
         panic!("selected builtin rule")
     };
     rule
-}
-
-#[test]
-fn exp_and_sign_nonzero_replay_original_results() {
-    for source in [
-        EXP,
-        EXP_REVERSED,
-        SIGN,
-        SIGN_REVERSED,
-        REFLECT,
-        REFLECT_REVERSED,
-        COMPUTED_ZERO,
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "exp_sign_nonzero")
-            .expect(source);
-        if source == EXP || source == EXP_REVERSED {
-            assert!(lean.contains("Litex.expNonzero"));
-        } else {
-            assert!(lean.contains("Litex.signZeroIffArgZero"));
-        }
-    }
 }
 
 #[test]

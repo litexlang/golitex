@@ -19,6 +19,67 @@ pub(super) struct ForallApplicationInput<'a> {
     pub requirements: &'a crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::ProveForallInstantiationRequirementsProof,
 }
 
+/// A view of an actual selected application, with its original result owner.
+/// Strategies retain their declaration identity; they are not synthetic facts.
+#[derive(Clone, Copy)]
+pub(super) enum ProvedApplicationRef<'a> {
+    KnownForall(&'a SearchProofByKnownForallFact),
+    Strategy(&'a crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::DetailedSearchProofByKnownStrategy),
+}
+
+impl<'a> From<&'a SearchProofByKnownForallFact> for ProvedApplicationRef<'a> {
+    fn from(proof: &'a SearchProofByKnownForallFact) -> Self {
+        Self::KnownForall(proof)
+    }
+}
+
+impl<'a> ProvedApplicationRef<'a> {
+    pub(super) fn input(self) -> ForallApplicationInput<'a> {
+        match self {
+            Self::KnownForall(proof) => ForallApplicationInput {
+                arguments: &proof.detailed_ref().forall_parameters_match_what_args,
+                matches: &proof.detailed_ref().arg_match_proofs,
+                requirements: &proof.detailed_ref().instantiation_requirements,
+            },
+            Self::Strategy(proof) => ForallApplicationInput {
+                arguments: &proof.forall_parameters_match_what_args,
+                matches: &proof.arg_match_proofs,
+                requirements: &proof.instantiation_requirements,
+            },
+        }
+    }
+
+    pub(super) fn owner(self) -> SourceOwner<'a> {
+        match self {
+            Self::KnownForall(proof) => SourceOwner::KnownApplication(proof),
+            Self::Strategy(proof) => SourceOwner::StrategyApplication(proof),
+        }
+    }
+
+    pub(super) fn location(self) -> ForallConclusionLocation {
+        match self {
+            Self::KnownForall(proof) => proof.detailed_ref().cite.location.clone(),
+            Self::Strategy(proof) => {
+                ForallConclusionLocation::DirectThenFact(DirectForallConclusionLocation {
+                    then_fact_index: proof.then_index,
+                })
+            }
+        }
+    }
+
+    pub(super) fn matches_owner(self, owner: SourceOwner<'_>) -> bool {
+        match (self, owner) {
+            (Self::KnownForall(a), SourceOwner::KnownApplication(b)) => std::ptr::eq(a, b),
+            (Self::Strategy(a), SourceOwner::StrategyApplication(b)) => std::ptr::eq(a, b),
+            _ => false,
+        }
+    }
+
+    pub(super) fn same_application(self, other: Self) -> bool {
+        self.matches_owner(other.owner())
+    }
+}
+
 impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn compile_known_or_fact(
         &self,
@@ -99,7 +160,7 @@ impl LitexToLeanCompiler {
                 }
             }
             equalities.push(self.compile_equality_search(&obligation, equality, position)?);
-            exact_identity &= source.ir() == goal_arg.ir()
+            exact_identity &= source == goal_arg
                 && matches!(
                     equality,
                     EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
@@ -149,7 +210,7 @@ impl LitexToLeanCompiler {
                 requirements: &proof.detailed_ref().instantiation_requirements,
             },
             SourceOwner::KnownApplication(proof),
-            SourceOwner::CalleeInstance(proof),
+            SourceOwner::CalleeInstance(ProvedApplicationRef::KnownForall(proof)),
             position,
         )
     }
@@ -229,8 +290,9 @@ impl LitexToLeanCompiler {
             .flat_map(|group| group.params.iter().map(|param| (param, &group.param_type)))
             .collect();
         let requirements = input.requirements.detailed_ref();
+        // Nullary conclusions have no argument matches. Their supplied hidden
+        // parameters still require every original type and domain certificate.
         if !same_shape
-            || pattern_args.is_empty()
             || pattern_args.len() != goal_args.len()
             || input.matches.len() != goal_args.len()
             || input.arguments.len() != parameters.len()
@@ -427,6 +489,22 @@ impl LitexToLeanCompiler {
         )
     }
 
+    pub(super) fn compile_proved_application_requirements(
+        &self,
+        source: &ForallFact,
+        application: ProvedApplicationRef<'_>,
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
+        let input = application.input();
+        self.compile_instantiation_requirements(
+            source,
+            input.arguments,
+            input.matches.len(),
+            input.requirements,
+            position,
+        )
+    }
+
     fn compile_instantiation_requirements(
         &self,
         source: &ForallFact,
@@ -527,7 +605,10 @@ impl LitexToLeanCompiler {
             };
             let compiled = self.compile_verify(checked, &prior)?;
             definitions.push(local_verified_fact(actual, &compiled));
-            arguments.push(format!("h_{}", actual.fact_id().value()));
+            arguments.push(requirement_argument(
+                actual,
+                &format!("h_{}", actual.fact_id().value()),
+            ));
         }
         Ok((definitions, arguments))
     }
@@ -1367,7 +1448,8 @@ impl LitexToLeanCompiler {
                             ),
                         ));
                     }
-                    let (declaration, _, _) = position.visible_template(&target.template_name)?;
+                    let (declaration, _, _) =
+                        position.visible_template(&target.template_name, &self.runtime)?;
                     let parameters = declaration
                         .statement
                         .template_arg_def
@@ -1833,9 +1915,41 @@ impl LitexToLeanCompiler {
             {
                 Ok(proof.to_string())
             }
-            _ => Err(LeanCompileError::unsupported(
-                "CompoundKnown/PredicateTransport",
-            )),
+            _ => {
+                // The existing atomic renderer owns predicate meaning and its
+                // fixed flags. Transport only the recorded argument equalities;
+                // this neither constructs a source fact nor searches for proof.
+                let mut current = atomic_fact_args_ref(old)
+                    .into_iter()
+                    .map(|arg| {
+                        self.compile_function_raw_expression_bound(arg, position, &HashMap::new())
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                let targets = atomic_fact_args_ref(new)
+                    .into_iter()
+                    .map(|arg| {
+                        self.compile_function_raw_expression_bound(arg, position, &HashMap::new())
+                    })
+                    .collect::<Result<Vec<_>, _>>()?;
+                let mut equality: Option<String> = None;
+                for (index, checked) in equalities.iter().enumerate() {
+                    let original = current[index].clone();
+                    current[index] = "_transport_value".to_string();
+                    let predicate = self.compile_atomic_raw_proposition(old, &current, position)?;
+                    let step = format!("(congrArg (fun (_transport_value : M.Value) => {predicate}) (show @Eq M.Value {original} {} from {checked}))", targets[index]);
+                    equality = Some(match equality {
+                        None => step,
+                        Some(previous) => format!("(Eq.trans {previous} {step})"),
+                    });
+                    current[index] = targets[index].clone();
+                }
+                Ok(format!(
+                    "(Eq.mp {} {proof})",
+                    equality.ok_or_else(|| {
+                        LeanCompileError::unsupported("CompoundKnown/TransportArity")
+                    })?
+                ))
+            }
         }
     }
 }
@@ -1847,6 +1961,35 @@ fn local_verified_fact(fact: &Fact, compiled: &(String, String)) -> String {
         compiled.0,
         compiled.1.replace('\n', "\n  ")
     )
+}
+
+/// A nested forall interface quantifies over semantic objects. Its checked
+/// proof may retain implicit host representations; applying it under the exact
+/// native binders specializes those representations without changing meaning.
+fn requirement_argument(fact: &Fact, reference: &str) -> String {
+    let Fact::ForallFact(forall) = fact else {
+        return reference.to_string();
+    };
+    let parameters = forall
+        .typed_parameters
+        .groups
+        .iter()
+        .map(|group| group.params.len())
+        .sum::<usize>();
+    let mut binders = Vec::with_capacity(2 * parameters + forall.dom_facts.len());
+    for index in 0..parameters {
+        binders.push(format!("_domain_value_{index}"));
+        binders.push(format!("_domain_member_{index}"));
+    }
+    for index in 0..forall.dom_facts.len() {
+        binders.push(format!("_domain_premise_{index}"));
+    }
+    if binders.is_empty() {
+        reference.to_string()
+    } else {
+        let arguments = binders.join(" ");
+        format!("(fun {arguments} => {reference} {arguments})")
+    }
 }
 
 fn compound_arguments(fact: &Fact) -> Result<Vec<&Obj>, LeanCompileError> {
@@ -1954,6 +2097,11 @@ fn same_or_branch_shape(a: &AndChainAtomicFact, b: &AndChainAtomicFact) -> bool 
 }
 
 fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), LeanCompileError> {
+    if atomic_fact_args_ref(fact).len() != args.len() {
+        return Err(LeanCompileError::unsupported(
+            "CompoundKnown/InstantiatedArity",
+        ));
+    }
     macro_rules! binary {
         ($f:expr) => {{
             $f.left = args[0].clone();
@@ -1976,6 +2124,26 @@ fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), L
             }
         }};
     }
+    macro_rules! mapping {
+        ($f:expr) => {{
+            $f.domain = args[0].clone();
+            $f.codomain = args[1].clone();
+            $f.function = args[2].clone();
+        }};
+    }
+    macro_rules! function_point {
+        ($f:expr) => {{
+            $f.function = args[0].clone();
+            $f.point = args[1].clone();
+        }};
+    }
+    macro_rules! riemann_interval {
+        ($f:expr) => {{
+            $f.function = args[0].clone();
+            $f.lower = args[1].clone();
+            $f.upper = args[2].clone();
+        }};
+    }
     match fact {
         AtomicFact::EqualFact(f) => binary!(f),
         AtomicFact::NotEqualFact(f) => binary!(f),
@@ -1988,16 +2156,161 @@ fn replace_atomic_arguments(fact: &mut AtomicFact, args: &[Obj]) -> Result<(), L
         AtomicFact::NotLessEqualFact(f) => binary!(f),
         AtomicFact::NotGreaterEqualFact(f) => binary!(f),
         AtomicFact::SubsetFact(f) => binary!(f),
+        AtomicFact::NotSubsetFact(f) => binary!(f),
+        AtomicFact::SupersetFact(f) => binary!(f),
+        AtomicFact::NotSupersetFact(f) => binary!(f),
+        AtomicFact::ProperSubsetFact(f) => binary!(f),
+        AtomicFact::NotProperSubsetFact(f) => binary!(f),
+        AtomicFact::ProperSupersetFact(f) => binary!(f),
+        AtomicFact::NotProperSupersetFact(f) => binary!(f),
         AtomicFact::InFact(f) => {
             f.element = args[0].clone();
             f.set = args[1].clone();
         }
+        AtomicFact::NotInFact(f) => {
+            f.element = args[0].clone();
+            f.set = args[1].clone();
+        }
         AtomicFact::IsSetFact(f) => f.set = args[0].clone(),
+        AtomicFact::NotIsSetFact(f) => f.set = args[0].clone(),
         AtomicFact::IsNonemptySetFact(f) => f.set = args[0].clone(),
+        AtomicFact::NotIsNonemptySetFact(f) => f.set = args[0].clone(),
         AtomicFact::IsFiniteSetFact(f) => f.set = args[0].clone(),
+        AtomicFact::NotIsFiniteSetFact(f) => f.set = args[0].clone(),
+        AtomicFact::PrimeFact(f) => f.value = args[0].clone(),
+        AtomicFact::NotPrimeFact(f) => f.value = args[0].clone(),
+        AtomicFact::CoprimeFact(f) => binary!(f),
+        AtomicFact::NotCoprimeFact(f) => binary!(f),
+        AtomicFact::DvdFact(f) => binary!(f),
+        AtomicFact::NotDvdFact(f) => binary!(f),
+        AtomicFact::InjectiveFact(f) => mapping!(f),
+        AtomicFact::NotInjectiveFact(f) => mapping!(f),
+        AtomicFact::SurjectiveFact(f) => mapping!(f),
+        AtomicFact::NotSurjectiveFact(f) => mapping!(f),
+        AtomicFact::BijectiveFact(f) => mapping!(f),
+        AtomicFact::NotBijectiveFact(f) => mapping!(f),
+        AtomicFact::IsMatrixInvFact(f) => {
+            f.matrix = args[0].clone();
+            f.inverse = args[1].clone();
+            f.order = args[2].clone();
+        }
+        AtomicFact::NotIsMatrixInvFact(f) => {
+            f.matrix = args[0].clone();
+            f.inverse = args[1].clone();
+            f.order = args[2].clone();
+        }
+        AtomicFact::MatrixInversibleFact(f) => {
+            f.matrix = args[0].clone();
+            f.order = args[1].clone();
+        }
+        AtomicFact::NotMatrixInversibleFact(f) => {
+            f.matrix = args[0].clone();
+            f.order = args[1].clone();
+        }
+        AtomicFact::IsChoiceFunctionForFact(f) => {
+            f.index = args[0].clone();
+            f.set = args[1].clone();
+            f.family = args[2].clone();
+            f.choice = args[3].clone();
+        }
+        AtomicFact::NotIsChoiceFunctionForFact(f) => {
+            f.index = args[0].clone();
+            f.set = args[1].clone();
+            f.family = args[2].clone();
+            f.choice = args[3].clone();
+        }
+        AtomicFact::RealSetBoundFact(f) => {
+            f.set = args[0].clone();
+            f.bound = args[1].clone();
+        }
+        AtomicFact::NotRealSetBoundFact(f) => {
+            f.set = args[0].clone();
+            f.bound = args[1].clone();
+        }
+        AtomicFact::RealSetBoundedFact(f) => f.set = args[0].clone(),
+        AtomicFact::NotRealSetBoundedFact(f) => f.set = args[0].clone(),
+        AtomicFact::RealAccumulationFact(f) => {
+            f.domain = args[0].clone();
+            f.point = args[1].clone();
+        }
+        AtomicFact::NotRealAccumulationFact(f) => {
+            f.domain = args[0].clone();
+            f.point = args[1].clone();
+        }
+        AtomicFact::FunctionContinuousAtFact(f) => function_point!(f),
+        AtomicFact::NotFunctionContinuousAtFact(f) => function_point!(f),
+        AtomicFact::FunctionContinuousFact(f) => f.function = args[0].clone(),
+        AtomicFact::NotFunctionContinuousFact(f) => f.function = args[0].clone(),
+        AtomicFact::FunctionLipschitzFact(f) => {
+            f.function = args[0].clone();
+            f.constant = args[1].clone();
+        }
+        AtomicFact::NotFunctionLipschitzFact(f) => {
+            f.function = args[0].clone();
+            f.constant = args[1].clone();
+        }
+        AtomicFact::FunctionDifferentiableAtFact(f) => function_point!(f),
+        AtomicFact::NotFunctionDifferentiableAtFact(f) => function_point!(f),
+        AtomicFact::HasRiemannIntegralFact(f) => {
+            riemann_interval!(f);
+            f.value = args[3].clone();
+        }
+        AtomicFact::NotHasRiemannIntegralFact(f) => {
+            riemann_interval!(f);
+            f.value = args[3].clone();
+        }
+        AtomicFact::FunctionRiemannIntegrableFact(f) => riemann_interval!(f),
+        AtomicFact::NotFunctionRiemannIntegrableFact(f) => riemann_interval!(f),
         AtomicFact::HasFunctionLimitFact(f) => function_limit!(f),
         AtomicFact::NotHasFunctionLimitFact(f) => function_limit!(f),
+        AtomicFact::HasSequenceLimitFact(f) => {
+            f.sequence = args[0].clone();
+            f.value = args[1].clone();
+        }
+        AtomicFact::NotHasSequenceLimitFact(f) => {
+            f.sequence = args[0].clone();
+            f.value = args[1].clone();
+        }
+        AtomicFact::HasSequenceLimsupFact(f) => {
+            f.sequence = args[0].clone();
+            f.value = args[1].clone();
+        }
+        AtomicFact::NotHasSequenceLimsupFact(f) => {
+            f.sequence = args[0].clone();
+            f.value = args[1].clone();
+        }
+        AtomicFact::HasSequenceLiminfFact(f) => {
+            f.sequence = args[0].clone();
+            f.value = args[1].clone();
+        }
+        AtomicFact::NotHasSequenceLiminfFact(f) => {
+            f.sequence = args[0].clone();
+            f.value = args[1].clone();
+        }
+        AtomicFact::SequenceAnalysisFact(f) => f.sequence = args[0].clone(),
+        AtomicFact::NotSequenceAnalysisFact(f) => f.sequence = args[0].clone(),
+        AtomicFact::HasDerivativeAtFact(f) => {
+            let [function, point, value] = args else {
+                return Err(LeanCompileError::unsupported(
+                    "CompoundKnown/InstantiatedArity",
+                ));
+            };
+            f.function = function.clone();
+            f.point = point.clone();
+            f.value = value.clone();
+        }
+        AtomicFact::NotHasDerivativeAtFact(f) => {
+            let [function, point, value] = args else {
+                return Err(LeanCompileError::unsupported(
+                    "CompoundKnown/InstantiatedArity",
+                ));
+            };
+            f.function = function.clone();
+            f.point = point.clone();
+            f.value = value.clone();
+        }
         AtomicFact::NormalAtomicFact(f) => f.body.clone_from_slice(args),
+        AtomicFact::NotNormalAtomicFact(f) => f.body.clone_from_slice(args),
         AtomicFact::MultivariableAnalysisFact(f) => {
             if f.relation.argument_refs().len() != args.len() {
                 return Err(LeanCompileError::unsupported(
@@ -2031,6 +2344,35 @@ fn replace_arithmetic_children(object: &mut Obj, args: &[Obj]) -> Result<(), Lea
         }};
     }
     match object {
+        Obj::LimitOperator(LimitOperator::Sequence(a)) => a.sequence = Box::new(args[0].clone()),
+        Obj::LimitOperator(LimitOperator::SequenceLimsup(a)) => {
+            a.sequence = Box::new(args[0].clone())
+        }
+        Obj::LimitOperator(LimitOperator::SequenceLiminf(a)) => {
+            a.sequence = Box::new(args[0].clone())
+        }
+        Obj::LimitOperator(LimitOperator::Function(a)) => {
+            a.function = Box::new(args[0].clone());
+            match &mut a.approach {
+                LimitApproach::AtPoint(p)
+                | LimitApproach::FromLeft(p)
+                | LimitApproach::FromRight(p) => {
+                    **p = args[1].clone();
+                }
+                LimitApproach::AtPositiveInfinity | LimitApproach::AtNegativeInfinity => {}
+            }
+        }
+        Obj::BoundOperator(BoundOperator::Supremum(a)) => a.set = Box::new(args[0].clone()),
+        Obj::BoundOperator(BoundOperator::Infimum(a)) => a.set = Box::new(args[0].clone()),
+        Obj::DerivativeOperator(DerivativeOperator::AtPoint(a)) => {
+            a.function = Box::new(args[0].clone());
+            a.point = Box::new(args[1].clone());
+        }
+        Obj::IntegralOperator(IntegralOperator::Riemann(a)) => {
+            a.function = Box::new(args[0].clone());
+            a.lower = Box::new(args[1].clone());
+            a.upper = Box::new(args[2].clone());
+        }
         Obj::MatrixOperator(MatrixOperator::Trace(m)) => {
             m.matrix = Box::new(args[0].clone());
             m.order = Box::new(args[1].clone());

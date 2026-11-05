@@ -6,23 +6,64 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const LEFT: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_identity_left/statement.lit");
-const RIGHT: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_identity_right/statement.lit");
-const ZERO_L: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_zero_left/statement.lit");
-const ZERO_R: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_zero_right/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_reverse/statement.lit");
-const ZERO_DIMS: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_zero_dimensions/statement.lit");
-const REAL: &str = include_str!("../../../lean/examples/native_matrix_mul_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_transport/statement.lit");
-const EXPLICIT_ID: &str = include_str!("../../../lean/examples/matrix_mul_identity/statement.lit");
-const EXPLICIT_ZERO: &str = include_str!("../../../lean/examples/matrix_mul_zero/statement.lit");
+const LEFT: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+forall replay_product_rows, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,replay_product_cols):
+    matrix_mul(identity_matrix(replay_product_rows),replay_product_matrix,replay_product_rows,replay_product_rows,replay_product_cols) = replay_product_matrix
+"#;
+const RIGHT: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+forall replay_product_rows, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,replay_product_cols):
+    replay_product_matrix = matrix_mul(replay_product_matrix,identity_matrix(replay_product_cols),replay_product_rows,replay_product_cols,replay_product_cols)
+"#;
+const ZERO_L: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+forall replay_product_rows, replay_product_inner, replay_product_cols N, replay_product_matrix matrix(C,replay_product_inner,replay_product_cols):
+    matrix_mul(zero_matrix(replay_product_rows,replay_product_inner),replay_product_matrix,replay_product_rows,replay_product_inner,replay_product_cols) = zero_matrix(replay_product_rows,replay_product_cols)
+"#;
+const ZERO_R: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+forall replay_product_rows, replay_product_inner, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,replay_product_inner):
+    matrix_mul(replay_product_matrix,zero_matrix(replay_product_inner,replay_product_cols),replay_product_rows,replay_product_inner,replay_product_cols) = zero_matrix(replay_product_rows,replay_product_cols)
+"#;
+const REVERSE: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+forall replay_product_rows, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,replay_product_cols):
+    replay_product_matrix = matrix_mul(identity_matrix(replay_product_rows),replay_product_matrix,replay_product_rows,replay_product_rows,replay_product_cols)
+forall replay_product_rows, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,replay_product_cols):
+    matrix_mul(replay_product_matrix,identity_matrix(replay_product_cols),replay_product_rows,replay_product_cols,replay_product_cols) = replay_product_matrix
+forall replay_product_rows, replay_product_inner, replay_product_cols N, replay_product_matrix matrix(C,replay_product_inner,replay_product_cols):
+    zero_matrix(replay_product_rows,replay_product_cols) = matrix_mul(zero_matrix(replay_product_rows,replay_product_inner),replay_product_matrix,replay_product_rows,replay_product_inner,replay_product_cols)
+forall replay_product_rows, replay_product_inner, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,replay_product_inner):
+    zero_matrix(replay_product_rows,replay_product_cols) = matrix_mul(replay_product_matrix,zero_matrix(replay_product_inner,replay_product_cols),replay_product_rows,replay_product_inner,replay_product_cols)
+"#;
+const ZERO_DIMS: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+forall replay_product_cols N, replay_product_matrix matrix(C,0,replay_product_cols):
+    matrix_mul(identity_matrix(0),replay_product_matrix,0,0,replay_product_cols) = replay_product_matrix
+forall replay_product_rows, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,0):
+    matrix_mul(replay_product_matrix,zero_matrix(0,replay_product_cols),replay_product_rows,0,replay_product_cols) = zero_matrix(replay_product_rows,replay_product_cols)
+"#;
+const REAL: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+forall replay_product_rows, replay_product_cols N, replay_product_matrix matrix(R,replay_product_rows,replay_product_cols):
+    replay_product_matrix $in matrix(C,replay_product_rows,replay_product_cols)
+    matrix_mul(identity_matrix(replay_product_rows),replay_product_matrix,replay_product_rows,replay_product_rows,replay_product_cols) = replay_product_matrix
+"#;
+const TRANSPORT: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+forall replay_product_rows, replay_product_cols N, replay_product_A, replay_product_B matrix(C,replay_product_rows,replay_product_cols):
+    replay_product_A = replay_product_B
+    =>:
+        matrix_mul(identity_matrix(replay_product_rows),replay_product_A,replay_product_rows,replay_product_rows,replay_product_cols) = replay_product_B
+"#;
+const EXPLICIT_ID: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+thm replay_matrix_mul_identity:
+    ? forall replay_product_rows, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,replay_product_cols):
+        matrix_mul(identity_matrix(replay_product_rows),replay_product_matrix,replay_product_rows,replay_product_rows,replay_product_cols) = replay_product_matrix
+        matrix_mul(replay_product_matrix,identity_matrix(replay_product_cols),replay_product_rows,replay_product_cols,replay_product_cols) = replay_product_matrix
+    release thm matrix_mul_identity(replay_product_matrix,replay_product_rows,replay_product_cols)
+"#;
+const EXPLICIT_ZERO: &str = r#"# Preserve the original multiplication clause, complete domains and recorded premises.
+thm replay_matrix_mul_zero:
+    ? forall replay_product_rows, replay_product_inner, replay_product_cols N, replay_product_matrix matrix(C,replay_product_rows,replay_product_inner):
+        matrix_mul(replay_product_matrix,zero_matrix(replay_product_inner,replay_product_cols),replay_product_rows,replay_product_inner,replay_product_cols) = zero_matrix(replay_product_rows,replay_product_cols)
+        matrix_mul(zero_matrix(replay_product_cols,replay_product_rows),replay_product_matrix,replay_product_cols,replay_product_rows,replay_product_inner) = zero_matrix(replay_product_cols,replay_product_inner)
+    release thm matrix_mul_zero(replay_product_matrix,replay_product_rows,replay_product_inner,replay_product_cols)
+by thm replay_matrix_mul_zero(2,3,4,zero_matrix(2,3)) => matrix_mul(zero_matrix(2,3),zero_matrix(3,4),2,3,4) = zero_matrix(2,4)
+"#;
 
 fn application(result: &mut VerifyFactResult) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(result);

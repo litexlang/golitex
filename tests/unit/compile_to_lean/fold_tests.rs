@@ -1,14 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn ordered_fold_generic_carrier_compiles_from_captured_signatures() {
-    let source = include_str!("../../../lean/examples/ordered_fold_carrier/statement.lit");
-    let (run, compiler) = super::execute(source);
-    let lean = compiler.compile_run(&run, "ordered_fold_carrier").unwrap();
-    assert!(lean.contains("Litex.rangeFold"));
-}
-
-#[test]
 fn ordered_fold_rejects_missing_signature_capture() {
     let (mut run, compiler) =
         super::execute("$is_set(reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a+b},0))");
@@ -25,34 +17,16 @@ fn ordered_fold_rejects_missing_signature_capture() {
 }
 
 #[test]
-fn finite_fold_generic_carrier_compiles_both_original_laws() {
-    let source = include_str!("../../../lean/examples/finite_fold_carrier/statement.lit");
-    let (run, compiler) = super::execute(source);
-    let lean = compiler.compile_run(&run, "finite_fold_carrier").unwrap();
-    assert!(lean.contains("Litex.finiteFold"));
-    assert!(lean.contains("Litex.forallMembersOfRepresentations"));
-}
-
-#[test]
-fn ordered_fold_calculation_replays_each_recorded_application() {
-    let source = include_str!("../../../lean/examples/ordered_subtraction_fold/statement.lit");
-    let (run, compiler) = super::execute(source);
-    let lean = compiler
-        .compile_run(&run, "ordered_subtraction_fold")
-        .unwrap();
-    assert!(lean.contains("Litex.rangeFoldDenote"));
-    assert!(lean.contains("_step_2"));
-}
-
-#[test]
 fn ordered_fold_calculation_rejects_changed_certificates() {
     use crate::execute::execute_eval_stmt::aggregate_evaluation_result::{
         AggregateEvaluationResult, FunctionApplicationExpansionProof,
     };
     for changed in 0..6 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/ordered_subtraction_fold/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# An ordered left fold subtracts 1, then 2, then 3 from zero.
+reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0) = -6
+"#,
+        );
         let equality = super::equality_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[0]).verify_result,
         );
@@ -89,60 +63,6 @@ fn ordered_fold_calculation_rejects_changed_certificates() {
                 .is_err(),
             "case {changed}"
         );
-    }
-}
-
-#[test]
-fn ordered_fold_keeps_natural_coverage_and_empty_guarded_domain() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/fold_domains/statement.lit"
-    ));
-    let lean = compiler.compile_run(&run, "fold_domains").unwrap();
-    assert!(lean.contains("Litex.integerInNaturalAbove"));
-    assert!(lean.contains("Litex.integerBoundsEmpty"));
-}
-
-#[test]
-fn finite_fold_singleton_replays_the_explicit_builtin_theorem() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/finite_fold_singleton/statement.lit"
-    ));
-    assert!(compiler
-        .compile_run(&run, "finite_fold_singleton")
-        .unwrap()
-        .contains("Litex.finiteFoldSingleton"));
-}
-
-#[test]
-fn ordered_fold_last_step_replays_original_nonempty_endpoint_and_result() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/ordered_fold_last_step/statement.lit"
-    ));
-    assert!(compiler
-        .compile_run(&run, "fold_last_step")
-        .unwrap()
-        .contains("Litex.rangeFoldLast"));
-}
-
-#[test]
-fn ordered_fold_consumes_symbolic_and_each_literal_guard() {
-    for source in [
-        include_str!("../../../lean/examples/ordered_fold_guarded/statement.lit"),
-        include_str!("../../../lean/examples/ordered_fold_guarded_literal/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler.compile_run(&run, "ordered_fold_guard").is_ok());
-    }
-}
-
-#[test]
-fn finite_fold_consumes_symbolic_literal_and_empty_guards() {
-    for source in [
-        include_str!("../../../lean/examples/finite_fold_guarded/statement.lit"),
-        include_str!("../../../lean/examples/finite_fold_guarded_literal/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler.compile_run(&run, "finite_fold_guard").is_ok());
     }
 }
 
@@ -217,9 +137,14 @@ fn finite_fold_rejects_missing_or_reordered_literal_guards() {
 
 #[test]
 fn ordered_fold_last_step_rejects_changed_endpoint_certificate() {
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/ordered_fold_last_step/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# A nonempty ordered fold performs its last call after folding the preceding indices.
+forall a,b Z, E set, f fn(k Z) E, op fn(x,y E) E, s E:
+    a <= b
+    =>:
+        reduce(a,b,f,op,s) = op(reduce(a,b-1,f,op,s),f(b))
+"#,
+    );
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
     let equality = super::equality_proof_mut(&mut all.proved_then_facts[0].verify_result);
     let EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReduceLastStep(
@@ -231,20 +156,6 @@ fn ordered_fold_last_step_rejects_changed_endpoint_certificate() {
     let endpoint = super::equality_proof_mut(&mut proof.endpoint);
     endpoint.fact.right = Obj::Literal(Literal::Number(Number::new("99".into())));
     assert!(compiler.compile_run(&run, "changed_last_endpoint").is_err());
-}
-
-#[test]
-fn aggregate_domain_coverage_folds_replay_positive_inputs_and_outputs() {
-    for source in [
-        include_str!("../../../lean/examples/positive_fold_carrier/statement.lit"),
-        include_str!("../../../lean/examples/positive_finite_fold/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "positive_fold_carrier")
-            .expect(source);
-        assert!(lean.contains("Litex.positiveFoldOperation"));
-    }
 }
 
 #[test]
@@ -275,19 +186,6 @@ fn fold_detailed_result_publishes_both_original_signature_selections() {
         op, f,
         "the binary operation and unary iterand retain distinct signatures"
     );
-}
-
-#[test]
-fn range_input_coverage_folds_replay_positive_and_arbitrary_carriers() {
-    for source in [
-        include_str!("../../../lean/examples/positive_range_fold/statement.lit"),
-        include_str!("../../../lean/examples/covered_range_fold/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "range_input_coverage_fold")
-            .expect(source);
-    }
 }
 
 #[test]

@@ -1,13 +1,40 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
-const SAME: &str =
-    include_str!("../../../lean/examples/finite_sum_pointwise_substitution/statement.lit");
-const EQUAL: &str =
-    include_str!("../../../lean/examples/finite_sum_equal_sets_substitution/statement.lit");
-const ORDER: &str = include_str!("../../../lean/examples/finite_sum_pointwise_order/statement.lit");
-const EQUAL_ORDER: &str =
-    include_str!("../../../lean/examples/finite_sum_equal_sets_order/statement.lit");
+const SAME: &str = r#"thm checked_finite_sum_pointwise_equality:
+    ? forall A finite_set, f,g fn(x A) C:
+        forall x A:
+            f(x)=g(x)
+        =>:
+            finite_set_sum(A,f)=finite_set_sum(A,g)
+    release thm finite_set_sum_substitution(finite_set_sum(A,f),finite_set_sum(A,g))
+"#;
+const EQUAL: &str = r#"thm checked_finite_sum_pointwise_equal_sets:
+    ? forall A,B finite_set, f fn(x A) C, g fn(x B) C:
+        A=B
+        forall x A:
+            f(x)=g(x)
+        =>:
+            finite_set_sum(A,f)=finite_set_sum(B,g)
+    release thm finite_set_sum_substitution(finite_set_sum(A,f),finite_set_sum(B,g))
+"#;
+const ORDER: &str = r#"thm checked_finite_sum_pointwise_order:
+    ? forall A finite_set, f,g fn(x A) R:
+        forall x A:
+            f(x)<=g(x)
+        =>:
+            finite_set_sum(A,f)<=finite_set_sum(A,g)
+    release thm finite_set_sum_le_from_pointwise(finite_set_sum(A,f),finite_set_sum(A,g))
+"#;
+const EQUAL_ORDER: &str = r#"thm checked_finite_sum_equal_sets_order:
+    ? forall A,B finite_set, f fn(x A) R, g fn(x B) R:
+        A=B
+        forall x A:
+            f(x)<=g(x)
+        =>:
+            finite_set_sum(A,f)<=finite_set_sum(B,g)
+    release thm finite_set_sum_le_from_pointwise(finite_set_sum(A,f),finite_set_sum(B,g))
+"#;
 #[test]
 fn finite_sum_substitution_replays_original_named_callback_pointwise_contracts() {
     for (source, ordered) in [

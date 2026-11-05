@@ -1,13 +1,47 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::ModCongruenceStrategySingleStep;
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/mod_congruence_operations/statement.lit");
-const DISTINCT: &str =
-    include_str!("../../../lean/examples/mod_congruence_equal_moduli/statement.lit");
-const NESTED: &str =
-    include_str!("../../../lean/examples/mod_congruence_nested_residues/statement.lit");
-const NEGATIVE: &str =
-    include_str!("../../../lean/examples/mod_congruence_negative_modulus/statement.lit");
+const SOURCE: &str = r#"# Replay modulus identity followed by the two original residue equalities.
+forall a, b, c, d, modulus Z:
+    modulus != 0
+    a % modulus = c % modulus
+    b % modulus = d % modulus
+    =>:
+        (a + b) % modulus = (c + d) % modulus
+        (a - b) % modulus = (c - d) % modulus
+        (a * b) % modulus = (c * d) % modulus
+"#;
+const DISTINCT: &str = r#"# Keep the checked transport between the two original modulus objects.
+forall a, b, c, d, m, n Z:
+    m != 0
+    m = n
+    a % m = c % n
+    b % m = d % n
+    =>:
+        (a + b) % m = (c + d) % n
+        (a - b) % m = (c - d) % n
+        (a * b) % m = (c * d) % n
+"#;
+const NESTED: &str = r#"# Some original operands already have their residue wrappers.
+forall a, b, c, d, m Z:
+    m != 0
+    a % m = c % m
+    b % m = d % m
+    =>:
+        ((a % m) + b) % m = (c + (d % m)) % m
+        (a - (b % m)) % m = ((c % m) - d) % m
+        ((a % m) * (b % m)) % m = (c * d) % m
+        ((a % m) + (b % m)) % m = ((c % m) + (d % m)) % m
+"#;
+const NEGATIVE: &str = r#"# Modulo congruence retains signed integer moduli.
+forall a, b, c, d Z:
+    a % (-3) = c % (-3)
+    b % (-3) = d % (-3)
+    =>:
+        (a + b) % (-3) = (c + d) % (-3)
+        (a - b) % (-3) = (c - d) % (-3)
+        (a * b) % (-3) = (c * d) % (-3)
+"#;
 
 fn original(result: &mut RunLitexCodeResult, index: usize) -> &mut VerifyEqualitySuccess {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =

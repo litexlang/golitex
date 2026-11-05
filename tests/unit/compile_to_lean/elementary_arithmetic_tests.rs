@@ -3,22 +3,36 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::prelude::*;
 const CASES: [(&str, &str, &str); 4] = [
     (
-        include_str!("../../../lean/examples/square_root_nonpositive_square/statement.lit"),
+        r#"forall x R:
+    x<=0
+    =>:
+        sqrt(x^2)=0-x
+"#,
         "SqrtSquareNonpositive",
         "sqrtOfNonpositiveSquareValue",
     ),
     (
-        include_str!("../../../lean/examples/remainder_negation/statement.lit"),
+        r#"forall a Z, m N+:
+    (-a)%m=(m-a%m)%m
+"#,
         "ModNegation",
         "remainderNegationValue",
     ),
     (
-        include_str!("../../../lean/examples/remainder_natural_power/statement.lit"),
+        r#"forall a Z, m N+, n N:
+    (a^n)%m=((a%m)^n)%m
+"#,
         "ModNaturalPower",
         "remainderNaturalPowerValue",
     ),
     (
-        include_str!("../../../lean/examples/square_root_quotient_square/statement.lit"),
+        r#"forall a R, p,q C:
+    0<=a
+    q!=0
+    sqrt(a)=p/q
+    =>:
+        p^2=a*q^2
+"#,
         "SqrtQuotientSquare",
         "sqrtQuotientSquareValue",
     ),

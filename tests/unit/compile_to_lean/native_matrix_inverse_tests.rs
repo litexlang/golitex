@@ -6,18 +6,86 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const LEFT: &str = include_str!("../../../lean/examples/native_matrix_inverse_left/statement.lit");
-const RIGHT: &str =
-    include_str!("../../../lean/examples/native_matrix_inverse_right/statement.lit");
-const EXPLICIT: &str = include_str!("../../../lean/examples/matrix_inverse_laws/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_inverse_reverse/statement.lit");
-const ZERO: &str = include_str!("../../../lean/examples/native_matrix_inverse_zero/statement.lit");
-const REAL: &str = include_str!("../../../lean/examples/native_matrix_inverse_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_inverse_transport/statement.lit");
-const GUARD_TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_inverse_guard_transport/statement.lit");
+const LEFT: &str = r#"# Original InverseLeft means inverse(A) times A.
+forall replay_inverse_n N, replay_inverse_A matrix(C,replay_inverse_n,replay_inverse_n):
+    det(replay_inverse_A,replay_inverse_n) != 0
+    =>:
+        matrix_mul(matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_A,replay_inverse_n,replay_inverse_n,replay_inverse_n) = identity_matrix(replay_inverse_n)
+"#;
+const RIGHT: &str = r#"# Original InverseRight means A times inverse(A).
+forall replay_inverse_n N, replay_inverse_A matrix(C,replay_inverse_n,replay_inverse_n):
+    det(replay_inverse_A,replay_inverse_n) != 0
+    =>:
+        matrix_mul(replay_inverse_A,matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_n,replay_inverse_n,replay_inverse_n) = identity_matrix(replay_inverse_n)
+"#;
+const EXPLICIT: &str = r#"# Preserve the actual guarded combined theorem and both conclusions.
+thm replay_matrix_inverse_laws:
+    ? forall replay_inverse_n N, replay_inverse_A matrix(C,replay_inverse_n,replay_inverse_n):
+        det(replay_inverse_A,replay_inverse_n) != 0
+        =>:
+            matrix_mul(replay_inverse_A,matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_n,replay_inverse_n,replay_inverse_n) = identity_matrix(replay_inverse_n)
+            matrix_mul(matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_A,replay_inverse_n,replay_inverse_n,replay_inverse_n) = identity_matrix(replay_inverse_n)
+    release thm matrix_inverse_laws(replay_inverse_A,replay_inverse_n)
+det(identity_matrix(2),2) = 1
+det(identity_matrix(2),2) != 0
+release thm replay_matrix_inverse_laws(2,identity_matrix(2))
+"#;
+const REVERSE: &str = r#"# Reverse both original guarded inverse product clauses.
+forall replay_inverse_n N, replay_inverse_A matrix(C,replay_inverse_n,replay_inverse_n):
+    det(replay_inverse_A,replay_inverse_n) != 0
+    =>:
+        identity_matrix(replay_inverse_n) = matrix_mul(replay_inverse_A,matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_n,replay_inverse_n,replay_inverse_n)
+forall replay_inverse_n N, replay_inverse_A matrix(C,replay_inverse_n,replay_inverse_n):
+    det(replay_inverse_A,replay_inverse_n) != 0
+    =>:
+        identity_matrix(replay_inverse_n) = matrix_mul(matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_A,replay_inverse_n,replay_inverse_n,replay_inverse_n)
+"#;
+const ZERO: &str = r#"# Retain the original determinant guard at natural order zero.
+forall replay_inverse_A matrix(C,0,0):
+    det(replay_inverse_A,0) != 0
+    =>:
+        matrix_mul(replay_inverse_A,matrix_inv(replay_inverse_A,0),0,0,0) = identity_matrix(0)
+forall replay_inverse_A matrix(C,0,0):
+    det(replay_inverse_A,0) != 0
+    =>:
+        matrix_mul(matrix_inv(replay_inverse_A,0),replay_inverse_A,0,0,0) = identity_matrix(0)
+"#;
+const REAL: &str = r#"# Retain the proved complex carrier and original determinant guard.
+forall replay_inverse_n N, replay_inverse_A matrix(R,replay_inverse_n,replay_inverse_n):
+    det(replay_inverse_A,replay_inverse_n) != 0
+    =>:
+        replay_inverse_A $in matrix(C,replay_inverse_n,replay_inverse_n)
+        matrix_mul(replay_inverse_A,matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_n,replay_inverse_n,replay_inverse_n) = identity_matrix(replay_inverse_n)
+forall replay_inverse_n N, replay_inverse_A matrix(R,replay_inverse_n,replay_inverse_n):
+    det(replay_inverse_A,replay_inverse_n) != 0
+    =>:
+        replay_inverse_A $in matrix(C,replay_inverse_n,replay_inverse_n)
+        matrix_mul(matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_A,replay_inverse_n,replay_inverse_n,replay_inverse_n) = identity_matrix(replay_inverse_n)
+"#;
+const TRANSPORT: &str = r#"# Transport each original identity endpoint using its given equality.
+forall replay_inverse_n N, replay_inverse_A, replay_inverse_D matrix(C,replay_inverse_n,replay_inverse_n):
+    det(replay_inverse_A,replay_inverse_n) != 0
+    identity_matrix(replay_inverse_n) = replay_inverse_D
+    =>:
+        matrix_mul(replay_inverse_A,matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_n,replay_inverse_n,replay_inverse_n) = replay_inverse_D
+forall replay_inverse_n N, replay_inverse_A, replay_inverse_D matrix(C,replay_inverse_n,replay_inverse_n):
+    det(replay_inverse_A,replay_inverse_n) != 0
+    identity_matrix(replay_inverse_n) = replay_inverse_D
+    =>:
+        matrix_mul(matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_A,replay_inverse_n,replay_inverse_n,replay_inverse_n) = replay_inverse_D
+"#;
+const GUARD_TRANSPORT: &str = r#"# Obtain the exact determinant guard from its original scalar equality.
+forall replay_inverse_n N, replay_inverse_A matrix(C,replay_inverse_n,replay_inverse_n), replay_inverse_det_value C:
+    det(replay_inverse_A,replay_inverse_n) = replay_inverse_det_value
+    replay_inverse_det_value != 0
+    =>:
+        matrix_mul(replay_inverse_A,matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_n,replay_inverse_n,replay_inverse_n) = identity_matrix(replay_inverse_n)
+forall replay_inverse_n N, replay_inverse_A matrix(C,replay_inverse_n,replay_inverse_n), replay_inverse_det_value C:
+    det(replay_inverse_A,replay_inverse_n) = replay_inverse_det_value
+    replay_inverse_det_value != 0
+    =>:
+        matrix_mul(matrix_inv(replay_inverse_A,replay_inverse_n),replay_inverse_A,replay_inverse_n,replay_inverse_n,replay_inverse_n) = identity_matrix(replay_inverse_n)
+"#;
 
 fn selected(statement: &mut ExecStmtResult, index: usize) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(

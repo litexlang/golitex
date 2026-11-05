@@ -499,12 +499,38 @@ fn function_call_cannot_recover_a_removed_definition_from_final_runtime() {
 #[test]
 fn function_arity_replays_ordered_inputs_guards_and_nested_calls() {
     for source in [
-        include_str!("../../lean/examples/four_variable_weighted_sum/statement.lit"),
-        include_str!("../../lean/examples/four_argument_guarded_quotient/statement.lit"),
-        include_str!("../../lean/examples/four_argument_callback/statement.lit"),
-        include_str!("../../lean/examples/captured_four_argument_function/statement.lit"),
-        include_str!("../../lean/examples/four_set_coordinate_function/statement.lit"),
-        include_str!("../../lean/examples/integral_offset_function/statement.lit"),
+        r#"# Evaluate a weighted sum with four independent real inputs.
+have fn weighted_total(a, b, c, d R) R = a + 2*b + 3*c + 4*d
+weighted_total(1, 2, 3, 4) = 30
+"#,
+        r#"# The nonzero fourth argument certifies division in a four-input function.
+have fn guarded_average(a, b, c, d R: d != 0) R = (a + b + c) / d
+guarded_average(1, 2, 3, 2) = 3
+"#,
+        r#"# Apply a four-input real function through a function-valued parameter.
+have fn weighted_total(a, b, c, d R) R = a + 2*b + 3*c + 4*d
+have fn apply_four(g fn(a, b, c, d R) R, a, b, c, d R) R = g(a, b, c, d)
+apply_four(weighted_total, 1, 2, 3, 4) = 30
+"#,
+        r#"# A returned four-input function retains its outer offset and both call stages.
+have fn shift_four(t R) fn(a, b, c, d R) R = fn(a, b, c, d R) R {t + a + 2*b + 3*c + 4*d}
+shift_four(10)(1, 2, 3, 4) = 40
+"#,
+        r#"# A four-input function over arbitrary sets returns and exposes its first and last coordinates.
+have A, B, D, E set
+have fn edge_pair(a A, b B, d D, z E) cart(A, E) = (a, z)
+forall a A, b B, d D, z E:
+    edge_pair(a, b, d, z) = (a, z)
+    edge_pair(a, b, d, z)(1) = a
+    edge_pair(a, b, d, z)(2) = z
+"#,
+        r#"# A function uses its integral-candidate premise to certify and evaluate an integral in its body.
+have fn integral_offset(f fn(x R) R, a, b, I, t R: $has_riemann_integral(f, a, b, I)) R = integral(f, a, b) + t
+forall f fn(x R) R, a, b, I, t R:
+    $has_riemann_integral(f, a, b, I)
+    =>:
+        integral_offset(f, a, b, I, t) = I + t
+"#,
     ] {
         let (run, compiler) = checked(source);
         compiler.compile_run(&run, "function_arity").expect(source);
@@ -514,9 +540,63 @@ fn function_arity_replays_ordered_inputs_guards_and_nested_calls() {
 #[test]
 fn analysis_selector_beta_replays_original_existence_guards_in_function_bodies() {
     for source in [
-        include_str!("../../lean/examples/derivative_offset_function/statement.lit"),
-        include_str!("../../lean/examples/sequence_limit_offset_functions/statement.lit"),
-        include_str!("../../lean/examples/function_limit_offset_functions/statement.lit"),
+        r#"# Evaluate a derivative-valued function using its original differentiability premise.
+have fn slope_offset(f fn(x R) R, p, d, t R: $has_derivative_at(f,p,d)) R = derivative(f,p)+t
+forall f fn(x R) R, p, d, t R:
+    $has_derivative_at(f,p,d)
+    =>:
+        slope_offset(f,p,d,t)=d+t
+"#,
+        r#"# Shift a sequence limit, limsup, or liminf through a function with the matching existence premise.
+have fn sequence_offset(a seq(R), L,t R: $has_seq_limit(a,L)) R = lim(a)+t
+forall a seq(R), L,t R:
+    $has_seq_limit(a,L)
+    =>:
+        sequence_offset(a,L,t)=L+t
+
+have fn upper_offset(a seq(R), L,t R: $has_seq_limsup(a,L)) R = limsup(a)+t
+forall a seq(R), L,t R:
+    $has_seq_limsup(a,L)
+    =>:
+        upper_offset(a,L,t)=L+t
+
+have fn lower_offset(a seq(R), L,t R: $has_seq_liminf(a,L)) R = liminf(a)+t
+forall a seq(R), L,t R:
+    $has_seq_liminf(a,L)
+    =>:
+        lower_offset(a,L,t)=L+t
+"#,
+        r#"# Preserve the selected approach when a function returns a shifted real function limit.
+have fn left_limit_offset(f fn(x R) R, p,L,t R: $has_limit_left(f,p,L)) R = lim_left(f,p)+t
+forall f fn(x R) R, p,L,t R:
+    $has_limit_left(f,p,L)
+    =>:
+        left_limit_offset(f,p,L,t)=L+t
+
+have fn point_limit_offset(f fn(x R) R, p,L,t R: $has_limit_at(f,p,L)) R = fn_lim(f,p)+t
+forall f fn(x R) R, p,L,t R:
+    $has_limit_at(f,p,L)
+    =>:
+        point_limit_offset(f,p,L,t)=L+t
+
+have fn right_limit_offset(f fn(x R) R, p,L,t R: $has_limit_right(f,p,L)) R = lim_right(f,p)+t
+forall f fn(x R) R, p,L,t R:
+    $has_limit_right(f,p,L)
+    =>:
+        right_limit_offset(f,p,L,t)=L+t
+
+have fn positive_limit_offset(f fn(x R) R, L,t R: $has_limit_pos_inf(f,L)) R = lim_pos_inf(f)+t
+forall f fn(x R) R, L,t R:
+    $has_limit_pos_inf(f,L)
+    =>:
+        positive_limit_offset(f,L,t)=L+t
+
+have fn negative_limit_offset(f fn(x R) R, L,t R: $has_limit_neg_inf(f,L)) R = lim_neg_inf(f)+t
+forall f fn(x R) R, L,t R:
+    $has_limit_neg_inf(f,L)
+    =>:
+        negative_limit_offset(f,L,t)=L+t
+"#,
     ] {
         let (run, compiler) = checked(source);
         compiler
@@ -528,10 +608,76 @@ fn analysis_selector_beta_replays_original_existence_guards_in_function_bodies()
 #[test]
 fn multivariable_selector_beta_replays_original_existence_guards_in_function_bodies() {
     for source in [
-        include_str!("../../lean/examples/partial_derivative_offset_function/statement.lit"),
-        include_str!("../../lean/examples/multivariable_scalar_offset_functions/statement.lit"),
-        include_str!("../../lean/examples/multivariable_matrix_value_functions/statement.lit"),
-        include_str!("../../lean/examples/multivariable_vector_value_functions/statement.lit"),
+        r#"# Add a real offset to a certified coordinate partial derivative.
+have fn partial_offset(f fn(x cart_n(R,2)) R, p cart_n(R,2), d,t R: $has_partial_derivative_at(f,p,2,1,d)) R = partial_derivative(f,p,2,1)+t
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), d,t R:
+    $has_partial_derivative_at(f,p,2,1,d)
+    =>:
+        partial_offset(f,p,d,t)=d+t
+"#,
+        r#"# Add real offsets to certified multivariable limits, divergences and Laplacians.
+have fn divergence_offset(f fn(x cart_n(R,2)) cart_n(R,2), p cart_n(R,2), d R, t R: $has_divergence_at(f,p,2,d)) R = divergence(f,p,2)+t
+forall f fn(x cart_n(R,2)) cart_n(R,2), p cart_n(R,2), d R, t R:
+    $has_divergence_at(f,p,2,d)
+    =>:
+        divergence_offset(f,p,d,t)=d+t
+
+have fn laplacian_offset(f fn(x cart_n(R,2)) R, p cart_n(R,2), d R, t R: $has_laplacian_at(f,p,2,d)) R = laplacian(f,p,2)+t
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), d R, t R:
+    $has_laplacian_at(f,p,2,d)
+    =>:
+        laplacian_offset(f,p,d,t)=d+t
+
+have fn multi_limit_offset(f fn(x cart_n(R,2)) R, p cart_n(R,2), L R, t R: $has_multi_limit_at(f,p,2,L)) R = lim_multi_at(f,p,2)+t
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), L R, t R:
+    $has_multi_limit_at(f,p,2,L)
+    =>:
+        multi_limit_offset(f,p,L,t)=L+t
+"#,
+        r#"# Return certified scalar differentials, total differentials, Jacobians and Hessians through formula functions.
+have fn scalar_diff_value(f fn(x cart_n(R,2)) R, p cart_n(R,2), A matrix(R,1,2): $has_scalar_differential_at(f,p,2,A)) matrix(R,1,2) = scalar_differential(f,p,2)
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), A matrix(R,1,2):
+    $has_scalar_differential_at(f,p,2,A)
+    =>:
+        scalar_diff_value(f,p,A)=A
+
+have fn total_diff_value(f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), A matrix(R,3,2): $has_total_derivative_at(f,p,2,3,A)) matrix(R,3,2) = differential(f,p,2,3)
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), A matrix(R,3,2):
+    $has_total_derivative_at(f,p,2,3,A)
+    =>:
+        total_diff_value(f,p,A)=A
+
+have fn jacobian_value(f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), J matrix(R,3,2): $has_jacobian_at(f,p,2,3,J)) matrix(R,3,2) = jacobian(f,p,2,3)
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), J matrix(R,3,2):
+    $has_jacobian_at(f,p,2,3,J)
+    =>:
+        jacobian_value(f,p,J)=J
+
+have fn hessian_value(f fn(x cart_n(R,2)) R, p cart_n(R,2), H matrix(R,2,2): $has_hessian_at(f,p,2,H)) matrix(R,2,2) = hessian(f,p,2)
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), H matrix(R,2,2):
+    $has_hessian_at(f,p,2,H)
+    =>:
+        hessian_value(f,p,H)=H
+"#,
+        r#"# Return certified gradients, curls and vector limits through formula functions.
+have fn gradient_value(f fn(x cart_n(R,2)) R, p cart_n(R,2), g cart_n(R,2): $has_gradient_at(f,p,2,g)) cart_n(R,2) = gradient_at(f,p,2)
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), g cart_n(R,2):
+    $has_gradient_at(f,p,2,g)
+    =>:
+        gradient_value(f,p,g)=g
+
+have fn curl_value(f fn(x cart_n(R,3)) cart_n(R,3), p cart_n(R,3), c cart_n(R,3): $has_curl_at(f,p,c)) cart_n(R,3) = curl(f,p)
+forall f fn(x cart_n(R,3)) cart_n(R,3), p cart_n(R,3), c cart_n(R,3):
+    $has_curl_at(f,p,c)
+    =>:
+        curl_value(f,p,c)=c
+
+have fn vector_limit_value(f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), L cart_n(R,3): $has_vector_limit_at(f,p,2,3,L)) cart_n(R,3) = lim_vector_at(f,p,2,3)
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), L cart_n(R,3):
+    $has_vector_limit_at(f,p,2,3,L)
+    =>:
+        vector_limit_value(f,p,L)=L
+"#,
     ] {
         let (run, compiler) = checked(source);
         compiler
@@ -543,9 +689,15 @@ fn multivariable_selector_beta_replays_original_existence_guards_in_function_bod
 #[test]
 fn function_input_carrier_locals_keep_original_stage_visibility() {
     use crate::execute::ExecHaveFnEqualStmtResult;
-    let (run, _) = checked(include_str!(
-        "../../lean/examples/partial_derivative_offset_function/statement.lit"
-    ));
+    let (run, _) = checked(
+        r#"# Add a real offset to a certified coordinate partial derivative.
+have fn partial_offset(f fn(x cart_n(R,2)) R, p cart_n(R,2), d,t R: $has_partial_derivative_at(f,p,2,1,d)) R = partial_derivative(f,p,2,1)+t
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), d,t R:
+    $has_partial_derivative_at(f,p,2,1,d)
+    =>:
+        partial_offset(f,p,d,t)=d+t
+"#,
+    );
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
         ExecHaveFnEqualStmtResult::Success(declaration),
     )) = &run.statement_results[0]
@@ -580,9 +732,15 @@ fn function_input_carrier_locals_keep_original_stage_visibility() {
 fn function_input_carrier_locals_reject_missing_reordered_and_changed_evidence() {
     use crate::execute::ExecHaveFnEqualStmtResult;
     for mutation in 0..3 {
-        let (mut run, compiler) = checked(include_str!(
-            "../../lean/examples/partial_derivative_offset_function/statement.lit"
-        ));
+        let (mut run, compiler) = checked(
+            r#"# Add a real offset to a certified coordinate partial derivative.
+have fn partial_offset(f fn(x cart_n(R,2)) R, p cart_n(R,2), d,t R: $has_partial_derivative_at(f,p,2,1,d)) R = partial_derivative(f,p,2,1)+t
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), d,t R:
+    $has_partial_derivative_at(f,p,2,1,d)
+    =>:
+        partial_offset(f,p,d,t)=d+t
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
             ExecHaveFnEqualStmtResult::Success(declaration),
         )) = &mut run.statement_results[0]

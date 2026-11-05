@@ -10,9 +10,23 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const SELECTED: &str =
-    include_str!("../../../lean/examples/function_limit_selected_value/statement.lit");
-const UNIQUE: &str = include_str!("../../../lean/examples/function_limit_unique/statement.lit");
+const SELECTED: &str = r#"# A proved finite real function-limit candidate determines fn_lim(f,x0).
+claim:
+    ? forall f fn(x R) R, x0 R, L R:
+        $has_limit_at(f,x0,L)
+        =>:
+            fn_lim(f,x0) = L
+    fn_lim(f,x0) = L
+"#;
+const UNIQUE: &str = r#"# Two finite real limits of the same function at the same point are equal.
+claim:
+    ? forall f fn(x R) R, x0 R, L R, K R:
+        $has_limit_at(f,x0,L)
+        $has_limit_at(f,x0,K)
+        =>:
+            L = K
+    L = K
+"#;
 
 fn equality(run: &mut RunLitexCodeResult) -> &mut crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::VerifyEqualitySuccess{
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
@@ -49,23 +63,6 @@ fn limit_wd(run: &mut RunLitexCodeResult) -> &mut FunctionLimitObjWellDefinedPro
         panic!("limit WD")
     };
     proof
-}
-
-#[test]
-fn function_limit_replays_finite_sides_guards_and_reversed_equality() {
-    for source in [
-        SELECTED,
-        include_str!("../../../lean/examples/function_limit_left_selected/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_selected/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_guarded_domain/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_reverse_equality/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "function_limit").expect(source);
-        assert!(lean.contains("Litex.finiteFunctionLimitEqCandidate"));
-        assert!(lean.contains("Litex.RealFunctionValue"));
-        assert!(!lean.contains("sorry"));
-    }
 }
 
 #[test]
@@ -122,7 +119,14 @@ fn function_limit_rejects_missing_original_point_wd() {
 
 #[test]
 fn function_limit_rejects_a_changed_effective_domain() {
-    let source = include_str!("../../../lean/examples/function_limit_guarded_domain/statement.lit");
+    let source = r#"# A proved finite real function-limit candidate determines fn_lim(f,x0).
+claim:
+    ? forall f fn(x R: x != 0) R, x0 R, L R:
+        $has_limit_at(f,x0,L)
+        =>:
+            fn_lim(f,x0) = L
+    fn_lim(f,x0) = L
+"#;
     let (mut run, compiler) = super::execute(source);
     limit_wd(&mut run).function_domain.domain = Obj::StandardSet(StandardSet::R);
     compiler
@@ -181,30 +185,6 @@ fn function_limit_without_a_convergence_proof_is_rejected() {
     );
 }
 
-#[test]
-fn function_limit_replays_existence_membership_and_equal_point_citations() {
-    for (source, marker) in [
-        (
-            include_str!("../../../lean/examples/function_limit_exists_object/statement.lit"),
-            "Litex.finiteFunctionConvergentOfExistence",
-        ),
-        (
-            include_str!("../../../lean/examples/function_limit_real/statement.lit"),
-            "Litex.finiteFunctionLimitInR",
-        ),
-        (
-            include_str!("../../../lean/examples/function_limit_equal_point/statement.lit"),
-            "Litex.HasFiniteFunctionLimitValue",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "function_limit_reuse")
-            .expect(source)
-            .contains(marker));
-    }
-}
-
 pub(super) fn definition(run: &mut RunLitexCodeResult) -> &mut crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::BuiltinFunctionLimitDefinitionProof{
     use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByStmtResult};
     use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtResult};
@@ -242,10 +222,50 @@ pub(super) fn definition(run: &mut RunLitexCodeResult) -> &mut crate::execute::e
 #[test]
 fn function_limit_definition_replays_both_required_clauses() {
     for source in [
-        include_str!("../../../lean/examples/function_limit_definition/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_guarded_definition/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_definition/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_definition/statement.lit"),
+        r#"# Accumulation and epsilon-delta clauses prove the finite function-limit predicate.
+thm checked_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-x0) and abs(x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < abs(x-x0) and abs(x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_at(f,x0,L)
+    by def $has_limit_at(f,x0,L)
+"#,
+        r#"# Relative finite limits retain the function's nonzero input domain.
+thm checked_guarded_function_limit_intro:
+    ? forall f fn(t R: t != 0) R, x0 R, L R:
+        forall r R+:
+            exist x {t R: t != 0} st {0 < abs(x-x0) and abs(x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x {t R: t != 0}: 0 < abs(x-x0) and abs(x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_at(f,x0,L)
+    by def $has_limit_at(f,x0,L)
+"#,
+        r#"# Accumulation and epsilon-delta clauses prove the left-sided function-limit predicate.
+thm checked_left_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < (x0-x) and (x0-x) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < (x0-x) and (x0-x) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_left(f,x0,L)
+    by def $has_limit_left(f,x0,L)
+"#,
+        r#"# Accumulation and epsilon-delta clauses prove the right-sided function-limit predicate.
+thm checked_right_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < (x-x0) and (x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < (x-x0) and (x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_right(f,x0,L)
+    by def $has_limit_right(f,x0,L)
+"#,
     ] {
         let (mut run, compiler) = super::execute(source);
         assert_eq!(definition(&mut run).proof_of_requirement_facts.len(), 2);
@@ -258,7 +278,17 @@ fn function_limit_definition_replays_both_required_clauses() {
 
 #[test]
 fn function_limit_definition_rejects_missing_or_reordered_proofs() {
-    let source = include_str!("../../../lean/examples/function_limit_definition/statement.lit");
+    let source = r#"# Accumulation and epsilon-delta clauses prove the finite function-limit predicate.
+thm checked_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-x0) and abs(x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < abs(x-x0) and abs(x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_at(f,x0,L)
+    by def $has_limit_at(f,x0,L)
+"#;
     for missing in [false, true] {
         let (mut run, compiler) = super::execute(source);
         let p = definition(&mut run);
@@ -275,7 +305,17 @@ fn function_limit_definition_rejects_missing_or_reordered_proofs() {
 
 #[test]
 fn function_limit_definition_rejects_a_changed_accumulation_domain() {
-    let source = include_str!("../../../lean/examples/function_limit_definition/statement.lit");
+    let source = r#"# Accumulation and epsilon-delta clauses prove the finite function-limit predicate.
+thm checked_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-x0) and abs(x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < abs(x-x0) and abs(x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_at(f,x0,L)
+    by def $has_limit_at(f,x0,L)
+"#;
     let (mut run, compiler) = super::execute(source);
     let p = definition(&mut run);
     let Fact::ForallFact(f) = &mut p.requirement_facts[0] else {
@@ -292,7 +332,17 @@ fn function_limit_definition_rejects_a_changed_accumulation_domain() {
 
 #[test]
 fn function_limit_definition_rejects_changed_epsilon_binders_and_preimage() {
-    let source = include_str!("../../../lean/examples/function_limit_definition/statement.lit");
+    let source = r#"# Accumulation and epsilon-delta clauses prove the finite function-limit predicate.
+thm checked_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-x0) and abs(x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < abs(x-x0) and abs(x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_at(f,x0,L)
+    by def $has_limit_at(f,x0,L)
+"#;
     for mutation in 0..3 {
         let (mut run, compiler) = super::execute(source);
         let p = definition(&mut run);

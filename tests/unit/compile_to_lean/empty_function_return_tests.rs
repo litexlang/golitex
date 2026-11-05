@@ -8,10 +8,40 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 use crate::execute::{ExecHaveFnEqualStmtResult, ExecHaveFnEqualStmtSuccessResult};
 use crate::prelude::*;
 
-const EMPTY: &str =
-    include_str!("../../../lean/examples/empty_domain_formula_functions/statement.lit");
-const GUARDED: &str =
-    include_str!("../../../lean/examples/excluded_guard_formula_functions/statement.lit");
+const EMPTY: &str = r#"# Functions on empty carriers still check their bodies and can return into the empty set.
+have fn empty_constant(k {}) {} = 0
+have fn empty_coordinate(k {}) {} = k
+have fn empty_four(a,b R,k {},d R) {} = a+d
+$is_set(empty_constant)
+$is_set(empty_coordinate)
+$is_set(empty_four)
+"#;
+const GUARDED: &str = r#"# Previously proved universal exclusions make complete input guards incompatible; body WD remains required.
+forall k R:
+    k=k
+
+have fn empty_negative(k R:k!=k) {} = k
+forall k R:
+    k<0
+    =>:
+        not k>0
+
+have fn empty_between(k R:k>0,k<0) {} = k
+$is_set(empty_negative)
+$is_set(empty_between)
+forall k R:
+    k>0
+    =>:
+        not k<0
+
+have fn empty_between_reverse(k R:k<0,k>0) {} = k
+$is_set(empty_between_reverse)
+forall k R+:
+    not k<0
+
+have fn empty_positive(k R+:k<0) {} = k
+$is_set(empty_positive)
+"#;
 
 fn declaration(statement: &mut ExecStmtResult) -> &mut ExecHaveFnEqualStmtSuccessResult {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
@@ -38,22 +68,6 @@ fn anonymous(statement: &mut ExecStmtResult) -> &mut AnonymousFnObjWellDefinedPr
         panic!("original anonymous function WD")
     };
     proof
-}
-
-#[test]
-fn empty_function_return_replays_all_absence_certificates_and_captured_bodies() {
-    for source in [
-        EMPTY,
-        GUARDED,
-        include_str!("../../../lean/examples/empty_range_formula_functions/statement.lit"),
-        include_str!("../../../lean/examples/empty_carrier_formula_functions/statement.lit"),
-        include_str!("../../../lean/examples/captured_empty_formula_functions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "empty_function_return")
-            .expect(source);
-    }
 }
 
 #[test]

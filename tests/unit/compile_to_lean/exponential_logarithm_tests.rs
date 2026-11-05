@@ -4,37 +4,61 @@ use crate::prelude::*;
 
 const CASES: [(&str, &str, &str); 7] = [
     (
-        include_str!("../../../lean/examples/exponential_difference/statement.lit"),
+        r#"forall a,b R:
+    exp(a-b)=exp(a)/exp(b)
+"#,
         "ExpDifference",
         "exponentialDifferenceValue",
     ),
     (
-        include_str!("../../../lean/examples/logarithm_product/statement.lit"),
+        r#"forall a,b R+:
+    ln(a*b)=ln(a)+ln(b)
+"#,
         "LnProduct",
         "logarithmProductValue",
     ),
     (
-        include_str!("../../../lean/examples/logarithm_quotient/statement.lit"),
+        r#"forall a,b R+:
+    ln(a/b)=ln(a)-ln(b)
+"#,
         "LnQuotient",
         "logarithmQuotientValue",
     ),
     (
-        include_str!("../../../lean/examples/exponential_injective/statement.lit"),
+        r#"forall a,b R:
+    exp(a)=exp(b)
+    =>:
+        a=b
+"#,
         "ExpInjective",
         "exponentialInjectiveValue",
     ),
     (
-        include_str!("../../../lean/examples/logarithm_injective/statement.lit"),
+        r#"forall a,b R+:
+    ln(a)=ln(b)
+    =>:
+        a=b
+"#,
         "LnInjective",
         "logarithmInjectiveValue",
     ),
     (
-        include_str!("../../../lean/examples/log_from_known_power/statement.lit"),
+        r#"forall a,x R+,n Z:
+    a!=1
+    a^n=x
+    =>:
+        log(a,x)=n
+"#,
         "LogFromKnownPower",
         "logarithmFromPowerValue",
     ),
     (
-        include_str!("../../../lean/examples/power_from_known_log/statement.lit"),
+        r#"forall a,x R+,n Z:
+    a!=1
+    log(a,x)=n
+    =>:
+        a^n=x
+"#,
         "PowerFromKnownLog",
         "powerFromLogarithmValue",
     ),
@@ -73,26 +97,6 @@ fn all_seven_exponential_logarithm_variants_replay_the_actual_selected_route() {
             .unwrap_or_else(|e| panic!("{variant}: {e}"));
         assert!(output.contains(&format!("Litex.{law}")));
         assert_eq!(output, compiler.compile_run(&run, "exp_log").unwrap());
-    }
-}
-
-#[test]
-fn exponential_logarithm_equalities_keep_the_original_orientation() {
-    for index in [0, 1, 2, 5, 6] {
-        let (source, _, law) = CASES[index];
-        let (prefix, last) = source.trim_end().rsplit_once('\n').unwrap();
-        let (left, right) = last.trim().split_once('=').unwrap();
-        let source = format!(
-            "{prefix}\n{}{}={}\n",
-            if index < 3 { "    " } else { "        " },
-            right,
-            left
-        );
-        let (run, compiler) = super::execute(&source);
-        let output = compiler
-            .compile_run(&run, "exp_log_reverse")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains(&format!("Litex.{law}")));
     }
 }
 

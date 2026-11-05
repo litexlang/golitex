@@ -161,16 +161,45 @@ impl LitexToLeanCompiler {
         body_text.extend(self.compile_named_header_aliases(proof, original_scope, position)?);
         body_text.extend(definitions);
         for (index, (source, step)) in proof.statement.prove_process.iter().zip(steps).enumerate() {
-            validate_statement_capture(source, step)?;
-            body_text.push(self.compile_statement_in_scope(
-                step,
-                &SourcePosition {
-                    before: head_count + index,
-                    ..*position
-                },
-                index + 1,
-                true,
-            )?);
+            validate_statement_capture(source, step).map_err(|mut error| {
+                error.message = format!(
+                    "{} Source step {} of theorem {}: {}",
+                    error.message,
+                    index + 1,
+                    proof.statement.name,
+                    source
+                        .readable_string()
+                        .lines()
+                        .next()
+                        .unwrap_or("<empty source>")
+                );
+                error
+            })?;
+            body_text.push(
+                self.compile_statement_in_scope(
+                    step,
+                    &SourcePosition {
+                        before: head_count + index,
+                        ..*position
+                    },
+                    index + 1,
+                    true,
+                )
+                .map_err(|mut error| {
+                    error.message = format!(
+                        "{} Source step {} of theorem {}: {}",
+                        error.message,
+                        index + 1,
+                        proof.statement.name,
+                        source
+                            .readable_string()
+                            .lines()
+                            .next()
+                            .unwrap_or("<empty source>")
+                    );
+                    error
+                })?,
+            );
         }
         let mut conclusions = Vec::new();
         for (expected, result) in expected.iter().zip(results) {

@@ -7,23 +7,14 @@ use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferHasDerivativeAtFactResult, InferResult,
 };
 
-const SELECTED: &str =
-    include_str!("../../../lean/examples/derivative_candidate_selection/statement.lit");
-#[test]
-fn derivative_formation_selection_and_signed_citations_replay() {
-    for source in [
-        SELECTED,
-        include_str!("../../../lean/examples/derivative_nested_objects/statement.lit"),
-        include_str!("../../../lean/examples/derivative_existence_selection/statement.lit"),
-        include_str!("../../../lean/examples/derivative_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/derivative_differentiability_selection/statement.lit"),
-        include_str!("../../../lean/examples/derivative_positive_domain_selection/statement.lit"),
-        include_str!("../../../lean/examples/derivative_guarded_domain_selection/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "derivative_selection").expect(source);
-    }
-}
+const SELECTED: &str = r#"# A proved derivative candidate determines the selected real derivative.
+forall f fn(x R) R, p, L R:
+    $has_derivative_at(f, p, L)
+    =>:
+        derivative(f, p) = L
+        L = derivative(f, p)
+        derivative(f, p) $in R
+"#;
 #[test]
 fn derivative_definition_inferences_require_original_domain_and_store_identity() {
     for mutation in 0..4 {
@@ -172,21 +163,6 @@ fn derivative_without_existence_cannot_be_constructed_or_hidden_by_zero() {
             .expect_err("failed source run");
     }
 }
-
-#[test]
-fn derivative_definitions_and_formula_body_replay_original_results() {
-    for source in [
-        include_str!("../../../lean/examples/derivative_from_definition/statement.lit"),
-        include_str!("../../../lean/examples/derivative_positive_from_definition/statement.lit"),
-        include_str!("../../../lean/examples/differentiability_from_existence/statement.lit"),
-        include_str!("../../../lean/examples/derivative_formula_body/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "derivative_definition")
-            .expect(source);
-    }
-}
 #[test]
 fn derivative_definition_requires_both_ordered_original_clauses() {
     use crate::execute::execute_by_stmt::ExecByDefStmtResult;
@@ -197,9 +173,17 @@ fn derivative_definition_requires_both_ordered_original_clauses() {
     };
     use crate::execute::ExecDefinitionStmtResult;
     for mutation in 0..3 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/derivative_from_definition/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Derive the classical derivative from an interior neighborhood and the punctured quotient limit.
+thm derivative_from_definition:
+    ? forall f fn(x R) R, p, L R:
+        exist radius R+ st {{x R: abs(x-p)<radius} $subset R}
+        $has_limit_at(fn(x R: x-p != 0) R {(f(x)-f(p))/(x-p)}, p, L)
+        =>:
+            $has_derivative_at(f, p, L)
+    by def $has_derivative_at(f, p, L)
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(p),
         )) = &mut run.statement_results[0]
@@ -247,8 +231,13 @@ fn derivative_definition_requires_both_ordered_original_clauses() {
 #[test]
 fn differentiability_inference_preserves_existence_then_optional_interior() {
     use crate::store_fact_and_infer::InferFunctionDifferentiableAtFactResult;
-    let source =
-        include_str!("../../../lean/examples/derivative_differentiability_selection/statement.lit");
+    let source = r#"# Differentiability provides the witness required to construct the derivative.
+forall f fn(x R) R, p R:
+    $is_differentiable_at(f, p)
+    =>:
+        derivative(f, p) $in R
+        derivative(f, p) = derivative(f, p)
+"#;
     for mutation in 0..3 {
         let (mut run, compiler) = super::execute(source);
         let p = super::forall_proof_mut(&mut run.statement_results[0]);

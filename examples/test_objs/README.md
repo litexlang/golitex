@@ -36,8 +36,11 @@ checks. The remaining LEG35/36 trigonometric cases keep their existing owners.
 符号聚合三项的最新复核 (historical task record; retired)：原十个短式现有 7 个直接通过，3 个已有显式作者证明；五个相关完整文件通过。第4–6项已从活动纠错段落移除，短搜索边界和原始回执保留。
 
 This directory inventories the terminal variants reachable from `Obj` in
-`src/ast/obj.rs`. Active families have dedicated, nonempty positive `.lit`
-files; explicitly retired interfaces retain rejection fixtures and have no
+`src/ast/obj.rs`. Active families have nonempty positive `.lit` files, either
+dedicated local fixtures or explicitly registered whole-file examples under
+`examples/`. Whole-file cases reuse the canonical mathematical source and still
+require every statement to succeed; their negative controls run separately.
+Explicitly retired interfaces retain rejection fixtures and have no
 positive file. Retained Rust AST declarations do not make those interfaces
 available in the language.
 Function-head variants and the `FnSetSpace` helper enum are audited as well.

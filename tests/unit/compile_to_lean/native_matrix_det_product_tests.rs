@@ -6,16 +6,41 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const NATIVE: &str = include_str!("../../../lean/examples/native_matrix_det_mul/statement.lit");
-const EXPLICIT: &str = include_str!("../../../lean/examples/matrix_det_mul/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_det_mul_reverse/statement.lit");
-const REPEATED: &str =
-    include_str!("../../../lean/examples/native_matrix_det_mul_repeated_factor/statement.lit");
-const ZERO: &str = include_str!("../../../lean/examples/native_matrix_det_mul_zero/statement.lit");
-const REAL: &str = include_str!("../../../lean/examples/native_matrix_det_mul_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_det_mul_transport/statement.lit");
+const NATIVE: &str = r#"# The determinant of a square complex matrix product is the product of determinants.
+forall replay_det_product_n N, replay_det_product_A, replay_det_product_B matrix(C,replay_det_product_n,replay_det_product_n):
+    det(matrix_mul(replay_det_product_A,replay_det_product_B,replay_det_product_n,replay_det_product_n,replay_det_product_n),replay_det_product_n) = det(replay_det_product_A,replay_det_product_n)*det(replay_det_product_B,replay_det_product_n)
+"#;
+const EXPLICIT: &str = r#"# Replay the original explicit theorem and its named application.
+thm replay_matrix_det_product:
+    ? forall replay_det_product_n N, replay_det_product_A, replay_det_product_B matrix(C,replay_det_product_n,replay_det_product_n):
+        det(matrix_mul(replay_det_product_A,replay_det_product_B,replay_det_product_n,replay_det_product_n,replay_det_product_n),replay_det_product_n) = det(replay_det_product_A,replay_det_product_n)*det(replay_det_product_B,replay_det_product_n)
+    release thm matrix_det_mul(replay_det_product_A,replay_det_product_B,replay_det_product_n)
+release thm replay_matrix_det_product(2,identity_matrix(2),zero_matrix(2,2))
+"#;
+const REVERSE: &str = r#"# Reverse the complete original selected product law.
+forall replay_det_product_n N, replay_det_product_A, replay_det_product_B matrix(C,replay_det_product_n,replay_det_product_n):
+    det(replay_det_product_A,replay_det_product_n)*det(replay_det_product_B,replay_det_product_n) = det(matrix_mul(replay_det_product_A,replay_det_product_B,replay_det_product_n,replay_det_product_n,replay_det_product_n),replay_det_product_n)
+"#;
+const REPEATED: &str = r#"# Both matrix premises retain their original independent identities.
+forall replay_det_product_n N, replay_det_product_A matrix(C,replay_det_product_n,replay_det_product_n):
+    det(matrix_mul(replay_det_product_A,replay_det_product_A,replay_det_product_n,replay_det_product_n,replay_det_product_n),replay_det_product_n) = det(replay_det_product_A,replay_det_product_n)*det(replay_det_product_A,replay_det_product_n)
+"#;
+const ZERO: &str = r#"# Natural order includes the empty square matrix.
+forall replay_det_product_A, replay_det_product_B matrix(C,0,0):
+    det(matrix_mul(replay_det_product_A,replay_det_product_B,0,0,0),0) = det(replay_det_product_A,0)*det(replay_det_product_B,0)
+"#;
+const REAL: &str = r#"# Preserve the two proved complex-carrier intermediate statements.
+forall replay_det_product_n N, replay_det_product_A, replay_det_product_B matrix(R,replay_det_product_n,replay_det_product_n):
+    replay_det_product_A $in matrix(C,replay_det_product_n,replay_det_product_n)
+    replay_det_product_B $in matrix(C,replay_det_product_n,replay_det_product_n)
+    det(matrix_mul(replay_det_product_A,replay_det_product_B,replay_det_product_n,replay_det_product_n,replay_det_product_n),replay_det_product_n) = det(replay_det_product_A,replay_det_product_n)*det(replay_det_product_B,replay_det_product_n)
+"#;
+const TRANSPORT: &str = r#"# Transport the original right endpoint through the given equality.
+forall replay_det_product_n N, replay_det_product_A, replay_det_product_B matrix(C,replay_det_product_n,replay_det_product_n), replay_det_product_value C:
+    det(replay_det_product_A,replay_det_product_n)*det(replay_det_product_B,replay_det_product_n) = replay_det_product_value
+    =>:
+        det(matrix_mul(replay_det_product_A,replay_det_product_B,replay_det_product_n,replay_det_product_n,replay_det_product_n),replay_det_product_n) = replay_det_product_value
+"#;
 
 fn selected(statement: &mut ExecStmtResult, index: usize) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(

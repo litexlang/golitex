@@ -1,8 +1,8 @@
 use crate::compile_to_lean::compile_by_stmt_result::induction_evidence::InductionEvidence;
+use crate::compile_to_lean::compile_known_application::ProvedApplicationRef;
 use crate::compile_to_lean::helper::*;
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::SearchProofByKnownForallFact;
 use crate::prelude::*;
 use std::collections::HashMap;
 
@@ -33,15 +33,25 @@ impl LitexToLeanCompiler {
             return Ok(None);
         }
         position.with_visible_callee_instance(&mut |application, caller| {
-            let resolved = self.resolve_fact(application.detailed_ref().cite.fact_id, caller)?;
-            let Fact::ForallFact(source) = &resolved else {
-                return Err(LeanCompileError::unsupported("WD/CalleeFamily"));
+            let source = match application {
+                ProvedApplicationRef::KnownForall(proof) => {
+                    let resolved = self.resolve_fact(proof.detailed_ref().cite.fact_id, caller)?;
+                    let registered = self.cited_fact_reference(proof.detailed_ref().cite.fact_id, caller)?;
+                    if *registered.0 != resolved {
+                        return Err(LeanCompileError::unsupported("WD/CalleeIdentity"));
+                    }
+                    let Fact::ForallFact(source) = resolved else {
+                        return Err(LeanCompileError::unsupported("WD/CalleeFamily"));
+                    };
+                    source
+                }
+                ProvedApplicationRef::Strategy(proof) => {
+                    let (declaration, _) = caller.visible_strategy(&proof.strategy_name)?;
+                    declaration.statement.forall_fact.clone()
+                }
             };
-            let registered = self.cited_fact_reference(application.detailed_ref().cite.fact_id, caller)?;
-            if *registered.0 != resolved {
-                return Err(LeanCompileError::unsupported("WD/CalleeIdentity"));
-            }
-            let (then_index, component) = match &application.detailed_ref().cite.location {
+            let source = &source;
+            let (then_index, component) = match application.location() {
                 ForallConclusionLocation::DirectThenFact(p) => (p.then_fact_index, None),
                 ForallConclusionLocation::AndFactComponent(p) => (p.then_fact_index, Some(p.component_index)),
                 _ => return Err(LeanCompileError::unsupported("WD/CalleeLocation")),
@@ -49,11 +59,12 @@ impl LitexToLeanCompiler {
             let selected = source.then_facts.get(then_index)
                 .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeLocation"))?;
             let parameters = source.typed_parameters.ordered_param_ids();
-            if parameters.len() != application.detailed_ref().forall_parameters_match_what_args.len() {
+            let input = application.input();
+            if parameters.len() != input.arguments.len() {
                 return Err(LeanCompileError::unsupported("WD/CalleeArguments"));
             }
             let substitution: HashMap<_,_> = parameters.into_iter()
-                .zip(application.detailed_ref().forall_parameters_match_what_args.iter().cloned()).collect();
+                .zip(input.arguments.iter().cloned()).collect();
             let roots: Vec<&Obj> = match (selected, component) {
                 (ExistOrAndChainAtomicFact::AndFact(and), Some(index)) => atomic_fact_args_ref(and.facts.get(index)
                     .ok_or_else(|| LeanCompileError::unsupported("WD/CalleeLocation"))?),
@@ -67,7 +78,7 @@ impl LitexToLeanCompiler {
                 return Ok(None);
             };
             let found = caller.with_visible_forall_constructor(
-                application.detailed_ref().cite.fact_id,
+                source.fact_id,
                 then_index,
                 pattern,
                 &mut |fact, introduced, assumed, wd, site, _declaration| {
@@ -78,13 +89,17 @@ impl LitexToLeanCompiler {
                 },
             )?;
             if let Some(found) = found { return Ok(Some(found)); }
-            if let Some(found) = self.compile_recursive_callee_constructor(
-                source, then_index, pattern, application, caller, observe_numeric)? {
-                return Ok(Some(found));
+            if let ProvedApplicationRef::KnownForall(proof) = application {
+                if let Some(found) = self.compile_recursive_callee_constructor(
+                    source, then_index, pattern, proof, caller, observe_numeric)? {
+                    return Ok(Some(found));
+                }
+                if let Some(found) = self.compile_template_callee_constructor(
+                    source, then_index, pattern, proof, caller, observe_numeric)? {
+                    return Ok(Some(found));
+                }
             }
-            self.compile_template_callee_constructor(source, then_index,
-                pattern, application, caller, observe_numeric)?
-                .map(Some).ok_or_else(|| LeanCompileError::new("WD/CalleeProducer", &format!("The selected forall h_{} has no original constructor for `{}` instantiated as `{}` at this exact argument stage.", source.fact_id.value(), pattern.readable_string(), object.readable_string())))
+            Err(LeanCompileError::new("WD/CalleeProducer", &format!("The selected proved signature {} has no original constructor for `{}` instantiated as `{}` at this exact argument stage.", source.fact_id.value(), pattern.readable_string(), object.readable_string())))
         })
     }
 
@@ -95,7 +110,7 @@ impl LitexToLeanCompiler {
         assumed: &[AssumeDomFactResult],
         wd: &ObjWellDefinedProof,
         site: &SourcePosition<'_>,
-        application: &SearchProofByKnownForallFact,
+        application: ProvedApplicationRef<'_>,
         caller: &SourcePosition<'_>,
         observe_numeric: bool,
     ) -> Result<String, LeanCompileError> {
@@ -127,17 +142,18 @@ impl LitexToLeanCompiler {
         )
     }
 
-    pub(super) fn apply_callee_constructor(
+    pub(super) fn apply_callee_constructor<'a>(
         &self,
         source: &ForallFact,
         wd: &ObjWellDefinedProof,
         site: &SourcePosition<'_>,
-        application: &SearchProofByKnownForallFact,
+        application: impl Into<ProvedApplicationRef<'a>>,
         caller: &SourcePosition<'_>,
         observe_numeric: bool,
         binders: Vec<String>,
         definitions: Vec<String>,
     ) -> Result<String, LeanCompileError> {
+        let application = application.into();
         // `site` has the original source header and the precise WD subtree.
         // It never opens the callee's proved then facts as new assumptions.
         let constructor = self.compile_wd(wd, site)?;
@@ -155,14 +171,15 @@ impl LitexToLeanCompiler {
 
     /// Apply a checked constructor factory in the cited forall's original
     /// binder order, retaining the recorded argument and domain evidence.
-    pub(super) fn apply_callee_body(
+    pub(super) fn apply_callee_body<'a>(
         &self,
         source: &ForallFact,
-        application: &SearchProofByKnownForallFact,
+        application: impl Into<ProvedApplicationRef<'a>>,
         caller: &SourcePosition<'_>,
         mut binders: Vec<String>,
         body: String,
     ) -> Result<String, LeanCompileError> {
+        let application = application.into();
         for parameter in source
             .typed_parameters
             .groups
@@ -179,10 +196,9 @@ impl LitexToLeanCompiler {
         } else {
             format!("(fun {} => {body})", binders.join(" "))
         };
-        let requirements =
-            SourcePosition::new(Some(caller), SourceOwner::KnownApplication(application), 0);
+        let requirements = SourcePosition::new(Some(caller), application.owner(), 0);
         let (definitions, arguments) =
-            self.compile_known_application_requirements(source, application, &requirements)?;
+            self.compile_proved_application_requirements(source, application, &requirements)?;
         let applied = if arguments.is_empty() {
             factory
         } else {
@@ -309,7 +325,10 @@ fn constructor_pattern<'a>(
             | Obj::MatrixOperator(_)
             | Obj::FnObj(_)
             | Obj::InstantiatedTemplateObj(_)
-            | Obj::SetFormer(SetFormer::ListSet(_) | SetFormer::MatrixSet(_))
+            | Obj::SetFormer(
+                SetFormer::ListSet(_) | SetFormer::MatrixSet(_) | SetFormer::SetBuilder(_)
+            )
+            | Obj::ProductShape(ProductShape::Cart(_))
     ) || numeric_leaves
         && (matches!(pattern, Obj::Literal(Literal::Number(_)))
             || arithmetic_constructor_pairs(pattern, pattern).is_some()))
@@ -328,6 +347,7 @@ fn constructor_pattern<'a>(
     }
     let children: Vec<&Obj> = match pattern {
         Obj::SetFormer(SetFormer::ListSet(set)) => set.list.iter().map(Box::as_ref).collect(),
+        Obj::ProductShape(ProductShape::Cart(cart)) => cart.args.iter().map(Box::as_ref).collect(),
         Obj::SetFormer(SetFormer::MatrixSet(set)) => vec![&set.set, &set.rows, &set.cols],
         Obj::MatrixOperator(_) => arithmetic_constructor_pairs(pattern, pattern)
             .map(|(_, children)| children.into_iter().map(|(child, _)| child).collect())

@@ -3,8 +3,16 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
 };
 use crate::prelude::*;
 
-const EQUALITY: &str = include_str!("../../../lean/examples/member_equality_witness/statement.lit");
-const NONEMPTY: &str = include_str!("../../../lean/examples/nonempty_member_witness/statement.lit");
+const EQUALITY: &str = r#"thm checked_member_equality_witness:
+    ? forall A set, a A:
+        exist x A st {x=a}
+    exist x A st {x=a}
+"#;
+const NONEMPTY: &str = r#"thm checked_nonempty_member_witness:
+    ? forall A nonempty_set:
+        exist x A st {x $in A}
+    exist x A st {x $in A}
+"#;
 
 pub(super) fn witness(run: &mut RunLitexCodeResult) -> &mut VerifyPlainExistFactSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(

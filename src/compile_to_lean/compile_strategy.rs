@@ -1,4 +1,5 @@
 //! Declared strategies retain a separate proved interface from ordinary facts.
+use super::compile_known_application::ProvedApplicationRef;
 use super::helper::*;
 use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
@@ -42,7 +43,7 @@ impl LitexToLeanCompiler {
                 requirements: &proof.instantiation_requirements,
             },
             SourceOwner::StrategyApplication(proof),
-            SourceOwner::Term,
+            SourceOwner::CalleeInstance(ProvedApplicationRef::Strategy(proof)),
             position,
         )
         .map(|compiled| compiled.1)

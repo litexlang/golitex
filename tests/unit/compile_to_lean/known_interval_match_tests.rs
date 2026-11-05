@@ -986,7 +986,11 @@ fn fixed_factory47(
         1 + p.assumed_dom_facts.len(),
     );
     let current = SourcePosition::new(Some(&scope), SourceOwner::KnownApplication(a), 0);
-    let formation = SourcePosition::new(Some(&current), SourceOwner::CalleeInstance(a), usize::MAX);
+    let formation = SourcePosition::new(
+        Some(&current),
+        SourceOwner::CalleeInstance(a.into()),
+        usize::MAX,
+    );
     c.compile_object_reference(&super::number_object("0"), &formation)
 }
 #[test]

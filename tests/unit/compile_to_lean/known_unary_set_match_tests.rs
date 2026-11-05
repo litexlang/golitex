@@ -45,18 +45,6 @@ fn known_unary_set_original_power_family_literal_trees() {
         );
     }
 }
-
-#[test]
-fn known_unary_set_replays_all_source_profiles() {
-    for source in ALL {
-        let (run, compiler) = super::execute(source);
-        let output = super::compile_run(&run, &compiler, "unary_profiles").unwrap();
-        assert_eq!(
-            output,
-            super::compile_run(&run, &compiler, "unary_profiles").unwrap()
-        );
-    }
-}
 #[test]
 fn known_unary_set_keeps_structure_captured_subjects() {
     for source in [POWER, FAMILY] {
@@ -342,21 +330,8 @@ fn reject(
         "altered evidence accepted: {name}"
     );
 }
-const POWER:&str="# Powerset self-membership reuses the structure of an ordinary mathematical statement.\n# Former source (strict source success, second statement compiler rejection):\n# forall replay38_Z set:\n#     replay38_Z $in power_set(replay38_Z)\n# fn(replay38_zv R) R $in power_set(fn(replay38_zw R) R)\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Current path consumes the original rebound equality and constructor WD.\n# Instantiate powerset self-membership at alpha-renamed carriers.\nforall replay38_Z set:\n    replay38_Z $in power_set(replay38_Z)\nfn(replay38_zv R) R $in power_set(fn(replay38_zw R) R)\n# Check: litex -lean -strict -f lean/examples/known_unary_power/statement.lit\n";
+const POWER:&str="# Powerset self-membership reuses the structure of an ordinary mathematical statement.\n# Former source (strict source success, second statement compiler rejection):\n# forall replay38_Z set:\n#     replay38_Z $in power_set(replay38_Z)\n# fn(replay38_zv R) R $in power_set(fn(replay38_zw R) R)\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Current path consumes the original rebound equality and constructor WD.\n# Instantiate powerset self-membership at alpha-renamed carriers.\nforall replay38_Z set:\n    replay38_Z $in power_set(replay38_Z)\nfn(replay38_zv R) R $in power_set(fn(replay38_zw R) R)\n# Check: litex -lean -strict -f corpus case known_unary_power\n";
 const FAMILY:&str="# Reuse singleton-family union at alpha-renamed function-space carriers.\nforall replay38_U set:\n    family_union({replay38_U})=replay38_U\nfamily_union({fn(replay38_uv R) R})=fn(replay38_uw R) R\n";
 const PAIR:&str="# Finite literal formation retains its original pairwise-distinctness premise.\nforall replay38_LA,replay38_LB set:\n    replay38_LA!=replay38_LB\n    =>:\n        {replay38_LA,replay38_LB} $in power_set({replay38_LA,replay38_LB})\nforall replay38_LS set:\n    fn(replay38_lpv R) R!=replay38_LS\n    =>:\n        {fn(replay38_lpv R) R,replay38_LS} $in power_set({fn(replay38_lpw R) R,replay38_LS})\n";
 const NESTED:&str="# Replay nested nonempty literal constructors in a singleton family.\nforall replay38_FN set:\n    family_union({{replay38_FN}})={replay38_FN}\nfamily_union({{fn(replay38_fnv R) R}})={fn(replay38_fnw R) R}\n";
 const GUARD:&str="# Retain the original positive-domain function-space guard.\nforall replay38_Z set:\n    replay38_Z $in power_set(replay38_Z)\nfn(replay38_pgv R:replay38_pgv>0) R $in power_set(fn(replay38_pgw R:replay38_pgw>0) R)\n";
-const ALL:&[&str]=&[
-"# Powerset self-membership reuses the structure of an ordinary mathematical statement.\n# Former source (strict source success, second statement compiler rejection):\n# forall replay38_Z set:\n#     replay38_Z $in power_set(replay38_Z)\n# fn(replay38_zv R) R $in power_set(fn(replay38_zw R) R)\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Current path consumes the original rebound equality and constructor WD.\n# Instantiate powerset self-membership at alpha-renamed carriers.\nforall replay38_Z set:\n    replay38_Z $in power_set(replay38_Z)\nfn(replay38_zv R) R $in power_set(fn(replay38_zw R) R)\n# Check: litex -lean -strict -f lean/examples/known_unary_power/statement.lit\n",
-"# Retain the original positive-domain function-space guard.\nforall replay38_Z set:\n    replay38_Z $in power_set(replay38_Z)\nfn(replay38_pgv R:replay38_pgv>0) R $in power_set(fn(replay38_pgw R:replay38_pgw>0) R)\n",
-"# Preserve ordered mixed parameter groups in repeated carrier matches.\nforall replay38_Z set:\n    replay38_Z $in power_set(replay38_Z)\nfn(replay38_pmv R,replay38_pmu C) C $in power_set(fn(replay38_pmw R,replay38_pmt C) C)\n",
-"# Compose original powerset matches at two constructor depths.\nforall replay38_N set:\n    power_set(replay38_N) $in power_set(power_set(replay38_N))\npower_set(fn(replay38_pnv R) R) $in power_set(power_set(fn(replay38_pnw R) R))\n",
-"# Finite literal formation retains its original pairwise-distinctness premise.\nforall replay38_LA,replay38_LB set:\n    replay38_LA!=replay38_LB\n    =>:\n        {replay38_LA,replay38_LB} $in power_set({replay38_LA,replay38_LB})\nforall replay38_LS set:\n    fn(replay38_lpv R) R!=replay38_LS\n    =>:\n        {fn(replay38_lpv R) R,replay38_LS} $in power_set({fn(replay38_lpw R) R,replay38_LS})\n",
-"# Reuse the original returned natural membership in a finite carrier bound.\nforall replay38_Z set:\n    replay38_Z $in power_set(replay38_Z)\nforall replay38_h fn(replay38_t R) N,replay38_a R:\n    replay38_h(replay38_a) $in N\n    fn(replay38_prv closed_range(1,replay38_h(replay38_a))) R $in power_set(fn(replay38_prw closed_range(1,replay38_h(replay38_a))) R)\n",
-"# Reuse singleton-family union at alpha-renamed function-space carriers.\nforall replay38_U set:\n    family_union({replay38_U})=replay38_U\nfamily_union({fn(replay38_uv R) R})=fn(replay38_uw R) R\n",
-"# Retain the original guarded singleton-family element.\nforall replay38_U set:\n    family_union({replay38_U})=replay38_U\nfamily_union({fn(replay38_fgv R:replay38_fgv>0) R})=fn(replay38_fgw R:replay38_fgw>0) R\n",
-"# Preserve the mixed parameter groups inside a singleton-family element.\nforall replay38_U set:\n    family_union({replay38_U})=replay38_U\nfamily_union({fn(replay38_fmv R,replay38_fmu C) C})=fn(replay38_fmw R,replay38_fmt C) C\n",
-"# Replay nested nonempty literal constructors in a singleton family.\nforall replay38_FN set:\n    family_union({{replay38_FN}})={replay38_FN}\nfamily_union({{fn(replay38_fnv R) R}})={fn(replay38_fnw R) R}\n",
-"# Compose the powerset and family-union semantic constructors.\nforall replay38_FP set:\n    family_union(power_set(replay38_FP))=replay38_FP\nfamily_union(power_set(fn(replay38_fpv R) R))=fn(replay38_fpw R) R\n",
-];

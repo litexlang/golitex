@@ -18,9 +18,43 @@ const SET_CONTRA: &str = "thm member_prevents_subset:\n    ? forall A, B set, a 
 
 #[test]
 fn membership_cases_replay_the_original_union_projection() {
-    let (result, compiler) = checked(include_str!(
-        "../../../lean/examples/membership_distinguishes_sets/statement.lit"
-    ));
+    let (result, compiler) = checked(
+        r#"# A member absent from another set witnesses unequal sets and failure of inclusion.
+thm member_distinguishes_sets:
+    ? forall A, B set, a set:
+        a $in A
+        not a $in B
+        =>:
+            A != B
+    by contra:
+        ? A != B
+        impossible a $in B
+
+thm member_prevents_subset:
+    ? forall A, B set, a set:
+        a $in A
+        not a $in B
+        =>:
+            not A $subset B
+    by contra:
+        ? not A $subset B
+        impossible a $in B
+
+# Split union membership; the left branch contradicts the retained absence premise.
+thm union_member_outside_left:
+    ? forall A, B set, a set:
+        a $in union(A, B)
+        not a $in A
+        =>:
+            a $in B
+    by cases:
+        ? a $in B
+        case a $in A:
+            impossible a $in A
+        case a $in B:
+            a $in B
+"#,
+    );
     let lean = compiler.compile_run(&result, "membership_cases").unwrap();
     assert!(lean.contains("Litex.inUnion_iff"));
     assert!(lean.contains("Or.elim"));
@@ -28,9 +62,43 @@ fn membership_cases_replay_the_original_union_projection() {
 
 #[test]
 fn membership_projection_rejects_reordered_union_store() {
-    let (mut result, compiler) = checked(include_str!(
-        "../../../lean/examples/membership_distinguishes_sets/statement.lit"
-    ));
+    let (mut result, compiler) = checked(
+        r#"# A member absent from another set witnesses unequal sets and failure of inclusion.
+thm member_distinguishes_sets:
+    ? forall A, B set, a set:
+        a $in A
+        not a $in B
+        =>:
+            A != B
+    by contra:
+        ? A != B
+        impossible a $in B
+
+thm member_prevents_subset:
+    ? forall A, B set, a set:
+        a $in A
+        not a $in B
+        =>:
+            not A $subset B
+    by contra:
+        ? not A $subset B
+        impossible a $in B
+
+# Split union membership; the left branch contradicts the retained absence premise.
+thm union_member_outside_left:
+    ? forall A, B set, a set:
+        a $in union(A, B)
+        not a $in A
+        =>:
+            a $in B
+    by cases:
+        ? a $in B
+        case a $in A:
+            impossible a $in A
+        case a $in B:
+            a $in B
+"#,
+    );
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(theorem),
     )) = &mut result.statement_results[2]
@@ -637,9 +705,14 @@ fn a_case_cannot_cite_another_branch_assumption() {
 #[test]
 fn function_extensionality_replays_both_domain_inclusion_proofs() {
     use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
-    let (run, compiler) = checked(include_str!(
-        "../../../lean/examples/equal_positive_shifts/statement.lit"
-    ));
+    let (run, compiler) = checked(
+        r#"# Two shifts on the positive real numbers have the same graph, although their guards are written differently.
+forall x R: x > 0 => 0 < x
+have fn domain_pos_shift(x R: x > 0) R = x + 1
+have fn domain_pos_shift_alt(y R: 0 < y) R = 1 + y
+by fn_extension domain_pos_shift = domain_pos_shift_alt
+"#,
+    );
     let ExecStmtResult::By(ExecByStmtResult::FnExtension(
         crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p),
     )) = &run.statement_results[3]
@@ -662,9 +735,14 @@ fn function_extensionality_replays_both_domain_inclusion_proofs() {
 fn function_extensionality_rejects_corrupt_domain_inclusions() {
     use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
     for mutation in 0..4 {
-        let (mut run, compiler) = checked(include_str!(
-            "../../../lean/examples/equal_positive_shifts/statement.lit"
-        ));
+        let (mut run, compiler) = checked(
+            r#"# Two shifts on the positive real numbers have the same graph, although their guards are written differently.
+forall x R: x > 0 => 0 < x
+have fn domain_pos_shift(x R: x > 0) R = x + 1
+have fn domain_pos_shift_alt(y R: 0 < y) R = 1 + y
+by fn_extension domain_pos_shift = domain_pos_shift_alt
+"#,
+        );
         let ExecStmtResult::By(ExecByStmtResult::FnExtension(
             crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p),
         )) = &mut run.statement_results[3]
@@ -705,9 +783,14 @@ fn function_extensionality_rejects_corrupt_domain_inclusions() {
 #[test]
 fn function_extensionality_domain_facts_remain_local_to_its_proof() {
     use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
-    let (run, compiler) = checked(include_str!(
-        "../../../lean/examples/equal_positive_shifts/statement.lit"
-    ));
+    let (run, compiler) = checked(
+        r#"# Two shifts on the positive real numbers have the same graph, although their guards are written differently.
+forall x R: x > 0 => 0 < x
+have fn domain_pos_shift(x R: x > 0) R = x + 1
+have fn domain_pos_shift_alt(y R: 0 < y) R = 1 + y
+by fn_extension domain_pos_shift = domain_pos_shift_alt
+"#,
+    );
     let ExecStmtResult::By(ExecByStmtResult::FnExtension(
         crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p),
     )) = &run.statement_results[3]
@@ -743,9 +826,16 @@ fn function_extensionality_domain_facts_remain_local_to_its_proof() {
 
 #[test]
 fn function_extensionality_replays_binary_and_positive_inputs() {
-    let (run, compiler) = checked(include_str!(
-        "../../../lean/examples/equal_binary_sums/statement.lit"
-    ));
+    let (run, compiler) = checked(
+        r#"# Commutativity gives equality of two binary sum functions, and doubling a positive input equals multiplication by two.
+have fn domain_sum(x, y R) R = x + y
+have fn domain_sum_alt(a, b R) R = b + a
+by fn_extension domain_sum = domain_sum_alt
+have fn domain_pos_double(x R+) R = x + x
+have fn domain_pos_double_alt(y R+) R = 2 * y
+by fn_extension domain_pos_double = domain_pos_double_alt
+"#,
+    );
     let lean = compiler.compile_run(&run, "binary_extension").unwrap();
     assert!(lean.contains("Litex.FiniteFunction.reconstruct"));
     assert!(lean.contains("Litex.positiveReal_members"));
@@ -753,9 +843,13 @@ fn function_extensionality_replays_binary_and_positive_inputs() {
 
 #[test]
 fn function_extensionality_replays_binary_guard_inclusions_with_distinct_return_bounds() {
-    let (run, compiler) = checked(include_str!(
-        "../../../lean/examples/equal_guarded_quotients/statement.lit"
-    ));
+    let (run, compiler) = checked(
+        r#"# On pairs of nonzero reals, division equals multiplication by the reciprocal; guard order and return bounds do not change the graph.
+have fn domain_quotient(x, y R: y != 0, x != 0) R = x / y
+have fn domain_quotient_alt(a, b R: a != 0, b != 0) C = a * (1 / b)
+by fn_extension domain_quotient = domain_quotient_alt
+"#,
+    );
     let lean = compiler.compile_run(&run, "guarded_quotients").unwrap();
     assert!(lean.contains("Litex.SetSemantics.ext"));
     assert!(lean.contains("Litex.FiniteFunction.reconstruct"));
@@ -763,9 +857,16 @@ fn function_extensionality_replays_binary_guard_inclusions_with_distinct_return_
 
 #[test]
 fn function_extensionality_rejects_reordered_pointwise_arguments() {
-    let (mut run, compiler) = checked(include_str!(
-        "../../../lean/examples/equal_binary_sums/statement.lit"
-    ));
+    let (mut run, compiler) = checked(
+        r#"# Commutativity gives equality of two binary sum functions, and doubling a positive input equals multiplication by two.
+have fn domain_sum(x, y R) R = x + y
+have fn domain_sum_alt(a, b R) R = b + a
+by fn_extension domain_sum = domain_sum_alt
+have fn domain_pos_double(x R+) R = x + x
+have fn domain_pos_double_alt(y R+) R = 2 * y
+by fn_extension domain_pos_double = domain_pos_double_alt
+"#,
+    );
     let ExecStmtResult::By(ExecByStmtResult::FnExtension(
         crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(p),
     )) = &mut run.statement_results[2]
@@ -803,9 +904,17 @@ fn function_extensionality_does_not_identify_a_function_with_a_restriction() {
 
 #[test]
 fn function_extensionality_replays_complete_domains_and_the_original_pointwise_forall() {
-    let (result, compiler) = checked(include_str!(
-        "../../../lean/examples/equal_shift_functions/statement.lit"
-    ));
+    let (result, compiler) = checked(
+        r#"# Equal real shifts and equal guarded identities have the same complete function graph.
+have fn ext_shift_left(x R) R = x + 1
+have fn ext_shift_right(x R) R = 1 + x
+by fn_extension ext_shift_left = ext_shift_right
+
+have fn ext_guarded_real(x R: x != 0) R = x
+have fn ext_guarded_complex(x R: x != 0) C = x + 0
+by fn_extension ext_guarded_real = ext_guarded_complex
+"#,
+    );
     let output = compiler
         .compile_run(&result, "equal_shift_functions")
         .unwrap();
@@ -816,9 +925,17 @@ fn function_extensionality_replays_complete_domains_and_the_original_pointwise_f
 #[test]
 fn function_extensionality_rejects_changed_domains_and_pointwise_subjects() {
     for change in ["carrier", "function", "guard", "conclusion"] {
-        let (mut result, compiler) = checked(include_str!(
-            "../../../lean/examples/equal_shift_functions/statement.lit"
-        ));
+        let (mut result, compiler) = checked(
+            r#"# Equal real shifts and equal guarded identities have the same complete function graph.
+have fn ext_shift_left(x R) R = x + 1
+have fn ext_shift_right(x R) R = 1 + x
+by fn_extension ext_shift_left = ext_shift_right
+
+have fn ext_guarded_real(x R: x != 0) R = x
+have fn ext_guarded_complex(x R: x != 0) C = x + 0
+by fn_extension ext_guarded_real = ext_guarded_complex
+"#,
+        );
         let ExecStmtResult::By(ExecByStmtResult::FnExtension(
             crate::execute::execute_by_stmt::ExecByFnExtensionStmtResult::Success(proof),
         )) = &mut result.statement_results[5]
@@ -855,9 +972,47 @@ fn function_extensionality_rejects_changed_domains_and_pointwise_subjects() {
 
 #[test]
 fn finite_enumeration_replays_original_assignments_and_false_antecedent() {
-    let (result, compiler) = checked(include_str!(
-        "../../../lean/examples/finite_square_values/statement.lit"
-    ));
+    let (result, compiler) = checked(
+        r#"# Check square identities and binary alternatives over displayed finite domains.
+# Before: by for and by enumerate finite_set verified in Litex but Lean rejected By.
+# Now: eliminate the complete displayed list and replay each original assignment.
+# Boundary: independent domains; integer ranges and assignment products have separate examples.
+# Core regression input is embedded in this test.
+by for:
+    ? forall enumerated_square {0, 1, 2}:
+        enumerated_square * enumerated_square = enumerated_square ^ 2
+    enumerated_square * enumerated_square = enumerated_square ^ 2
+
+by enumerate finite_set:
+    ? forall enumerated_binary {0, 1}:
+        enumerated_binary = 0 or enumerated_binary = 1
+    enumerated_binary = 0 or enumerated_binary = 1
+
+by for:
+    ? forall enumerated_guarded {0, 1}:
+        enumerated_guarded != 0
+        =>:
+            enumerated_guarded = 1
+    enumerated_guarded = 1
+
+by for:
+    ? forall empty_enumerated {}:
+        empty_enumerated = empty_enumerated
+    empty_enumerated = empty_enumerated
+
+thm binary_nonzero_by_local_enumeration:
+    ? forall binary_input {0, 1}:
+        binary_input != 0
+        =>:
+            binary_input = 1
+    by for:
+        ? forall local_binary {0, 1}:
+            local_binary != 0
+            =>:
+                local_binary = 1
+        local_binary = 1
+"#,
+    );
     let output = compiler
         .compile_run(&result, "finite_square_values")
         .unwrap();
@@ -868,9 +1023,47 @@ fn finite_enumeration_replays_original_assignments_and_false_antecedent() {
 #[test]
 fn finite_enumeration_rejects_missing_reordered_or_changed_assignments() {
     for change in ["missing", "order", "binding", "premise"] {
-        let (mut result, compiler) = checked(include_str!(
-            "../../../lean/examples/finite_square_values/statement.lit"
-        ));
+        let (mut result, compiler) = checked(
+            r#"# Check square identities and binary alternatives over displayed finite domains.
+# Before: by for and by enumerate finite_set verified in Litex but Lean rejected By.
+# Now: eliminate the complete displayed list and replay each original assignment.
+# Boundary: independent domains; integer ranges and assignment products have separate examples.
+# Core regression input is embedded in this test.
+by for:
+    ? forall enumerated_square {0, 1, 2}:
+        enumerated_square * enumerated_square = enumerated_square ^ 2
+    enumerated_square * enumerated_square = enumerated_square ^ 2
+
+by enumerate finite_set:
+    ? forall enumerated_binary {0, 1}:
+        enumerated_binary = 0 or enumerated_binary = 1
+    enumerated_binary = 0 or enumerated_binary = 1
+
+by for:
+    ? forall enumerated_guarded {0, 1}:
+        enumerated_guarded != 0
+        =>:
+            enumerated_guarded = 1
+    enumerated_guarded = 1
+
+by for:
+    ? forall empty_enumerated {}:
+        empty_enumerated = empty_enumerated
+    empty_enumerated = empty_enumerated
+
+thm binary_nonzero_by_local_enumeration:
+    ? forall binary_input {0, 1}:
+        binary_input != 0
+        =>:
+            binary_input = 1
+    by for:
+        ? forall local_binary {0, 1}:
+            local_binary != 0
+            =>:
+                local_binary = 1
+        local_binary = 1
+"#,
+        );
         let ExecStmtResult::By(ExecByStmtResult::For(
             crate::execute::execute_by_stmt::ExecByForStmtResult::Success(proof),
         )) = &mut result.statement_results[2]
@@ -944,9 +1137,47 @@ fn selected_or_branch_keeps_original_negative_assumptions_local() {
 
 #[test]
 fn finite_assignment_hypotheses_do_not_escape_to_siblings_or_callers() {
-    let (result, compiler) = checked(include_str!(
-        "../../../lean/examples/finite_square_values/statement.lit"
-    ));
+    let (result, compiler) = checked(
+        r#"# Check square identities and binary alternatives over displayed finite domains.
+# Before: by for and by enumerate finite_set verified in Litex but Lean rejected By.
+# Now: eliminate the complete displayed list and replay each original assignment.
+# Boundary: independent domains; integer ranges and assignment products have separate examples.
+# Core regression input is embedded in this test.
+by for:
+    ? forall enumerated_square {0, 1, 2}:
+        enumerated_square * enumerated_square = enumerated_square ^ 2
+    enumerated_square * enumerated_square = enumerated_square ^ 2
+
+by enumerate finite_set:
+    ? forall enumerated_binary {0, 1}:
+        enumerated_binary = 0 or enumerated_binary = 1
+    enumerated_binary = 0 or enumerated_binary = 1
+
+by for:
+    ? forall enumerated_guarded {0, 1}:
+        enumerated_guarded != 0
+        =>:
+            enumerated_guarded = 1
+    enumerated_guarded = 1
+
+by for:
+    ? forall empty_enumerated {}:
+        empty_enumerated = empty_enumerated
+    empty_enumerated = empty_enumerated
+
+thm binary_nonzero_by_local_enumeration:
+    ? forall binary_input {0, 1}:
+        binary_input != 0
+        =>:
+            binary_input = 1
+    by for:
+        ? forall local_binary {0, 1}:
+            local_binary != 0
+            =>:
+                local_binary = 1
+        local_binary = 1
+"#,
+    );
     let ExecStmtResult::By(ExecByStmtResult::For(
         crate::execute::execute_by_stmt::ExecByForStmtResult::Success(proof),
     )) = &result.statement_results[0]

@@ -1,0 +1,2 @@
+# Matrix dimensions must be natural numbers.
+zero_matrix(-1,2) = zero_matrix(-1,2)

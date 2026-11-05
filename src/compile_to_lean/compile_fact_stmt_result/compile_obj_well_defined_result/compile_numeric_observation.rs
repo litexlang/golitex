@@ -5,14 +5,36 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Integer
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    /// Consume the original standard-set membership selected at this stage.
+    /// This lookup neither runs verification nor creates an arithmetic proof.
+    pub(in crate::compile_to_lean) fn compile_visible_standard_membership(
+        &self,
+        object: &Obj,
+        set: &StandardSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        if let Some(proof) = position.with_visible_membership(
+            object,
+            &Obj::StandardSet(set.clone()),
+            &mut |result, producer| {
+                self.compile_verify(result, producer)
+                    .map(|compiled| compiled.1)
+            },
+        )? {
+            return Ok(Some(proof));
+        }
+        position.with_visible_structural_membership(object, set, &mut |proof, producer| {
+            self.compile_structural(proof, producer)
+        })
+    }
+
     pub(in crate::compile_to_lean) fn compile_real_membership_certificate(
         &self,
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
-            if let Ok((_, Some(set), _, hypothesis)) =
-                position.visible_parameter(*id, &self.runtime)
+        if let Some(id) = self.numeric_parameter_id(object, position)? {
+            if let Ok((_, Some(set), _, hypothesis)) = position.visible_parameter(id, &self.runtime)
             {
                 if let Obj::StandardSet(set) = set {
                     if *set == StandardSet::NPos || numeric_refinement(set).is_some() {
@@ -49,28 +71,18 @@ impl LitexToLeanCompiler {
                 }
             }
         }
-        if let Some(proof) = position.with_visible_membership(
-            object,
-            &Obj::StandardSet(StandardSet::R),
-            &mut |result, producer| {
-                self.compile_verify(result, producer)
-                    .map(|compiled| compiled.1)
-            },
-        )? {
+        if let Some(proof) =
+            self.compile_visible_standard_membership(object, &StandardSet::R, position)?
+        {
             return Ok(proof);
         }
-        if let Some(proof) = position.with_visible_membership(
-            object,
-            &Obj::StandardSet(StandardSet::RPos),
-            &mut |result, producer| {
-                let (_, positive) = self.compile_verify(result, producer)?;
-                Ok(format!(
-                    "(Litex.inRPos_real {} {positive})",
-                    self.compile_object_reference(object, producer)?
-                ))
-            },
-        )? {
-            return Ok(proof);
+        let positive =
+            self.compile_visible_standard_membership(object, &StandardSet::RPos, position)?;
+        if let Some(positive) = positive {
+            return Ok(format!(
+                "(Litex.inRPos_real {} {positive})",
+                self.compile_object_reference(object, position)?
+            ));
         }
         if let Some(proof) = position
             .with_visible_alias(object, &self.runtime, &mut |_, value, wd, producer| {
@@ -105,31 +117,6 @@ impl LitexToLeanCompiler {
                             .len()
                         && source_order_parts(&proof.fact).is_ok()
                     {
-                        if let PredicateDomainProof::ByRequirements(requirements) =
-                            &proof.well_defined_proof.detailed_ref().predicate_domain
-                        {
-                            let args = atomic_fact_args_ref(&proof.fact);
-                            for (index, domain) in requirements.iter().enumerate() {
-                                let crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::CheckedArgument(requirement) = &domain.result else { continue; };
-                                if requirement.membership.element != *object {
-                                    continue;
-                                }
-                                if requirement.membership.set != StandardSet::R
-                                    || args
-                                        .get(requirement.argument_index)
-                                        .is_none_or(|arg| *arg != object)
-                                    || !matches!(&requirement.requirement, Fact::AtomicFact(AtomicFact::InFact(member)) if member.element == *object && member.set == Obj::StandardSet(StandardSet::R))
-                                {
-                                    return Err(LeanCompileError::new("WD/OrderRealDomain", "Real-domain evidence is not attached to its checked argument."));
-                                }
-                                let producer = SourcePosition::new(
-                                    Some(cursor),
-                                    SourceOwner::AtomicWD(&proof.well_defined_proof),
-                                    args.len() + index,
-                                );
-                                return self.compile_structural(&requirement.membership, &producer);
-                            }
-                        }
                         if let PredicateDomainProof::ByKnownFact(known) =
                             &proof.well_defined_proof.detailed_ref().predicate_domain
                         {
@@ -156,9 +143,28 @@ impl LitexToLeanCompiler {
             }
             current = cursor.parent;
         }
+        // A source factory is needed only when the caller's original visible
+        // certificates above do not suffice. Preserve those existing producers
+        // before replaying an obtained witness's longer source prefix.
+        if let Some(proof) =
+            self.compile_obtain_membership_reference(object, &StandardSet::R, position)?
+        {
+            return Ok(proof);
+        }
+        if let Some(positive) =
+            self.compile_obtain_membership_reference(object, &StandardSet::RPos, position)?
+        {
+            return Ok(format!(
+                "(Litex.inRPos_real {} {positive})",
+                self.compile_object_reference(object, position)?
+            ));
+        }
         Err(LeanCompileError::new(
             "Real/Producer",
-            "No earlier original result supplies this exact real-membership certificate.",
+            &format!(
+                "No earlier original result supplies the real-membership certificate for `{}`.",
+                object.readable_string()
+            ),
         ))
     }
 
@@ -222,9 +228,8 @@ impl LitexToLeanCompiler {
                 return Ok(observation);
             }
         }
-        if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object {
-            if let Ok((_, Some(set), _, hypothesis)) =
-                position.visible_parameter(*id, &self.runtime)
+        if let Some(id) = self.numeric_parameter_id(object, position)? {
+            if let Ok((_, Some(set), _, hypothesis)) = position.visible_parameter(id, &self.runtime)
             {
                 if let Some(member) =
                     self.parameter_complex_membership(object, set, &hypothesis, position)?
@@ -778,9 +783,9 @@ impl LitexToLeanCompiler {
             } => {
                 // An identifier WD carries no numeric assertion. Its actual
                 // preceding membership proof supplies the observation separately.
-                if let Obj::Identifier(IdentifierObj::Plain { id, .. }) = obj {
+                if let Some(id) = self.numeric_parameter_id(obj, position)? {
                     if let Ok((_, Some(set), _, member)) =
-                        position.visible_parameter(*id, &self.runtime)
+                        position.visible_parameter(id, &self.runtime)
                     {
                         if let Some(member) =
                             self.parameter_complex_membership(obj, set, &member, position)?
@@ -933,6 +938,35 @@ impl LitexToLeanCompiler {
             _ => Ok(None),
         }
     }
+    /// Resolve spelling only; numeric knowledge still comes from the original
+    /// parameter store. Qualified names pass the shared capture/stage checks.
+    fn numeric_parameter_id(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<IdentifierId>, LeanCompileError> {
+        let Obj::Identifier(identifier) = object else {
+            return Ok(None);
+        };
+        if let IdentifierObj::Plain { id, .. } = identifier {
+            return Ok(Some(*id));
+        }
+        if let Some(parameter) = position.preflight_parameter(identifier, &self.runtime)? {
+            return Ok(Some(parameter.id));
+        }
+        let (bound, _, captured) =
+            position.qualified_identifier_scope(identifier, &self.runtime)?;
+        if matches!(
+            captured,
+            crate::exec_env::StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType(_)
+        ) {
+            self.compile_object_reference(object, position)?;
+            Ok(Some(bound.id))
+        } else {
+            Ok(None)
+        }
+    }
+
     fn parameter_complex_membership(
         &self,
         object: &Obj,

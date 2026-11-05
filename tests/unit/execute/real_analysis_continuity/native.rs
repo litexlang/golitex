@@ -154,7 +154,7 @@ fn continuity_evidence_is_retained_and_lean_fails_closed() {
     let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "native_continuity")
         .unwrap_err();
-    assert!(error.message.contains("not supported"), "{error}");
+    assert_eq!(error.route, "Atomic/BuiltinStrategy", "{error}");
 }
 #[test]
 fn checked_completeness_calls_keep_source_steps_and_actual_conclusion() {

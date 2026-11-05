@@ -453,17 +453,26 @@ impl LitexToLeanCompiler {
         let (Obj::FnObj(left), Obj::FnObj(right)) = (&fact.left, &fact.right) else {
             return self.compile_arithmetic_congruence(fact, children, position);
         };
-        // The verifier peels outer argument groups first and then the remaining
-        // function prefix. The current call constructor owns one group only.
-        if left.body.len() != 1
-            || right.body.len() != 1
-            || left.body[0].len() != right.body[0].len()
-            || left.body[0].is_empty()
+        // The selected certificate flattens the shared suffix: outer groups
+        // first, followed by the remaining callable prefix. Both calls retain
+        // their original formation; no prefix equality is searched again.
+        let group_arities: Vec<_> = left
+            .body
+            .iter()
+            .rev()
+            .zip(right.body.iter().rev())
+            .map(|(left, right)| (left.len(), right.len()))
+            .collect();
+        if group_arities.is_empty()
+            || group_arities
+                .iter()
+                .any(|(left, right)| left != right || *left == 0)
         {
             return Err(LeanCompileError::unsupported(
                 "Equality/MatchingOneArgByOne/FunctionArity",
             ));
         }
+        let multiple_groups = left.body.len() != 1 || right.body.len() != 1;
         let pairs = crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs(
             &fact.left,
             &fact.right,
@@ -498,7 +507,7 @@ impl LitexToLeanCompiler {
                 index,
             );
             let checked = self.compile_verify(result, &child_position)?;
-            if left.body[0].len() > 2 {
+            if multiple_groups || left.body[0].len() > 2 {
                 let formed =
                     SourcePosition::new(Some(&child_position), SourceOwner::Verify(result), 2);
                 compiled.push(format!(
@@ -516,7 +525,19 @@ impl LitexToLeanCompiler {
         let (head, arguments) = compiled
             .split_last()
             .ok_or_else(|| LeanCompileError::unsupported("FunctionCongruence/Children"))?;
-        Self::function_call_congruence(head, arguments)
+        if !multiple_groups {
+            return Self::function_call_congruence(head, arguments);
+        }
+        // All children were checked above in certificate order. Compose the
+        // already checked equalities from the innermost shared group outward.
+        let mut equality = head.clone();
+        let mut end = arguments.len();
+        for (arity, _) in group_arities.iter().rev() {
+            let start = end - arity;
+            equality = Self::function_call_congruence(&equality, &arguments[start..end])?;
+            end = start;
+        }
+        Ok(equality)
     }
 
     pub(in crate::compile_to_lean) fn compile_arithmetic_congruence_strategy(
@@ -623,6 +644,82 @@ impl LitexToLeanCompiler {
         }
     }
 
+    // Source IR identifies signed literals with their explicit numeric
+    // constructors. Replay that identity instead of treating it as Lean reduction.
+    fn compile_same_ir_value(
+        &self,
+        left: &Obj,
+        right: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        if left.ir() != right.ir() {
+            return Err(LeanCompileError::unsupported(
+                "Equality/IdentityChildSubject",
+            ));
+        }
+        if left == right {
+            return Ok(format!(
+                "(Litex.sameRefl {})",
+                self.compile_object_reference(left, position)?
+            ));
+        }
+        if matches!((left,right),
+            (Obj::Literal(Literal::Number(_)),Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)))
+                | (Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)),Obj::Literal(Literal::Number(_)))
+            if matches!(p.arg.as_ref(),Obj::Literal(Literal::Number(_))))
+        {
+            let (negative, literal, reverse) = match (left, right) {
+                (
+                    Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)),
+                    Obj::Literal(Literal::Number(n)),
+                ) => (p, n, false),
+                (
+                    Obj::Literal(Literal::Number(n)),
+                    Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)),
+                ) => (p, n, true),
+                _ => unreachable!(),
+            };
+            let Obj::Literal(Literal::Number(unsigned)) = negative.arg.as_ref() else {
+                unreachable!()
+            };
+            let unsigned = number_literal(unsigned, "ℂ")?;
+            let signed = number_literal(literal, "ℂ")?;
+            let proof=format!("((M.neg_numbers {unsigned}).trans (congrArg M.number (by norm_num : -{unsigned} = {signed})))");
+            return Ok(if reverse {
+                format!("({proof}).symm")
+            } else {
+                proof
+            });
+        }
+        if let Some(value) = EvalRational::from_obj(left) {
+            if EvalRational::from_obj(right).as_ref() == Some(&value) {
+                let a = self.compile_numeric_observation(left, position)?;
+                let b = self.compile_numeric_observation(right, position)?;
+                if a.3.as_ref() != Some(&value) || b.3.as_ref() != Some(&value) {
+                    return Err(LeanCompileError::unsupported(
+                        "Equality/IdentityNumericCapture",
+                    ));
+                }
+                return Ok(format!(
+                    "(({}).trans ((congrArg M.number (by norm_num : {} = {})).trans ({}).symm))",
+                    a.1, a.0, b.0, b.1
+                ));
+            }
+        }
+        if let Some((operation, pairs)) = arithmetic_constructor_pairs(left, right) {
+            let children = pairs
+                .into_iter()
+                .map(|(a, b)| self.compile_same_ir_value(a, b, position))
+                .collect::<Result<Vec<_>, _>>()?;
+            return curried_value_congruence(&arithmetic_operation_term(operation), &children);
+        }
+        Ok(format!(
+            "(show {} = {} from rfl)",
+            self.compile_normalization_value(left, position)?,
+            self.compile_normalization_value(right, position)?
+        ))
+    }
+
     pub(in crate::compile_to_lean) fn compile_identity(
         &self,
         left: &Obj,
@@ -631,10 +728,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         match proof {
-            TheyAreTheSameProof::SameIr(_) if left.ir() == right.ir() => Ok(format!(
-                "(Litex.sameRefl {})",
-                self.compile_object_reference(left, position)?
-            )),
+            TheyAreTheSameProof::SameIr(_) if left.ir() == right.ir() => {
+                self.compile_same_ir_value(left, right, position)
+            }
             TheyAreTheSameProof::SameIr(_) => Err(LeanCompileError::new(
                 "Equality/IdentitySubject",
                 "Exact identity evidence has different source endpoints.",

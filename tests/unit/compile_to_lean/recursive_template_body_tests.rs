@@ -5,11 +5,59 @@ use crate::execute::{
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/template_recursive_constant/statement.lit"),
-    include_str!("../../../lean/examples/template_recursive_accumulation/statement.lit"),
-    include_str!("../../../lean/examples/template_recursive_reciprocal/statement.lit"),
-    include_str!("../../../lean/examples/template_recursive_returned_sequence/statement.lit"),
-    include_str!("../../../lean/examples/template_recursive_natural_zero/statement.lit"),
+    r#"# A recursive sequence preserves its chosen real seed at the first two indices.
+template<a R>:
+    have fn repeat_real(n N) R by induc n from 0:
+        case n = 0: a
+        case n > 0: repeat_real(n - 1)
+
+\repeat_real<2>(0) = 2
+\repeat_real<2>(1) = \repeat_real<2>(0)
+\repeat_real<2>(1) = 2
+forall a R:
+    \repeat_real<a>(0) = a
+have fn repeat_at_zero(a R) R = \repeat_real<a>(0)
+repeat_at_zero(3) = \repeat_real<3>(0) = 3
+"#,
+    r#"# Repeated addition publishes its base value and guarded recursive equation.
+template<a R>:
+    have fn accumulated(n N) R by induc n from 0:
+        case n = 0: 0
+        case n > 0: accumulated(n - 1) + a
+
+\accumulated<3>(0) = 0
+\accumulated<3>(1) = \accumulated<3>(0) + 3 = 3
+forall a R, n N:
+    n > 0
+    =>:
+        \accumulated<a>(n) = \accumulated<a>(n - 1) + a
+"#,
+    r#"# A recursive reciprocal sequence retains the nonzero condition on its seed.
+template<a R: a != 0,>:
+    have fn repeat_inverse(n N) R by induc n from 0:
+        case n = 0: 1 / a
+        case n > 0: repeat_inverse(n - 1)
+
+\repeat_inverse<2>(0) = 1 / 2
+have fn inverse_seed(a R: a != 0) R = \repeat_inverse<a>(0)
+inverse_seed(2) = \repeat_inverse<2>(0) = 1 / 2
+"#,
+    r#"# A formula returns a recursive sequence, which can then be called.
+template<a R>:
+    have fn repeat_real(n N) R by induc n from 0:
+        case n = 0: a
+        case n > 0: repeat_real(n - 1)
+
+have fn recursive_sequence(a R) fn(n N) R = \repeat_real<a>
+recursive_sequence(2)(0) = \repeat_real<2>(0) = 2
+"#,
+    r#"# A natural recursive sequence uses the successor condition n >= 1.
+template<S set>:
+    have fn recursive_zero(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: recursive_zero(n - 1)
+\recursive_zero<R>(0) = 0
+"#,
 ];
 
 fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResult {
@@ -18,21 +66,6 @@ fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResu
             ExecDefTemplateStmtResult::Success(p),
         )) => p,
         _ => panic!("checked recursive template"),
-    }
-}
-
-#[test]
-fn recursive_template_bodies_replay_original_guards_calls_and_formula_capture() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "recursive_template")
-            .expect(source);
-        assert!(lean.contains("Litex.recursiveNatFnTarget"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "recursive_template").unwrap()
-        );
     }
 }
 

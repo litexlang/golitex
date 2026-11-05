@@ -57,7 +57,7 @@ def main():
             statuses = result['statement_statuses']
             setup = case['setup_statements']
             if case['phase'] == 'parse':
-                result['matches'] &= result['phase'] == 'parse' and statuses == [True] * setup
+                result['matches'] &= result['phase'] == 'parse' and statuses == [True] * setup + [False]
             else:
                 result['matches'] &= result['phase'] == case['phase'] and statuses == [True] * setup + [False]
         else:
@@ -126,7 +126,7 @@ def evaluate(path):
                 or not isinstance(termination.get('phase'), str)
                 or not isinstance(termination.get('message'), str)))):
         return dict(result, phase='invalid_termination', diagnostic=repr(envelope)[-4000:])
-    failed = [s for s in statements if s['statement_result'] == 'rejected']
+    failed = [index for index, s in enumerate(statements) if s['statement_result'] == 'rejected']
     contract_success = not terminated and all(statuses)
     if ((envelope['run_result'] == 'success') != contract_success
             or process.returncode != (0 if contract_success else 1)):
@@ -134,11 +134,11 @@ def evaluate(path):
     if contract_success:
         return dict(result, observed='accept', phase='success')
     else:
-        parse_error = isinstance(termination, dict) and termination.get('phase') == 'parse'
-        if failed and (termination is None or parse_error):
-            return dict(result, observed='reject', phase=failed[0].get('why_failed', {}).get('phase', 'verification'), failures=failed)
-        if parse_error:
-            return dict(result, observed='reject', phase='parse', diagnostic=termination, failures=failed)
+        diagnostics = envelope.get('errors', [])
+        if failed and termination is None:
+            if [error.get('statement_index') for error in diagnostics] != failed:
+                return dict(result, phase='invalid_diagnostics', diagnostic=repr(envelope)[-4000:])
+            return dict(result, observed='reject', phase=diagnostics[0]['phase'], failures=diagnostics)
     return dict(result, diagnostic=repr(envelope)[-4000:])
 
 

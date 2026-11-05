@@ -21,19 +21,6 @@ fn by_def(
     p
 }
 #[test]
-fn sequence_analysis_examples_replay_definition_citations_and_components() {
-    for source in [
-        include_str!("../../../lean/examples/sequence_monotonicity/statement.lit"),
-        include_str!("../../../lean/examples/sequence_property_citations/statement.lit"),
-        include_str!("../../../lean/examples/sequence_range_bounds/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "sequence_analysis")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
-#[test]
 fn sequence_analysis_rejects_changed_complete_domain() {
     for mutation in 0..3 {
         let (mut run, compiler) = super::execute(TRACER);
@@ -122,9 +109,54 @@ fn sequence_analysis_rejects_changed_inference_identity() {
 #[test]
 fn sequence_analysis_rejects_reordered_and_missing_bounded_inferences() {
     for mutation in 0..4 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/sequence_range_bounds/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# A real sequence is bounded exactly when its range is bounded; retain both witnesses.
+thm sequence_range_bounded_above:
+    ? forall a seq(R):
+        $is_seq_bounded_above(a)
+        =>:
+            $is_real_bounded_above(fn_range(a))
+
+thm bounded_range_sequence_above:
+    ? forall a seq(R):
+        $is_real_bounded_above(fn_range(a))
+        =>:
+            $is_seq_bounded_above(a)
+
+thm sequence_range_bounded_below:
+    ? forall a seq(R):
+        $is_seq_bounded_below(a)
+        =>:
+            $is_real_bounded_below(fn_range(a))
+
+thm bounded_range_sequence_below:
+    ? forall a seq(R):
+        $is_real_bounded_below(fn_range(a))
+        =>:
+            $is_seq_bounded_below(a)
+
+thm sequence_range_bounded:
+    ? forall a seq(R):
+        $is_seq_bounded(a)
+        =>:
+            $is_real_bounded(fn_range(a))
+
+thm bounded_range_sequence:
+    ? forall a seq(R):
+        $is_real_bounded(fn_range(a))
+        =>:
+            $is_seq_bounded(a)
+
+forall a seq(R):
+    $is_seq_bounded(a)
+    =>:
+        $is_seq_bounded_above(a)
+        $is_seq_bounded_below(a)
+        exist u R st {$is_real_upper_bound(fn_range(a),u)}
+        exist l R st {$is_real_lower_bound(fn_range(a),l)}
+
+"#,
+        );
         let p = super::forall_proof_mut(run.statement_results.last_mut().unwrap());
         let Some(InferResult::AtomicFact(InferAtomicFactResult::SequenceAnalysisFact(rules))) =
             &mut p.assumed_dom_facts[0].store_and_infer.infer
@@ -170,9 +202,12 @@ fn sequence_analysis_range_subset_replays_and_rejects_changed_certificates() {
         AtomicExceptEqualityFactSearchProofByBuiltinRule as Rule,
     };
     for mutation in 0..3 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/sequence_range_bounds/containment.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# A real sequence's range lies in its declared real codomain.
+forall sequence_range_probe seq(R):
+    fn_range(sequence_range_probe) $subset R
+"#,
+        );
         compiler.compile_run(&run, "range_subset").unwrap();
         let p = super::forall_proof_mut(&mut run.statement_results[0]);
         let p = super::atomic_proof_mut(&mut p.proved_then_facts[0].verify_result);

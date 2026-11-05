@@ -1,6 +1,8 @@
 # Rust build (crate root is repo root; was litex/target/)
 /target/
 /lean/.lake/
+# Optional local corpus; regression inputs live in tests/fixtures/compile_to_lean/.
+/lean/examples/
 /showcases/litex_to_lean_mathlib_pipeline/showcase1/.lake/
 /showcases/litex_to_lean_adapter/.lake/
 

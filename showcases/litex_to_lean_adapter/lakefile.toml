@@ -10,9 +10,9 @@ rev = "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f"
 [[lean_lib]]
 name = "Litex"
 srcDir = "../../lean"
-roots = ["Litex", "examples.real_mobius_involution.statement"]
+roots = ["Litex"]
 
 [[lean_lib]]
 name = "Showcase"
 roots = ["UseInYourProject"]
-globs = ["Generated", "Adapter", "Final", "UseInYourProject", "DirectLean"]
+globs = ["Generated", "MobiusGenerated", "Adapter", "Final", "UseInYourProject", "DirectLean"]

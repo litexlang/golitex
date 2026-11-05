@@ -2,28 +2,45 @@ use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
 const SOURCES: [&str; 4] = [
-    include_str!("../../../lean/examples/multivariable_continuity_to_limit/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_limit_to_continuity/statement.lit"),
-    include_str!("../../../lean/examples/vector_continuity_to_limit/statement.lit"),
-    include_str!("../../../lean/examples/vector_limit_to_continuity/statement.lit"),
+    r#"# Continuity and a limit at the function value retain their distinct domain conditions.
+thm checked_multivariable_continuity_to_limit:
+    ? forall f fn(x cart_n(R,2)) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        forall radius R+:
+            exist x cart_n(R,2) st {0<euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2), euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<radius}
+        =>:
+            $has_multi_limit_at(f,p,2,f(p))
+    release thm multi_continuous_at_limit(f,p,2)
+"#,
+    r#"# Continuity and a limit at the function value retain their distinct domain conditions.
+thm checked_multivariable_limit_to_continuity:
+    ? forall f fn(x cart_n(R,2)) R,p cart_n(R,2),L R:
+        $has_multi_limit_at(f,p,2,L)
+        f(p)=L
+        =>:
+            $is_multi_continuous_at(f,p,2)
+    release thm multi_limit_at_continuous(f,p,2,L)
+"#,
+    r#"# Continuity and a limit at the function value retain their distinct domain conditions.
+thm checked_vector_continuity_to_limit:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3),p cart_n(R,2):
+        $is_vector_continuous_at(f,p,2,3)
+        forall radius R+:
+            exist x cart_n(R,2) st {0<euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2), euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<radius}
+        =>:
+            $has_vector_limit_at(f,p,2,3,f(p))
+    release thm vector_continuous_at_limit(f,p,2,3)
+"#,
+    r#"# Continuity and a limit at the function value retain their distinct domain conditions.
+thm checked_vector_limit_to_continuity:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3),p cart_n(R,2),L cart_n(R,3):
+        $has_vector_limit_at(f,p,2,3,L)
+        f(p)=L
+        =>:
+            $is_vector_continuous_at(f,p,2,3)
+    release thm vector_limit_at_continuous(f,p,2,3,L)
+"#,
 ];
-
-#[test]
-fn continuity_limit_bridge_replays_four_selected_rules_deterministically() {
-    for (source, law) in SOURCES.iter().zip([
-        "scalarContinuityToMultivariableLimit",
-        "scalarMultivariableLimitToContinuity",
-        "vectorContinuityToMultivariableLimit",
-        "vectorMultivariableLimitToContinuity",
-    ]) {
-        let (run, c) = super::execute(source);
-        let output = c
-            .compile_run(&run, "bridge")
-            .unwrap_or_else(|e| panic!("{law}: {e}"));
-        assert!(output.contains(&format!("Litex.{law}")));
-        assert_eq!(output, c.compile_run(&run, "bridge").unwrap());
-    }
-}
 
 #[test]
 fn continuity_limit_bridge_retains_ordered_proofs_stores_and_formation() {
@@ -213,23 +230,6 @@ fn continuity_limit_bridge_rejects_future_accumulation_citation() {
 }
 
 #[test]
-fn continuity_limit_bridge_preserves_generic_guarded_and_reversed_source_equalities() {
-    for source in [
-        include_str!("../../../lean/examples/multivariable_continuity_to_limit_generic/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_to_continuity_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuity_to_limit_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_to_continuity_generic/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_to_continuity_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_to_continuity_guarded/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_to_continuity_reversed_equality/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_to_continuity_reversed_equality/statement.lit"),
-    ] {
-        let (run,c)=super::execute(source);
-        c.compile_run(&run,"original_domains").unwrap_or_else(|e|panic!("{source}: {e}"));
-    }
-}
-
-#[test]
 fn continuity_limit_bridge_requires_exact_result_and_its_wd_requirements() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     for source in SOURCES {
@@ -293,22 +293,5 @@ fn continuity_limit_bridge_requires_exact_result_and_its_wd_requirements() {
                 "{change}"
             );
         }
-    }
-}
-
-#[test]
-fn continuity_limit_bridge_replays_selected_limit_after_candidate_storage() {
-    for source in [
-        include_str!(
-            "../../../lean/examples/multivariable_continuity_to_limit_selector/statement.lit"
-        ),
-        include_str!("../../../lean/examples/vector_continuity_to_limit_selector/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        let output = c
-            .compile_run(&run, "stored_limit")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains("ContinuityToMultivariableLimit"));
-        assert!(output.contains("LimitEqCandidate"));
     }
 }

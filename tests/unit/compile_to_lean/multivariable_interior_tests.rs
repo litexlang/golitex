@@ -5,43 +5,149 @@ use crate::execute::execute_fact_stmt::multivariable::strategy::{
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof;
 use crate::prelude::*;
 
-const TWO: &str =
-    include_str!("../../../lean/examples/partial_derivative_guarded_two_bounds/statement.lit");
+const TWO: &str = r#"# Differentiate q(1)+q(2) along coordinate 2 inside the domain q(1) > 0, q(2) < 3.
+forall p cart(R,R):
+    p(1) > 0
+    p(2) < 3
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0, q(2) < 3) R {q(1)+q(2)},p,2,2,1)
+"#;
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/partial_derivative_guarded_log/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_other_axis/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_log_other_axis/statement.lit"),
+    r#"# Differentiate ln(q(1)) along coordinate 1 inside the domain q(1) > 0.
+forall p cart(R,R):
+    p(1) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0) R {ln(q(1))},p,2,1,1/p(1))
+"#,
+    r#"# Differentiate q(2) along coordinate 2 inside the domain q(1) > 0.
+forall p cart(R,R):
+    p(1) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate ln(q(1)) along coordinate 2 inside the domain q(1) > 0.
+forall p cart(R,R):
+    p(1) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0) R {ln(q(1))},p,2,2,0/p(1))
+"#,
     TWO,
-    include_str!("../../../lean/examples/partial_derivative_guarded_nonzero/statement.lit"),
-    include_str!(
-        "../../../lean/examples/partial_derivative_guarded_positive_membership/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/partial_derivative_guarded_negative_membership/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/partial_derivative_guarded_nonzero_membership/statement.lit"
-    ),
-    include_str!("../../../lean/examples/partial_derivative_guarded_exponential/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_power/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_quotient/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_nonstrict/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_nested_domains/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_selector/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_real_membership/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_variable_axis/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_guarded_trigonometric/statement.lit"),
-    include_str!(
-        "../../../lean/examples/partial_derivative_guarded_logarithm_condition/statement.lit"
-    ),
-    include_str!("../../../lean/examples/partial_derivative_guarded_sqrt_condition/statement.lit"),
-    include_str!(
-        "../../../lean/examples/partial_derivative_guarded_log_sqrt_product/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/partial_derivative_guarded_sqrt_log_product/statement.lit"
-    ),
-    include_str!("../../../lean/examples/partial_derivative_guarded_exp_log_sqrt/statement.lit"),
+    r#"# Differentiate q(2) along coordinate 2 inside the domain q(1) != 0.
+forall p cart(R,R):
+    p(1) != 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) != 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate q(2) along coordinate 2 inside the domain q(1) $in R+.
+forall p cart(R,R):
+    p(1) $in R+
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) $in R+) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate in the second direction inside a negative-real coordinate domain.
+forall p cart(R,R):
+    p(1) $in R-
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) $in R-) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate in the second direction inside a nonzero-real coordinate domain.
+forall p cart(R,R):
+    p(1) $in R*
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) $in R*) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate q(2) along coordinate 2 inside the domain exp(q(1)) > 1.
+forall p cart(R,R):
+    exp(p(1)) > 1
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): exp(q(1)) > 1) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate q(2) along coordinate 2 inside the domain q(1)^2 > 0.
+forall p cart(R,R):
+    p(1)^2 > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1)^2 > 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate q(2) along coordinate 2 inside the domain q(2) != 0, q(1)/q(2) > 0.
+forall p cart(R,R):
+    p(2) != 0
+    p(1)/p(2) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(2) != 0, q(1)/q(2) > 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Use a strict interior point of a non-strict coordinate constraint.
+forall p cart(R,R):
+    p(1) > 0
+    =>:
+        p(1) >= 0
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) >= 0) R {q(1)},p,2,1,1)
+"#,
+    r#"# Preserve the interior conditions of nested coordinate domains.
+forall p cart(R,R):
+    p(1) > 0
+    p(2) < 3
+    =>:
+        $has_partial_derivative_at(fn(q {v cart(R,R): v(1) > 0}: q(2) < 3) R {q(2)},p,2,2,1)
+"#,
+    r#"# Use a derivative on a guarded domain as an object in a new function body.
+forall p cart(R,R):
+    p(1) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0) R {ln(q(1))},p,2,1,1/p(1))
+        partial_derivative(fn(q cart(R,R): q(1) > 0) R {ln(q(1))},p,2,1) = 1/p(1)
+        $is_set(fn(t R) R {partial_derivative(fn(q cart(R,R): q(1) > 0) R {ln(q(1))},p,2,1)+t})
+"#,
+    r#"# Differentiate the second coordinate when the first coordinate is real.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R): q(1) $in R) R {q(2)},p,2,2,1)
+"#,
+    r#"# A constant has zero partial derivative along every valid coordinate.
+forall p cart(R,R), k closed_range(1,2):
+    p(1) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0) R {1},p,2,k,0)
+"#,
+    r#"# Differentiate a coordinate on an open trigonometric and exponential domain.
+forall p cart(R,R):
+    sin(p(1)) + cos(p(1)) - exp(-p(1)) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): sin(q(1)) + cos(q(1)) - exp(-q(1)) > 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate a coordinate under a logarithmic domain condition.
+forall p cart(R,R):
+    p(1) > 0
+    ln(p(1)) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0, ln(q(1)) > 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate a coordinate under a square-root domain condition.
+forall p cart(R,R):
+    p(1) > 0
+    sqrt(p(1)) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0, sqrt(q(1)) > 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate a coordinate with logarithm and square-root domain guards.
+forall p cart(R,R):
+    p(1) > 0
+    ln(p(1)) * sqrt(p(1)) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0, ln(q(1)) * sqrt(q(1)) > 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate a coordinate after reversing the square-root and logarithm guard factors.
+forall p cart(R,R):
+    p(1) > 0
+    sqrt(p(1)) * ln(p(1)) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0, sqrt(q(1)) * ln(q(1)) > 0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Differentiate a coordinate under a guard with nested exponential, logarithm and square root.
+forall p cart(R,R):
+    p(1) > 0
+    exp(ln(p(1))) * sqrt(p(1)) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0, exp(ln(q(1))) * sqrt(q(1)) > 0) R {q(2)},p,2,2,1)
+"#,
 ];
 fn number(n: i64) -> Obj {
     Obj::Literal(Literal::Number(Number::new(n.to_string())))
@@ -63,30 +169,26 @@ fn geometry(run: &mut RunLitexCodeResult) -> &mut P {
 }
 
 #[test]
-fn multivariable_interior_replays_actual_axis_guard_domains_and_selector_wd() {
-    for source in SOURCES {
-        let (run, c) = super::execute(source);
-        let lean = c
-            .compile_run(&run, "guarded")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains("Litex.partialInteriorOfNeighborhood"));
-        assert_eq!(lean, c.compile_run(&run, "guarded").unwrap());
-    }
-}
-
-#[test]
 fn multivariable_interior_compound_guard_keeps_nested_domain_and_derivative_wd() {
     for (source, changes) in [
         (
-            include_str!(
-                "../../../lean/examples/partial_derivative_guarded_log_sqrt_product/statement.lit"
-            ),
+            r#"# Differentiate a coordinate with logarithm and square-root domain guards.
+forall p cart(R,R):
+    p(1) > 0
+    ln(p(1)) * sqrt(p(1)) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0, ln(q(1)) * sqrt(q(1)) > 0) R {q(2)},p,2,2,1)
+"#,
             6,
         ),
         (
-            include_str!(
-                "../../../lean/examples/partial_derivative_guarded_exp_log_sqrt/statement.lit"
-            ),
+            r#"# Differentiate a coordinate under a guard with nested exponential, logarithm and square root.
+forall p cart(R,R):
+    p(1) > 0
+    exp(ln(p(1))) * sqrt(p(1)) > 0
+    =>:
+        $has_partial_derivative_at(fn(q cart(R,R): q(1) > 0, exp(ln(q(1))) * sqrt(q(1)) > 0) R {q(2)},p,2,2,1)
+"#,
             7,
         ),
     ] {
@@ -386,16 +488,55 @@ forall p cart(R,R):
 }
 
 const GEOMETRY_SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/partial_derivative_finite_function_domain/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_finite_function_axis/statement.lit"),
-    include_str!(
-        "../../../lean/examples/partial_derivative_finite_function_dimension/statement.lit"
-    ),
-    include_str!("../../../lean/examples/partial_derivative_finite_function_product/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_finite_function_guard/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_known_interior/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_known_interior_axis/statement.lit"),
-    include_str!("../../../lean/examples/partial_derivative_known_interior_selector/statement.lit"),
+    r#"# Differentiate a coordinate on the exact finite real function space.
+forall p fn(k closed_range(1,2)) R:
+    p $in cart_n(R,2)
+    $has_partial_derivative_at(fn(q fn(k closed_range(1,2)) R) R {q(1)},p,2,1,1)
+"#,
+    r#"# Preserve a variable differentiation coordinate on an exact finite function space.
+forall k closed_range(1,2), p fn(j closed_range(1,2)) R:
+    p $in cart_n(R,2)
+    $has_partial_derivative_at(fn(q fn(j closed_range(1,2)) R) R {q(k)},p,2,k,1)
+"#,
+    r#"# Preserve arbitrary dimension and axis in an exact finite function domain.
+forall n N+, k closed_range(1,n), p fn(j closed_range(1,n)) R:
+    p $in cart_n(R,n)
+    $has_partial_derivative_at(fn(q fn(j closed_range(1,n)) R) R {q(k)},p,n,k,1)
+"#,
+    r#"# Differentiate a coordinate product on a three-coordinate function space.
+forall p fn(k closed_range(1,3)) R:
+    p $in cart_n(R,3)
+    $has_partial_derivative_at(fn(q fn(k closed_range(1,3)) R) R {q(1)*q(3)},p,3,1,p(3))
+"#,
+    r#"# Keep a finite-function-space base beneath an open coordinate guard.
+forall p fn(k closed_range(1,2)) R:
+    p $in cart_n(R,2)
+    p(1) > 0
+    =>:
+        $has_partial_derivative_at(fn(q fn(k closed_range(1,2)) R: q(1)>0) R {q(2)},p,2,2,1)
+"#,
+    r#"# Consume an explicitly supplied interior ball for a non-strict coordinate domain.
+forall p cart_n(R,2):
+    p(1) >= 0
+    exist radius R+ st {{x cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<radius} $subset {v cart_n(R,2): v(1)>=0}}
+    =>:
+        $has_partial_derivative_at(fn(q cart_n(R,2): q(1)>=0) R {q(1)},p,2,1,1)
+"#,
+    r#"# Use a recorded interior ball along an arbitrary valid coordinate.
+forall k closed_range(1,2), p cart_n(R,2):
+    p(1) >= 0
+    exist radius R+ st {{x cart_n(R,2): euclidean_norm(fn(j closed_range(1,2)) R {x(j)-p(j)},2)<radius} $subset {v cart_n(R,2): v(1)>=0}}
+    =>:
+        $has_partial_derivative_at(fn(q cart_n(R,2): q(1)>=0) R {q(k)},p,2,k,1)
+"#,
+    r#"# Select the partial derivative after citing an interior ball.
+forall p cart_n(R,2):
+    p(1) >= 0
+    exist radius R+ st {{x cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<radius} $subset {v cart_n(R,2): v(1)>=0}}
+    =>:
+        $has_partial_derivative_at(fn(q cart_n(R,2): q(1)>=0) R {q(2)},p,2,2,1)
+        partial_derivative(fn(q cart_n(R,2): q(1)>=0) R {q(2)},p,2,2)=1
+"#,
 ];
 
 #[test]

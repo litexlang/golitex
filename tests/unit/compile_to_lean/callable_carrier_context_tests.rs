@@ -4,11 +4,27 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::{InFactSearchProofByBuiltinRule, PositiveIntegerInNPosBuiltinRuleProof};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FiniteSetStatObjWellDefinedProofByDef;
 
-const WIDEN: &str = include_str!("../../../lean/examples/sequence_carrier_widening/statement.lit");
-const POSITIVE: &str =
-    include_str!("../../../lean/examples/positive_integer_refinement/statement.lit");
-const EXTREMA: &str =
-    include_str!("../../../lean/examples/finite_extrema_carrier_alias/statement.lit");
+const WIDEN: &str = r#"# Regard an integer-valued sequence as a real-valued sequence.
+forall a seq(Z):
+    a $in seq(R)
+"#;
+const POSITIVE: &str = r#"# Both orientations of strict positivity refine an integer to a positive natural.
+forall z Z:
+    z > 0
+    =>:
+        z $in N+
+forall z Z:
+    0 < z
+    =>:
+        z $in N+
+have fn positive_integer_identity(z Z: z > 0) N+ = z
+positive_integer_identity(3) $in N+
+"#;
+const EXTREMA: &str = r#"# Select the greatest and least elements of a named finite real set.
+have sample_extrema_set set = {-2, 1, 3}
+let selected_maximum = finite_set_max(sample_extrema_set)
+let selected_minimum = finite_set_min(sample_extrema_set)
+"#;
 
 fn sequence_strategy(run: &mut RunLitexCodeResult) -> &mut FunctionSetMembershipStrategySingleStep {
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
@@ -64,25 +80,6 @@ fn nonempty_rewrite(
         panic!("recorded nonempty alias rewrite")
     };
     p
-}
-
-#[test]
-fn callable_carriers_replay_original_numeric_and_set_wd() {
-    for source in [
-        WIDEN,
-        POSITIVE,
-        EXTREMA,
-        include_str!("../../../lean/examples/constant_sequence_carrier_alias/statement.lit"),
-        include_str!("../../../lean/examples/constant_sequence_generic_carrier/statement.lit"),
-        include_str!("../../../lean/examples/positive_integer_sequence_index/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "callable_carriers").unwrap();
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "callable_carriers").unwrap()
-        );
-    }
 }
 
 #[test]

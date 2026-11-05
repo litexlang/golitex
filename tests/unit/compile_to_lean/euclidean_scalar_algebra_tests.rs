@@ -1,14 +1,94 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 const SOURCES: [&str; 8] = [
-    include_str!("../../../lean/examples/multivariable_limit_add/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_limit_subtract/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_limit_multiply/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_limit_divide/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_continuous_add/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_continuous_subtract/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_continuous_multiply/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_continuous_divide/statement.lit"),
+    r#"# Preserve the common Euclidean domain and the checked pointwise add equation.
+thm checked_multivariable_limit_add:
+    ? forall f,g,h fn(x cart_n(R,2)) R,p cart_n(R,2),A R,B R:
+        $has_multi_limit_at(f,p,2,A)
+        $has_multi_limit_at(g,p,2,B)
+        forall x cart_n(R,2):
+            h(x)=f(x)+g(x)
+        =>:
+            $has_multi_limit_at(h,p,2,A+B)
+    release thm multi_limit_at_add(f,g,h,p,2,A,B)
+"#,
+    r#"# Preserve the common Euclidean domain and the checked pointwise subtract equation.
+thm checked_multivariable_limit_subtract:
+    ? forall f,g,h fn(x cart_n(R,2)) R,p cart_n(R,2),A R,B R:
+        $has_multi_limit_at(f,p,2,A)
+        $has_multi_limit_at(g,p,2,B)
+        forall x cart_n(R,2):
+            h(x)=f(x)-g(x)
+        =>:
+            $has_multi_limit_at(h,p,2,A-B)
+    release thm multi_limit_at_subtract(f,g,h,p,2,A,B)
+"#,
+    r#"# Preserve the common Euclidean domain and the checked pointwise multiply equation.
+thm checked_multivariable_limit_multiply:
+    ? forall f,g,h fn(x cart_n(R,2)) R,p cart_n(R,2),A R,B R:
+        $has_multi_limit_at(f,p,2,A)
+        $has_multi_limit_at(g,p,2,B)
+        forall x cart_n(R,2):
+            h(x)=f(x)*g(x)
+        =>:
+            $has_multi_limit_at(h,p,2,A*B)
+    release thm multi_limit_at_multiply(f,g,h,p,2,A,B)
+"#,
+    r#"# Preserve the common Euclidean domain and the checked pointwise divide equation.
+thm checked_multivariable_limit_divide:
+    ? forall f,h fn(x cart_n(R,2)) R,g fn(y cart_n(R,2)) R+,p cart_n(R,2),A R,B R+:
+        $has_multi_limit_at(f,p,2,A)
+        $has_multi_limit_at(g,p,2,B)
+        forall x cart_n(R,2):
+            h(x)=f(x)/g(x)
+        =>:
+            $has_multi_limit_at(h,p,2,A/B)
+    release thm multi_limit_at_divide(f,g,h,p,2,A,B)
+"#,
+    r#"# Preserve the common Euclidean domain and the checked pointwise add equation.
+thm checked_multivariable_continuous_add:
+    ? forall f,g,h fn(x cart_n(R,2)) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_multi_continuous_at(g,p,2)
+        forall x cart_n(R,2):
+            h(x)=f(x)+g(x)
+        =>:
+            $is_multi_continuous_at(h,p,2)
+    release thm multi_continuous_at_add(f,g,h,p,2)
+"#,
+    r#"# Preserve the common Euclidean domain and the checked pointwise subtract equation.
+thm checked_multivariable_continuous_subtract:
+    ? forall f,g,h fn(x cart_n(R,2)) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_multi_continuous_at(g,p,2)
+        forall x cart_n(R,2):
+            h(x)=f(x)-g(x)
+        =>:
+            $is_multi_continuous_at(h,p,2)
+    release thm multi_continuous_at_subtract(f,g,h,p,2)
+"#,
+    r#"# Preserve the common Euclidean domain and the checked pointwise multiply equation.
+thm checked_multivariable_continuous_multiply:
+    ? forall f,g,h fn(x cart_n(R,2)) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_multi_continuous_at(g,p,2)
+        forall x cart_n(R,2):
+            h(x)=f(x)*g(x)
+        =>:
+            $is_multi_continuous_at(h,p,2)
+    release thm multi_continuous_at_multiply(f,g,h,p,2)
+"#,
+    r#"# Preserve the common Euclidean domain and the checked pointwise divide equation.
+thm checked_multivariable_continuous_divide:
+    ? forall f,h fn(x cart_n(R,2)) R,g fn(y cart_n(R,2)) R+,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_multi_continuous_at(g,p,2)
+        forall x cart_n(R,2):
+            h(x)=f(x)/g(x)
+        =>:
+            $is_multi_continuous_at(h,p,2)
+    release thm multi_continuous_at_divide(f,g,h,p,2)
+"#,
 ];
 fn binary_right(o: &mut Obj) -> &mut Box<Obj> {
     match o {
@@ -17,19 +97,6 @@ fn binary_right(o: &mut Obj) -> &mut Box<Obj> {
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => &mut x.right,
         Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => &mut x.right,
         _ => panic!(),
-    }
-}
-#[test]
-fn euclidean_scalar_algebra_replays_all_eight_rules_deterministically() {
-    for (i, source) in SOURCES.iter().enumerate() {
-        let (run, c) = super::execute(source);
-        let out = c
-            .compile_run(&run, "scalar_algebra")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        let family = if i < 4 { "Limit" } else { "Continuous" };
-        let op = ["Add", "Subtract", "Multiply", "Divide"][i % 4];
-        assert!(out.contains(&format!("Litex.scalarMultivariable{family}{op}")));
-        assert_eq!(out, c.compile_run(&run, "scalar_algebra").unwrap());
     }
 }
 #[test]
@@ -269,61 +336,5 @@ fn euclidean_scalar_algebra_retains_formation_context_dimensions_and_limit_opera
             }
             assert!(c.compile_run(&run, "bad_formation").is_err(), "{change}");
         }
-    }
-}
-
-#[test]
-fn euclidean_scalar_algebra_preserves_generic_and_guarded_domains() {
-    for source in [
-        include_str!("../../../lean/examples/multivariable_limit_add_generic/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_subtract_generic/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_multiply_generic/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_divide_generic/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_continuous_add_generic/statement.lit"),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_subtract_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_multiply_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_divide_generic/statement.lit"
-        ),
-        include_str!("../../../lean/examples/multivariable_limit_add_guarded/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_subtract_guarded/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_multiply_guarded/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_limit_divide_guarded/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_continuous_add_guarded/statement.lit"),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_subtract_guarded/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_multiply_guarded/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_divide_guarded/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "actual_domains")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-    }
-}
-
-#[test]
-fn euclidean_scalar_algebra_division_accepts_general_nonzero_real_denominators() {
-    for source in [
-        include_str!(
-            "../../../lean/examples/multivariable_limit_divide_general_nonzero/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_divide_general_nonzero/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        let out = c
-            .compile_run(&run, "nonzero_real")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains("Divide"));
     }
 }

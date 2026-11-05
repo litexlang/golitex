@@ -6,22 +6,68 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const TRANSPOSE: &str =
-    include_str!("../../../lean/examples/native_matrix_transpose_mul/statement.lit");
-const ADJOINT: &str =
-    include_str!("../../../lean/examples/native_matrix_adjoint_mul/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_transform_reverse/statement.lit");
-const ZERO: &str =
-    include_str!("../../../lean/examples/native_matrix_transform_zero_dimensions/statement.lit");
-const REAL: &str =
-    include_str!("../../../lean/examples/native_matrix_transform_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_transform_transport/statement.lit");
-const EXPLICIT_TRANSPOSE: &str =
-    include_str!("../../../lean/examples/matrix_transpose_mul/statement.lit");
-const EXPLICIT_ADJOINT: &str =
-    include_str!("../../../lean/examples/matrix_adjoint_mul/statement.lit");
+const TRANSPOSE: &str = r#"# The transpose of a rectangular matrix product reverses the order of the factors.
+forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n):
+    transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n) = matrix_mul(transpose(replay_transform_B,replay_transform_k,replay_transform_n),transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m)
+"#;
+const ADJOINT: &str = r#"# The adjoint of a rectangular matrix product reverses the order of the factors.
+forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n):
+    conjugate_transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n) = matrix_mul(conjugate_transpose(replay_transform_B,replay_transform_k,replay_transform_n),conjugate_transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m)
+"#;
+const REVERSE: &str = r#"# Reverse the equality sides of both product transformation laws.
+forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n):
+    matrix_mul(transpose(replay_transform_B,replay_transform_k,replay_transform_n),transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m) = transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n)
+forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n):
+    matrix_mul(conjugate_transpose(replay_transform_B,replay_transform_k,replay_transform_n),conjugate_transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m) = conjugate_transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n)
+"#;
+const ZERO: &str = r#"# Product transpose and adjoint laws include empty outer and inner dimensions.
+forall replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,0,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n):
+    transpose(matrix_mul(replay_transform_A,replay_transform_B,0,replay_transform_k,replay_transform_n),0,replay_transform_n) = matrix_mul(transpose(replay_transform_B,replay_transform_k,replay_transform_n),transpose(replay_transform_A,0,replay_transform_k),replay_transform_n,replay_transform_k,0)
+forall replay_transform_m, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,0), replay_transform_B matrix(C,0,replay_transform_n):
+    transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,0,replay_transform_n),replay_transform_m,replay_transform_n) = matrix_mul(transpose(replay_transform_B,0,replay_transform_n),transpose(replay_transform_A,replay_transform_m,0),replay_transform_n,0,replay_transform_m)
+forall replay_transform_m, replay_transform_k N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,0):
+    transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,0),replay_transform_m,0) = matrix_mul(transpose(replay_transform_B,replay_transform_k,0),transpose(replay_transform_A,replay_transform_m,replay_transform_k),0,replay_transform_k,replay_transform_m)
+forall replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,0,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n):
+    conjugate_transpose(matrix_mul(replay_transform_A,replay_transform_B,0,replay_transform_k,replay_transform_n),0,replay_transform_n) = matrix_mul(conjugate_transpose(replay_transform_B,replay_transform_k,replay_transform_n),conjugate_transpose(replay_transform_A,0,replay_transform_k),replay_transform_n,replay_transform_k,0)
+forall replay_transform_m, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,0), replay_transform_B matrix(C,0,replay_transform_n):
+    conjugate_transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,0,replay_transform_n),replay_transform_m,replay_transform_n) = matrix_mul(conjugate_transpose(replay_transform_B,0,replay_transform_n),conjugate_transpose(replay_transform_A,replay_transform_m,0),replay_transform_n,0,replay_transform_m)
+forall replay_transform_m, replay_transform_k N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,0):
+    conjugate_transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,0),replay_transform_m,0) = matrix_mul(conjugate_transpose(replay_transform_B,replay_transform_k,0),conjugate_transpose(replay_transform_A,replay_transform_m,replay_transform_k),0,replay_transform_k,replay_transform_m)
+"#;
+const REAL: &str = r#"# Real matrix products satisfy both transformation laws after proving complex carriers.
+forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(R,replay_transform_m,replay_transform_k), replay_transform_B matrix(R,replay_transform_k,replay_transform_n):
+    replay_transform_A $in matrix(C,replay_transform_m,replay_transform_k)
+    replay_transform_B $in matrix(C,replay_transform_k,replay_transform_n)
+    transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n) = matrix_mul(transpose(replay_transform_B,replay_transform_k,replay_transform_n),transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m)
+forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(R,replay_transform_m,replay_transform_k), replay_transform_B matrix(R,replay_transform_k,replay_transform_n):
+    replay_transform_A $in matrix(C,replay_transform_m,replay_transform_k)
+    replay_transform_B $in matrix(C,replay_transform_k,replay_transform_n)
+    conjugate_transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n) = matrix_mul(conjugate_transpose(replay_transform_B,replay_transform_k,replay_transform_n),conjugate_transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m)
+"#;
+const TRANSPORT: &str = r#"# An assumed transformed-factor product identifies the transformed original product.
+forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n), replay_transform_D matrix(C,replay_transform_n,replay_transform_m):
+    matrix_mul(transpose(replay_transform_B,replay_transform_k,replay_transform_n),transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m) = replay_transform_D
+    =>:
+        transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n) = replay_transform_D
+forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n), replay_transform_D matrix(C,replay_transform_n,replay_transform_m):
+    matrix_mul(conjugate_transpose(replay_transform_B,replay_transform_k,replay_transform_n),conjugate_transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m) = replay_transform_D
+    =>:
+        conjugate_transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n) = replay_transform_D
+"#;
+const EXPLICIT_TRANSPOSE: &str = r#"# Prove the product transpose law using the named theorem.
+thm replay_matrix_transpose_mul:
+    ? forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n):
+        transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n) = matrix_mul(transpose(replay_transform_B,replay_transform_k,replay_transform_n),transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m)
+    release thm matrix_transpose_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n)
+release thm replay_matrix_transpose_mul(2,3,4,zero_matrix(2,3),zero_matrix(3,4))
+"#;
+const EXPLICIT_ADJOINT: &str = r#"# Prove the product adjoint law using the named theorem.
+thm replay_matrix_adjoint_mul:
+    ? forall replay_transform_m, replay_transform_k, replay_transform_n N, replay_transform_A matrix(C,replay_transform_m,replay_transform_k), replay_transform_B matrix(C,replay_transform_k,replay_transform_n):
+        conjugate_transpose(matrix_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n),replay_transform_m,replay_transform_n) = matrix_mul(conjugate_transpose(replay_transform_B,replay_transform_k,replay_transform_n),conjugate_transpose(replay_transform_A,replay_transform_m,replay_transform_k),replay_transform_n,replay_transform_k,replay_transform_m)
+    release thm matrix_adjoint_mul(replay_transform_A,replay_transform_B,replay_transform_m,replay_transform_k,replay_transform_n)
+release thm replay_matrix_adjoint_mul(2,3,4,zero_matrix(2,3),zero_matrix(3,4))
+"#;
 
 fn selected(statement: &mut ExecStmtResult, index: usize) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(

@@ -6,28 +6,71 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Structi
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/dependent_record_function_domain/statement.lit"),
-    include_str!("../../../lean/examples/dependent_record_selected_point/statement.lit"),
-    include_str!("../../../lean/examples/nested_dependent_record_fields/statement.lit"),
-    include_str!("../../../lean/examples/dependent_record_field_chain/statement.lit"),
-];
+    r#"# A selected point fixes the input domain of an operation stored in a later record field.
+struct AnchoredOperation<A nonempty_set, a A>:
+    point A
+    combine fn(x {a}, y A) A
 
-#[test]
-fn dependent_record_carriers_replay_original_fields_domains_and_set_transport() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "dependent_record_carriers")
-            .expect(source);
-        assert_eq!(
-            lean,
-            compiler
-                .compile_run(&run, "dependent_record_carriers")
-                .unwrap()
-        );
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
-}
+struct AnchoredBundle<A nonempty_set>:
+    point A
+    operation &AnchoredOperation<A, point>
+
+forall B nonempty_set, b &AnchoredBundle<B>, y B:
+    b.operation.combine(b.point, y) $in B
+"#,
+    r#"# A later record field uses the selected point; its value retains and transports its carrier.
+struct SelectedPoint<A nonempty_set, a A>:
+    value A
+    tag N
+    <=>:
+        value = a
+
+struct SelectedBox<A nonempty_set>:
+    point A
+    selected &SelectedPoint<A, point>
+
+forall B nonempty_set, b &SelectedBox<B>:
+    b.selected.value $in B
+
+forall B, D nonempty_set, b &SelectedBox<B>:
+    B = D
+    =>:
+        b.selected.value $in D
+"#,
+    r#"# A dependent record contains another dependent record whose coordinates lie in successive singleton sets.
+struct PointFiber<A nonempty_set, a A>:
+    base {a}
+    copy {base}
+
+struct FiberBox<A nonempty_set>:
+    point A
+    fiber &PointFiber<A, point>
+
+forall B nonempty_set, b &FiberBox<B>:
+    b.fiber.base $in {b.point}
+    b.fiber.copy $in {b.fiber.base}
+"#,
+    r#"# A third record field is indexed by a value projected from the second field.
+struct SelectedPoint<A nonempty_set, a A>:
+    value A
+    tag N
+    <=>:
+        value = a
+
+struct PointFiber<A nonempty_set, a A>:
+    base {a}
+    copy {base}
+
+struct ChainedSelection<A nonempty_set>:
+    point A
+    selected &SelectedPoint<A, point>
+    fiber &PointFiber<A, selected.value>
+
+forall B nonempty_set, b &ChainedSelection<B>:
+    b.fiber.base $in {b.selected.value}
+    b.fiber.copy $in {b.fiber.base}
+"#,
+];
 
 #[test]
 fn dependent_record_carriers_require_original_instantiation_wd() {

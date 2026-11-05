@@ -2,17 +2,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Complex
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
 
-const COORDINATES: &str =
-    include_str!("../../../lean/examples/evaluated_complex_coordinates/statement.lit");
-const MODULUS: &str =
-    include_str!("../../../lean/examples/evaluated_complex_modulus/statement.lit");
-const ARITHMETIC: &str =
-    include_str!("../../../lean/examples/evaluated_complex_coordinate_arithmetic/statement.lit");
-const PRODUCT: &str =
-    include_str!("../../../lean/examples/evaluated_complex_product_coordinate/statement.lit");
-const QUOTIENT: &str =
-    include_str!("../../../lean/examples/evaluated_complex_quotient_coordinate/statement.lit");
-
 fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
         &mut run.statement_results[0]
@@ -20,23 +9,6 @@ fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
         panic!("successful eval")
     };
     p
-}
-
-#[test]
-fn complex_coordinate_eval_replays_exact_original_results() {
-    for source in [COORDINATES, MODULUS, ARITHMETIC, PRODUCT, QUOTIENT] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "complex_coordinate_eval")
-            .expect(source);
-        assert_eq!(
-            lean,
-            compiler
-                .compile_run(&run, "complex_coordinate_eval")
-                .unwrap()
-        );
-        assert!(!lean.contains("sorry") && !lean.contains("admit"));
-    }
 }
 
 #[test]

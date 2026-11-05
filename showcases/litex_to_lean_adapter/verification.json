@@ -1281,5 +1281,45 @@
     "axiom_audit": "'Adapter.mobiusInvolution' depends on axioms: [propext, Classical.choice, Quot.sound]\n'LitexLeanExample.mobiusInvolution' depends on axioms: [propext, Classical.choice, Quot.sound]\n'UserTheorems.applyMobiusTwice' depends on axioms: [propext, Classical.choice, Quot.sound]\n",
     "lean_version": "Lean (version 4.31.0, arm64-apple-darwin24.6.0, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
     "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f"
+  },
+  "current_validation": {
+    "checked_on": "2026-11-05",
+    "scope": "Current checkout; earlier sections retain historical measurements and proof audits.",
+    "source_pairs": [
+      [
+        "source.lit",
+        "Generated.lean"
+      ],
+      [
+        "mobius.lit",
+        "MobiusGenerated.lean"
+      ]
+    ],
+    "files": {
+      "source.lit": "e7999cc0382488d3f022b9413aeb505e7215fff7ef8514d0310562b7ba40683d",
+      "Generated.lean": "fe7faed3e89f8063d209a9ffe0f88b805eb53f5770d4f084b20c2abf8ec16fc9",
+      "mobius.lit": "19bc66d75aaee0a95b297fc2985899453499053c72121b36e27cab246cec15dc",
+      "MobiusGenerated.lean": "5f34b212687b1f1d9bb45f57153bd6b64daac7cf94c8ad6e7f514534282b5149",
+      "Adapter.lean": "2d708317e2c3685a848bed5fef1ceb78bcd99746778d82a96c726611e445b60f",
+      "Final.lean": "42e729d4ce5d61a593e4e714de497b9131427ea05a1db70064d49138d45e8e43",
+      "UseInYourProject.lean": "402e629eb9f1460ea68cd40285e06ea56647cd031788374a208d551c7ec19e18",
+      "lakefile.toml": "36637702abbb923c3eaa5787da34c44d0304263f40b2c49dc0ed125b2886ca51",
+      "lean-toolchain": "efac0b94923b2d8b6840cd35be9177ad0fc5ab2332f4f4311c98712cee92fdee"
+    },
+    "semantic_core_tree_sha256": "854bb12b7024760aa45acaf03d046d017aa89f2cd1f7f16f50ad01f40d26da38",
+    "cli_sha256": "e298c76ab4d5258156e12505921e9dabcb8eb03a5e4f14944cfa9a2b3def9c5c",
+    "source_and_generation": "Both sources pass strict verification and regenerate byte-identically.",
+    "lean": [
+      "lake build",
+      "lake env lean -DwarningAsError=true Final.lean",
+      "lake env lean ../../tests/fixtures/compile_to_lean/identity.lean"
+    ],
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "optional_corpus_dependency": false,
+    "limitations": "No new cross-platform or publishing result is claimed."
   }
 }

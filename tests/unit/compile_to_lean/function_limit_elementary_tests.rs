@@ -6,10 +6,17 @@ use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtRe
 use crate::execute::{ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult};
 use crate::prelude::*;
 
-const IDENTITY: &str =
-    include_str!("../../../lean/examples/identity_function_limit_at_by_theorem/statement.lit");
-const ACCUMULATION: &str =
-    include_str!("../../../lean/examples/real_function_limit_at_accumulation/statement.lit");
+const IDENTITY: &str = r#"# Prove the identity function limit from its formula and real-domain accumulation.
+have fn identity_limit_example(x R) R = x
+release thm fn_limit_at_real_accumulation(2)
+by thm fn_limit_at_identity(identity_limit_example,2) => $has_limit_at(identity_limit_example,2,2)
+"#;
+const ACCUMULATION: &str = r#"# The real line has points arbitrarily close from the at approach.
+thm reals_accumulate_at:
+    ? forall p R, r R+:
+        exist x R st {0<(abs(x-p)) and (abs(x-p))<r}
+    release thm fn_limit_at_real_accumulation(p)
+"#;
 
 fn identity(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
     let ExecStmtResult::By(ExecByStmtResult::Thm(ExecByThmStmtResult::Success(p))) =
@@ -36,37 +43,6 @@ fn accumulation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess 
         panic!("real accumulation invocation")
     };
     p
-}
-
-#[test]
-fn real_accumulation_and_identity_replay_all_existing_approaches() {
-    for source in [
-        IDENTITY,
-        ACCUMULATION,
-        include_str!("../../../lean/examples/real_function_limit_left_accumulation/statement.lit"),
-        include_str!("../../../lean/examples/real_function_limit_right_accumulation/statement.lit"),
-        include_str!(
-            "../../../lean/examples/real_function_limit_pos_inf_accumulation/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/real_function_limit_neg_inf_accumulation/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/identity_function_limit_left_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/identity_function_limit_right_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/identity_function_limit_guarded_by_theorem/statement.lit"
-        ),
-        include_str!("../../../lean/examples/quantified_premise_host_bridge/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "elementary_limit")
-            .expect("original complete-domain evidence");
-    }
 }
 
 #[test]

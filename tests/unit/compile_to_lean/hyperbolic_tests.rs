@@ -1,22 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn hyperbolic_examples_compile_original_domains_values_rules_and_functions() {
-    for source in [
-        include_str!("../../../lean/examples/hyperbolic_domains/statement.lit"),
-        include_str!("../../../lean/examples/hyperbolic_zero_values/statement.lit"),
-        include_str!("../../../lean/examples/hyperbolic_definitions/statement.lit"),
-        include_str!("../../../lean/examples/hyperbolic_parity/statement.lit"),
-        include_str!("../../../lean/examples/hyperbolic_nonzero/statement.lit"),
-        include_str!("../../../lean/examples/hyperbolic_function/statement.lit"),
-        include_str!("../../../lean/examples/hyperbolic_identities/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "hyperbolic_example").unwrap();
-    }
-}
-
-#[test]
 fn hyperbolic_wd_rejects_missing_or_wrong_nonzero_argument() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::HyperbolicOperatorObjWellDefinedProofByDef;
     for missing in [false, true] {

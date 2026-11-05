@@ -10,14 +10,38 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/inequality_from_nonzero_sum/statement.lit");
-const REVERSED: &str =
-    include_str!("../../../lean/examples/inequality_from_reversed_nonzero_sum/statement.lit");
-const SWAPPED: &str =
-    include_str!("../../../lean/examples/inequality_from_swapped_nonzero_sum/statement.lit");
-const ZERO_SUB: &str =
-    include_str!("../../../lean/examples/inequality_zero_sub_from_nonzero_sum/statement.lit");
+const SOURCE: &str = r#"# If a complex sum is nonzero, one summand is not the negative of the other.
+claim:
+    ? forall a C, b C:
+        a+b != 0
+        =>:
+            a != -b
+    a != -b
+"#;
+const REVERSED: &str = r#"# A reversed nonzero sum distinguishes a number from zero minus the other.
+claim:
+    ? forall a C, b C:
+        b+a != 0
+        =>:
+            (0-b) != a
+    (0-b) != a
+"#;
+const SWAPPED: &str = r#"# A nonzero sum also distinguishes the second summand from the first negated.
+claim:
+    ? forall a C, b C:
+        b+a != 0
+        =>:
+            a != -b
+    a != -b
+"#;
+const ZERO_SUB: &str = r#"# Zero minus one summand differs from the other when their sum is nonzero.
+claim:
+    ? forall a C, b C:
+        a+b != 0
+        =>:
+            0-b != a
+    0-b != a
+"#;
 
 fn selected_rule(run: &mut RunLitexCodeResult) -> &mut InequalityFromSumNonzeroBuiltinRuleProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

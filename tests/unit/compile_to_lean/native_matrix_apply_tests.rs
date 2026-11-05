@@ -5,20 +5,56 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const ID: &str = include_str!("../../../lean/examples/native_matrix_apply_identity/statement.lit");
-const COMPOSE: &str =
-    include_str!("../../../lean/examples/native_matrix_apply_compose/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_apply_reverse/statement.lit");
-const ZERO: &str =
-    include_str!("../../../lean/examples/native_matrix_apply_zero_dimensions/statement.lit");
-const REAL: &str = include_str!("../../../lean/examples/native_matrix_apply_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_apply_transport/statement.lit");
-const EXPLICIT_ID: &str =
-    include_str!("../../../lean/examples/matrix_apply_identity/statement.lit");
-const EXPLICIT_COMPOSE: &str =
-    include_str!("../../../lean/examples/matrix_apply_compose/statement.lit");
+const ID: &str = r#"# The identity matrix fixes every finite complex vector.
+forall replay_apply_n N, replay_apply_v cart_n(C,replay_apply_n):
+    matrix_apply(identity_matrix(replay_apply_n),replay_apply_v,replay_apply_n,replay_apply_n) = replay_apply_v
+"#;
+const COMPOSE: &str = r#"# Matrix action respects multiplication for rectangular complex matrices.
+forall replay_apply_m, replay_apply_k, replay_apply_n N, replay_apply_A matrix(C,replay_apply_m,replay_apply_k), replay_apply_B matrix(C,replay_apply_k,replay_apply_n), replay_apply_v cart_n(C,replay_apply_n):
+    matrix_apply(matrix_mul(replay_apply_A,replay_apply_B,replay_apply_m,replay_apply_k,replay_apply_n),replay_apply_v,replay_apply_m,replay_apply_n) = matrix_apply(replay_apply_A,matrix_apply(replay_apply_B,replay_apply_v,replay_apply_k,replay_apply_n),replay_apply_m,replay_apply_k)
+"#;
+const REVERSE: &str = r#"# State both matrix-action laws with their equality sides reversed.
+forall replay_apply_n N, replay_apply_v cart_n(C,replay_apply_n):
+    replay_apply_v = matrix_apply(identity_matrix(replay_apply_n),replay_apply_v,replay_apply_n,replay_apply_n)
+forall replay_apply_m, replay_apply_k, replay_apply_n N, replay_apply_A matrix(C,replay_apply_m,replay_apply_k), replay_apply_B matrix(C,replay_apply_k,replay_apply_n), replay_apply_v cart_n(C,replay_apply_n):
+    matrix_apply(replay_apply_A,matrix_apply(replay_apply_B,replay_apply_v,replay_apply_k,replay_apply_n),replay_apply_m,replay_apply_k) = matrix_apply(matrix_mul(replay_apply_A,replay_apply_B,replay_apply_m,replay_apply_k,replay_apply_n),replay_apply_v,replay_apply_m,replay_apply_n)
+"#;
+const ZERO: &str = r#"# Matrix-action laws include empty output, intermediate and input dimensions.
+forall replay_apply_v cart_n(C,0):
+    matrix_apply(identity_matrix(0),replay_apply_v,0,0) = replay_apply_v
+forall replay_apply_k, replay_apply_n N, replay_apply_A matrix(C,0,replay_apply_k), replay_apply_B matrix(C,replay_apply_k,replay_apply_n), replay_apply_v cart_n(C,replay_apply_n):
+    matrix_apply(matrix_mul(replay_apply_A,replay_apply_B,0,replay_apply_k,replay_apply_n),replay_apply_v,0,replay_apply_n) = matrix_apply(replay_apply_A,matrix_apply(replay_apply_B,replay_apply_v,replay_apply_k,replay_apply_n),0,replay_apply_k)
+forall replay_apply_m, replay_apply_n N, replay_apply_A matrix(C,replay_apply_m,0), replay_apply_B matrix(C,0,replay_apply_n), replay_apply_v cart_n(C,replay_apply_n):
+    matrix_apply(matrix_mul(replay_apply_A,replay_apply_B,replay_apply_m,0,replay_apply_n),replay_apply_v,replay_apply_m,replay_apply_n) = matrix_apply(replay_apply_A,matrix_apply(replay_apply_B,replay_apply_v,0,replay_apply_n),replay_apply_m,0)
+forall replay_apply_m, replay_apply_k N, replay_apply_A matrix(C,replay_apply_m,replay_apply_k), replay_apply_B matrix(C,replay_apply_k,0), replay_apply_v cart_n(C,0):
+    matrix_apply(matrix_mul(replay_apply_A,replay_apply_B,replay_apply_m,replay_apply_k,0),replay_apply_v,replay_apply_m,0) = matrix_apply(replay_apply_A,matrix_apply(replay_apply_B,replay_apply_v,replay_apply_k,0),replay_apply_m,replay_apply_k)
+"#;
+const REAL: &str = r#"# Real matrices acting on a real vector respect composition after proving complex carriers.
+forall replay_apply_m, replay_apply_k, replay_apply_n N, replay_apply_A matrix(R,replay_apply_m,replay_apply_k), replay_apply_B matrix(R,replay_apply_k,replay_apply_n), replay_apply_v cart_n(R,replay_apply_n):
+    replay_apply_A $in matrix(C,replay_apply_m,replay_apply_k)
+    replay_apply_B $in matrix(C,replay_apply_k,replay_apply_n)
+    replay_apply_v $in cart_n(C,replay_apply_n)
+    matrix_apply(matrix_mul(replay_apply_A,replay_apply_B,replay_apply_m,replay_apply_k,replay_apply_n),replay_apply_v,replay_apply_m,replay_apply_n) = matrix_apply(replay_apply_A,matrix_apply(replay_apply_B,replay_apply_v,replay_apply_k,replay_apply_n),replay_apply_m,replay_apply_k)
+"#;
+const TRANSPORT: &str = r#"# An assumed nested-action equality identifies the output of the matrix product.
+forall replay_apply_m, replay_apply_k, replay_apply_n N, replay_apply_A matrix(C,replay_apply_m,replay_apply_k), replay_apply_B matrix(C,replay_apply_k,replay_apply_n), replay_apply_v cart_n(C,replay_apply_n), replay_apply_w cart_n(C,replay_apply_m):
+    matrix_apply(replay_apply_A,matrix_apply(replay_apply_B,replay_apply_v,replay_apply_k,replay_apply_n),replay_apply_m,replay_apply_k) = replay_apply_w
+    =>:
+        matrix_apply(matrix_mul(replay_apply_A,replay_apply_B,replay_apply_m,replay_apply_k,replay_apply_n),replay_apply_v,replay_apply_m,replay_apply_n) = replay_apply_w
+"#;
+const EXPLICIT_ID: &str = r#"# Prove the matrix-action identity law using its named theorem.
+thm replay_matrix_apply_identity:
+    ? forall replay_apply_n N, replay_apply_v cart_n(C,replay_apply_n):
+        matrix_apply(identity_matrix(replay_apply_n),replay_apply_v,replay_apply_n,replay_apply_n) = replay_apply_v
+    release thm matrix_apply_identity(replay_apply_v,replay_apply_n)
+"#;
+const EXPLICIT_COMPOSE: &str = r#"# Prove the matrix-action compose law using its named theorem.
+thm replay_matrix_apply_compose:
+    ? forall replay_apply_m, replay_apply_k, replay_apply_n N, replay_apply_A matrix(C,replay_apply_m,replay_apply_k), replay_apply_B matrix(C,replay_apply_k,replay_apply_n), replay_apply_v cart_n(C,replay_apply_n):
+        matrix_apply(matrix_mul(replay_apply_A,replay_apply_B,replay_apply_m,replay_apply_k,replay_apply_n),replay_apply_v,replay_apply_m,replay_apply_n) = matrix_apply(replay_apply_A,matrix_apply(replay_apply_B,replay_apply_v,replay_apply_k,replay_apply_n),replay_apply_m,replay_apply_k)
+    release thm matrix_apply_compose(replay_apply_A,replay_apply_B,replay_apply_v,replay_apply_m,replay_apply_k,replay_apply_n)
+release thm replay_matrix_apply_compose(2,3,4,zero_matrix(2,3),zero_matrix(3,4),fn(replay_apply_i closed_range(1,4)) C {0})
+"#;
 
 fn selected(statement: &mut ExecStmtResult, index: usize) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(

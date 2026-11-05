@@ -163,35 +163,15 @@ impl LitexToLeanCompiler {
         }
         let proof = match proof {
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::NativeMatrixProperty(p)) => self.compile_native_matrix_property(&AtomicFact::EqualFact(fact.clone()),p,position)?,
-            EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_)) => {
+            EqualFactSearchedProof::ByTheyAreTheSame(identity @ TheyAreTheSameProof::SameIr(_)) => {
                 if fact.left.ir() != fact.right.ir() {
-                    return Err(LeanCompileError::new(
-                        "SameIr",
-                        "Identity evidence has different endpoints.",
-                    ));
+                    return Err(LeanCompileError::new("SameIr", "Identity evidence has different endpoints."));
                 }
-                // The source IR spells both a signed number leaf and a
-                // negated unsigned leaf as `-n`. Their owned representations
-                // are different, so replay that encoding identity explicitly.
-                if matches!((&fact.left, &fact.right),
-                    (Obj::Literal(Literal::Number(_)), Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)))
-                    | (Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)), Obj::Literal(Literal::Number(_)))
-                    if matches!(p.arg.as_ref(), Obj::Literal(Literal::Number(_)))) {
-                    let (negative, literal, reverse) = match (&fact.left, &fact.right) {
-                        (Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)), Obj::Literal(Literal::Number(n))) => (p, n, false),
-                        (Obj::Literal(Literal::Number(n)), Obj::ArithmeticOperator(ArithmeticOperator::Neg(p))) => (p, n, true),
-                        _ => unreachable!(),
-                    };
-                    let Obj::Literal(Literal::Number(unsigned)) = negative.arg.as_ref() else { unreachable!() };
-                    let unsigned = number_literal(unsigned, "ℂ")?;
-                    let signed = number_literal(literal, "ℂ")?;
-                    let equality = format!("((M.neg_numbers {unsigned}).trans (congrArg M.number (by norm_num : -{unsigned} = {signed})))");
-                    if reverse { format!("({equality}).symm") } else { equality }
+                if fact.left == fact.right {
+                    // Endpoint WD already consumed; identical ASTs reduce at this cursor.
+                    "(show @Eq M.Value _ _ from Eq.refl _)".to_string()
                 } else {
-                // Endpoint formation has already consumed its original WD.
-                // Infer only M.Value from the equality's expected type, avoiding
-                // a second copy of the complete object and its certificates.
-                "(show @Eq M.Value _ _ from Eq.refl _)".to_string()
+                    self.compile_identity(&fact.left, &fact.right, identity, position)?
                 }
             }
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Multivariable(p)) => {

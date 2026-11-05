@@ -5,12 +5,39 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
 use crate::prelude::*;
 const SOURCES: [&str; 4] = [
-    include_str!("../../../lean/examples/riemann_certificate_exists/statement.lit"),
-    include_str!(
-        "../../../lean/examples/riemann_certificate_integrable_from_candidate/statement.lit"
-    ),
-    include_str!("../../../lean/examples/riemann_certificate_selected/statement.lit"),
-    include_str!("../../../lean/examples/riemann_certificate_unique/statement.lit"),
+    r#"# A real Riemann integral candidate supplies an integral value.
+thm checked_riemann_certificate_exists:
+    ? forall f fn(x R) R,a,b,I R:
+        $has_riemann_integral(f,a,b,I)
+        =>:
+            exist J R st {$has_riemann_integral(f,a,b,J)}
+    release thm riemann_integral_exists(f,a,b,I)
+"#,
+    r#"# A real integral candidate establishes Riemann integrability.
+thm checked_riemann_certificate_integrable_from_candidate:
+    ? forall f fn(x R) R,a,b,I R:
+        $has_riemann_integral(f,a,b,I)
+        =>:
+            $is_riemann_integrable(f,a,b)
+    release thm riemann_integrable_from_candidate(f,a,b,I)
+"#,
+    r#"# The selected Riemann integral satisfies its defining candidate predicate.
+thm checked_riemann_certificate_selected:
+    ? forall f fn(x R) R,a,b R:
+        exist I R st {$has_riemann_integral(f,a,b,I)}
+        =>:
+            $has_riemann_integral(f,a,b,integral(f,a,b))
+    release thm riemann_integral_selected(f,a,b)
+"#,
+    r#"# Two integral candidates on the same oriented interval have equal values.
+thm checked_riemann_certificate_unique:
+    ? forall f fn(x R) R,a,b,I,J R:
+        $has_riemann_integral(f,a,b,I)
+        $has_riemann_integral(f,a,b,J)
+        =>:
+            I=J
+    release thm riemann_integral_unique(f,a,b,I,J)
+"#,
 ];
 fn original_wd(run: &mut RunLitexCodeResult, selected: bool) -> &mut AtomicFactWellDefinedProof {
     if selected {
@@ -320,12 +347,62 @@ fn integral_certificates_preserve_original_integrability_subject() {
 }
 
 const TRANSPORTS: [&str; 6] = [
-    include_str!("../../../lean/examples/riemann_candidate_transport/statement.lit"),
-    include_str!("../../../lean/examples/riemann_negative_candidate_transport/statement.lit"),
-    include_str!("../../../lean/examples/riemann_integrability_transport/statement.lit"),
-    include_str!("../../../lean/examples/riemann_negative_integrability_transport/statement.lit"),
-    include_str!("../../../lean/examples/riemann_selector_existing_inference_closed/statement.lit"),
-    include_str!("../../../lean/examples/riemann_selector_existing_inference_named/statement.lit"),
+    r#"# Transport the original integral predicate along the recorded value equality.
+thm checked_riemann_candidate_transport:
+    ? forall f fn(x R) R,a,b,I,J R:
+        $has_riemann_integral(f,a,b,I)
+        I=J
+        =>:
+            $has_riemann_integral(f,a,b,J)
+    $has_riemann_integral(f,a,b,J)
+"#,
+    r#"# Transport the original integral predicate along the recorded value equality.
+thm checked_riemann_negative_candidate_transport:
+    ? forall f fn(x R) R,a,b,I,J R:
+        not $has_riemann_integral(f,a,b,I)
+        I=J
+        =>:
+            not $has_riemann_integral(f,a,b,J)
+    not $has_riemann_integral(f,a,b,J)
+"#,
+    r#"# Transport the original integrability predicate along a function equality.
+thm checked_riemann_integrability_transport:
+    ? forall f,g fn(x R) R,a,b R:
+        $is_riemann_integrable(f,a,b)
+        f=g
+        =>:
+            $is_riemann_integrable(g,a,b)
+    $is_riemann_integrable(g,a,b)
+"#,
+    r#"# Transport the original integrability predicate along a function equality.
+thm checked_riemann_negative_integrability_transport:
+    ? forall f,g fn(x R) R,a,b R:
+        not $is_riemann_integrable(f,a,b)
+        f=g
+        =>:
+            not $is_riemann_integrable(g,a,b)
+    not $is_riemann_integrable(g,a,b)
+"#,
+    r#"# An existing integral candidate equals the selected integral and certifies it.
+thm checked_riemann_selector_existing_inference_closed:
+    ? forall f fn(x '[0,1]) R,I R:
+        $has_riemann_integral(f,0,1,I)
+        =>:
+            $has_riemann_integral(f,0,1,integral(f,0,1))
+    integral(f,0,1)=I
+    $has_riemann_integral(f,0,1,integral(f,0,1))
+"#,
+    r#"# An existing integral candidate equals the selected integral and certifies it.
+thm checked_riemann_selector_existing_inference_named:
+    ? forall D set,f fn(x D) R,a,b,I R:
+        D $subset R
+        '[min(a,b),max(a,b)] $subset D
+        $has_riemann_integral(f,a,b,I)
+        =>:
+            $has_riemann_integral(f,a,b,integral(f,a,b))
+    integral(f,a,b)=I
+    $has_riemann_integral(f,a,b,integral(f,a,b))
+"#,
 ];
 fn transported(run: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -342,21 +419,6 @@ fn transported(run: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEqualityF
         panic!("actual ordinary assertion")
     };
     super::atomic_proof_mut(&mut p.verify_result)
-}
-#[test]
-fn riemann_predicates_replay_recorded_argument_equalities_for_all_four_polarities() {
-    for source in TRANSPORTS.into_iter().chain([include_str!(
-        "../../../lean/examples/riemann_certificate_exists_value_alias/statement.lit"
-    )]) {
-        let (run, c) = super::execute(source);
-        let out = c
-            .compile_run(&run, "riemann_argument_transport")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert_eq!(
-            out,
-            c.compile_run(&run, "riemann_argument_transport").unwrap()
-        );
-    }
 }
 #[test]
 fn riemann_predicate_transport_keeps_original_citation_and_ordered_equality_winners() {

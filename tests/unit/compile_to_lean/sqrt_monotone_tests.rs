@@ -11,7 +11,15 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/sqrt_monotone/statement.lit");
+const SOURCE: &str = r#"# The principal square root preserves the order of nonnegative real numbers.
+claim:
+    ? forall x R, y R:
+        0 <= x
+        x <= y
+        =>:
+            sqrt(x) <= sqrt(y)
+    sqrt(x) <= sqrt(y)
+"#;
 
 fn selected_rule(run: &mut RunLitexCodeResult) -> &mut SqrtMonotoneFromDefinedRootsProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
@@ -50,8 +58,15 @@ fn sqrt_monotonicity_replays_selected_argument_order() {
     selected_rule(&mut run);
     let lean = compiler.compile_run(&run, "sqrt_monotone").unwrap();
     assert!(lean.contains("Litex.sqrtMonotone"));
-    let reversed =
-        include_str!("../../../lean/examples/sqrt_monotone_reversed_premise/statement.lit");
+    let reversed = r#"# Square-root order with the argument order written in reverse.
+claim:
+    ? forall x R, y R:
+        0 <= x
+        y >= x
+        =>:
+            sqrt(x) <= sqrt(y)
+    sqrt(x) <= sqrt(y)
+"#;
     let (mut run, compiler) = super::execute(reversed);
     selected_rule(&mut run);
     assert!(compiler

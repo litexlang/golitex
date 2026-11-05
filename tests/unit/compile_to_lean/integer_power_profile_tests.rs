@@ -2,15 +2,28 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::resu
 use crate::prelude::*;
 const CASES: [(&str, &str); 3] = [
     (
-        include_str!("../../../lean/examples/integer_power_product_same_base/statement.lit"),
+        r#"forall a C,m,n Z:
+    a!=0
+    =>:
+        a^m*a^n=a^(m+n)
+"#,
         "integerPowerProductValue",
     ),
     (
-        include_str!("../../../lean/examples/integer_power_of_power/statement.lit"),
+        r#"forall a C,m,n Z:
+    a!=0
+    =>:
+        (a^m)^n=a^(m*n)
+"#,
         "integerPowerOfPowerValue",
     ),
     (
-        include_str!("../../../lean/examples/integer_power_product_distribution/statement.lit"),
+        r#"forall a,b C,n Z:
+    a!=0
+    b!=0
+    =>:
+        (a*b)^n=a^n*b^n
+"#,
         "integerPowerProductDistributionValue",
     ),
 ];

@@ -2,8 +2,22 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::resu
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_elementary_identities::ElementaryIdentitySearchProofByBuiltinRule as Rule;
 use crate::prelude::*;
 
-const FLOOR: &str = include_str!("../../../lean/examples/floor_integer_bounds/statement.lit");
-const CEIL: &str = include_str!("../../../lean/examples/ceil_integer_bounds/statement.lit");
+const FLOOR: &str = r#"thm checked_floor_bounds:
+    ? forall x R,n Z:
+        n<=x
+        x<n+1
+        =>:
+            floor(x)=n
+    floor(x)=n
+"#;
+const CEIL: &str = r#"thm checked_ceil_bounds:
+    ? forall x R,n Z:
+        x<=n
+        n-1<x
+        =>:
+            ceil(x)=n
+    ceil(x)=n
+"#;
 
 pub(super) fn equality(run: &mut RunLitexCodeResult) -> &mut VerifyEqualitySuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(

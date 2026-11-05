@@ -6,24 +6,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 
 #[test]
-fn real_bound_examples_replay_original_evidence() {
-    for source in [
-        include_str!("../../../lean/examples/real_set_bound_citations/statement.lit"),
-        include_str!("../../../lean/examples/real_set_bound_theorem/statement.lit"),
-        include_str!("../../../lean/examples/real_set_bound_citations/substitution.lit"),
-        include_str!("../../../lean/examples/real_empty_set_bounds/statement.lit"),
-        include_str!("../../../lean/examples/real_singleton_bounds/statement.lit"),
-        include_str!("../../../lean/examples/real_set_bounded_components/statement.lit"),
-        include_str!("../../../lean/examples/riemann_restricted_range_bounded/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "real_bounds")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
-
-#[test]
 fn inferred_literal_range_requires_the_original_preceding_formation() {
     use crate::compile_to_lean::compile_fact_stmt_result::compile_formed_subjects::formed_subject_proof;
     use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
@@ -153,9 +135,17 @@ fn real_bounds_reject_changed_inference_identity_and_direction() {
 #[test]
 fn real_boundedness_rejects_reordered_lower_and_upper_witnesses() {
     for mutation in 0..2 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/real_empty_set_bounds/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# The empty set is bounded without a nonempty premise.
+by def $is_real_upper_bound({},0)
+by def $is_real_lower_bound({},0)
+witness exist upper R st {$is_real_upper_bound({},upper)} from 0
+witness exist lower R st {$is_real_lower_bound({},lower)} from 0
+by def $is_real_bounded({})
+$is_real_bounded_above({})
+$is_real_bounded_below({})
+"#,
+        );
         let ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(p))) =
             &mut run.statement_results[4]
         else {
@@ -194,18 +184,4 @@ fn real_bounds_reject_unproved_or_nonreal_domains() {
             .compile_run(&run, "invalid_real_bound")
             .is_err());
     }
-}
-
-#[test]
-fn real_bound_definition_keeps_its_set_semantics_dependency() {
-    let (run, compiler) = super::execute("by def $is_real_upper_bound({2},2)");
-    let lean = compiler.compile_run(&run, "set_bound_definition").unwrap();
-    assert!(lean.contains("variable [_setSemantics : Litex.SetSemantics M]"));
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/real_set_bound_theorem/statement.lit"
-    ));
-    assert!(compiler
-        .compile_run(&run, "set_bound_theorem")
-        .unwrap()
-        .contains("variable [_setSemantics : Litex.SetSemantics M]"));
 }

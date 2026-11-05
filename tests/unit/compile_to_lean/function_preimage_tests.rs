@@ -1,16 +1,25 @@
-const RECIPROCAL: &str =
-    include_str!("../../../lean/examples/guarded_reciprocal_preimages/statement.lit");
+const RECIPROCAL: &str = r#"# Point and set fibers preserve the reciprocal's complete nonzero domain.
+have fn fiber_recip(x R: x != 0) R = 1 / x
 
-#[test]
-fn guarded_preimages_compile_membership_projection_and_containment() {
-    let (run, compiler) = super::execute(RECIPROCAL);
-    let first = compiler.compile_run(&run, "PreimageTest").unwrap();
-    assert!(first.contains("Litex.preimage "));
-    assert!(first.contains("Litex.preimageSet "));
-    assert!(first.contains("Litex.preimageMembers"));
-    assert!(first.contains("Litex.preimageSetMembers"));
-    assert_eq!(first, compiler.compile_run(&run, "PreimageTest").unwrap());
-}
+fiber_recip(2) = 1 / 2
+
+2 $in preimage(fiber_recip, 1 / 2)
+
+2 $in preimage_set(fiber_recip, {1 / 2})
+
+forall fiber_x preimage(fiber_recip, 1 / 2):
+    fiber_x $in R
+    fiber_x != 0
+    fiber_recip(fiber_x) = 1 / 2
+
+forall fiber_y preimage_set(fiber_recip, {1 / 2}):
+    fiber_y $in R
+    fiber_y != 0
+    fiber_recip(fiber_y) $in {1 / 2}
+
+preimage(fiber_recip, 1 / 2) $subset R
+
+"#;
 
 use crate::execute::execute_fact_stmt::function_preimage::FunctionPreimageConstructionProof;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
@@ -120,23 +129,6 @@ fn preimage_membership_rejects_missing_or_reordered_children_and_mismatched_requ
 }
 
 #[test]
-fn abstract_binary_and_positive_preimages_replay() {
-    for source in [
-        include_str!("../../../lean/examples/abstract_function_preimages/statement.lit"),
-        include_str!("../../../lean/examples/binary_quotient_preimages/statement.lit"),
-        include_str!("../../../lean/examples/positive_domain_preimages/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "preimage_variants").unwrap();
-        assert!(lean.contains("Litex.preimageMembers"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "preimage_variants").unwrap()
-        );
-    }
-}
-
-#[test]
 fn preimage_inference_rejects_wrong_seed_reordered_stores_and_reused_ids() {
     use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
     use std::rc::Rc;
@@ -179,7 +171,23 @@ fn preimage_inference_rejects_wrong_seed_reordered_stores_and_reused_ids() {
 #[test]
 fn preimage_membership_rejects_changed_tuple_and_invalid_input_equality() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FunctionPreimageInputView;
-    let source = include_str!("../../../lean/examples/binary_quotient_preimages/statement.lit");
+    let source = r#"# Point and set fibers of a quotient retain both input coordinates and the nonzero divisor.
+have fn fiber_divide(a, b R: b != 0) R = a / b
+
+fiber_divide(6, 2) = 3
+
+(6, 2) $in preimage(fiber_divide, 3)
+
+(6, 2) $in preimage_set(fiber_divide, {3, 4})
+
+forall fiber_pair preimage(fiber_divide, 3):
+    fiber_pair $in cart(R, R)
+    fiber_pair(2) != 0
+    fiber_divide(fiber_pair(1), fiber_pair(2)) = 3
+
+preimage_set(fiber_divide, {3, 4}) $subset cart(R, R)
+
+"#;
     for mutation in 0..2 {
         let (mut run, compiler) = super::execute(source);
         let p = member_mut(&mut run, 2);

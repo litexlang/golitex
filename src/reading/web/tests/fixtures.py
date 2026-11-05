@@ -760,13 +760,13 @@ EMPTY_DOMAIN_CASES = {
 EMPTY_DOMAIN_LATER_GROUP = 'forall a R, b {}:\n    a = b\n'
 EQUIVALENCE_CASES = {
     'simple': ('examples/test_statements/release_basics/fixtures/L/forall-iff.lit', True),
-    'directions': ('lean/examples/equivalence_directions/statement.lit', True),
     'cross-guard': ('examples/wd_negative/quantifier_domain_iff_cross_assumption.lit', False),
     'reverse-guard': ('examples/test_statements/release_basics/fixtures/W/iff-guard-cannot-cross.lit', False),
 }
 # Checked one statement per turn in one persistent strict Session. Failed
 # directions leave earlier accepted context available; none is a user axiom.
 EQUIVALENCE_INLINE_CASES = {
+    'directions': ('# Equality has both orientations; quotient equivalence retains the nonzero divisor premise.\nforall iff_zero R:\n    =>:\n        iff_zero = 0\n    <=>:\n        0 = iff_zero\n\nforall iff_forward R:\n    iff_forward = 0\n    =>:\n        0 = iff_forward\n\nforall iff_reverse R:\n    0 = iff_reverse\n    =>:\n        iff_reverse = 0\n\nforall iff_divisor R:\n    iff_divisor != 0\n    =>:\n        iff_divisor / iff_divisor = 1\n    <=>:\n        1 = iff_divisor / iff_divisor\n\nthm equality_orientation_from_local_iff:\n    ? forall left, right R:\n        left = right\n        =>:\n            right = left\n    forall local_left, local_right R:\n        =>:\n            local_left = local_right\n        <=>:\n            local_right = local_left\n\nthm use_equivalence_premise:\n    ? forall source_value R:\n        forall bound_value R:\n            =>:\n                bound_value = 0\n            <=>:\n                0 = bound_value\n        source_value = 0\n        =>:\n            0 = source_value\n', True),
     'forward-failure': ('forall failure_x R:\n    =>:\n        failure_x = failure_x\n    <=>:\n        failure_x = 0\n', False),
     'reverse-failure': ('forall failure_y R:\n    =>:\n        failure_y = 0\n    <=>:\n        failure_y = failure_y\n', False),
     'unquantified': ('forall:\n    =>:\n        1 = 1\n    <=>:\n        2 = 2\n', True),

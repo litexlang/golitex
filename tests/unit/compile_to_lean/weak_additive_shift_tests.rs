@@ -1,7 +1,31 @@
 use crate::prelude::*;
 
-const LOWER: &str = include_str!("../../../lean/examples/weak_additive_lower_bounds/statement.lit");
-const UPPER: &str = include_str!("../../../lean/examples/weak_additive_upper_bounds/statement.lit");
+const LOWER: &str = r#"# A nonnegative addend preserves a lower bound, on either side of the sum.
+forall lo, a, b R:
+    lo <= a
+    0 <= b
+    =>:
+        lo <= a + b
+
+forall lo, a, b R:
+    lo <= b
+    0 <= a
+    =>:
+        lo <= a + b
+"#;
+const UPPER: &str = r#"# A nonpositive addend preserves an upper bound, on either side of the sum.
+forall hi, a, b R:
+    a <= hi
+    b <= 0
+    =>:
+        a + b <= hi
+
+forall hi, a, b R:
+    b <= hi
+    a <= 0
+    =>:
+        a + b <= hi
+"#;
 
 fn children(
     proof: &mut VerifyAtomicExceptEqualityFactSuccess,
@@ -153,18 +177,5 @@ fn weak_additive_shifts_reject_future_and_sibling_assumption_citations() {
         assert!(compiler
             .compile_run(&run, "escaped_shift_citation")
             .is_err());
-    }
-}
-
-#[test]
-fn weak_additive_shifts_compile_recorded_enumeration_and_theorem_routes() {
-    for source in [
-        include_str!("../../../lean/examples/integer_rectangle_sum_bound/statement.lit"),
-        include_str!("../../../lean/examples/mixed_finite_rectangle_sum_bound/statement.lit"),
-        include_str!("../../../lean/examples/binary_cube_sum_bound/statement.lit"),
-        include_str!("../../../lean/examples/named_integer_rectangle_sum/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "enumerated_sum").unwrap();
     }
 }

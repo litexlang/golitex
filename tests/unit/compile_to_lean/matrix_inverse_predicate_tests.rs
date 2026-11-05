@@ -1,22 +1,5 @@
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/native_matrix_inverse_predicates/statement.lit");
-
-#[test]
-fn native_matrix_inverse_predicate_compiler_replays_checked_source() {
-    let (run, compiler) = super::execute(SOURCE);
-    let output = super::compile_run(&run, &compiler, "native_matrix_inverse_predicates").unwrap();
-    assert!(output.contains("Litex.IsMatrixInvValue"));
-    assert!(output.contains("Litex.MatrixInversibleValue"));
-    assert!(output.contains("Litex.matrixInversibleOfNonzero"));
-    assert!(output.contains("Litex.matrixInversibleNonzero"));
-    assert!(output.contains("Litex.isMatrixInvOfProducts"));
-    assert!(output.contains("Litex.isMatrixInvProducts"));
-    assert!(!output.contains("sorry"));
-    assert!(!output.contains("axiom "));
-}
-
 #[test]
 fn native_matrix_inverse_predicate_compiler_rejects_mismatched_determinant_subject() {
     let (mut run, compiler) = super::execute(

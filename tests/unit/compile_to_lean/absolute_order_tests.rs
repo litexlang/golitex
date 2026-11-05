@@ -2,35 +2,53 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 const CASES: [(&str, &str); 8] = [
     (
-        include_str!("../../../lean/examples/absolute_self_upper/statement.lit"),
+        r#"forall x R => x<=abs(x)
+"#,
         "absSelfUpperValue",
     ),
     (
-        include_str!("../../../lean/examples/absolute_self_lower/statement.lit"),
+        r#"forall x R => 0-abs(x)<=x
+"#,
         "absSelfLowerValue",
     ),
     (
-        include_str!("../../../lean/examples/absolute_triangle/statement.lit"),
+        r#"forall x,y R => abs(x+y)<=abs(x)+abs(y)
+"#,
         "absTriangleValue",
     ),
     (
-        include_str!("../../../lean/examples/absolute_reverse_triangle_add/statement.lit"),
+        r#"forall x,y R => abs(x)-abs(y)<=abs(x+y)
+"#,
         "absReverseTriangleAddValue",
     ),
     (
-        include_str!("../../../lean/examples/absolute_reverse_triangle_sub/statement.lit"),
+        r#"forall x,y R => abs(x)-abs(y)<=abs(x-y)
+"#,
         "absReverseTriangleSubValue",
     ),
     (
-        include_str!("../../../lean/examples/absolute_from_symmetric_bounds/statement.lit"),
+        r#"forall x,a R:
+    x<=a
+    0-x<=a
+    =>:
+        abs(x)<=a
+"#,
         "absFromSymmetricBoundsValue",
     ),
     (
-        include_str!("../../../lean/examples/absolute_bound_upper_projection/statement.lit"),
+        r#"forall x,a R:
+    abs(x)<=a
+    =>:
+        x<=a
+"#,
         "absBoundUpperProjectionValue",
     ),
     (
-        include_str!("../../../lean/examples/absolute_bound_negative_projection/statement.lit"),
+        r#"forall x,a R:
+    abs(x)<=a
+    =>:
+        0-x<=a
+"#,
         "absBoundNegativeProjectionValue",
     ),
 ];

@@ -7,10 +7,96 @@ use crate::execute::{
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/selected_template_real_composition/statement.lit"),
-    include_str!("../../../lean/examples/selected_template_complex_composition/statement.lit"),
-    include_str!("../../../lean/examples/selected_template_field_composition/statement.lit"),
-    include_str!("../../../lean/examples/selected_template_binary_composition/statement.lit"),
+    r#"# Compose a nonzero real input with a uniquely specified scalar function.
+thm unique_scalar:
+    ? forall a R:
+        exist! x R st {x = a}
+    witness exist! x R st {x = a} from a
+
+template<a R: a != 0,>:
+    have fn selected_scalar by exist!:
+        ? forall index R:
+            index != 0
+            =>:
+                exist! x R st {x = a}
+
+have fn selected_again(a R: a != 0) R = \selected_scalar<a>(3)
+
+selected_again(2) = \selected_scalar<2>(3) = 2
+
+forall a R:
+    a != 0
+    =>:
+        selected_again(a) = \selected_scalar<a>(3) = a
+"#,
+    r#"# Use the real output of a uniquely specified function as a complex value.
+thm unique_scalar:
+    ? forall a R:
+        exist! x R st {x = a}
+    witness exist! x R st {x = a} from a
+
+template<a R: a != 0,>:
+    have fn selected_scalar by exist!:
+        ? forall index R:
+            index != 0
+            =>:
+                exist! x R st {x = a}
+
+have fn selected_complex(a R: a != 0) C = \selected_scalar<a>(3)
+
+selected_complex(2) = \selected_scalar<2>(3) = 2
+"#,
+    r#"# Select a record field through a uniquely specified function.
+struct Point<K nonempty_set, S nonempty_set>:
+    value S
+    tag N
+
+thm unique_value:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>:
+        exist! x S st {x = t.value}
+    witness exist! x S st {x = t.value} from t.value
+
+template<K nonempty_set, S nonempty_set, t &Point<K, S>>:
+    have fn selected_value by exist!:
+        ? forall index N:
+            exist! x S st {x = t.value}
+
+thm selected_value_spec:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>:
+        \selected_value<K, S, t>(0) = t.value
+
+struct Unary<S nonempty_set>:
+    call fn(x S) S
+    tag N
+
+# The template occurs under another call, whose WD uses read-only premises.
+thm selected_value_nested:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>, op &Unary<S>:
+        op.call(\selected_value<K, S, t>(0)) $in S
+
+have fn chosen_field(p &Point<R, R>) R = \selected_value<R, R, p>(0)
+
+forall p &Point<R, R>:
+    chosen_field(p) = \selected_value<R, R, p>(0) = p.value
+"#,
+    r#"# Compose a uniquely specified two-input sum with fixed arguments.
+thm unique_sum:
+    ? forall a, x, y R:
+        exist! z R st {z = a + x + y}
+    witness exist! z R st {z = a + x + y} from a + x + y
+
+template<a R>:
+    have fn selected_sum by exist!:
+        ? forall x, y R:
+            exist! z R st {z = a + x + y}
+
+have fn chosen_sum(a R) R = \selected_sum<a>(1, 2)
+
+chosen_sum(3) = \selected_sum<3>(1, 2) = 6
+
+forall a R:
+    chosen_sum(a) = \selected_sum<a>(1, 2) = a + 1 + 2
+"#,
 ];
 
 fn formula(run: &mut RunLitexCodeResult) -> &mut AnonymousFnObjWellDefinedProof {
@@ -51,20 +137,6 @@ fn template(run: &mut RunLitexCodeResult) -> &mut crate::execute::ExecDefTemplat
             _ => None,
         })
         .unwrap()
-}
-
-#[test]
-fn selected_template_compositions_replay_real_complex_record_and_binary_bodies() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "selected_compositions")
-            .expect(source);
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "selected_compositions").unwrap()
-        );
-    }
 }
 
 #[test]

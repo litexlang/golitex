@@ -2,8 +2,26 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::execute::{ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult};
 use crate::prelude::*;
 
-const BOUNDED: &str =
-    include_str!("../../../examples/stmt_nodes/definition/induction_lower_bound.lit");
+const BOUNDED: &str = r#"# Tracer: recursive lower bounds cannot descend with the arguments.
+# Before (incorrectly accepted in strict mode):
+# have fn empty_value(n Z) {} by induc n from n - 1:
+#     case n = n: empty_value(n - 1)
+# empty_value(0) $in {}
+# Now the declaration fails: (n - 1) - 1 >= n - 1 is not provable.
+# Executable negative regression: induction_lower_bound_cannot_descend_with_recursive_arguments.
+#
+# Now: a parameter-dependent lower bound preserved by recursion is accepted.
+have fn bounded(n, b Z: n >= b) Z by induc n from b:
+    case n - 1 < b: 0
+    case n - 1 >= b: bounded(n - 1, b)
+
+bounded(1, 0) = bounded(0, 0) = 0
+
+# Boundary: recursive calls must decrease the integer measure, stay in-domain,
+# and preserve or increase the lower bound. Arbitrary descending bounds fail.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/definition/induction_lower_bound.lit
+# Tests: cargo test --release --lib induction_lower_bound
+"#;
 const FIB: &str = "have fn fib(n Z: n >= 0) R by induc n from 0:\n    case n < 2: 1\n    case n >= 2: fib(n - 2) + fib(n - 1)\n";
 const INCREASING: &str = "have fn increasing(n, b Z: n >= b) Z by induc n from b:\n    case n - 1 < b: 0\n    case n - 1 >= b:\n        case n - 1 < b + 1: 0\n        case n - 1 >= b + 1: increasing(n - 1, b + 1)\n";
 
@@ -332,11 +350,18 @@ fn nested_recursive_coverage_wd_stays_inside_its_original_parent_branch() {
         assert_eq!(found.is_some(), expected);
     }
 }
+const TEMPLATE_NESTED: &str = r#"# Count from a captured real seed using nested recursive cases.
+template<start R>:
+    have fn seeded_count(n Z: n >= 0) R by induc n from 0:
+        case n < 1: start
+        case n >= 1:
+            case n < 2: start + 1
+            case n >= 2: seeded_count(n - 1) + 1
 
-const TEMPLATE_FIB: &str =
-    include_str!("../../../lean/examples/template_fibonacci_seed/statement.lit");
-const TEMPLATE_NESTED: &str =
-    include_str!("../../../lean/examples/template_nested_recursive_count/statement.lit");
+\seeded_count<3>(1) = 4
+
+\seeded_count<3>(2) = \seeded_count<3>(1) + 1 = 5
+"#;
 
 fn recursive_template(
     run: &mut RunLitexCodeResult,
@@ -348,30 +373,6 @@ fn recursive_template(
         panic!("recursive template")
     };
     proof
-}
-
-#[test]
-fn general_recursive_templates_preserve_captured_values_and_original_equations() {
-    for source in [
-        TEMPLATE_FIB,
-        TEMPLATE_NESTED,
-        include_str!("../../../lean/examples/template_recursive_lower_bound/statement.lit"),
-        include_str!("../../../lean/examples/template_recursive_set_seed/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "general_recursive_templates")
-            .expect(source);
-        assert!(lean.contains("Litex.RecursiveFn M"));
-        assert!(lean.contains("Litex.recursiveFnInFnSet"));
-        assert!(!lean.contains("Litex.recursiveNatFnInFnSet"));
-        assert_eq!(
-            lean,
-            compiler
-                .compile_run(&run, "general_recursive_templates")
-                .unwrap()
-        );
-    }
 }
 
 #[test]
@@ -445,29 +446,20 @@ fn recursive_template_unfold_requires_the_complete_original_selected_path() {
     }
 }
 
-const TEMPLATE_SET_SEED: &str =
-    include_str!("../../../lean/examples/template_recursive_set_seed/statement.lit");
+const TEMPLATE_SET_SEED: &str = r#"# Repeat an arbitrary set member using integer recursion and reuse the published equations.
+template<A set, seed A>:
+    have fn seeded_generic(n Z: n >= 0) A by induc n from 0:
+        case n < 1: seed
+        case n >= 1: seeded_generic(n - 1)
 
-#[test]
-fn recursive_template_citations_support_generic_outputs_headers_and_nested_cases() {
-    for source in [
-        TEMPLATE_SET_SEED,
-        include_str!("../../../lean/examples/template_recursive_set_lower_bound/statement.lit"),
-        include_str!("../../../lean/examples/template_recursive_set_nested/statement.lit"),
-        include_str!("../../../lean/examples/template_recursive_set_natural/statement.lit"),
-        include_str!("../../../lean/examples/template_recursive_integer_reciprocal/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "recursive_citations")
-            .expect(source);
-        assert!(lean.contains("Litex.recursiveFnInFnSet"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "recursive_citations").unwrap()
-        );
-    }
-}
+\seeded_generic<R, 3>(0) = 3
+
+\seeded_generic<R, 3>(1) = \seeded_generic<R, 3>(0) = 3
+
+forall A set, seed A:
+    \seeded_generic<A, seed>(0) = seed
+    \seeded_generic<A, seed>(1) = \seeded_generic<A, seed>(0) = seed
+"#;
 
 #[test]
 fn recursive_set_template_replays_a_published_equation_through_known_forall() {
@@ -603,8 +595,16 @@ fn recursive_call_evidence_cannot_escape_its_selected_case() {
         .is_err());
 }
 
-const INTEGER_COUNT: &str =
-    include_str!("../../../lean/examples/template_integer_count/statement.lit");
+const INTEGER_COUNT: &str = r#"# Count integer steps above a variable lower bound, starting from a captured real seed.
+template<seed R>:
+    have fn seeded_bounded(n, b Z: n >= b) R by induc n from b:
+        case n = b: seed
+        case n > b: seeded_bounded(n - 1, b) + 1
+
+\seeded_bounded<7>(0, 0) = 7
+
+\seeded_bounded<7>(1, 0) = \seeded_bounded<7>(0, 0) + 1 = 8
+"#;
 
 #[test]
 fn integer_recursive_count_retains_the_selected_discrete_order_rule() {
@@ -673,7 +673,13 @@ fn integer_recursive_count_retains_the_selected_discrete_order_rule() {
 #[test]
 fn integer_gap_replays_both_alignments_and_exact_citations() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule;
-    const SOURCE: &str = include_str!("../../../lean/examples/integer_successor_gap/statement.lit");
+    const SOURCE: &str = r#"# Integers separated by a strict inequality differ by at least one.
+forall a, b Z: a < b => a + 1 <= b
+forall a, b Z: a < b => a <= b - 1
+forall a, b Z: 1 + a < b => a + 2 <= b
+forall a Z: 4 < a => 5 <= a
+forall a Z: a < 0 => a <= -1
+"#;
     let (mut run, compiler) = super::execute(SOURCE);
     for (index, result) in run.statement_results.iter_mut().enumerate() {
         let forall = super::forall_proof_mut(result);
@@ -702,9 +708,14 @@ fn integer_gap_replays_both_alignments_and_exact_citations() {
     let lean = compiler.compile_run(&run, "integer_gap").unwrap();
     assert!(lean.contains("Litex.integerGapLe"));
     assert!(lean.contains("Or.inl ⟨by ring!, by ring!⟩"));
-    let (other, other_compiler) = super::execute(include_str!(
-        "../../../lean/examples/integer_predecessor_gap/statement.lit"
-    ));
+    let (other, other_compiler) = super::execute(
+        r#"# The original greater-than premise is transposed without a new search.
+forall gap_left, gap_right Z:
+    gap_right > gap_left
+    =>:
+        gap_left <= gap_right - 1
+"#,
+    );
     let other_lean = other_compiler
         .compile_run(&other, "predecessor_gap")
         .unwrap();

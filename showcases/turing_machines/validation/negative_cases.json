@@ -1,0 +1,36 @@
+{
+  "context": "main.lit",
+  "method": "After a clean strict positive caller, submit each code as one statement in the same Session; require mathematical/WD rejection and success of 1=1 immediately afterward.",
+  "cases": [
+    {
+      "id": "empty_input_not_halted_initially",
+      "code": "tm::run(0,tm::unary_initial(0))(1)=1",
+      "boundary": "Empty input still requires its write-and-halt transition."
+    },
+    {
+      "id": "no_premature_halt",
+      "code": "tm::run(2,tm::unary_initial(2))(1)=1",
+      "boundary": "The scanning state persists through step n."
+    },
+    {
+      "id": "right_endpoint_is_blank",
+      "code": "tm::unary_tape(3)(3)=1",
+      "boundary": "Input ones occupy exactly 0 through n-1."
+    },
+    {
+      "id": "invalid_state",
+      "code": "tm::configuration(2,0,tm::unary_tape(0))=tm::configuration(2,0,tm::unary_tape(0))",
+      "boundary": "State2 is outside the actual configuration constructor domain."
+    },
+    {
+      "id": "negative_step_count",
+      "code": "tm::run(-1,tm::unary_initial(0))=tm::run(-1,tm::unary_initial(0))",
+      "boundary": "Step counts are natural."
+    },
+    {
+      "id": "constant_one_tape_does_not_halt",
+      "code": "$tm::halts(tm::configuration(0,0,tm::ones_tape))",
+      "boundary": "A tape with no blank cells stays in the scanning state for every finite step count."
+    }
+  ]
+}

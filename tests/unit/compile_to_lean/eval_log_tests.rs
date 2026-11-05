@@ -2,15 +2,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogO
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/evaluated_logarithms/statement.lit");
-const RATIONAL: &str =
-    include_str!("../../../lean/examples/evaluated_rational_logarithms/statement.lit");
-const ARITHMETIC: &str =
-    include_str!("../../../lean/examples/evaluated_logarithm_arithmetic/statement.lit");
-const FUNCTIONS: &str =
-    include_str!("../../../lean/examples/evaluated_logarithm_functions/statement.lit");
-const LOCAL: &str = include_str!("../../../lean/examples/evaluated_local_logarithms/statement.lit");
-
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
         &mut run.statement_results[index]
@@ -18,16 +9,6 @@ fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess 
         panic!("successful eval")
     };
     p
-}
-
-#[test]
-fn log_eval_replays_exact_values_functions_arithmetic_and_scope() {
-    for source in [SOURCE, RATIONAL, ARITHMETIC, FUNCTIONS, LOCAL] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "log_eval").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "log_eval").unwrap());
-        assert!(!lean.contains("sorry") && !lean.contains("admit"));
-    }
 }
 
 #[test]

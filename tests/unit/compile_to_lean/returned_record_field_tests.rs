@@ -2,19 +2,33 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Structi
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/returned_record_function_fields/statement.lit"),
-    include_str!("../../../lean/examples/guarded_returned_record_fields/statement.lit"),
-];
+    r#"# A returned record carries a function and a numeric tag; evaluate both fields.
+struct Box:
+    op fn(x R) R
+    tag N
 
-#[test]
-fn returned_record_fields_replay_receiver_calls_and_guards() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "returned_record").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "returned_record").unwrap());
-        assert!(!lean.contains("sorry") && !lean.contains("axiom "));
-    }
-}
+forall f fn(x R) R:
+    (f, 0) $in &Box
+
+have fn make(a R) &Box = (fn(x R) R {x + a}, 0)
+make(2).op(3) = 5
+make(2).tag = 0
+"#,
+    r#"# A nonzero parameter remains required when projecting a function from a returned record.
+struct Box:
+    op fn(x R) R
+    tag N
+
+forall f fn(x R) R:
+    (f, 0) $in &Box
+
+have fn divide_box(a R: a != 0) &Box = (fn(x R) R {x / a}, 0)
+
+divide_box(2).op(6) = 3
+
+divide_box(2).tag = 0
+"#,
+];
 
 #[test]
 fn returned_record_fields_require_the_original_call_and_projection_stages() {

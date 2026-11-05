@@ -125,7 +125,18 @@ impl LitexToLeanCompiler {
             .iter()
             .flat_map(|g| &g.params)
             .collect();
-        let (_, unique_arguments) = self.unique_signature(source, position)?;
+        let VerifyFactWellDefinedResult::Success(goal_wd) = &proof.goal_wd else {
+            return Err(LeanCompileError::unsupported("By/UniqueGoalFormation"));
+        };
+        let goal_scope =
+            SourcePosition::new(Some(position), SourceOwner::FactWD(goal_wd), usize::MAX);
+        let (_, unique_arguments) =
+            self.unique_signature(source, &goal_scope)
+                .map_err(|mut error| {
+                    error.message =
+                        format!("{} Original uniqueness goal formation.", error.message);
+                    error
+                })?;
         let mut witness = Vec::new();
         for (p, store) in parameters.iter().zip(
             &formation

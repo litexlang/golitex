@@ -25,9 +25,21 @@ fn citation(proof: &mut VerifyAtomicExceptEqualityFactSuccess) -> &mut FactId {
 }
 
 const SOURCES: [&str; 3] = [
-    include_str!("../../../lean/examples/signed_bound_nonzero/statement.lit"),
-    include_str!("../../../lean/examples/signed_bound_positive/statement.lit"),
-    include_str!("../../../lean/examples/signed_bound_negative/statement.lit"),
+    r#"forall x R:
+    2<=x
+    =>:
+        x!=0
+"#,
+    r#"forall x R:
+    2<=x
+    =>:
+        0<x
+"#,
+    r#"forall x R:
+    x<=-2
+    =>:
+        x<=0
+"#,
 ];
 
 #[test]

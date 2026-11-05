@@ -63,7 +63,7 @@ fn antiderivative_parts_relation_wd_requires_both_real_domains_and_open_region()
 }
 
 #[test]
-fn antiderivative_parts_explicit_projection_preserves_provenance_and_lean_boundary() {
+fn antiderivative_parts_explicit_projection_preserves_provenance_and_lean_replay() {
     let mut rt = runtime();
     let source="thm antiderivative_elimination:\n    ? forall F,f fn(x R) R:\n        $is_antiderivative_on(F,f,R)\n        =>:\n            $has_derivative_at(F,0,f(0))\n    release thm antiderivative_to_definition(F,f,R)";
     let result = run(&mut rt, source, true);
@@ -71,9 +71,9 @@ fn antiderivative_parts_explicit_projection_preserves_provenance_and_lean_bounda
         crate::json_output::project_run_detailed(&result, &rt, "antiderivative", None).stringify();
     assert!(json.contains("antiderivative_to_definition"));
     assert!(json.contains("has_derivative_at"));
-    assert!(crate::compile_to_lean::LitexToLeanCompiler::new(rt)
-        .compile_run(&result, "antiderivative_boundary")
-        .is_err());
+    crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&result, "antiderivative_replay")
+        .expect("the original antiderivative definition now replays into Lean");
 }
 
 #[test]

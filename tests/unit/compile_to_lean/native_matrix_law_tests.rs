@@ -3,14 +3,20 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 };
 use crate::prelude::*;
 
-const IDENTITY: &str =
-    include_str!("../../../lean/examples/native_determinant_identity/statement.lit");
-const TRANSPOSE: &str =
-    include_str!("../../../lean/examples/native_determinant_transpose/statement.lit");
-const ADJOINT: &str =
-    include_str!("../../../lean/examples/native_determinant_adjoint/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_determinant_transport/statement.lit");
+const IDENTITY: &str = r#"det(identity_matrix(2), 2) = 1
+forall replay_order N:
+    1 = det(identity_matrix(replay_order), replay_order)
+"#;
+const TRANSPOSE: &str = r#"forall replay_order N, replay_matrix matrix(C, replay_order, replay_order):
+    det(transpose(replay_matrix, replay_order, replay_order), replay_order) = det(replay_matrix, replay_order)
+"#;
+const ADJOINT: &str = r#"forall replay_order N, replay_matrix matrix(C, replay_order, replay_order):
+    det(conjugate_transpose(replay_matrix, replay_order, replay_order), replay_order) = conj(det(replay_matrix, replay_order))
+"#;
+const TRANSPORT: &str = r#"have replay_one R = 1
+forall replay_order N:
+    det(identity_matrix(replay_order), replay_order) = replay_one
+"#;
 
 fn selected(statement: &mut ExecStmtResult, universal: bool) -> &mut MatrixLawApplicationProof {
     let result = if universal {

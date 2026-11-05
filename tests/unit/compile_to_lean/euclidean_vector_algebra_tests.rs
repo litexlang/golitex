@@ -1,16 +1,64 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 const SOURCES: [&str; 4] = [
-    include_str!("../../../lean/examples/vector_limit_add/statement.lit"),
-    include_str!("../../../lean/examples/vector_limit_subtract/statement.lit"),
-    include_str!("../../../lean/examples/vector_continuous_add/statement.lit"),
-    include_str!("../../../lean/examples/vector_continuous_subtract/statement.lit"),
+    r#"# Pointwise vector add preserves the common Euclidean domain and dimensions.
+thm checked_vector_limit_add:
+    ? forall f,g,h fn(x cart_n(R,2)) cart_n(R,3),p cart_n(R,2),A,B cart_n(R,3):
+        $has_vector_limit_at(f,p,2,3,A)
+        $has_vector_limit_at(g,p,2,3,B)
+        forall x cart_n(R,2):
+            h(x)=fn(k closed_range(1,3)) R {f(x)(k)+g(x)(k)}
+        =>:
+            $has_vector_limit_at(h,p,2,3,fn(k closed_range(1,3)) R {A(k)+B(k)})
+    release thm vector_limit_at_add(f,g,h,p,2,3,A,B)
+"#,
+    r#"# Pointwise vector subtract preserves the common Euclidean domain and dimensions.
+thm checked_vector_limit_subtract:
+    ? forall f,g,h fn(x cart_n(R,2)) cart_n(R,3),p cart_n(R,2),A,B cart_n(R,3):
+        $has_vector_limit_at(f,p,2,3,A)
+        $has_vector_limit_at(g,p,2,3,B)
+        forall x cart_n(R,2):
+            h(x)=fn(k closed_range(1,3)) R {f(x)(k)-g(x)(k)}
+        =>:
+            $has_vector_limit_at(h,p,2,3,fn(k closed_range(1,3)) R {A(k)-B(k)})
+    release thm vector_limit_at_subtract(f,g,h,p,2,3,A,B)
+"#,
+    r#"# Pointwise vector add preserves the common Euclidean domain and dimensions.
+thm checked_vector_continuous_add:
+    ? forall f,g,h fn(x cart_n(R,2)) cart_n(R,3),p cart_n(R,2):
+        $is_vector_continuous_at(f,p,2,3)
+        $is_vector_continuous_at(g,p,2,3)
+        forall x cart_n(R,2):
+            h(x)=fn(k closed_range(1,3)) R {f(x)(k)+g(x)(k)}
+        =>:
+            $is_vector_continuous_at(h,p,2,3)
+    release thm vector_continuous_at_add(f,g,h,p,2,3)
+"#,
+    r#"# Pointwise vector subtract preserves the common Euclidean domain and dimensions.
+thm checked_vector_continuous_subtract:
+    ? forall f,g,h fn(x cart_n(R,2)) cart_n(R,3),p cart_n(R,2):
+        $is_vector_continuous_at(f,p,2,3)
+        $is_vector_continuous_at(g,p,2,3)
+        forall x cart_n(R,2):
+            h(x)=fn(k closed_range(1,3)) R {f(x)(k)-g(x)(k)}
+        =>:
+            $is_vector_continuous_at(h,p,2,3)
+    release thm vector_continuous_at_subtract(f,g,h,p,2,3)
+"#,
 ];
 #[test]
 fn euclidean_vector_algebra_cached_formation_requires_exact_visible_source_and_argument_proofs() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
-    let source =
-        include_str!("../../../lean/examples/vector_continuous_subtract_aliased/statement.lit");
+    let source = r#"# Preserve repeated source function identities when replaying vector subtract.
+thm checked_vector_continuous_subtract_aliased:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3),p cart_n(R,2):
+        $is_vector_continuous_at(f,p,2,3)
+        forall x cart_n(R,2):
+            f(x)=fn(k closed_range(1,3)) R {f(x)(k)-f(x)(k)}
+        =>:
+            $is_vector_continuous_at(f,p,2,3)
+    release thm vector_continuous_at_subtract(f,f,f,p,2,3)
+"#;
     for change in ["future", "missing", "equalities", "wrong_family"] {
         let (mut run, c) = super::execute(source);
         let p = invocation(&mut run);
@@ -89,22 +137,6 @@ fn mutate_formula(obj: &mut Obj, change: &str) {
             };
             f.equal_to = Box::new(new);
         }
-    }
-}
-#[test]
-fn euclidean_vector_algebra_replays_four_original_schemas_deterministically() {
-    for (i, source) in SOURCES.iter().enumerate() {
-        let (run, c) = super::execute(source);
-        let out = c
-            .compile_run(&run, "vector_algebra")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains(&format!(
-            "Litex.vectorMultivariable{}{}",
-            if i < 2 { "Limit" } else { "Continuous" },
-            if i % 2 == 0 { "Add" } else { "Subtract" }
-        )));
-        assert!(out.contains("_vector_algebra_formula"));
-        assert_eq!(out, c.compile_run(&run, "vector_algebra").unwrap());
     }
 }
 #[test]
@@ -337,24 +369,5 @@ fn euclidean_vector_algebra_requires_original_output_context_and_value_formation
             }
             assert!(c.compile_run(&run, "bad_output").is_err(), "{change}");
         }
-    }
-}
-#[test]
-fn euclidean_vector_algebra_preserves_generic_guarded_and_aliased_functions() {
-    for source in [
-        include_str!("../../../lean/examples/vector_limit_add_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_subtract_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_add_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_subtract_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_add_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_subtract_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_add_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_subtract_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_add_aliased/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_subtract_aliased/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "actual_domains")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
     }
 }

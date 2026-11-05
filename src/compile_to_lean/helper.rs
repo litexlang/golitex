@@ -111,7 +111,10 @@ pub(super) fn closed_integer(object: &Obj) -> Option<i128> {
 
 pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCompileError> {
     match object {
-        Obj::Identifier(IdentifierObj::Plain { .. }) => Ok(()),
+        // Module-qualified scalar parameters retain the same opaque atom
+        // contract. The observer still resolves their original scoped
+        // declaration and numeric membership before emitting a value.
+        Obj::Identifier(_) => Ok(()),
         Obj::Literal(Literal::Number(n)) => number_literal(n, "ℂ").map(|_| ()),
         Obj::Literal(Literal::ImaginaryUnit(_) | Literal::EulerNumber(_) | Literal::Pi(_)) => Ok(()),
         Obj::FnObj(call)
@@ -144,6 +147,10 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             // membership and nonnegativity; it does not normalize the radicand.
             Ok(())
         }
+        // The selected polynomial certificate treats this owned real absolute
+        // value as one scalar atom. Its observer replays the original WD and
+        // real argument evidence; no absolute-value identity is substituted.
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(_)) => Ok(()),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => {
             validate_arithmetic_expression(&x.left)?;
             validate_arithmetic_expression(&x.right)
@@ -376,6 +383,61 @@ pub(super) fn arithmetic_constructor_pairs<'a>(
 ) -> Option<(&'static str, Vec<(&'a Obj, &'a Obj)>)> {
     use ArithmeticOperator::*;
     match (left, right) {
+        (
+            Obj::LimitOperator(LimitOperator::Sequence(a)),
+            Obj::LimitOperator(LimitOperator::Sequence(b)),
+        ) => Some(("sequenceLimitValue", vec![(&a.sequence, &b.sequence)])),
+        (
+            Obj::LimitOperator(LimitOperator::SequenceLimsup(a)),
+            Obj::LimitOperator(LimitOperator::SequenceLimsup(b)),
+        ) => Some(("sequenceLimsupValue", vec![(&a.sequence, &b.sequence)])),
+        (
+            Obj::LimitOperator(LimitOperator::SequenceLiminf(a)),
+            Obj::LimitOperator(LimitOperator::SequenceLiminf(b)),
+        ) => Some(("sequenceLiminfValue", vec![(&a.sequence, &b.sequence)])),
+        (
+            Obj::LimitOperator(LimitOperator::Function(a)),
+            Obj::LimitOperator(LimitOperator::Function(b)),
+        ) if a.approach.same_direction(&b.approach) => {
+            let operation = match &a.approach {
+                LimitApproach::AtPoint(_) => "finiteFunctionLimitBothValue",
+                LimitApproach::FromLeft(_) => "finiteFunctionLimitLeftValue",
+                LimitApproach::FromRight(_) => "finiteFunctionLimitRightValue",
+                LimitApproach::AtPositiveInfinity => "infiniteFunctionLimitPositiveValue",
+                LimitApproach::AtNegativeInfinity => "infiniteFunctionLimitNegativeValue",
+            };
+            let mut pairs = vec![(a.function.as_ref(), b.function.as_ref())];
+            if let (Some(a), Some(b)) = (a.approach.point(), b.approach.point()) {
+                pairs.push((a, b));
+            }
+            Some((operation, pairs))
+        }
+        (
+            Obj::BoundOperator(BoundOperator::Supremum(a)),
+            Obj::BoundOperator(BoundOperator::Supremum(b)),
+        ) => Some(("supremumValue", vec![(&a.set, &b.set)])),
+        (
+            Obj::BoundOperator(BoundOperator::Infimum(a)),
+            Obj::BoundOperator(BoundOperator::Infimum(b)),
+        ) => Some(("infimumValue", vec![(&a.set, &b.set)])),
+        (
+            Obj::DerivativeOperator(DerivativeOperator::AtPoint(a)),
+            Obj::DerivativeOperator(DerivativeOperator::AtPoint(b)),
+        ) => Some((
+            "derivativeValue",
+            vec![(&a.function, &b.function), (&a.point, &b.point)],
+        )),
+        (
+            Obj::IntegralOperator(IntegralOperator::Riemann(a)),
+            Obj::IntegralOperator(IntegralOperator::Riemann(b)),
+        ) => Some((
+            "riemannIntegralValue",
+            vec![
+                (&a.function, &b.function),
+                (&a.lower, &b.lower),
+                (&a.upper, &b.upper),
+            ],
+        )),
         (
             Obj::MatrixOperator(MatrixOperator::Trace(a)),
             Obj::MatrixOperator(MatrixOperator::Trace(b)),
@@ -790,7 +852,15 @@ pub(super) fn arithmetic_operation_term(operation: &str) -> String {
         "expValue" => "(Litex.realUnaryValue (M := M) Real.exp)".into(),
         "lnValue" => "(Litex.realUnaryValue (M := M) Real.log)".into(),
         "logValue" => "(fun _base _arg => M.divValue (Litex.realUnaryValue (M := M) Real.log _arg) (Litex.realUnaryValue (M := M) Real.log _base))".into(),
-        "supremumValue" | "infimumValue" => format!("(Litex.{operation} (M := M))"),
+        "supremumValue" | "infimumValue" | "sequenceLimitValue" | "derivativeValue"
+        | "riemannIntegralValue" => format!("(Litex.{operation} (M := M))"),
+        "sequenceLimsupValue" => "(Litex.sequenceExtremumValue (M := M) true)".into(),
+        "sequenceLiminfValue" => "(Litex.sequenceExtremumValue (M := M) false)".into(),
+        "finiteFunctionLimitBothValue" => "(Litex.finiteFunctionLimitValue (M := M) .both)".into(),
+        "finiteFunctionLimitLeftValue" => "(Litex.finiteFunctionLimitValue (M := M) .left)".into(),
+        "finiteFunctionLimitRightValue" => "(Litex.finiteFunctionLimitValue (M := M) .right)".into(),
+        "infiniteFunctionLimitPositiveValue" => "(Litex.infiniteFunctionLimitValue (M := M) .positive)".into(),
+        "infiniteFunctionLimitNegativeValue" => "(Litex.infiniteFunctionLimitValue (M := M) .negative)".into(),
         "absValue" | "sqrtValue" | "signValue" => format!("(Litex.{operation} (M := M))"),
         "minValue" => "(Litex.minMaxValue (M := M) false)".into(),
         "factorialValue" => "(Litex.factorialValue (M := M))".into(),
@@ -1156,6 +1226,24 @@ pub(super) fn captured_identifier_definition_matches(
             StoredIdentifierDefinition::HaveFnEqual((key, a)),
             ExecDefinitionStmtResult::HaveFnEqual(ExecHaveFnEqualStmtResult::Success(b)),
         ) => key == name && a.as_ref() == &b.statement,
+        (
+            StoredIdentifierDefinition::HaveFnEqualCaseByCase((key, a)),
+            ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+                crate::execute::ExecHaveFnEqualCaseByCaseStmtResult::Success(b),
+            ),
+        ) => key == name && a.as_ref() == &b.statement,
+        (
+            StoredIdentifierDefinition::HaveFnByInduc((key, a)),
+            ExecDefinitionStmtResult::HaveFnByInduc(
+                crate::execute::ExecHaveFnByInducStmtResult::Success(b),
+            ),
+        ) => key == name && a.as_ref() == &b.statement,
+        (
+            StoredIdentifierDefinition::HaveFnByForallExistUnique((key, a)),
+            ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+                crate::execute::ExecHaveFnByForallExistUniqueStmtResult::Success(b),
+            ),
+        ) => key == name && a.as_ref() == &b.statement,
         _ => false,
     }
 }
@@ -1282,6 +1370,12 @@ pub(super) fn validate_statement_capture(
         return Ok(());
     }
     let matches = match (source, result) {
+        (
+            Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(source)),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(
+                crate::execute::ExecHaveFnEqualStmtResult::Success(proof),
+            )),
+        ) => source == &proof.statement,
         (
             Stmt::Definition(DefinitionStmt::HaveFnByInducStmt(source)),
             ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByInduc(
@@ -1979,6 +2073,10 @@ pub(super) fn instantiated_object_matches(
             .is_some_and(|scoped| {
                 instantiated_object_matches(&expected.equal_to, &actual.equal_to, &scoped)
             }),
+        (
+            Obj::FunctionSpace(FunctionSpace::FnRange(expected)),
+            Obj::FunctionSpace(FunctionSpace::FnRange(actual)),
+        ) => instantiated_object_matches(&expected.function, &actual.function, substitution),
         (
             Obj::FunctionSpace(FunctionSpace::Preimage(expected)),
             Obj::FunctionSpace(FunctionSpace::Preimage(actual)),
@@ -3069,6 +3167,31 @@ mod function_substitution_tests {
         assert!(!instantiated_object_matches(
             &seq(parameter),
             &seq(unrelated),
+            &substitution,
+        ));
+    }
+
+    #[test]
+    fn range_beta_preserves_the_original_function_parameter_id() {
+        let mut runtime = runtime();
+        let (parameter_id, parameter) = name(&mut runtime, "f");
+        let (_, actual) = name(&mut runtime, "f");
+        let (_, unrelated) = name(&mut runtime, "f");
+        let range = |function| {
+            Obj::FunctionSpace(FunctionSpace::FnRange(FnRange {
+                function: Box::new(function),
+            }))
+        };
+        let source = range(parameter);
+        let substitution = HashMap::from([(parameter_id, actual.clone())]);
+        assert!(instantiated_object_matches(
+            &source,
+            &range(actual),
+            &substitution,
+        ));
+        assert!(!instantiated_object_matches(
+            &source,
+            &range(unrelated),
             &substitution,
         ));
     }

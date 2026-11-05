@@ -1,0 +1,3 @@
+# A derivative selector requires an established candidate proof.
+have fn square(x R) R = x^2
+derivative(square,3) = 6

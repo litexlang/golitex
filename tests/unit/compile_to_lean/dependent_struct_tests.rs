@@ -1,35 +1,16 @@
 use crate::prelude::*;
 
-const REPEATED: &str =
-    include_str!("../../../lean/examples/repeated_coordinate_fields/statement.lit");
-const ELEMENT: &str = include_str!("../../../lean/examples/member_coordinate_pairs/statement.lit");
+const REPEATED: &str = r#"# The second coordinate belongs to the singleton of the first, so they are equal.
+struct RepeatedCoordinate:
+    x R
+    y {x}
 
-#[test]
-fn dependent_struct_fields_replay_original_membership_and_release() {
-    for source in [
-        REPEATED,
-        ELEMENT,
-        include_str!("../../../lean/examples/repeated_coordinate_triples/statement.lit"),
-        include_str!("../../../lean/examples/positive_repeated_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/equal_coordinates_membership/statement.lit"),
-        include_str!("../../../lean/examples/reciprocal_coordinate_fields/statement.lit"),
-        include_str!("../../../lean/examples/chosen_repeated_coordinates/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "dependent_fields")
-            .unwrap_or_else(|e| panic!("{}: {e:?}", source.lines().next().unwrap()));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "dependent_fields").unwrap()
-        );
-        assert!(lean.contains("Litex.IndexedUnionSemantics M"));
-        assert!(
-            lean.contains("Litex.inDependentCartAt") || lean.contains("Litex.inDependentCart_iff")
-        );
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
-}
+1 $in {1}
+(1, 1) $in &RepeatedCoordinate
+forall p &RepeatedCoordinate:
+    p.y $in {p.x}
+    p.y = p.x
+"#;
 
 #[test]
 fn dependent_struct_field_and_release_facts_keep_original_scope() {
@@ -76,9 +57,17 @@ fn dependent_struct_field_and_release_facts_keep_original_scope() {
 #[test]
 fn dependent_field_inference_constructors_follow_the_field_prefix() {
     use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/reciprocal_coordinate_fields/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# The second coordinate is the reciprocal of a positive first coordinate.
+struct ReciprocalCoordinate:
+    x R+
+    y {1 / x}
+
+forall p &ReciprocalCoordinate:
+    p.x != 0
+    p.y = 1 / p.x
+"#,
+    );
     let p = declaration(&mut run);
     let header = SourcePosition::new(None, SourceOwner::StructHeader(p), usize::MAX);
     let before = SourcePosition::new(Some(&header), SourceOwner::StructFields(p), 0);
@@ -232,7 +221,18 @@ fn dependent_nonliteral_membership_requires_original_shape_and_coordinates() {
     use crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSourceProof;
     use crate::execute::execute_fact_stmt::known_tuple::KnownTupleShapeProof;
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
-    let source = include_str!("../../../lean/examples/equal_coordinates_membership/statement.lit");
+    let source = r#"# A real pair with equal coordinates belongs to the dependent structure.
+struct RepeatedCoordinate:
+    x R
+    y {x}
+
+forall p cart(R, R):
+    p(2) = p(1)
+    =>:
+        p(2) $in {p(1)}
+        p $in cart(R, {p(1)})
+        p $in &RepeatedCoordinate
+"#;
     for change in 0..4 {
         let (mut run, compiler) = super::execute(source);
         let atomic = super::atomic_proof_mut(

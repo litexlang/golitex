@@ -20,23 +20,17 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     };
     p
 }
-const SOURCE: &str = include_str!("../../../lean/examples/function_limit_at_squeeze/statement.lit");
-#[test]
-fn squeeze_replays_five_approaches() {
-    for source in [
-        include_str!("../../../lean/examples/function_limit_at_squeeze/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_squeeze/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_squeeze/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_pos_inf_squeeze/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_neg_inf_squeeze/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        assert!(c
-            .compile_run(&run, "limit_transfer")
-            .unwrap()
-            .contains("FunctionLimitSqueeze"));
-    }
-}
+const SOURCE: &str = r#"# A local two-sided bound transfers a common finite-approach limit.
+thm at_squeezed_limit:
+    ? forall f,g,h fn(x R) R, p,L R, r R+:
+        $has_limit_at(f,p,L)
+        $has_limit_at(h,p,L)
+        forall x {t R:0<(abs(t-p)) and (abs(t-p))<r}:
+            f(x)<=g(x)<=h(x)
+        =>:
+            $has_limit_at(g,p,L)
+    release thm fn_limit_at_squeeze(f,g,h,p,L,r)
+"#;
 #[test]
 fn squeeze_requires_every_recorded_stage() {
     for mutation in 0..3 {

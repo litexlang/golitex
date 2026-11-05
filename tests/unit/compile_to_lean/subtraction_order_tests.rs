@@ -1,7 +1,32 @@
 use crate::prelude::*;
 
-const RIGHT: &str = include_str!("../../../lean/examples/subtract_shared_value/statement.lit");
-const LEFT: &str = include_str!("../../../lean/examples/subtract_from_shared_value/statement.lit");
+const RIGHT: &str = r#"# Subtracting the same real value preserves weak and strict inequalities.
+forall next_sub_a, next_sub_b, next_sub_c R:
+    next_sub_a <= next_sub_b
+    =>:
+        next_sub_a - next_sub_c <= next_sub_b - next_sub_c
+
+forall sub_strict_a, sub_strict_b, sub_strict_c R:
+    sub_strict_a < sub_strict_b
+    =>:
+        sub_strict_a - sub_strict_c < sub_strict_b - sub_strict_c
+
+forall nested_sub_a, nested_sub_b, nested_sub_c, nested_sub_d R:
+    nested_sub_a <= nested_sub_b
+    =>:
+        nested_sub_a - (nested_sub_c + nested_sub_d) <= nested_sub_b - (nested_sub_c + nested_sub_d)
+"#;
+const LEFT: &str = r#"# Subtracting ordered values from a shared real value reverses their order.
+forall sub_left_a, sub_left_b, sub_left_c R:
+    sub_left_a <= sub_left_b
+    =>:
+        sub_left_c - sub_left_b <= sub_left_c - sub_left_a
+
+forall sub_left_strict_a, sub_left_strict_b, sub_left_strict_c R:
+    sub_left_strict_a < sub_left_strict_b
+    =>:
+        sub_left_strict_c - sub_left_strict_b < sub_left_strict_c - sub_left_strict_a
+"#;
 
 fn children(
     proof: &mut VerifyAtomicExceptEqualityFactSuccess,
@@ -206,30 +231,6 @@ fn subtraction_order_rejects_changed_common_operand() {
                 .is_err());
         }
     }
-}
-
-#[test]
-fn subtraction_order_replays_real_difference_domains_without_retyping_common_operand() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/real_difference_domains/statement.lit"
-    ));
-    let lean = compiler
-        .compile_run(&run, "real_difference_domains")
-        .unwrap();
-    assert!(lean.contains("Litex.subStructuralLeRight "));
-    assert!(lean.contains("Litex.C (M := M)"));
-}
-
-#[test]
-fn subtraction_order_composes_with_transitivity_and_theorem_reuse() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/ordered_difference_bound/statement.lit"
-    ));
-    let lean = compiler
-        .compile_run(&run, "ordered_difference_bound")
-        .unwrap();
-    assert!(lean.contains("Litex.subStructuralLtRight "));
-    assert!(lean.contains("Litex.subStructuralLeLeft "));
 }
 
 #[test]

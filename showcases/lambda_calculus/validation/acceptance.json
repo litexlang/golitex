@@ -1,0 +1,176 @@
+{
+  "date": "2026-11-04",
+  "binary_sha256": "27c82d982c6afb7bc6b788050a3dcf7d65ef2b4cdd9c17bb27085f3db79813f3",
+  "source": {
+    "command": [
+      "target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-f",
+      "showcases/lambda_calculus/main.lit"
+    ],
+    "exit_code": 0,
+    "kind": "run",
+    "run_result": "success",
+    "statements": 103,
+    "session_terminated": false,
+    "termination": null,
+    "seconds": 6.289,
+    "sha256": "f2b0202c0ddb93de8583d4a245e0f5cfa21ffb6f15223dbeee2fa6d0d6284e9a"
+  },
+  "independent_import": {
+    "command": [
+      "target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-f",
+      "showcases/lambda_calculus/validation/main.lit"
+    ],
+    "exit_code": 0,
+    "kind": "run",
+    "run_result": "success",
+    "statements": 27,
+    "session_terminated": false,
+    "termination": null,
+    "seconds": 5.757,
+    "sha256": "3766a29b26ece953adc6362a2441c84d9bbc27686035cbc645a166b8893172aa"
+  },
+  "negative_controls": [
+    {
+      "id": "capture_is_false",
+      "source": "lc::beta_contract(lc::abstraction(lc::variable(1)),lc::variable(0))=lc::abstraction(lc::variable(0))",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::beta_contract(m0::f0::abstraction(m0::f0::variable(1)), m0::f0::variable(0)) = m0::f0::abstraction(m0::f0::variable(0))",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "m0::f0::beta_contract(m0::f0::abstraction(m0::f0::variable(1)), m0::f0::variable(0)) = m0::f0::abstraction(m0::f0::variable(0))"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "variable_has_no_step",
+      "source": "$lc::is_beta_step(lc::variable(0),lc::variable(1))",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "$m0::f0::is_beta_step(m0::f0::variable(0), m0::f0::variable(1))",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "$m0::f0::is_beta_step(m0::f0::variable(0), m0::f0::variable(1))"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "wrong_abstraction_destructor",
+      "source": "lc::abstraction_body(lc::variable(0))=lc::abstraction_body(lc::variable(0))",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::abstraction_body(m0::f0::variable(0)) = m0::f0::abstraction_body(m0::f0::variable(0))",
+          "phase": "well_defined",
+          "message": "Could not prove that the statement is well-defined.",
+          "category": "well_defined"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "wrong_application_destructor",
+      "source": "lc::application_left(lc::variable(0))=lc::application_left(lc::variable(0))",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::application_left(m0::f0::variable(0)) = m0::f0::application_left(m0::f0::variable(0))",
+          "phase": "well_defined",
+          "message": "Could not prove that the statement is well-defined.",
+          "category": "well_defined"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "negative_shift",
+      "source": "lc::shift(lc::variable(0),0,-1)=lc::shift(lc::variable(0),0,-1)",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::shift(m0::f0::variable(0), 0, (-1)) = m0::f0::shift(m0::f0::variable(0), 0, (-1))",
+          "phase": "well_defined",
+          "message": "Could not prove that the statement is well-defined.",
+          "category": "well_defined",
+          "obligation": "(-1) $in N"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "wrong_identity_result",
+      "source": "lc::beta_contract(lc::variable(0),lc::variable(1))=lc::variable(0)",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::beta_contract(m0::f0::variable(0), m0::f0::variable(1)) = m0::f0::variable(0)",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "m0::f0::beta_contract(m0::f0::variable(0), m0::f0::variable(1)) = m0::f0::variable(0)"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    }
+  ],
+  "session_close": {
+    "exit_code": 0,
+    "run_result": "failure",
+    "session_terminated": false,
+    "termination": null,
+    "meaning": "Aggregate failure records the deliberate refusals; per-turn verdicts and successful follow-ups establish the controls."
+  },
+  "manifest_sha256": {
+    "litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+    "validation/litex.config": "889abb86a4d80aa8c3a5cff6f969e0c01f6d99392a1c5bcbe85f2f8c69c9030f"
+  },
+  "relocation": {
+    "mathematical_source_unchanged": true,
+    "mathematical_source_sha256": "87a223913a309fbf06db827ab2b0c7e62b2c193cf0424216298d2b4cd4d2592f",
+    "caller_unchanged": true,
+    "negative_cases_unchanged": true,
+    "standard_library_copy_removed": true,
+    "import_mode": "Relative [import] from validation/ to ..",
+    "standard_library_search_path": "LITEX_STD_PATH removed from the verification environment"
+  },
+  "scope": "Strict showcase source and independent relative import, final-statement refusals and Session liveness. No Rust, Lean or release-wide claim.",
+  "temporary_artifacts": {
+    "remaining_task_temporary_artifacts": [],
+    "task_ledger_removed": true,
+    "task_verifier_driver_removed": true
+  },
+  "completion_audit": {
+    "strict_source_and_relative_import_passed": true,
+    "all_refusals_and_session_follow_ups_passed": true,
+    "mathematical_statements_callers_and_cases_preserved": true,
+    "old_directories_and_obsolete_references_removed": true,
+    "collection_indexes_and_local_documentation_links_checked": true,
+    "source_trust_and_user_axiom_delta": 0
+  }
+}

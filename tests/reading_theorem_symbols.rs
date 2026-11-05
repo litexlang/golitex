@@ -53,12 +53,31 @@ fn rejected_theorem_calls_keep_native_declaration_without_success_evidence() {
         );
         assert!(!result.success, "{source}");
         check_identity(&result.document, name, arity);
-        for entry in field(&result.document, "evidence_nodes")
+        let nodes = field(&result.document, "evidence_nodes")
+            .as_array()
+            .unwrap();
+        let statements = field(&result.document, "statements").as_array().unwrap();
+        let statement = statements
+            .iter()
+            .find(|statement| field(statement, "status").as_str().unwrap() == "rejected")
+            .unwrap();
+        assert!(field(statement, "produced_fact_ids")
             .as_array()
             .unwrap()
-        {
+            .is_empty());
+        let mut reference = field(statement, "evidence");
+        let mut found_failed_call = false;
+        loop {
+            let id = field(reference, "evidence_id").as_str().unwrap();
+            let entry = nodes
+                .iter()
+                .find(|entry| field(entry, "id").as_str().unwrap() == id)
+                .unwrap();
             let node = field(entry, "node");
             let kind = field(node, "type").as_str().unwrap();
+            // The callee's retained declaration can contain successful generic
+            // applications. Check the caller's result chain, not that separate
+            // declaration's proof graph.
             assert!(
                 ![
                     "ExecReleaseThmStmtSuccess",
@@ -68,12 +87,17 @@ fn rejected_theorem_calls_keep_native_declaration_without_success_evidence() {
                 .contains(&kind),
                 "{source}"
             );
+            if ["ExecReleaseThmStmtResult", "ExecByThmStmtResult"].contains(&kind) {
+                assert_eq!(field(node, "variant").as_str().unwrap(), "Failed");
+                found_failed_call = true;
+            }
+            let Some(next) = field(node, "fields").as_object().unwrap().get("0") else {
+                break;
+            };
+            assert_eq!(field(next, "kind").as_str().unwrap(), "evidence_reference");
+            reference = next;
         }
-        assert!(field(&result.document, "statements")
-            .as_array()
-            .unwrap()
-            .iter()
-            .any(|statement| field(statement, "status").as_str().unwrap() == "rejected"));
+        assert!(found_failed_call, "{source}");
     }
 }
 

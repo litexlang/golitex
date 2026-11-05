@@ -141,6 +141,7 @@ impl LitexToLeanCompiler {
                         use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule;
                         let AtomicFact::IsFiniteSetFact(fact) = goal else { return Err(LeanCompileError::unsupported("FiniteSet/FactSubject")); };
                         match rule {
+                            IsFiniteSetFactSearchProofByBuiltinRule::FunctionRangeOfFiniteDomain(p) => self.compile_finite_function_range(fact,p,position)?,
                             IsFiniteSetFactSearchProofByBuiltinRule::ListSet(_) => self.compile_list_finite(&fact.set, position)?,
                             IsFiniteSetFactSearchProofByBuiltinRule::ClosedRange(_) if matches!(&fact.set,Obj::SetFormer(SetFormer::ClosedRange(_))) => format!("(Litex.closedRangeFinite {})",self.compile_object_reference(&fact.set,position)?),
                             IsFiniteSetFactSearchProofByBuiltinRule::Range(_) if matches!(&fact.set,Obj::SetFormer(SetFormer::Range(_))) => format!("(Litex.rangeFinite {})",self.compile_object_reference(&fact.set,position)?),
@@ -290,6 +291,10 @@ impl LitexToLeanCompiler {
                     _ => return Err(LeanCompileError::new("FunctionReturn/Family", "A returned-membership rule has another source fact family.")),
                 },
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FunctionSetMembership(p)) => self.compile_function_set_strategy(goal,p,position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ClosedRangeMembership(p)) =>
+                    self.compile_integer_range_membership_strategy(goal, true, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RangeMembership(p)) =>
+                    self.compile_integer_range_membership_strategy(goal, false, &p.requirement_facts, &p.proof_of_requirement_facts, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::UnionFiniteFromBoth(p)) => self.compile_finite_union_or_difference(goal,true,&p.requirement_facts,&p.proof_of_requirement_facts,position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::SetMinusFiniteFromLeft(p)) => self.compile_finite_union_or_difference(goal,false,&p.requirement_facts,&p.proof_of_requirement_facts,position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::IntersectFiniteFromBoth(p)) => self.compile_finite_intersection(goal,p,position)?,

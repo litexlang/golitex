@@ -88,8 +88,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -175,8 +180,13 @@
           "strict": false,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -234,8 +244,13 @@
           "strict": false,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `Missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `Missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -244,8 +259,13 @@
           "strict": false,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -305,9 +325,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "name `x` is already bound in an enclosing parse scope"
+            "error_contains": "name `x` is already bound in an enclosing parse scope",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -316,8 +340,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -330,7 +359,7 @@
               false
             ],
             "failed_phase": [
-              "let"
+              "requirement"
             ]
           }
         }
@@ -380,7 +409,7 @@
               false
             ],
             "failed_phase": [
-              "have_in_nonempty"
+              "nonempty_check"
             ]
           }
         },
@@ -390,8 +419,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `Missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `Missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -440,7 +474,7 @@
               false
             ],
             "failed_phase": [
-              "have_equal"
+              "membership"
             ]
           }
         },
@@ -454,7 +488,7 @@
               false
             ],
             "failed_phase": [
-              "have_equal"
+              "parameter_count"
             ]
           }
         },
@@ -468,7 +502,7 @@
               false
             ],
             "failed_phase": [
-              "have_equal"
+              "membership"
             ]
           }
         },
@@ -484,7 +518,7 @@
               true
             ],
             "failed_phase": [
-              "have_equal"
+              "membership"
             ]
           }
         },
@@ -548,7 +582,7 @@
               false
             ],
             "failed_phase": [
-              "have_by_exist"
+              "search_proof"
             ]
           }
         },
@@ -558,8 +592,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -608,7 +647,7 @@
               false
             ],
             "failed_phase": [
-              "obtain_exist"
+              "witness_count"
             ]
           }
         },
@@ -622,7 +661,7 @@
               false
             ],
             "failed_phase": [
-              "obtain_exist"
+              "search_proof"
             ]
           }
         }
@@ -673,7 +712,7 @@
               false
             ],
             "failed_phase": [
-              "obtain_atomic"
+              "definition"
             ]
           }
         },
@@ -688,7 +727,7 @@
               false
             ],
             "failed_phase": [
-              "obtain_atomic"
+              "source_fact"
             ]
           }
         }
@@ -738,7 +777,7 @@
               false
             ],
             "failed_phase": [
-              "have_by_preimage"
+              "source_shape"
             ]
           }
         },
@@ -753,7 +792,7 @@
               false
             ],
             "failed_phase": [
-              "have_by_preimage"
+              "parameter_count"
             ]
           }
         }
@@ -804,7 +843,7 @@
               false
             ],
             "failed_phase": [
-              "have_by_replacement"
+              "predicate_arity"
             ]
           }
         },
@@ -818,7 +857,7 @@
               false
             ],
             "failed_phase": [
-              "have_by_replacement"
+              "predicate_arity"
             ]
           }
         }
@@ -867,7 +906,7 @@
               false
             ],
             "failed_phase": [
-              "have_fn_equal"
+              "search_proof"
             ]
           }
         },
@@ -896,7 +935,7 @@
               false
             ],
             "failed_phase": [
-              "have_fn_equal"
+              "requirement"
             ]
           }
         }
@@ -945,7 +984,7 @@
               false
             ],
             "failed_phase": [
-              "have_fn_cases"
+              "coverage"
             ]
           }
         },
@@ -959,7 +998,7 @@
               false
             ],
             "failed_phase": [
-              "have_fn_cases"
+              "case_body_in_return_set"
             ]
           }
         }
@@ -1015,7 +1054,7 @@
               false
             ],
             "failed_phase": [
-              "have_fn_induc"
+              "case_body_wd"
             ]
           }
         },
@@ -1029,7 +1068,7 @@
               false
             ],
             "failed_phase": [
-              "have_fn_induc"
+              "case_body_in_ret_set"
             ]
           }
         }
@@ -1074,8 +1113,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "`have fn … by exist!`: the only forall then fact must be `exist!`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "`have fn … by exist!`: the only forall then fact must be `exist!`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -1088,7 +1132,7 @@
               false
             ],
             "failed_phase": [
-              "have_fn_forall_exist_unique"
+              "source_forall"
             ]
           }
         }
@@ -1147,8 +1191,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -1162,7 +1211,7 @@
               false
             ],
             "failed_phase": [
-              "by_def"
+              "goal_wd"
             ]
           }
         },
@@ -1177,7 +1226,7 @@
               false
             ],
             "failed_phase": [
-              "by_def"
+              "definition_requirement"
             ]
           }
         },
@@ -1294,9 +1343,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "name `P` is already bound in an enclosing parse scope"
+            "error_contains": "name `P` is already bound in an enclosing parse scope",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -1382,8 +1435,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "template definition expects exactly one body statement"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "template definition expects exactly one body statement",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -1456,8 +1514,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `Missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `Missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -1466,8 +1529,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "duplicate struct field `x`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "duplicate struct field `x`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -1476,8 +1544,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "struct definition expects at least two fields"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "struct definition expects at least two fields",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -1616,7 +1689,7 @@
               false
             ],
             "failed_phase": [
-              "def_algo_induc"
+              "case_body_wd"
             ]
           }
         },
@@ -1630,7 +1703,7 @@
               false
             ],
             "failed_phase": [
-              "def_algo_induc"
+              "case_body_in_ret_set"
             ]
           }
         }
@@ -1679,7 +1752,7 @@
               false
             ],
             "failed_phase": [
-              "def_thm"
+              "conclusion"
             ]
           }
         },
@@ -1693,7 +1766,7 @@
               false
             ],
             "failed_phase": [
-              "def_thm"
+              "conclusion"
             ]
           }
         },
@@ -1707,7 +1780,7 @@
               false
             ],
             "failed_phase": [
-              "def_thm"
+              "goal_unsupported"
             ]
           }
         },
@@ -1795,8 +1868,13 @@
           "strict": false,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "axiom: goal must be a single `forall` fact"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "axiom: goal must be a single `forall` fact",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -1805,8 +1883,13 @@
           "strict": false,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -1872,8 +1955,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "strategy: goal must be a single `forall` fact"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "strategy: goal must be a single `forall` fact",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -1967,7 +2055,7 @@
               false
             ],
             "failed_phase": [
-              "release_thm"
+              "argument_type"
             ]
           }
         },
@@ -1982,7 +2070,7 @@
               false
             ],
             "failed_phase": [
-              "release_thm"
+              "premise"
             ]
           }
         },
@@ -1996,7 +2084,7 @@
               false
             ],
             "failed_phase": [
-              "release_thm"
+              "lookup"
             ]
           }
         }
@@ -2046,7 +2134,7 @@
               false
             ],
             "failed_phase": [
-              "release_struct"
+              "no_definition_owned_carrier"
             ]
           }
         },
@@ -2056,8 +2144,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -2101,8 +2194,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -2111,8 +2209,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "release obj def expects an identifier"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "release obj def expects an identifier",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -2156,8 +2259,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "expand: expected `e $in range(…)`, `e $in closed_range(…)`, or `e $in a...b`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "expand: expected `e $in range(…)`, `e $in closed_range(…)`, or `e $in a...b`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -2170,7 +2278,7 @@
               false
             ],
             "failed_phase": [
-              "expand_range"
+              "search_proof"
             ]
           }
         }
@@ -2288,8 +2396,13 @@
           "strict": false,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `Missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `Missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -2333,8 +2446,13 @@
           "strict": false,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `Missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `Missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -2343,8 +2461,13 @@
           "strict": false,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "release regularity_axiom: expected exactly one set argument, got 2"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "release regularity_axiom: expected exactly one set argument, got 2",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -2414,7 +2537,7 @@
               false
             ],
             "failed_phase": [
-              "by_cases"
+              "coverage"
             ]
           }
         },
@@ -2428,7 +2551,7 @@
               false
             ],
             "failed_phase": [
-              "by_cases"
+              "closing_then"
             ]
           }
         },
@@ -2528,7 +2651,7 @@
               false
             ],
             "failed_phase": [
-              "by_contra"
+              "impossible"
             ]
           }
         },
@@ -2538,8 +2661,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "by contra: expects a `? <fact>` goal block and `impossible ...` tail"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "by contra: expects a `? <fact>` goal block and `impossible ...` tail",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -2552,7 +2680,7 @@
               false
             ],
             "failed_phase": [
-              "by_contra"
+              "negated_impossible"
             ]
           }
         },
@@ -2566,7 +2694,7 @@
               false
             ],
             "failed_phase": [
-              "by_contra"
+              "impossible"
             ]
           }
         },
@@ -2644,7 +2772,7 @@
               false
             ],
             "failed_phase": [
-              "by_enumerate"
+              "assignment"
             ]
           }
         },
@@ -2658,7 +2786,7 @@
               false
             ],
             "failed_phase": [
-              "by_enumerate"
+              "domain"
             ]
           }
         },
@@ -2672,7 +2800,7 @@
               false
             ],
             "failed_phase": [
-              "by_enumerate"
+              "proof_body"
             ]
           }
         },
@@ -2686,7 +2814,7 @@
               false
             ],
             "failed_phase": [
-              "by_enumerate"
+              "assignment"
             ]
           }
         }
@@ -2735,7 +2863,7 @@
               false
             ],
             "failed_phase": [
-              "by_induc"
+              "goal"
             ]
           }
         },
@@ -2749,7 +2877,7 @@
               false
             ],
             "failed_phase": [
-              "by_induc"
+              "goal"
             ]
           }
         },
@@ -2763,7 +2891,7 @@
               false
             ],
             "failed_phase": [
-              "by_induc"
+              "from_in_z"
             ]
           }
         }
@@ -2812,7 +2940,7 @@
               false
             ],
             "failed_phase": [
-              "by_strong_induc"
+              "goal"
             ]
           }
         },
@@ -2826,7 +2954,7 @@
               false
             ],
             "failed_phase": [
-              "by_strong_induc"
+              "goal"
             ]
           }
         },
@@ -2840,7 +2968,7 @@
               false
             ],
             "failed_phase": [
-              "by_strong_induc"
+              "from_in_z"
             ]
           }
         }
@@ -2903,7 +3031,7 @@
               false
             ],
             "failed_phase": [
-              "by_for"
+              "assignment"
             ]
           }
         },
@@ -2917,7 +3045,7 @@
               false
             ],
             "failed_phase": [
-              "by_for"
+              "domain"
             ]
           }
         },
@@ -2931,7 +3059,7 @@
               false
             ],
             "failed_phase": [
-              "by_for"
+              "proof_body"
             ]
           }
         },
@@ -2945,7 +3073,7 @@
               false
             ],
             "failed_phase": [
-              "by_for"
+              "assignment"
             ]
           }
         }
@@ -3001,7 +3129,7 @@
               false
             ],
             "failed_phase": [
-              "by_extension"
+              "left_to_right"
             ]
           }
         },
@@ -3011,8 +3139,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "by extension: goal expects an equality fact"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "by extension: goal expects an equality fact",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -3069,7 +3202,7 @@
               false
             ],
             "failed_phase": [
-              "by_fn_extension"
+              "pointwise"
             ]
           }
         },
@@ -3085,7 +3218,7 @@
               false
             ],
             "failed_phase": [
-              "by_fn_extension"
+              "function_domain"
             ]
           }
         }
@@ -3135,7 +3268,7 @@
               false
             ],
             "failed_phase": [
-              "by_def"
+              "definition_requirement"
             ]
           }
         },
@@ -3149,7 +3282,7 @@
               false
             ],
             "failed_phase": [
-              "by_def"
+              "goal_wd"
             ]
           }
         },
@@ -3214,7 +3347,7 @@
               false
             ],
             "failed_phase": [
-              "by_thm"
+              "selected_fact"
             ]
           }
         },
@@ -3229,7 +3362,7 @@
               false
             ],
             "failed_phase": [
-              "by_thm"
+              "selected_fact"
             ]
           }
         },
@@ -3244,7 +3377,7 @@
               false
             ],
             "failed_phase": [
-              "by_thm"
+              "selected_fact"
             ]
           }
         },
@@ -3259,7 +3392,7 @@
               false
             ],
             "failed_phase": [
-              "by_thm"
+              "argument_type"
             ]
           }
         },
@@ -3320,9 +3453,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register reflexive: then fact must be a positive user-defined prop fact"
+            "error_contains": "register reflexive: then fact must be a positive user-defined prop fact",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3332,9 +3469,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register reflexive: indented proof body is not supported; prove the forall first, then register"
+            "error_contains": "register reflexive: indented proof body is not supported; prove the forall first, then register",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3344,9 +3485,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register reflexive: each forall parameter type must be set"
+            "error_contains": "register reflexive: each forall parameter type must be set",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3356,9 +3501,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register reflexive: each forall parameter type must be set"
+            "error_contains": "register reflexive: each forall parameter type must be set",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3372,7 +3521,7 @@
               false
             ],
             "failed_phase": [
-              "register_reflexive"
+              "forall"
             ]
           }
         }
@@ -3418,9 +3567,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register symmetric: forall must bind at least two parameters"
+            "error_contains": "register symmetric: forall must bind at least two parameters",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3430,9 +3583,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register symmetric: indented proof body is not supported; prove the forall first, then register"
+            "error_contains": "register symmetric: indented proof body is not supported; prove the forall first, then register",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3442,9 +3599,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register symmetric: each forall parameter type must be set"
+            "error_contains": "register symmetric: each forall parameter type must be set",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3454,9 +3615,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register symmetric: each forall parameter type must be set"
+            "error_contains": "register symmetric: each forall parameter type must be set",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3470,7 +3635,7 @@
               false
             ],
             "failed_phase": [
-              "register_symmetric"
+              "forall"
             ]
           }
         }
@@ -3516,9 +3681,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register transitive: forall must bind exactly three parameters"
+            "error_contains": "register transitive: forall must bind exactly three parameters",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3528,9 +3697,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register transitive: indented proof body is not supported; prove the forall first, then register"
+            "error_contains": "register transitive: indented proof body is not supported; prove the forall first, then register",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3540,9 +3713,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register transitive: each forall parameter type must be set"
+            "error_contains": "register transitive: each forall parameter type must be set",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3552,9 +3729,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "register transitive: each forall parameter type must be set"
+            "error_contains": "register transitive: each forall parameter type must be set",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3568,7 +3749,7 @@
               false
             ],
             "failed_phase": [
-              "register_transitive"
+              "forall"
             ]
           }
         },
@@ -3632,7 +3813,7 @@
               false
             ],
             "failed_phase": [
-              "witness_exist"
+              "witness_type"
             ]
           }
         },
@@ -3646,7 +3827,7 @@
               false
             ],
             "failed_phase": [
-              "witness_exist"
+              "witness_count"
             ]
           }
         },
@@ -3660,7 +3841,7 @@
               false
             ],
             "failed_phase": [
-              "witness_exist"
+              "body_check"
             ]
           }
         }
@@ -3710,7 +3891,7 @@
               false
             ],
             "failed_phase": [
-              "witness_atomic"
+              "witness_type"
             ]
           }
         },
@@ -3725,7 +3906,7 @@
               false
             ],
             "failed_phase": [
-              "witness_atomic"
+              "definition"
             ]
           }
         },
@@ -3740,7 +3921,7 @@
               false
             ],
             "failed_phase": [
-              "witness_atomic"
+              "definition"
             ]
           }
         }
@@ -3789,7 +3970,7 @@
               false
             ],
             "failed_phase": [
-              "witness_nonempty"
+              "membership"
             ]
           }
         },
@@ -3803,7 +3984,7 @@
               false
             ],
             "failed_phase": [
-              "witness_nonempty"
+              "membership"
             ]
           }
         }
@@ -3848,8 +4029,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "claim: expects a nonempty proof body"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "claim: expects a nonempty proof body",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3859,9 +4045,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "undefined name `local`"
+            "error_contains": "undefined name `local`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -3874,7 +4064,7 @@
               false
             ],
             "failed_phase": [
-              "claim"
+              "conclusion"
             ]
           }
         },
@@ -3940,7 +4130,7 @@
               false
             ],
             "failed_phase": [
-              "sketch"
+              "proof_body"
             ]
           }
         },
@@ -3951,9 +4141,13 @@
           "expect": {
             "success": false,
             "statement_success": [
-              true
+              true,
+              false
             ],
-            "session_error_contains": "undefined name `local`"
+            "error_contains": "undefined name `local`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -4025,8 +4219,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "undefined name `missing`"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "undefined name `missing`",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -4039,7 +4238,7 @@
               false
             ],
             "failed_phase": [
-              "eval"
+              "requirement"
             ]
           }
         },
@@ -4054,7 +4253,7 @@
               false
             ],
             "failed_phase": [
-              "eval"
+              "search_proof"
             ]
           }
         }
@@ -4089,7 +4288,7 @@
               false
             ],
             "failed_phase": [
-              "release_cart_def"
+              "requirement"
             ]
           }
         },
@@ -4099,8 +4298,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "expects a cart(...) constructor"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "expects a cart(...) constructor",
+            "failed_phase": [
+              "parse"
+            ]
           }
         },
         {
@@ -4109,8 +4313,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "release cart def expects one cart(...)"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "release cart def expects one cart(...)",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -4176,8 +4385,13 @@
           "strict": true,
           "expect": {
             "success": false,
-            "statement_success": [],
-            "session_error_contains": "release tuple def expects one object and no body"
+            "statement_success": [
+              false
+            ],
+            "error_contains": "release tuple def expects one object and no body",
+            "failed_phase": [
+              "parse"
+            ]
           }
         }
       ]
@@ -4287,9 +4501,13 @@
       "expect": {
         "success": false,
         "statement_success": [
-          true
+          true,
+          false
         ],
-        "session_error_contains": "by thm: expected bare call or `=> <atomic fact>`"
+        "error_contains": "by thm: expected bare call or `=> <atomic fact>`",
+        "failed_phase": [
+          "parse"
+        ]
       }
     },
     {
@@ -4408,7 +4626,7 @@
           false
         ],
         "failed_phase": [
-          "by_for"
+          "domain"
         ]
       }
     },

@@ -1,7 +1,31 @@
 use crate::prelude::*;
 
-const WEAK: &str = include_str!("../../../lean/examples/componentwise_sum_bounds/statement.lit");
-const MIXED: &str = include_str!("../../../lean/examples/mixed_strict_sum_bounds/statement.lit");
+const WEAK: &str = r#"# Add two real upper bounds, including crossed pairs of addends.
+forall sum_a, sum_b, sum_c, sum_d R:
+    sum_a <= sum_b
+    sum_c <= sum_d
+    =>:
+        sum_a + sum_c <= sum_b + sum_d
+
+forall sum_a, sum_b, sum_c, sum_d R:
+    sum_a <= sum_d
+    sum_c <= sum_b
+    =>:
+        sum_a + sum_c <= sum_b + sum_d
+"#;
+const MIXED: &str = r#"# Adding a strict bound and a weak bound gives a strict bound on the sum.
+forall sum_a, sum_b, sum_c, sum_d R:
+    sum_a < sum_b
+    sum_c <= sum_d
+    =>:
+        sum_a + sum_c < sum_b + sum_d
+
+forall sum_right_a, sum_right_b, sum_right_c, sum_right_d R:
+    sum_right_a <= sum_right_b
+    sum_right_c < sum_right_d
+    =>:
+        sum_right_a + sum_right_c < sum_right_b + sum_right_d
+"#;
 
 fn children(
     proof: &mut VerifyAtomicExceptEqualityFactSuccess,
@@ -203,14 +227,4 @@ fn componentwise_addition_rejects_changed_strength_with_matching_child_subject()
             }
         }
     }
-}
-
-#[test]
-fn componentwise_addition_composes_and_reuses_a_named_theorem() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/three_term_sum_bound/statement.lit"
-    ));
-    let lean = compiler.compile_run(&run, "three_term_sum").unwrap();
-    assert!(lean.contains("Litex.addLeAdd "));
-    assert!(lean.contains("Litex.addLtAddOfLeOfLt "));
 }

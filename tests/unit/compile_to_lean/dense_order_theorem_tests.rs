@@ -2,8 +2,18 @@ use crate::execute::execute_by_stmt::{ExecReleaseThmStmtResult, ExecReleaseThmSt
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const NATURAL: &str = include_str!("../../../lean/examples/real_natural_upper_bound/statement.lit");
-const RATIONAL: &str = include_str!("../../../lean/examples/rational_between_reals/statement.lit");
+const NATURAL: &str = r#"thm checked_natural_upper_bound:
+    ? forall x R:
+        exist n N+ st {x<n}
+    release thm real_archimedean_natural_upper_bound(x)
+"#;
+const RATIONAL: &str = r#"thm checked_rational_density:
+    ? forall a,b R:
+        a<b
+        =>:
+            exist q Q st {a<q and q<b}
+    release thm rational_between_reals(a,b)
+"#;
 
 pub(super) fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -22,30 +32,6 @@ pub(super) fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStm
         panic!("original builtin invocation");
     };
     call
-}
-
-#[test]
-fn dense_order_theorems_replay_generic_and_concrete_calls() {
-    for (source, law) in [
-        (NATURAL, "positiveNaturalAboveReal"),
-        (RATIONAL, "rationalBetweenRealObjects"),
-        (
-            "release thm real_archimedean_natural_upper_bound(3)\n",
-            "positiveNaturalAboveReal",
-        ),
-        (
-            "release thm rational_between_reals(2,3)\n",
-            "rationalBetweenRealObjects",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "dense_order")
-            .unwrap_or_else(|e| panic!("{e}"));
-        assert!(output.contains(&format!("Litex.{law}")));
-        assert!(output.contains("Litex.Obj (M := M) M.Value"));
-        assert_eq!(output, compiler.compile_run(&run, "dense_order").unwrap());
-    }
 }
 
 #[test]

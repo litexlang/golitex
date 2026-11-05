@@ -549,14 +549,35 @@ fn eval_tuple_coordinate_evidence_and_unknown_values_stay_checked() {
         assert!(!exec_one(&mut rt, "let p=(1,2,3)").is_failed());
         let result = exec_one(&mut rt, "eval p(2)");
         assert!(!result.is_failed());
-        let detailed = crate::json_output::project_stmt_detailed(&result, &rt).stringify();
-        assert!(
-            detailed.contains("finite_function_coordinate"),
-            "{detailed}"
-        );
-        assert!(
-            detailed.contains("p(2)") && detailed.contains("tuple_equality"),
-            "missing coordinate source: {detailed}"
+        let detailed = crate::json_output::project_stmt_detailed(&result, &rt);
+        let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(
+            evaluated,
+        ))) = &result
+        else {
+            panic!("expected a checked coordinate evaluation");
+        };
+        assert_eq!(evaluated.cited_equal_fact_ids.len(), 1);
+        let cited = rt
+            .top_exec_env()
+            .facts
+            .facts_by_id
+            .get(&evaluated.cited_equal_fact_ids[0])
+            .unwrap();
+        assert_eq!(cited.readable_string(), "p(2) = 2");
+        assert_eq!(evaluated.rewritten_object.readable_string(), "2");
+        assert_eq!(evaluated.evaluated_object.readable_string(), "2");
+        let fields = detailed.as_object().unwrap();
+        let field = |name| {
+            fields
+                .get(&crate::json_output::json_keys::localize_key(name, language))
+                .unwrap()
+        };
+        assert_eq!(field("source_object").as_str().unwrap(), "p(2)");
+        let citations = field("cite").as_array().unwrap();
+        assert_eq!(citations.len(), 1);
+        assert_eq!(
+            citations[0].as_str().unwrap(),
+            evaluated.cited_equal_fact_ids[0].to_string()
         );
         assert!(!exec_one(&mut rt, "have unknown cart(R,R)").is_failed());
         let count = rt.top_exec_env().facts.facts_by_id.len();

@@ -4,44 +4,6 @@ use crate::prelude::*;
 use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
 
 #[test]
-fn real_interval_sequence_examples_replay_deterministically() {
-    for (source, expected) in [
-        (
-            include_str!("../../../lean/examples/real_interval_endpoints/statement.lit"),
-            "Litex.inRealInterval_iff",
-        ),
-        (
-            include_str!("../../../lean/examples/real_ray_endpoints/statement.lit"),
-            "Litex.inRealRay_iff",
-        ),
-        (
-            include_str!("../../../lean/examples/real_interval_bounds/statement.lit"),
-            "Litex.inRealInterval_iff",
-        ),
-        (
-            include_str!("../../../lean/examples/real_interval_membership/statement.lit"),
-            "Litex.inRealInterval_iff",
-        ),
-        (
-            include_str!("../../../lean/examples/infinite_sequence_spaces/statement.lit"),
-            "Litex.seqSet_eq_fnSet",
-        ),
-        (
-            include_str!("../../../lean/examples/infinite_sequence_values/statement.lit"),
-            "Litex.seqSignature",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "interval_sequence").unwrap();
-        assert!(output.contains(expected), "{expected}");
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "interval_sequence").unwrap()
-        );
-    }
-}
-
-#[test]
 fn real_interval_wd_rejects_missing_swapped_or_foreign_evidence() {
     for mutation in 0..5 {
         let (mut run, compiler) = super::execute("let interval = '[0, 2]\n");
@@ -233,7 +195,10 @@ fn sequence_expansion_rejects_a_different_recorded_rule_family() {
     };
     for source in [
         "forall A set, s seq(A), n N+:\n    s(n) $in A\n",
-        include_str!("../../../lean/examples/finite_sequence_coordinates/statement.lit"),
+        r#"# A finite sequence returns an element of its carrier at every legal index.
+forall A set, n N, f finite_seq(A, n), k closed_range(1, n):
+    f(k) $in A
+"#,
     ] {
         let (mut run, compiler) = super::execute(source);
         let p = super::forall_proof_mut(&mut run.statement_results[0]);

@@ -1,0 +1,2 @@
+# Conjugation reverses the imaginary component.
+conj(i) = i

@@ -2,8 +2,12 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_b
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::ArithmeticCongruenceStrategySingleStep;
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../../lean/examples/real_shift_square_quotient/statement.lit");
+const SOURCE: &str = r#"# Expand the square of a real shift under negation and a nonzero constant divisor.
+have fn shift(x R) R = x + 3
+thm scalar_polynomial:
+    ? forall x R:
+        -(shift(x)^2)/2 = -(x^2+6*x+9)/2
+"#;
 
 fn arithmetic(result: &mut VerifyFactResult) -> Option<&mut VerifyEqualitySuccess> {
     let VerifyFactResult::Equality(result) = result else {

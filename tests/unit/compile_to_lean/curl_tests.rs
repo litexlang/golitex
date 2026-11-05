@@ -1,20 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn curl_replays_selection_existence_and_six_partial_definition() {
-    for source in [
-        include_str!("../../../lean/examples/curl_selection/statement.lit"),
-        include_str!("../../../lean/examples/curl_existence/statement.lit"),
-        include_str!("../../../lean/examples/curl_guarded_domain/statement.lit"),
-        include_str!("../../../lean/examples/curl_from_partials/statement.lit"),
-        include_str!("../../../lean/examples/curl_negative_citation/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "curl_replay").expect(source);
-    }
-}
-
-#[test]
 fn curl_rejects_changed_domains_and_inference_producers() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -22,9 +8,15 @@ fn curl_rejects_changed_domains_and_inference_producers() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..4 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/curl_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select a curl from its certified value and use its components in arithmetic.
+forall f fn(x cart_n(R,3)) cart_n(R,3), p cart_n(R,3), c cart_n(R,3):
+    $has_curl_at(f,p,c)
+    =>:
+        curl(f,p)=c
+        curl(f,p)(1)+curl(f,p)(3) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         if mutation < 2 {
             let FactWellDefinedProof::AtomicExceptEquality(p) =
@@ -69,9 +61,15 @@ fn curl_requires_original_point_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
         DetailedObjWellDefinedProof, ObjWellDefinedProofByDef,
     };
-    let (mut run, c) = super::execute(include_str!(
-        "../../../lean/examples/curl_selection/statement.lit"
-    ));
+    let (mut run, c) = super::execute(
+        r#"# Select a curl from its certified value and use its components in arithmetic.
+forall f fn(x cart_n(R,3)) cart_n(R,3), p cart_n(R,3), c cart_n(R,3):
+    $has_curl_at(f,p,c)
+    =>:
+        curl(f,p)=c
+        curl(f,p)(1)+curl(f,p)(3) $in R
+"#,
+    );
     let root = super::forall_proof_mut(&mut run.statement_results[0]);
     let equal = super::equality_proof_mut(&mut root.proved_then_facts[0].verify_result);
     let DetailedObjWellDefinedProof::ByDef {

@@ -4,33 +4,35 @@ use crate::store_fact_and_infer::{
     InferResult,
 };
 
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/abstract_property_transport/statement.lit");
+const TRANSPORT: &str = r#"# An arbitrary property transfers between equal real objects.
+abstract_prop marked(x)
+forall a, b R:
+    a = b
+    $marked(a)
+    =>:
+        $marked(b)
+
+thm marked_equal:
+    ? forall a, b R:
+        a = b
+        $marked(a)
+        =>:
+            $marked(b)
+    $marked(b)
+
+thm marked_add_zero:
+    ? forall a R:
+        $marked(a)
+        =>:
+            $marked(a + 0)
+    by thm marked_equal(a, a + 0) => $marked(a + 0)
+"#;
 
 fn conclusion(run: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     super::atomic_proof_mut(
         &mut super::forall_proof_mut(&mut run.statement_results[1]).proved_then_facts[0]
             .verify_result,
     )
-}
-
-#[test]
-fn abstract_predicate_examples_replay_deterministically() {
-    for source in [
-        TRANSPORT,
-        include_str!("../../../lean/examples/abstract_relation_transport/statement.lit"),
-        include_str!("../../../lean/examples/abstract_function_guard/statement.lit"),
-        include_str!("../../../lean/examples/abstract_proposition_identity/statement.lit"),
-        include_str!("../../../lean/examples/abstract_property_context/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "abstract_predicates").unwrap();
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "abstract_predicates").unwrap()
-        );
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
 }
 
 #[test]

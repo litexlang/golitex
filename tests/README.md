@@ -11,6 +11,12 @@ narrow test-only access seams.
 | `integration/` | Black-box public API, CLI, output, publication, and repository-boundary tests. | Registered explicitly as Cargo `[[test]]` targets. |
 | `tooling/` | Tests for repository scripts and deployment tooling. | Run by the tool-specific Python gate. |
 
+Core compiler regressions use self-contained source strings and temporary
+module projects. Only tiny file-based CLI inputs remain in
+[`fixtures/compile_to_lean/`](fixtures/compile_to_lean/README.md). Bulk example
+acceptance runs separately from the optional `lean/examples/_acceptance/`
+package and is not part of ordinary Cargo tests.
+
 The current Cargo targets run Rust unit tests and the Stmt fixture inventory
 integration test. The old `run_examples`, `run_examples_only`,
 `run_docs_markdown_files`, and `run_showcases` collectors exist only in the

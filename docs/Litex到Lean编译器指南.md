@@ -162,6 +162,10 @@ forall p &CoordinatePair:
 普通对象声明、给定值的声明和显式展开也使用同一套表示：
 
 ```litex
+struct CoordinatePair:
+    x R
+    y R
+
 witness $is_nonempty_set(&CoordinatePair) from (1, 2)
 have p &CoordinatePair
 release struct def p

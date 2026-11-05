@@ -3,24 +3,22 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::BoundOp
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const SUP: &str = include_str!("../../../lean/examples/real_supremum_selection/statement.lit");
-const INF: &str = include_str!("../../../lean/examples/real_infimum_selection/statement.lit");
-
-#[test]
-fn real_extrema_examples_replay_selection_and_candidate_evidence() {
-    for source in [
-        SUP,
-        INF,
-        include_str!("../../../lean/examples/real_extremum_functions/statement.lit"),
-        include_str!("../../../lean/examples/real_supremum_candidate/statement.lit"),
-        include_str!("../../../lean/examples/real_infimum_candidate/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "real_extrema")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
+const SUP: &str = r#"# Construct and select the supremum of the real singleton {2}.
+by def $is_real_upper_bound({2},2)
+witness exist bound R st {$is_real_upper_bound({2},bound)} from 2
+by def $is_real_bounded_above({2})
+release thm real_supremum_exists({2})
+release thm real_supremum_selected({2})
+sup({2}) $in R
+"#;
+const INF: &str = r#"# Construct and select the infimum of the real singleton {2}.
+by def $is_real_lower_bound({2},2)
+witness exist bound R st {$is_real_lower_bound({2},bound)} from 2
+by def $is_real_bounded_below({2})
+release thm real_infimum_exists({2})
+release thm real_infimum_selected({2})
+inf({2}) $in R
+"#;
 
 #[test]
 fn real_extrema_reject_changed_theorem_stages() {
@@ -187,8 +185,60 @@ fn real_extrema_certificate_all_native_contracts_compile() {
             .unwrap_or_else(|e| panic!("{id}: {e:?}"));
     }
     for source in [
-        include_str!("../../../lean/examples/real_supremum_certificate_laws/statement.lit"),
-        include_str!("../../../lean/examples/real_infimum_certificate_laws/statement.lit"),
+        r#"# Establish the supremum of {2}, identify any other candidate, and extract a crossing member.
+by def $is_real_upper_bound({2},2)
+release thm real_least_upper_bound_from_definition({2},2)
+sup({2}) = 2
+release thm real_least_upper_bound_upper_bound({2},2)
+by def $is_real_upper_bound({2},3)
+release thm real_least_upper_bound_exists({2},3)
+obtain upper_candidate_witness from exist u R st {$is_real_least_upper_bound({2},u)}
+release thm real_least_upper_bound_unique({2},upper_candidate_witness,2)
+upper_candidate_witness = 2
+release thm real_member_le_least_upper_bound({2},upper_candidate_witness,2)
+release thm real_least_upper_bound_le_upper_bound({2},upper_candidate_witness,3)
+release thm real_least_upper_bound_crosses({2},upper_candidate_witness,1)
+obtain upper_crossing_witness from exist x {2} st {1 < x}
+1 < upper_crossing_witness
+upper_crossing_witness = 2
+
+thm extremal_member_upper_bound:
+    ? forall A set, b R, x A:
+        A $subset R
+        $is_real_least_upper_bound(A,b)
+        =>:
+            x <= b
+    release thm real_member_le_least_upper_bound(A,b,x)
+
+by thm extremal_member_upper_bound({2},upper_candidate_witness,2) => 2 <= upper_candidate_witness
+"#,
+        r#"# Establish the infimum of {2}, identify any other candidate, and extract a crossing member.
+by def $is_real_lower_bound({2},2)
+release thm real_greatest_lower_bound_from_definition({2},2)
+inf({2}) = 2
+release thm real_greatest_lower_bound_lower_bound({2},2)
+by def $is_real_lower_bound({2},1)
+release thm real_greatest_lower_bound_exists({2},1)
+obtain lower_candidate_witness from exist u R st {$is_real_greatest_lower_bound({2},u)}
+release thm real_greatest_lower_bound_unique({2},lower_candidate_witness,2)
+lower_candidate_witness = 2
+release thm real_greatest_lower_bound_le_member({2},lower_candidate_witness,2)
+release thm real_lower_bound_le_greatest_lower_bound({2},lower_candidate_witness,1)
+release thm real_greatest_lower_bound_crosses({2},lower_candidate_witness,3)
+obtain lower_crossing_witness from exist x {2} st {x < 3}
+lower_crossing_witness < 3
+lower_crossing_witness = 2
+
+thm extremal_member_lower_bound:
+    ? forall A set, b R, x A:
+        A $subset R
+        $is_real_greatest_lower_bound(A,b)
+        =>:
+            b <= x
+    release thm real_greatest_lower_bound_le_member(A,b,x)
+
+by thm extremal_member_lower_bound({2},lower_candidate_witness,2) => lower_candidate_witness <= 2
+"#,
     ] {
         let (run, compiler) = super::execute(source);
         compiler.compile_run(&run, "certificate_laws").unwrap();

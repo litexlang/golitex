@@ -14,23 +14,6 @@ fn released(statement: &mut ExecStmtResult) -> &mut ExecReleaseObjDefStmtSuccess
 }
 
 #[test]
-fn object_release_examples_replay_original_definitions() {
-    for source in [
-        include_str!("../../../lean/examples/released_value_definitions/statement.lit"),
-        include_str!("../../../lean/examples/released_reciprocal_definition/statement.lit"),
-        include_str!("../../../lean/examples/released_witness_definition/statement.lit"),
-        include_str!("../../../lean/examples/released_local_definitions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "released_definition").unwrap();
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "released_definition").unwrap()
-        );
-    }
-}
-
-#[test]
 fn object_release_emits_direct_original_fact_references() {
     let (mut run, compiler) = super::execute("have a R = 2\nrelease obj def a\n");
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(

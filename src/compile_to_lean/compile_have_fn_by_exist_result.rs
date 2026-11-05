@@ -20,7 +20,8 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         outer: &HashMap<IdentifierId, String>,
     ) -> Result<String, LeanCompileError> {
-        let (signature, existential) = selected_shape(p)?;
+        let (signature, existential) =
+            selected_shape(p, &IdentifierObj::from_bound_name(&p.statement.name))?;
         let (domain, output, _) =
             self.compile_function_signature_value_parts(signature, position, outer)?;
         let values = self.compile_function_packed_values(signature, "_selected_input")?;
@@ -60,7 +61,8 @@ impl LitexToLeanCompiler {
         let ExecHaveFnByForallExistUniqueStmtResult::Success(p) = result else {
             return Err(LeanCompileError::unsupported("SelectedFunction/Failed"));
         };
-        let (signature, existential) = selected_shape(p)?;
+        let identifier = position.defining_identifier(&p.statement.name, &self.runtime)?;
+        let (signature, existential) = selected_shape(p, &identifier)?;
         let expected = Fact::ForallFact(p.statement.forall.clone());
         if source_subject(&p.source_forall)? != expected {
             return Err(LeanCompileError::unsupported(
@@ -158,7 +160,7 @@ impl LitexToLeanCompiler {
         };
         let value = format!("(show Litex.Obj (M := M) (Litex.SelectedFn M) from by\n  let _selected_signature := ({compiled_set}).val\n  have _selected_pointwise : {} := {}\n  exact Litex.selectedFn _selected_signature {relation} (by\n    intro _selected_input _selected_domain\n    obtain ⟨_selected_members, _selected_guard⟩ := (Litex.FunctionSignature.withGuard_domain {base} (Litex.denote {target}) {base_set} (Litex.isSet {target}) {guard} _selected_input).mp _selected_domain\n    exact _selected_pointwise {} {members} _selected_guard))",
             raw_unique.0, raw_unique.1.replace('\n', "\n  "), values.join(" "));
-        let object = Obj::Identifier(IdentifierObj::from_bound_name(&p.statement.name));
+        let object = Obj::Identifier(identifier);
         let mut declarations =
             vec![self.bind_alias(&p.statement.name, &object, &object, &value, local, position)?];
         let name = format!("_object_i{}", p.statement.name.id.value());
@@ -559,9 +561,10 @@ fn conjunction_evidence(terms: &[String]) -> String {
         .unwrap_or_else(|| "True.intro".into())
 }
 
-fn selected_shape(
-    p: &ExecHaveFnByForallExistUniqueStmtSuccessResult,
-) -> Result<(&FnSet, &PlainExistFact), LeanCompileError> {
+fn selected_shape<'a>(
+    p: &'a ExecHaveFnByForallExistUniqueStmtSuccessResult,
+    identifier: &IdentifierObj,
+) -> Result<(&'a FnSet, &'a PlainExistFact), LeanCompileError> {
     let fail = || LeanCompileError::unsupported("SelectedFunction/StoredShape");
     let stores = [&p.membership, &p.property, &p.uniqueness];
     let ids = stores
@@ -589,8 +592,7 @@ fn selected_shape(
     let AtomicFact::InFact(member) = &member.fact else {
         return Err(fail());
     };
-    if !matches!(&member.element,Obj::Identifier(IdentifierObj::Plain{id,name}) if *id==p.statement.name.id && *name==p.statement.name.name)
-    {
+    if member.element != Obj::Identifier(identifier.clone()) {
         return Err(fail());
     }
     let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) = &member.set else {
@@ -674,8 +676,7 @@ fn selected_shape(
     let Obj::FnObj(call) = &eq.right else {
         return Err(fail());
     };
-    if !matches!(call.head.as_ref(),FnObjHead::Identifier(IdentifierObj::Plain{id,name}) if *id==p.statement.name.id && *name==p.statement.name.name)
-    {
+    if !matches!(call.head.as_ref(),FnObjHead::Identifier(head) if head == identifier) {
         return Err(fail());
     }
     let [args] = call.body.as_slice() else {

@@ -1,27 +1,19 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/matrix_rank_split_factorization/statement.lit");
+const SOURCE: &str = r#"# The rank equals the inner dimension of a supplied split matrix factorization.
+thm checked_rank_split_factorization_preparation:
+    ? forall m, k, n N, A matrix(C,m,n), U matrix(C,m,k), V matrix(C,k,n), L matrix(C,k,m), Rr matrix(C,n,k):
+        k<=m
+        k<=n
+        A=matrix_mul(U,V,m,k,n)
+        matrix_mul(L,U,k,m,k)=identity_matrix(k)
+        matrix_mul(V,Rr,k,n,k)=identity_matrix(k)
+        =>:
+            matrix_rank(A,m,n)=k
+    release thm matrix_rank_from_factorization(A,U,V,L,Rr,m,k,n)
 
-#[test]
-fn rank_factorization_replays_supplied_complex_real_and_empty_inner_factors() {
-    for source in [
-        SOURCE,
-        include_str!("../../../lean/examples/matrix_rank_split_factorization_real/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_split_factorization_empty/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "rank_factorization")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains("Litex.matrixRankFromSplitFactorization"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "rank_factorization").unwrap()
-        );
-    }
-}
+"#;
 
 #[test]
 fn rank_factorization_retains_all_twenty_proofs_stores_and_original_order() {

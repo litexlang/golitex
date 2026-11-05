@@ -6,20 +6,56 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const NATIVE: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_invertible/statement.lit");
-const EXPLICIT: &str = include_str!("../../../lean/examples/matrix_rank_invertible/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_invertible_reverse/statement.lit");
-const ZERO: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_invertible_zero/statement.lit");
-const REAL: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_invertible_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_invertible_transport/statement.lit");
-const GUARD: &str = include_str!(
-    "../../../lean/examples/native_matrix_rank_invertible_guard_transport/statement.lit"
-);
+const NATIVE: &str = r#"# Preserve the original nonzero determinant premise for full rank.
+forall replay_invertible_rank_n N, replay_invertible_rank_A matrix(C,replay_invertible_rank_n,replay_invertible_rank_n):
+    det(replay_invertible_rank_A,replay_invertible_rank_n) != 0
+    =>:
+        matrix_rank(replay_invertible_rank_A,replay_invertible_rank_n,replay_invertible_rank_n) = replay_invertible_rank_n
+"#;
+const EXPLICIT: &str = r#"# Retain both proved determinant intermediates before the named call.
+thm replay_matrix_rank_invertible:
+    ? forall replay_invertible_rank_n N, replay_invertible_rank_A matrix(C,replay_invertible_rank_n,replay_invertible_rank_n):
+        det(replay_invertible_rank_A,replay_invertible_rank_n) != 0
+        =>:
+            matrix_rank(replay_invertible_rank_A,replay_invertible_rank_n,replay_invertible_rank_n) = replay_invertible_rank_n
+    release thm matrix_rank_invertible(replay_invertible_rank_A,replay_invertible_rank_n)
+det(identity_matrix(2),2) = 1
+det(identity_matrix(2),2) != 0
+release thm replay_matrix_rank_invertible(2,identity_matrix(2))
+"#;
+const REVERSE: &str = r#"# Reverse the original guarded full-rank equality.
+forall replay_invertible_rank_n N, replay_invertible_rank_A matrix(C,replay_invertible_rank_n,replay_invertible_rank_n):
+    det(replay_invertible_rank_A,replay_invertible_rank_n) != 0
+    =>:
+        replay_invertible_rank_n = matrix_rank(replay_invertible_rank_A,replay_invertible_rank_n,replay_invertible_rank_n)
+"#;
+const ZERO: &str = r#"# Preserve the original determinant guard at natural order zero.
+forall replay_invertible_rank_A matrix(C,0,0):
+    det(replay_invertible_rank_A,0) != 0
+    =>:
+        matrix_rank(replay_invertible_rank_A,0,0) = 0
+"#;
+const REAL: &str = r#"# Retain the proved complex carrier for the original real matrix.
+forall replay_invertible_rank_n N, replay_invertible_rank_A matrix(R,replay_invertible_rank_n,replay_invertible_rank_n):
+    det(replay_invertible_rank_A,replay_invertible_rank_n) != 0
+    =>:
+        replay_invertible_rank_A $in matrix(C,replay_invertible_rank_n,replay_invertible_rank_n)
+        matrix_rank(replay_invertible_rank_A,replay_invertible_rank_n,replay_invertible_rank_n) = replay_invertible_rank_n
+"#;
+const TRANSPORT: &str = r#"# Transport the original order endpoint using the given equality.
+forall replay_invertible_rank_n, replay_invertible_rank_value N, replay_invertible_rank_A matrix(C,replay_invertible_rank_n,replay_invertible_rank_n):
+    det(replay_invertible_rank_A,replay_invertible_rank_n) != 0
+    replay_invertible_rank_n = replay_invertible_rank_value
+    =>:
+        matrix_rank(replay_invertible_rank_A,replay_invertible_rank_n,replay_invertible_rank_n) = replay_invertible_rank_value
+"#;
+const GUARD: &str = r#"# Retain original scalar equality and nonzero evidence for the determinant guard.
+forall replay_invertible_rank_n N, replay_invertible_rank_A matrix(C,replay_invertible_rank_n,replay_invertible_rank_n), replay_invertible_rank_det C:
+    det(replay_invertible_rank_A,replay_invertible_rank_n) = replay_invertible_rank_det
+    replay_invertible_rank_det != 0
+    =>:
+        matrix_rank(replay_invertible_rank_A,replay_invertible_rank_n,replay_invertible_rank_n) = replay_invertible_rank_n
+"#;
 
 fn selected(statement: &mut ExecStmtResult, index: usize) -> &mut MatrixLawApplicationProof {
     let p = super::equality_proof_mut(

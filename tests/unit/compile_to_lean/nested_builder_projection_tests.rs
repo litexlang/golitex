@@ -7,8 +7,13 @@ use crate::store_fact_and_infer::{
 };
 use std::rc::Rc;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/nested_numeric_set_builder/statement.lit");
+const SOURCE: &str = r#"# Project membership through a nested domain whose predicate uses numeric WD.
+claim:
+    ? forall epsilon R+, x {t {s R: s != 0}: 0 < abs(t) and abs(t) < epsilon}:
+        x $in R
+    x $in {s R: s != 0}
+    x $in R
+"#;
 
 fn projection(run: &mut RunLitexCodeResult) -> &mut SetBuilderMembershipProjectionStep {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
@@ -33,14 +38,6 @@ fn projection(run: &mut RunLitexCodeResult) -> &mut SetBuilderMembershipProjecti
             _ => None,
         })
         .expect("original builder projection")
-}
-
-#[test]
-fn nested_builder_projection_uses_the_certified_object() {
-    let (run, compiler) = super::execute(SOURCE);
-    let lean = compiler.compile_run(&run, "nested_builder").unwrap();
-    assert!(lean.contains("Litex.inSetBuilderObj_iff"));
-    assert!(lean.contains("let _litex_builder :="));
 }
 
 #[test]

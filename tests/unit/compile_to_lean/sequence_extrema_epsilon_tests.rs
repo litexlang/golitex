@@ -1,12 +1,60 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 const SOURCES: [&str; 6] = [
-    include_str!("../../../lean/examples/sequence_limsup_from_epsilon/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_bound/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_hit/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_from_epsilon/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_bound/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_hit/statement.lit"),
+    r#"# Both epsilon clauses are required for finite limsup.
+thm checked_sequence_limsup_from_epsilon:
+    ? forall a seq(R),L R:
+        forall epsilon R+:
+            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:v<L+epsilon})}
+        forall epsilon R+,n0 N+:
+            exist n N+ st {n>=n0 and L-epsilon<a(n)}
+        =>:
+            $has_seq_limsup(a,L)
+    release thm seq_limsup_from_epsilon(a,L)
+"#,
+    r#"# The finite limsup candidate supplies a strict eventual epsilon bound.
+thm checked_sequence_limsup_bound:
+    ? forall a seq(R),L R,epsilon R+:
+        $has_seq_limsup(a,L)
+        =>:
+            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:v<L+epsilon})}
+    release thm seq_limsup_bound(a,L,epsilon)
+"#,
+    r#"# Every positive-index tail has a strict finite limsup epsilon hit.
+thm checked_sequence_limsup_hit:
+    ? forall a seq(R),L R,epsilon R+,n0 N+:
+        $has_seq_limsup(a,L)
+        =>:
+            exist n N+ st {n>=n0 and L-epsilon<a(n)}
+    release thm seq_limsup_hit(a,L,epsilon,n0)
+"#,
+    r#"# Both epsilon clauses are required for finite liminf.
+thm checked_sequence_liminf_from_epsilon:
+    ? forall a seq(R),L R:
+        forall epsilon R+:
+            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:L-epsilon<v})}
+        forall epsilon R+,n0 N+:
+            exist n N+ st {n>=n0 and a(n)<L+epsilon}
+        =>:
+            $has_seq_liminf(a,L)
+    release thm seq_liminf_from_epsilon(a,L)
+"#,
+    r#"# The finite liminf candidate supplies a strict eventual epsilon bound.
+thm checked_sequence_liminf_bound:
+    ? forall a seq(R),L R,epsilon R+:
+        $has_seq_liminf(a,L)
+        =>:
+            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:L-epsilon<v})}
+    release thm seq_liminf_bound(a,L,epsilon)
+"#,
+    r#"# Every positive-index tail has a strict finite liminf epsilon hit.
+thm checked_sequence_liminf_hit:
+    ? forall a seq(R),L R,epsilon R+,n0 N+:
+        $has_seq_liminf(a,L)
+        =>:
+            exist n N+ st {n>=n0 and a(n)<L+epsilon}
+    release thm seq_liminf_hit(a,L,epsilon,n0)
+"#,
 ];
 #[test]
 fn sequence_extrema_epsilon_replays_six_original_selected_schemas() {
@@ -40,21 +88,6 @@ fn sequence_extrema_epsilon_replays_six_original_selected_schemas() {
         ][i % 3];
         assert!(out.contains(&format!("Litex.{law} {}", i < 3)));
         assert_eq!(out, c.compile_run(&run, "extrema_epsilon").unwrap());
-    }
-}
-#[test]
-fn sequence_extrema_epsilon_retains_closed_value_epsilon_and_cutoff_arguments() {
-    for source in [
-        include_str!("../../../lean/examples/sequence_limsup_from_epsilon_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_bound_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_hit_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_from_epsilon_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_bound_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_hit_closed/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "closed_extrema")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
     }
 }
 #[test]

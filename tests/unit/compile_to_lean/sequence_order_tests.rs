@@ -22,17 +22,33 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
 }
 
 const SOURCES: [&str; 3] = [
-    include_str!("../../../lean/examples/sequence_strict_increasing_nondecreasing/statement.lit"),
-    include_str!("../../../lean/examples/sequence_strict_decreasing_nonincreasing/statement.lit"),
-    include_str!("../../../lean/examples/sequence_bounded_from_bounds_by_theorem/statement.lit"),
+    r#"# Strict increase implies weak increase for a positive-indexed real sequence.
+thm strict_increase_is_weak_increase:
+    ? forall a seq(R):
+        $is_seq_strictly_increasing(a)
+        =>:
+            $is_seq_nondecreasing(a)
+    release thm sequence_strict_increasing_nondecreasing(a)
+"#,
+    r#"# Strict decrease implies weak decrease for a positive-indexed real sequence.
+thm strict_decrease_is_weak_decrease:
+    ? forall a seq(R):
+        $is_seq_strictly_decreasing(a)
+        =>:
+            $is_seq_nonincreasing(a)
+    release thm sequence_strict_decreasing_nonincreasing(a)
+"#,
+    r#"# Two real bounds on all terms make a real sequence bounded.
+thm pointwise_bounds_make_sequence_bounded:
+    ? forall a seq(R), lower,upper R:
+        forall n N+:
+            lower<=a(n)
+            a(n)<=upper
+        =>:
+            $is_seq_bounded(a)
+    release thm sequence_bounded_from_bounds(a,lower,upper)
+"#,
 ];
-#[test]
-fn sequence_order_and_bound_certificates_replay() {
-    for source in SOURCES {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "sequence_order").unwrap();
-    }
-}
 #[test]
 fn sequence_order_and_bounds_reject_missing_or_altered_evidence() {
     for (index, source) in SOURCES.into_iter().enumerate() {

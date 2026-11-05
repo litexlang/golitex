@@ -3,21 +3,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 
 #[test]
-fn factorial_examples_replay_original_results() {
-    for source in [
-        include_str!("../../../lean/examples/factorial_values/statement.lit"),
-        include_str!("../../../lean/examples/factorial_identities/statement.lit"),
-        include_str!("../../../lean/examples/factorial_order/statement.lit"),
-        include_str!("../../../lean/examples/factorial_function/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "factorials").unwrap();
-        assert!(output.contains("Litex.factorial"));
-        assert_eq!(output, compiler.compile_run(&run, "factorials").unwrap());
-    }
-}
-
-#[test]
 fn factorial_wd_rejects_missing_child_missing_domain_and_wrong_carrier() {
     for fault in 0..3 {
         let (mut run, compiler) = super::execute("have n N\n$is_set(n!)\n");

@@ -1,0 +1,21 @@
+{
+  "context": "main.lit",
+  "method": "After a clean strict positive caller, submit each code as one statement in the same Session; require mathematical/WD rejection and success of 1=1 immediately afterward.",
+  "cases": [
+    {
+      "id": "false_does_not_hold",
+      "code": "$hol::holds(hol::False)",
+      "boundary": "The two Boolean truth values remain distinct."
+    },
+    {
+      "id": "two_plus_two_not_three",
+      "code": "hol::plus(hol::hol_of_nat(2),hol::hol_of_nat(2))=hol::hol_of_nat(3)",
+      "boundary": "Constructed arithmetic retains the proved inequality."
+    },
+    {
+      "id": "wrong_beta_result",
+      "code": "fn(x N) N {x+1}(3)=5",
+      "boundary": "Beta evaluation of successor at3 yields4."
+    }
+  ]
+}

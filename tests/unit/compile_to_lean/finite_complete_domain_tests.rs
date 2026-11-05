@@ -5,33 +5,72 @@ use crate::execute::execute_fact_stmt::known_tuple::KnownTupleShapeProof as Shap
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FunctionGraphNonemptyFromDomainStrategySingleStep;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::SignatureCodomainUseProof as Use;
 use crate::prelude::*;
-
-macro_rules! source {
-    ($s:literal) => {
-        include_str!(concat!(
-            "../../../lean/examples/finite_function_graph_",
-            $s,
-            "/statement.lit"
-        ))
-    };
-}
-const CART: &str = source!("cartesian");
-const RETURNED: &str = source!("returned");
-const COORD: &str = source!("coordinate");
-const MULTI: &str = source!("multiple_codomains");
+const CART: &str = r#"# A member of a two-factor Cartesian product has a nonempty finite graph.
+forall replay_fin_A,replay_fin_B set,replay_fin_p cart(replay_fin_A,replay_fin_B):
+    $is_nonempty_set(replay_fin_p)
+"#;
+const RETURNED: &str = r#"# A Cartesian-valued function returns a nonempty finite graph.
+forall replay_fin_ret_A,replay_fin_ret_B set,replay_fin_ret_f fn(replay_fin_ret_x R) cart(replay_fin_ret_A,replay_fin_ret_B),replay_fin_ret_t R:
+    $is_nonempty_set(replay_fin_ret_f(replay_fin_ret_t))
+"#;
+const COORD: &str = r#"# A Cartesian coordinate of a returned function is a nonempty finite graph.
+forall replay_fin_coord_A,replay_fin_coord_B,replay_fin_coord_C set,replay_fin_coord_f fn(replay_fin_coord_x R) cart(cart(replay_fin_coord_A,replay_fin_coord_B),replay_fin_coord_C),replay_fin_coord_t R:
+    $is_nonempty_set(replay_fin_coord_f(replay_fin_coord_t)(1))
+"#;
+const MULTI: &str = r#"# Original simultaneous Cartesian return contracts certify a nonempty coordinate graph.
+forall replay_fin_multi_A,replay_fin_multi_B,replay_fin_multi_C,replay_fin_multi_D,replay_fin_multi_E,replay_fin_multi_F set,replay_fin_multi_h set,replay_fin_multi_t R:
+    replay_fin_multi_h $in fn(replay_fin_multi_x R) cart(cart(replay_fin_multi_A,replay_fin_multi_B),replay_fin_multi_C)
+    replay_fin_multi_h $in fn(replay_fin_multi_y R) cart(cart(replay_fin_multi_D,replay_fin_multi_E),replay_fin_multi_F)
+    =>:
+        $is_nonempty_set(replay_fin_multi_h(replay_fin_multi_t)(1))
+"#;
 const ALL: &[&str] = &[
-    source!("literal"),
+    r#"# A two-coordinate finite function has a nonempty graph.
+$is_nonempty_set((2,3))
+"#,
     CART,
     RETURNED,
     COORD,
-    source!("repeated"),
+    r#"# Repeated generic coordinates still form a nonempty finite graph.
+forall replay_fin_lit_A,replay_fin_lit_B set,replay_fin_lit_x replay_fin_lit_A,replay_fin_lit_y replay_fin_lit_B:
+    $is_nonempty_set(tuple(replay_fin_lit_x,replay_fin_lit_x,replay_fin_lit_y))
+"#,
     MULTI,
-    source!("tuple_transport"),
-    source!("cartesian_transport"),
-    source!("four_factors"),
-    source!("range"),
-    source!("coordinate_transport"),
-    source!("prior_prefix"),
+    r#"# Equality to a literal finite function preserves graph nonemptiness.
+forall replay_fin_path_p set:
+    replay_fin_path_p=tuple(2,3)
+    =>:
+        $is_nonempty_set(replay_fin_path_p)
+"#,
+    r#"# An original Cartesian carrier equality certifies a nonempty finite graph.
+forall replay_fin_alias_A,replay_fin_alias_B,replay_fin_alias_S set,replay_fin_alias_p replay_fin_alias_S:
+    replay_fin_alias_S=cart(replay_fin_alias_A,replay_fin_alias_B)
+    =>:
+        $is_nonempty_set(replay_fin_alias_p)
+"#,
+    r#"# A four-factor Cartesian member has its complete nonempty finite graph.
+forall replay_fin_dim_A,replay_fin_dim_B,replay_fin_dim_C,replay_fin_dim_D set,replay_fin_dim_p cart(replay_fin_dim_A,replay_fin_dim_B,replay_fin_dim_C,replay_fin_dim_D):
+    $is_nonempty_set(replay_fin_dim_p)
+"#,
+    r#"# The range of a finite Cartesian function lies in the union of its coordinate carriers.
+forall replay_fin_range_A,replay_fin_range_B set,replay_fin_range_p cart(replay_fin_range_A,replay_fin_range_B):
+    fn_range(replay_fin_range_p) $subset union(replay_fin_range_A,replay_fin_range_B)
+"#,
+    r#"# An original coordinate carrier equality preserves finite graph nonemptiness.
+forall replay_fin_ca_A,replay_fin_ca_B,replay_fin_ca_C,replay_fin_ca_S set,replay_fin_ca_f fn(replay_fin_ca_x R) cart(replay_fin_ca_S,replay_fin_ca_C),replay_fin_ca_t R:
+    replay_fin_ca_S=cart(replay_fin_ca_A,replay_fin_ca_B)
+    =>:
+        $is_nonempty_set(replay_fin_ca_f(replay_fin_ca_t)(1))
+"#,
+    r#"# An earlier completed Cartesian call supports a later return contract in its original scope.
+have replay_fin_pc_A,replay_fin_pc_B,replay_fin_pc_C,replay_fin_pc_S set
+have replay_fin_pc_h fn(replay_fin_pc_x R) cart({tuple(2,3)},R)
+replay_fin_pc_h(0)(1)=replay_fin_pc_h(0)(1)
+forall replay_fin_pc_unused R:
+    replay_fin_pc_h $in fn(replay_fin_pc_y R) cart(cart(replay_fin_pc_A,replay_fin_pc_B),replay_fin_pc_C)
+    =>:
+        $is_nonempty_set(replay_fin_pc_h(0)(1))
+"#,
 ];
 fn atom(statement: &mut ExecStmtResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) = statement else {
@@ -157,7 +196,13 @@ fn finite_complete_domain_rejects_disagreement_between_original_parent_and_finit
 
 #[test]
 fn finite_complete_domain_keeps_all_factors_in_their_original_order() {
-    for source in [CART, source!("four_factors")] {
+    for source in [
+        CART,
+        r#"# A four-factor Cartesian member has its complete nonempty finite graph.
+forall replay_fin_dim_A,replay_fin_dim_B,replay_fin_dim_C,replay_fin_dim_D set,replay_fin_dim_p cart(replay_fin_dim_A,replay_fin_dim_B,replay_fin_dim_C,replay_fin_dim_D):
+    $is_nonempty_set(replay_fin_dim_p)
+"#,
+    ] {
         for change in ["missing", "order"] {
             let (mut run, c) = super::execute(source);
             let Shape::CartesianMembership(p) = &mut finite(last(&mut run)).source else {
@@ -195,7 +240,14 @@ fn finite_complete_domain_needs_the_exact_visible_cartesian_membership() {
 #[test]
 fn finite_complete_domain_replays_literal_tuple_transport_instead_of_dropping_the_path() {
     for change in ["path", "citation", "order", "length"] {
-        let (mut run, c) = super::execute(source!("tuple_transport"));
+        let (mut run, c) = super::execute(
+            r#"# Equality to a literal finite function preserves graph nonemptiness.
+forall replay_fin_path_p set:
+    replay_fin_path_p=tuple(2,3)
+    =>:
+        $is_nonempty_set(replay_fin_path_p)
+"#,
+        );
         let Shape::TupleEquality(p) = &mut finite(last(&mut run)).source else {
             panic!()
         };
@@ -215,7 +267,14 @@ fn finite_complete_domain_replays_literal_tuple_transport_instead_of_dropping_th
 #[test]
 fn finite_complete_domain_requires_original_cartesian_carrier_transport() {
     for change in ["path", "citation", "endpoint"] {
-        let (mut run, c) = super::execute(source!("cartesian_transport"));
+        let (mut run, c) = super::execute(
+            r#"# An original Cartesian carrier equality certifies a nonempty finite graph.
+forall replay_fin_alias_A,replay_fin_alias_B,replay_fin_alias_S set,replay_fin_alias_p replay_fin_alias_S:
+    replay_fin_alias_S=cart(replay_fin_alias_A,replay_fin_alias_B)
+    =>:
+        $is_nonempty_set(replay_fin_alias_p)
+"#,
+        );
         let Shape::CartesianMembership(p) = &mut finite(last(&mut run)).source else {
             panic!()
         };
@@ -254,7 +313,14 @@ fn finite_complete_domain_checks_the_actual_coordinate_index_and_parent_factor()
 #[test]
 fn finite_complete_domain_needs_original_coordinate_carrier_equality() {
     for change in ["path", "citation"] {
-        let (mut run, c) = super::execute(source!("coordinate_transport"));
+        let (mut run, c) = super::execute(
+            r#"# An original coordinate carrier equality preserves finite graph nonemptiness.
+forall replay_fin_ca_A,replay_fin_ca_B,replay_fin_ca_C,replay_fin_ca_S set,replay_fin_ca_f fn(replay_fin_ca_x R) cart(replay_fin_ca_S,replay_fin_ca_C),replay_fin_ca_t R:
+    replay_fin_ca_S=cart(replay_fin_ca_A,replay_fin_ca_B)
+    =>:
+        $is_nonempty_set(replay_fin_ca_f(replay_fin_ca_t)(1))
+"#,
+        );
         let Shape::CartesianCoordinate(p) = &mut finite(last(&mut run)).source else {
             panic!()
         };
@@ -270,7 +336,19 @@ fn finite_complete_domain_needs_original_coordinate_carrier_equality() {
 
 #[test]
 fn finite_complete_domain_needs_the_exact_original_return_citation_and_all_signature_rows() {
-    for source in [RETURNED, MULTI, source!("prior_prefix")] {
+    for source in [
+        RETURNED,
+        MULTI,
+        r#"# An earlier completed Cartesian call supports a later return contract in its original scope.
+have replay_fin_pc_A,replay_fin_pc_B,replay_fin_pc_C,replay_fin_pc_S set
+have replay_fin_pc_h fn(replay_fin_pc_x R) cart({tuple(2,3)},R)
+replay_fin_pc_h(0)(1)=replay_fin_pc_h(0)(1)
+forall replay_fin_pc_unused R:
+    replay_fin_pc_h $in fn(replay_fin_pc_y R) cart(cart(replay_fin_pc_A,replay_fin_pc_B),replay_fin_pc_C)
+    =>:
+        $is_nonempty_set(replay_fin_pc_h(0)(1))
+"#,
+    ] {
         for change in ["cite", "missing_row", "row_cite"] {
             let (mut run, c) = super::execute(source);
             let p = &mut returned(&mut finite(last(&mut run)).source).membership_proof;
@@ -301,7 +379,18 @@ fn finite_complete_domain_needs_the_exact_original_return_citation_and_all_signa
 
 #[test]
 fn finite_complete_domain_checks_original_alternative_signature_domain_layers() {
-    for source in [MULTI, source!("prior_prefix")] {
+    for source in [
+        MULTI,
+        r#"# An earlier completed Cartesian call supports a later return contract in its original scope.
+have replay_fin_pc_A,replay_fin_pc_B,replay_fin_pc_C,replay_fin_pc_S set
+have replay_fin_pc_h fn(replay_fin_pc_x R) cart({tuple(2,3)},R)
+replay_fin_pc_h(0)(1)=replay_fin_pc_h(0)(1)
+forall replay_fin_pc_unused R:
+    replay_fin_pc_h $in fn(replay_fin_pc_y R) cart(cart(replay_fin_pc_A,replay_fin_pc_B),replay_fin_pc_C)
+    =>:
+        $is_nonempty_set(replay_fin_pc_h(0)(1))
+"#,
+    ] {
         for change in ["missing_layer", "signature"] {
             let (mut run, c) = super::execute(source);
             let p = &mut returned(&mut finite(last(&mut run)).source).membership_proof;

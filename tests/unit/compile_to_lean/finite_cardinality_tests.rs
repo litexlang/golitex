@@ -4,32 +4,59 @@ use crate::prelude::*;
 fn six_selected_cardinality_rules_replay_their_own_certificates() {
     for (source, law, selected) in [
         (
-            include_str!("../../../lean/examples/finite_set_zero_cardinality/statement.lit"),
+            r#"# A finite set with cardinality zero is empty.
+forall A finite_set:
+    finite_set_size(A)=0
+    =>:
+        A={}
+"#,
             "emptyOfCardinalityZero",
             "zero",
         ),
         (
-            include_str!("../../../lean/examples/finite_sets_equal_cardinality/statement.lit"),
+            r#"# A finite subset with the same cardinality as its containing set is equal to it.
+forall A finite_set,B finite_set:
+    A $subset B
+    finite_set_size(A)=finite_set_size(B)
+    =>:
+        A=B
+"#,
             "sameOfFiniteSubsetCardinality",
             "equal",
         ),
         (
-            include_str!("../../../lean/examples/finite_difference_cardinality/statement.lit"),
+            r#"# Finite difference cardinality subtracts the cardinality of the intersection.
+forall A finite_set,B finite_set:
+    finite_set_size(set_minus(A,B))=finite_set_size(A)-finite_set_size(intersect(A,B))
+"#,
             "finiteCardinalityDifferenceValue",
             "minus",
         ),
         (
-            include_str!("../../../lean/examples/finite_union_cardinality/statement.lit"),
+            r#"# The inclusion-exclusion formula for two finite sets.
+forall A finite_set,B finite_set:
+    finite_set_size(union(A,B))=finite_set_size(A)+finite_set_size(B)-finite_set_size(intersect(A,B))
+"#,
             "finiteCardinalityUnionValue",
             "union",
         ),
         (
-            include_str!("../../../lean/examples/finite_subset_cardinality_bound/statement.lit"),
+            r#"# Inclusion of finite sets gives a weak cardinality bound.
+forall A finite_set,B finite_set:
+    A $subset B
+    =>:
+        finite_set_size(A)<=finite_set_size(B)
+"#,
             "finiteCardinalitySubsetLe",
             "le",
         ),
         (
-            include_str!("../../../lean/examples/finite_proper_subset_cardinality/statement.lit"),
+            r#"# Proper inclusion of finite sets gives a strict cardinality bound.
+forall A finite_set,B finite_set:
+    A $proper_subset B
+    =>:
+        finite_set_size(A)<finite_set_size(B)
+"#,
             "finiteCardinalityProperSubsetLt",
             "lt",
         ),
@@ -128,8 +155,19 @@ fn finite_cardinality_equalities_preserve_both_inclusion_and_equality_directions
 #[test]
 fn cardinality_certificates_cannot_lose_or_exchange_distinct_premises() {
     for source in [
-        include_str!("../../../lean/examples/finite_set_zero_cardinality/statement.lit"),
-        include_str!("../../../lean/examples/finite_sets_equal_cardinality/statement.lit"),
+        r#"# A finite set with cardinality zero is empty.
+forall A finite_set:
+    finite_set_size(A)=0
+    =>:
+        A={}
+"#,
+        r#"# A finite subset with the same cardinality as its containing set is equal to it.
+forall A finite_set,B finite_set:
+    A $subset B
+    finite_set_size(A)=finite_set_size(B)
+    =>:
+        A=B
+"#,
     ] {
         let (mut run, compiler) = super::execute(source);
         let universal = super::forall_proof_mut(&mut run.statement_results[0]);
@@ -152,8 +190,14 @@ fn cardinality_certificates_cannot_lose_or_exchange_distinct_premises() {
 #[test]
 fn finite_union_and_difference_wd_replay_original_operand_proofs() {
     for source in [
-        include_str!("../../../lean/examples/finite_union_construction/statement.lit"),
-        include_str!("../../../lean/examples/finite_difference_construction/statement.lit"),
+        r#"# The union of two finite sets is finite.
+forall A finite_set,B finite_set:
+    $is_finite_set(union(A,B))
+"#,
+        r#"# Removing any set from a finite set leaves a finite set.
+forall A finite_set,B set:
+    $is_finite_set(set_minus(A,B))
+"#,
     ] {
         let (run, compiler) = super::execute(source);
         let output = compiler.compile_run(&run, "finite_constructor_wd").unwrap();
@@ -164,9 +208,12 @@ fn finite_union_and_difference_wd_replay_original_operand_proofs() {
         }));
     }
     for change in ["missing", "swapped"] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/finite_union_construction/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# The union of two finite sets is finite.
+forall A finite_set,B finite_set:
+    $is_finite_set(union(A,B))
+"#,
+        );
         let universal = super::forall_proof_mut(&mut run.statement_results[0]);
         let proof = super::atomic_proof_mut(&mut universal.proved_then_facts[0].verify_result);
         let AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(

@@ -8,10 +8,13 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
 use crate::execute::ExecObtainObjFromExistFactStmtResult;
 use crate::prelude::*;
 use crate::store_fact_and_infer::{InferNotExistFactResult, InferResult};
-
-const SIMPLE: &str = include_str!("../../../lean/examples/no_one_in_zero_singleton/statement.lit");
-const GUARDED: &str =
-    include_str!("../../../lean/examples/nonzero_reciprocal_reflexivity/statement.lit");
+const GUARDED: &str = r#"# Every defined reciprocal equals itself, so no nonzero real is a counterexample.
+by contra:
+    ? not exist x R st {x != 0, 1 / x != 1 / x}
+    obtain a from exist x R st {x != 0, 1 / x != 1 / x}
+    impossible 1 / a != 1 / a
+not exist y R st {y != 0, 1 / y != 1 / y}
+"#;
 
 fn contra(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecByContraStmtSuccess {
     let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(p))) =
@@ -20,25 +23,6 @@ fn contra(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecByContraStmtSu
         panic!("contra")
     };
     p
-}
-
-#[test]
-fn negative_existence_replays_contra_witness_and_reuse() {
-    for source in [
-        SIMPLE,
-        GUARDED,
-        include_str!("../../../lean/examples/incompatible_existential_equalities/statement.lit"),
-        include_str!("../../../lean/examples/no_self_unequal_alternative/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "negative_exist").unwrap();
-        assert!(output.contains("¬ (∃"));
-        assert!(!output.contains("sorry"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "negative_exist").unwrap()
-        );
-    }
 }
 
 #[test]

@@ -1,17 +1,193 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 const SOURCES: [&str; 10] = [
-    include_str!("../../../lean/examples/sequence_limsup_compare/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_eventually_equal/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_shift/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_neg/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_compare/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_eventually_equal/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_shift/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_neg/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limit_from_extrema/statement.lit"),
-    include_str!("../../../lean/examples/sequence_extrema_order/statement.lit"),
+    r#"# Eventual order of real sequences orders their finite limsup values.
+thm checked_sequence_limsup_compare:
+    ? forall a,b seq(R),L,M R,cutoff N+:
+        $has_seq_limsup(a,L)
+        $has_seq_limsup(b,M)
+        forall k N+:
+            k>=cutoff
+            =>:
+                a(k)<=b(k)
+        =>:
+            L<=M
+    release thm seq_limsup_compare(a,b,L,M,cutoff)
+"#,
+    r#"# Finite limsup is preserved by equality after a positive cutoff.
+thm checked_sequence_limsup_eventually_equal:
+    ? forall a,b seq(R),L R,cutoff N+:
+        $has_seq_limsup(a,L)
+        forall k N+:
+            k>=cutoff
+            =>:
+                b(k)=a(k)
+        =>:
+            $has_seq_limsup(b,L)
+    release thm seq_limsup_eventually_equal(a,b,L,cutoff)
+"#,
+    r#"# A natural shift, including zero, preserves finite limsup.
+thm checked_sequence_limsup_shift:
+    ? forall a,b seq(R),L R,amount N:
+        $has_seq_limsup(a,L)
+        forall k N+:
+            b(k)=a(k+amount)
+        =>:
+            $has_seq_limsup(b,L)
+    release thm seq_limsup_shift(a,b,L,amount)
+"#,
+    r#"# Pointwise negation exchanges finite limsup with finite liminf.
+thm checked_sequence_limsup_neg:
+    ? forall a,b seq(R),L R:
+        $has_seq_limsup(a,L)
+        forall k N+:
+            b(k)=-a(k)
+        =>:
+            $has_seq_liminf(b,-L)
+    release thm seq_limsup_neg(a,b,L)
+"#,
+    r#"# Eventual order of real sequences orders their finite liminf values.
+thm checked_sequence_liminf_compare:
+    ? forall a,b seq(R),L,M R,cutoff N+:
+        $has_seq_liminf(a,L)
+        $has_seq_liminf(b,M)
+        forall k N+:
+            k>=cutoff
+            =>:
+                a(k)<=b(k)
+        =>:
+            L<=M
+    release thm seq_liminf_compare(a,b,L,M,cutoff)
+"#,
+    r#"# Finite liminf is preserved by equality after a positive cutoff.
+thm checked_sequence_liminf_eventually_equal:
+    ? forall a,b seq(R),L R,cutoff N+:
+        $has_seq_liminf(a,L)
+        forall k N+:
+            k>=cutoff
+            =>:
+                b(k)=a(k)
+        =>:
+            $has_seq_liminf(b,L)
+    release thm seq_liminf_eventually_equal(a,b,L,cutoff)
+"#,
+    r#"# A natural shift, including zero, preserves finite liminf.
+thm checked_sequence_liminf_shift:
+    ? forall a,b seq(R),L R,amount N:
+        $has_seq_liminf(a,L)
+        forall k N+:
+            b(k)=a(k+amount)
+        =>:
+            $has_seq_liminf(b,L)
+    release thm seq_liminf_shift(a,b,L,amount)
+"#,
+    r#"# Pointwise negation exchanges finite liminf with finite limsup.
+thm checked_sequence_liminf_neg:
+    ? forall a,b seq(R),L R:
+        $has_seq_liminf(a,L)
+        forall k N+:
+            b(k)=-a(k)
+        =>:
+            $has_seq_limsup(b,-L)
+    release thm seq_liminf_neg(a,b,L)
+"#,
+    r#"# Coincident finite upper and lower extrema determine the ordinary sequence limit.
+thm checked_sequence_limit_from_extrema:
+    ? forall a seq(R),L R:
+        $has_seq_limsup(a,L)
+        $has_seq_liminf(a,L)
+        =>:
+            $has_seq_limit(a,L)
+    release thm seq_limit_from_extrema(a,L)
+"#,
+    r#"# The finite lower extremum is at most the finite upper extremum.
+thm checked_sequence_extrema_order:
+    ? forall a seq(R),L,U R:
+        $has_seq_liminf(a,L)
+        $has_seq_limsup(a,U)
+        =>:
+            L<=U
+    release thm seq_extrema_order(a,L,U)
+"#,
 ];
+#[test]
+fn sequence_extrema_obtained_values_use_only_their_prior_original_carrier_store() {
+    use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
+    let source = r#"# Negate a sequence after obtaining its original finite upper extremum.
+thm obtained_extremum_negation:
+    ? forall a,b seq(R):
+        exist L R st {$has_seq_limsup(a,L)}
+        forall n N+:
+            b(n)=-a(n)
+        =>:
+            exist M R st {$has_seq_liminf(b,M)}
+    obtain L from exist L R st {$has_seq_limsup(a,L)}
+    release thm seq_limsup_neg(a,b,L)
+    witness exist M R st {$has_seq_liminf(b,M)} from -L
+"#;
+    let (run, compiler) = super::execute(source);
+    compiler
+        .compile_run(&run, "obtained_extremum_negation")
+        .unwrap();
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+        ExecDefThmStmtResult::Success(theorem),
+    )) = &run.statement_results[0]
+    else {
+        panic!("original theorem");
+    };
+    let Fact::ForallFact(fact) = &theorem.statement.fact else {
+        panic!("forall goal");
+    };
+    let ExecDefThmBodyProof::Forall(body) = &theorem.body else {
+        panic!("forall body");
+    };
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+        ExecDefineObjStmtResult::ObtainObjFromExistFact(
+            crate::execute::ExecObtainObjFromExistFactStmtResult::Success(obtain),
+        ),
+    )) = &body.proof_steps[0]
+    else {
+        panic!("original obtain");
+    };
+    let object = Obj::Identifier(IdentifierObj::from_bound_name(
+        &obtain.statement.equal_tos[0],
+    ));
+    let id = obtain
+        .store_and_infer_result
+        .store_and_infer_results
+        .iter()
+        .find_map(|stored| {
+            matches!(&stored.store, StoreFactResult::AtomicFact(s)
+            if matches!(s.fact, AtomicFact::HasSequenceLimsupFact(_)))
+            .then(|| stored.primary_fact_id())
+        })
+        .expect("original renamed extremum clause");
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+    let head = fact.typed_parameters.ordered_param_ids().len() + fact.dom_facts.len();
+    let before = SourcePosition::new(Some(&root), SourceOwner::Named(theorem), head);
+    assert!(compiler
+        .cited_obtained_argument_membership(id, &object, &StandardSet::R, &before)
+        .is_err());
+    let after = SourcePosition {
+        before: head + 1,
+        ..before
+    };
+    let original = compiler
+        .cited_obtained_argument_membership(id, &object, &StandardSet::R, &after)
+        .unwrap()
+        .unwrap();
+    assert!(original.contains(&format!(
+        "h_{}",
+        obtain.store_and_infer_result.store_and_infer_results[0]
+            .primary_fact_id()
+            .value()
+    )));
+    assert!(compiler
+        .cited_obtained_argument_membership(id, &object, &StandardSet::C, &after)
+        .unwrap()
+        .is_none());
+}
+
 fn value(f: &mut Fact) -> &mut Obj {
     match f {
         Fact::AtomicFact(AtomicFact::HasSequenceLimsupFact(f)) => &mut f.value,
@@ -66,32 +242,6 @@ fn sequence_extrema_transport_replays_ten_actual_selected_schemas_deterministica
             assert!(out.contains(&format!("Litex.{law} {}", i < 4)));
         }
         assert_eq!(out, c.compile_run(&run, "extrema_transport").unwrap());
-    }
-}
-#[test]
-fn sequence_extrema_transport_preserves_zero_alias_literal_and_call_owners() {
-    for source in [
-        include_str!("../../../lean/examples/sequence_limsup_neg_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_neg_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_shift_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_shift_closed/statement.lit"),
-        include_str!(
-            "../../../lean/examples/sequence_limsup_eventually_equal_aliased/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/sequence_liminf_eventually_equal_aliased/statement.lit"
-        ),
-        include_str!("../../../lean/examples/sequence_limsup_neg_aliased/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_neg_aliased/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_neg_literal/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_neg_call/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_compare_call/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_from_extrema_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_extrema_order_closed/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "transport_variants")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
     }
 }
 #[test]
@@ -347,8 +497,29 @@ fn sequence_extrema_cross_links_require_coincident_values_and_distinct_original_
 fn sequence_extrema_call_owners_cannot_drop_original_verifications() {
     use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult};
     for source in [
-        include_str!("../../../lean/examples/sequence_limsup_neg_call/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_compare_call/statement.lit"),
+        r#"# Pointwise negation exchanges finite limsup with finite liminf.
+thm checked_sequence_limsup_neg_explicit_call:
+    ? forall a,b seq(R),L R:
+        $has_seq_limsup(a,L)
+        forall k N+:
+            b(k)=-a(k)
+        =>:
+            $has_seq_liminf(b,-L)
+    by thm seq_limsup_neg(a,b,L) => $has_seq_liminf(b,-L)
+"#,
+        r#"# Eventual order of real sequences orders their finite liminf values.
+thm checked_sequence_liminf_compare_explicit_call:
+    ? forall a,b seq(R),L,M R,cutoff N+:
+        $has_seq_liminf(a,L)
+        $has_seq_liminf(b,M)
+        forall k N+:
+            k>=cutoff
+            =>:
+                a(k)<=b(k)
+        =>:
+            L<=M
+    by thm seq_liminf_compare(a,b,L,M,cutoff) => L<=M
+"#,
     ] {
         let (mut run, c) = super::execute(source);
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -374,9 +545,35 @@ fn sequence_extrema_call_owners_cannot_drop_original_verifications() {
 fn sequence_extrema_closed_values_require_the_original_real_formation() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     for source in [
-        include_str!("../../../lean/examples/sequence_limsup_neg_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_neg_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_from_extrema_closed/statement.lit"),
+        r#"# Pointwise negation exchanges finite limsup with finite liminf.
+thm checked_sequence_limsup_neg_closed:
+    ? forall a,b seq(R):
+        $has_seq_limsup(a,0)
+        forall k N+:
+            b(k)=-a(k)
+        =>:
+            $has_seq_liminf(b,-0)
+    release thm seq_limsup_neg(a,b,0)
+"#,
+        r#"# Pointwise negation exchanges finite liminf with finite limsup.
+thm checked_sequence_liminf_neg_closed:
+    ? forall a,b seq(R):
+        $has_seq_liminf(a,0)
+        forall k N+:
+            b(k)=-a(k)
+        =>:
+            $has_seq_limsup(b,-0)
+    release thm seq_liminf_neg(a,b,0)
+"#,
+        r#"# Coincident finite upper and lower extrema determine the ordinary sequence limit.
+thm checked_sequence_limit_from_extrema_closed:
+    ? forall a seq(R):
+        $has_seq_limsup(a,0)
+        $has_seq_liminf(a,0)
+        =>:
+            $has_seq_limit(a,0)
+    release thm seq_limit_from_extrema(a,0)
+"#,
     ] {
         for carrier in [false, true] {
             let (mut run, c) = super::execute(source);

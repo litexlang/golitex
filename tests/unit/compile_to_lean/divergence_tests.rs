@@ -1,21 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn divergence_replays_selection_existence_and_diagonal_sum_definition() {
-    for source in [
-        include_str!("../../../lean/examples/divergence_selection/statement.lit"),
-        include_str!("../../../lean/examples/divergence_generic_dimension/statement.lit"),
-        include_str!("../../../lean/examples/divergence_existence/statement.lit"),
-        include_str!("../../../lean/examples/divergence_guarded_domain/statement.lit"),
-        include_str!("../../../lean/examples/divergence_from_partials/statement.lit"),
-        include_str!("../../../lean/examples/divergence_negative_citation/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "divergence_replay").expect(source);
-    }
-}
-
-#[test]
 fn divergence_rejects_changed_domains_and_inference_producers() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -23,9 +8,15 @@ fn divergence_rejects_changed_domains_and_inference_producers() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..4 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/divergence_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select the sum of diagonal coordinate partials and use it in arithmetic.
+forall f fn(x cart_n(R,2)) cart_n(R,2), p cart_n(R,2), d R:
+    $has_divergence_at(f,p,2,d)
+    =>:
+        divergence(f,p,2)=d
+        divergence(f,p,2)+1 $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         if mutation < 2 {
             let FactWellDefinedProof::AtomicExceptEquality(p) =
@@ -70,9 +61,15 @@ fn divergence_requires_original_dimension_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
         DetailedObjWellDefinedProof, ObjWellDefinedProofByDef,
     };
-    let (mut run, c) = super::execute(include_str!(
-        "../../../lean/examples/divergence_selection/statement.lit"
-    ));
+    let (mut run, c) = super::execute(
+        r#"# Select the sum of diagonal coordinate partials and use it in arithmetic.
+forall f fn(x cart_n(R,2)) cart_n(R,2), p cart_n(R,2), d R:
+    $has_divergence_at(f,p,2,d)
+    =>:
+        divergence(f,p,2)=d
+        divergence(f,p,2)+1 $in R
+"#,
+    );
     let root = super::forall_proof_mut(&mut run.statement_results[0]);
     let equal = super::equality_proof_mut(&mut root.proved_then_facts[0].verify_result);
     let DetailedObjWellDefinedProof::ByDef {

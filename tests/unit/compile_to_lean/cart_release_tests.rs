@@ -1,30 +1,3 @@
-#[test]
-fn cart_release_replays_complete_definition_and_its_citation() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/released_cartesian_definition/statement.lit"
-    ));
-    compiler
-        .compile_run(&run, "released_cartesian_definition")
-        .unwrap();
-}
-
-#[test]
-fn cart_release_replays_boundary_lengths_generic_carriers_and_local_theorems() {
-    for source in [
-        include_str!("../../../lean/examples/empty_and_single_cartesian_products/statement.lit"),
-        include_str!("../../../lean/examples/generic_cartesian_definitions/statement.lit"),
-        include_str!("../../../lean/examples/local_cartesian_definition/statement.lit"),
-        "release cart def cart(R,Z)\nrelease cart def cart(R,Z)\n",
-    ] {
-        let (run, compiler) = super::execute(source);
-        let first = compiler.compile_run(&run, "cartesian_definitions").unwrap();
-        assert_eq!(
-            first,
-            compiler.compile_run(&run, "cartesian_definitions").unwrap()
-        );
-    }
-}
-
 use crate::execute::execute_release_cart_def_stmt::{
     ExecReleaseCartDefStmtResult, ExecReleaseCartDefStmtSuccess,
 };
@@ -121,9 +94,17 @@ fn cart_release_publication_follows_verification_and_stays_in_scope() {
             before == 4
         );
     }
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/local_cartesian_definition/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# Release a Cartesian definition inside a reusable theorem on arbitrary carriers.
+thm cart_description:
+    ? forall A, B set:
+        cart(A, B) = {p finite_seq(union(A, B), 2): p(1) $in A, p(2) $in B}
+    release cart def cart(A, B)
+    cart(A, B) = {p finite_seq(union(A, B), 2): p(1) $in A, p(2) $in B}
+
+by thm cart_description(R, Z) => cart(R, Z) = {p finite_seq(union(R, Z), 2): p(1) $in R, p(2) $in Z}
+"#,
+    );
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(thm),
     )) = &mut run.statement_results[0]
@@ -143,9 +124,17 @@ fn cart_release_publication_follows_verification_and_stays_in_scope() {
 #[test]
 fn cart_release_set_parameter_calls_reject_changed_evidence() {
     for mutation in 0..3 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/local_cartesian_definition/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Release a Cartesian definition inside a reusable theorem on arbitrary carriers.
+thm cart_description:
+    ? forall A, B set:
+        cart(A, B) = {p finite_seq(union(A, B), 2): p(1) $in A, p(2) $in B}
+    release cart def cart(A, B)
+    cart(A, B) = {p finite_seq(union(A, B), 2): p(1) $in A, p(2) $in B}
+
+by thm cart_description(R, Z) => cart(R, Z) = {p finite_seq(union(R, Z), 2): p(1) $in R, p(2) $in Z}
+"#,
+        );
         let ExecStmtResult::By(crate::execute::execute_by_stmt::ExecByStmtResult::Thm(
             crate::execute::execute_by_stmt::ExecByThmStmtResult::Success(call),
         )) = &mut run.statement_results[1]

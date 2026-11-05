@@ -1,20 +1,5 @@
 use crate::prelude::*;
 #[test]
-fn scalar_differentials_replay_selection_existence_coordinates_and_remainder_definition() {
-    for source in [
-        include_str!("../../../lean/examples/scalar_differential_selection/statement.lit"),
-        include_str!("../../../lean/examples/scalar_differential_existence/statement.lit"),
-        include_str!("../../../lean/examples/scalar_differential_generic_dimension/statement.lit"),
-        include_str!("../../../lean/examples/scalar_differential_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/scalar_differential_from_definition/statement.lit"),
-        include_str!("../../../lean/examples/scalar_differential_guarded_domain/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "scalar_differential_replay")
-            .expect(source);
-    }
-}
-#[test]
 fn scalar_differentials_reject_changed_point_domain_and_inference_subjects() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -22,9 +7,15 @@ fn scalar_differentials_reject_changed_point_domain_and_inference_subjects() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/scalar_differential_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select the scalar differential matrix and use its second coordinate.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), A matrix(R,1,2):
+    $has_scalar_differential_at(f,p,2,A)
+    =>:
+        scalar_differential(f,p,2)=A
+        scalar_differential(f,p,2)(1,2) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         if mutation == 0 {
             let FactWellDefinedProof::AtomicExceptEquality(p) =

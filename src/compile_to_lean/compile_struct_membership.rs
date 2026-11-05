@@ -18,7 +18,7 @@ impl LitexToLeanCompiler {
         else {
             return Err(LeanCompileError::unsupported("StructMembership/Carrier"));
         };
-        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        let (declaration, _, _) = position.visible_struct(&carrier.name, &self.runtime)?;
         validate_struct(declaration)?;
         if proof.equivalent_fact_proofs.len() != declaration.statement.equivalent_facts.len() {
             return Err(LeanCompileError::unsupported("StructMembership/Conditions"));

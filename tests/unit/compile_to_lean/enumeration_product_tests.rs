@@ -3,10 +3,23 @@ use crate::execute::execute_by_stmt::{
 };
 use crate::prelude::*;
 
-const RECTANGLE: &str =
-    include_str!("../../../lean/examples/integer_rectangle_square_bound/statement.lit");
-const GUARDS: &str =
-    include_str!("../../../lean/examples/nonzero_integer_pair_division/statement.lit");
+const RECTANGLE: &str = r#"# The squared coordinates of an integer point in [0, 3) times [0, 2) sum to at most 5.
+by for:
+    ? forall x range(0, 3), y range(0, 2):
+        x * x + y * y <= 5
+    x * x + y * y <= 5
+"#;
+const GUARDS: &str = r#"# Two nonzero integers in {-1, 0, 1} each divide themselves to 1.
+by for:
+    ? forall x, y closed_range(-1, 1):
+        x != 0
+        y != 0
+        =>:
+            x / x = 1
+            y / y = 1
+    x / x = 1
+    y / y = 1
+"#;
 
 fn product(statement: &mut ExecStmtResult) -> &mut ExecByForStmtSuccess {
     let ExecStmtResult::By(ExecByStmtResult::For(ExecByForStmtResult::Success(p))) = statement
@@ -158,7 +171,12 @@ fn enumeration_product_preserves_both_guard_prefixes_and_return_conjunction() {
 #[test]
 fn enumeration_product_empty_factor_does_not_expand_other_factors() {
     for source in [
-        include_str!("../../../lean/examples/empty_integer_rectangle/statement.lit"),
+        r#"# A rectangle with an empty second factor has no points.
+by for:
+    ? forall x range(0, 3), y range(2, 2):
+        x = y
+    x = y
+"#,
         "by for:\n    ? forall x {0,1}, y {}:\n        x=y\n    x=y\n",
         "by for:\n    ? forall x {}, y range(0,3):\n        x=y\n    x=y\n",
     ] {
@@ -169,19 +187,6 @@ fn enumeration_product_empty_factor_does_not_expand_other_factors() {
         let lean = compiler.compile_run(&run, "empty_product").unwrap();
         assert!(!lean.contains("_enumerated_case_"));
         assert!(lean.len() < 10_000);
-    }
-}
-
-#[test]
-fn enumeration_product_accepts_shared_groups_mixed_domains_and_local_scope() {
-    for source in [
-        include_str!("../../../lean/examples/binary_product_commutes/statement.lit"),
-        include_str!("../../../lean/examples/mixed_finite_product_commutes/statement.lit"),
-        include_str!("../../../lean/examples/finite_triple_product/statement.lit"),
-        include_str!("../../../lean/examples/named_integer_rectangle_bound/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "product_scope").unwrap();
     }
 }
 

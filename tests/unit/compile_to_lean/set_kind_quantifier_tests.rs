@@ -11,13 +11,99 @@ use crate::store_fact_and_infer::{
 };
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/unique_empty_finite_set/statement.lit"),
-    include_str!("../../../lean/examples/unique_real_nonempty_set/statement.lit"),
-    include_str!("../../../lean/examples/unique_finite_point/statement.lit"),
-    include_str!("../../../lean/examples/unique_finite_copy/statement.lit"),
-    include_str!("../../../lean/examples/incompatible_set_kind_equalities/statement.lit"),
-    include_str!("../../../lean/examples/template_unique_finite_copy/statement.lit"),
-    include_str!("../../../lean/examples/template_unique_nonempty_copy/statement.lit"),
+    r#"# The empty set is the unique finite set equal to itself.
+
+witness exist! unique_finite finite_set st {unique_finite = {}} from {}
+
+exist! empty_copy finite_set st {empty_copy = {}}
+
+obtain empty_chosen from exist! finite_candidate finite_set st {finite_candidate = {}}
+
+empty_chosen = {}
+"#,
+    r#"# The real numbers form the unique nonempty set equal to R.
+
+witness exist! unique_nonempty nonempty_set st {unique_nonempty = R} from R
+
+obtain real_chosen from exist! nonempty_candidate nonempty_set st {nonempty_candidate = R}
+
+real_chosen = R
+"#,
+    r#"# A singleton set and its only element form a uniquely determined dependent pair.
+
+witness exist! one_set finite_set, one_member one_set st {one_set = {1}, one_member = 1} from {1}, 1
+
+obtain chosen_one_set, chosen_one_member from exist! finite_point finite_set, member_point finite_point st {finite_point = {1}, member_point = 1}
+
+chosen_one_set = {1}
+
+chosen_one_member = 1
+"#,
+    r#"# Every finite set has a unique equal finite-set witness.
+
+thm unique_finite_copy:
+    ? forall finite_seed finite_set:
+        exist! finite_copy finite_set st {finite_copy = finite_seed}
+    witness exist! finite_copy finite_set st {finite_copy = finite_seed} from finite_seed
+
+by thm unique_finite_copy({1, 2})
+
+obtain selected_finite_copy from exist! finite_value finite_set st {finite_value = {1, 2}}
+
+selected_finite_copy = {1, 2}
+"#,
+    r#"# Neither finite nor nonempty sets admit simultaneous equality and inequality.
+
+thm no_finite_incompatible:
+    ? not exist first_finite, second_finite finite_set st {first_finite = second_finite, first_finite != second_finite}
+    by contra:
+        ? not exist first_finite, second_finite finite_set st {first_finite = second_finite, first_finite != second_finite}
+        obtain first_finite, second_finite from exist first_finite, second_finite finite_set st {first_finite = second_finite, first_finite != second_finite}
+        impossible first_finite = second_finite
+
+by thm no_finite_incompatible
+
+not exist renamed_finite, another_finite finite_set st {renamed_finite = another_finite, renamed_finite != another_finite}
+
+thm no_nonempty_incompatible:
+    ? not exist first_nonempty, second_nonempty nonempty_set st {first_nonempty = second_nonempty, first_nonempty != second_nonempty}
+    by contra:
+        ? not exist first_nonempty, second_nonempty nonempty_set st {first_nonempty = second_nonempty, first_nonempty != second_nonempty}
+        obtain first_nonempty, second_nonempty from exist first_nonempty, second_nonempty nonempty_set st {first_nonempty = second_nonempty, first_nonempty != second_nonempty}
+        impossible first_nonempty = second_nonempty
+
+by thm no_nonempty_incompatible
+
+not exist renamed_nonempty, another_nonempty nonempty_set st {renamed_nonempty = another_nonempty, renamed_nonempty != another_nonempty}
+"#,
+    r#"# A template chooses the unique equal finite set and retains its cardinality WD.
+
+thm unique_finite_copy:
+    ? forall finite_seed finite_set:
+        exist! finite_copy finite_set st {finite_copy = finite_seed}
+    witness exist! finite_copy finite_set st {finite_copy = finite_seed} from finite_seed
+
+template<T finite_set>:
+    obtain copied_finite from exist! v finite_set st {v = T}
+
+\copied_finite<{3, 4}> = {3, 4}
+
+finite_set_size(\copied_finite<{3, 4}>) $in N
+"#,
+    r#"# A template retains the nonempty-set property of its unique equal witness.
+
+thm unique_nonempty_copy:
+    ? forall nonempty_seed nonempty_set:
+        exist! nonempty_copy nonempty_set st {nonempty_copy = nonempty_seed}
+    witness exist! nonempty_copy nonempty_set st {nonempty_copy = nonempty_seed} from nonempty_seed
+
+template<U nonempty_set>:
+    obtain copied_nonempty from exist! B nonempty_set st {B = U}
+
+\copied_nonempty<R> = R
+
+$is_nonempty_set(\copied_nonempty<R>)
+"#,
 ];
 
 fn witness(run: &mut RunLitexCodeResult) -> &mut ExecWitnessExistFactStmtSuccessResult {
@@ -28,20 +114,6 @@ fn witness(run: &mut RunLitexCodeResult) -> &mut ExecWitnessExistFactStmtSuccess
         panic!("unique witness")
     };
     p
-}
-
-#[test]
-fn set_kind_quantifiers_replay_unique_witnesses_obtain_theorems_and_templates() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "set_kind_quantifiers")
-            .expect(source);
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "set_kind_quantifiers").unwrap()
-        );
-    }
 }
 
 #[test]

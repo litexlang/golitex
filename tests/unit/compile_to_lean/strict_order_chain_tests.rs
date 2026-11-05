@@ -1,7 +1,29 @@
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rewrite::AtomicExceptEqualityFactSearchProofByBuiltinRewrite as Rule;
 
-const SOURCE: &str = include_str!("../../../lean/examples/strict_order_chains/statement.lit");
+const SOURCE: &str = r#"# Chain two real inequalities, retaining a strict step in either position.
+forall chain_strict_a, chain_strict_b, chain_strict_c R:
+    chain_strict_a < chain_strict_b
+    chain_strict_b < chain_strict_c
+    =>:
+        chain_strict_a < chain_strict_c
+
+claim:
+    ? forall chain_left_a, chain_left_b, chain_left_c R:
+        chain_left_a < chain_left_b
+        chain_left_b <= chain_left_c
+        =>:
+            chain_left_a < chain_left_c
+    chain_left_a < chain_left_b <= chain_left_c
+
+claim:
+    ? forall chain_right_a, chain_right_b, chain_right_c R:
+        chain_right_a <= chain_right_b
+        chain_right_b < chain_right_c
+        =>:
+            chain_right_a < chain_right_c
+    chain_right_a <= chain_right_b < chain_right_c
+"#;
 
 #[test]
 fn strict_order_chains_replay_one_step_search_and_explicit_mixed_chains() {

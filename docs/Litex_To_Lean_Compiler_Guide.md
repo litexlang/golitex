@@ -242,6 +242,10 @@ structure. These are independent field carriers.
 The same representation supports named objects and explicit opening:
 
 ```litex
+struct CoordinatePair:
+    x R
+    y R
+
 witness $is_nonempty_set(&CoordinatePair) from (1, 2)
 have p &CoordinatePair
 release struct def p

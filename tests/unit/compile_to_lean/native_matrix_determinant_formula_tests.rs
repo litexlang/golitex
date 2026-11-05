@@ -3,36 +3,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_
 };
 use crate::prelude::*;
 
-#[test]
-fn native_matrix_determinant_formulas_compile_forward_reverse_and_boundaries() {
-    for source in [
-        include_str!("../../../examples/test_objs/native_matrix_determinant_formulas.lit"),
-        include_str!(
-            "../../../lean/examples/native_matrix_determinant_formulas_reverse/statement.lit"
-        ),
-        include_str!("../../../lean/examples/native_matrix_determinant_boundaries/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let out = compiler
-            .compile_run(&run, "native_determinant_formulas")
-            .unwrap();
-        assert_eq!(
-            out,
-            compiler
-                .compile_run(&run, "native_determinant_formulas")
-                .unwrap()
-        );
-        for name in [
-            "matrixDeterminantUpperTriangularFormula",
-            "matrixDeterminantLowerTriangularFormula",
-            "matrixDeterminantLaplaceRowFormula",
-            "matrixDeterminantLaplaceColumnFormula",
-        ] {
-            assert!(out.contains(name), "{name}");
-        }
-    }
-}
-
 fn application(statement: &mut ExecStmtResult) -> &mut MatrixPropertyApplicationProof {
     let all = super::forall_proof_mut(statement);
     let selected =

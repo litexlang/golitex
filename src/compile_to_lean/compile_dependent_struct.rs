@@ -17,7 +17,8 @@ impl LitexToLeanCompiler {
         let mut cursor = Some(position);
         while let Some(current) = cursor {
             if let SourceOwner::StructLayer(layer) = current.owner {
-                let (declaration, _, _) = current.visible_struct(&layer.struct_obj.name)?;
+                let (declaration, _, _) =
+                    current.visible_struct(&layer.struct_obj.name, &self.runtime)?;
                 if !has_dependent_fields(&declaration.statement) {
                     let mut substitution =
                         header_substitution(&declaration.statement, &layer.struct_obj)?;
@@ -175,9 +176,14 @@ impl LitexToLeanCompiler {
         carrier: &StructObj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (_, _, index) = position.visible_struct(&carrier.name)?;
+        let (_, producer, index) = position.visible_struct(&carrier.name, &self.runtime)?;
+        position.validate_declaration_context(&producer)?;
+        let prefix = producer
+            .module_file_number()
+            .map(|file| format!("source_{file}."))
+            .unwrap_or_default();
         Ok(format!(
-            "_struct_indices_{} _struct_indices_spec_{}",
+            "{prefix}_struct_indices_{} {prefix}_struct_indices_spec_{}",
             index + 1,
             index + 1
         ))
@@ -190,7 +196,7 @@ impl LitexToLeanCompiler {
         member: &str,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        let (declaration, _, _) = position.visible_struct(&carrier.name, &self.runtime)?;
         let base = self.compile_struct_base_reference(carrier, position)?;
         if !has_dependent_fields(&declaration.statement) {
             return Ok(base);
@@ -209,7 +215,7 @@ impl LitexToLeanCompiler {
         member: &str,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        let (declaration, _, _) = position.visible_struct(&carrier.name, &self.runtime)?;
         let member = self.compile_struct_base_membership(carrier, receiver, member, position)?;
         if !has_dependent_fields(&declaration.statement) {
             return Ok(member);

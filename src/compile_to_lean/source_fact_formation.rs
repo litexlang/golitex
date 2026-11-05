@@ -9,6 +9,73 @@ use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
 impl LitexToLeanCompiler {
+    /// An obtained atomic clause is renamed, rather than re-verified. Its
+    /// argument can still have an earlier exact carrier store from that same
+    /// obtain. Consume that original store without inventing a predicate WD.
+    pub(super) fn cited_obtained_argument_membership(
+        &self,
+        id: FactId,
+        object: &Obj,
+        set: &StandardSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        let (actual, _) = self.cited_fact_reference(id, position)?;
+        let Fact::AtomicFact(actual) = actual else {
+            return Err(invalid("AtomicSubject"));
+        };
+        if !atomic_fact_args_ref(actual)
+            .iter()
+            .any(|arg| arg.ir() == object.ir())
+        {
+            return Err(invalid("ObtainedArgumentSubject"));
+        }
+        position.with_visible_obtain(&mut |declaration, _| {
+            let stores = match declaration {
+                ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                    crate::execute::ExecObtainObjFromExistFactStmtResult::Success(p),
+                ) => &p.store_and_infer_result,
+                ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                    crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(p),
+                ) => &p.store_and_infer_result,
+                ExecDefineObjStmtResult::HaveObjByExistFacts(
+                    crate::execute::ExecHaveObjByExistFactsStmtResult::Success(p),
+                ) => &p.store_and_infer_result,
+                _ => return Ok(None),
+            };
+            let Some(index) = stores
+                .store_and_infer_results
+                .iter()
+                .position(|stored| stored.primary_fact_id() == id)
+            else {
+                return Ok(None);
+            };
+            let StoreFactResult::AtomicFact(stored) = &stores.store_and_infer_results[index].store
+            else {
+                return Err(invalid("ObtainedAtomic"));
+            };
+            if stored.fact != *actual || stored.fact.fact_id() != id {
+                return Err(invalid("ObtainedIdentity"));
+            }
+            for member in stores.store_and_infer_results.iter().take(index).rev() {
+                let StoreFactResult::AtomicFact(stored) = &member.store else {
+                    continue;
+                };
+                if !matches!(&stored.fact, AtomicFact::InFact(f)
+                    if f.element.ir() == object.ir() && f.set == Obj::StandardSet(set.clone()))
+                {
+                    continue;
+                }
+                let (checked, reference) =
+                    self.cited_fact_reference(member.primary_fact_id(), position)?;
+                if !matches!(checked, Fact::AtomicFact(f) if f == &stored.fact) {
+                    return Err(invalid("ObtainedCarrierIdentity"));
+                }
+                return Ok(Some(reference));
+            }
+            Ok(None)
+        })
+    }
+
     pub(super) fn with_cited_atomic_formation<T>(
         &self,
         id: FactId,
@@ -132,18 +199,18 @@ impl LitexToLeanCompiler {
                     }
                 }
             }
-            let run = match current.owner {
-                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => Some(run),
+            let steps = match current.owner {
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some(run.statement_results.as_slice())
+                }
+                SourceOwner::Derivation(p) => {
+                    super::compile_builtin_sequence_program::program_parts(p)
+                        .map(|(_, steps, _, _)| steps)
+                }
                 _ => None,
             };
-            if let Some(run) = run {
-                for (i, statement) in run
-                    .statement_results
-                    .iter()
-                    .take(current.before)
-                    .enumerate()
-                    .rev()
-                {
+            if let Some(steps) = steps {
+                for (i, statement) in steps.iter().take(current.before).enumerate().rev() {
                     let prior = SourcePosition {
                         before: i,
                         ..*current

@@ -8,25 +8,66 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const ASSOC: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_associative/statement.lit");
-const LEFT: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_distributive_left/statement.lit");
-const RIGHT: &str =
-    include_str!("../../../lean/examples/native_matrix_mul_distributive_right/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_algebra_reverse/statement.lit");
-const ZERO: &str =
-    include_str!("../../../lean/examples/native_matrix_algebra_zero_dimensions/statement.lit");
-const REAL: &str = include_str!("../../../lean/examples/native_matrix_algebra_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_algebra_transport/statement.lit");
-const EXPLICIT_ASSOC: &str =
-    include_str!("../../../lean/examples/matrix_mul_associative/statement.lit");
-const EXPLICIT_LEFT: &str =
-    include_str!("../../../lean/examples/matrix_mul_distributive_left/statement.lit");
-const EXPLICIT_RIGHT: &str =
-    include_str!("../../../lean/examples/matrix_mul_distributive_right/statement.lit");
+const ASSOC: &str = r#"# Matrix multiplication is associative for rectangular complex matrices.
+forall replay_mul_m, replay_mul_k, replay_mul_p, replay_mul_n N, replay_mul_A matrix(C,replay_mul_m,replay_mul_k), replay_mul_B matrix(C,replay_mul_k,replay_mul_p), replay_mul_C matrix(C,replay_mul_p,replay_mul_n):
+    matrix_mul(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k,replay_mul_p),replay_mul_C,replay_mul_m,replay_mul_p,replay_mul_n) = matrix_mul(replay_mul_A,matrix_mul(replay_mul_B,replay_mul_C,replay_mul_k,replay_mul_p,replay_mul_n),replay_mul_m,replay_mul_k,replay_mul_n)
+"#;
+const LEFT: &str = r#"# Left multiplication distributes over addition of rectangular complex matrices.
+forall replay_mul_m, replay_mul_k, replay_mul_n N, replay_mul_A matrix(C,replay_mul_m,replay_mul_k), replay_mul_B, replay_mul_C matrix(C,replay_mul_k,replay_mul_n):
+    matrix_mul(replay_mul_A,matrix_add(replay_mul_B,replay_mul_C,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_k,replay_mul_n) = matrix_add(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k,replay_mul_n),matrix_mul(replay_mul_A,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_n)
+"#;
+const RIGHT: &str = r#"# Right multiplication distributes over addition of rectangular complex matrices.
+forall replay_mul_m, replay_mul_k, replay_mul_n N, replay_mul_A, replay_mul_B matrix(C,replay_mul_m,replay_mul_k), replay_mul_C matrix(C,replay_mul_k,replay_mul_n):
+    matrix_mul(matrix_add(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k),replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n) = matrix_add(matrix_mul(replay_mul_A,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),matrix_mul(replay_mul_B,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_n)
+"#;
+const REVERSE: &str = r#"# State associativity and both distributive laws with their equality sides reversed.
+forall replay_mul_m, replay_mul_k, replay_mul_p, replay_mul_n N, replay_mul_A matrix(C,replay_mul_m,replay_mul_k), replay_mul_B matrix(C,replay_mul_k,replay_mul_p), replay_mul_C matrix(C,replay_mul_p,replay_mul_n):
+    matrix_mul(replay_mul_A,matrix_mul(replay_mul_B,replay_mul_C,replay_mul_k,replay_mul_p,replay_mul_n),replay_mul_m,replay_mul_k,replay_mul_n) = matrix_mul(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k,replay_mul_p),replay_mul_C,replay_mul_m,replay_mul_p,replay_mul_n)
+forall replay_mul_m, replay_mul_k, replay_mul_n N, replay_mul_A matrix(C,replay_mul_m,replay_mul_k), replay_mul_B, replay_mul_C matrix(C,replay_mul_k,replay_mul_n):
+    matrix_add(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k,replay_mul_n),matrix_mul(replay_mul_A,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_n) = matrix_mul(replay_mul_A,matrix_add(replay_mul_B,replay_mul_C,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_k,replay_mul_n)
+forall replay_mul_m, replay_mul_k, replay_mul_n N, replay_mul_A, replay_mul_B matrix(C,replay_mul_m,replay_mul_k), replay_mul_C matrix(C,replay_mul_k,replay_mul_n):
+    matrix_add(matrix_mul(replay_mul_A,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),matrix_mul(replay_mul_B,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_n) = matrix_mul(matrix_add(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k),replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n)
+"#;
+const ZERO: &str = r#"# Associativity and distributivity include empty row, column and summation domains.
+forall replay_mul_k, replay_mul_n N, replay_mul_A matrix(C,0,replay_mul_k), replay_mul_B matrix(C,replay_mul_k,0), replay_mul_C matrix(C,0,replay_mul_n):
+    matrix_mul(matrix_mul(replay_mul_A,replay_mul_B,0,replay_mul_k,0),replay_mul_C,0,0,replay_mul_n) = matrix_mul(replay_mul_A,matrix_mul(replay_mul_B,replay_mul_C,replay_mul_k,0,replay_mul_n),0,replay_mul_k,replay_mul_n)
+forall replay_mul_m, replay_mul_n N, replay_mul_A matrix(C,replay_mul_m,0), replay_mul_B, replay_mul_C matrix(C,0,replay_mul_n):
+    matrix_mul(replay_mul_A,matrix_add(replay_mul_B,replay_mul_C,0,replay_mul_n),replay_mul_m,0,replay_mul_n) = matrix_add(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,0,replay_mul_n),matrix_mul(replay_mul_A,replay_mul_C,replay_mul_m,0,replay_mul_n),replay_mul_m,replay_mul_n)
+forall replay_mul_k N, replay_mul_A, replay_mul_B matrix(C,0,replay_mul_k), replay_mul_C matrix(C,replay_mul_k,0):
+    matrix_mul(matrix_add(replay_mul_A,replay_mul_B,0,replay_mul_k),replay_mul_C,0,replay_mul_k,0) = matrix_add(matrix_mul(replay_mul_A,replay_mul_C,0,replay_mul_k,0),matrix_mul(replay_mul_B,replay_mul_C,0,replay_mul_k,0),0,0)
+"#;
+const REAL: &str = r#"# Real rectangular matrices satisfy distributivity after proving their complex carriers.
+forall replay_mul_m, replay_mul_k, replay_mul_n N, replay_mul_A matrix(R,replay_mul_m,replay_mul_k), replay_mul_B, replay_mul_C matrix(R,replay_mul_k,replay_mul_n):
+    replay_mul_A $in matrix(C,replay_mul_m,replay_mul_k)
+    replay_mul_B $in matrix(C,replay_mul_k,replay_mul_n)
+    replay_mul_C $in matrix(C,replay_mul_k,replay_mul_n)
+    matrix_mul(replay_mul_A,matrix_add(replay_mul_B,replay_mul_C,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_k,replay_mul_n) = matrix_add(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k,replay_mul_n),matrix_mul(replay_mul_A,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_n)
+"#;
+const TRANSPORT: &str = r#"# Use an assumed equality for the associated product to identify a fourth matrix.
+forall replay_mul_m, replay_mul_k, replay_mul_p, replay_mul_n N, replay_mul_A matrix(C,replay_mul_m,replay_mul_k), replay_mul_B matrix(C,replay_mul_k,replay_mul_p), replay_mul_C matrix(C,replay_mul_p,replay_mul_n), replay_mul_D matrix(C,replay_mul_m,replay_mul_n):
+    matrix_mul(replay_mul_A,matrix_mul(replay_mul_B,replay_mul_C,replay_mul_k,replay_mul_p,replay_mul_n),replay_mul_m,replay_mul_k,replay_mul_n) = replay_mul_D
+    =>:
+        matrix_mul(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k,replay_mul_p),replay_mul_C,replay_mul_m,replay_mul_p,replay_mul_n) = replay_mul_D
+"#;
+const EXPLICIT_ASSOC: &str = r#"# Prove associativity for rectangular complex matrices and instantiate dimensions 2, 3, 4, 5.
+thm replay_matrix_mul_associative:
+    ? forall replay_mul_m, replay_mul_k, replay_mul_p, replay_mul_n N, replay_mul_A matrix(C,replay_mul_m,replay_mul_k), replay_mul_B matrix(C,replay_mul_k,replay_mul_p), replay_mul_C matrix(C,replay_mul_p,replay_mul_n):
+        matrix_mul(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k,replay_mul_p),replay_mul_C,replay_mul_m,replay_mul_p,replay_mul_n) = matrix_mul(replay_mul_A,matrix_mul(replay_mul_B,replay_mul_C,replay_mul_k,replay_mul_p,replay_mul_n),replay_mul_m,replay_mul_k,replay_mul_n)
+    release thm matrix_mul_associative(replay_mul_A,replay_mul_B,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_p,replay_mul_n)
+release thm replay_matrix_mul_associative(2,3,4,5,zero_matrix(2,3),zero_matrix(3,4),zero_matrix(4,5))
+"#;
+const EXPLICIT_LEFT: &str = r#"# Prove left distributivity for rectangular complex matrices using the named theorem.
+thm replay_matrix_mul_distributive_left:
+    ? forall replay_mul_m, replay_mul_k, replay_mul_n N, replay_mul_A matrix(C,replay_mul_m,replay_mul_k), replay_mul_B, replay_mul_C matrix(C,replay_mul_k,replay_mul_n):
+        matrix_mul(replay_mul_A,matrix_add(replay_mul_B,replay_mul_C,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_k,replay_mul_n) = matrix_add(matrix_mul(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k,replay_mul_n),matrix_mul(replay_mul_A,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_n)
+    release thm matrix_mul_distributive_left(replay_mul_A,replay_mul_B,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n)
+"#;
+const EXPLICIT_RIGHT: &str = r#"# Prove right distributivity for rectangular complex matrices using the named theorem.
+thm replay_matrix_mul_distributive_right:
+    ? forall replay_mul_m, replay_mul_k, replay_mul_n N, replay_mul_A, replay_mul_B matrix(C,replay_mul_m,replay_mul_k), replay_mul_C matrix(C,replay_mul_k,replay_mul_n):
+        matrix_mul(matrix_add(replay_mul_A,replay_mul_B,replay_mul_m,replay_mul_k),replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n) = matrix_add(matrix_mul(replay_mul_A,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),matrix_mul(replay_mul_B,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n),replay_mul_m,replay_mul_n)
+    release thm matrix_mul_distributive_right(replay_mul_A,replay_mul_B,replay_mul_C,replay_mul_m,replay_mul_k,replay_mul_n)
+"#;
 
 fn selected(statement: &mut ExecStmtResult, index: usize) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(

@@ -2,7 +2,17 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AddObjW
 use crate::execute::ExecDefThmForallProof;
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../../lean/examples/nested_named_add_zero/statement.lit");
+const SOURCE: &str = r#"# Apply the real add-zero identity through a named theorem to prove the same identity again.
+
+thm add_zero:
+    ? forall x R:
+        x + 0 = x
+
+thm add_zero_again:
+    ? forall y R:
+        y + 0 = y
+    by thm add_zero(y) => y + 0 = y
+"#;
 const RECIPROCAL_SOURCE: &str = "prop is_nonzero(x R):\n    x != 0\n\nhave fn reciprocal(x R: x != 0) R = 1 / x\n\nthm reciprocal_product:\n    ? forall x R:\n        $is_nonzero(x)\n        =>:\n            reciprocal(x) * x = 1\n    reciprocal(x) = 1 / x\n    reciprocal(x) * x = (1 / x) * x\n    (1 / x) * x = 1\n\nhave denominator R = 2\nby def $is_nonzero(denominator)\nlet answer = reciprocal(denominator)\nby thm reciprocal_product(denominator) => reciprocal(denominator) * denominator = 1\nreciprocal(denominator) = 1 / denominator\n1 / denominator = 1 / 2\nanswer = 1 / 2\n";
 
 fn theorem_body(result: &mut ExecStmtResult) -> &mut ExecDefThmForallProof {

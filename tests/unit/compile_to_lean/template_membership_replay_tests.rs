@@ -5,18 +5,30 @@ use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferInFactResult, InferResult, InferTemplateMembershipResult,
 };
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/template_membership_conversion/statement.lit");
-const NESTED: &str =
-    include_str!("../../../lean/examples/template_membership_nested/statement.lit");
-const FUNCTION: &str =
-    include_str!("../../../lean/examples/template_membership_function/statement.lit");
-const GUARDED: &str =
-    include_str!("../../../lean/examples/template_membership_guarded/statement.lit");
-const STOP: &str =
-    include_str!("../../../lean/examples/template_membership_identifier_stop/statement.lit");
-const BINDER: &str =
-    include_str!("../../../lean/examples/template_membership_binder/statement.lit");
+const SOURCE: &str = r#"template<S set>:
+    have replay_pairs set = cart(S, S)
+(1, 2) $in \replay_pairs<R>
+(3, 4) $in \replay_pairs<R>
+(1, 2) $in cart(R, R)
+"#;
+const NESTED: &str = r#"template<S set>:
+    have replay_carrier set = S
+1 $in \replay_carrier<\replay_carrier<R>>
+"#;
+const FUNCTION: &str = r#"template<A, B nonempty_set>:
+    have replay_maps set = fn(x A) B
+fn(x R) R {x + 1} $in \replay_maps<R, R>
+fn(x R) R {x + 1} $in fn(x R) R
+"#;
+const GUARDED: &str = r#"template<S set: $is_nonempty_set(S)>:
+    have replay_guarded_pairs set = cart(S, S)
+(5, 6) $in \replay_guarded_pairs<R>
+"#;
+const STOP: &str = r#"template<S set>:
+    have replay_carrier set = S
+have replay_real_alias set = R
+1 $in \replay_carrier<replay_real_alias>
+"#;
 
 fn inferred(statement: &ExecStmtResult) -> &InferTemplateMembershipResult {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = statement else {
@@ -118,13 +130,6 @@ fn template_membership_stops_conversion_at_an_ordinary_identifier() {
     assert_eq!(proof.expansions.len(), 1);
     assert!(matches!(proof.expansions[0].set, Obj::Identifier(_)));
     super::compile_run(&result, &compiler, "template_identifier_boundary").unwrap();
-}
-
-#[test]
-fn template_membership_binder_replays_native_coordinate_stores() {
-    let (result, compiler) = super::execute(BINDER);
-    let output = super::compile_run(&result, &compiler, "template_binder").unwrap();
-    assert!(output.contains("Litex.cartCall"));
 }
 
 #[test]

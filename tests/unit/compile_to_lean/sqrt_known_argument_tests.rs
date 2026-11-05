@@ -4,11 +4,19 @@ use crate::prelude::*;
 
 const CASES: [(&str, &str); 2] = [
     (
-        include_str!("../../../lean/examples/square_root_known_product/statement.lit"),
+        r#"forall a,b,x R+:
+    x=a*b
+    =>:
+        sqrt(x)=sqrt(a)*sqrt(b)
+"#,
         "sqrtProductFromArgumentEquality",
     ),
     (
-        include_str!("../../../lean/examples/square_root_known_quotient/statement.lit"),
+        r#"forall a,b,x R+:
+    x=a/b
+    =>:
+        sqrt(x)=sqrt(a)/sqrt(b)
+"#,
         "sqrtQuotientFromArgumentEquality",
     ),
 ];

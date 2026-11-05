@@ -4,33 +4,31 @@ use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
 };
 
-const DEFINITION: &str = include_str!(
-    "../../../lean/examples/multivariable_limit_builtin_epsilon_control/statement.lit"
-);
-const EXISTS: &str =
-    include_str!("../../../lean/examples/multivariable_limit_builtin_exists/statement.lit");
-const UNIQUE: &str =
-    include_str!("../../../lean/examples/multivariable_limit_builtin_unique/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/multivariable_limit_builtin_selected/statement.lit");
-
-#[test]
-fn multivariable_elimination_replays_original_candidates_and_captured_domain() {
-    for (source, law) in [
-        (DEFINITION, "Litex.multivariableScalarLimitClauses"),
-        (EXISTS, "Litex.multivariableScalarExistsOfCandidate"),
-        (UNIQUE, "Litex.multivariableScalarLimitUnique"),
-        (SELECTED, "Litex.multivariableScalarLimitValueSelected"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "multi_elimination").unwrap();
-        assert!(output.contains(law));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "multi_elimination").unwrap()
-        );
-    }
-}
+const DEFINITION: &str = r#"# A Euclidean scalar limit supplies epsilon-delta control for every positive tolerance.
+thm checked_multivariable_limit_builtin_epsilon_control:
+    ? forall f fn(x cart_n(R, 2)) R, p cart_n(R, 2), L R, epsilon R+:
+        $has_multi_limit_at(f, p, 2, L)
+        =>:
+            exist delta R+ st {{x cart_n(R, 2): 0 < euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2), euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2) < delta} $subset {y cart_n(R, 2): abs(f(y) - L) < epsilon}}
+    release thm multi_limit_at_to_definition(f, p, 2, L)
+"#;
+const UNIQUE: &str = r#"# A Euclidean scalar function has at most one limit at a fixed accumulation point.
+thm checked_multivariable_limit_builtin_unique:
+    ? forall f fn(x cart_n(R, 2)) R, p cart_n(R, 2), L, K R:
+        $has_multi_limit_at(f, p, 2, L)
+        $has_multi_limit_at(f, p, 2, K)
+        =>:
+            L = K
+    release thm multi_limit_at_unique(f, p, 2, L, K)
+"#;
+const SELECTED: &str = r#"# The Euclidean scalar selector chooses a limit only from an original real limit witness.
+thm checked_multivariable_limit_builtin_selected:
+    ? forall f fn(x cart_n(R, 2)) R, p cart_n(R, 2):
+        exist value R st {$has_multi_limit_at(f, p, 2, value)}
+        =>:
+            $has_multi_limit_at(f, p, 2, lim_multi_at(f, p, 2))
+    release thm multi_limit_at_selected(f, p, 2)
+"#;
 
 #[test]
 fn multivariable_elimination_selected_retains_original_existence_domain_and_selector() {

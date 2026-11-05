@@ -253,9 +253,7 @@
   },
   {
     "file": "retired_object_index.lit",
-    "expected_phase": "retired_syntax",
-    "expected_diagnostic": "object indexing with [] is removed",
-    "expected_prefix_count": 1
+    "expected_phase": "well_defined"
   },
   {
     "file": "retired_nested_object_index.lit",

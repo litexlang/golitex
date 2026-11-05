@@ -5,12 +5,23 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 };
 use crate::prelude::*;
 
-const TRANSPOSE: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_transpose/statement.lit");
-const ADJOINT: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_adjoint/statement.lit");
-const EXPLICIT_T: &str = include_str!("../../../lean/examples/matrix_rank_transpose/statement.lit");
-const EXPLICIT_A: &str = include_str!("../../../lean/examples/matrix_rank_adjoint/statement.lit");
+const TRANSPOSE: &str = r#"forall replay_rows, replay_cols N, replay_matrix matrix(C, replay_rows, replay_cols):
+    matrix_rank(transpose(replay_matrix, replay_rows, replay_cols), replay_cols, replay_rows) = matrix_rank(replay_matrix, replay_rows, replay_cols)
+"#;
+const ADJOINT: &str = r#"forall replay_rows, replay_cols N, replay_matrix matrix(C, replay_rows, replay_cols):
+    matrix_rank(replay_matrix, replay_rows, replay_cols) = matrix_rank(conjugate_transpose(replay_matrix, replay_rows, replay_cols), replay_cols, replay_rows)
+"#;
+const EXPLICIT_T: &str = r#"thm replay_rank_transpose:
+    ? forall replay_rows, replay_cols N, replay_matrix matrix(C, replay_rows, replay_cols):
+        matrix_rank(transpose(replay_matrix, replay_rows, replay_cols), replay_cols, replay_rows) = matrix_rank(replay_matrix, replay_rows, replay_cols)
+    release thm matrix_rank_transpose(replay_matrix, replay_rows, replay_cols)
+by thm replay_rank_transpose(2, 3, zero_matrix(2, 3)) => matrix_rank(transpose(zero_matrix(2, 3), 2, 3), 3, 2) = matrix_rank(zero_matrix(2, 3), 2, 3)
+"#;
+const EXPLICIT_A: &str = r#"thm replay_rank_adjoint:
+    ? forall replay_rows, replay_cols N, replay_matrix matrix(C, replay_rows, replay_cols):
+        matrix_rank(conjugate_transpose(replay_matrix, replay_rows, replay_cols), replay_cols, replay_rows) = matrix_rank(replay_matrix, replay_rows, replay_cols)
+    release thm matrix_rank_adjoint(replay_matrix, replay_rows, replay_cols)
+"#;
 
 fn selected(statement: &mut ExecStmtResult) -> &mut MatrixLawApplicationProof {
     let all = super::forall_proof_mut(statement);

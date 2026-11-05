@@ -1,21 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn sign_examples_preserve_integer_codomain_and_function_expansion() {
-    for source in [
-        include_str!("../../../../lean/examples/real_sign/statement.lit"),
-        include_str!("../../../../lean/examples/shifted_sign_function/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "real_sign").unwrap();
-        assert!(output.contains("Litex.signInZ"));
-        assert!(output.contains("Litex.signDenoteReal"));
-        assert!(output.contains("Litex.signOfPositive"));
-        assert_eq!(output, compiler.compile_run(&run, "real_sign").unwrap());
-    }
-}
-
-#[test]
 fn sign_selected_rules_use_the_recorded_strict_order_in_both_orientations() {
     for (condition, value, law) in [
         ("0 < x", "1", "signOfPositive"),

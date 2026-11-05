@@ -1,11 +1,24 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
-const GENERIC: &str =
-    include_str!("../../../lean/examples/euclidean_norm_scale_theorem/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/euclidean_norm_scale_zero_selected/statement.lit");
-const EMPTY: &str = include_str!("../../../lean/examples/euclidean_norm_scale_empty/statement.lit");
+const GENERIC: &str = r#"# Scaling a finite complex vector scales its Euclidean norm by the scalar modulus.
+thm checked_euclidean_norm_scale:
+    ? forall n N, v cart_n(C, n), a C:
+        euclidean_norm(fn(k closed_range(1, n)) C{a * v(k)}, n) = C_abs(a) * euclidean_norm(v, n)
+    release thm euclidean_norm_scale(a, v, n)
+"#;
+const SELECTED: &str = r#"# Select norm scaling by the zero scalar in every finite dimension.
+thm checked_euclidean_norm_scale_zero_selected:
+    ? forall n N, v cart_n(C, n):
+        euclidean_norm(fn(k closed_range(1, n)) C{0 * v(k)}, n) = C_abs(0) * euclidean_norm(v, n)
+    by thm euclidean_norm_scale(0, v, n) => euclidean_norm(fn(k closed_range(1, n)) C{0 * v(k)}, n) = C_abs(0) * euclidean_norm(v, n)
+"#;
+const EMPTY: &str = r#"# Scaling an empty complex vector also admits a non-real scalar.
+thm checked_euclidean_norm_scale_empty:
+    ? forall v cart_n(C, 0):
+        euclidean_norm(fn(k closed_range(1, 0)) C{i * v(k)}, 0) = C_abs(i) * euclidean_norm(v, 0)
+    release thm euclidean_norm_scale(i, v, 0)
+"#;
 
 #[test]
 fn norm_scale_replays_complex_scalars_selected_zero_and_empty_dimensions() {

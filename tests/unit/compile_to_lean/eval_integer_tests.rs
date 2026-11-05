@@ -3,17 +3,17 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 };
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
-
-const OPERATIONS: &str =
-    include_str!("../../../lean/examples/evaluated_integer_operations/statement.lit");
-const CITATIONS: &str =
-    include_str!("../../../lean/examples/evaluated_integer_citations/statement.lit");
-const FUNCTIONS: &str =
-    include_str!("../../../lean/examples/evaluated_integer_functions/statement.lit");
-const LOCAL: &str =
-    include_str!("../../../lean/examples/evaluated_local_integer_operations/statement.lit");
-const AGGREGATES: &str =
-    include_str!("../../../lean/examples/evaluated_integer_aggregates/statement.lit");
+const CITATIONS: &str = r#"# Evaluate integer operations from previously proved values, preserving their domains.
+have integer_eval_a Z = -7
+have integer_eval_b N+ = 3
+eval integer_eval_a % integer_eval_b + quot(integer_eval_a,integer_eval_b)
+integer_eval_a % integer_eval_b + quot(integer_eval_a,integer_eval_b) = -1
+eval gcd(integer_eval_a,integer_eval_b)
+gcd(integer_eval_a,integer_eval_b) = 1
+have integer_eval_n N = 5
+eval factorial(integer_eval_n)
+factorial(integer_eval_n) = 120
+"#;
 
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -22,16 +22,6 @@ fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess 
         panic!("successful eval")
     };
     p
-}
-
-#[test]
-fn integer_eval_replays_values_references_functions_and_scope() {
-    for source in [OPERATIONS, CITATIONS, FUNCTIONS, LOCAL, AGGREGATES] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "integer_eval").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "integer_eval").unwrap());
-        assert!(!lean.contains("sorry") && !lean.contains("admit"));
-    }
 }
 
 #[test]

@@ -14,13 +14,51 @@ use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferResult, InferSequenceAnalysisFactResult,
 };
 
-const CAUCHY: &str =
-    include_str!("../../../lean/examples/sequence_cauchy_definition/statement.lit");
-const LIMIT: &str = include_str!("../../../lean/examples/sequence_limit_definition/statement.lit");
-const CONVERGENT: &str =
-    include_str!("../../../lean/examples/sequence_convergence_witness/statement.lit");
-const CITATIONS: &str =
-    include_str!("../../../lean/examples/sequence_limit_citations/statement.lit");
+const CAUCHY: &str = r#"# A real sequence is Cauchy exactly when every positive tolerance has a controlling tail.
+thm checked_sequence_cauchy_intro:
+    ? forall a seq(R):
+        forall epsilon R+:
+            exist cutoff N+ st {cart({m N+:m>=cutoff},{n N+:n>=cutoff}) $subset {p cart(N+,N+):abs(a(p(1))-a(p(2)))<epsilon}}
+        =>:
+            $is_seq_cauchy(a)
+    by def $is_seq_cauchy(a)
+
+forall a seq(R), epsilon R+:
+    $is_seq_cauchy(a)
+    =>:
+        exist cutoff N+ st {cart({m N+:m>=cutoff},{n N+:n>=cutoff}) $subset {p cart(N+,N+):abs(a(p(1))-a(p(2)))<epsilon}}
+"#;
+const LIMIT: &str = r#"# An epsilon-tail inclusion supplies the claimed real limit of a sequence.
+thm checked_sequence_limit_intro:
+    ? forall a seq(R), L R:
+        forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})}
+        =>:
+            $has_seq_limit(a,L)
+    by def $has_seq_limit(a,L)
+"#;
+const CONVERGENT: &str = r#"# A proved limit supplies convergence, and convergence retains a real limit witness.
+thm recorded_sequence_limit_implies_convergence:
+    ? forall seq_limit_a seq(R), seq_limit_L R:
+        $has_seq_limit(seq_limit_a,seq_limit_L)
+        =>:
+            $is_seq_convergent(seq_limit_a)
+    witness exist limit_witness R st {$has_seq_limit(seq_limit_a,limit_witness)} from seq_limit_L:
+        $has_seq_limit(seq_limit_a,seq_limit_L)
+    by def $is_seq_convergent(seq_limit_a)
+
+forall a seq(R):
+    $is_seq_convergent(a)
+    =>:
+        exist L R st {$has_seq_limit(a,L)}
+
+thm reused_sequence_limit_convergence:
+    ? forall reused_a seq(R), reused_L R:
+        $has_seq_limit(reused_a,reused_L)
+        =>:
+            $is_seq_convergent(reused_a)
+    by thm recorded_sequence_limit_implies_convergence(reused_a,reused_L) => $is_seq_convergent(reused_a)
+"#;
 
 fn by_def(run: &mut RunLitexCodeResult) -> &mut ExecByDefStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -70,16 +108,6 @@ fn builder(o: &mut Obj) -> &mut SetBuilder {
         panic!("builder")
     };
     p
-}
-
-#[test]
-fn sequence_epsilon_examples_replay_original_results() {
-    for source in [CAUCHY, LIMIT, CONVERGENT, CITATIONS] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "sequence_epsilon")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
 }
 
 #[test]

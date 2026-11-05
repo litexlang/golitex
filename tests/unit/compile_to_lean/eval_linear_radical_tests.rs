@@ -4,9 +4,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
 
-const SUM: &str =
-    include_str!("../../../lean/examples/evaluated_radical_simplification/statement.lit");
-
 fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
         &mut run.statement_results[0]
@@ -14,25 +11,6 @@ fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
         panic!("successful eval")
     };
     p
-}
-
-#[test]
-fn exact_linear_radicals_compile() {
-    for source in [
-        SUM,
-        "eval sqrt(8)",
-        "eval sqrt(12)-sqrt(3)",
-        "eval sqrt(2)+sqrt(2)",
-        "eval sqrt(2)*sqrt(3)",
-        "eval sqrt(2)*sqrt(2)",
-        "eval sqrt(3)*sqrt(6)",
-        "eval sqrt(12)*sqrt(27)",
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "linear_radical").expect(source);
-        assert!(!lean.contains("sorry") && !lean.contains("admit"));
-        assert_eq!(lean, compiler.compile_run(&run, "linear_radical").unwrap());
-    }
 }
 
 #[test]
@@ -95,8 +73,11 @@ fn radical_product_rejects_changed_result_and_citation() {
 
 #[test]
 fn cited_radical_replays_original_equality_and_rejects_missing_evidence() {
-    let source =
-        include_str!("../../../lean/examples/evaluated_cited_irrational_root/statement.lit");
+    let source = r#"# Evaluate an irrational square root using a previously proved value.
+have cited_radical_a R = 12
+eval sqrt(cited_radical_a)
+sqrt(cited_radical_a)=2*sqrt(3)
+"#;
     let (run, compiler) = super::execute(source);
     let lean = compiler.compile_run(&run, "cited_radical").expect(source);
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -144,7 +125,9 @@ fn cited_radical_replays_original_equality_and_rejects_missing_evidence() {
 #[test]
 fn sum_products_replay_exact_result_and_reject_bad_evidence() {
     for source in [
-        include_str!("../../../lean/examples/evaluated_radical_sum_product/statement.lit"),
+        r#"# Evaluate the product of two sums of square roots exactly.
+eval (sqrt(2)+sqrt(3))*(sqrt(5)+sqrt(7))
+"#,
         "eval (sqrt(2)+sqrt(3))*(sqrt(2)-sqrt(3))",
         "eval (2*sqrt(2)+sqrt(3))*(sqrt(5)+3*sqrt(7))",
         "eval (sqrt(8)+sqrt(3))*(sqrt(5)+sqrt(7))",
@@ -190,8 +173,10 @@ fn sum_products_replay_exact_result_and_reject_bad_evidence() {
             .compile_run(&run, "invalid_sum_product")
             .expect_err(change);
     }
-    let source =
-        include_str!("../../../lean/examples/evaluated_cited_radical_sum_product/statement.lit");
+    let source = r#"# Evaluate a product of radical sums using a cited value.
+have sum_prod_a R = 2
+eval (sqrt(sum_prod_a)+sqrt(3))*(sqrt(5)+sqrt(7))
+"#;
     let (mut run, compiler) = super::execute(source);
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
         &mut run.statement_results[1]

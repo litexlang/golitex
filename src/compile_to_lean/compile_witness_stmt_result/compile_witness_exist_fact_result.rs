@@ -197,7 +197,22 @@ impl LitexToLeanCompiler {
                 before: 2 * count + i,
                 ..scope
             };
-            lines.push(self.compile_statement_in_scope(result, &prior, i + 1, true)?);
+            lines.push(
+                self.compile_statement_in_scope(result, &prior, i + 1, true)
+                    .map_err(|mut error| {
+                        error.message = format!(
+                            "{} Witness step {}: {}",
+                            error.message,
+                            i + 1,
+                            source
+                                .readable_string()
+                                .lines()
+                                .next()
+                                .unwrap_or("<empty source>")
+                        );
+                        error
+                    })?,
+            );
         }
         for (i, (source, check)) in fact.facts.iter().zip(&obligations.body_checks).enumerate() {
             let source = crate::instantiate::quantifier_free_fact_to_fact(source.clone());

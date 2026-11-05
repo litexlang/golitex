@@ -47,13 +47,13 @@ impl LitexToLeanCompiler {
                 "RecursiveUnfold/ApplicationSubject",
             ));
         };
-        let FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) = application.head.as_ref()
-        else {
+        let FnObjHead::Identifier(identifier) = application.head.as_ref() else {
             return Err(LeanCompileError::unsupported(
                 "RecursiveUnfold/ApplicationHead",
             ));
         };
-        let (declaration, _, _) = position.visible_recursive_function(id)?;
+        let (declaration, producer, _) =
+            position.visible_recursive_identifier(identifier, &self.runtime)?;
         if application.body.len() != 1 || proof.selected_case_path.is_empty() {
             return Err(LeanCompileError::unsupported("RecursiveUnfold/LeafPath"));
         }
@@ -89,11 +89,22 @@ impl LitexToLeanCompiler {
                 "RecursiveUnfold/ParameterArity",
             ));
         }
-        let substitution = parameters
+        let mut substitution = parameters
             .iter()
             .zip(&application.body[0])
             .map(|(p, a)| (p.id, a.as_ref().clone()))
             .collect::<HashMap<_, _>>();
+        if substitution
+            .insert(
+                declaration.statement.name.id,
+                Obj::Identifier(identifier.clone()),
+            )
+            .is_some()
+        {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveUnfold/SelfIdentity",
+            ));
+        }
         if !instantiated_object_matches(body, &proof.expanded_body, &substitution) {
             return Err(LeanCompileError::unsupported(
                 "RecursiveUnfold/SelectedPathSubject",
@@ -246,7 +257,8 @@ impl LitexToLeanCompiler {
                         "The selected source leaf has no stored equation producer.",
                     )
                 })?;
-            let (_, case_equation) = self.cited_fact_reference(*stored_id, position)?;
+            let case_equation =
+                position.declaration_reference(&format!("h_{}", stored_id.value()), &producer)?;
             let equality = format!("(by\n  let _checked_call := {checked_call}\n  {guard_declarations}have _checked_case_guard : {} := {}\n  have _selected_beta := {case_equation} {actual}\n  exact _selected_beta.trans {})", guard.0, guard.1, residual.1);
             Ok(if reversed {
                 format!("({equality}).symm")

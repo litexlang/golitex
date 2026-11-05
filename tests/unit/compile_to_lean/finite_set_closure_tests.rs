@@ -1,14 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn finite_intersection_replays_both_original_finiteness_proofs() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/finite_intersection/statement.lit"
-    ));
-    compiler.compile_run(&run, "finite_intersection").unwrap();
-}
-
-#[test]
 fn finite_intersection_one_bound_replays_each_actual_operand() {
     for (source, bridge) in [
         (

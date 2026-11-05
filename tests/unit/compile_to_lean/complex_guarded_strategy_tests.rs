@@ -1,8 +1,17 @@
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::ComplexWithNonzeroPremisesStrategySingleStep;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/complex_guarded_normalization/statement.lit");
+const SOURCE: &str = r#"# Split a complex quotient with a certified nonzero denominator.
+forall z C:
+    z != 0
+    =>:
+        (z + i) / z = 1 + i / z
+
+forall z, w C:
+    z * w != 0
+    =>:
+        ((z + i) * w) / (z * w) = 1 + i / z
+"#;
 
 fn selected(result: &mut RunLitexCodeResult) -> &mut ComplexWithNonzeroPremisesStrategySingleStep {
     selected_at(result, 0)

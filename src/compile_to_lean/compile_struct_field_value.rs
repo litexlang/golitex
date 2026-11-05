@@ -60,7 +60,7 @@ impl LitexToLeanCompiler {
         } else {
             self.compile_struct_receiver(&receiver, position)?.0
         };
-        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        let (declaration, _, _) = position.visible_struct(&carrier.name, &self.runtime)?;
         let index = declaration
             .statement
             .fields

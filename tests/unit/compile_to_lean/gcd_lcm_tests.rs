@@ -30,9 +30,33 @@ fn gcd_lcm_selected_rules_reject_an_unrelated_subject() {
 #[test]
 fn gcd_congruence_requires_each_original_argument_proof() {
     for missing in [true, false] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/gcd_lcm_functions/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Define gcd/lcm functions with their exact domains and reuse a guarded theorem.
+have fn common(a Z, b Z: a != 0 or b != 0) N+ = gcd(a, b)
+
+have fn multiple(a Z, b Z) N = lcm(a, b)
+
+common(54, -24) = 6
+
+multiple(-6, 15) = 30
+
+thm common_self:
+    ? forall n Z:
+        n != 0
+        =>:
+            common(n, n) = abs(n)
+    common(n, n) = gcd(n, n)
+    gcd(n, n) = abs(n)
+
+by thm common_self(-9) => common(-9, -9) = abs(-9)
+
+have fn next(n Z) Z = n + 1
+next(5) = 6
+gcd(next(5), 15) = gcd(6, 15)
+gcd(6, 15) = 3
+
+"#,
+        );
         let equality = super::equality_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[8]).verify_result,
         );
@@ -55,21 +79,6 @@ fn gcd_congruence_requires_each_original_argument_proof() {
                 "ArithmeticCongruence/ChildSubject"
             }
         );
-    }
-}
-
-#[test]
-fn gcd_lcm_examples_replay_original_results_deterministically() {
-    for source in [
-        include_str!("../../../lean/examples/gcd_lcm_values/statement.lit"),
-        include_str!("../../../lean/examples/gcd_lcm_identities/statement.lit"),
-        include_str!("../../../lean/examples/gcd_euclidean_step/statement.lit"),
-        include_str!("../../../lean/examples/gcd_lcm_functions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "gcd_lcm").unwrap();
-        assert!(output.contains("Litex.gcd"));
-        assert_eq!(output, compiler.compile_run(&run, "gcd_lcm").unwrap());
     }
 }
 

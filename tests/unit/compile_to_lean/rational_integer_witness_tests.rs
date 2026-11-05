@@ -4,10 +4,23 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
 };
 use crate::prelude::*;
 
-const POS: &str = include_str!("../../../lean/examples/rational_positive_ratio/statement.lit");
-const RATIO: &str = include_str!("../../../lean/examples/rational_integer_ratio/statement.lit");
-const MULTIPLE: &str =
-    include_str!("../../../lean/examples/integer_multiple_witness/statement.lit");
+const POS: &str = r#"thm checked_rational_positive_ratio:
+    ? forall q Q:
+        exist a,b Z st {b>0,q=a/b}
+    exist a,b Z st {b>0,q=a/b}
+"#;
+const RATIO: &str = r#"thm checked_rational_integer_ratio:
+    ? forall q Q:
+        exist a Z,b Z* st {q=a/b}
+    exist a Z,b Z* st {q=a/b}
+"#;
+const MULTIPLE: &str = r#"thm checked_integer_multiple_witness:
+    ? forall a Z,b Z*:
+        a%b=0
+        =>:
+            exist k Z st {a=b*k}
+    exist k Z st {a=b*k}
+"#;
 
 fn rule(run: &mut RunLitexCodeResult) -> &mut Rule {
     let ExistShapedFactSearchedProof::ByBuiltinRule(p) = &mut witness(run).searched_proof else {

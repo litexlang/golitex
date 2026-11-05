@@ -3,78 +3,138 @@ use crate::prelude::*;
 
 const CASES: [(&str, &str); 11] = [
     (
-        include_str!("../../../lean/examples/function_continuous_exp/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_exp:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=exp(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_exp(f)
+"#,
         "Exp",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_sin/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_sin:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=sin(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_sin(f)
+"#,
         "Sin",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_cos/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_cos:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=cos(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_cos(f)
+"#,
         "Cos",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_arcsin/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_arcsin:
+    ? forall f fn(x R: -1<=x, x<=1) R:
+        forall x {z R: -1<=z, z<=1}:
+            f(x)=arcsin(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_arcsin(f)
+"#,
         "Arcsin",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_arccos/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_arccos:
+    ? forall f fn(x R: -1<=x, x<=1) R:
+        forall x {z R: -1<=z, z<=1}:
+            f(x)=arccos(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_arccos(f)
+"#,
         "Arccos",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_arctan/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_arctan:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=arctan(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_arctan(f)
+"#,
         "Arctan",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_arccot/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_arccot:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=arccot(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_arccot(f)
+"#,
         "Arccot",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_sinh/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_sinh:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=sinh(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_sinh(f)
+"#,
         "Sinh",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_cosh/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_cosh:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=cosh(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_cosh(f)
+"#,
         "Cosh",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_tanh/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_tanh:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=tanh(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_tanh(f)
+"#,
         "Tanh",
     ),
     (
-        include_str!("../../../lean/examples/function_continuous_sech/statement.lit"),
+        r#"# Global continuity of the exact elementary formula on its complete source domain.
+thm checked_function_continuous_sech:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=sech(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_sech(f)
+"#,
         "Sech",
     ),
 ];
-
-#[test]
-fn global_elementary_continuity_replays_all_eleven_exact_named_laws_deterministically() {
-    for (source, law) in CASES {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "elementary_continuity")
-            .unwrap_or_else(|e| panic!("{law}: {e}"));
-        assert!(output.contains(&format!("Litex.functionContinuousOf{law}")));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "elementary_continuity").unwrap()
-        );
-    }
-}
-
-#[test]
-fn global_elementary_continuity_keeps_guarded_domains_and_inline_constructors() {
-    for source in [
-        include_str!("../../../lean/examples/function_continuous_guarded_exp/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_inline_sin/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "elementary_continuity_profiles")
-            .unwrap();
-    }
-}
 
 #[test]
 fn global_elementary_continuity_requires_all_original_stages() {
@@ -185,9 +245,11 @@ fn global_elementary_literal_inference_requires_original_identity_and_published_
         InferAtomicFactResult, InferFunctionContinuousFactResult, InferResult,
     };
     for change in ["identity", "derived", "formation"] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/function_continuous_inline_sin/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Preserve the complete source domain and function object in elementary continuity.
+release thm fn_continuous_sin(fn(x R) R{sin(x)})
+"#,
+        );
         let ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
             ExecReleaseThmStmtResult::Success(call),
         )) = &mut run.statement_results[0]

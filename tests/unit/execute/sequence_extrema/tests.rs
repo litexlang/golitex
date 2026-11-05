@@ -88,7 +88,7 @@ fn extrema_scope_does_not_leak_after_failed_claim() {
     check(&mut rt, "c(1)=3", true);
 }
 #[test]
-fn extrema_output_provenance_and_explicit_lean_boundary() {
+fn extrema_output_provenance_and_lean_replay() {
     for side in ["limsup", "liminf"] {
         let source =
             format!("forall a seq(R),L R:\n    $has_seq_{side}(a,L)\n    =>:\n        {side}(a)=L");
@@ -103,10 +103,11 @@ fn extrema_output_provenance_and_explicit_lean_boundary() {
         let latex = crate::compile_to_latex::to_latex_from_source(&source, OutputLanguage::English)
             .unwrap();
         assert!(latex.contains(&format!("\\{side}")));
-        let e = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        let lean = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
             .compile_run(&r, "extrema")
-            .unwrap_err();
-        assert!(e.message.contains("not supported"));
+            .expect("the checked sequence extremum selector has a Lean adapter");
+        assert!(lean.contains("Litex.sequenceExtremumEqCandidate"));
+        assert!(!lean.contains("sorry"));
     }
 }
 

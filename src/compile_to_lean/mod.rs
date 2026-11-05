@@ -22,6 +22,7 @@ mod compile_builtin_number_theory_theorem;
 mod compile_builtin_rank_existence;
 mod compile_builtin_reduced_fraction_theorem;
 mod compile_builtin_sequence_limit_theorem;
+mod compile_builtin_sequence_program;
 mod compile_builtin_sequence_tail_order;
 mod compile_builtin_triangular_determinant;
 mod compile_builtin_tuple_theorem;
@@ -34,6 +35,7 @@ mod compile_claim_stmt_result;
 mod compile_compound_fact;
 mod compile_compound_stores;
 mod compile_continuity_point_formation;
+mod compile_declared_type_arguments;
 mod compile_def_abstract_prop_stmt_result;
 mod compile_def_prop_stmt_result;
 mod compile_def_struct_stmt_result;
@@ -371,7 +373,20 @@ mod compile_original_continuity_formula_condition;
 mod compile_function_limit_composition;
 
 mod compile_builtin_darboux_definition;
+mod compile_builtin_partial_algebra;
 mod compile_builtin_riemann_certificate;
 mod compile_builtin_riemann_definition;
 mod compile_builtin_second_partial_definition;
 mod compile_builtin_second_partial_function;
+
+mod compile_antiderivative;
+mod compile_builtin_antiderivative;
+
+mod compile_antiderivative_context;
+mod compile_builtin_antiderivative_algebra;
+mod compile_builtin_antiderivative_calculus;
+mod compile_builtin_differential_projections;
+mod compile_builtin_matrix_differential;
+mod compile_builtin_riemann_constant;
+mod compile_builtin_riemann_order;
+mod compile_builtin_riemann_transport;

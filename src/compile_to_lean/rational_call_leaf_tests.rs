@@ -222,14 +222,14 @@ fn rational_call_leaf_requires_original_constructor_domain_and_argument_evidence
 }
 
 #[test]
-fn rational_normalization_still_rejects_an_unreviewed_abs_leaf_with_its_source_subject() {
-    let (mut result, compiler) = checked("forall x R:\n    |x|=|x|\n");
+fn rational_normalization_still_rejects_an_unreviewed_sign_leaf_with_its_source_subject() {
+    let (mut result, compiler) = checked("forall x R:\n    sign(x)=sign(x)\n");
     equality(&mut result, 0).searched_proof =
         EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
             EqualitySearchProofByCalculation::Rational {},
         ));
     let error = compiler
-        .compile_run(&result, "unreviewed_abs_rational_leaf")
+        .compile_run(&result, "unreviewed_sign_rational_leaf")
         .unwrap_err();
     assert_eq!(error.route, "Rational/ExpressionDomain");
     assert!(error.to_string().contains("original source expression"));
@@ -364,4 +364,49 @@ fn rational_normalization_accepts_original_three_argument_scalar_calls() {
         .compile_run(&result, "three_argument_rational_leaf")
         .unwrap();
     assert!(lean.contains("Litex.NativeBridge.asComplex"));
+}
+
+#[test]
+fn rational_normalization_replays_owned_absolute_value_atoms() {
+    for source in [
+        r#"# Polynomial normalization preserves an owned absolute value as one scalar atom.
+thm absolute_value_polynomial:
+    ? forall x R:
+        abs(x)^2-1=(abs(x)-1)*(abs(x)+1)
+"#,
+        r#"# Reorder an affine expression while preserving the original sequence call and absolute value.
+thm sequence_absolute_affine_reorder:
+    ? forall a seq(R),n N+,c R:
+        (2+abs(a(n)))+c=c+(abs(a(n))+2)
+"#,
+    ] {
+        let (run, compiler) = checked(source);
+        let lean = compiler.compile_run(&run, "absolute_polynomial").unwrap();
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            ExecDefThmStmtResult::Success(named),
+        )) = &run.statement_results[0]
+        else {
+            panic!("named source theorem")
+        };
+        let ExecDefThmBodyProof::Forall(body) = &named.body else {
+            panic!("source forall")
+        };
+        let VerifyFactResult::Equality(result) = &body.conclusion_proofs[0] else {
+            panic!("source equality")
+        };
+        let VerifyEqualityResult::Success(proof) = result.as_ref() else {
+            panic!("successful equality")
+        };
+        assert!(matches!(
+            proof.searched_proof,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Calculation(
+                EqualitySearchProofByCalculation::Rational {}
+            ))
+        ));
+        assert!(lean.contains("Litex.NativeBridge.denoteAbs"));
+        assert_eq!(
+            lean,
+            compiler.compile_run(&run, "absolute_polynomial").unwrap()
+        );
+    }
 }

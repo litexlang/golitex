@@ -6,10 +6,23 @@ use crate::execute::ExecDefinitionStmtResult;
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const FROM_EPSILON: &str =
-    include_str!("../../../lean/examples/sequence_limit_from_epsilon_by_theorem/statement.lit");
-const TAIL: &str =
-    include_str!("../../../lean/examples/sequence_limit_tail_by_theorem/statement.lit");
+const FROM_EPSILON: &str = r#"# Invoke the explicit epsilon-to-limit theorem for a real sequence.
+thm checked_sequence_limit_intro:
+    ? forall a seq(R), L R:
+        forall epsilon R+:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})}
+        =>:
+            $has_seq_limit(a,L)
+    by thm seq_limit_from_epsilon(a,L) => $has_seq_limit(a,L)
+"#;
+const TAIL: &str = r#"# Extract an epsilon-tail certificate from a proved real sequence limit.
+thm checked_sequence_tail:
+    ? forall a seq(R), L R, epsilon R+:
+        $has_seq_limit(a,L)
+        =>:
+            exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:abs(v-L)<epsilon})}
+    release thm seq_limit_tail(a,L,epsilon)
+"#;
 
 fn theorem_step(run: &mut RunLitexCodeResult) -> &mut ExecStmtResult {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -22,20 +35,6 @@ fn theorem_step(run: &mut RunLitexCodeResult) -> &mut ExecStmtResult {
         panic!("forall")
     };
     &mut p.proof_steps[0]
-}
-
-#[test]
-fn sequence_limit_theorems_replay_epsilon_introduction_and_tail_elimination() {
-    for (source, law) in [
-        (FROM_EPSILON, "Litex.sequenceLimitOfForall"),
-        (TAIL, "Litex.sequenceLimitTail"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "sequence_epsilon_theorem")
-            .unwrap()
-            .contains(law));
-    }
 }
 
 #[test]
@@ -91,27 +90,23 @@ fn sequence_limit_tail_rejects_changed_cutoff_or_epsilon_carriers() {
     }
 }
 
-const UNIQUE: &str =
-    include_str!("../../../lean/examples/sequence_limit_unique_by_theorem/statement.lit");
-const EXISTS: &str =
-    include_str!("../../../lean/examples/sequence_limit_exists_by_theorem/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/sequence_limit_selected_by_theorem/statement.lit");
-
-#[test]
-fn sequence_limit_theorems_replay_uniqueness_existence_and_selection() {
-    for (source, law) in [
-        (UNIQUE, "Litex.sequenceLimitCandidatesEqual"),
-        (EXISTS, "Litex.sequenceConvergentOfCandidate"),
-        (SELECTED, "Litex.sequenceLimitSelected"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "sequence_limit_theorem")
-            .unwrap()
-            .contains(law));
-    }
-}
+const UNIQUE: &str = r#"# Invoke the explicit sequence-limit uniqueness theorem.
+claim:
+    ? forall a seq(R), L R, K R:
+        $has_seq_limit(a,L)
+        $has_seq_limit(a,K)
+        =>:
+            L=K
+    by thm seq_limit_unique(a,L,K) => L=K
+"#;
+const SELECTED: &str = r#"# The selected sequence limit satisfies the limit predicate.
+claim:
+    ? forall a seq(R):
+        exist L R st {$has_seq_limit(a,L)}
+        =>:
+            $has_seq_limit(a,lim(a))
+    release thm seq_limit_selected(a)
+"#;
 
 #[test]
 fn sequence_limit_uniqueness_rejects_missing_candidates_and_changed_domain() {

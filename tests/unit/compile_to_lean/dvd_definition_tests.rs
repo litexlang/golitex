@@ -1,8 +1,8 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{AtomicExceptEqualityFactSearchProofByDefinition as Definition,BuiltinPropDefinitionProof as Builtin};
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/dvd_definition_from_certificates/statement.lit");
+const SOURCE: &str = r#"$dvd(6*10,3)
+"#;
 
 #[test]
 fn dvd_definition_replays_both_original_certificates() {

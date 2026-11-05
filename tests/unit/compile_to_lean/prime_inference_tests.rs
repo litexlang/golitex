@@ -2,7 +2,12 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{InferAtomicFactResult, InferPrimeFactResult, InferResult};
 
-const SOURCE: &str = include_str!("../../../lean/examples/prime_definition_replay/statement.lit");
+const SOURCE: &str = r#"forall p N,d range(2,p):
+    $prime(p)
+    =>:
+        2<=p
+        p%d!=0
+"#;
 
 #[test]
 fn prime_definition_publishes_both_original_stores_and_their_carrier() {

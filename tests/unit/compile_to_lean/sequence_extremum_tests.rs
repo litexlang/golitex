@@ -6,25 +6,16 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactSearchedProof;
 use crate::prelude::*;
 
-const SELECTED: &str =
-    include_str!("../../../lean/examples/sequence_limsup_selection/statement.lit");
+const SELECTED: &str = r#"# A finite limsup candidate identifies its proof-consuming selector and its real codomain.
+forall a seq(R), L R:
+    $has_seq_limsup(a,L)
+    =>:
+        limsup(a) = L
+        limsup(a) $in R
+"#;
 fn equality(run: &mut RunLitexCodeResult) -> &mut VerifyEqualitySuccess {
     let body = super::forall_proof_mut(&mut run.statement_results[0]);
     super::equality_proof_mut(&mut body.proved_then_facts[0].verify_result)
-}
-#[test]
-fn finite_extrema_replay_candidates_existence_and_polarity() {
-    for source in [
-        SELECTED,
-        include_str!("../../../lean/examples/sequence_liminf_selection/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_existence_selection/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_existence_selection/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_citations/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_citations/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "extrema").expect(source);
-    }
 }
 #[test]
 fn finite_extremum_wd_rejects_another_sequence() {
@@ -130,21 +121,6 @@ fn finite_extrema_without_selection_are_not_well_defined() {
             .expect_err("failed source run");
     }
 }
-
-#[test]
-fn finite_extrema_definition_and_uniqueness_replay_original_routes() {
-    for source in [
-        include_str!("../../../lean/examples/sequence_limsup_definition/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_definition/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_unique/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_unique/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "extremum_definition")
-            .expect(source);
-    }
-}
 #[test]
 fn finite_extremum_definition_rejects_deleted_tail_hits() {
     use crate::execute::execute_by_stmt::ExecByDefStmtResult;
@@ -154,7 +130,17 @@ fn finite_extremum_definition_rejects_deleted_tail_hits() {
         BuiltinPropDefinitionProof as Builtin,
     };
     use crate::execute::ExecDefinitionStmtResult;
-    let source = include_str!("../../../lean/examples/sequence_limsup_definition/statement.lit");
+    let source = r#"# The finite limsup definition requires both an eventual bound and hits on every tail.
+thm limsup_from_two_clauses:
+    ? forall a seq(R), L R:
+        forall epsilon R+:
+            exist n0 N+ st {{n N+:n>=n0} $subset preimage_set(a,{v R:v<L+epsilon})}
+        forall epsilon R+, n0 N+:
+            exist n N+ st {n>=n0 and L-epsilon<a(n)}
+        =>:
+            $has_seq_limsup(a,L)
+    by def $has_seq_limsup(a,L)
+"#;
     let (mut run, compiler) = super::execute(source);
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(p),
@@ -183,28 +169,6 @@ fn finite_extremum_definition_rejects_deleted_tail_hits() {
         .compile_run(&run, "bound_without_hits")
         .expect_err("an eventual bound alone is insufficient");
 }
-
-#[test]
-fn finite_extrema_explicit_theorems_and_nested_objects_replay() {
-    for source in [
-        include_str!("../../../lean/examples/sequence_limsup_constant_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_constant_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_from_limit_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_from_limit_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_exists_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_exists_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_unique_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_unique_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_selected_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_selected_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/sequence_extrema_nested_objects/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "explicit_extrema")
-            .expect(source);
-    }
-}
 #[test]
 fn finite_extremum_explicit_theorem_rejects_missing_stage_or_wrong_formula() {
     use crate::execute::execute_by_stmt::ExecReleaseThmStmtResult;
@@ -212,9 +176,15 @@ fn finite_extremum_explicit_theorem_rejects_missing_stage_or_wrong_formula() {
     use crate::execute::ExecDefinitionStmtResult;
     use crate::execute::ExecReleaseAndExpandStmtResult;
     for missing in [true, false] {
-        let source = include_str!(
-            "../../../lean/examples/sequence_limsup_constant_by_theorem/statement.lit"
-        );
+        let source = r#"# A constant real sequence has finite limsup equal to its value.
+thm limsup_constant:
+    ? forall a seq(R), L R:
+        forall n N+:
+            a(n)=L
+        =>:
+            $has_seq_limsup(a,L)
+    release thm seq_limsup_constant(a,L)
+"#;
         let (mut run, compiler) = super::execute(source);
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(p),

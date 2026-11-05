@@ -1,5 +1,5 @@
 import Generated
-import examples.real_mobius_involution.statement
+import MobiusGenerated
 
 namespace Adapter
 
@@ -41,8 +41,8 @@ private noncomputable def mobiusCall {α : Type*}
     (a : Litex.Obj (M := mobiusModel) α) (ha : Litex.In a Litex.R)
     (h1 : ¬ Litex.Same a (Litex.number 1)) :=
   Litex.call .real .real (fun x => x ≠ mobiusModel.number 1)
-    (LitexCompiled.file_lean_x2f_examples_x2f_real_x5f_mobius_x5f_involution_x2f_statement_x2e_lit._object_i2 (M := mobiusModel))
-    a (LitexCompiled.file_lean_x2f_examples_x2f_real_x5f_mobius_x5f_involution_x2f_statement_x2e_lit.h_352 (M := mobiusModel)) ha h1
+    (LitexCompiled.file_showcases_x2f_litex_x5f_to_x5f_lean_x5f_adapter_x2f_mobius_x2e_lit._object_i2 (M := mobiusModel))
+    a (LitexCompiled.file_showcases_x2f_litex_x5f_to_x5f_lean_x5f_adapter_x2f_mobius_x2e_lit.h_352 (M := mobiusModel)) ha h1
 
 private theorem mobiusCallDenote {α : Type*}
     [Litex.Representation mobiusModel α]
@@ -51,7 +51,7 @@ private theorem mobiusCallDenote {α : Type*}
     (hv : Litex.denote a = mobiusModel.number (x : ℂ)) :
     Litex.denote (mobiusCall a ha h1) =
       mobiusModel.number (((x + 1) / (x - 1) : ℝ) : ℂ) := by
-  let f := LitexCompiled.file_lean_x2f_examples_x2f_real_x5f_mobius_x5f_involution_x2f_statement_x2e_lit._object_i2 (M := mobiusModel)
+  let f := LitexCompiled.file_showcases_x2f_litex_x5f_to_x5f_lean_x5f_adapter_x2f_mobius_x2e_lit._object_i2 (M := mobiusModel)
   have domain : mobiusModel.mem (Litex.denote a) f.val.signature.domain :=
     (Litex.FunctionSignature.one_domain .real .real (fun x => x ≠ mobiusModel.number 1) _).mpr ⟨ha, h1⟩
   have beta := Litex.FunctionSemantics.call_graphValue f.val.signature.domain
@@ -76,7 +76,7 @@ theorem mobiusInvolution (x : ℝ) (hx : x ≠ 1) :
     hx (Complex.ofReal_injective (by simpa only [Complex.ofReal_one] using h))
   have h1 := Litex.NativeBridge.notSameOfDenoteNumber a
     (Litex.number (M := mobiusModel) 1) (x : ℂ) 1 rfl rfl hxC
-  have preserved := LitexCompiled.file_lean_x2f_examples_x2f_real_x5f_mobius_x5f_involution_x2f_statement_x2e_lit.h_424
+  have preserved := LitexCompiled.file_showcases_x2f_litex_x5f_to_x5f_lean_x5f_adapter_x2f_mobius_x2e_lit.h_424
     (M := mobiusModel) a ha h1
   have firstValue := mobiusCallDenote a ha h1 x hx rfl
   have nativeGuard : (x + 1) / (x - 1) ≠ 1 := by
@@ -86,7 +86,7 @@ theorem mobiusInvolution (x : ℝ) (hx : x ≠ 1) :
     rw [firstValue]
     exact congrArg mobiusModel.number
       (by simpa only [Complex.ofReal_one] using congrArg (fun r : ℝ => (r : ℂ)) h)
-  have generated := LitexCompiled.file_lean_x2f_examples_x2f_real_x5f_mobius_x5f_involution_x2f_statement_x2e_lit.h_3588
+  have generated := LitexCompiled.file_showcases_x2f_litex_x5f_to_x5f_lean_x5f_adapter_x2f_mobius_x2e_lit.h_3815
     (M := mobiusModel) a ha h1
   have secondValue := mobiusCallDenote (mobiusCall a ha h1)
     (Litex.callInOutput _) preserved ((x + 1) / (x - 1)) nativeGuard firstValue

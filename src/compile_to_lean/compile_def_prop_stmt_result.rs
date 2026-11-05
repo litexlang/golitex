@@ -5,6 +5,27 @@ use crate::execute::{ExecDefPropStmtResult, ExecDefPropStmtSuccessResult};
 use crate::prelude::*;
 use std::collections::HashMap;
 
+pub(super) fn concrete_prop_name(
+    proof: &ExecDefPropStmtSuccessResult,
+    index: usize,
+    local: bool,
+) -> Result<String, LeanCompileError> {
+    if local {
+        let clause = proof
+            .assumed_iff_facts
+            .first()
+            .ok_or_else(|| LeanCompileError::unsupported("Prop/BodyArity"))?;
+        // A source-owned store identity avoids collisions between declarations
+        // at the same statement index in different nested scopes.
+        Ok(format!(
+            "_local_prop_h{}",
+            clause.store_and_infer.primary_fact_id().value()
+        ))
+    } else {
+        Ok(format!("prop_{index}"))
+    }
+}
+
 impl LitexToLeanCompiler {
     /// Render denotational predicate meaning with the same quantified objects
     /// used by the checked declaration and stored source facts. This does not
@@ -18,6 +39,24 @@ impl LitexToLeanCompiler {
         let Fact::ForallFact(fact) = fact else {
             return self.compile_function_raw_predicate(fact, position, bindings);
         };
+        let (prefix, bound) = self.compile_canonical_predicate_header(fact, position, bindings)?;
+        let body = conjunction_proposition(
+            fact.then_facts
+                .iter()
+                .map(|f| {
+                    self.compile_canonical_predicate_value(&f.clone().into(), position, &bound)
+                })
+                .collect::<Result<Vec<_>, _>>()?,
+        )?;
+        Ok(format!("({prefix}{body})"))
+    }
+
+    pub(super) fn compile_canonical_predicate_header(
+        &self,
+        fact: &ForallFact,
+        position: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<(String, HashMap<IdentifierId, String>), LeanCompileError> {
         let (parameters, bound) =
             self.compile_canonical_predicate_binders(&fact.typed_parameters, position, bindings)?;
         let mut prefix = parameters
@@ -32,15 +71,7 @@ impl LitexToLeanCompiler {
                 self.compile_canonical_predicate_value(premise, position, &bound)?
             ));
         }
-        let body = conjunction_proposition(
-            fact.then_facts
-                .iter()
-                .map(|f| {
-                    self.compile_canonical_predicate_value(&f.clone().into(), position, &bound)
-                })
-                .collect::<Result<Vec<_>, _>>()?,
-        )?;
-        Ok(format!("({}{body})", prefix.join("")))
+        Ok((prefix.join(""), bound))
     }
 
     pub(super) fn compile_canonical_predicate_binders(
@@ -86,9 +117,6 @@ impl LitexToLeanCompiler {
         index: usize,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if local {
-            return Err(LeanCompileError::unsupported("Prop/LocalDeclaration"));
-        }
         let proof = match result {
             ExecDefPropStmtResult::Success(proof) => proof,
             ExecDefPropStmtResult::Failed(_) => {
@@ -104,10 +132,16 @@ impl LitexToLeanCompiler {
             before: 0,
         };
         let (binders, meaning) =
-            self.compile_concrete_prop_definition(proof, &definition_position)?;
+            self.compile_concrete_prop_definition(proof, &definition_position, local)?;
+        let name = concrete_prop_name(proof, index, local)?;
         Ok(format!(
-            "def prop_{index}{}{} : Prop :=\n  {}",
-            self.context_header(position)?,
+            "{} {name}{}{} : Prop :=\n  {}",
+            if local { "let" } else { "def" },
+            if local {
+                String::new()
+            } else {
+                self.context_header(position)?
+            },
             if binders.is_empty() {
                 String::new()
             } else {
@@ -121,9 +155,10 @@ impl LitexToLeanCompiler {
         &self,
         proof: &ExecDefPropStmtSuccessResult,
         position: &SourcePosition<'_>,
+        local: bool,
     ) -> Result<(Vec<String>, String), LeanCompileError> {
         let (binders, memberships, parameter_definitions) =
-            self.compile_prop_parameter_prefix(proof, position, false)?;
+            self.compile_prop_parameter_prefix(proof, position, local)?;
         let count = proof.statement.typed_parameters.ordered_param_ids().len();
         let mut clauses = Vec::new();
         for (index, (fact, assumed)) in proof

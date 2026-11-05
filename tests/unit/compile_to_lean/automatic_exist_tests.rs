@@ -5,10 +5,39 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
 };
 use crate::prelude::*;
 
-const RECIPROCAL: &str =
-    include_str!("../../../lean/examples/automatic_unique_reciprocal/statement.lit");
-const PAIR: &str = include_str!("../../../lean/examples/automatic_unique_pair/statement.lit");
-const NEGATIVE: &str = include_str!("../../../lean/examples/automatic_excluded_copy/statement.lit");
+const RECIPROCAL: &str = r#"# A nonzero real has a unique reciprocal value; instantiate the guarded theorem automatically.
+thm unique_reciprocal:
+    ? forall seed R:
+        seed != 0
+        =>:
+            exist! x R st {x = 1 / seed}
+    witness exist! x R st {x = 1 / seed} from 1 / seed
+exist! y R st {y = 1 / 2}
+obtain a from exist! z R st {z = 1 / 2}
+a = 1 / 2
+"#;
+const PAIR: &str = r#"# Two real coordinates have a unique specified pair, and unique existence implies existence.
+thm unique_pair:
+    ? forall first, second R:
+        exist! x, y R st {x = first, y = second}
+    witness exist! x, y R st {x = first, y = second} from first, second
+exist! u, v R st {u = 2, v = 3}
+exist s, t R st {s = 2, t = 3}
+exist p, q R st {p = 4, q = 5}
+obtain a, b from exist x, y R st {x = 4, y = 5}
+a = 4
+b = 5
+"#;
+const NEGATIVE: &str = r#"# No real number can be both equal and unequal to a specified real value.
+thm excluded_copy:
+    ? forall seed R:
+        not exist x R st {x = seed, x != seed}
+    by contra:
+        ? not exist x R st {x = seed, x != seed}
+        obtain bad from exist x R st {x = seed, x != seed}
+        impossible bad = seed
+not exist y R st {y = 7, y != 7}
+"#;
 
 fn searched(run: &mut RunLitexCodeResult, index: usize) -> &mut ExistShapedFactSearchedProof {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) = &mut run.statement_results[index]

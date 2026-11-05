@@ -5,49 +5,43 @@ use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferHasRiemannIntegralFactResult, InferResult,
 };
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/riemann_integral_selection/statement.lit");
-
-#[test]
-fn riemann_integral_candidate_replays() {
-    for source in [
-        SOURCE,
-        include_str!("../../../lean/examples/riemann_integral_existence/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_integrability/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_reversed_interval/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_zero_width/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_closed_domain/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_guarded_domain/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integrability_from_existence/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_nested_objects/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_rational_endpoints/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_closed_endpoints/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_fractional_bounds/statement.lit"),
-        include_str!("../../../lean/examples/darboux_enclosure_citation/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_from_definition/statement.lit"),
-        include_str!("../../../lean/examples/subtract_closed_bound/statement.lit"),
-        include_str!("../../../lean/examples/renamed_range_binders/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        let compiled = c
-            .compile_run(&run, "riemann_integral_selection")
-            .expect(source);
-        if source.contains("thm integral_from_darboux_definition:") {
-            // The full statement remains intact; a finite local option lets
-            // ordinary Lean check it without changing its importer's options.
-            assert!(compiled.contains("set_option maxHeartbeats 1000000 in\ntheorem "));
-            assert!(!compiled.contains("set_option maxHeartbeats 0"));
-        }
-    }
-}
+const SOURCE: &str = r#"# A proved oriented Riemann integral candidate determines the selected value.
+forall f fn(x R) R, a, b, I R:
+    $has_riemann_integral(f, a, b, I)
+    =>:
+        integral(f, a, b) = I
+"#;
 
 #[test]
 fn closed_subtraction_bound_keeps_its_citation_and_exact_certificate() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{
         closed_subtraction_bound::BoundDirection, less_equal::LessEqualFactSearchProofByBuiltinRule as Rule,
     };
-    let source = include_str!("../../../lean/examples/subtract_closed_bound/statement.lit");
+    let source = r#"# Transport stored bounds through subtraction of an exact constant, preserving direction and strictness.
+
+forall k, n R:
+    1 <= k
+    k <= n
+    =>:
+        0 <= k - 1
+        k - 1 <= n
+
+forall x R:
+    x < 3
+    =>:
+        x - 1 < 2
+
+forall x R:
+    x >= 3
+    =>:
+        x - 1 >= 2
+        x - 1 > 1
+
+forall x, a R:
+    x >= a
+    =>:
+        x - (0 - 1) > a
+"#;
     for conclusion in 0..2 {
         for mutation in 0..6 {
             let (mut run, compiler) = super::execute(source);
@@ -96,8 +90,28 @@ fn riemann_definition_fold_requires_all_original_clauses() {
         BuiltinPropDefinitionProof as Builtin,
     };
     use crate::execute::ExecDefinitionStmtResult;
-    let source =
-        include_str!("../../../lean/examples/riemann_integral_from_definition/statement.lit");
+    let source = r#"# Recover the oriented Riemann integral from boundedness and arbitrarily tight Darboux enclosures.
+
+0 <= 1
+
+forall k Z:
+    1 <= k
+    =>:
+        0 <= k
+
+thm integral_from_darboux_definition:
+    ? forall f fn(x R) R, a, b, I R:
+        '[min(a,b),max(a,b)] $subset R
+        $is_real_bounded(fn_range(fn(x '[min(a,b),max(a,b)]) R {f(x)}))
+        a != b or I = 0
+        forall epsilon R+:
+            min(a,b) < max(a,b)
+            =>:
+                exist n N+, p fn(k Z: 0 <= k, k <= n) R, lower fn(k Z: 1 <= k, k <= n) R, upper fn(k Z: 1 <= k, k <= n) R, lower_sum R, upper_sum R st {$is_darboux_enclosure(f,min(a,b),max(a,b),n,p,lower,upper), lower_sum = sum(1,n,fn(k Z: 1 <= k, k <= n) R {lower(k)*(p(k)-p(k-1))}), upper_sum = sum(1,n,fn(k Z: 1 <= k, k <= n) R {upper(k)*(p(k)-p(k-1))}), lower_sum <= sign(b-a)*I, sign(b-a)*I <= upper_sum, upper_sum-lower_sum < epsilon}
+        =>:
+            $has_riemann_integral(f,a,b,I)
+    by def $has_riemann_integral(f,a,b,I)
+"#;
     for mutation in 0..5 {
         let (mut run, compiler) = super::execute(source);
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -146,7 +160,18 @@ fn riemann_definition_fold_requires_all_original_clauses() {
 
 #[test]
 fn darboux_enclosure_requires_original_partition_signatures() {
-    let source = include_str!("../../../lean/examples/darboux_enclosure_citation/statement.lit");
+    let source = r#"# Preserve the checked partition signatures when citing a Darboux enclosure or its negation.
+
+forall f fn(x R) R, a, b R, n N+, p fn(k Z: 0 <= k, k <= n) R, lower, upper fn(k Z: 1 <= k, k <= n) R:
+    $is_darboux_enclosure(f, a, b, n, p, lower, upper)
+    =>:
+        $is_darboux_enclosure(f, a, b, n, p, lower, upper)
+
+forall f fn(x R) R, a, b R, n N+, p fn(k Z: 0 <= k, k <= n) R, lower, upper fn(k Z: 1 <= k, k <= n) R:
+    not $is_darboux_enclosure(f, a, b, n, p, lower, upper)
+    =>:
+        not $is_darboux_enclosure(f, a, b, n, p, lower, upper)
+"#;
     for statement in 0..2 {
         for mutation in 0..6 {
             let (mut run, c) = super::execute(source);
@@ -202,8 +227,66 @@ fn darboux_enclosure_requires_original_partition_signatures() {
 #[test]
 fn riemann_closed_endpoints_keep_original_constructor_and_interval_evidence() {
     for source in [
-        include_str!("../../../lean/examples/riemann_integral_closed_endpoints/statement.lit"),
-        include_str!("../../../lean/examples/riemann_integral_fractional_bounds/statement.lit"),
+        r#"# Integral selection preserves exactly evaluated real endpoints, orientation and zero-width intervals.
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, abs(-2), 3, I)
+    =>:
+        integral(f, abs(-2), 3) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, floor(-1.5), 2 ^ 3, I)
+    =>:
+        integral(f, floor(-1.5), 2 ^ 3) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, sqrt(4), max(3, ceil(2.5)), I)
+    =>:
+        integral(f, sqrt(4), max(3, ceil(2.5))) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, factorial(3), gcd(9, 6), I)
+    =>:
+        integral(f, factorial(3), gcd(9, 6)) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, abs(-2), abs(-2), I)
+    =>:
+        integral(f, abs(-2), abs(-2)) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, exp(0), ln(1), I)
+    =>:
+        integral(f, exp(0), ln(1)) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, sinh(0), cosh(0), I)
+    =>:
+        integral(f, sinh(0), cosh(0)) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, tanh(0), sech(0), I)
+    =>:
+        integral(f, tanh(0), sech(0)) = I
+"#,
+        r#"# Integral selection preserves rational interval endpoints, including thirds and reversed intervals.
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, 1 / 3, 1 / 2, I)
+    =>:
+        integral(f, 1 / 3, 1 / 2) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, 1 / 4, 1 / 3, I)
+    =>:
+        integral(f, 1 / 4, 1 / 3) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, 1 / 2, 1 / 3, I)
+    =>:
+        integral(f, 1 / 2, 1 / 3) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, 1 / 3, 1 / 4, I)
+    =>:
+        integral(f, 1 / 3, 1 / 4) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, 1 / 3, 2 / 3, I)
+    =>:
+        integral(f, 1 / 3, 2 / 3) = I
+forall f fn(x R) R, I R:
+    $has_riemann_integral(f, 1 / 3, 1 / 3, I)
+    =>:
+        integral(f, 1 / 3, 1 / 3) = I
+"#,
     ] {
         for mutation in 0..3 {
             let (mut run, c) = super::execute(source);

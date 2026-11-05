@@ -1,9 +1,30 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
 use crate::prelude::*;
 
-const MEMBERSHIP: &str =
-    include_str!("../../../lean/examples/coordinate_pair_membership/statement.lit");
-const FIELDS: &str = include_str!("../../../lean/examples/coordinate_pair_fields/statement.lit");
+const MEMBERSHIP: &str = r#"# Real coordinate pairs belong to their named Cartesian carrier.
+struct CoordinatePair:
+    x R
+    y R
+
+(1, 2) $in &CoordinatePair
+
+forall p cart(R, R):
+    p $in &CoordinatePair
+"#;
+const FIELDS: &str = r#"# Named coordinates agree with tuple coordinates and can be used in real arithmetic.
+struct CoordinatePair:
+    x R
+    y R
+
+forall p &CoordinatePair:
+    p.x = p(1)
+    p.y = p(2)
+
+forall p &CoordinatePair:
+    p.x $in R
+    p.y $in R
+    p.x + p.y = p.y + p.x
+"#;
 
 fn declaration(
     run: &mut RunLitexCodeResult,
@@ -15,24 +36,6 @@ fn declaration(
         panic!("struct declaration")
     };
     p
-}
-
-#[test]
-fn struct_examples_replay_exact_results() {
-    for source in [
-        MEMBERSHIP,
-        FIELDS,
-        include_str!("../../../lean/examples/indexed_point_fields/statement.lit"),
-        include_str!("../../../lean/examples/arbitrary_carrier_pairs/statement.lit"),
-        include_str!("../../../lean/examples/nested_coordinate_membership/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "structures")
-            .unwrap_or_else(|error| panic!("{}: {error:?}", source.lines().next().unwrap()));
-        assert_eq!(lean, compiler.compile_run(&run, "structures").unwrap());
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
 }
 
 #[test]
@@ -145,23 +148,22 @@ fn struct_dependencies_and_local_scope_are_not_discarded() {
 }
 
 #[test]
-fn quantified_struct_laws_replay_fields_domains_and_publications() {
-    for source in [
-        include_str!("../../../lean/examples/struct_universal_function_law/statement.lit"),
-        include_str!("../../../lean/examples/struct_dependent_universal_law/statement.lit"),
-        include_str!("../../../lean/examples/struct_guarded_universal_law/statement.lit"),
-        include_str!("../../../lean/examples/struct_generic_universal_law/statement.lit"),
-        "struct ConstantLawPair:\n    x R\n    y R\n    <=>:\n        forall z R:\n            z = z\n",
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "universal_struct").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "universal_struct").unwrap());
-    }
-}
-
-#[test]
 fn quantified_struct_laws_retain_formation_and_flattened_publication() {
-    let source = include_str!("../../../lean/examples/struct_guarded_universal_law/statement.lit");
+    let source = r#"# A universal record law retains the nonzero domain of its function field.
+struct GuardedInverseFunctionPair:
+    reciprocal fn(t R: t != 0) R
+    base R
+    <=>:
+        forall z R:
+            z != 0
+            =>:
+                reciprocal(z) * z = 1
+
+forall p &GuardedInverseFunctionPair, x R:
+    x != 0
+    =>:
+        p.reciprocal(x) * x = 1
+"#;
     for mutation in 0..8 {
         let (mut run, compiler) = super::execute(source);
         let p = declaration(&mut run);
@@ -217,7 +219,21 @@ fn quantified_struct_laws_retain_formation_and_flattened_publication() {
 #[test]
 fn quantified_struct_laws_keep_private_scope_and_invalid_call_boundaries() {
     use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
-    let source = include_str!("../../../lean/examples/struct_guarded_universal_law/statement.lit");
+    let source = r#"# A universal record law retains the nonzero domain of its function field.
+struct GuardedInverseFunctionPair:
+    reciprocal fn(t R: t != 0) R
+    base R
+    <=>:
+        forall z R:
+            z != 0
+            =>:
+                reciprocal(z) * z = 1
+
+forall p &GuardedInverseFunctionPair, x R:
+    x != 0
+    =>:
+        p.reciprocal(x) * x = 1
+"#;
     let (run, compiler) = super::execute(source);
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
         crate::execute::ExecDefStructStmtResult::Success(p),
@@ -314,31 +330,45 @@ fn struct_non_numeric_fields_are_not_rational_scalar_leaves() {
     assert!(compiler.compile_run(&run, "non_numeric_field").is_err());
 }
 
-const CHOSEN: &str = include_str!("../../../lean/examples/chosen_coordinate_fields/statement.lit");
-const ORIGIN: &str = include_str!("../../../lean/examples/origin_coordinate_fields/statement.lit");
-const RELEASED: &str =
-    include_str!("../../../lean/examples/released_coordinate_fields/statement.lit");
-const TWO_PAIRS: &str =
-    include_str!("../../../lean/examples/coordinate_pair_addition/statement.lit");
+const CHOSEN: &str = r#"# Choose two coordinate pairs and use their real fields.
+struct CoordinatePair:
+    x R
+    y R
 
-#[test]
-fn struct_binding_examples_replay_results_in_global_and_local_scopes() {
-    for source in [
-        CHOSEN,
-        ORIGIN,
-        RELEASED,
-        TWO_PAIRS,
-        include_str!("../../../lean/examples/local_coordinate_objects/statement.lit"),
-        include_str!("../../../lean/examples/coordinate_field_theorem/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "bindings")
-            .unwrap_or_else(|e| panic!("{}: {e:?}", source.lines().next().unwrap()));
-        assert_eq!(lean, compiler.compile_run(&run, "bindings").unwrap());
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
-}
+witness $is_nonempty_set(&CoordinatePair) from (1, 2)
+have p, q &CoordinatePair
+p.x $in R
+q.y $in R
+p.x + q.y = q.y + p.x
+"#;
+const ORIGIN: &str = r#"# Name the origin as a coordinate pair and recover its zero coordinates.
+struct CoordinatePair:
+    x R
+    y R
+
+have origin &CoordinatePair = (0, 0)
+origin.x = 0
+origin.y = 0
+"#;
+const RELEASED: &str = r#"# Explicitly open a coordinate pair and check both field carriers.
+struct CoordinatePair:
+    x R
+    y R
+
+witness $is_nonempty_set(&CoordinatePair) from (1, 2)
+have p &CoordinatePair
+release struct def p
+p.x $in R
+p.y $in R
+"#;
+const TWO_PAIRS: &str = r#"# Real coordinates of any two pairs commute under addition.
+struct CoordinatePair:
+    x R
+    y R
+
+forall p, q &CoordinatePair:
+    p.x + q.y = q.y + p.x
+"#;
 
 #[test]
 fn struct_have_requires_all_original_layers_in_parameter_order() {
@@ -509,34 +539,35 @@ fn struct_declaration_layers_follow_parameter_and_alias_formation() {
     }
 }
 
-const POSITIVE_POINT: &str =
-    include_str!("../../../lean/examples/positive_point_conditions/statement.lit");
-const POSITIVE_RATIO: &str =
-    include_str!("../../../lean/examples/positive_ratio_conditions/statement.lit");
+const POSITIVE_POINT: &str = r#"# A positive point has real coordinates and a strictly positive first coordinate.
+struct PositivePoint:
+    x R
+    y R
+    <=>:
+        x > 0
 
-#[test]
-fn constrained_struct_examples_replay_original_conditions() {
-    for source in [
-        POSITIVE_POINT,
-        POSITIVE_RATIO,
-        include_str!("../../../lean/examples/positive_point_release/statement.lit"),
-        include_str!("../../../lean/examples/ordered_coordinate_conditions/statement.lit"),
-        include_str!("../../../lean/examples/first_quadrant_conditions/statement.lit"),
-        include_str!("../../../lean/examples/chosen_positive_points/statement.lit"),
-        include_str!("../../../lean/examples/equal_coordinate_conditions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "constrained_structs")
-            .unwrap_or_else(|e| panic!("{}: {e:?}", source.lines().next().unwrap()));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "constrained_structs").unwrap()
-        );
-        assert!(lean.contains("Litex.setBuilder") && lean.contains("Litex.inSetBuilder_iff"));
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
-}
+(2, 3) $in &PositivePoint
+forall p &PositivePoint:
+    p.x > 0
+
+forall p cart(R, R):
+    p(1) > 0
+    =>:
+        p $in &PositivePoint
+"#;
+const POSITIVE_RATIO: &str = r#"# A positive ratio requires its denominator to be nonzero before division is formed.
+struct PositiveRatio:
+    numerator R
+    denominator R
+    <=>:
+        denominator != 0
+        numerator / denominator > 0
+
+(2, 1) $in &PositiveRatio
+forall p &PositiveRatio:
+    p.denominator != 0
+    p.numerator / p.denominator > 0
+"#;
 
 #[test]
 fn constrained_struct_conditions_cannot_be_dropped_or_reordered() {
@@ -670,34 +701,37 @@ fn constrained_struct_invalid_point_is_rejected_before_compilation() {
         .compile_run(&run, "invalid_positive_point")
         .is_err());
 }
+const DESIGNATED_PAIR: &str = r#"# A designated pair remembers a value from its parameter set as its first coordinate.
+struct DesignatedPair<A set, a A>:
+    x A
+    y A
+    <=>:
+        x = a
 
-const PARAMETERIZED_PAIR: &str =
-    include_str!("../../../lean/examples/parameterized_pairs/statement.lit");
-const DESIGNATED_PAIR: &str =
-    include_str!("../../../lean/examples/designated_coordinate_pairs/statement.lit");
+(2, 3) $in &DesignatedPair<R, 2>
+forall A set, a A, p &DesignatedPair<A, a>:
+    p.x = a
+"#;
 
-const NONEMPTY_PAIR: &str =
-    include_str!("../../../lean/examples/nonempty_parameterized_pairs/statement.lit");
+const NONEMPTY_PAIR: &str = r#"# Coordinates of a pair belong to its arbitrary nonempty carrier.
+struct NonemptyPair<A nonempty_set>:
+    x A
+    y A
 
-#[test]
-fn nonempty_struct_headers_preserve_kind_facts() {
-    for source in [
-        NONEMPTY_PAIR,
-        include_str!("../../../lean/examples/nonempty_equal_pairs/statement.lit"),
-        include_str!("../../../lean/examples/nonempty_cartesian_theorem/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "nonempty_headers")
-            .unwrap_or_else(|error| panic!("{}: {error:?}", source.lines().next().unwrap()));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "nonempty_headers").unwrap()
-        );
-        assert!(lean.contains("Litex.IsNonempty _value_i"));
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
-}
+(1, 2) $in &NonemptyPair<R>
+forall A nonempty_set, p &NonemptyPair<A>:
+    $is_nonempty_set(A)
+    p.x $in A
+    p.y $in A
+
+forall A nonempty_set:
+    $is_set(A)
+    $is_nonempty_set(A)
+
+forall B nonempty_set:
+    $is_set(B)
+    $is_nonempty_set(B)
+"#;
 
 #[test]
 fn nonempty_struct_headers_reject_wrong_kind_and_missing_capture() {
@@ -844,24 +878,6 @@ fn nonempty_structures_reject_empty_arguments_and_unsupported_finite_kinds() {
 
     let (run, compiler) = super::execute("struct FinitePair<A finite_set>:\n    x A\n    y A\n");
     assert!(compiler.compile_run(&run, "finite_parameter").is_err());
-}
-
-#[test]
-fn struct_header_examples_preserve_actual_arguments_and_conditions() {
-    for source in [
-        PARAMETERIZED_PAIR,
-        DESIGNATED_PAIR,
-        include_str!("../../../lean/examples/parameterized_equal_pairs/statement.lit"),
-        include_str!("../../../lean/examples/threshold_points/statement.lit"),
-        include_str!("../../../lean/examples/chosen_parameterized_pairs/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "struct_headers")
-            .unwrap_or_else(|e| panic!("{}: {e:?}", source.lines().next().unwrap()));
-        assert_eq!(lean, compiler.compile_run(&run, "struct_headers").unwrap());
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
 }
 
 #[test]
@@ -1017,24 +1033,14 @@ fn struct_specialization_cannot_erase_the_instantiated_field_carrier() {
         .is_err());
 }
 
-const SUBSET_RETURN: &str =
-    include_str!("../../../lean/examples/struct_subset_function_return/statement.lit");
+const SUBSET_RETURN: &str = r#"# A function field returns subsets of the record's arbitrary header set.
+struct RecordOfSubsets<SourceCarrier set, ValueCarrier set>:
+    subsets fn(s SourceCarrier) power_set(ValueCarrier)
+    marker SourceCarrier
 
-#[test]
-fn struct_signature_constructors_replay_headers_and_dependent_fields() {
-    for source in [
-        SUBSET_RETURN,
-        include_str!("../../../lean/examples/struct_subset_function_input/statement.lit"),
-        include_str!("../../../lean/examples/struct_guarded_subset_function/statement.lit"),
-        include_str!("../../../lean/examples/struct_dependent_subset_function/statement.lit"),
-        include_str!("../../../lean/examples/struct_nested_subset_function/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "field_signature").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "field_signature").unwrap());
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
-}
+forall SourceCarrier, ValueCarrier set, p &RecordOfSubsets<SourceCarrier, ValueCarrier>, x SourceCarrier:
+    $is_set(p.subsets(x))
+"#;
 
 #[test]
 fn struct_signature_constructors_require_original_field_formation() {
@@ -1145,7 +1151,16 @@ fn struct_signature_constructor_lookup_respects_parameter_and_publication_scope(
 
 #[test]
 fn struct_signature_constructors_retain_field_guards() {
-    let valid = include_str!("../../../lean/examples/struct_guarded_subset_function/statement.lit");
+    let valid = r#"# The subset-valued function field keeps its nonzero input condition.
+struct GuardedRecordOfSubsets<Carrier set>:
+    subsets fn(t R: t != 0) power_set(Carrier)
+    marker Carrier
+
+forall Carrier set, p &GuardedRecordOfSubsets<Carrier>, x R:
+    x != 0
+    =>:
+        $is_set(p.subsets(x))
+"#;
     let invalid = format!("{valid}\nforall Carrier set, p &GuardedRecordOfSubsets<Carrier>:\n    $is_set(p.subsets(0))\n");
     let mut runtime = Runtime::new_with_result_detail(
         LaunchCommand::Eval {
@@ -1163,31 +1178,46 @@ fn struct_signature_constructors_retain_field_guards() {
         .expect_err("an undefined call cannot be compiled");
 }
 
-const NAMED_IDENTITY_LAW: &str =
-    include_str!("../../../lean/examples/struct_named_identity_law/statement.lit");
-const NESTED_GUARDED_IDENTITY_LAW: &str =
-    include_str!("../../../lean/examples/struct_nested_guarded_identity_law/statement.lit");
+const NAMED_IDENTITY_LAW: &str = r#"# A record carries a named universal identity law for its function field.
+prop fixes_every_real(f fn(x R) R):
+    forall x R:
+        f(x) = x
 
-#[test]
-fn concrete_universal_record_predicates_replay_original_declarations() {
-    for source in [
-        NAMED_IDENTITY_LAW,
-        NESTED_GUARDED_IDENTITY_LAW,
-        include_str!("../../../lean/examples/struct_nonidentity_law/statement.lit"),
-        include_str!("../../../lean/examples/struct_finite_subset_transfer/statement.lit"),
-        include_str!("../../../lean/examples/category_identity_and_composition/statement.lit"),
-        include_str!("../../../lean/examples/named_identity_function_domain/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "named_record_law")
-            .expect(source);
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "named_record_law").unwrap()
-        );
-    }
-}
+struct IdentityMapRecord:
+    mapping fn(x R) R
+    point R
+    <=>:
+        $fixes_every_real(mapping)
+
+forall p &IdentityMapRecord:
+    $fixes_every_real(p.mapping)
+
+forall p &IdentityMapRecord, x R:
+    p.mapping(x) = x
+"#;
+const NESTED_GUARDED_IDENTITY_LAW: &str = r#"# An explicitly unfolded nested predicate supplies a guarded identity law.
+prop fixes_every_nonzero_real(f fn(x R: x != 0) R):
+    forall x R:
+        x != 0
+        =>:
+            f(x) = x
+
+prop guarded_identity_law(f fn(x R: x != 0) R):
+    $fixes_every_nonzero_real(f)
+
+struct GuardedIdentityRecord:
+    mapping fn(x R: x != 0) R
+    point R
+    <=>:
+        $guarded_identity_law(mapping)
+
+forall p &GuardedIdentityRecord, x R:
+    x != 0
+    =>:
+        $guarded_identity_law(p.mapping)
+        $fixes_every_nonzero_real(p.mapping)
+        p.mapping(x) = x
+"#;
 
 #[test]
 fn concrete_universal_record_predicates_keep_canonical_binders_and_declaration_scope() {

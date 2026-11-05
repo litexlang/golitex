@@ -7,30 +7,22 @@ use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
 };
 
-const FROM: &str =
-    include_str!("../../../lean/examples/second_partial_builtin_from_definition/statement.lit");
-const TO: &str =
-    include_str!("../../../lean/examples/second_partial_builtin_to_definition/statement.lit");
-#[test]
-fn second_partial_definition_schemas_keep_generic_coordinates_and_guarded_domains() {
-    for source in [
-        include_str!(
-            "../../../lean/examples/second_partial_builtin_from_definition_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/second_partial_builtin_to_definition_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/second_partial_builtin_from_definition_guarded/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/second_partial_builtin_to_definition_guarded/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "second_definition_domain").unwrap();
-    }
-}
+const FROM: &str = r#"# Recover an ordered second partial through its explicit builtin definition rule.
+thm second_partial_builtin_from_definition:
+    ? forall f fn(x cart_n(R,2)) R,p cart_n(R,2),d R:
+        exist A power_set(cart_n(R,2)),g fn(x A) R st {A $subset cart_n(R,2),p $in A,A $subset {q A:$has_partial_derivative_at(f,q,2,1,g(q))},$has_partial_derivative_at(g,p,2,2,d)}
+        =>:
+            $has_second_partial_derivative_at(f,p,2,1,2,d)
+    release thm second_partial_at_from_definition(f,p,2,1,2,d)
+"#;
+const TO: &str = r#"# Expand the local first-derivative witness of an ordered second partial.
+thm second_partial_builtin_to_definition:
+    ? forall f fn(x cart_n(R,2)) R,p cart_n(R,2),d R:
+        $has_second_partial_derivative_at(f,p,2,1,2,d)
+        =>:
+            exist A power_set(cart_n(R,2)),g fn(x A) R st {A $subset cart_n(R,2),p $in A,A $subset {q A:$has_partial_derivative_at(f,q,2,1,g(q))},$has_partial_derivative_at(g,p,2,2,d)}
+    release thm second_partial_at_to_definition(f,p,2,1,2,d)
+"#;
 fn clause(run: &mut RunLitexCodeResult, fold: bool) -> &mut PlainExistFact {
     let b = invocation(run).builtin.as_mut().unwrap();
     let fact = if fold {

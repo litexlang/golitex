@@ -1,8 +1,8 @@
 {
   "evidence": {
-    "date": "2026-10-27",
-    "source": "lean/examples/add_zero/statement.lit",
-    "generated": "lean/examples/add_zero/statement.lean",
+    "date": "2026-11-05",
+    "source": "examples/lean_compilation/source.lit",
+    "generated": "examples/lean_compilation/Generated.lean",
     "strict": true,
     "source_success": true,
     "same_result_compiled": true,
@@ -11,25 +11,29 @@
     "core_freshly_checked": true,
     "lean_version": "Lean (version 4.31.0, arm64-apple-darwin24.6.0, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
     "mathlib_revision": "fabf563a7c95a166b8d7b6efca11c8b4dc9d911f",
-    "axioms": "'LitexCompiled.file_lean_x2f_examples_x2f_add_x5f_zero_x2f_statement_x2e_lit.h_2' depends on axioms: [propext,\n Classical.choice,\n Quot.sound]",
-    "source_sha256": "ae2533413411a4c2716acf86ce447947c1e29769fb82c891c8c45d3f6f889344",
-    "generated_sha256": "b724efb5e9f927878c4643c0e58e66e3597e6801902386d90034c5b2e2637201",
-    "core_sha256": "6cff65f2baf8446359b1b981a1324abe33de382dd63b8982c0ddbaa0b006b78e",
-    "binary_sha256": "37ae0848adea3ccd31dbabc685fea14c8a255363871d72254f288c342af9f57a",
-    "rust_library_sha256": "68c072b6c3cb8a2a9defb8c755497d94bbab0af2b7905b020a938fa3b244638c",
-    "detailed_sha256": "89c6403a097fd018fd575faf4fd25871d5d97da7bbc6ad0c47694704ab310941"
+    "source_sha256": "7bdd8100d7527c3545ae4a9c6fec47e63f057e716a21174be233988d8f04aca3",
+    "generated_sha256": "7667b2f66234c5a48504d2dbc0425b29ce38a270fff95fee6ca53c7ed7c76eb2",
+    "core_sha256": "eec759004ee55133f5a3255cabc31f19bfadc7bbdcf86076340b4ba1bca40a04",
+    "core_tree_sha256": "854bb12b7024760aa45acaf03d046d017aa89f2cd1f7f16f50ad01f40d26da38",
+    "binary_sha256": "e298c76ab4d5258156e12505921e9dabcb8eb03a5e4f14944cfa9a2b3def9c5c",
+    "rust_library_sha256": "e571aa23d85fbf47c566974fdc1127f982a03fe7126a3433a28356df1ed0bd55",
+    "detailed_sha256": "bd00974c85bae560fa85ecd589f12dcc212b6aa0a641a1e9d6d08de80b0930a8"
   },
   "boundary": "Detailed JSON is an inspection view; compilation consumes typed results plus completed Runtime. Native Adapter is a separate handwritten step.",
   "assets": {
-    "index.html": "533ab0d70665efbfb03127ff5b34d94ed7285361783ce827ebb99977a69c6f96",
+    "index.html": "0f3737b09171573cd4a7858c6f5ce4d1c6c971944cbff58e7ee82afda259c512",
     "index.template.html": "ed558bfe92afa7292c5a346d5ac7dd51c9513f4186095f1dc073b38c0b92039d",
-    "viewer.js": "b0f5f90f9f1077d4c0519a863a92b3b47eb6184942ec7fee16b4a735ec09c482",
+    "viewer.js": "ebe9a548244e60eee4facbd0f5b6ca70c08e6fb40db25dca5e2cc83a32234f1d",
     "style.css": "3cd6c2d492def32a21d843d16781fd1979df16d1ada9b14933a8175109e95c2d",
-    "build.py": "377a90e6f878ab66061574015f7c428d4a096484b92dac79b5246fd1ec611171",
+    "build.py": "147271afac2f3c48d54a868e1b7f68c95cbd4a5ba13d80644c0d5d0f69071094",
+    "capture.py": "3779924027cd27eddb1c4869c5e75799a5364007b0cc3580c37e4108ef951ac3",
+    "capture.rs": "231a7234a0c1ebd7f9b0c4f887615caa758d500121619c17920ffaa9832d426b",
+    "source.lit": "7bdd8100d7527c3545ae4a9c6fec47e63f057e716a21174be233988d8f04aca3",
+    "Generated.lean": "7667b2f66234c5a48504d2dbc0425b29ce38a270fff95fee6ca53c7ed7c76eb2",
     "export.cjs": "384529f77796c9590e947b1209a15c7bd32352228b3549b1bd4040799c8ec316",
-    "README.md": "e90a2e204b2a7b455ded7518e4d55e526a6b76a5b1103732c40b58ea961300dc",
-    "trace.detailed.json": "89c6403a097fd018fd575faf4fd25871d5d97da7bbc6ad0c47694704ab310941",
-    "evidence.json": "0b438f68d6574a6b9321c6d9f277de8db364cda8e450354defdc8ee93ba8e4eb",
+    "README.md": "49c5737173d12985a3cbb7a6907ce7562af6706e68924f2629f89e7700263efe",
+    "trace.detailed.json": "bd00974c85bae560fa85ecd589f12dcc212b6aa0a641a1e9d6d08de80b0930a8",
+    "evidence.json": "017cca5afd3635557c9d884686e0bfe69bc5e5817f881b2698cd6328633713e5",
     "lean-compilation.svg": "df4fe838f8bc493052533c330ecd8093abc2577cb49887fe9743842a7cf534d6",
     "lean-compilation.zh.svg": "147c3bd49d8d16cbcbd0d39e87da3cb279a686a694e8052646b3fdc6e2e416e4"
   },
@@ -41,131 +45,8 @@
     "lean-compilation.zh.pdf": "ad047bf392732dcc177869c02df9b97bc6c07554f03e70f89a9394e81f80c56a",
     "lean-compilation.zh.png": "ad5594bdb81136e3f604e31d4c2dcc0b66b613eb80d679f3e82bdcdd398a7468"
   },
-  "visual_review": {
-    "date": "2026-10-27",
-    "languages": [
-      "en",
-      "zh"
-    ],
-    "viewports": [
-      1440,
-      1100,
-      768,
-      720,
-      392,
-      320
-    ],
-    "steps": 5,
-    "linked_json_lean_semantics": true,
-    "keyboard": true,
-    "playback": true,
-    "offline": true,
-    "browser_errors": 0,
-    "text_outside_nodes": false,
-    "page_overflow": false,
-    "svg_markers_unique": true,
-    "pdf_pages_per_language": 1,
-    "pdf_text_extractable": true,
-    "pdf_render_inspected": true,
-    "png_pixels": [
-      4323,
-      3401
-    ],
-    "semantic_panel_location": "interpretation-section",
-    "upper_figure_panels": [
-      "a",
-      "b"
-    ],
-    "role_layout": {
-      "desktop": "diagram beside prose",
-      "mobile": "stacked"
-    },
-    "compiler_evidence_reused": true
-  },
-  "mathematical_context_review": {
-    "date": "2026-10-27",
-    "browser": "Codex in-app browser",
-    "viewport": [
-      872,
-      863
-    ],
-    "languages": [
-      "en",
-      "zh"
-    ],
-    "statement": "forall a C:\n    a + 0 = a",
-    "source_at_start_and_in_inspector": true,
-    "final_step_identifies_same_statement": true,
-    "final_summary_uses_checked_receipt": true,
-    "full_technical_receipt_retained": true,
-    "document_overflow": false,
-    "static_assets_unchanged": true,
-    "compiler_and_lean_evidence_reused": true
-  },
-  "entrypoint_review": {
-    "date": "2026-10-27",
-    "template_forwarding": "actual viewer source checked in VM",
-    "query_and_hash_preserved": true,
-    "fallback_link_without_javascript": true,
-    "fallback_removed_from_generated_page": true,
-    "generated_http_preview_visibly_rendered": true,
-    "generated_preview_console_errors": 0,
-    "visible_upper_diagrams": 2,
-    "visible_semantic_diagram": 1,
-    "static_assets_unchanged": true
-  },
-  "pipeline_layout_review": {
-    "date": "2026-10-27",
-    "browser": "Codex in-app browser",
-    "viewport": [
-      872,
-      863
-    ],
-    "languages": [
-      "zh",
-      "en"
-    ],
-    "buttons": 5,
-    "orientation": "vertical",
-    "arrows": "down",
-    "parallel_columns": [
-      "compilation flow",
-      "checked evidence",
-      "selected-route replay"
-    ],
-    "button_selection_verified": "Calculation / rational",
-    "document_overflow": false,
-    "static_assets_unchanged": true,
-    "arrows_count": 4,
-    "merged_source_runtime": true,
-    "source_and_runtime_correspond_to_right_source_node": true,
-    "walkthrough_stages": 5,
-    "top_and_left_titles_match": true
-  },
-  "stage_sync_review": {
-    "date": "2026-10-27",
-    "browser": "Codex in-app browser",
-    "languages": [
-      "zh",
-      "en"
-    ],
-    "stages": [
-      "source and verification",
-      "typed results",
-      "replay compiler",
-      "generated Lean",
-      "Lean check"
-    ],
-    "top_overview_and_inspector_aligned": true,
-    "every_stage_has_right_hand_counterpart": true,
-    "next_and_previous_synchronized": true,
-    "playback_stops_at": "05 / 05",
-    "selection_and_keyboard_verified": true,
-    "semantic_details_belong_to_generated_Lean_stage": true,
-    "kernel_card_uses_actual_check_receipt": true,
-    "console_errors": 0,
-    "document_overflow": false,
-    "static_assets_unchanged": true,
-    "compiler_evidence_reused": true
+  "render_reuse": {
+    "status": "Byte-identical SVG, PDF and PNG assets retained after refreshing proof data.",
+    "fresh_render_claimed": false
   }
 }

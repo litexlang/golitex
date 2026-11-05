@@ -43,7 +43,8 @@ impl LitexToLeanCompiler {
         let step_proof = self.compile_recursive_case_return(proof, 1, &scope)?;
         let congruence = self.compile_recursive_step_congruence(proof, &scope)?;
         let value = format!("(Litex.recursiveNatFnTarget (M := M) (Litex.denote {target}) (Litex.isSet {target}) {guard} {base} {step} {guard_sound} {base_proof} {step_proof} {congruence})");
-        let object = Obj::Identifier(IdentifierObj::from_bound_name(&proof.statement.name));
+        let object =
+            Obj::Identifier(position.defining_identifier(&proof.statement.name, &self.runtime)?);
         let declaration = self.bind_alias(
             &proof.statement.name,
             &object,
@@ -324,8 +325,14 @@ impl LitexToLeanCompiler {
         };
         let original = &proof.statement.fn_set_clause;
         let groups = &signature.set_bound_parameters.groups;
-        if member.element.ir()
-            != Obj::Identifier(IdentifierObj::from_bound_name(&proof.statement.name)).ir()
+        let (_, owner) = position.visible_recursive_self(&proof.statement.name.id)?;
+        let expected = match owner.parent {
+            Some(declaration) => {
+                declaration.defining_identifier(&proof.statement.name, &self.runtime)?
+            }
+            None => IdentifierObj::from_bound_name(&proof.statement.name),
+        };
+        if member.element.ir() != Obj::Identifier(expected).ir()
             || groups.len() != original.set_bound_parameters.groups.len()
         {
             return Err(LeanCompileError::new(
@@ -799,7 +806,7 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         bindings: &HashMap<IdentifierId, String>,
     ) -> Result<String, LeanCompileError> {
-        if !contains_identifier(object, declaration.statement.name.id) {
+        if !self.recursive_body_uses_self(object, declaration, position)? {
             return Ok("rfl".into());
         }
         if let Some((operation, children)) = arithmetic_constructor_pairs(object, object) {
@@ -818,15 +825,13 @@ impl LitexToLeanCompiler {
                         "RecursiveFunction/CongruenceCallArity",
                     ));
                 }
-                let FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) =
-                    application.head.as_ref()
-                else {
+                let FnObjHead::Identifier(identifier) = application.head.as_ref() else {
                     return Err(LeanCompileError::unsupported(
                         "RecursiveFunction/CongruenceCallHead",
                     ));
                 };
                 let argument = &application.body[0][0];
-                if *id == declaration.statement.name.id {
+                if self.recursive_identifier_is_self(identifier, declaration, position)? {
                     let parameter = &declaration
                         .statement
                         .fn_set_clause
@@ -938,8 +943,14 @@ impl LitexToLeanCompiler {
                 "RecursiveFunction/CaseEquationConclusion",
             ));
         };
-        if equation.right != *recursive_case_body(proof, index)?
-            || !matches!(&equation.left, Obj::FnObj(f) if matches!(f.head.as_ref(), FnObjHead::Identifier(IdentifierObj::Plain { id: function_id, .. }) if *function_id == proof.statement.name.id)
+        let expected = outer.defining_identifier(&proof.statement.name, &self.runtime)?;
+        let self_binding =
+            HashMap::from([(proof.statement.name.id, Obj::Identifier(expected.clone()))]);
+        if !instantiated_object_matches(
+            recursive_case_body(proof, index)?,
+            &equation.right,
+            &self_binding,
+        ) || !matches!(&equation.left, Obj::FnObj(f) if matches!(f.head.as_ref(), FnObjHead::Identifier(identifier) if identifier == &expected)
                 && f.body.len() == 1 && f.body[0].len() == 1 && f.body[0][0].as_ref() == &Obj::Identifier(IdentifierObj::from_bound_name(parameter)))
         {
             return Err(LeanCompileError::new("RecursiveFunction/CaseEquationConclusion", "The stored conclusion differs from this exact source function and selected branch body."));

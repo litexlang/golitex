@@ -8,40 +8,43 @@ use crate::execute::execute_proof_block_stmt::{
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const UNIQUE: &str =
-    include_str!("../../../lean/examples/function_limit_at_unique_by_theorem/statement.lit");
-const EXISTS: &str =
-    include_str!("../../../lean/examples/function_limit_at_exists_by_theorem/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/function_limit_at_selected_by_theorem/statement.lit");
+const UNIQUE: &str = r#"# Invoke the explicit at function-limit uniqueness theorem.
+claim:
+    ? forall f fn(x R) R, p R, L R, K R:
+        $has_limit_at(f,p,L)
+        $has_limit_at(f,p,K)
+        =>:
+            L = K
+    by thm fn_limit_at_unique(f,p,L,K) => L = K
+"#;
+const EXISTS: &str = r#"# Release the explicit at function-limit exists theorem.
+claim:
+    ? forall f fn(x R) R, p R, L R:
+        $has_limit_at(f,p,L)
+        =>:
+            exist K R st {$has_limit_at(f,p,K)}
+    release thm fn_limit_at_exists(f,p,L)
+"#;
+const SELECTED: &str = r#"# Release the explicit at function-limit selected theorem.
+claim:
+    ? forall f fn(x R) R, p R:
+        exist L R st {$has_limit_at(f,p,L)}
+        =>:
+            $has_limit_at(f,p,fn_lim(f,p))
+    release thm fn_limit_at_selected(f,p)
+"#;
 
-const CONSTANT: &str =
-    include_str!("../../../lean/examples/constant_function_limit_at_by_theorem/statement.lit");
-
-#[test]
-fn explicit_constant_limits_replay_all_five_approaches() {
-    for source in [
-        CONSTANT,
-        include_str!(
-            "../../../lean/examples/constant_function_limit_left_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/constant_function_limit_right_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/constant_function_limit_pos_inf_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/constant_function_limit_neg_inf_by_theorem/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "constant_limit")
-            .unwrap()
-            .contains("FunctionLimitConstant"));
-    }
-}
+const CONSTANT: &str = r#"# A constant function has the stated at limit on an accumulating domain.
+claim:
+    ? forall f fn(x R) R, p R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-p) and abs(x-p) < r}
+        forall x R:
+            f(x)=L
+        =>:
+            $has_limit_at(f,p,L)
+    by thm fn_limit_at_constant(f,p,L) => $has_limit_at(f,p,L)
+"#;
 
 #[test]
 fn explicit_constant_limit_rejects_missing_or_changed_accumulation() {
@@ -109,73 +112,6 @@ fn release(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
         panic!("release theorem")
     };
     p
-}
-
-#[test]
-fn explicit_limit_uniqueness_replays_all_five_approaches() {
-    for source in [
-        UNIQUE,
-        include_str!("../../../lean/examples/function_limit_left_unique_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_unique_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_unique_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_unique_by_theorem/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "explicit_limit_unique")
-            .unwrap()
-            .contains("FunctionLimitCandidatesEqual"));
-    }
-}
-
-#[test]
-fn explicit_limit_existence_replays_all_five_approaches() {
-    for source in [
-        EXISTS,
-        include_str!("../../../lean/examples/function_limit_left_exists_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_exists_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_exists_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_exists_by_theorem/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "explicit_limit_exists")
-            .unwrap()
-            .contains("FunctionLimitExists"));
-    }
-}
-
-#[test]
-fn explicit_limit_selection_replays_all_five_approaches() {
-    for source in [
-        SELECTED,
-        include_str!(
-            "../../../lean/examples/function_limit_left_selected_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_right_selected_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_selected_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_selected_by_theorem/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "explicit_limit_selected")
-            .unwrap()
-            .contains("FunctionLimitSelected"));
-    }
 }
 
 #[test]

@@ -12,11 +12,62 @@ use crate::store_fact_and_infer::{
 };
 
 const SOURCES: [&str; 5] = [
-    include_str!("../../../lean/examples/function_continuity_at_citations/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_left_citations/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_right_citations/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_semantic_transport/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_guarded_citations/statement.lit"),
+    r#"# Cite positive and negative two-sided continuity facts on their original real function domain.
+thm at_continuity_citation:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        =>:
+            $is_continuous_at(f,p)
+
+thm at_discontinuity_citation:
+    ? forall f fn(x R) R, p R:
+        not $is_continuous_at(f,p)
+        =>:
+            not $is_continuous_at(f,p)
+"#,
+    r#"# Cite positive and negative left-sided continuity facts on their original real function domain.
+thm left_continuity_citation:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        =>:
+            $is_continuous_left(f,p)
+
+thm left_discontinuity_citation:
+    ? forall f fn(x R) R, p R:
+        not $is_continuous_left(f,p)
+        =>:
+            not $is_continuous_left(f,p)
+"#,
+    r#"# Cite positive and negative right-sided continuity facts on their original real function domain.
+thm right_continuity_citation:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        =>:
+            $is_continuous_right(f,p)
+
+thm right_discontinuity_citation:
+    ? forall f fn(x R) R, p R:
+        not $is_continuous_right(f,p)
+        =>:
+            not $is_continuous_right(f,p)
+"#,
+    r#"# Semantic equality transports continuity between equivalent functions and points.
+thm continuity_semantic_transport:
+    ? forall f,g fn(x R) R, p,q R:
+        f=g
+        p=q
+        $is_continuous_at(f,p)
+        =>:
+            $is_continuous_at(g,q)
+"#,
+    r#"# Cite continuity on a punctured real function domain with its original nonzero condition.
+thm guarded_continuity_citation:
+    ? forall f fn(x R: x != 0) R, p R:
+        p != 0
+        $is_continuous_at(f,p)
+        =>:
+            $is_continuous_at(f,p)
+"#,
 ];
 fn theorem(run: &mut RunLitexCodeResult) -> &mut ExecDefThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -43,15 +94,6 @@ fn definition(p: &mut ExecDefThmForallProof) -> &mut InferFunctionContinuousAtDe
         panic!("definition")
     };
     p
-}
-#[test]
-fn continuity_citations_keep_polarity_side_domain_and_semantic_equality() {
-    for source in SOURCES {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "continuity").unwrap();
-        assert!(lean.contains("Litex.FunctionContinuousAt"));
-        assert!(lean.contains("Litex.functionContinuousAtControl"));
-    }
 }
 #[test]
 fn continuity_definition_rejects_missing_or_changed_domain_evidence() {
@@ -100,62 +142,122 @@ fn continuity_requires_original_point_membership() {
 }
 
 const LAWS: [&str; 7] = [
-    include_str!(
-        "../../../lean/examples/function_continuity_at_from_epsilon_by_theorem/statement.lit"
-    ),
-    include_str!("../../../lean/examples/function_continuity_at_control_by_theorem/statement.lit"),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_from_epsilon_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_control_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_from_epsilon_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_control_by_theorem/statement.lit"
-    ),
-    include_str!("../../../lean/examples/function_continuity_at_definition/statement.lit"),
+    r#"# Derive at continuity from its epsilon-delta control on the complete real domain.
+thm explicit_at_continuity_intro:
+    ? forall f fn(x R) R, p R:
+        forall epsilon R+:
+            exist delta R+ st {{x R: abs(x-p)<delta} $subset preimage_set(f,{v R:abs(v-f(p))<epsilon})}
+        =>:
+            $is_continuous_at(f,p)
+    by thm fn_continuous_at_from_epsilon(f,p) => $is_continuous_at(f,p)
+"#,
+    r#"# Obtain an epsilon-delta control from at continuity on the complete real domain.
+thm explicit_at_continuity_control:
+    ? forall f fn(x R) R, p R, epsilon R+:
+        $is_continuous_at(f,p)
+        =>:
+            exist delta R+ st {{x R: abs(x-p)<delta} $subset preimage_set(f,{v R:abs(v-f(p))<epsilon})}
+    release thm fn_continuous_at_control(f,p,epsilon)
+"#,
+    r#"# Derive left continuity from its epsilon-delta control on the complete real domain.
+thm explicit_left_continuity_intro:
+    ? forall f fn(x R) R, p R:
+        forall epsilon R+:
+            exist delta R+ st {{x R: x<=p, p-x<delta} $subset preimage_set(f,{v R:abs(v-f(p))<epsilon})}
+        =>:
+            $is_continuous_left(f,p)
+    by thm fn_continuous_left_from_epsilon(f,p) => $is_continuous_left(f,p)
+"#,
+    r#"# Obtain an epsilon-delta control from left continuity on the complete real domain.
+thm explicit_left_continuity_control:
+    ? forall f fn(x R) R, p R, epsilon R+:
+        $is_continuous_left(f,p)
+        =>:
+            exist delta R+ st {{x R: x<=p, p-x<delta} $subset preimage_set(f,{v R:abs(v-f(p))<epsilon})}
+    release thm fn_continuous_left_control(f,p,epsilon)
+"#,
+    r#"# Derive right continuity from its epsilon-delta control on the complete real domain.
+thm explicit_right_continuity_intro:
+    ? forall f fn(x R) R, p R:
+        forall epsilon R+:
+            exist delta R+ st {{x R: p<=x, x-p<delta} $subset preimage_set(f,{v R:abs(v-f(p))<epsilon})}
+        =>:
+            $is_continuous_right(f,p)
+    by thm fn_continuous_right_from_epsilon(f,p) => $is_continuous_right(f,p)
+"#,
+    r#"# Obtain an epsilon-delta control from right continuity on the complete real domain.
+thm explicit_right_continuity_control:
+    ? forall f fn(x R) R, p R, epsilon R+:
+        $is_continuous_right(f,p)
+        =>:
+            exist delta R+ st {{x R: p<=x, x-p<delta} $subset preimage_set(f,{v R:abs(v-f(p))<epsilon})}
+    release thm fn_continuous_right_control(f,p,epsilon)
+"#,
+    r#"# Derive at continuity from its epsilon-delta control on the complete real domain.
+thm at_continuity_from_definition:
+    ? forall f fn(x R) R, p R:
+        forall epsilon R+:
+            exist delta R+ st {{x R: abs(x-p)<delta} $subset preimage_set(f,{v R:abs(v-f(p))<epsilon})}
+        =>:
+            $is_continuous_at(f,p)
+"#,
 ];
 const FORMULAS: [&str; 6] = [
-    include_str!("../../../lean/examples/function_continuity_at_constant_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_at_identity_by_theorem/statement.lit"),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_constant_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_identity_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_constant_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_identity_by_theorem/statement.lit"
-    ),
+    r#"# A function equal to the constant formula is at-continuous on its complete real domain.
+thm at_constant_continuity:
+    ? forall f fn(x R) R, p R, c R:
+        forall x R:
+            f(x)=c
+        =>:
+            $is_continuous_at(f,p)
+    by thm fn_continuous_at_constant(f,p,c) => $is_continuous_at(f,p)
+"#,
+    r#"# A function equal to the identity formula is at-continuous on its complete real domain.
+thm at_identity_continuity:
+    ? forall f fn(x R) R, p R:
+        forall x R:
+            f(x)=x
+        =>:
+            $is_continuous_at(f,p)
+    by thm fn_continuous_at_identity(f,p) => $is_continuous_at(f,p)
+"#,
+    r#"# A function equal to the constant formula is left-continuous on its complete real domain.
+thm left_constant_continuity:
+    ? forall f fn(x R) R, p R, c R:
+        forall x R:
+            f(x)=c
+        =>:
+            $is_continuous_left(f,p)
+    by thm fn_continuous_left_constant(f,p,c) => $is_continuous_left(f,p)
+"#,
+    r#"# A function equal to the identity formula is left-continuous on its complete real domain.
+thm left_identity_continuity:
+    ? forall f fn(x R) R, p R:
+        forall x R:
+            f(x)=x
+        =>:
+            $is_continuous_left(f,p)
+    by thm fn_continuous_left_identity(f,p) => $is_continuous_left(f,p)
+"#,
+    r#"# A function equal to the constant formula is right-continuous on its complete real domain.
+thm right_constant_continuity:
+    ? forall f fn(x R) R, p R, c R:
+        forall x R:
+            f(x)=c
+        =>:
+            $is_continuous_right(f,p)
+    by thm fn_continuous_right_constant(f,p,c) => $is_continuous_right(f,p)
+"#,
+    r#"# A function equal to the identity formula is right-continuous on its complete real domain.
+thm right_identity_continuity:
+    ? forall f fn(x R) R, p R:
+        forall x R:
+            f(x)=x
+        =>:
+            $is_continuous_right(f,p)
+    by thm fn_continuous_right_identity(f,p) => $is_continuous_right(f,p)
+"#,
 ];
-#[test]
-fn continuity_constant_and_identity_replay_the_source_formula() {
-    for source in FORMULAS {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "formula_continuity").unwrap();
-        assert!(
-            lean.contains("Litex.functionContinuousAtOfConstant")
-                || lean.contains("Litex.functionContinuousAtOfIdentity")
-        );
-    }
-}
-#[test]
-fn continuity_epsilon_definitions_and_explicit_certificates_replay() {
-    for source in LAWS {
-        let (run, c) = super::execute(source);
-        let output = c.compile_run(&run, "continuity_laws").unwrap();
-        assert!(
-            output.contains("Litex.functionContinuousAtOfForall")
-                || output.contains("Litex.functionContinuousAtControl")
-        );
-    }
-}
 #[test]
 fn continuity_certificates_reject_changed_side_point_or_missing_stage() {
     for source in LAWS[..6].iter().chain(FORMULAS.iter()) {

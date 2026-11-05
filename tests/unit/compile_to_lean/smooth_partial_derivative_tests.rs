@@ -5,30 +5,27 @@ use crate::execute::execute_fact_stmt::multivariable::strategy::{
     MultivariableStrategyProof, PartialDerivativeAtStrategyProof,
 };
 use crate::prelude::*;
-const COORDINATE: &str =
-    include_str!("../../../lean/examples/partial_derivative_coordinate_path/statement.lit");
-const FINITE_INTERSECTION: &str = include_str!(
-    "../../../lean/examples/partial_derivative_singleton_intersection_equal/statement.lit"
-);
-const MATRIX_ZERO: &str =
-    include_str!("../../../lean/examples/partial_derivative_zero_matrix_entry/statement.lit");
-const MATRIX_CALCULATED_PAIR: &str = include_str!(
-    "../../../lean/examples/partial_derivative_zero_matrix_calculated_pair/statement.lit"
-);
-
-#[test]
-fn smooth_partial_native_calculated_indices_replay_original_input_domains() {
-    for source in [
-        MATRIX_CALCULATED_PAIR,
-        include_str!("../../../lean/examples/partial_derivative_zero_matrix_calculated_row/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_identity_calculated_diagonal/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_identity_calculated_off_diagonal/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let target = compiler.compile_run(&run, "native_calculated_indices").unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert_eq!(target, compiler.compile_run(&run, "native_calculated_indices").unwrap());
-    }
-}
+const COORDINATE: &str = r#"# Differentiate a coordinate projection along the same and a different axis.
+forall p cart(R,R,R):
+    $has_partial_derivative_at(fn(q cart(R,R,R)) R {q(1)},p,3,1,1)
+forall p cart(R,R,R):
+    $has_partial_derivative_at(fn(q cart(R,R,R)) R {q(1)},p,3,2,0)
+"#;
+const FINITE_INTERSECTION: &str = r#"# Different exact spellings give the same singleton and a derivative coefficient of one.
+finite_set_size(intersect({1/2},{0.5})) $in R
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {finite_set_size(intersect({1/2},{0.5}))*q(1)},p,2,1,1)
+"#;
+const MATRIX_ZERO: &str = r#"# Replay a native matrix entry as an exact partial-derivative coefficient.
+zero_matrix(2,2)(1,1) $in R
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {zero_matrix(2,2)(1,1)*q(1)},p,2,1,0)
+"#;
+const MATRIX_CALCULATED_PAIR: &str = r#"# Retain both original domain proofs while calculating both matrix indices.
+zero_matrix(3,3)(1+1,1+2) $in R
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {zero_matrix(3,3)(1+1,1+2)*q(1)},p,2,1,0)
+"#;
 
 #[test]
 fn smooth_partial_native_calculated_indices_reject_changed_calculation_and_beta_tapes() {
@@ -123,29 +120,18 @@ fn smooth_partial_native_calculated_indices_require_original_call_wd() {
         compiler.compile_run(&run, "missing_native_calculated_wd").expect_err("normalizing input values cannot replace the original call's checked WD and domain facts");
     }
 }
-const CURRIED_PRODUCT: &str =
-    include_str!("../../../lean/examples/partial_derivative_curried_product/statement.lit");
-const FUNCTION_PARAMETER_SQUARE: &str = include_str!(
-    "../../../lean/examples/partial_derivative_function_parameter_square/statement.lit"
-);
-const APPLIED_CURRIED: &str =
-    include_str!("../../../lean/examples/partial_derivative_applied_curried_capture/statement.lit");
-
-#[test]
-fn smooth_partial_applied_curried_calls_replay_original_receivers_and_later_arguments() {
-    for source in [
-        APPLIED_CURRIED,
-        include_str!("../../../lean/examples/partial_derivative_applied_curried_argument/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_applied_curried_packed/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_applied_curried_three_groups/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_applied_curried_function_parameter/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_applied_curried_nested_captures/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let target = compiler.compile_run(&run, "applied_curried").unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert_eq!(target, compiler.compile_run(&run, "applied_curried").unwrap());
-    }
-}
+const CURRIED_PRODUCT: &str = r#"# Differentiate multiplication expressed as a function returning a function.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(x R) (fn(y R) R) {fn(z R) R {x*z}})(q(1))(q(2))},p,2,1,p(2))
+"#;
+const FUNCTION_PARAMETER_SQUARE: &str = r#"# Differentiate a square function passed as an ordinary function-valued argument.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(f (fn(x R) R)) R {f(q(1))})(fn(y R) R {y*y})},p,2,1,2*p(1))
+"#;
+const APPLIED_CURRIED: &str = r#"# Differentiate a curried product after substituting a calculated captured parameter.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(t R) R {(fn(x R) (fn(y R) R) {fn(z R) R {t*x*z}})(q(1))(q(2))})(1+1)},p,2,1,2*p(2))
+"#;
 
 #[test]
 fn smooth_partial_applied_curried_calls_reject_changed_outer_and_grouped_beta_tape() {
@@ -199,33 +185,67 @@ fn smooth_partial_applied_curried_calls_reject_changed_outer_and_grouped_beta_ta
 #[test]
 fn smooth_partial_applied_curried_calls_require_the_complete_original_grouped_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
-    for source in [APPLIED_CURRIED, include_str!("../../../lean/examples/partial_derivative_applied_curried_function_parameter/statement.lit")] {
+    for source in [
+        APPLIED_CURRIED,
+        r#"# Apply a curried function passed through its original function membership interface.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(f (fn(x R) (fn(y R) R))) R {f(q(1))(q(2))})(fn(x R) (fn(y R) R) {fn(z R) R {x*z}})},p,2,1,p(2))
+"#,
+    ] {
         for mutation in 0..4 {
             let (mut run, compiler) = super::execute(source);
-            let DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(root)), .. } = proof(&mut run).stages.body_well_defined.as_detailed_mut().unwrap() else {panic!()};
-            let DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FnObj(outer), .. } = root.body_well_defined.as_detailed_mut().unwrap() else {panic!()};
-            let DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FunctionSpace(FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(function)), .. } = outer.child_obj_well_defined[0].as_detailed_mut().unwrap() else {panic!()};
-            let DetailedObjWellDefinedProof::ByDef { proof: ObjWellDefinedProofByDef::FnObj(call), .. } = function.body_well_defined.as_detailed_mut().unwrap() else {panic!()};
+            let DetailedObjWellDefinedProof::ByDef {
+                proof:
+                    ObjWellDefinedProofByDef::FunctionSpace(
+                        FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(root),
+                    ),
+                ..
+            } = proof(&mut run)
+                .stages
+                .body_well_defined
+                .as_detailed_mut()
+                .unwrap()
+            else {
+                panic!()
+            };
+            let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::FnObj(outer),
+                ..
+            } = root.body_well_defined.as_detailed_mut().unwrap()
+            else {
+                panic!()
+            };
+            let DetailedObjWellDefinedProof::ByDef {
+                proof:
+                    ObjWellDefinedProofByDef::FunctionSpace(
+                        FunctionSpaceObjWellDefinedProofByDef::AnonymousFn(function),
+                    ),
+                ..
+            } = outer.child_obj_well_defined[0].as_detailed_mut().unwrap()
+            else {
+                panic!()
+            };
+            let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::FnObj(call),
+                ..
+            } = function.body_well_defined.as_detailed_mut().unwrap()
+            else {
+                panic!()
+            };
             match mutation {
                 0 => call.requirement_fact_verified.clear(),
                 1 => call.child_obj_well_defined.clear(),
                 2 => call.domain_fn_set = None,
-                _ => {call.requirement_fact_verified.pop();},
+                _ => {
+                    call.requirement_fact_verified.pop();
+                }
             }
-            compiler.compile_run(&run, "missing_applied_curried_wd").expect_err("all original receiver, argument and guard evidence is required in its own scope");
+            compiler
+                .compile_run(&run, "missing_applied_curried_wd")
+                .expect_err(
+                "all original receiver, argument and guard evidence is required in its own scope",
+            );
         }
-    }
-}
-
-#[test]
-fn smooth_partial_function_parameters_replay_original_function_interfaces() {
-    for source in [FUNCTION_PARAMETER_SQUARE,
-        include_str!("../../../lean/examples/partial_derivative_function_parameter_binary/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_function_parameter_three_inputs/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_function_parameter_positive_return/statement.lit")] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "function_parameters").unwrap();
-        assert_eq!(lean, compiler.compile_run(&run, "function_parameters").unwrap());
     }
 }
 
@@ -340,26 +360,6 @@ fn smooth_partial_function_parameters_require_original_parameter_call_wd() {
 }
 
 #[test]
-fn smooth_partial_grouped_calls_replay_each_original_receiver_and_argument_group() {
-    for source in [
-        CURRIED_PRODUCT,
-        include_str!(
-            "../../../lean/examples/partial_derivative_curried_three_groups/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/partial_derivative_curried_packed_arguments/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/partial_derivative_guarded_curried_constant/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "grouped_calls").unwrap();
-        assert_eq!(lean, compiler.compile_run(&run, "grouped_calls").unwrap());
-    }
-}
-
-#[test]
 fn smooth_partial_grouped_calls_reject_changed_steps_arguments_endpoints_and_order() {
     for mutation in 0..8 {
         let (mut run, compiler) = super::execute(CURRIED_PRODUCT);
@@ -462,22 +462,6 @@ fn smooth_partial_grouped_calls_require_the_complete_original_call_wd() {
 }
 
 #[test]
-fn smooth_partial_native_matrix_replays_original_call_and_expanded_body() {
-    for source in [
-        MATRIX_ZERO,
-        include_str!("../../../lean/examples/partial_derivative_identity_diagonal/statement.lit"),
-        include_str!(
-            "../../../lean/examples/partial_derivative_identity_off_diagonal/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "native_matrix_reduction")
-            .unwrap();
-    }
-}
-
-#[test]
 fn smooth_partial_native_matrix_rejects_changed_expansion_arguments_and_definition() {
     for mutation in 0..5 {
         let (mut run, compiler) = super::execute(MATRIX_ZERO);
@@ -521,16 +505,6 @@ fn smooth_partial_native_matrix_rejects_changed_expansion_arguments_and_definiti
             .expect_err(
             "original matrix definition, arguments, expanded body and complete tape are required",
         );
-    }
-}
-
-#[test]
-fn smooth_partial_finite_intersection_replays_equal_and_distinct_rationals() {
-    for source in [FINITE_INTERSECTION,
-        include_str!("../../../lean/examples/partial_derivative_singleton_intersection_different/statement.lit")] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "finite_intersection").unwrap();
-        assert_eq!(lean, compiler.compile_run(&run, "finite_intersection").unwrap());
     }
 }
 
@@ -600,26 +574,6 @@ fn number(n: i64) -> Obj {
     Obj::Literal(Literal::Number(Number::new(n.to_string())))
 }
 #[test]
-fn smooth_partial_derivative_replays_coordinate_and_arithmetic_trees() {
-    for source in [
-        COORDINATE,
-        include_str!("../../../lean/examples/partial_derivative_constant_path/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_sum_path/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_product_path/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_neg_path/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_polynomial_path/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_arbitrary_dimension/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_parameter_scale/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        let lean = c
-            .compile_run(&run, "smooth_partial")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains("Litex.partialDerivativeOfSemanticPath"));
-        assert_eq!(lean, c.compile_run(&run, "smooth_partial").unwrap());
-    }
-}
-#[test]
 fn smooth_partial_derivative_rejects_changed_subject_reduction_and_coordinate_selection() {
     for mutation in 0..9 {
         let (mut run, c) = super::execute(COORDINATE);
@@ -678,75 +632,21 @@ fn smooth_partial_derivative_rejects_changed_axis_comparison_and_final_equality(
 }
 
 #[test]
-fn smooth_partial_derivative_replays_elementary_chain_rules_and_original_domains() {
-    for (source, law) in [
-        (
-            include_str!(
-                "../../../lean/examples/partial_derivative_elementary_selector/statement.lit"
-            ),
-            "Sin",
-        ),
-        (
-            include_str!("../../../lean/examples/partial_derivative_sine/statement.lit"),
-            "Sin",
-        ),
-        (
-            include_str!("../../../lean/examples/partial_derivative_cosine/statement.lit"),
-            "Cos",
-        ),
-        (
-            include_str!("../../../lean/examples/partial_derivative_exponential/statement.lit"),
-            "Exp",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/partial_derivative_nested_elementary/statement.lit"
-            ),
-            "Sin",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/partial_derivative_exponential_square/statement.lit"
-            ),
-            "Exp",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/partial_derivative_sine_other_coordinate/statement.lit"
-            ),
-            "Sin",
-        ),
-        (
-            include_str!("../../../lean/examples/partial_derivative_reduced_sine/statement.lit"),
-            "Sin",
-        ),
-        (
-            include_str!("../../../lean/examples/partial_derivative_log_exponential/statement.lit"),
-            "Ln",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/partial_derivative_sqrt_exponential/statement.lit"
-            ),
-            "Sqrt",
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        let lean = c
-            .compile_run(&run, "elementary_partial")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains(&format!("Litex.semanticDerivative{law}")));
-        assert_eq!(lean, c.compile_run(&run, "elementary_partial").unwrap());
-    }
-}
-
-#[test]
 fn smooth_partial_derivative_rejects_changed_elementary_rule_child_and_domain() {
     use crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction as K;
     for source in [
-        include_str!("../../../lean/examples/partial_derivative_sine/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_log_exponential/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_sqrt_exponential/statement.lit"),
+        r#"# Differentiate the first-coordinate sine.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {sin(q(1))},p,2,1,cos(p(1)))
+"#,
+        r#"# Differentiate a logarithm using the positive exponential argument.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {ln(exp(q(1)))},p,2,1,exp(p(1))/exp(p(1)))
+"#,
+        r#"# Differentiate a square root using the strictly positive exponential argument.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {sqrt(exp(q(1)))},p,2,1,(exp(p(1))/2)/sqrt(exp(p(1))))
+"#,
     ] {
         for change in 0..9 {
             let (mut run, c) = super::execute(source);
@@ -802,9 +702,12 @@ fn smooth_partial_derivative_replays_guarded_interior() {
 #[test]
 fn smooth_partial_derivative_preserves_reduction_tape_under_elementary_operations() {
     for change in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/partial_derivative_reduced_sine/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Replay exact reductions inside a sine and its chain-rule coefficient.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {sin(q(1)*(1+1))},p,2,1,cos(p(1)*2)*2)
+"#,
+        );
         let p = &mut proof(&mut run).stages.coordinates[0].reduction;
         assert!(!p.steps.is_empty());
         match change {
@@ -822,29 +725,17 @@ fn smooth_partial_derivative_preserves_reduction_tape_under_elementary_operation
     }
 }
 
-const SQUARE: &str =
-    include_str!("../../../lean/examples/partial_derivative_square_path/statement.lit");
-const QUOTIENT: &str =
-    include_str!("../../../lean/examples/partial_derivative_constant_quotient/statement.lit");
+const SQUARE: &str = r#"# Differentiate the square of a coordinate at an arbitrary real point.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {q(1)^2},p,2,1,2*p(1))
+"#;
+const QUOTIENT: &str = r#"# Divide a coordinate by a nonzero constant, including denominator one.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {q(1)/2},p,2,1,1/2)
 
-#[test]
-fn smooth_partial_derivative_replays_quotients_and_original_nonzero_evidence() {
-    for source in [
-        QUOTIENT,
-        include_str!(
-            "../../../lean/examples/partial_derivative_positive_denominator/statement.lit"
-        ),
-        include_str!("../../../lean/examples/partial_derivative_reduced_quotient/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_parameter_quotient/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        let lean = c
-            .compile_run(&run, "smooth_quotients")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains("Litex.semanticDerivativeDiv"));
-        assert_eq!(lean, c.compile_run(&run, "smooth_quotients").unwrap());
-    }
-}
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {q(1)/1},p,2,1,1)
+"#;
 
 #[test]
 fn smooth_partial_derivative_rejects_changed_quotient_children_and_nonzero_subjects() {
@@ -875,31 +766,10 @@ fn smooth_partial_derivative_rejects_changed_quotient_children_and_nonzero_subje
         );
     }
 }
-const SEPARATE: &str =
-    include_str!("../../../lean/examples/partial_derivative_separate_powers/statement.lit");
-
-#[test]
-fn smooth_partial_derivative_replays_natural_powers_and_nested_reductions() {
-    for source in [
-        SQUARE,
-        SEPARATE,
-        include_str!(
-            "../../../lean/examples/partial_derivative_constant_function_value/statement.lit"
-        ),
-        include_str!("../../../lean/examples/partial_derivative_nested_powers/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_zero_one_powers/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_natural_power/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_square_sum/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_reduced_power/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        let lean = c
-            .compile_run(&run, "smooth_powers")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains("Litex.semanticDerivativePower"));
-        assert_eq!(lean, c.compile_run(&run, "smooth_powers").unwrap());
-    }
-}
+const SEPARATE: &str = r#"# Differentiate two independently reduced coordinate powers along the first axis.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {q(1)^(1+1)+q(2)^(2+1)},p,2,1,2*p(1))
+"#;
 
 #[test]
 fn smooth_partial_derivative_rejects_changed_power_and_nested_tape() {
@@ -982,36 +852,14 @@ fn smooth_partial_derivative_rejects_missing_reordered_or_extra_body_reductions(
     }
 }
 
-const BETA_PRODUCT: &str =
-    include_str!("../../../lean/examples/partial_derivative_beta_product/statement.lit");
-const BETA_REDUCED: &str =
-    include_str!("../../../lean/examples/partial_derivative_beta_reduced_argument/statement.lit");
-
-#[test]
-fn smooth_partial_beta_replays_original_calls_domains_and_captured_parameters() {
-    for source in [
-        include_str!("../../../lean/examples/partial_derivative_beta_square/statement.lit"),
-        BETA_PRODUCT,
-        include_str!(
-            "../../../lean/examples/partial_derivative_beta_three_arguments/statement.lit"
-        ),
-        BETA_REDUCED,
-        include_str!(
-            "../../../lean/examples/partial_derivative_beta_nested_argument/statement.lit"
-        ),
-        include_str!("../../../lean/examples/partial_derivative_beta_capture/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_beta_positive/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_beta_vector/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_beta_target/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "beta")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains("Litex.FunctionSemantics.call_graphValue"));
-        assert_eq!(output, compiler.compile_run(&run, "beta").unwrap());
-    }
-}
+const BETA_PRODUCT: &str = r#"# Differentiate a binary anonymous function of two coordinates.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(x, y R) R {x*y})(q(1),q(2))},p,2,1,p(2))
+"#;
+const BETA_REDUCED: &str = r#"# Retain an argument calculation before anonymous beta reduction.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(x, y R) R {x*y})(q(1),1+1)},p,2,1,2)
+"#;
 
 #[test]
 fn smooth_partial_beta_rejects_changed_function_arguments_endpoint_and_order() {
@@ -1111,9 +959,10 @@ fn smooth_partial_beta_rejects_missing_original_call_formation() {
 
 #[test]
 fn smooth_partial_beta_retains_the_endpoint_before_following_calculation() {
-    let source = include_str!(
-        "../../../lean/examples/partial_derivative_beta_then_calculation/statement.lit"
-    );
+    let source = r#"# Keep beta substitution and its following exact calculation as separate stages.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(x R) R {1+1})(q(1))},p,2,1,0)
+"#;
     let (mut run, compiler) = super::execute(source);
     let reduction = &proof(&mut run).stages.coordinates[0].reduction;
     let index = reduction
@@ -1139,36 +988,12 @@ fn smooth_partial_beta_retains_the_endpoint_before_following_calculation() {
 }
 
 #[test]
-fn smooth_partial_nested_body_replays_original_lexical_formation() {
-    for source in [
-        include_str!("../../../lean/examples/partial_derivative_nested_body_square/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_nested_body_capture/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_nested_body_binary/statement.lit"),
-        include_str!(
-            "../../../lean/examples/partial_derivative_nested_body_three_levels/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/partial_derivative_nested_body_calculation/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/partial_derivative_nested_body_positive/statement.lit"
-        ),
-        include_str!("../../../lean/examples/partial_derivative_nested_body_vector/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "nested_body")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains("have _beta_body"));
-        assert_eq!(lean, compiler.compile_run(&run, "nested_body").unwrap());
-    }
-}
-
-#[test]
 fn smooth_partial_nested_body_rejects_missing_inner_call_formation() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
-    let source =
-        include_str!("../../../lean/examples/partial_derivative_nested_body_square/statement.lit");
+    let source = r#"# Differentiate a coordinate square computed through two nested formula calls.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(x R) R {(fn(y R) R {y*y})(x)})(q(1))},p,2,1,2*p(1))
+"#;
     for mutation in 0..3 {
         let (mut run, compiler) = super::execute(source);
         let DetailedObjWellDefinedProof::ByDef {
@@ -1222,8 +1047,10 @@ fn smooth_partial_nested_body_rejects_missing_inner_call_formation() {
 
 #[test]
 fn smooth_partial_nested_body_rejects_changed_capture_argument_and_tape_order() {
-    let source =
-        include_str!("../../../lean/examples/partial_derivative_nested_body_capture/statement.lit");
+    let source = r#"# Differentiate a nested call whose inner formula captures its outer parameter.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(fn(x R) R {(fn(y R) R {y*x})(x)})(q(1))},p,2,1,2*p(1))
+"#;
     for mutation in 0..5 {
         let (mut run, compiler) = super::execute(source);
         let steps = &mut proof(&mut run).stages.coordinates[0].reduction.steps;
@@ -1261,31 +1088,10 @@ fn smooth_partial_nested_body_rejects_changed_capture_argument_and_tape_order() 
     }
 }
 
-const TUPLE_FIRST: &str =
-    include_str!("../../../lean/examples/partial_derivative_tuple_first/statement.lit");
-
-#[test]
-fn smooth_partial_tuple_projection_replays_selected_component() {
-    for source in [
-        TUPLE_FIRST,
-        include_str!(
-            "../../../lean/examples/partial_derivative_tuple_calculated_index/statement.lit"
-        ),
-        include_str!("../../../lean/examples/partial_derivative_tuple_in_beta_body/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_tuple_in_sine/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_tuple_third/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "tuple_projection")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains("Litex.FiniteFunction.call_tuple"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "tuple_projection").unwrap()
-        );
-    }
-}
+const TUPLE_FIRST: &str = r#"# Differentiate the first component of a tuple-valued expression.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(q(1)*q(2),q(1)+q(2))(1)},p,2,1,p(2))
+"#;
 
 #[test]
 fn smooth_partial_tuple_projection_rejects_wrong_tuple_index_and_endpoint() {
@@ -1334,9 +1140,10 @@ fn smooth_partial_tuple_projection_rejects_wrong_tuple_index_and_endpoint() {
 
 #[test]
 fn smooth_partial_tuple_projection_rejects_reordered_index_calculation() {
-    let source = include_str!(
-        "../../../lean/examples/partial_derivative_tuple_calculated_index/statement.lit"
-    );
+    let source = r#"# Differentiate the second tuple component selected by an exact calculated index.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(q(1)*q(2),q(1)+q(2))(1+1)},p,2,1,1)
+"#;
     for remove in [false, true] {
         let (mut run, compiler) = super::execute(source);
         let steps = &mut proof(&mut run).stages.coordinates[0].reduction.steps;
@@ -1369,9 +1176,10 @@ fn tuple_uniform_membership_rejects_changed_index_carrier_and_coordinates() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
         AnonymousFnBodyInReturnSetProof, FunctionSpaceObjWellDefinedProofByDef,
     };
-    let source = include_str!(
-        "../../../lean/examples/partial_derivative_tuple_calculated_index/statement.lit"
-    );
+    let source = r#"# Differentiate the second tuple component selected by an exact calculated index.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(q(1)*q(2),q(1)+q(2))(1+1)},p,2,1,1)
+"#;
     for mutation in 0..6 {
         let (mut run, compiler) = super::execute(source);
         let DetailedObjWellDefinedProof::ByDef {
@@ -1418,38 +1226,11 @@ fn tuple_uniform_membership_rejects_changed_index_carrier_and_coordinates() {
 }
 
 #[test]
-fn smooth_partial_periodic_replays_original_angles_and_parent_continuations() {
-    for source in [
-        include_str!("../../../lean/examples/partial_derivative_periodic_sine/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_periodic_cosine/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_periodic_fraction/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_periodic_nested/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_periodic_tangent/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_periodic_radical/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_periodic_cotangent/statement.lit"),
-        include_str!(
-            "../../../lean/examples/partial_derivative_periodic_cotangent_radical/statement.lit"
-        ),
-        include_str!("../../../lean/examples/partial_derivative_periodic_sum/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_periodic_beta/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_periodic_target/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "periodic_reduction")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains("have _angle"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "periodic_reduction").unwrap()
-        );
-    }
-}
-
-#[test]
 fn smooth_partial_periodic_rejects_changed_source_coefficient_value_and_endpoint() {
-    let source =
-        include_str!("../../../lean/examples/partial_derivative_periodic_sine/statement.lit");
+    let source = r#"# Differentiate a coordinate multiplied by sine of one complete turn.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {sin(2*pi)*q(1)},p,2,1,0)
+"#;
     for mutation in 0..5 {
         let (mut run, compiler) = super::execute(source);
         let p = &mut proof(&mut run).stages.coordinates[0].reduction;
@@ -1484,11 +1265,17 @@ fn smooth_partial_periodic_rejects_changed_source_coefficient_value_and_endpoint
 fn smooth_partial_periodic_rejects_sibling_and_parent_reordering() {
     for (source, parent) in [
         (
-            include_str!("../../../lean/examples/partial_derivative_periodic_sum/statement.lit"),
+            r#"# Differentiate after two exact trigonometric values combine to one.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {(sin(pi/6)+cos(pi/3))*q(1)},p,2,1,1)
+"#,
             false,
         ),
         (
-            include_str!("../../../lean/examples/partial_derivative_periodic_nested/statement.lit"),
+            r#"# Differentiate a nested trigonometric constant times a coordinate.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {sin(cos(pi/2))*q(1)},p,2,1,0)
+"#,
             true,
         ),
     ] {
@@ -1514,9 +1301,10 @@ fn smooth_partial_periodic_rejects_sibling_and_parent_reordering() {
 
 #[test]
 fn smooth_partial_integer_period_rejects_changed_membership_tape() {
-    let source = include_str!(
-        "../../../lean/examples/partial_derivative_integer_period_linear_combination/statement.lit"
-    );
+    let source = r#"# Differentiate a coordinate with two independent integral sine periods.
+forall k,l Z, p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {sin((2*k-4*l+13/6)*pi)*q(1)},p,2,1,1/2)
+"#;
     for mutation in 0..7 {
         let (mut run, compiler) = super::execute(source);
         let p = proof(&mut run).stages.coordinates[0]

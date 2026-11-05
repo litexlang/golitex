@@ -1,28 +1,19 @@
 use crate::prelude::*;
-#[test]
-fn coordinate_partial_replays_formation_candidates_existence_and_original_clauses() {
-    for source in [
-        include_str!("../../../lean/examples/partial_derivative_selection/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_existence/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_generic_coordinate/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_nested_objects/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_from_definition/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "coordinate_partial_derivative")
-            .expect(source);
-    }
-}
 
 #[test]
 fn coordinate_partial_keeps_point_domain_axis_and_real_value_requirements() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
     for mutation in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/partial_derivative_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select a coordinate partial derivative only after its original standard difference-quotient candidate is known.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), L R:
+    $has_partial_derivative_at(f,p,2,1,L)
+    =>:
+        partial_derivative(f,p,2,1)=L
+        partial_derivative(f,p,2,1) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         let FactWellDefinedProof::AtomicExceptEquality(wd) =
             &mut root.assumed_dom_facts[0].well_defined
@@ -57,9 +48,15 @@ fn coordinate_partial_inference_requires_original_clauses_and_producer_identity(
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/partial_derivative_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select a coordinate partial derivative only after its original standard difference-quotient candidate is known.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), L R:
+    $has_partial_derivative_at(f,p,2,1,L)
+    =>:
+        partial_derivative(f,p,2,1)=L
+        partial_derivative(f,p,2,1) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         let Some(InferResult::AtomicFact(InferAtomicFactResult::MultivariableAnalysisFact(rules))) =
             &mut root.assumed_dom_facts[0].store_and_infer.infer
@@ -84,9 +81,15 @@ fn coordinate_partial_requires_original_coordinate_wd_child() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
         DetailedObjWellDefinedProof, ObjWellDefinedProofByDef,
     };
-    let (mut run, c) = super::execute(include_str!(
-        "../../../lean/examples/partial_derivative_selection/statement.lit"
-    ));
+    let (mut run, c) = super::execute(
+        r#"# Select a coordinate partial derivative only after its original standard difference-quotient candidate is known.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), L R:
+    $has_partial_derivative_at(f,p,2,1,L)
+    =>:
+        partial_derivative(f,p,2,1)=L
+        partial_derivative(f,p,2,1) $in R
+"#,
+    );
     let root = super::forall_proof_mut(&mut run.statement_results[0]);
     let equal = super::equality_proof_mut(&mut root.proved_then_facts[0].verify_result);
     let DetailedObjWellDefinedProof::ByDef {

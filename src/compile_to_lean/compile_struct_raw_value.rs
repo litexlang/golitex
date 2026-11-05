@@ -16,7 +16,7 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         bindings: &HashMap<IdentifierId, String>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, producer, _) = position.visible_struct(&object.name)?;
+        let (declaration, producer, _) = position.visible_struct(&object.name, &self.runtime)?;
         validate_struct(declaration)?;
         header_substitution(&declaration.statement, object)?;
         let mut bound = bindings.clone();

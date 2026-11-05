@@ -4,10 +4,20 @@ use crate::execute::execute_by_stmt::{
 };
 use crate::prelude::*;
 
-const SQUARES: &str =
-    include_str!("../../../lean/examples/integer_range_square_values/statement.lit");
-const GUARDS: &str =
-    include_str!("../../../lean/examples/guarded_integer_range_division/statement.lit");
+const SQUARES: &str = r#"# Every integer in [0, 4) has square at most 9.
+by for:
+    ? forall n range(0, 4):
+        n * n <= 9
+    n * n <= 9
+"#;
+const GUARDS: &str = r#"# Division by a nonzero member of [-1, 2) cancels; the zero case has a false premise.
+by for:
+    ? forall n range(-1, 2):
+        n != 0
+        =>:
+            n / n = 1
+    n / n = 1
+"#;
 
 fn for_result(statement: &mut ExecStmtResult) -> &mut ExecByForStmtSuccess {
     let ExecStmtResult::By(ExecByStmtResult::For(ExecByForStmtResult::Success(p))) = statement
@@ -152,8 +162,11 @@ fn integer_enumeration_skipped_guards_require_the_original_false_premise() {
 
 #[test]
 fn arithmetic_subterm_order_rewrite_keeps_all_citations_in_selected_order() {
-    let source =
-        include_str!("../../../lean/examples/nested_numeric_order_substitution/statement.lit");
+    let source = r#"# Substitute two known values inside an arithmetic expression to prove its bound.
+have a R = 2
+have b R = 3
+a * a + b <= 7
+"#;
     let (run, compiler) = super::execute(source);
     assert!(compiler
         .compile_run(&run, "nested_order_substitution")
@@ -172,28 +185,5 @@ fn arithmetic_subterm_order_rewrite_keeps_all_citations_in_selected_order() {
         assert!(compiler
             .compile_run(&run, "invalid_nested_order_substitution")
             .is_err());
-    }
-}
-
-#[test]
-fn integer_enumeration_replays_negative_empty_singleton_and_local_cases() {
-    for source in [
-        include_str!("../../../lean/examples/closed_integer_square_values/statement.lit"),
-        GUARDS,
-        include_str!("../../../lean/examples/empty_integer_range_enumeration/statement.lit"),
-        include_str!("../../../lean/examples/singleton_integer_square_enumeration/statement.lit"),
-        include_str!("../../../lean/examples/named_integer_range_enumeration/statement.lit"),
-        include_str!("../../../lean/examples/calculated_integer_range_enumeration/statement.lit"),
-        "by for:\n    ? forall n closed_range(3, 2):\n        n = 0\n    n = 0\n",
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "integer_enumeration")
-            .unwrap_or_else(|e| panic!("{source}\n{e}"));
-        assert!(lean.len() < 180_000, "{} bytes", lean.len());
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "integer_enumeration").unwrap()
-        );
     }
 }

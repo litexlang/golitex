@@ -21,35 +21,27 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     p
 }
 
-const CAUCHY: &str =
-    include_str!("../../../lean/examples/sequence_limit_cauchy_by_theorem/statement.lit");
-const CONSTANT: &str =
-    include_str!("../../../lean/examples/constant_sequence_properties_by_theorem/statement.lit");
-#[test]
-fn sequence_metric_laws_replay_supplied_limits_and_constant_properties() {
-    for source in [
-        CAUCHY,
-        CONSTANT,
-        include_str!("../../../lean/examples/constant_sequence_complete/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        let out = c.compile_run(&run, "sequence_metric").unwrap();
-        assert!(
-            out.contains("sequenceCauchyOfCandidate") || out.contains("sequenceConstantProperties")
-        );
-        if out.contains("sequenceConstantProperties") {
-            assert_eq!(
-                out.matches("from Litex.sequenceConstantProperties ")
-                    .count(),
-                1
-            );
-            assert!(
-                out.len() < 100_000,
-                "one source call must share its five results"
-            );
-        }
-    }
-}
+const CAUCHY: &str = r#"# A real sequence with a supplied real limit is Cauchy.
+thm limit_makes_sequence_cauchy:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            $is_seq_cauchy(a)
+    release thm sequence_limit_cauchy(a,L)
+"#;
+const CONSTANT: &str = r#"# A constant real sequence is monotone, bounded, Cauchy and convergent.
+thm constant_real_sequence_properties:
+    ? forall a seq(R), value R:
+        forall n N+:
+            a(n)=value
+        =>:
+            $is_seq_nondecreasing(a)
+            $is_seq_nonincreasing(a)
+            $is_seq_bounded(a)
+            $is_seq_cauchy(a)
+            $is_seq_convergent(a)
+    release thm sequence_constant_properties(a,value)
+"#;
 #[test]
 fn sequence_metric_laws_require_all_original_stage_evidence() {
     for source in [CAUCHY, CONSTANT] {

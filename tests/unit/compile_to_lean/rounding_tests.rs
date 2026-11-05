@@ -2,20 +2,6 @@ use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule as OrderRule;
 
 #[test]
-fn rounding_examples_replay_values_domains_bounds_and_function_calls() {
-    for source in [
-        include_str!("../../../lean/examples/rounding_integers/statement.lit"),
-        include_str!("../../../lean/examples/rounding_bounds/statement.lit"),
-        include_str!("../../../lean/examples/shifted_rounding_function/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "rounding").unwrap();
-        assert!(output.contains("Litex.rounding"));
-        assert_eq!(output, compiler.compile_run(&run, "rounding").unwrap());
-    }
-}
-
-#[test]
 fn rounding_integer_rules_preserve_each_selected_family_and_equality_orientation() {
     for expression in ["floor(n)", "ceil(n)", "floor(ceil(n))", "ceil(floor(n))"] {
         for reversed in [false, true] {

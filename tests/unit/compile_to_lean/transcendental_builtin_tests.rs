@@ -4,22 +4,34 @@ use crate::prelude::*;
 fn selected_transcendental_and_absolute_square_rules_compile() {
     for (source, law, variant) in [
         (
-            include_str!("../../../lean/examples/exponential_addition/statement.lit"),
+            r#"# The exponential of a sum is the product of the exponentials.
+forall a,b R:
+    exp(a+b)=exp(a)*exp(b)
+"#,
             "exponentialSumValue",
             "exp",
         ),
         (
-            include_str!("../../../lean/examples/sine_addition/statement.lit"),
+            r#"# The sine addition formula for two real arguments.
+forall a,b R:
+    sin(a+b)=sin(a)*cos(b)+cos(a)*sin(b)
+"#,
             "sineAdditionComplex",
             "sin",
         ),
         (
-            include_str!("../../../lean/examples/cosine_addition/statement.lit"),
+            r#"# The cosine addition formula for two real arguments.
+forall a,b R:
+    cos(a+b)=cos(a)*cos(b)-sin(a)*sin(b)
+"#,
             "cosineAdditionComplex",
             "cos",
         ),
         (
-            include_str!("../../../lean/examples/absolute_square/statement.lit"),
+            r#"# The square of a real number is unchanged by absolute value.
+forall a R:
+    abs(a^2)=a^2
+"#,
             "absoluteSquareValue",
             "abs",
         ),

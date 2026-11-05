@@ -57,7 +57,8 @@ impl LitexToLeanCompiler {
         let FnObjHead::InstantiatedTemplateObj(instance) = call.head.as_ref() else {
             return Err(LeanCompileError::unsupported("TemplateCases/Head"));
         };
-        let (declaration, _, _) = position.visible_template(&instance.template_name)?;
+        let (declaration, producer, _) =
+            position.visible_template(&instance.template_name, &self.runtime)?;
         super::compile_template_stmt_result::template_binding(declaration)?;
         let (parameters, expected_guards, expected_body, source_ids, recursive_name, index) = match (
             proof,
@@ -185,8 +186,10 @@ impl LitexToLeanCompiler {
             .iter()
             .find(|p| &p.source_fact_id == source_id)
             .ok_or_else(|| LeanCompileError::unsupported("TemplateCases/EquationPublication"))?;
-        let (_, equation) =
-            position.visible_fact(published.store_and_infer.primary_fact_id(), &self.runtime)?;
+        let equation = position.declaration_reference(
+            &format!("h_{}", published.store_and_infer.primary_fact_id().value()),
+            &producer,
+        )?;
         let mut guards = Vec::new();
         let mut declarations = Vec::new();
         let mut propositions = Vec::new();

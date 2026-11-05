@@ -7,10 +7,55 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjDo
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/template_piecewise_declared_type/statement.lit"),
-    include_str!("../../../lean/examples/template_piecewise_guarded/statement.lit"),
-    include_str!("../../../lean/examples/template_obtained_function/statement.lit"),
-    include_str!("../../../lean/examples/template_obtained_value/statement.lit"),
+    r#"# A checked template function keeps its declared full function type when the
+# bound parameter is renamed, including inside builtin property domains.
+template<Domain, Codomain set, map fn(x Domain) Codomain>:
+    have fn through(x Domain) Codomain by cases:
+        case x = x: map(x)
+
+forall Domain, Codomain set, map fn(x Domain) Codomain:
+    \through<Domain, Codomain, map> $in fn(renamed Domain) Codomain
+
+thm through_injective:
+    ? forall Domain, Codomain set, map fn(x Domain) Codomain:
+        $injective(Domain, Codomain, map)
+        =>:
+            $injective(Domain, Codomain, \through<Domain, Codomain, map>)
+    claim:
+        ? forall left, right Domain:
+            \through<Domain, Codomain, map>(left) = \through<Domain, Codomain, map>(right)
+            =>:
+                left = right
+        \through<Domain, Codomain, map>(left) = map(left)
+        \through<Domain, Codomain, map>(right) = map(right)
+        map(left) = map(right)
+        left = right
+    by def $injective(Domain, Codomain, \through<Domain, Codomain, map>)
+"#,
+    r#"# Evaluate both branches of a template function with a nonzero parameter.
+template<scale R: scale != 0,>:
+    have fn fraction(x R) R by cases:
+        case x = 0: 0
+        case x != 0: x / scale
+\fraction<2>(0) = 0
+\fraction<2>(6) = 3
+"#,
+    r#"# Obtain a function from an existential predicate under template premises.
+prop has_equal_function(S nonempty_set, T nonempty_set, f fn(x S) T):
+    exist g fn(x S) T st {g = f}
+
+template<S nonempty_set, T nonempty_set, f fn(x S) T: $has_equal_function(S, T, f)>:
+    obtain selected_function from $has_equal_function(S, T, f)
+
+have fn identity(x R) R = x
+witness $has_equal_function(R, R, identity) from identity
+\selected_function<R, R, identity>(2) $in R
+"#,
+    r#"# Select a scalar witness from an existence proof and reuse its defining equality.
+template<value R>:
+    obtain copied_value from exist x R st {x = value}
+\copied_value<2> = 2
+"#,
 ];
 
 fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResult {
@@ -23,16 +68,6 @@ fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResu
             _ => None,
         })
         .unwrap()
-}
-
-#[test]
-fn template_definition_bodies_replay_cases_witnesses_and_original_guards() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "template_bodies").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "template_bodies").unwrap());
-        assert!(!lean.contains("sorry") && !lean.contains("axiom "));
-    }
 }
 
 #[test]

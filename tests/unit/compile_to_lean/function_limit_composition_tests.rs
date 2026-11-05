@@ -4,10 +4,28 @@ use crate::execute::execute_by_stmt::TheoremDerivationProof;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
 use crate::prelude::*;
 
-const CONTINUOUS: &str =
-    include_str!("../../../lean/examples/function_limit_continuous_compose/statement.lit");
-const PUNCTURED: &str =
-    include_str!("../../../lean/examples/function_limit_punctured_compose/statement.lit");
+const CONTINUOUS: &str = r#"# Private probe of the original local mapping composition contract.
+thm checked_function_limit_continuous_compose:
+    ? forall f,g,h fn(x R) R,x0,y0 R:
+        $has_limit_at(f,x0,y0)
+        $is_real_accumulation_at(R,x0)
+        $is_continuous_at(g,y0)
+        exist radius R+ st {{x R:0<abs(x-x0) and abs(x-x0)<radius} $subset {x R:x $in R,f(x) $in R,h(x)=g(f(x))}}
+        =>:
+            $has_limit_at(h,x0,g(y0))
+    release thm fn_limit_at_continuous_compose(f,g,h,x0,y0)
+"#;
+const PUNCTURED: &str = r#"# Private probe of the original local mapping composition contract.
+thm checked_function_limit_punctured_compose:
+    ? forall f,g,h fn(x R) R,x0,y0,L R:
+        $has_limit_at(f,x0,y0)
+        $is_real_accumulation_at(R,x0)
+        $has_limit_at(g,y0,L)
+        exist radius R+ st {{x R:0<abs(x-x0) and abs(x-x0)<radius} $subset {x R:x $in R,f(x) $in R,f(x)!=y0,h(x)=g(f(x))}}
+        =>:
+            $has_limit_at(h,x0,L)
+    release thm fn_limit_at_punctured_compose(f,g,h,x0,y0,L)
+"#;
 fn mapping(run: &mut RunLitexCodeResult) -> &mut SubsetFact {
     let b = invocation(run).builtin.as_mut().unwrap();
     let Fact::ExistFact(exists) = &mut b.requirements[12] else {
@@ -377,8 +395,28 @@ fn limit_composition_retains_exact_output_function_point_and_value() {
 fn limit_composition_preserves_actual_explicit_goal_call_owners() {
     use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult};
     for source in [
-        include_str!("../../../lean/examples/function_limit_continuous_compose_call/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_punctured_compose_call/statement.lit"),
+        r#"# Private probe of the original local mapping composition contract.
+thm checked_function_limit_continuous_compose_call:
+    ? forall f,g,h fn(x R) R,x0,y0 R:
+        $has_limit_at(f,x0,y0)
+        $is_real_accumulation_at(R,x0)
+        $is_continuous_at(g,y0)
+        exist radius R+ st {{x R:0<abs(x-x0) and abs(x-x0)<radius} $subset {x R:x $in R,f(x) $in R,h(x)=g(f(x))}}
+        =>:
+            $has_limit_at(h,x0,g(y0))
+    by thm fn_limit_at_continuous_compose(f,g,h,x0,y0) => $has_limit_at(h,x0,g(y0))
+"#,
+        r#"# Private probe of the original local mapping composition contract.
+thm checked_function_limit_punctured_compose_call:
+    ? forall f,g,h fn(x R) R,x0,y0,L R:
+        $has_limit_at(f,x0,y0)
+        $is_real_accumulation_at(R,x0)
+        $has_limit_at(g,y0,L)
+        exist radius R+ st {{x R:0<abs(x-x0) and abs(x-x0)<radius} $subset {x R:x $in R,f(x) $in R,f(x)!=y0,h(x)=g(f(x))}}
+        =>:
+            $has_limit_at(h,x0,L)
+    by thm fn_limit_at_punctured_compose(f,g,h,x0,y0,L) => $has_limit_at(h,x0,L)
+"#,
     ] {
         for change in 0..4 {
             let (mut run, c) = super::execute(source);
@@ -416,20 +454,5 @@ fn limit_composition_preserves_actual_explicit_goal_call_owners() {
                 );
             }
         }
-    }
-}
-#[test]
-fn limit_composition_keeps_distinct_domains_and_accepts_domain_boundary_limits() {
-    for source in [
-        include_str!("../../../lean/examples/function_limit_continuous_compose_distinct_domains/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_punctured_compose_distinct_domains/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_punctured_compose_no_centre_member/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_continuous_compose_output_boundary/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_punctured_compose_output_boundary/statement.lit"),
-        include_str!("../../../examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_continuous_compose.lit"),
-        include_str!("../../../examples/stmt_nodes/release_and_expand/builtin_thm/fn_limit_at_punctured_compose.lit"),
-    ] {
-        let (run,c)=super::execute(source);
-        c.compile_run(&run,"complete_local_composition_domain").unwrap_or_else(|e|panic!("{source}: {e}"));
     }
 }

@@ -1,26 +1,3 @@
-#[test]
-fn tuple_release_replays_membership_and_coordinate_publications() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/released_tuple_coordinates/statement.lit"
-    ));
-    compiler
-        .compile_run(&run, "released_tuple_coordinates")
-        .unwrap();
-}
-
-#[test]
-fn tuple_release_replays_empty_singleton_mixed_and_cartesian_members() {
-    for source in [
-        include_str!("../../../lean/examples/released_finite_tuples/statement.lit"),
-        include_str!("../../../lean/examples/released_cartesian_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/released_local_tuple/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "released_finite_shapes")
-            .unwrap();
-    }
-}
 use crate::execute::execute_release_tuple_def_stmt::{
     ExecReleaseTupleDefStmtResult, ExecReleaseTupleDefStmtSuccess,
 };
@@ -156,9 +133,18 @@ fn tuple_release_rejects_corrupt_variable_coordinate_certificates() {
 #[test]
 fn tuple_release_local_facts_do_not_escape_theorem_scope() {
     use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/released_local_tuple/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# Release a locally named pair while proving its second-coordinate theorem.
+thm pair_second:
+    ? forall a, b R:
+        (a, b)(2) = b
+    let pair = (a, b)
+    release tuple def pair
+    pair(2) = b
+
+by thm pair_second(3, 4) => (3, 4)(2) = 4
+"#,
+    );
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(theorem),
     )) = &mut run.statement_results[0]

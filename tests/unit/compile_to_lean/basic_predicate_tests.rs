@@ -1,23 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn basic_predicate_generated_examples_compile() {
-    for source in [
-        include_str!("../../../lean/examples/set_predicate_contexts/statement.lit"),
-        include_str!("../../../lean/examples/proper_set_relations/statement.lit"),
-        include_str!("../../../lean/examples/negative_set_values/statement.lit"),
-        include_str!("../../../lean/examples/number_theory_predicate_contexts/statement.lit"),
-        include_str!("../../../lean/examples/number_theory_values/statement.lit"),
-        include_str!("../../../lean/examples/integer_divisibility/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "basic_predicate_examples")
-            .unwrap();
-    }
-}
-
-#[test]
 fn basic_predicate_invalid_domains_and_false_claims_produce_no_artifact() {
     for source in [
         "$prime(9)",

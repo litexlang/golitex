@@ -28,6 +28,17 @@ not as false statements. Missing or conflicting records remain incomplete.
 This does not certify distinct generated function-check scopes that share one
 statement/fact/source address or every cached/result variant.
 
+Theorem calls can retain successful local argument, premise and conclusion
+checks while failing the final formation check in the caller. The source bubble
+distinguishes those stages, keeps the actual local selection proof available,
+and identifies the rejected caller conclusion. A partially stored release
+prefix remains temporary; later caller conclusions stay unchecked, and the
+failed call publishes no conclusions. Argument and formation evidence remains
+in the final closed disclosure. Missing or conflicting records stay incomplete.
+For a function-interface lookup failure, the viewer names the failed call only
+when the retained record identifies it unambiguously. An argument-level record
+with several possible calls and no failed-argument index does not supply one.
+
 Ordinary `exist`, `exist!` and `not exist` verification also keeps its retained
 candidate-expression checks closed at the end. The checking scope belongs to
 that execution; candidate parameters and assumed body conditions supply no
@@ -2386,3 +2397,45 @@ verifier's composition of membership evidence across normalization.
 CyclicAlgoCall and EvaluatedEqualityWellDefined still have no positive source
 coverage in this audit; rejected self-reference and a recursion-depth limit
 must not be presented as those different stages.
+
+
+Checked-source builtin theorem proofs are available on demand inside the
+existing invocation bubble. The viewer selects the actual declaration retained
+by `ResolvedTheoremCallee`, pairs the generic premises and conclusions with
+the recorded arguments, and displays its ordered checked steps. It does not
+select a declaration by a generated name or conflate call-head symbol IDs with
+declaration IDs. The comparison observes typed terms and binder correspondence;
+it does not execute substitutions, prove a premise, or allocate identities.
+
+Local results whose fact rows lack direct evidence can recover a unique checked
+execution in the retained generic proof's actual scope. Their details explicitly
+identify an internal proof step. Generated source positions are not registered
+as user files or borrowed as user-source lines; public selection addresses and
+verification/storage state are unchanged. The disclosure adds no editor rows.
+Missing or competing correspondence remains incomplete. A generated function
+unfolding can show its actual parameter substitution, cited defining equality
+and residual proof without registering its internal source as a user file.
+A retained internal lemma call uses its explicit resolved declaration, checks
+the correspondence of arguments, type requirements, premises and returned
+conclusions, and offers that earlier lemma's checked proof on demand. Its result
+text comes from the call's actual store, rather than an enclosing goal.
+Definition and proof citations follow actual local execution evidence and Back
+restores the invocation. This does not certify every nested proof narrative,
+generated source mapping, failure variant or browser layout.
+
+
+Nested local claims in these retained proofs expose their own ordered steps
+on demand. A case split presents its coverage proof, actual branch conditions,
+branch-local steps and common-goal closing evidence. Conditions followed by a
+fact link remain case assumptions; the viewer does not present them as facts
+proved in the enclosing scope. The claim and each atomic verification keep
+their formation checks closed at the end.
+
+Following an inferred branch consequence also retains the actual arbitrary
+parameters and case condition. Its native inference rule links to the original
+checked chain, whose proof remains available, with exact Back navigation.
+These contexts come from retained declaration/claim/case execution frames,
+without adding an execution address or modifying the native fact owner.
+Missing or conflicting scope, coverage, store or source correspondence stays
+incomplete. Generated contradiction-closing cases and other specialized
+nested histories still require independent evidence.

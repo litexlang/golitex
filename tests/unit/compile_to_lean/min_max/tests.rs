@@ -1,22 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn min_max_functions_unfold_and_reuse_named_theorems() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../../lean/examples/ordered_min_max_functions/statement.lit"
-    ));
-    let output = compiler.compile_run(&run, "extrema_functions").unwrap();
-    assert!(output.contains("Litex.minMaxValue (M := M) false"));
-    assert!(output.contains("Litex.minMaxValue (M := M) true"));
-    assert!(output.contains("Litex.minOfLeOperands"));
-    assert!(output.contains("Litex.maxOfLeOperands"));
-    assert_eq!(
-        output,
-        compiler.compile_run(&run, "extrema_functions").unwrap()
-    );
-}
-
-#[test]
 fn min_max_replays_each_conditional_rule_in_both_equality_orientations() {
     for (expression, selected, law) in [
         ("min(a, b)", "a", "minOfLeOperands"),
@@ -82,19 +66,6 @@ fn min_max_selection_rejects_missing_reversed_or_wrong_constructor_evidence() {
             }
         );
     }
-}
-
-const SOURCE: &str = include_str!("../../../../lean/examples/real_min_max/statement.lit");
-
-#[test]
-fn min_max_replays_four_identities_and_preserves_integer_membership() {
-    let (run, compiler) = super::execute(SOURCE);
-    let output = compiler.compile_run(&run, "extrema").unwrap();
-    assert_eq!(output.matches("Litex.minMaxIdempotent").count(), 2);
-    assert_eq!(output.matches("Litex.minMaxCommutative").count(), 2);
-    assert!(output.contains("Litex.minMaxMember"));
-    assert!(output.contains("Litex.Z"));
-    assert_eq!(output, compiler.compile_run(&run, "extrema").unwrap());
 }
 
 #[test]
@@ -171,27 +142,8 @@ fn complex_membership_does_not_supply_the_real_min_max_domain() {
         .compile_run(&run, "extrema")
         .is_err());
 }
-
-const EVALUATION: &str = include_str!("../../../../lean/examples/min_max_evaluation/statement.lit");
-const BOUNDS: &str = include_str!("../../../../lean/examples/min_max_bounds/statement.lit");
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule as OrderRule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::sign_extremum_order::{MinLowerBoundProof, WeakOrderArgumentProof};
-
-#[test]
-fn min_max_closed_calculation_and_recorded_order_rules_compile() {
-    for source in [EVALUATION, BOUNDS] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "extrema").unwrap();
-        assert_eq!(output, compiler.compile_run(&run, "extrema").unwrap());
-        if source == EVALUATION {
-            assert!(output.contains("Litex.minMaxDenoteReal"));
-        } else {
-            assert_eq!(output.matches("Litex.minLeOperands").count(), 2);
-            assert_eq!(output.matches("Litex.operandsLeMax").count(), 2);
-            assert_eq!(output.matches("Litex.minMaxMonotone").count(), 4);
-        }
-    }
-}
 
 #[test]
 fn min_max_closed_calculation_rejects_changed_exact_value() {

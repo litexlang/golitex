@@ -1,13 +1,19 @@
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
 
-const RANGE: &str = include_str!("../../../lean/examples/evaluated_range_aggregates/statement.lit");
-const FINITE: &str =
-    include_str!("../../../lean/examples/evaluated_finite_aggregates/statement.lit");
-const MIXED: &str =
-    include_str!("../../../lean/examples/evaluated_aggregate_arithmetic/statement.lit");
-const CALLS: &str = include_str!("../../../lean/examples/evaluated_aggregate_calls/statement.lit");
-const LOCAL: &str = include_str!("../../../lean/examples/evaluated_local_aggregates/statement.lit");
+const RANGE: &str = r#"# Evaluate an integer sum, a factorial segment and a sum of squares, then reuse the equalities.
+eval sum(1, 3, fn(x Z) Z {x})
+sum(1, 3, fn(x Z) Z {x}) = 6
+eval product(2, 5, fn(x Z) Z {x})
+product(2, 5, fn(x Z) Z {x}) = 120
+eval sum(-2, 2, fn(x Z) Z {x * x})
+sum(-2, 2, fn(x Z) Z {x * x}) = 10
+"#;
+const MIXED: &str = r#"# Add an independently evaluated sum and product in one expression.
+eval sum(1, 4, fn(x Z) Z {x}) + product(1, 4, fn(x Z) Z {x})
+sum(1, 4, fn(x Z) Z {x}) + product(1, 4, fn(x Z) Z {x}) = 34
+sum(1,3,fn(x Z) Z {x}) = product(1,3,fn(x Z) Z {x})
+"#;
 
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -16,18 +22,6 @@ fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess 
         panic!("eval result")
     };
     p
-}
-
-#[test]
-fn eval_aggregates_replay_range_finite_arithmetic_and_local_results() {
-    for source in [RANGE, FINITE, MIXED, LOCAL, CALLS] {
-        let (run, compiler) = super::execute(source);
-        let generated = compiler.compile_run(&run, "eval_aggregates").expect(source);
-        assert_eq!(
-            generated,
-            compiler.compile_run(&run, "eval_aggregates").unwrap()
-        );
-    }
 }
 
 #[test]

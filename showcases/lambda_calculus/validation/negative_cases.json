@@ -1,0 +1,36 @@
+{
+  "context": "main.lit",
+  "method": "After a clean strict positive caller, submit each code as one statement in the same Session; require mathematical/WD rejection and success of 1=1 immediately afterward.",
+  "cases": [
+    {
+      "id": "capture_is_false",
+      "code": "lc::beta_contract(lc::abstraction(lc::variable(1)),lc::variable(0))=lc::abstraction(lc::variable(0))",
+      "boundary": "An inserted free variable must be shifted across lambda."
+    },
+    {
+      "id": "variable_has_no_step",
+      "code": "$lc::is_beta_step(lc::variable(0),lc::variable(1))",
+      "boundary": "Variables are normal forms, proved by a closed-relation invariant."
+    },
+    {
+      "id": "wrong_abstraction_destructor",
+      "code": "lc::abstraction_body(lc::variable(0))=lc::abstraction_body(lc::variable(0))",
+      "boundary": "The abstraction-body selector retains its shape guard."
+    },
+    {
+      "id": "wrong_application_destructor",
+      "code": "lc::application_left(lc::variable(0))=lc::application_left(lc::variable(0))",
+      "boundary": "Application projections retain their shape guard."
+    },
+    {
+      "id": "negative_shift",
+      "code": "lc::shift(lc::variable(0),0,-1)=lc::shift(lc::variable(0),0,-1)",
+      "boundary": "This shift operation takes a natural amount."
+    },
+    {
+      "id": "wrong_identity_result",
+      "code": "lc::beta_contract(lc::variable(0),lc::variable(1))=lc::variable(0)",
+      "boundary": "The identity body returns the supplied argument."
+    }
+  ]
+}

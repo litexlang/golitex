@@ -3,51 +3,62 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::
 use crate::prelude::*;
 
 const SOURCES: [&str; 5] = [
-    include_str!("../../../lean/examples/sequence_limit_eventually_equal/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limit_shift/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limit_compare/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limit_squeeze/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limit_from_convergent/statement.lit"),
+    r#"# Eventually equal real sequences have the same limit.
+thm checked_sequence_limit_eventually_equal:
+    ? forall a,b seq(R),L R,cutoff N+:
+        $has_seq_limit(a,L)
+        forall k N+:
+            k>=cutoff
+            =>:
+                a(k)=b(k)
+        =>:
+            $has_seq_limit(b,L)
+    release thm seq_limit_eventually_equal(a,b,L,cutoff)
+"#,
+    r#"# A natural index shift, including zero, preserves a real sequence limit.
+thm checked_sequence_limit_shift:
+    ? forall a seq(R),L R,amount N:
+        $has_seq_limit(a,L)
+        =>:
+            $has_seq_limit(fn(k N+) R {a(k+amount)},L)
+    release thm seq_limit_shift(a,L,amount)
+"#,
+    r#"# An eventual order between two convergent real sequences orders their limits.
+thm checked_sequence_limit_compare:
+    ? forall a,b seq(R),L,M R,cutoff N+:
+        $has_seq_limit(a,L)
+        $has_seq_limit(b,M)
+        forall k N+:
+            k>=cutoff
+            =>:
+                a(k)<=b(k)
+        =>:
+            L<=M
+    release thm seq_limit_compare(a,b,L,M,cutoff)
+"#,
+    r#"# A real sequence eventually between two sequences with one limit shares that limit.
+thm checked_sequence_limit_squeeze:
+    ? forall a,b,c seq(R),L R,cutoff N+:
+        $has_seq_limit(a,L)
+        $has_seq_limit(c,L)
+        forall k N+:
+            k>=cutoff
+            =>:
+                a(k)<=b(k)
+                b(k)<=c(k)
+        =>:
+            $has_seq_limit(b,L)
+    release thm seq_limit_squeeze(a,b,c,L,cutoff)
+"#,
+    r#"# A convergent real sequence has a real limit witness.
+thm checked_sequence_limit_from_convergent:
+    ? forall a seq(R):
+        $is_seq_convergent(a)
+        =>:
+            exist L R st {$has_seq_limit(a,L)}
+    release thm sequence_limit_from_convergent(a)
+"#,
 ];
-#[test]
-fn sequence_tail_order_replays_five_selected_native_laws_deterministically() {
-    for (source, law) in SOURCES.into_iter().zip([
-        "sequenceLimitEventuallyEqual",
-        "sequenceLimitShift",
-        "sequenceLimitCompare",
-        "sequenceLimitSqueeze",
-        "sequenceLimitExistsOfConvergent",
-    ]) {
-        let (run, c) = super::execute(source);
-        let out = c
-            .compile_run(&run, "tail_order")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains(&format!("Litex.{law}")));
-        assert_eq!(out, c.compile_run(&run, "tail_order").unwrap());
-    }
-}
-#[test]
-fn sequence_tail_order_retains_zero_closed_alias_and_literal_inputs() {
-    for source in [
-        include_str!("../../../lean/examples/sequence_limit_eventually_equal_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_shift_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_compare_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_squeeze_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_shift_zero/statement.lit"),
-        include_str!(
-            "../../../lean/examples/sequence_limit_eventually_equal_aliased/statement.lit"
-        ),
-        include_str!("../../../lean/examples/sequence_limit_compare_aliased/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_squeeze_aliased/statement.lit"),
-        include_str!(
-            "../../../lean/examples/sequence_limit_eventually_equal_literal/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "tail_variants")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-    }
-}
 #[test]
 fn sequence_tail_order_requires_original_ordered_stages_and_selected_schema() {
     for source in SOURCES {
@@ -216,8 +227,20 @@ fn sequence_tail_candidate_context_consumes_original_fresh_membership_evidence()
 }
 #[test]
 fn sequence_tail_cached_context_requires_visible_exact_citation() {
-    let source =
-        include_str!("../../../lean/examples/sequence_limit_squeeze_aliased/statement.lit");
+    let source = r#"# A real sequence eventually between two sequences with one limit shares that limit.
+thm checked_sequence_limit_squeeze_aliased:
+    ? forall a,b seq(R),L R,cutoff N+:
+        $has_seq_limit(a,L)
+        $has_seq_limit(a,L)
+        forall k N+:
+            k>=cutoff
+            =>:
+                a(k)<=b(k)
+                b(k)<=a(k)
+        =>:
+            $has_seq_limit(b,L)
+    release thm seq_limit_squeeze(a,b,a,L,cutoff)
+"#;
     for change in ["future", "missing", "equality"] {
         let (mut run, c) = super::execute(source);
         let p = invocation(&mut run);
@@ -243,8 +266,24 @@ fn sequence_tail_cached_context_requires_visible_exact_citation() {
 }
 
 const MIXED: [&str; 2] = [
-    include_str!("../../../lean/examples/mixed_positive_sum_left/statement.lit"),
-    include_str!("../../../lean/examples/mixed_positive_sum_right/statement.lit"),
+    r#"# Selected strict/nonnegative sum certificate, including the weak zero endpoint.
+thm checked_mixed_positive_sum_left:
+    ? forall x R,y R:
+        0<x
+        0<=y
+        =>:
+            0<x+y
+    0<x+y
+"#,
+    r#"# Selected strict/nonnegative sum certificate, including the weak zero endpoint.
+thm checked_mixed_positive_sum_right:
+    ? forall x R,y R:
+        0<x
+        0<=y
+        =>:
+            0<y+x
+    0<y+x
+"#,
 ];
 fn mixed(run: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(

@@ -3,34 +3,105 @@ use crate::execute::execute_fact_stmt::function_domain::CompleteFunctionDomainSo
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::{FunctionRangeCodomainContainment as Containment, FunctionRangeInCodomainProof, SubsetFactSearchProofByBuiltinRule as SubsetRule};
 use crate::prelude::*;
 
-const GENERAL: &str = include_str!("../../../lean/examples/function_range_widening/statement.lit");
-macro_rules! source {
-    ($s:literal) => {
-        include_str!(concat!(
-            "../../../lean/examples/function_range_widening_",
-            $s,
-            "/statement.lit"
-        ))
-    };
-}
+const GENERAL: &str = r#"# A function range lies in every superset of its declared return carrier.
+forall replay_range_A,replay_range_B,replay_range_C set,replay_range_f fn(replay_range_x replay_range_A) replay_range_B:
+    replay_range_B $subset replay_range_C
+    =>:
+        fn_range(replay_range_f) $subset replay_range_C
+"#;
 const ALL: &[&str] = &[
     GENERAL,
-    source!("finite"),
-    source!("returned"),
-    source!("anonymous"),
-    source!("composition"),
-    source!("matrix"),
-    source!("selector"),
-    source!("union"),
-    source!("carrier_alias"),
-    source!("guard"),
-    source!("binary_guard"),
-    source!("function_alias"),
-    source!("named"),
-    source!("native_matrix"),
+    r#"# A finite function range remains inside any superset of its complete return carrier.
+forall replay_rw_fin_A,replay_rw_fin_B,replay_rw_fin_C set,replay_rw_fin_p cart(replay_rw_fin_A,replay_rw_fin_B):
+    union(replay_rw_fin_A,replay_rw_fin_B) $subset replay_rw_fin_C
+    =>:
+        fn_range(replay_rw_fin_p) $subset replay_rw_fin_C
+"#,
+    r#"# The image of a returned function lies in every superset of its declared return carrier.
+forall replay_rw_ret_A,replay_rw_ret_B,replay_rw_ret_C set,replay_rw_ret_h fn(replay_rw_ret_x R) fn(replay_rw_ret_y replay_rw_ret_A) replay_rw_ret_B,replay_rw_ret_t R:
+    replay_rw_ret_B $subset replay_rw_ret_C
+    =>:
+        fn_range(replay_rw_ret_h(replay_rw_ret_t)) $subset replay_rw_ret_C
+"#,
+    r#"# An anonymous constant function range lies in every superset of its declared return carrier.
+forall replay_rw_anon_A,replay_rw_anon_B,replay_rw_anon_C set,replay_rw_anon_b replay_rw_anon_B:
+    replay_rw_anon_B $subset replay_rw_anon_C
+    =>:
+        fn_range(fn(replay_rw_anon_x replay_rw_anon_A) replay_rw_anon_B {replay_rw_anon_b}) $subset replay_rw_anon_C
+"#,
+    r#"# The range of a composite function lies in any superset of its declared output carrier.
+forall replay_rw_co_A,replay_rw_co_B,replay_rw_co_D,replay_rw_co_S set,replay_rw_co_f fn(replay_rw_co_y replay_rw_co_B) replay_rw_co_D,replay_rw_co_g fn(replay_rw_co_x replay_rw_co_A) replay_rw_co_B:
+    replay_rw_co_D $subset replay_rw_co_S
+    =>:
+        fn_range(replay_rw_co_f ∘ replay_rw_co_g) $subset replay_rw_co_S
+"#,
+    r#"# A complex matrix range lies in every superset of its declared scalar output carrier.
+forall replay_rw_ma_n,replay_rw_ma_m N,replay_rw_ma_S set,replay_rw_ma_A matrix(C,replay_rw_ma_n,replay_rw_ma_m):
+    C $subset replay_rw_ma_S
+    =>:
+        fn_range(replay_rw_ma_A) $subset replay_rw_ma_S
+"#,
+    r#"# A selected gradient range lies in any superset of the real numbers after its carrier is established.
+forall replay_rw_se_S set,replay_rw_se_f fn(replay_rw_se_x cart_n(R,2)) R,replay_rw_se_p,replay_rw_se_g cart_n(R,2):
+    $has_gradient_at(replay_rw_se_f,replay_rw_se_p,2,replay_rw_se_g)
+    R $subset replay_rw_se_S
+    =>:
+        gradient_at(replay_rw_se_f,replay_rw_se_p,2) $in cart_n(R,2)
+        fn_range(gradient_at(replay_rw_se_f,replay_rw_se_p,2)) $subset replay_rw_se_S
+"#,
+    r#"# A function range lies in a common upper bound after both return-carrier components are included.
+forall replay_rw_ue_A,replay_rw_ue_D,replay_rw_ue_E,replay_rw_ue_C set,replay_rw_ue_f fn(replay_rw_ue_x replay_rw_ue_A) union(replay_rw_ue_D,replay_rw_ue_E):
+    replay_rw_ue_D $subset replay_rw_ue_C
+    replay_rw_ue_E $subset replay_rw_ue_C
+    =>:
+        union(replay_rw_ue_D,replay_rw_ue_E) $subset replay_rw_ue_C
+        fn_range(replay_rw_ue_f) $subset replay_rw_ue_C
+"#,
+    r#"# A return-carrier equality transports the inclusion used to bound a function range.
+forall replay_rw_al_A,replay_rw_al_B,replay_rw_al_D,replay_rw_al_C set,replay_rw_al_f fn(replay_rw_al_x replay_rw_al_A) replay_rw_al_B:
+    replay_rw_al_B=replay_rw_al_D
+    replay_rw_al_D $subset replay_rw_al_C
+    =>:
+        fn_range(replay_rw_al_f) $subset replay_rw_al_C
+"#,
+    r#"# A guarded function range remains in every superset of its declared return carrier.
+forall replay_rw_g_A,replay_rw_g_B,replay_rw_g_C,replay_rw_g_D set,replay_rw_g_f fn(replay_rw_g_x replay_rw_g_A:replay_rw_g_x $in replay_rw_g_D) replay_rw_g_B:
+    replay_rw_g_B $subset replay_rw_g_C
+    =>:
+        fn_range(replay_rw_g_f) $subset replay_rw_g_C
+"#,
+    r#"# A binary function with its diagonal excluded has range in every superset of its return carrier.
+forall replay_rw_bg_A,replay_rw_bg_B,replay_rw_bg_C set,replay_rw_bg_f fn(replay_rw_bg_x,replay_rw_bg_y replay_rw_bg_A:replay_rw_bg_x!=replay_rw_bg_y) replay_rw_bg_B:
+    replay_rw_bg_B $subset replay_rw_bg_C
+    =>:
+        fn_range(replay_rw_bg_f) $subset replay_rw_bg_C
+"#,
+    r#"# A function equality establishes the alias carrier before its range is bounded.
+forall replay_rw_fe_A,replay_rw_fe_B,replay_rw_fe_C set,replay_rw_fe_f fn(replay_rw_fe_x replay_rw_fe_A) replay_rw_fe_B,replay_rw_fe_g set:
+    replay_rw_fe_g=replay_rw_fe_f
+    replay_rw_fe_B $subset replay_rw_fe_C
+    =>:
+        replay_rw_fe_g $in fn(replay_rw_fe_y replay_rw_fe_A) replay_rw_fe_B
+        fn_range(replay_rw_fe_g) $subset replay_rw_fe_C
+"#,
+    r#"# A declared identity function range lies in every superset of the real numbers.
+have fn replay_rw_named_identity(replay_rw_named_x R) R = replay_rw_named_x
+forall replay_rw_named_S set:
+    R $subset replay_rw_named_S
+    =>:
+        fn_range(replay_rw_named_identity) $subset replay_rw_named_S
+"#,
+    r#"# An identity matrix range lies in every superset of its real return carrier, including order zero.
+forall replay_rw_id_n N,replay_rw_id_S set:
+    R $subset replay_rw_id_S
+    =>:
+        fn_range(identity_matrix(replay_rw_id_n)) $subset replay_rw_id_S
+"#,
 ];
-const EXACT: &str =
-    include_str!("../../../lean/examples/finite_function_graph_range/statement.lit");
+const EXACT: &str = r#"# The range of a finite Cartesian function lies in the union of its coordinate carriers.
+forall replay_fin_range_A,replay_fin_range_B set,replay_fin_range_p cart(replay_fin_range_A,replay_fin_range_B):
+    fn_range(replay_fin_range_p) $subset union(replay_fin_range_A,replay_fin_range_B)
+"#;
 
 fn atom(statement: &mut ExecStmtResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) = statement else {
@@ -216,7 +287,15 @@ fn range_widening_preserves_the_original_complete_source_signature_and_membershi
 #[test]
 fn range_widening_replays_original_carrier_alias_argument_paths() {
     for change in ["citation", "endpoint", "missing"] {
-        let (mut run, c) = super::execute(source!("carrier_alias"));
+        let (mut run, c) = super::execute(
+            r#"# A return-carrier equality transports the inclusion used to bound a function range.
+forall replay_rw_al_A,replay_rw_al_B,replay_rw_al_D,replay_rw_al_C set,replay_rw_al_f fn(replay_rw_al_x replay_rw_al_A) replay_rw_al_B:
+    replay_rw_al_B=replay_rw_al_D
+    replay_rw_al_D $subset replay_rw_al_C
+    =>:
+        fn_range(replay_rw_al_f) $subset replay_rw_al_C
+"#,
+        );
         let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(p) =
             &mut super::atomic_proof_mut(child(last(&mut run))).searched_proof
         else {
@@ -244,7 +323,15 @@ fn range_widening_replays_original_carrier_alias_argument_paths() {
 #[test]
 fn range_widening_named_source_keeps_the_actual_function_equality_path() {
     for change in ["path", "citation"] {
-        let (mut run, c) = super::execute(source!("named"));
+        let (mut run, c) = super::execute(
+            r#"# A declared identity function range lies in every superset of the real numbers.
+have fn replay_rw_named_identity(replay_rw_named_x R) R = replay_rw_named_x
+forall replay_rw_named_S set:
+    R $subset replay_rw_named_S
+    =>:
+        fn_range(replay_rw_named_identity) $subset replay_rw_named_S
+"#,
+        );
         let Source::AnonymousFunction { subject_equal, .. } =
             &mut selected(last(&mut run)).source.source
         else {
@@ -263,7 +350,14 @@ fn range_widening_named_source_keeps_the_actual_function_equality_path() {
 #[test]
 fn range_widening_returned_source_keeps_all_original_application_stages() {
     for change in ["argument", "requirement"] {
-        let (mut run, c) = super::execute(source!("returned"));
+        let (mut run, c) = super::execute(
+            r#"# The image of a returned function lies in every superset of its declared return carrier.
+forall replay_rw_ret_A,replay_rw_ret_B,replay_rw_ret_C set,replay_rw_ret_h fn(replay_rw_ret_x R) fn(replay_rw_ret_y replay_rw_ret_A) replay_rw_ret_B,replay_rw_ret_t R:
+    replay_rw_ret_B $subset replay_rw_ret_C
+    =>:
+        fn_range(replay_rw_ret_h(replay_rw_ret_t)) $subset replay_rw_ret_C
+"#,
+        );
         let Source::ApplicationReturn {
             application_check, ..
         } = &mut selected(last(&mut run)).source.source
@@ -283,7 +377,16 @@ fn range_widening_returned_source_keeps_all_original_application_stages() {
 #[test]
 fn range_widening_retains_selector_subject_and_original_wd_identity() {
     for change in ["subject", "wd"] {
-        let (mut run, c) = super::execute(source!("selector"));
+        let (mut run, c) = super::execute(
+            r#"# A selected gradient range lies in any superset of the real numbers after its carrier is established.
+forall replay_rw_se_S set,replay_rw_se_f fn(replay_rw_se_x cart_n(R,2)) R,replay_rw_se_p,replay_rw_se_g cart_n(R,2):
+    $has_gradient_at(replay_rw_se_f,replay_rw_se_p,2,replay_rw_se_g)
+    R $subset replay_rw_se_S
+    =>:
+        gradient_at(replay_rw_se_f,replay_rw_se_p,2) $in cart_n(R,2)
+        fn_range(gradient_at(replay_rw_se_f,replay_rw_se_p,2)) $subset replay_rw_se_S
+"#,
+        );
         let Source::MultivariableSelector(p) = &mut selected(last(&mut run)).source.source else {
             panic!()
         };
@@ -303,7 +406,14 @@ fn range_widening_retains_selector_subject_and_original_wd_identity() {
 
 #[test]
 fn range_widening_keeps_the_original_ordered_finite_return_domain() {
-    let (mut run, c) = super::execute(source!("finite"));
+    let (mut run, c) = super::execute(
+        r#"# A finite function range remains inside any superset of its complete return carrier.
+forall replay_rw_fin_A,replay_rw_fin_B,replay_rw_fin_C set,replay_rw_fin_p cart(replay_rw_fin_A,replay_rw_fin_B):
+    union(replay_rw_fin_A,replay_rw_fin_B) $subset replay_rw_fin_C
+    =>:
+        fn_range(replay_rw_fin_p) $subset replay_rw_fin_C
+"#,
+    );
     let stmt = last(&mut run);
     let p = selected(stmt);
     p.source.signature.ret_set = Box::new(Obj::StandardSet(StandardSet::C));
@@ -359,7 +469,14 @@ fn range_widening_child_cannot_borrow_a_sibling_foralls_private_subset() {
 
 #[test]
 fn range_widening_original_child_cursor_follows_all_complete_source_stages() {
-    let (mut run, _) = super::execute(source!("returned"));
+    let (mut run, _) = super::execute(
+        r#"# The image of a returned function lies in every superset of its declared return carrier.
+forall replay_rw_ret_A,replay_rw_ret_B,replay_rw_ret_C set,replay_rw_ret_h fn(replay_rw_ret_x R) fn(replay_rw_ret_y replay_rw_ret_A) replay_rw_ret_B,replay_rw_ret_t R:
+    replay_rw_ret_B $subset replay_rw_ret_C
+    =>:
+        fn_range(replay_rw_ret_h(replay_rw_ret_t)) $subset replay_rw_ret_C
+"#,
+    );
     let atomic = atom(last(&mut run));
     let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
         AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(

@@ -46,7 +46,7 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_en(),
             Self::CompositionRangeSubset(_) => BuiltinRuleText {
                 rule_name: "CompositionRangeSubset".into(),
-                message: "The image of f ∘ g is a subset of the image of f".into(),
+                message: "For a well-defined composition, every value of f ∘ g is a value of f, so fn_range(f ∘ g) ⊆ fn_range(f). No surjectivity of g is required.".into(),
             },
             Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_en(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_en(),
@@ -82,8 +82,8 @@ impl SubsetFactSearchProofByBuiltinRule {
             Self::RealIntervalSubsetReal(p) => p.rule_name_and_message_zh(),
             Self::SetBuilderSubsetOfParamSet(p) => p.rule_name_and_message_zh(),
             Self::CompositionRangeSubset(_) => BuiltinRuleText {
-                rule_name: "CompositionRangeSubset".into(),
-                message: "The image of f ∘ g is a subset of the image of f".into(),
+                rule_name: "复合函数的像包含于外层函数的像".into(),
+                message: "当复合函数有定义时，f ∘ g 的每个值都是外层函数 f 的值，因此 fn_range(f ∘ g) ⊆ fn_range(f)；无需假设 g 满射。".into(),
             },
             Self::FunctionPreimageSubsetOfInputCarrier(p) => p.rule_name_and_message_zh(),
             Self::SubsetReflexivity(p) => p.rule_name_and_message_zh(),

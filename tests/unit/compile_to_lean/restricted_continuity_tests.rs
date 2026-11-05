@@ -8,29 +8,124 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 const SOURCES: [&str; 9] = [
-    include_str!("../../../lean/examples/function_continuous_ln_restricted/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_log_restricted/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_tan_restricted/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_cot_restricted/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_sec_restricted/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_csc_restricted/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_coth_restricted/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_csch_restricted/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_sqrt_restricted/statement.lit"),
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_ln_restricted:
+    ? forall f fn(x R+) R:
+        forall x R+:
+            f(x)=ln(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_ln(f)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_log_restricted:
+    ? forall f fn(x R+) R,base R+:
+        base!=1
+        forall x R+:
+            f(x)=log(base,x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_log(f,base)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_tan_restricted:
+    ? forall f fn(x R: cos(x)!=0) R:
+        forall x {z R: cos(z)!=0}:
+            f(x)=tan(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_tan(f)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_cot_restricted:
+    ? forall f fn(x R: sin(x)!=0) R:
+        forall x {z R: sin(z)!=0}:
+            f(x)=cot(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_cot(f)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_sec_restricted:
+    ? forall f fn(x R: cos(x)!=0) R:
+        forall x {z R: cos(z)!=0}:
+            f(x)=sec(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_sec(f)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_csc_restricted:
+    ? forall f fn(x R: sin(x)!=0) R:
+        forall x {z R: sin(z)!=0}:
+            f(x)=csc(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_csc(f)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_coth_restricted:
+    ? forall f fn(x R: x!=0) R:
+        forall x {z R: z!=0}:
+            f(x)=coth(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_coth(f)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_csch_restricted:
+    ? forall f fn(x R: x!=0) R:
+        forall x {z R: z!=0}:
+            f(x)=csch(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_csch(f)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_sqrt_restricted:
+    ? forall f fn(x R: x>=0) R:
+        forall x {z R: z>=0}:
+            f(x)=sqrt(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_sqrt(f)
+"#,
 ];
 const LITERALS: [&str; 9] = [
-    include_str!("../../../lean/examples/function_continuous_ln_literal/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_log_literal/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_tan_literal/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_cot_literal/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_sec_literal/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_csc_literal/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_coth_literal/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_csch_literal/statement.lit"),
-    include_str!("../../../lean/examples/function_continuous_sqrt_literal/statement.lit"),
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_ln(fn(x R+) R{ln(x)})
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_log(fn(x R+) R{log(2,x)},2)
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_tan(fn(x R:cos(x)!=0) R{tan(x)})
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_cot(fn(x R:sin(x)!=0) R{cot(x)})
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_sec(fn(x R:cos(x)!=0) R{sec(x)})
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_csc(fn(x R:sin(x)!=0) R{csc(x)})
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_coth(fn(x R:x!=0) R{coth(x)})
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_csch(fn(x R:x!=0) R{csch(x)})
+"#,
+    r#"# Continuity on the complete declared domain, preserving original operator conditions.
+release thm fn_continuous_sqrt(fn(x R:x>=0) R{sqrt(x)})
+"#,
 ];
-const EMPTY: &str =
-    include_str!("../../../lean/examples/function_continuous_ln_empty_no_formula/statement.lit");
+const EMPTY: &str = r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_ln_empty_no_formula:
+    ? forall f fn(x {}) R:
+        $is_continuous(f)
+    release thm fn_continuous_ln(f)
+"#;
 fn release(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     if matches!(&run.statement_results[0], ExecStmtResult::Definition(_)) {
         return invocation(run);
@@ -186,12 +281,40 @@ fn restricted_continuity_retains_actual_known_local_and_empty_forall_owners() {
     }
     assert_eq!(seen, [true, true, true], "actual verifier routes");
     for source in [
-        include_str!("../../../lean/examples/function_continuous_ln_empty_domain/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_continuous_sqrt_singleton_zero/statement.lit"
-        ),
-        include_str!("../../../lean/examples/inferred_sin_nonzero_real/statement.lit"),
-        include_str!("../../../lean/examples/inferred_cos_nonzero_real/statement.lit"),
+        r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_ln_empty_domain:
+    ? forall f fn(x {}) R:
+        forall x {}:
+            f(x)=ln(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_ln(f)
+"#,
+        r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_sqrt_singleton_zero:
+    ? forall f fn(x {0}) R:
+        forall x {0}:
+            f(x)=sqrt(x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_sqrt(f)
+"#,
+        r#"# Preserve the original real argument when constructing an inferred trigonometric subject.
+thm checked_inferred_sin_nonzero_real:
+    ? forall x R:
+        sin(x)!=0
+        =>:
+            sin(x) $in R
+    sin(x) $in R
+"#,
+        r#"# Preserve the original real argument when constructing an inferred trigonometric subject.
+thm checked_inferred_cos_nonzero_real:
+    ? forall x R:
+        cos(x)!=0
+        =>:
+            cos(x) $in R
+    cos(x) $in R
+"#,
     ] {
         let (run, c) = super::execute(source);
         c.compile_run(&run, "domain_edges")
@@ -463,11 +586,25 @@ fn restricted_continuity_rejects_damaged_original_operator_children_and_restrict
 fn inferred_trigonometric_constructors_use_only_the_exact_visible_real_argument() {
     for (source, kind) in [
         (
-            include_str!("../../../lean/examples/inferred_sin_nonzero_real/statement.lit"),
+            r#"# Preserve the original real argument when constructing an inferred trigonometric subject.
+thm checked_inferred_sin_nonzero_real:
+    ? forall x R:
+        sin(x)!=0
+        =>:
+            sin(x) $in R
+    sin(x) $in R
+"#,
             "sin",
         ),
         (
-            include_str!("../../../lean/examples/inferred_cos_nonzero_real/statement.lit"),
+            r#"# Preserve the original real argument when constructing an inferred trigonometric subject.
+thm checked_inferred_cos_nonzero_real:
+    ? forall x R:
+        cos(x)!=0
+        =>:
+            cos(x) $in R
+    cos(x) $in R
+"#,
             "cos",
         ),
     ] {
@@ -558,8 +695,24 @@ fn restricted_continuity_literal_inferences_retain_identity_derived_facts_and_fo
 fn restricted_continuity_actual_call_owners_cannot_lose_original_proofs_or_wd() {
     use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult};
     for source in [
-        include_str!("../../../lean/examples/function_continuous_ln_call/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_tan_call/statement.lit"),
+        r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_ln_call:
+    ? forall f fn(x R+) R:
+        forall x R+:
+            f(x)=ln(x)
+        =>:
+            $is_continuous(f)
+    by thm fn_continuous_ln(f) => $is_continuous(f)
+"#,
+        r#"# Continuity on the complete declared domain, preserving original operator conditions.
+thm checked_function_continuous_tan_call:
+    ? forall f fn(x R: cos(x)!=0) R:
+        forall x {z R: cos(z)!=0}:
+            f(x)=tan(x)
+        =>:
+            $is_continuous(f)
+    by thm fn_continuous_tan(f) => $is_continuous(f)
+"#,
     ] {
         for change in ["proof", "wd"] {
             let (mut run, c) = super::execute(source);

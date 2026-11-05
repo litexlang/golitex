@@ -3815,7 +3815,7 @@ one-export axiom audit. Local receipts: `phase6u-first`, `phase6u-values`,
 
 ## Phase 6v: guarded inverse matrices, 2026-10-27
 
-`matrix_inverse(A,n)` retains children `[A,n]` and the original ordered WD:
+`matrix_inv(A,n)` (formerly `matrix_inverse(A,n)`) retains children `[A,n]` and the original ordered WD:
 `n $in N`, `A $in matrix(C,n,n)`, then `det(A,n) != 0`. Its graph has entry
 `matrix_cofactor(A,n,c,r) / det(A,n)`. Core derives complex and real matrix
 membership and coordinate values from the existing graph, cofactor, determinant
@@ -3828,7 +3828,7 @@ carried into the inverse object:
 forall n N+, A matrix(C,n,n), r closed_range(1,n), c closed_range(1,n):
     det(A,n) != 0
     =>:
-        matrix_inverse(A,n)(r,c) = matrix_cofactor(A,n,c,r) / det(A,n)
+        matrix_inv(A,n)(r,c) = matrix_cofactor(A,n,c,r) / det(A,n)
 ```
 
 The compiler checks the transposed cofactor indices, denominator, complete
@@ -4180,8 +4180,13 @@ For example, the [limit definition](../lean/examples/sequence_limit_definition/s
 uses this premise to prove `$has_seq_limit(a,L)` through `by def`:
 
 ```litex
-forall epsilon R+:
-    exist cutoff N+ st {{n N+: n >= cutoff} $subset preimage_set(a, {v R: abs(v-L) < epsilon})}
+thm checked_sequence_limit_intro:
+    ? forall a seq(R), L R:
+        forall epsilon R+:
+            exist cutoff N+ st {{n N+: n >= cutoff} $subset preimage_set(a, {v R: abs(v-L) < epsilon})}
+        =>:
+            $has_seq_limit(a,L)
+    by def $has_seq_limit(a,L)
 ```
 
 Core defines the tail, epsilon ball and limit predicate using the existing

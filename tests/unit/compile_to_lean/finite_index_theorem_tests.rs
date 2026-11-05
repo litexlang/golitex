@@ -1,22 +1,10 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
-const SOURCE: &str =
-    include_str!("../../../lean/examples/finite_set_bijective_index/statement.lit");
-const CONCRETE: &str =
-    include_str!("../../../lean/examples/finite_set_bijective_index_concrete/statement.lit");
-#[test]
-fn finite_index_replays_generic_empty_and_concrete_original_bt_calls() {
-    for source in [SOURCE, CONCRETE] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "finite_index")
-            .unwrap_or_else(|e| panic!("{e}"));
-        assert!(output.contains("Litex.finiteSetBijectiveIndexWitness"));
-        assert!(output.contains("variable [_functionSemantics : Litex.FunctionSemantics M]"));
-        assert!(!output.contains("variable [_setSemantics"));
-        assert_eq!(output, compiler.compile_run(&run, "finite_index").unwrap());
-    }
-}
+const SOURCE: &str = r#"thm checked_finite_set_bijective_index:
+    ? forall A finite_set:
+        exist index finite_seq(A,finite_set_size(A)) st {$bijective(closed_range(1,finite_set_size(A)),A,index)}
+    release thm finite_set_has_bijective_index(A)
+"#;
 #[test]
 fn finite_index_keeps_original_finiteness_proof_store_wd_and_prior_scope() {
     for change in ["proof", "store", "wd", "argument", "future"] {

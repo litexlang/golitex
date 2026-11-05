@@ -3,18 +3,8 @@ use crate::run_module::{load_file_for_lean, LoadLeanSourceResult, LoadedLeanSour
 use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByDefStmtSuccess};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{AtomicExceptEqualityFactSearchProofByDefinition, UserDefinedPropDefinitionProof};
 
-fn load(name: &str) -> LoadedLeanSource {
-    let command = parse_launch_command(&[
-        "-lean".into(),
-        "-strict".into(),
-        "-f".into(),
-        format!("lean/examples/{name}/statement.lit"),
-    ])
-    .unwrap();
-    let LoadLeanSourceResult::Success(loaded) = load_file_for_lean(command).unwrap() else {
-        panic!("source module must verify")
-    };
-    loaded
+fn load(name: &str) -> super::module_fixtures::LoadedProject {
+    super::module_fixtures::load(name)
 }
 fn call(loaded: &mut LoadedLeanSource) -> &mut ExecByDefStmtSuccess {
     let ExecStmtResult::By(ExecByStmtResult::Def(ExecByDefStmtResult::Success(proof))) =
@@ -52,7 +42,7 @@ fn compiles(loaded: LoadedLeanSource) -> bool {
 }
 #[test]
 fn module_predicate_replays_original_fold_inference_and_forall_scope() {
-    let mut loaded = load("module_positive_predicate");
+    let (mut loaded, _project_1) = load("module_positive_predicate");
     assert_eq!(fold(call(&mut loaded)).requirement_facts.len(), 2);
     assert_eq!(fold(call(&mut loaded)).proof_of_requirement_facts.len(), 2);
     let output = super::LitexToLeanCompiler::new(loaded.runtime)
@@ -63,18 +53,18 @@ fn module_predicate_replays_original_fold_inference_and_forall_scope() {
 }
 #[test]
 fn module_predicate_rejects_missing_reordered_and_changed_original_requirements() {
-    let mut loaded = load("module_positive_predicate");
+    let (mut loaded, _project_2) = load("module_positive_predicate");
     fold(call(&mut loaded)).proof_of_requirement_facts.pop();
     assert!(!compiles(loaded));
-    let mut loaded = load("module_positive_predicate");
+    let (mut loaded, _project_3) = load("module_positive_predicate");
     fold(call(&mut loaded))
         .proof_of_requirement_facts
         .swap(0, 1);
     assert!(!compiles(loaded));
-    let mut loaded = load("module_positive_predicate");
+    let (mut loaded, _project_4) = load("module_positive_predicate");
     fold(call(&mut loaded)).requirement_facts.swap(0, 1);
     assert!(!compiles(loaded));
-    let mut loaded = load("module_positive_predicate");
+    let (mut loaded, _project_5) = load("module_positive_predicate");
     let Fact::AtomicFact(AtomicFact::InFact(fact)) =
         &mut fold(call(&mut loaded)).requirement_facts[0]
     else {
@@ -86,7 +76,7 @@ fn module_predicate_rejects_missing_reordered_and_changed_original_requirements(
 #[test]
 fn module_predicate_requires_original_qualified_producer_and_formation() {
     use crate::compile_to_lean::source_position::SourcePosition;
-    let loaded = load("module_positive_predicate");
+    let (loaded, _project_6) = load("module_positive_predicate");
     let name = AtomicName::WithExportFileId {
         export_file_id: 0,
         name: "positive".into(),
@@ -111,7 +101,7 @@ fn module_predicate_requires_original_qualified_producer_and_formation() {
 
 #[test]
 fn module_predicate_nested_exist_projection_keeps_original_definition_namespace() {
-    let loaded = load("module_nested_predicates");
+    let (loaded, _project_7) = load("module_nested_predicates");
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
         crate::execute::ExecDefPropStmtResult::Success(pair),
     )) = &loaded.closure.files[0].run.statement_results[1]
@@ -150,7 +140,7 @@ fn module_predicate_profiles_cover_guarded_dependent_imported_and_distinct_defin
         "module_import_predicates",
         "module_predicate_alias_collision",
     ] {
-        let loaded = load(name);
+        let (loaded, _project_8) = load(name);
         let output = super::LitexToLeanCompiler::new(loaded.runtime)
             .compile_module(&loaded.closure, name)
             .unwrap();
@@ -165,7 +155,7 @@ fn module_predicate_profiles_cover_guarded_dependent_imported_and_distinct_defin
 fn module_predicate_keeps_namespace_identity_and_private_formation_scope() {
     use crate::compile_to_lean::source_position::SourcePosition;
     use crate::runtime::CodeSource;
-    let loaded = load("module_predicate_alias_collision");
+    let (loaded, _project_9) = load("module_predicate_alias_collision");
     let CodeSource::ImportedExport {
         global_mod_id: left,
         ..
@@ -225,7 +215,7 @@ fn module_predicate_keeps_namespace_identity_and_private_formation_scope() {
 #[test]
 fn module_predicate_set_kinds_keep_exact_wd_and_domain_store() {
     for index in [0, 1] {
-        let mut loaded = load("module_dependent_predicate");
+        let (mut loaded, _project_10) = load("module_dependent_predicate");
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
             crate::execute::ExecDefPropStmtResult::Success(prop),
         )) = &mut loaded.closure.files[0].run.statement_results[index]
@@ -234,7 +224,7 @@ fn module_predicate_set_kinds_keep_exact_wd_and_domain_store() {
         };
         prop.param_type_well_defined[0] = ParamTypeWellDefinedProof::Set;
         assert!(!compiles(loaded));
-        let mut loaded = load("module_dependent_predicate");
+        let (mut loaded, _project_11) = load("module_dependent_predicate");
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
             crate::execute::ExecDefPropStmtResult::Success(prop),
         )) = &mut loaded.closure.files[0].run.statement_results[index]
@@ -257,7 +247,7 @@ fn module_predicate_requires_original_inference_signature_and_requirement_identi
         InferAtomicFactResult, InferNormalAtomicFactResult, InferResult,
     };
     for missing in [false, true] {
-        let mut loaded = load("module_positive_predicate");
+        let (mut loaded, _project_12) = load("module_positive_predicate");
         let Some(InferResult::AtomicFact(InferAtomicFactResult::NormalAtomicFact(rules))) =
             &mut call(&mut loaded).stored.infer
         else {
@@ -273,7 +263,7 @@ fn module_predicate_requires_original_inference_signature_and_requirement_identi
         }
         assert!(!compiles(loaded));
     }
-    let mut loaded = load("module_positive_predicate");
+    let (mut loaded, _project_13) = load("module_positive_predicate");
     let VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AtomicExceptEquality(
         AtomicFactWellDefinedProof::Detailed(wd),
     )) = &mut call(&mut loaded).goal_wd
@@ -289,7 +279,7 @@ fn module_predicate_requires_original_inference_signature_and_requirement_identi
     };
     *export_file_id = 1;
     assert!(!compiles(loaded));
-    let mut loaded = load("module_positive_predicate");
+    let (mut loaded, _project_14) = load("module_positive_predicate");
     let changed_id = loaded.runtime.global_ids.allocate_fact_id();
     let Fact::AtomicFact(AtomicFact::InFact(fact)) =
         &mut fold(call(&mut loaded)).requirement_facts[0]

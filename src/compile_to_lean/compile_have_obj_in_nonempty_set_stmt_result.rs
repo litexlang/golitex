@@ -109,7 +109,7 @@ impl LitexToLeanCompiler {
                         ..source_position
                     };
                     let fact = self.resolve_fact(store.primary_fact_id(), &introduced)?;
-                    let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+                    let object = Obj::Identifier(introduced.parameter_identifier(parameter)?);
                     match &fact {
                         Fact::AtomicFact(AtomicFact::IsSetFact(f)) if f.set.ir() == object.ir() => {
                         }

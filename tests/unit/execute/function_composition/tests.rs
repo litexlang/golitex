@@ -376,7 +376,7 @@ fn function_composition_evidence_and_permission_ceiling() {
 }
 
 #[test]
-fn function_composition_durable_examples_and_lean_boundary() {
+fn function_composition_durable_examples_and_lean_replay() {
     let files = [
         "examples/wd/function_composition.lit",
         "examples/proof_nodes/equal/by_builtin_rule/composition_associativity.lit",
@@ -402,15 +402,14 @@ fn function_composition_durable_examples_and_lean_boundary() {
             .into_owned(),
     ])
     .unwrap();
-    let error = crate::run::run_command(command)
-        .err()
-        .expect("the full example still has unsupported Lean constructor evidence");
-    assert!(
-        error
-            .to_string()
-            .contains("Equality/MatchingOneArgByOne/Constructor"),
-        "{error}"
-    );
+    let outcome = crate::run::run_command(command)
+        .expect("the checked composition example has a Lean adapter");
+    let crate::run::RunCommandOutcome::CompileToLean(compiled) = outcome else {
+        panic!("expected the Lean compilation outcome");
+    };
+    assert!(compiled.success);
+    assert!(compiled.source.contains("Litex.compose"));
+    assert!(!compiled.source.contains("sorry"));
 }
 
 #[test]

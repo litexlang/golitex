@@ -9,10 +9,59 @@ use crate::execute::execute_fact_stmt::known_tuple::KnownFunctionTupleApplicabil
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/template_record_function_fields/statement.lit"),
-    include_str!("../../../lean/examples/template_record_guarded_fields/statement.lit"),
-    include_str!("../../../lean/examples/template_generic_record_fields/statement.lit"),
-    include_str!("../../../lean/examples/template_generic_factory_fields/statement.lit"),
+    r#"# Instantiate a record of an affine operation and evaluate its function and tag fields.
+struct Box:
+    op fn(x R) R
+    tag N
+
+forall f fn(x R) R:
+    (f, 0) $in &Box
+
+template<a R>:
+    have shifted &Box = (fn(x R) R {x + a}, 0)
+
+\shifted<2>.op(3) = 5
+\shifted<2>.tag = 0
+"#,
+    r#"# A nonzero template argument is required when evaluating the returned quotient field.
+struct Box:
+    op fn(x R) R
+    tag N
+
+forall f fn(x R) R:
+    (f, 0) $in &Box
+
+template<a R: a != 0,>:
+    have quotient_box &Box = (fn(x R) R {x / a}, 0)
+
+\quotient_box<2>.op(6) = 3
+
+\quotient_box<2>.tag = 0
+"#,
+    r#"# Instantiate a generic pair record and recover its two coordinates.
+struct GenericPair<S set>:
+    first S
+    second S
+
+template<S set, x, y S>:
+    have selected_pair &GenericPair<S> = (x, y)
+
+\selected_pair<R, 2, 3>.first = 2
+
+\selected_pair<R, 2, 3>.second = 3
+"#,
+    r#"# A generic factory template returns a pair whose named fields recover the arguments.
+struct GenericPair<S set>:
+    first S
+    second S
+
+template<S set>:
+    have fn pair(x, y S) &GenericPair<S> = (x, y)
+
+\pair<R>(2, 3).first = 2
+
+\pair<R>(2, 3).second = 3
+"#,
 ];
 
 fn field_value(run: &mut RunLitexCodeResult) -> &mut StructFieldValueProof {
@@ -32,21 +81,6 @@ fn field_value(run: &mut RunLitexCodeResult) -> &mut StructFieldValueProof {
         panic!("field value")
     };
     field
-}
-
-#[test]
-fn template_record_fields_replay_original_instances_and_generic_factories() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "template_records")
-            .expect(source);
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "template_records").unwrap()
-        );
-        assert!(!lean.contains("sorry") && !lean.contains("axiom "));
-    }
 }
 
 #[test]

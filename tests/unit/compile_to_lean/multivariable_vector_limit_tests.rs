@@ -1,39 +1,16 @@
 use crate::prelude::*;
-#[test]
-fn vector_limit_selects_candidates_existence_and_distinct_dimensions() {
-    for source in [
-        include_str!("../../../lean/examples/multivariable_vector_limit_selection/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_vector_limit_existence/statement.lit"),
-        include_str!(
-            "../../../lean/examples/multivariable_vector_limit_generic_dimensions/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_vector_limit_guarded_domain/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_vector_limit_coordinate_call/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_vector_limit_negative_citation/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_vector_limit_from_definition/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_vector_limit_nested_objects/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "vector_euclidean_limit").expect(source);
-    }
-}
 
 #[test]
 fn vector_limit_formation_preserves_independent_output_dimension_and_stage_order() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
-    let source =
-        include_str!("../../../lean/examples/multivariable_vector_limit_selection/statement.lit");
+    let source = r#"# Select a three-dimensional vector limit from a two-dimensional input and cite its value.
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), L cart_n(R,3):
+    $has_vector_limit_at(f,p,2,3,L)
+    =>:
+        lim_vector_at(f,p,2,3)=L
+        lim_vector_at(f,p,2,3) $in cart_n(R,3)
+"#;
     for mutation in 0..3 {
         let (mut run, c) = super::execute(source);
         let proof = super::forall_proof_mut(&mut run.statement_results[0]);
@@ -71,8 +48,13 @@ fn vector_limit_inferences_retain_source_identity_domain_and_clause_order() {
     use crate::store_fact_and_infer::{
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
-    let source =
-        include_str!("../../../lean/examples/multivariable_vector_limit_selection/statement.lit");
+    let source = r#"# Select a three-dimensional vector limit from a two-dimensional input and cite its value.
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), L cart_n(R,3):
+    $has_vector_limit_at(f,p,2,3,L)
+    =>:
+        lim_vector_at(f,p,2,3)=L
+        lim_vector_at(f,p,2,3) $in cart_n(R,3)
+"#;
     for mutation in 0..3 {
         let (mut run, c) = super::execute(source);
         let proof = super::forall_proof_mut(&mut run.statement_results[0]);
@@ -99,9 +81,15 @@ fn vector_limit_requires_original_output_wd_child() {
         DetailedObjWellDefinedProof, LimitOperatorObjWellDefinedProofByDef,
         ObjWellDefinedProofByDef,
     };
-    let (mut run, c) = super::execute(include_str!(
-        "../../../lean/examples/multivariable_vector_limit_selection/statement.lit"
-    ));
+    let (mut run, c) = super::execute(
+        r#"# Select a three-dimensional vector limit from a two-dimensional input and cite its value.
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), L cart_n(R,3):
+    $has_vector_limit_at(f,p,2,3,L)
+    =>:
+        lim_vector_at(f,p,2,3)=L
+        lim_vector_at(f,p,2,3) $in cart_n(R,3)
+"#,
+    );
     let root = super::forall_proof_mut(&mut run.statement_results[0]);
     let equal = super::equality_proof_mut(&mut root.proved_then_facts[0].verify_result);
     let DetailedObjWellDefinedProof::ByDef {

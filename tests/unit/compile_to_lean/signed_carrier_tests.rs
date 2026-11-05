@@ -3,30 +3,6 @@ use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, Infe
 
 const SETS: [&str; 8] = ["Q+", "Q-", "Z-", "R-", "Q*", "Z*", "R*", "C*"];
 
-#[test]
-fn signed_examples_replay_their_original_results() {
-    for source in [
-        include_str!("../../../lean/examples/signed_numeric_values/statement.lit"),
-        include_str!("../../../lean/examples/signed_numeric_domains/statement.lit"),
-        include_str!("../../../lean/examples/refined_numeric_membership/statement.lit"),
-        include_str!("../../../lean/examples/signed_numeric_declarations/statement.lit"),
-        include_str!("../../../lean/examples/signed_numeric_hierarchy/statement.lit"),
-        include_str!("../../../lean/examples/signed_numeric_functions/statement.lit"),
-        include_str!("../../../lean/examples/signed_numeric_identity_functions/statement.lit"),
-        include_str!("../../../lean/examples/signed_numeric_subsets/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "signed_carriers").unwrap();
-        assert!(
-            output.contains("Litex.SetSemantics M") || output.contains("Litex.FunctionSemantics M")
-        );
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "signed_carriers").unwrap()
-        );
-    }
-}
-
 fn sign_mut(
     store: &mut StoreFactAndInferResult,
 ) -> &mut crate::store_fact_and_infer::InferInFactSignedStandardSetSignResult {

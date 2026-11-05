@@ -2,9 +2,25 @@ use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
 
-const DIRECT: &str =
-    include_str!("../../../lean/examples/finite_summand_nonnegative/statement.lit");
-const EQUAL: &str = include_str!("../../../lean/examples/finite_summand_equal_value/statement.lit");
+const DIRECT: &str = r#"# A nonnegative summand of a finite real sum is bounded above by the sum.
+thm checked_nonnegative_finite_summand:
+    ? forall A finite_set, f fn(x A) R, t A:
+        forall x A:
+            0<=f(x)
+        =>:
+            f(t)<=finite_set_sum(A,f)
+    release thm finite_set_summand_le_sum(f(t),finite_set_sum(A,f))
+"#;
+const EQUAL: &str = r#"# A value equal to a nonnegative finite summand inherits its upper bound.
+thm checked_equal_nonnegative_finite_summand:
+    ? forall A finite_set, f,g fn(x A) R, t A:
+        g(t)=f(t)
+        forall x A:
+            0<=f(x)
+        =>:
+            g(t)<=finite_set_sum(A,f)
+    release thm finite_set_summand_le_sum(g(t),finite_set_sum(A,f))
+"#;
 
 #[test]
 fn finite_summand_replays_membership_nonnegativity_and_original_value_equality() {

@@ -5,42 +5,247 @@ use crate::prelude::*;
 #[test]
 fn all_sixteen_selected_negative_factor_variants_compile() {
     for (source, kind, left, right) in [
-        (include_str!("../../../lean/examples/negative_factor_strict_less_left/statement.lit"), SourceOrderKind::Less, true, true),
-        (include_str!("../../../lean/examples/negative_factor_strict_less_right/statement.lit"), SourceOrderKind::Less, false, false),
-        (include_str!("../../../lean/examples/negative_factor_strict_less_left_right/statement.lit"), SourceOrderKind::Less, true, false),
-        (include_str!("../../../lean/examples/negative_factor_strict_less_right_left/statement.lit"), SourceOrderKind::Less, false, true),
-        (include_str!("../../../lean/examples/negative_factor_strict_greater_left/statement.lit"), SourceOrderKind::Greater, true, true),
-        (include_str!("../../../lean/examples/negative_factor_strict_greater_right/statement.lit"), SourceOrderKind::Greater, false, false),
-        (include_str!("../../../lean/examples/negative_factor_strict_greater_left_right/statement.lit"), SourceOrderKind::Greater, true, false),
-        (include_str!("../../../lean/examples/negative_factor_strict_greater_right_left/statement.lit"), SourceOrderKind::Greater, false, true),
-        (include_str!("../../../lean/examples/negative_factor_weak_less_equal_left/statement.lit"), SourceOrderKind::LessEqual, true, true),
-        (include_str!("../../../lean/examples/negative_factor_weak_less_equal_right/statement.lit"), SourceOrderKind::LessEqual, false, false),
-        (include_str!("../../../lean/examples/negative_factor_weak_less_equal_left_right/statement.lit"), SourceOrderKind::LessEqual, true, false),
-        (include_str!("../../../lean/examples/negative_factor_weak_less_equal_right_left/statement.lit"), SourceOrderKind::LessEqual, false, true),
-        (include_str!("../../../lean/examples/negative_factor_weak_greater_equal_left/statement.lit"), SourceOrderKind::GreaterEqual, true, true),
-        (include_str!("../../../lean/examples/negative_factor_weak_greater_equal_right/statement.lit"), SourceOrderKind::GreaterEqual, false, false),
-        (include_str!("../../../lean/examples/negative_factor_weak_greater_equal_left_right/statement.lit"), SourceOrderKind::GreaterEqual, true, false),
-        (include_str!("../../../lean/examples/negative_factor_weak_greater_equal_right_left/statement.lit"), SourceOrderKind::GreaterEqual, false, true),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    b<a
+    =>:
+        c*a<c*b
+"#,
+            SourceOrderKind::Less,
+            true,
+            true,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    b<a
+    =>:
+        a*c<b*c
+"#,
+            SourceOrderKind::Less,
+            false,
+            false,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    b<a
+    =>:
+        c*a<b*c
+"#,
+            SourceOrderKind::Less,
+            true,
+            false,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    b<a
+    =>:
+        a*c<c*b
+"#,
+            SourceOrderKind::Less,
+            false,
+            true,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    a<b
+    =>:
+        c*a>c*b
+"#,
+            SourceOrderKind::Greater,
+            true,
+            true,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    a<b
+    =>:
+        a*c>b*c
+"#,
+            SourceOrderKind::Greater,
+            false,
+            false,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    a<b
+    =>:
+        c*a>b*c
+"#,
+            SourceOrderKind::Greater,
+            true,
+            false,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    a<b
+    =>:
+        a*c>c*b
+"#,
+            SourceOrderKind::Greater,
+            false,
+            true,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<=0
+    b<=a
+    =>:
+        c*a<=c*b
+"#,
+            SourceOrderKind::LessEqual,
+            true,
+            true,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<=0
+    b<=a
+    =>:
+        a*c<=b*c
+"#,
+            SourceOrderKind::LessEqual,
+            false,
+            false,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<=0
+    b<=a
+    =>:
+        c*a<=b*c
+"#,
+            SourceOrderKind::LessEqual,
+            true,
+            false,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<=0
+    b<=a
+    =>:
+        a*c<=c*b
+"#,
+            SourceOrderKind::LessEqual,
+            false,
+            true,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<=0
+    a<=b
+    =>:
+        c*a>=c*b
+"#,
+            SourceOrderKind::GreaterEqual,
+            true,
+            true,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<=0
+    a<=b
+    =>:
+        a*c>=b*c
+"#,
+            SourceOrderKind::GreaterEqual,
+            false,
+            false,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<=0
+    a<=b
+    =>:
+        c*a>=b*c
+"#,
+            SourceOrderKind::GreaterEqual,
+            true,
+            false,
+        ),
+        (
+            r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<=0
+    a<=b
+    =>:
+        a*c>=c*b
+"#,
+            SourceOrderKind::GreaterEqual,
+            false,
+            true,
+        ),
     ] {
         let (run, compiler) = super::execute(source);
-        let ExecStmtResult::Fact(ExecFactStmtResult::Success(top)) = &run.statement_results[0] else { panic!("source fact"); };
-        let VerifyFactResult::ForallFact(universal) = &top.verify_result else { panic!("universal"); };
-        let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(universal)) = universal.as_ref() else { panic!("local universal"); };
+        let ExecStmtResult::Fact(ExecFactStmtResult::Success(top)) = &run.statement_results[0]
+        else {
+            panic!("source fact");
+        };
+        let VerifyFactResult::ForallFact(universal) = &top.verify_result else {
+            panic!("universal");
+        };
+        let VerifyForallFactResult::Success(VerifyForallFactProof::ByLocalIntroduction(universal)) =
+            universal.as_ref()
+        else {
+            panic!("local universal");
+        };
         let proof = super::phase2_atomic(&universal.proved_then_facts[0].verify_result);
-        let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(rule) = &proof.searched_proof else { panic!("selected builtin"); };
-        let (actual, actual_left, actual_right, _, _) = LitexToLeanCompiler::negative_factor_evidence(rule).expect("actual negative-factor variant");
-        assert!(actual == kind && actual_left == left && actual_right == right, "{source}");
+        let AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(rule) = &proof.searched_proof
+        else {
+            panic!("selected builtin");
+        };
+        let (actual, actual_left, actual_right, _, _) =
+            LitexToLeanCompiler::negative_factor_evidence(rule)
+                .expect("actual negative-factor variant");
+        assert!(
+            actual == kind && actual_left == left && actual_right == right,
+            "{source}"
+        );
         let output = compiler.compile_run(&run, "negative_factor").unwrap();
-        assert!(output.contains(if source.contains("c<=0") { "Litex.mulStructuralLeNonpositiveLeft" } else { "Litex.mulStructuralLtNegativeLeft" }));
-        assert_eq!(output, compiler.compile_run(&run, "negative_factor").unwrap());
+        assert!(output.contains(if source.contains("c<=0") {
+            "Litex.mulStructuralLeNonpositiveLeft"
+        } else {
+            "Litex.mulStructuralLtNegativeLeft"
+        }));
+        assert_eq!(
+            output,
+            compiler.compile_run(&run, "negative_factor").unwrap()
+        );
     }
 }
 
 #[test]
 fn negative_factor_children_cannot_be_swapped() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less::LessFactSearchProofByBuiltinRule;
-    let source =
-        include_str!("../../../lean/examples/negative_factor_strict_less_left/statement.lit");
+    let source = r#"# Multiplication by a negative or nonpositive real factor reverses the operand order.
+forall a,b,c R:
+    c<0
+    b<a
+    =>:
+        c*a<c*b
+"#;
     let (mut run, compiler) = super::execute(source);
     let universal = super::forall_proof_mut(&mut run.statement_results[0]);
     let proof = super::atomic_proof_mut(&mut universal.proved_then_facts[0].verify_result);

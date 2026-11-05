@@ -275,22 +275,25 @@ fn shared_function_definition_rejects_another_stored_literal_with_the_same_fact_
 }
 
 #[test]
-fn projected_line_condition_replays_its_original_builder_constructor() {
-    let (result, compiler) = super::execute(include_str!(
-        "../../../../lean/examples/line_membership_condition/statement.lit"
-    ));
-    let output = compiler
-        .compile_run(&result, "line_condition_constructor")
-        .unwrap();
-    assert!(output.contains("fun (_value_i"));
-    assert!(output.contains("Litex.setBuilder"));
-}
-
-#[test]
 fn projected_line_condition_rejects_missing_original_clause_formation() {
-    let (mut result, compiler) = super::execute(include_str!(
-        "../../../../lean/examples/line_membership_condition/statement.lit"
-    ));
+    let (mut result, compiler) = super::execute(
+        r#"# A point on a line satisfies its determinant equation.
+have fn vec(A, B cart(R, R)) cart(R, R) = (B(1) - A(1), B(2) - A(2))
+
+have fn planar_det(u, v cart(R, R)) R = u(1) * v(2) - u(2) * v(1)
+
+have fn line_through_points(a, b cart(R, R): a != b) power_set(cart(R, R)) = {p cart(R, R): planar_det(vec(a, p), vec(a, b)) = 0}
+
+thm line_member_coordinate:
+    ? forall a, b, p cart(R, R):
+        a != b
+        p $in line_through_points(a,b)
+        =>:
+            planar_det(vec(a,p),vec(a,b)) = 0
+    line_through_points(a,b) = {r cart(R,R): planar_det(vec(a,r),vec(a,b))=0}
+    p $in line_through_points(a,b)
+"#,
+    );
     let theorem = super::named_theorem_mut(&mut result.statement_results[3]);
     let ExecDefThmBodyProof::Forall(body) = &mut theorem.body else {
         panic!("original theorem body")

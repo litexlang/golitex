@@ -14,12 +14,51 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const NONUNIT: &str =
-    include_str!("../../../lean/examples/log_nonzero_positive_nonunit/statement.lit");
-const ABOVE: &str = include_str!("../../../lean/examples/log_nonzero_above_one/statement.lit");
-const BELOW: &str = include_str!("../../../lean/examples/log_nonzero_below_one/statement.lit");
-const MIXED: &str = include_str!("../../../lean/examples/log_nonzero_mixed_guards/statement.lit");
-const REVERSED: &str = include_str!("../../../lean/examples/log_nonzero_reversed/statement.lit");
+const NONUNIT: &str = r#"# A positive nonunit argument has a nonzero logarithm in a valid base.
+claim:
+    ? forall b R+, x R+:
+        b != 1
+        x != 1
+        =>:
+            log(b,x) != 0
+    log(b,x) != 0
+"#;
+const ABOVE: &str = r#"# A logarithm with base and argument above one is nonzero.
+claim:
+    ? forall b R+, x R+:
+        b > 1
+        x > 1
+        =>:
+            log(b,x) != 0
+    log(b,x) != 0
+"#;
+const BELOW: &str = r#"# A logarithm with positive base and argument below one is nonzero.
+claim:
+    ? forall b R+, x R+:
+        b < 1
+        x < 1
+        =>:
+            log(b,x) != 0
+    log(b,x) != 0
+"#;
+const MIXED: &str = r#"# A base above one and a positive argument below one have a nonzero logarithm.
+claim:
+    ? forall b R+, x R+:
+        1 < b
+        1 > x
+        =>:
+            0 != log(b,x)
+    0 != log(b,x)
+"#;
+const REVERSED: &str = r#"# A logarithm is nonzero when its positive base and argument differ from one.
+claim:
+    ? forall b R+, x R+:
+        1 != b
+        1 != x
+        =>:
+            0 != log(b,x)
+    0 != log(b,x)
+"#;
 
 fn selected_rule(run: &mut RunLitexCodeResult) -> &mut LogNonzeroFromNonunitArgumentProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

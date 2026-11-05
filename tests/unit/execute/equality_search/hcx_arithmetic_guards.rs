@@ -225,7 +225,7 @@ fn restricted_search_does_not_reenable_rules_and_failures_do_not_publish() {
 }
 
 #[test]
-fn normal_locales_and_unsupported_lean_boundary_remain_explicit() {
+fn normal_locales_and_lean_support_boundaries_remain_explicit() {
     for language in OutputLanguage::ALL {
         for source in VALID {
             let mut rt = Runtime::new_with_result_detail(
@@ -243,13 +243,17 @@ fn normal_locales_and_unsupported_lean_boundary_remain_explicit() {
             assert!(!normal.contains("unsupported"), "{language:?}: {normal}");
         }
     }
-    for source in VALID {
+    for (index, source) in VALID.into_iter().enumerate() {
         let mut rt = runtime();
         let run = check(&mut rt, source, true);
-        assert!(
-            crate::compile_to_lean::compile_run(&run, rt, "hcx_guards").is_err(),
-            "No new Lean adapter for {source}"
-        );
+        let compiled = crate::compile_to_lean::compile_run(&run, rt, "hcx_guards");
+        if matches!(index, 2 | 3) {
+            let lean = compiled.expect("rectangular real/imaginary projections have Lean adapters");
+            assert!(!lean.contains("sorry"));
+        } else {
+            let error = compiled.expect_err("this arithmetic route remains unsupported");
+            assert_eq!(error.route, "Equality/BuiltinRule", "{source}: {error}");
+        }
     }
 }
 

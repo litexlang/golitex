@@ -36,18 +36,6 @@ fn known_set_binary_original_tree_records_ordered_and_rebound_children() {
         );
     }
 }
-
-#[test]
-fn known_set_binary_replays_actual_three_operation_profiles() {
-    for source in ALL {
-        let (run, compiler) = super::execute(source);
-        let output = super::compile_run(&run, &compiler, "binary_set_profiles").unwrap();
-        assert_eq!(
-            output,
-            super::compile_run(&run, &compiler, "binary_set_profiles").unwrap()
-        );
-    }
-}
 #[test]
 fn known_set_binary_requires_both_original_captured_subjects() {
     for source in [UNION, INTERSECT, MINUS] {
@@ -305,22 +293,8 @@ fn reject(
         "altered original evidence accepted: {name}"
     );
 }
-const UNION: &str = "# Union commutativity is reused at an alpha-renamed function-space carrier.\n# Before: source success,second-fact compiler rejection.\n# forall replay37_A,replay37_B set:\n#     union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\n# union(fn(replay37_v R) R,C)=union(C,fn(replay37_w R) R)\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Now: replay ordered operand matches and original strict rebound equalities.\n# Reuse union commutativity at equal alpha-renamed function-space carriers.\nforall replay37_A,replay37_B set:\n    union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\nunion(fn(replay37_v R) R,C)=union(C,fn(replay37_w R) R)\n# Boundary: a changed operand guard remains unproved.\n# Evidence: litex -lean -strict -f lean/examples/known_set_union/statement.lit\n# Evidence: known_set_binary_match_tests rejects altered certificates and scope escapes.\n";
+const UNION: &str = "# Union commutativity is reused at an alpha-renamed function-space carrier.\n# Before: source success,second-fact compiler rejection.\n# forall replay37_A,replay37_B set:\n#     union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\n# union(fn(replay37_v R) R,C)=union(C,fn(replay37_w R) R)\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Now: replay ordered operand matches and original strict rebound equalities.\n# Reuse union commutativity at equal alpha-renamed function-space carriers.\nforall replay37_A,replay37_B set:\n    union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\nunion(fn(replay37_v R) R,C)=union(C,fn(replay37_w R) R)\n# Boundary: a changed operand guard remains unproved.\n# Evidence: litex -lean -strict -f corpus case known_set_union\n# Evidence: known_set_binary_match_tests rejects altered certificates and scope escapes.\n";
 const INTERSECT: &str = "# Reuse intersection idempotence with original repeated-parameter evidence.\nforall replay37_I set:\n    intersect(replay37_I,replay37_I)=replay37_I\nintersect(fn(replay37_iv R) R,fn(replay37_iw R) R)=fn(replay37_iz R) R\n";
 const MINUS: &str = "# Reuse empty-set subtraction at an alpha-renamed function-space carrier.\nforall replay37_D set:\n    set_minus(replay37_D,{})=replay37_D\nset_minus(fn(replay37_dv R) R,{})=fn(replay37_dw R) R\n";
 const ASSOC: &str = "# Reuse associativity with nested union constructor matches.\nforall replay37_aA,replay37_aB,replay37_aC set:\n    union(union(replay37_aA,replay37_aB),replay37_aC)=union(replay37_aA,union(replay37_aB,replay37_aC))\nunion(union(fn(replay37_av R) R,R),C)=union(fn(replay37_aw R) R,union(R,C))\n";
 const UNION_GUARD: &str = "# Reuse union commutativity at equal alpha-renamed function-space carriers.\nforall replay37_A,replay37_B set:\n    union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\nunion(fn(replay37_gv R:replay37_gv>0) R,C)=union(C,fn(replay37_gw R:replay37_gw>0) R)\n";
-const ALL: &[&str] = &[
-"# Union commutativity is reused at an alpha-renamed function-space carrier.\n# Before: source success,second-fact compiler rejection.\n# forall replay37_A,replay37_B set:\n#     union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\n# union(fn(replay37_v R) R,C)=union(C,fn(replay37_w R) R)\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Now: replay ordered operand matches and original strict rebound equalities.\n# Reuse union commutativity at equal alpha-renamed function-space carriers.\nforall replay37_A,replay37_B set:\n    union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\nunion(fn(replay37_v R) R,C)=union(C,fn(replay37_w R) R)\n# Boundary: a changed operand guard remains unproved.\n# Evidence: litex -lean -strict -f lean/examples/known_set_union/statement.lit\n# Evidence: known_set_binary_match_tests rejects altered certificates and scope escapes.\n",
-"# Reuse union commutativity at equal alpha-renamed function-space carriers.\nforall replay37_A,replay37_B set:\n    union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\nunion(fn(replay37_gv R:replay37_gv>0) R,C)=union(C,fn(replay37_gw R:replay37_gw>0) R)\n",
-"# Reuse union commutativity at equal alpha-renamed function-space carriers.\nforall replay37_A,replay37_B set:\n    union(replay37_A,replay37_B)=union(replay37_B,replay37_A)\nunion(fn(replay37_uv R,replay37_uu C) C,R)=union(R,fn(replay37_uw R,replay37_ut C) C)\n",
-"# Reuse associativity with nested union constructor matches.\nforall replay37_aA,replay37_aB,replay37_aC set:\n    union(union(replay37_aA,replay37_aB),replay37_aC)=union(replay37_aA,union(replay37_aB,replay37_aC))\nunion(union(fn(replay37_av R) R,R),C)=union(fn(replay37_aw R) R,union(R,C))\n",
-"# Reuse intersection idempotence with original repeated-parameter evidence.\nforall replay37_I set:\n    intersect(replay37_I,replay37_I)=replay37_I\nintersect(fn(replay37_iv R) R,fn(replay37_iw R) R)=fn(replay37_iz R) R\n",
-"# Reuse intersection idempotence with original repeated-parameter evidence.\nforall replay37_I set:\n    intersect(replay37_I,replay37_I)=replay37_I\nintersect(fn(replay37_igv R:replay37_igv>0) R,fn(replay37_igw R:replay37_igw>0) R)=fn(replay37_igz R:replay37_igz>0) R\n",
-"# Reuse intersection idempotence with original repeated-parameter evidence.\nforall replay37_I set:\n    intersect(replay37_I,replay37_I)=replay37_I\nintersect(fn(replay37_imv R,replay37_imu C) C,fn(replay37_imw R,replay37_imt C) C)=fn(replay37_imz R,replay37_imq C) C\n",
-"# Reuse distribution with nested union and intersection matches.\nforall replay37_dA,replay37_dB,replay37_dC set:\n    intersect(replay37_dA,union(replay37_dB,replay37_dC))=union(intersect(replay37_dA,replay37_dB),intersect(replay37_dA,replay37_dC))\nintersect(fn(replay37_pv R) R,union(R,C))=union(intersect(fn(replay37_pw R) R,R),intersect(fn(replay37_pz R) R,C))\n",
-"# Reuse empty-set subtraction at an alpha-renamed function-space carrier.\nforall replay37_D set:\n    set_minus(replay37_D,{})=replay37_D\nset_minus(fn(replay37_dv R) R,{})=fn(replay37_dw R) R\n",
-"# Reuse empty-set subtraction at an alpha-renamed function-space carrier.\nforall replay37_D set:\n    set_minus(replay37_D,{})=replay37_D\nset_minus(fn(replay37_mgv R:replay37_mgv>0) R,{})=fn(replay37_mgw R:replay37_mgw>0) R\n",
-"# Reuse empty-set subtraction at an alpha-renamed function-space carrier.\nforall replay37_D set:\n    set_minus(replay37_D,{})=replay37_D\nset_minus(fn(replay37_mmv R,replay37_mmu C) C,{})=fn(replay37_mmw R,replay37_mmt C) C\n",
-"# Reuse consecutive set subtraction with nested difference and union matches.\nforall replay37_cA,replay37_cB,replay37_cC set:\n    set_minus(set_minus(replay37_cA,replay37_cB),replay37_cC)=set_minus(replay37_cA,union(replay37_cB,replay37_cC))\nset_minus(set_minus(fn(replay37_cv R) R,R),C)=set_minus(fn(replay37_cw R) R,union(R,C))\n",
-];

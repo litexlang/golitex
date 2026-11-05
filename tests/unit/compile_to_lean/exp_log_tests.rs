@@ -3,21 +3,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogO
 use crate::prelude::*;
 
 #[test]
-fn exp_log_examples_compile_with_original_objects_and_rules() {
-    for source in [
-        include_str!("../../../lean/examples/exponential_logarithm_inverse/statement.lit"),
-        include_str!("../../../lean/examples/positive_mathematical_constants/statement.lit"),
-        include_str!("../../../lean/examples/logarithm_real_output/statement.lit"),
-        include_str!("../../../lean/examples/exponential_logarithm_values/statement.lit"),
-        include_str!("../../../lean/examples/logarithm_unit_identities/statement.lit"),
-        include_str!("../../../lean/examples/exponential_logarithm_functions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler.compile_run(&run, "exp_log").is_ok());
-    }
-}
-
-#[test]
 fn exp_ln_wd_rejects_missing_or_changed_carrier_proofs() {
     for source in ["let value = exp(0)\n", "let value = ln(1)\n"] {
         for mutation in 0..3 {

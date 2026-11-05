@@ -2,9 +2,34 @@ use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
 
-const SAME: &str = include_str!("../../../lean/examples/range_sum_pointwise_order/statement.lit");
-const EQUAL: &str =
-    include_str!("../../../lean/examples/range_sum_equal_endpoints_order/statement.lit");
+const SAME: &str = r#"# Pointwise bounds on an integer interval imply bounds on the corresponding sums.
+thm checked_ordered_sum_pointwise_order:
+    ? forall a,b Z, f,g fn(x Z) R:
+        a<=b
+        forall k Z:
+            a<=k
+            k<=b
+            =>:
+                f(k)<=g(k)
+        =>:
+            sum(a,b,f)<=sum(a,b,g)
+    release thm sum_le_sum_from_pointwise(sum(a,b,f),sum(a,b,g))
+"#;
+const EQUAL: &str = r#"# Equal integer endpoints preserve pointwise comparison of the corresponding sums.
+thm checked_equal_endpoint_sums:
+    ? forall a,b,c,d Z, f,g fn(x Z) R:
+        a=c
+        b=d
+        a<=b
+        forall k Z:
+            a<=k
+            k<=b
+            =>:
+                f(k)<=g(k)
+        =>:
+            sum(a,b,f)<=sum(c,d,g)
+    release thm sum_le_sum_from_pointwise(sum(a,b,f),sum(c,d,g))
+"#;
 
 #[test]
 fn range_sum_replays_original_endpoint_equalities_and_guarded_integer_pointwise_bound() {

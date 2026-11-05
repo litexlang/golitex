@@ -243,9 +243,29 @@ fn induction_case_facts_do_not_escape_or_become_future_producers() {
 
 #[test]
 fn strong_induction_replays_original_bounded_hypotheses_and_both_cases() {
-    let (result, compiler) = checked_source(include_str!(
-        "../../lean/examples/strong_integer_identity/statement.lit"
-    ));
+    let (result, compiler) = checked_source(
+        r#"# Reflexivity holds for every nonnegative integer, with a bounded strong induction hypothesis.
+# Before: by strong_induc verified in Litex but Lean compilation rejected By.
+# Now: replay the original base, bounded forall hypotheses, successor case and store.
+# Boundary: this compiler adapter currently starts at zero and keeps both original cases.
+# Core regression input is embedded in this test.
+by strong_induc strong_index from 0:
+    ? strong_index = strong_index
+    strong_index = strong_index
+
+by strong_induc induction_index from 0:
+    ? induction_index = induction_index
+    ? from induction_index = 0:
+        0 = 0
+    ? strong_induc:
+        forall prior_index Z:
+            prior_index >= 0
+            prior_index <= induction_index
+            =>:
+                prior_index = prior_index
+        induction_index + 1 = induction_index + 1
+"#,
+    );
     let output = compiler
         .compile_run(&result, "strong_integer_identity")
         .unwrap();
@@ -264,9 +284,29 @@ fn strong_induction_rejects_changed_or_missing_original_hypothesis_and_conclusio
         "missing_base",
         "missing_step",
     ] {
-        let (mut result, compiler) = checked_source(include_str!(
-            "../../lean/examples/strong_integer_identity/statement.lit"
-        ));
+        let (mut result, compiler) = checked_source(
+            r#"# Reflexivity holds for every nonnegative integer, with a bounded strong induction hypothesis.
+# Before: by strong_induc verified in Litex but Lean compilation rejected By.
+# Now: replay the original base, bounded forall hypotheses, successor case and store.
+# Boundary: this compiler adapter currently starts at zero and keeps both original cases.
+# Core regression input is embedded in this test.
+by strong_induc strong_index from 0:
+    ? strong_index = strong_index
+    strong_index = strong_index
+
+by strong_induc induction_index from 0:
+    ? induction_index = induction_index
+    ? from induction_index = 0:
+        0 = 0
+    ? strong_induc:
+        forall prior_index Z:
+            prior_index >= 0
+            prior_index <= induction_index
+            =>:
+                prior_index = prior_index
+        induction_index + 1 = induction_index + 1
+"#,
+        );
         let ExecStmtResult::By(ExecByStmtResult::StrongInduc(
             crate::execute::execute_by_stmt::ExecByStrongInducStmtResult::Success(proof),
         )) = &mut result.statement_results[1]

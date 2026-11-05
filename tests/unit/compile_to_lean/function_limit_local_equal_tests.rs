@@ -20,24 +20,18 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     };
     p
 }
-const SOURCE: &str =
-    include_str!("../../../lean/examples/function_limit_at_local_equal/statement.lit");
-#[test]
-fn local_equal_replays_five_approaches() {
-    for source in [
-        include_str!("../../../lean/examples/function_limit_at_local_equal/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_local_equal/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_local_equal/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_pos_inf_local_equal/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_neg_inf_local_equal/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        assert!(c
-            .compile_run(&run, "limit_transfer")
-            .unwrap()
-            .contains("FunctionLimitLocalEqual"));
-    }
-}
+const SOURCE: &str = r#"# A local pointwise equality transfers a at limit.
+thm at_locally_equal_limits:
+    ? forall f,g fn(x R) R, p,L R, r R+:
+        $has_limit_at(f,p,L)
+        forall q R+:
+            exist x R st {0<(abs(x-p)) and (abs(x-p))<q}
+        forall x {t R:0<(abs(t-p)) and (abs(t-p))<r}:
+            g(x)=f(x)
+        =>:
+            $has_limit_at(g,p,L)
+    release thm fn_limit_at_local_equal(f,g,p,L,r)
+"#;
 #[test]
 fn local_equal_requires_every_recorded_stage() {
     for mutation in 0..3 {

@@ -3,19 +3,37 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 const CASES: [(&str, &str); 4] = [
     (
-        include_str!("../../../lean/examples/natural_log_positive_above_one/statement.lit"),
+        r#"forall x R:
+    1<x
+    =>:
+        0<ln(x)
+"#,
         "naturalLogPositiveAboveOneValue",
     ),
     (
-        include_str!("../../../lean/examples/natural_log_negative_below_one/statement.lit"),
+        r#"forall x R+:
+    x<1
+    =>:
+        ln(x)<0
+"#,
         "naturalLogNegativeBelowOneValue",
     ),
     (
-        include_str!("../../../lean/examples/product_positive_negative_strict/statement.lit"),
+        r#"forall a,b R:
+    0<a
+    b<0
+    =>:
+        a*b<0
+"#,
         "positiveNegativeProductValue",
     ),
     (
-        include_str!("../../../lean/examples/product_nonnegative_negative_weak/statement.lit"),
+        r#"forall a,b R:
+    0<=a
+    b<0
+    =>:
+        a*b<=0
+"#,
         "nonnegativeNegativeProductValue",
     ),
 ];
@@ -78,13 +96,19 @@ fn log_product_signs_replay_four_selected_rules_and_both_product_factor_orders()
             source,
             if index >= 2 {
                 if index == 2 {
-                    include_str!(
-                        "../../../lean/examples/product_negative_positive_strict/statement.lit"
-                    )
+                    r#"forall a,b R:
+    0<a
+    b<0
+    =>:
+        b*a<0
+"#
                 } else {
-                    include_str!(
-                        "../../../lean/examples/product_negative_nonnegative_weak/statement.lit"
-                    )
+                    r#"forall a,b R:
+    0<=a
+    b<0
+    =>:
+        b*a<=0
+"#
                 }
             } else {
                 source

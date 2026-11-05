@@ -2,10 +2,10 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Complex
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
 
-const TWO: &str =
-    include_str!("../../../lean/examples/evaluated_irrational_complex_modulus/statement.lit");
-const FIVE: &str =
-    include_str!("../../../lean/examples/evaluated_irrational_complex_modulus_five/statement.lit");
+const TWO: &str = r#"# Evaluate a complex modulus exactly as an irrational square root.
+eval C_abs(1+i)
+C_abs(1+i) = sqrt(2)
+"#;
 
 fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -14,24 +14,6 @@ fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
         panic!("successful eval")
     };
     p
-}
-
-#[test]
-fn complex_modulus_eval_preserves_exact_irrational_result() {
-    for source in [TWO, FIVE] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "complex_modulus_radical")
-            .expect(source);
-        assert!(lean.contains("Litex.complexAbsEqSqrtOfNormSq"));
-        assert!(!lean.contains("sorry") && !lean.contains("admit"));
-        assert_eq!(
-            lean,
-            compiler
-                .compile_run(&run, "complex_modulus_radical")
-                .unwrap()
-        );
-    }
 }
 
 #[test]

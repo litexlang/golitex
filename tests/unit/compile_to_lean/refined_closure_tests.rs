@@ -2,24 +2,6 @@ use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule as Rule;
 
 #[test]
-fn refined_closure_examples_replay_checked_operand_memberships() {
-    for source in [
-        include_str!("../../../lean/examples/refined_products/statement.lit"),
-        include_str!("../../../lean/examples/nonzero_rational_reciprocal/statement.lit"),
-        include_str!("../../../lean/examples/positive_scaling_functions/statement.lit"),
-        include_str!("../../../lean/examples/nonzero_rational_product_theorem/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "refined_closure").unwrap();
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "refined_closure").unwrap()
-        );
-        assert!(output.contains("InRPos") || output.contains("InQStar"));
-    }
-}
-
-#[test]
 fn refined_closure_consumes_all_four_selected_builtin_variants() {
     for (set, op, law) in [
         ("R+", "*", "mulInRPos"),

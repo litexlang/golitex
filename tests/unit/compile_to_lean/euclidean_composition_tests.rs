@@ -1,28 +1,51 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 const SOURCES: [&str; 4] = [
-    include_str!("../../../lean/examples/multivariable_continuous_compose/statement.lit"),
-    include_str!("../../../lean/examples/multivariable_limit_compose/statement.lit"),
-    include_str!("../../../lean/examples/vector_continuous_compose/statement.lit"),
-    include_str!("../../../lean/examples/vector_limit_compose/statement.lit"),
+    r#"# Compose a Euclidean real function with a continuous unary real function.
+thm checked_multivariable_continuous_compose:
+    ? forall f,h fn(x cart_n(R,2)) R,g fn(t R) R,p cart_n(R,2):
+        $is_multi_continuous_at(f,p,2)
+        $is_continuous_at(g,f(p))
+        forall x cart_n(R,2):
+            h(x)=g(f(x))
+        =>:
+            $is_multi_continuous_at(h,p,2)
+    release thm multi_continuous_at_compose(f,g,h,p,2)
+"#,
+    r#"# Continuity of the outer real function transports an independently checked Euclidean limit.
+thm checked_multivariable_limit_compose:
+    ? forall f,h fn(x cart_n(R,2)) R,g fn(t R) R,p cart_n(R,2),L R:
+        $has_multi_limit_at(f,p,2,L)
+        $is_continuous_at(g,L)
+        forall x cart_n(R,2):
+            h(x)=g(f(x))
+        =>:
+            $has_multi_limit_at(h,p,2,g(L))
+    release thm multi_limit_at_compose(f,g,h,p,2,L)
+"#,
+    r#"# Compose continuous Euclidean vector functions while retaining all three dimensions.
+thm checked_vector_continuous_compose:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3),g fn(y cart_n(R,3)) cart_n(R,4),h fn(z cart_n(R,2)) cart_n(R,4),p cart_n(R,2):
+        $is_vector_continuous_at(f,p,2,3)
+        $is_vector_continuous_at(g,f(p),3,4)
+        forall x cart_n(R,2):
+            h(x)=g(f(x))
+        =>:
+            $is_vector_continuous_at(h,p,2,4)
+    release thm vector_continuous_at_compose(f,g,h,p,2,3,4)
+"#,
+    r#"# A continuous outer vector function transports a Euclidean vector limit on the same domain.
+thm checked_vector_limit_compose:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3),g fn(y cart_n(R,3)) cart_n(R,4),h fn(z cart_n(R,2)) cart_n(R,4),p cart_n(R,2),L cart_n(R,3):
+        $has_vector_limit_at(f,p,2,3,L)
+        $is_vector_continuous_at(g,L,3,4)
+        forall x cart_n(R,2):
+            h(x)=g(f(x))
+        =>:
+            $has_vector_limit_at(h,p,2,4,g(L))
+    release thm vector_limit_at_compose(f,g,h,p,2,3,4,L)
+"#,
 ];
-
-#[test]
-fn euclidean_composition_replays_four_original_schemas_deterministically() {
-    for (source, law) in SOURCES.iter().zip([
-        "scalarMultivariableContinuityCompose",
-        "scalarMultivariableLimitCompose",
-        "vectorMultivariableContinuityCompose",
-        "vectorMultivariableLimitCompose",
-    ]) {
-        let (run, c) = super::execute(source);
-        let out = c
-            .compile_run(&run, "composition")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains(&format!("Litex.{law}")));
-        assert_eq!(out, c.compile_run(&run, "composition").unwrap());
-    }
-}
 #[test]
 fn euclidean_composition_requires_all_original_ordered_stages() {
     for source in SOURCES {
@@ -220,28 +243,6 @@ fn euclidean_composition_rejects_future_formula_citations() {
 }
 
 #[test]
-fn euclidean_composition_preserves_generic_dimensions_and_positive_outer_domains() {
-    for source in [
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_compose_generic/statement.lit"
-        ),
-        include_str!("../../../lean/examples/multivariable_limit_compose_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_compose_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_compose_generic/statement.lit"),
-        include_str!(
-            "../../../lean/examples/multivariable_limit_compose_outer_positive/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_compose_positive_output/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "actual_domains")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-    }
-}
-
-#[test]
 fn euclidean_composition_retains_output_formation_and_three_distinct_dimensions() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     for source in SOURCES {
@@ -315,12 +316,52 @@ fn euclidean_composition_retains_output_formation_and_three_distinct_dimensions(
 fn euclidean_composition_preserves_guarded_common_domain_and_rejects_its_erasure() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     for source in [
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_compose_guarded/statement.lit"
-        ),
-        include_str!("../../../lean/examples/multivariable_limit_compose_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_compose_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_limit_compose_guarded/statement.lit"),
+        r#"# Compose a Euclidean real function with a continuous unary real function.
+thm guarded_multivariable_continuous_compose:
+    ? forall f,h fn(x cart_n(R,2): x(1)>0) R,g fn(t R) R,p cart_n(R,2):
+        p(1)>0
+        $is_multi_continuous_at(f,p,2)
+        $is_continuous_at(g,f(p))
+        forall x {z cart_n(R,2): z(1)>0}:
+            h(x)=g(f(x))
+        =>:
+            $is_multi_continuous_at(h,p,2)
+    release thm multi_continuous_at_compose(f,g,h,p,2)
+"#,
+        r#"# Continuity of the outer real function transports an independently checked Euclidean limit.
+thm guarded_multivariable_limit_compose:
+    ? forall f,h fn(x cart_n(R,2): x(1)>0) R,g fn(t R) R,p cart_n(R,2),L R:
+        $has_multi_limit_at(f,p,2,L)
+        $is_continuous_at(g,L)
+        forall x {z cart_n(R,2): z(1)>0}:
+            h(x)=g(f(x))
+        =>:
+            $has_multi_limit_at(h,p,2,g(L))
+    release thm multi_limit_at_compose(f,g,h,p,2,L)
+"#,
+        r#"# Compose continuous Euclidean vector functions while retaining all three dimensions.
+thm guarded_vector_continuous_compose:
+    ? forall f fn(x cart_n(R,2): x(1)>0) cart_n(R,3),g fn(y cart_n(R,3)) cart_n(R,4),h fn(z cart_n(R,2): z(1)>0) cart_n(R,4),p cart_n(R,2):
+        p(1)>0
+        $is_vector_continuous_at(f,p,2,3)
+        $is_vector_continuous_at(g,f(p),3,4)
+        forall x {z cart_n(R,2): z(1)>0}:
+            h(x)=g(f(x))
+        =>:
+            $is_vector_continuous_at(h,p,2,4)
+    release thm vector_continuous_at_compose(f,g,h,p,2,3,4)
+"#,
+        r#"# A continuous outer vector function transports a Euclidean vector limit on the same domain.
+thm guarded_vector_limit_compose:
+    ? forall f fn(x cart_n(R,2): x(1)>0) cart_n(R,3),g fn(y cart_n(R,3)) cart_n(R,4),h fn(z cart_n(R,2): z(1)>0) cart_n(R,4),p cart_n(R,2),L cart_n(R,3):
+        $has_vector_limit_at(f,p,2,3,L)
+        $is_vector_continuous_at(g,L,3,4)
+        forall x {z cart_n(R,2): z(1)>0}:
+            h(x)=g(f(x))
+        =>:
+            $has_vector_limit_at(h,p,2,4,g(L))
+    release thm vector_limit_at_compose(f,g,h,p,2,3,4,L)
+"#,
     ] {
         let (mut run, c) = super::execute(source);
         c.compile_run(&run, "guarded_composition")

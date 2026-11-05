@@ -5,30 +5,26 @@ use crate::prelude::*;
 use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
 };
-const FROM: &str =
-    include_str!("../../../lean/examples/second_partial_builtin_from_function/statement.lit");
-const TO: &str =
-    include_str!("../../../lean/examples/second_partial_builtin_to_function/statement.lit");
-#[test]
-fn second_partial_function_schemas_keep_generic_coordinates_and_guarded_domains() {
-    for source in [
-        include_str!(
-            "../../../lean/examples/second_partial_builtin_from_function_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/second_partial_builtin_to_function_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/second_partial_builtin_from_function_guarded/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/second_partial_builtin_to_function_guarded/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "second_function_domain").unwrap();
-    }
-}
+const FROM: &str = r#"# A checked first-partial function supplies the ordered second partial.
+thm second_partial_builtin_from_function:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),d R:
+        forall q cart_n(R,2):
+            $has_partial_derivative_at(f,q,2,1,g(q))
+        $has_partial_derivative_at(g,p,2,2,d)
+        =>:
+            $has_second_partial_derivative_at(f,p,2,1,2,d)
+    release thm second_partial_at_from_function(f,g,p,2,1,2,d)
+"#;
+const TO: &str = r#"# A supplied first-partial function has the derivative selected by the second partial.
+thm second_partial_builtin_to_function:
+    ? forall f,g fn(x cart_n(R,2)) R,p cart_n(R,2),d R:
+        $has_second_partial_derivative_at(f,p,2,1,2,d)
+        forall q cart_n(R,2):
+            $has_partial_derivative_at(f,q,2,1,g(q))
+        =>:
+            $has_partial_derivative_at(g,p,2,2,d)
+    release thm second_partial_at_to_function(f,g,p,2,1,2,d)
+"#;
 #[test]
 fn second_partial_function_schemas_replay_both_original_complete_contexts() {
     for (source, id, law) in [

@@ -2,10 +2,24 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::FiniteSetProductPointwiseEqualityStrategySingleStep;
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/finite_product_pointwise/statement.lit");
-const MIXED: &str =
-    include_str!("../../../lean/examples/finite_product_mixed_domains/statement.lit");
-const REAL: &str = include_str!("../../../lean/examples/finite_product_real_factors/statement.lit");
+const SOURCE: &str = r#"# Finite products agree when their factors agree under a local member binder.
+forall S finite_set:
+    S $subset Z
+    =>:
+        finite_set_product(S, fn(x S) Z {x}) = finite_set_product(S, fn(x S) Z {x + 0})
+"#;
+const MIXED: &str = r#"# Compare factors defined on a finite set and on the integers containing it.
+forall S finite_set:
+    S $subset Z
+    =>:
+        finite_set_product(S, fn(x S) Z {x}) = finite_set_product(S, fn(x Z) Z {x + 0})
+"#;
+const REAL: &str = r#"# Preserve real factor membership while replaying a local finite-product proof.
+forall S finite_set:
+    S $subset R
+    =>:
+        finite_set_product(S, fn(x S) R {x}) = finite_set_product(S, fn(x S) R {x + 0})
+"#;
 
 fn selected(
     result: &mut RunLitexCodeResult,

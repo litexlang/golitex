@@ -1,0 +1,2 @@
+# Matrix coordinates use the closed range from one to the dimension.
+identity_matrix(2)(0,1) = 0

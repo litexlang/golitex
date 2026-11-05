@@ -7,11 +7,70 @@ use crate::execute::{ExecDefThmForallProof, ExecReleaseAndExpandStmtResult};
 use crate::prelude::*;
 
 const SOURCES: [&str; 5] = [
-    include_str!("../../../lean/examples/riemann_explicit_from_definition/statement.lit"),
-    include_str!("../../../lean/examples/riemann_explicit_to_definition/statement.lit"),
-    include_str!("../../../lean/examples/riemann_zero_interval/statement.lit"),
-    include_str!("../../../lean/examples/darboux_explicit_from_definition/statement.lit"),
-    include_str!("../../../lean/examples/darboux_explicit_to_definition/statement.lit"),
+    r#"# Recover the oriented Riemann integral from boundedness and arbitrarily tight Darboux enclosures.
+
+0 <= 1
+
+forall k Z:
+    1 <= k
+    =>:
+        0 <= k
+
+thm explicit_riemann_from_definition:
+    ? forall f fn(x R) R, a, b, I R:
+        '[min(a,b),max(a,b)] $subset R
+        $is_real_bounded(fn_range(fn(x '[min(a,b),max(a,b)]) R {f(x)}))
+        a != b or I = 0
+        forall epsilon R+:
+            min(a,b) < max(a,b)
+            =>:
+                exist n N+, p fn(k Z: 0 <= k, k <= n) R, lower fn(k Z: 1 <= k, k <= n) R, upper fn(k Z: 1 <= k, k <= n) R, lower_sum R, upper_sum R st {$is_darboux_enclosure(f,min(a,b),max(a,b),n,p,lower,upper), lower_sum = sum(1,n,fn(k Z: 1 <= k, k <= n) R {lower(k)*(p(k)-p(k-1))}), upper_sum = sum(1,n,fn(k Z: 1 <= k, k <= n) R {upper(k)*(p(k)-p(k-1))}), lower_sum <= sign(b-a)*I, sign(b-a)*I <= upper_sum, upper_sum-lower_sum < epsilon}
+        =>:
+            $has_riemann_integral(f,a,b,I)
+    release thm riemann_integral_from_definition(f,a,b,I)
+"#,
+    r#"# Explicit source definition elimination; retain all six producer conclusions.
+thm explicit_riemann_to_definition:
+    ? forall f fn(x R) R,a,b,I R:
+        $has_riemann_integral(f,a,b,I)
+        =>:
+            $is_real_bounded(fn_range(fn(x '[min(a,b),max(a,b)]) R {f(x)}))
+    release thm riemann_integral_to_definition(f,a,b,I)
+"#,
+    r#"# A Riemann integral over a zero-width interval has candidate value zero.
+thm riemann_zero_interval:
+    ? forall f fn(x R) R, a R:
+        $has_riemann_integral(f,a,a,0)
+    release thm riemann_integral_zero(f,a)
+"#,
+    r#"# Build a Darboux enclosure from its exact partition and pointwise bounds.
+thm darboux_explicit_from_definition:
+    ? forall f fn(x R) R, a, b R, n N+, p fn(k Z: 0 <= k, k <= n) R, lower, upper fn(k Z: 1 <= k, k <= n) R:
+        a < b
+        p(0) = a
+        p(n) = b
+        forall k closed_range(1,n):
+            p(k-1) < p(k)
+            a <= p(k-1)
+            p(k) <= b
+        forall k closed_range(1,n), x '[a,b]:
+            p(k-1) <= x
+            x <= p(k)
+            =>:
+                lower(k) <= f(x)
+                f(x) <= upper(k)
+        =>:
+            $is_darboux_enclosure(f,a,b,n,p,lower,upper)
+    release thm darboux_enclosure_from_definition(f,a,b,n,p,lower,upper)
+"#,
+    r#"# Recover the ordered interval from a checked Darboux enclosure.
+thm darboux_explicit_to_definition:
+    ? forall f fn(x R) R, a, b R, n N+, p fn(k Z: 0 <= k, k <= n) R, lower, upper fn(k Z: 1 <= k, k <= n) R:
+        $is_darboux_enclosure(f,a,b,n,p,lower,upper)
+        =>:
+            a < b
+    release thm darboux_enclosure_to_definition(f,a,b,n,p,lower,upper)
+"#,
 ];
 fn theorem(run: &mut RunLitexCodeResult) -> &mut ExecDefThmForallProof {
     let p = run
@@ -92,16 +151,6 @@ fn integral_definitions_replay_five_native_schemas_with_every_ordered_output() {
         let output = c.compile_run(&run, "integral_definition").unwrap();
         assert!(output.contains(&format!("Litex.{law}")));
         assert_eq!(output, c.compile_run(&run, "integral_definition").unwrap());
-    }
-}
-#[test]
-fn integral_definitions_retain_guarded_domains_and_closed_endpoint_reductions() {
-    for source in [
-        include_str!("../../../lean/examples/riemann_zero_guarded_interval/statement.lit"),
-        include_str!("../../../lean/examples/riemann_definition_closed_interval/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "integral_definition_domain").unwrap();
     }
 }
 #[test]

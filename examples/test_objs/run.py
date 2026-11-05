@@ -216,7 +216,12 @@ def audit(suite, root, manifest):
             target = suite / obj["positive_file"]
             if target.is_file():
                 ids = re.findall(r"^# (P\d+):", target.read_text(), re.MULTILINE)
-                if ids != obj["positive_cases"]:
+                if obj.get("whole_file"):
+                    if obj["positive_cases"] != ["whole-file"]:
+                        errors.append("whole-file case label differs: " + obj["positive_file"])
+                    if not target.resolve().is_relative_to((root / "examples").resolve()):
+                        errors.append("whole-file source is outside examples: " + obj["positive_file"])
+                elif ids != obj["positive_cases"]:
                     errors.append("positive case labels differ from manifest: " + obj["positive_file"])
     for file in sorted(expected_files):
         path = suite / file
@@ -272,15 +277,17 @@ def evaluate(binary, root, path, timeout):
     if contract_success:
         observed, phase = "accept", "success"
     else:
-        parse_error = isinstance(termination, dict) and termination.get("phase") == "parse"
-        if failed and (termination is None or parse_error):
+        diagnostics = envelope.get("errors", [])
+        failed_indices = [index for index, result in enumerate(statements)
+                          if result.get("statement_result") == "rejected"]
+        if failed and termination is None and diagnostics:
+            if [error.get("statement_index") for error in diagnostics] != failed_indices:
+                return {"observed": "infrastructure_failure", "exit_code": process.returncode,
+                        "phase": "invalid_diagnostics", "diagnostic": repr(envelope)[-2000:],
+                        "statements": len(statements)}
             observed = "reject"
-            phase = failed[0].get("why_failed", {}).get("phase", "verification")
-            diagnostic = json.dumps(failed[0], ensure_ascii=False)
-            if termination:
-                diagnostic += "; subsequent error: " + json.dumps(termination, ensure_ascii=False)
-        elif parse_error:
-            observed, phase, diagnostic = "reject", "parse", json.dumps(termination, ensure_ascii=False)
+            phase = diagnostics[0]["phase"]
+            diagnostic = json.dumps(diagnostics, ensure_ascii=False)
     return {"observed": observed, "exit_code": process.returncode, "phase": phase,
         "diagnostic": diagnostic, "statements": len(statements)}
 

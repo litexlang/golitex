@@ -2,9 +2,13 @@ use crate::prelude::*;
 
 #[test]
 fn closed_integer_range_enumeration_replays_literal_rule() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/closed_integer_range_enumeration/statement.lit"
-    ));
+    let (run, compiler) = super::execute(
+        r#"# Expand closed integer intervals, including an empty interval and reversed equality.
+closed_range(1,0) = {}
+closed_range(0,2) = {0,1,2}
+{4,5} = closed_range(4,5)
+"#,
+    );
     for statement in &run.statement_results {
         let ExecStmtResult::Fact(ExecFactStmtResult::Success(result)) = statement else {
             panic!("fact")
@@ -35,23 +39,6 @@ fn closed_integer_range_enumeration_rejects_retagged_rule() {
         ),
     );
     assert!(compiler.compile_run(&run, "wrong_range_rule").is_err());
-}
-
-#[test]
-fn new_set_object_examples_replay() {
-    for source in [
-        include_str!("../../../lean/examples/symmetric_difference_membership/statement.lit"),
-        include_str!("../../../lean/examples/symmetric_difference_identities/statement.lit"),
-        include_str!("../../../lean/examples/indexed_union_member/statement.lit"),
-        include_str!("../../../lean/examples/indexed_intersection_member/statement.lit"),
-        include_str!("../../../lean/examples/indexed_product_member/statement.lit"),
-        include_str!("../../../lean/examples/family_intersection_member/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "set_object_examples")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
 }
 
 #[test]

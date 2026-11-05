@@ -11741,11 +11741,12 @@ forall m Z:
     =>:
         0 % m = 0
 
+8 % 2 = 0
 forall a Z:
     a % 2 = (a % 8) % 2
 ```
 
-The second fact uses `2 | 8`. In general, `(a % m) % d = a % d` is automatic
+The second fact uses the stored compatibility fact `8 % 2 = 0`. In general, `(a % m) % d = a % d` is automatic
 only when `a` is an integer, `m` and `d` are positive integers, and `m % d = 0`.
 
 Domain obligations are never supplied by an algebra rule:

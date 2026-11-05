@@ -2,35 +2,59 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::prelude::*;
 const SOURCES: [(&str, &str); 8] = [
     (
-        include_str!("../../../lean/examples/arcsin_principal_lower/statement.lit"),
+        r#"forall x R:
+    -1<=x
+    x<=1
+    =>:
+        (-pi)/2<=arcsin(x)
+"#,
         "arcsinePrincipalLowerValue",
     ),
     (
-        include_str!("../../../lean/examples/arcsin_principal_upper/statement.lit"),
+        r#"forall x R:
+    -1<=x
+    x<=1
+    =>:
+        arcsin(x)<=pi/2
+"#,
         "arcsinePrincipalUpperValue",
     ),
     (
-        include_str!("../../../lean/examples/arccos_principal_lower/statement.lit"),
+        r#"forall x R:
+    -1<=x
+    x<=1
+    =>:
+        0<=arccos(x)
+"#,
         "arccosinePrincipalLowerValue",
     ),
     (
-        include_str!("../../../lean/examples/arccos_principal_upper/statement.lit"),
+        r#"forall x R:
+    -1<=x
+    x<=1
+    =>:
+        arccos(x)<=pi
+"#,
         "arccosinePrincipalUpperValue",
     ),
     (
-        include_str!("../../../lean/examples/arctan_principal_lower/statement.lit"),
+        r#"forall x R => (-pi)/2<arctan(x)
+"#,
         "arctangentPrincipalLowerValue",
     ),
     (
-        include_str!("../../../lean/examples/arctan_principal_upper/statement.lit"),
+        r#"forall x R => arctan(x)<pi/2
+"#,
         "arctangentPrincipalUpperValue",
     ),
     (
-        include_str!("../../../lean/examples/arccot_principal_lower/statement.lit"),
+        r#"forall x R => 0<arccot(x)
+"#,
         "arccotangentPrincipalLowerValue",
     ),
     (
-        include_str!("../../../lean/examples/arccot_principal_upper/statement.lit"),
+        r#"forall x R => arccot(x)<pi
+"#,
         "arccotangentPrincipalUpperValue",
     ),
 ];

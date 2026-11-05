@@ -1,7 +1,17 @@
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_builtin_strategy_result::ExtremumEqualityStrategySingleStep;
 
-const SOURCE: &str = include_str!("../../../lean/examples/extremum_order_strategy/statement.lit");
+const SOURCE: &str = r#"# A maximum equals an operand when it also lies below that operand.
+forall p, q R:
+    max(p, q) <= p
+    =>:
+        max(p, q) = p
+
+forall p, q R:
+    q <= min(p, q)
+    =>:
+        q = min(p, q)
+"#;
 
 fn selected(result: &mut RunLitexCodeResult) -> &mut ExtremumEqualityStrategySingleStep {
     let proof = original(result);

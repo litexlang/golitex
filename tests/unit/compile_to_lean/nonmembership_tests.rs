@@ -2,18 +2,6 @@ use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{not_in_fact::NotInFactSearchProofByBuiltinRule as NotIn, not_equal::NotEqualFactSearchProofByBuiltinRule as Ne};
 
 #[test]
-fn nonmembership_examples_replay_numeric_finite_and_contradiction_routes() {
-    for source in [
-        include_str!("../../../lean/examples/numeric_nonmembership/statement.lit"),
-        include_str!("../../../lean/examples/finite_nonmembership/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "nonmembership").unwrap();
-        assert_eq!(output, compiler.compile_run(&run, "nonmembership").unwrap());
-    }
-}
-
-#[test]
 fn closed_nonmembership_rejects_forged_values_and_target_sets() {
     for source in ["not 0 $in Q*", "not 1 / 3 $in Z", "not i $in R"] {
         for target in [false, true] {

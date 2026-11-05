@@ -1,19 +1,5 @@
 use crate::prelude::*;
 #[test]
-fn gradients_replay_selection_existence_coordinates_and_partial_definition() {
-    for source in [
-        include_str!("../../../lean/examples/gradient_selection/statement.lit"),
-        include_str!("../../../lean/examples/gradient_existence/statement.lit"),
-        include_str!("../../../lean/examples/gradient_generic_dimension/statement.lit"),
-        include_str!("../../../lean/examples/gradient_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/gradient_from_partials/statement.lit"),
-        include_str!("../../../lean/examples/gradient_nested_objects/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "gradient_replay").expect(source);
-    }
-}
-#[test]
 fn gradients_reject_changed_point_domain_and_inference_subjects() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -21,9 +7,16 @@ fn gradients_reject_changed_point_domain_and_inference_subjects() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/gradient_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select the vector of coordinate partial derivatives and retain callable coordinates.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), g cart_n(R,2):
+    $has_gradient_at(f,p,2,g)
+    =>:
+        gradient_at(f,p,2)=g
+        gradient_at(f,p,2) $in cart_n(R,2)
+        gradient_at(f,p,2)(1) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         if mutation == 0 {
             let FactWellDefinedProof::AtomicExceptEquality(p) =

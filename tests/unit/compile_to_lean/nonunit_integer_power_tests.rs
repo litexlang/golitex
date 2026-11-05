@@ -14,14 +14,41 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const NONUNIT: &str =
-    include_str!("../../../lean/examples/positive_nonunit_integer_power/statement.lit");
-const ABOVE: &str =
-    include_str!("../../../lean/examples/nonunit_integer_power_above_one/statement.lit");
-const BELOW: &str =
-    include_str!("../../../lean/examples/nonunit_integer_power_below_one/statement.lit");
-const NEGATIVE: &str =
-    include_str!("../../../lean/examples/nonunit_negative_integer_power/statement.lit");
+const NONUNIT: &str = r#"# A positive nonunit raised to a nonzero integer power is not one.
+claim:
+    ? forall b R+, n Z:
+        b != 1
+        n != 0
+        =>:
+            b^n != 1
+    b^n != 1
+"#;
+const ABOVE: &str = r#"# A base above one with nonzero integer exponent has power distinct from one.
+claim:
+    ? forall b R+, n Z:
+        b > 1
+        n != 0
+        =>:
+            1 != b^n
+    1 != b^n
+"#;
+const BELOW: &str = r#"# A positive base below one with nonzero integer exponent has power distinct from one.
+claim:
+    ? forall b R+, n Z:
+        b < 1
+        n != 0
+        =>:
+            b^n != 1
+    b^n != 1
+"#;
+const NEGATIVE: &str = r#"# A positive nonunit raised to a negative integer power is not one.
+claim:
+    ? forall b R+:
+        b != 1
+        =>:
+            b^(-2) != 1
+    b^(-2) != 1
+"#;
 
 fn selected_rule(run: &mut RunLitexCodeResult) -> &mut PositiveNonunitIntegerPowerProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

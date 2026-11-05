@@ -2,8 +2,18 @@ use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_by_stmt::BuiltinThmApplication;
 use crate::prelude::*;
 
-const ROW: &str = include_str!("../../../lean/examples/matrix_det_laplace_row/statement.lit");
-const COLUMN: &str = include_str!("../../../lean/examples/matrix_det_laplace_column/statement.lit");
+const ROW: &str = r#"# Expand a finite complex determinant along a chosen row.
+thm checked_laplace_row_preparation:
+    ? forall n N+, A matrix(C,n,n), row closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(row,k)*matrix_cofactor(A,n,row,k)})
+    release thm matrix_det_laplace_row(A,n,row)
+"#;
+const COLUMN: &str = r#"# Expand a finite complex determinant along a chosen column.
+thm checked_laplace_column_preparation:
+    ? forall n N+, A matrix(C,n,n), col closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,col)*matrix_cofactor(A,n,k,col)})
+    release thm matrix_det_laplace_column(A,n,col)
+"#;
 fn goal(b: &mut BuiltinThmApplication) -> &mut EqualFact {
     let Fact::AtomicFact(AtomicFact::EqualFact(f)) = &mut b.conclusions[0] else {
         panic!()
@@ -24,47 +34,6 @@ fn product(b: &mut BuiltinThmApplication) -> &mut Mul {
         panic!()
     };
     p
-}
-
-#[test]
-fn laplace_determinants_replay_complex_real_one_and_zero_matrix_inputs() {
-    for (source, native) in [
-        (ROW, "Row"),
-        (COLUMN, "Column"),
-        (
-            include_str!("../../../lean/examples/matrix_det_laplace_row_real/statement.lit"),
-            "Row",
-        ),
-        (
-            include_str!("../../../lean/examples/matrix_det_laplace_column_real/statement.lit"),
-            "Column",
-        ),
-        (
-            include_str!("../../../lean/examples/matrix_det_laplace_row_one/statement.lit"),
-            "Row",
-        ),
-        (
-            include_str!("../../../lean/examples/matrix_det_laplace_column_one/statement.lit"),
-            "Column",
-        ),
-        (
-            include_str!("../../../lean/examples/matrix_det_laplace_row_zero_matrix/statement.lit"),
-            "Row",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/matrix_det_laplace_column_zero_matrix/statement.lit"
-            ),
-            "Column",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "laplace_det")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains(&format!("Litex.matrixDeterminantLaplace{native}Formula")));
-        assert_eq!(output, compiler.compile_run(&run, "laplace_det").unwrap());
-    }
 }
 
 #[test]

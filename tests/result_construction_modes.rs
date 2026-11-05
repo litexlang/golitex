@@ -180,8 +180,12 @@ fn every_fact_wd_family_preserves_mode_and_closes_its_binder_scope() {
 
 #[test]
 fn quantified_wd_keeps_failed_guard_order_in_every_mode() {
-    use litex::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult;
-    use litex::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult;
+    use litex::execute::execute_fact_stmt::verify_forall_fact_with_iff::{
+        FailToVerifyForallFactWithIffWellDefinedResult, ForallIffWellDefinedLocalFailed,
+    };
+    use litex::execute::execute_fact_stmt::verify_not_forall_fact::{
+        FailToVerifyNotForallFactWellDefinedResult, NotForallWellDefinedLocalFailed,
+    };
     use litex::execute::execute_fact_stmt::well_defined_results::{
         FailToVerifyFactWellDefinedResult, VerifyFactWellDefinedResult,
     };
@@ -197,14 +201,26 @@ fn quantified_wd_keeps_failed_guard_order_in_every_mode() {
         ] {
             let fact = parsed_fact(&mut runtime, source);
             let VerifyFactWellDefinedResult::Failed(failure) = runtime.verify_fact_well_definedness(&fact, VerifyState::top_level()).unwrap() else { panic!("later guard authorized earlier expression: {source}") };
-            let (index, prior_types, prior_dom) = match failure {
-                FailToVerifyFactWellDefinedResult::ForallFactWithIff(FailToVerifyForallFactWithIffWellDefinedResult::DomFact { failed_index, param_type_well_defined, succeeded_dom, .. }) => (failed_index, param_type_well_defined.len(), succeeded_dom.len()),
-                FailToVerifyFactWellDefinedResult::NotForall(FailToVerifyNotForallFactWellDefinedResult::DomFact { failed_index, param_type_well_defined, succeeded_dom, .. }) => (failed_index, param_type_well_defined.len(), succeeded_dom.len()),
+            let (index, introduced_params, prior_dom) = match failure {
+                FailToVerifyFactWellDefinedResult::ForallFactWithIff(FailToVerifyForallFactWithIffWellDefinedResult::Local(local)) => match local.failure {
+                    ForallIffWellDefinedLocalFailed::Premise { failed_index, introduced_params, assumed_dom_facts, .. } => (failed_index, introduced_params, assumed_dom_facts.len()),
+                    _ => panic!("actual first iff guard WD failure"),
+                },
+                FailToVerifyFactWellDefinedResult::NotForall(FailToVerifyNotForallFactWellDefinedResult::Local(local)) => match local.failure {
+                    NotForallWellDefinedLocalFailed::Premise { failed_index, introduced_params, assumed_dom_facts, .. } => (failed_index, introduced_params, assumed_dom_facts.len()),
+                    _ => panic!("actual first negated-forall guard WD failure"),
+                },
                 _ => panic!("actual first guard WD failure"),
             };
             assert_eq!(index, 0);
             assert_eq!(prior_dom, 0);
-            assert_eq!(prior_types, usize::from(mode == OutputDetail::Detailed));
+            assert_eq!(introduced_params.param_type_well_defined.len(), 1);
+            let litex::execute::ParamTypeWellDefinedProof::Obj(carrier) =
+                &introduced_params.param_type_well_defined[0]
+            else {
+                panic!("the checked real carrier is retained in the local failure");
+            };
+            assert_eq!(carrier.detail(), mode);
             assert_eq!(runtime.execution_environments_stack.len(), 1);
         }
     }

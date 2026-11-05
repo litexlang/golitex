@@ -2,15 +2,42 @@ use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_by_stmt::BuiltinThmApplication;
 use crate::prelude::*;
 
-const SCALAR_FROM: &str = include_str!(
-    "../../../lean/examples/multivariable_differentiable_from_definition/statement.lit"
-);
-const SCALAR_TO: &str =
-    include_str!("../../../lean/examples/multivariable_differentiable_to_definition/statement.lit");
-const VECTOR_FROM: &str =
-    include_str!("../../../lean/examples/vector_differentiable_from_definition/statement.lit");
-const VECTOR_TO: &str =
-    include_str!("../../../lean/examples/vector_differentiable_to_definition/statement.lit");
+const SCALAR_FROM: &str = r#"# Differentiability at a point is equivalent to existence of a certified differential matrix.
+thm checked_multi_differentiable_from_definition:
+    ? forall f fn(x cart_n(R,2)) R, p cart_n(R,2):
+        exist A matrix(R,1,2) st {$has_scalar_differential_at(f,p,2,A)}
+        =>:
+            $is_multi_differentiable_at(f,p,2)
+    release thm multi_differentiable_at_from_definition(f,p,2)
+
+"#;
+const SCALAR_TO: &str = r#"# Differentiability at a point is equivalent to existence of a certified differential matrix.
+thm checked_multi_differentiable_to_definition:
+    ? forall f fn(x cart_n(R,2)) R, p cart_n(R,2):
+        $is_multi_differentiable_at(f,p,2)
+        =>:
+            exist A matrix(R,1,2) st {$has_scalar_differential_at(f,p,2,A)}
+    release thm multi_differentiable_at_to_definition(f,p,2)
+
+"#;
+const VECTOR_FROM: &str = r#"# Differentiability at a point is equivalent to existence of a certified differential matrix.
+thm checked_vector_differentiable_from_definition:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2):
+        exist A matrix(R,3,2) st {$has_total_derivative_at(f,p,2,3,A)}
+        =>:
+            $is_vector_differentiable_at(f,p,2,3)
+    release thm vector_differentiable_at_from_definition(f,p,2,3)
+
+"#;
+const VECTOR_TO: &str = r#"# Differentiability at a point is equivalent to existence of a certified differential matrix.
+thm checked_vector_differentiable_to_definition:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2):
+        $is_vector_differentiable_at(f,p,2,3)
+        =>:
+            exist A matrix(R,3,2) st {$has_total_derivative_at(f,p,2,3,A)}
+    release thm vector_differentiable_at_to_definition(f,p,2,3)
+
+"#;
 
 fn existential(b: &mut BuiltinThmApplication, fold: bool) -> &mut PlainExistFact {
     let f = if fold {
@@ -20,43 +47,6 @@ fn existential(b: &mut BuiltinThmApplication, fold: bool) -> &mut PlainExistFact
     };
     let Fact::ExistFact(e) = f else { panic!() };
     e
-}
-
-#[test]
-fn multivariable_differentiability_replays_four_definition_bts() {
-    for (source, law) in [
-        (SCALAR_FROM, "scalarDifferentiableAtFromDefinition"),
-        (SCALAR_TO, "scalarDifferentiableAtToDefinition"),
-        (VECTOR_FROM, "vectorDifferentiableAtFromDefinition"),
-        (VECTOR_TO, "vectorDifferentiableAtToDefinition"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "differentiability")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains(&format!("Litex.{law}")));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "differentiability").unwrap()
-        );
-    }
-}
-
-#[test]
-fn multivariable_differentiability_replays_generic_and_guarded_domains() {
-    for source in [
-        include_str!("../../../lean/examples/multivariable_differentiable_from_definition_generic/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_differentiable_to_definition_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_differentiable_from_definition_generic/statement.lit"),
-        include_str!("../../../lean/examples/vector_differentiable_to_definition_generic/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_differentiable_from_definition_guarded/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_differentiable_to_definition_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_differentiable_from_definition_guarded/statement.lit"),
-        include_str!("../../../lean/examples/vector_differentiable_to_definition_guarded/statement.lit"),
-    ] {
-        let (run,compiler)=super::execute(source);
-        compiler.compile_run(&run,"dimension_domain").unwrap_or_else(|e|panic!("{source}: {e}"));
-    }
 }
 
 #[test]
@@ -217,28 +207,6 @@ fn multivariable_differentiability_retains_native_schema_and_inference_capture()
 }
 
 #[test]
-fn multivariable_differentiability_replays_definition_search_and_inferred_selectors() {
-    for source in [
-        include_str!(
-            "../../../lean/examples/multivariable_differentiable_definition/statement.lit"
-        ),
-        include_str!("../../../lean/examples/vector_differentiable_definition/statement.lit"),
-        include_str!(
-            "../../../lean/examples/multivariable_differentiable_definition_guarded/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/vector_differentiable_definition_guarded/statement.lit"
-        ),
-        include_str!("../../../lean/examples/multivariable_differentiable_selector/statement.lit"),
-        include_str!("../../../lean/examples/vector_differentiable_selector/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "actual_search_inference")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-    }
-}
-
-#[test]
 fn multivariable_differentiability_rejects_future_existential_citation() {
     use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
     for source in [SCALAR_FROM, VECTOR_FROM] {
@@ -271,10 +239,18 @@ fn multivariable_differentiability_definition_retains_existential_proof_and_scop
     };
     use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
     for source in [
-        include_str!(
-            "../../../lean/examples/multivariable_differentiable_definition/statement.lit"
-        ),
-        include_str!("../../../lean/examples/vector_differentiable_definition/statement.lit"),
+        r#"# Preserve the checked definition or inferred matrix existence when using differentiability.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2):
+    exist A matrix(R,1,2) st {$has_scalar_differential_at(f,p,2,A)}
+    =>:
+        $is_multi_differentiable_at(f,p,2)
+"#,
+        r#"# Preserve the checked definition or inferred matrix existence when using differentiability.
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2):
+    exist A matrix(R,3,2) st {$has_total_derivative_at(f,p,2,3,A)}
+    =>:
+        $is_vector_differentiable_at(f,p,2,3)
+"#,
     ] {
         for change in ["missing", "carrier", "future"] {
             let (mut run, c) = super::execute(source);

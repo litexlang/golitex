@@ -9,21 +9,7 @@ closed_range(1, 3) = {1, 2, 3}
 closed_range(2, 2) = {2}
 
 # P03: closed_range(3, 1) = {}
-claim:
-    ? forall x closed_range(3, 1):
-        x $in {}
-    by contra:
-        ? x $in {}
-        x >= 3
-        x > 1
-        impossible x <= 1
-claim:
-    ? forall x {}:
-        x $in closed_range(3, 1)
-    by contra:
-        ? x $in closed_range(3, 1)
-        impossible x $in {}
-by extension closed_range(3, 1) = {}
+closed_range(3, 1) = {}
 
 # P05: 1...3 = closed_range(1, 3)
 1...3 = closed_range(1, 3)

@@ -247,6 +247,17 @@ impl LitexToLeanCompiler {
             })
             .collect::<Vec<_>>();
         for (prior, _index, statement, before) in position.context_statements() {
+            // A preceding file's carrier belongs to its original completed
+            // declaration. Current-file headers keep their active stage cursor.
+            let declared = SourcePosition {
+                before: prior.before + 1,
+                ..prior
+            };
+            let carrier_position = if prior.module_file_number() == position.module_file_number() {
+                position
+            } else {
+                &declared
+            };
             if super::source_position::context_parameter_parts(statement).is_some() {
                 let mut parameters = Vec::new();
                 super::source_position::append_have_parameters(statement, before, &mut parameters);
@@ -256,15 +267,17 @@ impl LitexToLeanCompiler {
                     let proposition = match kind {
                         ParamType::Obj(set) => format!(
                             "Litex.In _value_i{id} {}",
-                            self.compile_object_reference(set, position)?
+                            self.compile_object_reference(set, carrier_position)?
                         ),
                         kind => format!("{} _value_i{id}", set_kind_predicate(kind).unwrap()),
                     };
                     binders.push(format!("{{_Host_i{id} : Type v{id}}} [_rep_i{id} : Litex.Representation M _Host_i{id}] (_value_i{id} : Litex.Obj (M := M) _Host_i{id}) (h_{fact_id} : {proposition})"));
                 }
             }
-            binders.extend(self.assumption_binders(statement, before, &prior)?);
-            binders.extend(self.closed_assumption_binders(statement, &prior)?);
+            if prior.module_file_number() == position.module_file_number() {
+                binders.extend(self.assumption_binders(statement, before, &prior)?);
+                binders.extend(self.closed_assumption_binders(statement, &prior)?);
+            }
         }
         Ok(if binders.is_empty() {
             String::new()
@@ -445,7 +458,7 @@ impl LitexToLeanCompiler {
         let instance = format!("_rep_i{}", id.value());
         let value = format!("_value_i{}", id.value());
         let hypothesis = format!("h_{}", store.primary_fact_id().value());
-        let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+        let object = Obj::Identifier(position.parameter_identifier(parameter)?);
         let fact = self.resolve_fact(store.primary_fact_id(), position)?;
         match &fact {
             Fact::AtomicFact(AtomicFact::InFact(f))
@@ -474,7 +487,7 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, Vec<String>), LeanCompileError> {
         let fact = self.resolve_fact(store.primary_fact_id(), position)?;
-        let object = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+        let object = Obj::Identifier(position.parameter_identifier(parameter)?);
         let predicate = match (kind, &fact) {
             (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f)))
                 if f.set.ir() == object.ir() =>
@@ -1061,6 +1074,11 @@ impl LitexToLeanCompiler {
         if let Some(term) = position.bound_object_child(object) {
             return Ok(term);
         }
+        if let Obj::Identifier(identifier) = object {
+            if let Some(parameter) = position.preflight_parameter(identifier, &self.runtime)? {
+                return self.compile_parameter_reference(parameter.id, position);
+            }
+        }
         // Standard-set constructors have a fixed Core representation. The
         // active inference's exact subject is sufficient provenance; searching
         // its entire earlier WD tree cannot produce a different host value.
@@ -1117,11 +1135,57 @@ impl LitexToLeanCompiler {
             }
             return self.compile_parameter_reference(*id, position);
         }
-        if matches!(object, Obj::Identifier(_)) {
-            return Err(LeanCompileError::new(
-                "Identifier/Producer",
-                "The qualified identifier has no available original declaration constructor.",
-            ));
+        if let Obj::Identifier(identifier) = object {
+            let (bound, scope, captured) =
+                position.qualified_identifier_scope(identifier, &self.runtime)?;
+            if matches!(
+                captured,
+                crate::exec_env::StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType(_)
+            ) {
+                let exact = position.context_statements().iter().any(|(owner, _, statement, _)| {
+                    owner.module_file_number() == scope.module_file_number()
+                    && matches!(statement, ExecStmtResult::Definition(definition)
+                        if super::helper::captured_identifier_definition_matches(captured, definition, &bound.name))
+                });
+                if !exact {
+                    return Err(LeanCompileError::unsupported(
+                        "Parameters/DeclarationCapture",
+                    ));
+                }
+                return self.compile_parameter_reference(bound.id, position);
+            }
+            if matches!(
+                captured,
+                crate::exec_env::StoredIdentifierDefinition::HaveFnByForallExistUnique(_)
+            ) {
+                let (proof, producer) =
+                    scope.visible_selected_identifier(identifier, &self.runtime)?;
+                return position.declaration_reference(
+                    &format!("_object_i{}", proof.statement.name.id.value()),
+                    &producer,
+                );
+            }
+            if let crate::exec_env::StoredIdentifierDefinition::HaveFnByInduc(_) = captured {
+                // The self binder shadows the eventual total graph, even when
+                // its source spelling is qualified by the exporting file.
+                if let Ok((proof, _)) =
+                    position.visible_recursive_self_identifier(identifier, &self.runtime)
+                {
+                    return Ok(format!("_object_i{}", proof.statement.name.id.value()));
+                }
+                let (proof, producer, _) =
+                    scope.visible_recursive_identifier(identifier, &self.runtime)?;
+                return position.declaration_reference(
+                    &format!("_object_i{}", proof.statement.name.id.value()),
+                    &producer,
+                );
+            }
+            let (proof, producer) =
+                position.visible_piecewise_identifier(identifier, &self.runtime)?;
+            return position.declaration_reference(
+                &format!("_object_i{}", proof.statement.name.id.value()),
+                &producer,
+            );
         }
         if let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) = object {
             return self.compile_struct_field_reference(access, position);
@@ -1232,6 +1296,9 @@ impl LitexToLeanCompiler {
         })? {
             return Ok(term);
         }
+        if let Some(term) = self.compile_declared_type_object(object, position)? {
+            return Ok(term);
+        }
         Err(LeanCompileError::new(
             "WD/Producer",
             &format!(
@@ -1255,10 +1322,10 @@ impl LitexToLeanCompiler {
                     None => name,
                 }
             })
-            .map_err(|_| {
+            .map_err(|error| {
                 LeanCompileError::new(
                     "Identifier/Producer",
-                    "The identifier has no preceding parameter producer in this original ancestry.",
+                    &format!("The identifier has no preceding parameter producer in this original ancestry (i{}: {error}).", id.value()),
                 )
             })
     }

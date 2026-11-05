@@ -254,7 +254,7 @@ impl LitexToLeanCompiler {
         function: Option<&AnonymousFn>,
         position: &SourcePosition<'_>,
     ) -> Result<(), LeanCompileError> {
-        let (p, _, _) = position.visible_template(&instance.template_name)?;
+        let (p, _, _) = position.visible_template(&instance.template_name, &self.runtime)?;
         let original = self.template_function_signature(instance, position)?;
         let ids = p.statement.template_arg_def.ordered_param_ids();
         if ids.len() != instance.args.len() {
@@ -295,7 +295,7 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         bindings: &HashMap<IdentifierId, String>,
     ) -> Result<String, LeanCompileError> {
-        let (p, producer, _) = position.visible_template(&instance.template_name)?;
+        let (p, producer, _) = position.visible_template(&instance.template_name, &self.runtime)?;
         let (binding, _) = template_output(p, instance.template_name.local_name())?;
         let output_index = template_bindings(p)?
             .0
@@ -474,7 +474,8 @@ impl LitexToLeanCompiler {
                     "TemplateMembership/RepeatedStage",
                 ));
             }
-            let (template, _, _) = position.visible_template(&instance.template_name)?;
+            let (template, _, _) =
+                position.visible_template(&instance.template_name, &self.runtime)?;
             let rhs = template_alias_rhs(template, instance.template_name.local_name())?;
             let substitution = template_substitution(template, instance)?;
             if expansion.element != member.element
@@ -625,7 +626,7 @@ impl LitexToLeanCompiler {
             }
             _ => return Err(LeanCompileError::unsupported("Template/UnfoldSubject")),
         };
-        let (template, _, _) = position.visible_template(&instance.template_name)?;
+        let (template, _, _) = position.visible_template(&instance.template_name, &self.runtime)?;
         let rhs = template_alias_rhs(template, instance.template_name.local_name())?;
         let subst = template_substitution(template, instance)?;
         if p.expanded_rhs.ir() != residual.left.ir()
@@ -733,9 +734,7 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("Template/PublicationCapture"));
         }
         let instance = InstantiatedTemplateObj {
-            template_name: AtomicName::Plain {
-                name: p.statement.template_name.clone(),
-            },
+            template_name: position.file_qualified_name(&p.statement.template_name),
             args: p
                 .statement
                 .template_arg_def
@@ -910,7 +909,7 @@ impl LitexToLeanCompiler {
                     .template_def_stmt
                     .defined_bindings()
                     .iter()
-                    .any(|p| p.name == instance.template_name.local_name())
+                    .any(|p| scope.file_qualified_name(&p.name) == instance.template_name)
                     && parameters.len() == instance.args.len()
                     && parameters.iter().zip(&instance.args).all(|(p, a)| {
                         a.ir() == Obj::Identifier(IdentifierObj::from_bound_name(p)).ir()
@@ -919,8 +918,13 @@ impl LitexToLeanCompiler {
                     let binding = template_output(p, instance.template_name.local_name())?
                         .0
                         .id;
-                    let base = self
-                        .context_application(&format!("_template_i{}", binding.value()), position);
+                    let producer = scope
+                        .parent
+                        .ok_or_else(|| LeanCompileError::unsupported("Template/SelfProducer"))?;
+                    let base = position.declaration_reference(
+                        &format!("_template_i{}", binding.value()),
+                        producer,
+                    )?;
                     let mut args = parameters
                         .iter()
                         .zip(&p.introduced_params.defined_params.store_and_infer_results)
@@ -950,11 +954,11 @@ impl LitexToLeanCompiler {
         evidence: &InstantiatedTemplateObjObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (p, producer, _) = position.visible_template(&instance.template_name)?;
+        let (p, producer, _) = position.visible_template(&instance.template_name, &self.runtime)?;
         let (binding, _) = template_output(p, instance.template_name.local_name())?;
         let args = self.compile_template_arguments(instance, evidence, position)?;
-        let base =
-            self.context_application(&format!("_template_i{}", binding.id.value()), &producer);
+        let base = position
+            .declaration_reference(&format!("_template_i{}", binding.id.value()), &producer)?;
         Ok(format!("({base} {})", args.join(" ")))
     }
 
@@ -965,7 +969,7 @@ impl LitexToLeanCompiler {
         evidence: &InstantiatedTemplateObjObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        let (p, producer, _) = position.visible_template(&instance.template_name)?;
+        let (p, producer, _) = position.visible_template(&instance.template_name, &self.runtime)?;
         template_output(p, instance.template_name.local_name())?;
         let ids = p.statement.template_arg_def.ordered_param_ids();
         let n = ids.len();

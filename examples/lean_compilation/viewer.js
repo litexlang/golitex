@@ -16,7 +16,7 @@ const rows = data.lean.split('\n');
 const leanLines = (a, b) => rows.slice(a-1, b).map((line,i) => `${String(a+i).padStart(2)}  ${line}`).join('\n');
 const pointer = '/statement_results/0/verify';
 const details = {
- source:[data.source, 'source: lean/examples/add_zero/statement.lit', leanLines(1,10), data.core.object, 'Obj · In · Same'],
+ source:[data.source, 'source: '+data.gate.source, leanLines(1,10), data.core.object, 'Obj · In · Same'],
  results:[verify, pointer, leanLines(20,31), data.core.add, 'Litex.add'],
  membership:[equality.well_defined.left.requirement_fact_verified[0], pointer+'/proved_then_facts/0/verify_result/well_defined/left/requirement_fact_verified/0', leanLines(20,22), data.core.add, 'Litex.add'],
  construction:[equality.well_defined.left, pointer+'/proved_then_facts/0/verify_result/well_defined/left', leanLines(20,22), data.core.add, 'Litex.add'],

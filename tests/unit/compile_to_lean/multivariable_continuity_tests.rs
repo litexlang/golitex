@@ -2,14 +2,40 @@ use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_by_stmt::BuiltinThmApplication;
 use crate::prelude::*;
 
-const SCALAR_FROM: &str =
-    include_str!("../../../lean/examples/multivariable_continuous_from_definition/statement.lit");
-const SCALAR_TO: &str =
-    include_str!("../../../lean/examples/multivariable_continuous_to_definition/statement.lit");
-const VECTOR_FROM: &str =
-    include_str!("../../../lean/examples/vector_continuous_from_definition/statement.lit");
-const VECTOR_TO: &str =
-    include_str!("../../../lean/examples/vector_continuous_to_definition/statement.lit");
+const SCALAR_FROM: &str = r#"# Continuity is the epsilon neighborhood condition on the original function domain.
+thm checked_multi_continuous_from_definition:
+    ? forall f fn(x cart_n(R,2)) R, p cart_n(R,2):
+        forall epsilon R+:
+            exist delta R+ st {{x cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<delta} $subset {y cart_n(R,2): abs(f(y)-f(p))<epsilon}}
+        =>:
+            $is_multi_continuous_at(f,p,2)
+    release thm multi_continuous_at_from_definition(f,p,2)
+"#;
+const SCALAR_TO: &str = r#"# Continuity is the epsilon neighborhood condition on the original function domain.
+thm checked_multi_continuous_to_definition:
+    ? forall f fn(x cart_n(R,2)) R, p cart_n(R,2), epsilon R+:
+        $is_multi_continuous_at(f,p,2)
+        =>:
+            exist delta R+ st {{x cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<delta} $subset {y cart_n(R,2): abs(f(y)-f(p))<epsilon}}
+    release thm multi_continuous_at_to_definition(f,p,2)
+"#;
+const VECTOR_FROM: &str = r#"# Continuity is the epsilon neighborhood condition on the original function domain.
+thm checked_vector_continuous_from_definition:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2):
+        forall epsilon R+:
+            exist delta R+ st {{x cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<delta} $subset {y cart_n(R,2): euclidean_norm(fn(r closed_range(1,3)) R {f(y)(r)-f(p)(r)},3)<epsilon}}
+        =>:
+            $is_vector_continuous_at(f,p,2,3)
+    release thm vector_continuous_at_from_definition(f,p,2,3)
+"#;
+const VECTOR_TO: &str = r#"# Continuity is the epsilon neighborhood condition on the original function domain.
+thm checked_vector_continuous_to_definition:
+    ? forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), epsilon R+:
+        $is_vector_continuous_at(f,p,2,3)
+        =>:
+            exist delta R+ st {{x cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<delta} $subset {y cart_n(R,2): euclidean_norm(fn(r closed_range(1,3)) R {f(y)(r)-f(p)(r)},3)<epsilon}}
+    release thm vector_continuous_at_to_definition(f,p,2,3)
+"#;
 
 fn clause(b: &mut BuiltinThmApplication, fold: bool) -> &mut ForallFact {
     let f = if fold {
@@ -28,63 +54,6 @@ fn inclusion(f: &mut ForallFact) -> &mut SubsetFact {
         panic!()
     };
     s
-}
-
-#[test]
-fn multivariable_continuity_replays_four_selected_bts() {
-    for (source, law) in [
-        (SCALAR_FROM, "scalarMultivariableContinuousAtFromDefinition"),
-        (SCALAR_TO, "scalarMultivariableContinuousAtToDefinition"),
-        (VECTOR_FROM, "vectorMultivariableContinuousAtFromDefinition"),
-        (VECTOR_TO, "vectorMultivariableContinuousAtToDefinition"),
-    ] {
-        let (run, c) = super::execute(source);
-        let output = c
-            .compile_run(&run, "continuity")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains(&format!("Litex.{law}")));
-        assert_eq!(output, c.compile_run(&run, "continuity").unwrap());
-    }
-}
-
-#[test]
-fn multivariable_continuity_preserves_generic_dimensions() {
-    for source in [
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_from_definition_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_to_definition_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/vector_continuous_from_definition_generic/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/vector_continuous_to_definition_generic/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "original_domain")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-    }
-}
-
-#[test]
-fn multivariable_continuity_replays_definition_search_and_inferred_epsilon_control() {
-    for source in [
-        include_str!("../../../lean/examples/multivariable_continuous_definition/statement.lit"),
-        include_str!("../../../lean/examples/multivariable_continuous_inference/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_definition/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_inference/statement.lit"),
-        include_str!(
-            "../../../lean/examples/multivariable_continuous_guarded_citation/statement.lit"
-        ),
-        include_str!("../../../lean/examples/vector_continuous_guarded_citation/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "definition_and_inference")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-    }
 }
 
 #[test]
@@ -357,8 +326,20 @@ fn multivariable_continuity_definition_retains_clause_proof_and_source_scope() {
         AtomicExceptEqualityFactSearchProofByDefinition, BuiltinPropDefinitionProof,
     };
     for source in [
-        include_str!("../../../lean/examples/multivariable_continuous_definition/statement.lit"),
-        include_str!("../../../lean/examples/vector_continuous_definition/statement.lit"),
+        r#"# Continuity can be checked from, and expose, its original neighborhood condition.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2):
+    forall epsilon R+:
+        exist delta R+ st {{x cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<delta} $subset {y cart_n(R,2): abs(f(y)-f(p))<epsilon}}
+    =>:
+        $is_multi_continuous_at(f,p,2)
+"#,
+        r#"# Continuity can be checked from, and expose, its original neighborhood condition.
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2):
+    forall epsilon R+:
+        exist delta R+ st {{x cart_n(R,2): euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<delta} $subset {y cart_n(R,2): euclidean_norm(fn(r closed_range(1,3)) R {f(y)(r)-f(p)(r)},3)<epsilon}}
+    =>:
+        $is_vector_continuous_at(f,p,2,3)
+"#,
     ] {
         for change in ["missing", "epsilon_carrier", "future"] {
             let (mut run, c) = super::execute(source);

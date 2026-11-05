@@ -1,20 +1,5 @@
 use crate::prelude::*;
 #[test]
-fn total_differentials_replay_selection_existence_coordinates_and_remainder_definition() {
-    for source in [
-        include_str!("../../../lean/examples/total_differential_selection/statement.lit"),
-        include_str!("../../../lean/examples/total_differential_existence/statement.lit"),
-        include_str!("../../../lean/examples/total_differential_generic_dimensions/statement.lit"),
-        include_str!("../../../lean/examples/total_differential_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/total_differential_from_definition/statement.lit"),
-        include_str!("../../../lean/examples/total_differential_guarded_domain/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "total_differential_replay")
-            .expect(source);
-    }
-}
-#[test]
 fn total_differentials_reject_changed_point_domain_and_inference_subjects() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -22,9 +7,15 @@ fn total_differentials_reject_changed_point_domain_and_inference_subjects() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/total_differential_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select a rectangular total differential matrix and use its entries.
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), A matrix(R,3,2):
+    $has_total_derivative_at(f,p,2,3,A)
+    =>:
+        differential(f,p,2,3)=A
+        differential(f,p,2,3)(3,2) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         if mutation == 0 {
             let FactWellDefinedProof::AtomicExceptEquality(p) =

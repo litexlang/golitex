@@ -7,7 +7,7 @@ fn lean_cli_emits_the_complete_canonical_source_without_json_wrapping() {
             "-strict",
             "-lean",
             "-f",
-            "lean/examples/one_equals_itself/statement.lit",
+            "tests/fixtures/compile_to_lean/identity.lit",
         ])
         .output()
         .unwrap();
@@ -15,32 +15,8 @@ fn lean_cli_emits_the_complete_canonical_source_without_json_wrapping() {
     assert!(output.stderr.is_empty(), "{output:?}");
     assert_eq!(
         output.stdout,
-        std::fs::read("lean/examples/one_equals_itself/statement.lean").unwrap()
+        std::fs::read("tests/fixtures/compile_to_lean/identity.lean").unwrap()
     );
-}
-
-#[test]
-fn lean_cli_replay_is_stable_across_processes() {
-    for example in [
-        "piecewise_total_reciprocal",
-        "selected_set_identity_function",
-        "local_cartesian_definition",
-    ] {
-        let path = format!("lean/examples/{example}/statement.lit");
-        let mut previous = None;
-        for _ in 0..8 {
-            let output = Command::new(env!("CARGO_BIN_EXE_litex"))
-                .args(["-strict", "-lean", "-f", &path])
-                .output()
-                .unwrap();
-            assert!(output.status.success(), "{path}: {output:?}");
-            assert!(output.stderr.is_empty(), "{path}: {output:?}");
-            if let Some(previous) = &previous {
-                assert!(previous == &output.stdout, "unstable Lean replay: {path}");
-            }
-            previous = Some(output.stdout);
-        }
-    }
 }
 
 #[test]

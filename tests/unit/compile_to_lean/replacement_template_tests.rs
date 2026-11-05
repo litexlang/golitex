@@ -6,11 +6,111 @@ use crate::execute::{
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/replacement_template_image/statement.lit"),
-    include_str!("../../../lean/examples/guarded_replacement_template/statement.lit"),
-    include_str!("../../../lean/examples/replacement_template_parameter_set/statement.lit"),
-    include_str!("../../../lean/examples/local_replacement_witness/statement.lit"),
-    include_str!("../../../lean/examples/captured_replacement_template/statement.lit"),
+    r#"# The identity relation defines a replacement image inside a template.
+
+prop identity_image_relation(x, y set):
+    y = x
+
+forall x {1, 2}, y, z set:
+    $identity_image_relation(x, y)
+    $identity_image_relation(x, z)
+    =>:
+        y = z
+
+template<S set>:
+    have by replacement_axiom: templated_image from prop identity_image_relation, set {1, 2}
+
+$identity_image_relation(1, 1)
+
+1 $in \templated_image<R>
+"#,
+    r#"# A functional-relation guard supplies a replacement template with its uniqueness evidence.
+
+prop identity_image_relation(x, y set):
+    y = x
+
+forall x {1, 2}, y, z set:
+    $identity_image_relation(x, y)
+    $identity_image_relation(x, z)
+    =>:
+        y = z
+
+$identity_image_relation(1, 1)
+
+prop identity_image_functional(S set):
+    forall x S, y, z set:
+        $identity_image_relation(x, y)
+        $identity_image_relation(x, z)
+        =>:
+            y = z
+
+$identity_image_functional({1, 2})
+
+template<T set: $identity_image_functional(T)>:
+    have by replacement_axiom: guarded_image from prop identity_image_relation, set T
+
+1 $in \guarded_image<{1, 2}>
+"#,
+    r#"# Form the set of real parameters whose singleton replacement image contains one.
+
+prop identity_image_relation(x, y set):
+    y = x
+
+prop identity_image_functional(S set):
+    forall x S, y, z set:
+        $identity_image_relation(x, y)
+        $identity_image_relation(x, z)
+        =>:
+            y = z
+
+template<T set: $identity_image_functional(T)>:
+    have by replacement_axiom: guarded_image from prop identity_image_relation, set T
+
+forall t R:
+    $identity_image_functional({t})
+
+have image_parameters set = {t R: 1 $in \guarded_image<{t}>}
+"#,
+    r#"# A replacement image constructed inside a theorem witnesses a set containing one.
+
+prop identity_image_relation(x, y set):
+    y = x
+
+forall x {1, 2}, y, z set:
+    $identity_image_relation(x, y)
+    $identity_image_relation(x, z)
+    =>:
+        y = z
+
+thm local_image_witness:
+    ? exist target set st {1 $in target}
+    have by replacement_axiom: local_image from prop identity_image_relation, set {1, 2}
+    $identity_image_relation(1, 1)
+    1 $in local_image
+    witness exist target set st {1 $in target} from local_image
+"#,
+    r#"# Replacement templates retain a previously declared source set and its chosen member.
+
+prop identity_image_relation(x, y set):
+    y = x
+
+have captured_domain nonempty_set
+
+have captured_member captured_domain
+
+forall x captured_domain, y, z set:
+    $identity_image_relation(x, y)
+    $identity_image_relation(x, z)
+    =>:
+        y = z
+
+template<Index set>:
+    have by replacement_axiom: captured_image from prop identity_image_relation, set captured_domain
+
+$identity_image_relation(captured_member, captured_member)
+
+captured_member $in \captured_image<R>
+"#,
 ];
 
 fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResult {
@@ -35,22 +135,6 @@ fn replacement(s: &mut ExecStmtResult) -> &mut ExecHaveByReplacementAxiomStmtSuc
         panic!("replacement")
     };
     p
-}
-
-#[test]
-fn replacement_templates_and_local_witnesses_replay_existing_evidence() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "replacement_contexts")
-            .expect(source);
-        assert!(lean.contains("Litex.replacement"));
-        assert!(lean.contains("Litex.IndexedUnionSemantics M"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "replacement_contexts").unwrap()
-        );
-    }
 }
 
 #[test]

@@ -8,12 +8,38 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const CONJ: &str = include_str!("../../../lean/examples/complex_conjugate_nonzero/statement.lit");
-const ABS: &str = include_str!("../../../lean/examples/complex_modulus_nonzero/statement.lit");
-const CONJ_REV: &str =
-    include_str!("../../../lean/examples/complex_conjugate_nonzero_reversed/statement.lit");
-const ABS_REV: &str =
-    include_str!("../../../lean/examples/complex_modulus_nonzero_reversed/statement.lit");
+const CONJ: &str = r#"# The conjugate of a nonzero complex number is nonzero.
+claim:
+    ? forall z C:
+        z != 0
+        =>:
+            conj(z) != 0
+    conj(z) != 0
+"#;
+const ABS: &str = r#"# The modulus of a nonzero complex number is nonzero.
+claim:
+    ? forall z C:
+        z != 0
+        =>:
+            C_abs(z) != 0
+    C_abs(z) != 0
+"#;
+const CONJ_REV: &str = r#"# Zero is distinct from the conjugate of a nonzero complex number.
+claim:
+    ? forall z C:
+        z != 0
+        =>:
+            0 != conj(z)
+    0 != conj(z)
+"#;
+const ABS_REV: &str = r#"# Zero is distinct from the modulus of a nonzero complex number.
+claim:
+    ? forall z C:
+        z != 0
+        =>:
+            0 != C_abs(z)
+    0 != C_abs(z)
+"#;
 
 fn selected_premise(run: &mut RunLitexCodeResult, conjugate: bool) -> &mut VerifyFactResult {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

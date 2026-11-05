@@ -1,9 +1,18 @@
 use super::or_order_builtin_tests::target;
 use crate::execute::execute_fact_stmt::verify_or_fact::OrBuiltinClassicalImplication;
 use crate::prelude::*;
-const LEFT: &str = include_str!("../../../lean/examples/classical_implication_shift/statement.lit");
-const RIGHT: &str =
-    include_str!("../../../lean/examples/classical_implication_shift_swapped/statement.lit");
+const LEFT: &str = r#"# Unequal real values or equality after a common shift form a classical implication disjunction.
+thm checked_classical_implication_shift:
+    ? forall a,b R:
+        a!=b or a+1=b+1
+    a!=b or a+1=b+1
+"#;
+const RIGHT: &str = r#"# A shifted equality or commuted disequality retains its original local implication proof.
+thm checked_classical_implication_shift_swapped:
+    ? forall a,b R:
+        a+1=b+1 or b!=a
+    a+1=b+1 or b!=a
+"#;
 const SCOPE:&str="thm checked_classical_implication_scope_candidate:\n    ? forall a,b R:\n        a=b\n        =>:\n            a=b\n    a!=b or a+1=b+1\n    a=b\n";
 fn selected(run: &mut RunLitexCodeResult) -> &mut OrBuiltinClassicalImplication {
     let OrFactSearchedProof::ByBuiltinRule(OrFactSearchProofByBuiltinRule::ClassicalImplication(p)) =

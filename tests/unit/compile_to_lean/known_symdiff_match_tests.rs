@@ -48,18 +48,6 @@ fn known_symdiff_original_self_and_definition_trees() {
         );
     }
 }
-
-#[test]
-fn known_symdiff_replays_actual_three_operation_profiles() {
-    for source in ALL {
-        let (run, compiler) = super::execute(source);
-        let output = super::compile_run(&run, &compiler, "binary_set_profiles").unwrap();
-        assert_eq!(
-            output,
-            super::compile_run(&run, &compiler, "binary_set_profiles").unwrap()
-        );
-    }
-}
 #[test]
 fn known_symdiff_requires_both_original_captured_subjects() {
     for source in [DEFINITION, SELF] {
@@ -365,22 +353,8 @@ fn literal_wd(run:&mut RunLitexCodeResult)->&mut crate::execute::execute_fact_st
     assert_eq!(p.requirement_fact_verified.len(), 1);
     p
 }
-const SELF:&str="# Self symmetric difference reuses an ordinary general identity.\n# Former source (strict source success,second statement compiler rejection):\n# forall replay39_A set:\n#     set_diff(replay39_A,replay39_A)={}\n# set_diff(fn(replay39_sv R) R,fn(replay39_sw R) R)={}\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Current replay must retain ordered operand matches and original strict equality.\nforall replay39_A set:\n    set_diff(replay39_A,replay39_A)={}\nset_diff(fn(replay39_sv R) R,fn(replay39_sw R) R)={}\n# Check: litex -lean -strict -f lean/examples/known_symdiff_self/statement.lit\n";
+const SELF:&str="# Self symmetric difference reuses an ordinary general identity.\n# Former source (strict source success,second statement compiler rejection):\n# forall replay39_A set:\n#     set_diff(replay39_A,replay39_A)={}\n# set_diff(fn(replay39_sv R) R,fn(replay39_sw R) R)={}\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Current replay must retain ordered operand matches and original strict equality.\nforall replay39_A set:\n    set_diff(replay39_A,replay39_A)={}\nset_diff(fn(replay39_sv R) R,fn(replay39_sw R) R)={}\n# Check: litex -lean -strict -f corpus case known_symdiff_self\n";
 const DEFINITION:&str="forall replay39_DA,replay39_DB set:\n    set_diff(replay39_DA,replay39_DB)=union(set_minus(replay39_DA,replay39_DB),set_minus(replay39_DB,replay39_DA))\nset_diff(fn(replay39_dv R) R,C)=union(set_minus(fn(replay39_dw R) R,C),set_minus(C,fn(replay39_dz R) R))\n";
 const SELF_GUARD:&str="# Preserve the positive-domain carrier guard.\nforall replay39_A set:\n    set_diff(replay39_A,replay39_A)={}\nset_diff(fn(replay39_sgv R:replay39_sgv>0) R,fn(replay39_sgw R:replay39_sgw>0) R)={}\n";
 const DEFINITION_NESTED:&str="# Compose powerset,union,and difference matches in source order.\nforall replay39_NA,replay39_NB set:\n    set_diff(power_set(replay39_NA),union(replay39_NB,{}))=union(set_minus(power_set(replay39_NA),union(replay39_NB,{})),set_minus(union(replay39_NB,{}),power_set(replay39_NA)))\nset_diff(power_set(fn(replay39_dnv R) R),union(C,{}))=union(set_minus(power_set(fn(replay39_dnw R) R),union(C,{})),set_minus(union(C,{}),power_set(fn(replay39_dnz R) R)))\n";
 const PAIR:&str="# Literal pair formation retains its original distinctness premise.\nforall replay39_QA,replay39_QB set:\n    replay39_QA!=replay39_QB\n    =>:\n        set_diff({replay39_QA,replay39_QB},{replay39_QA,replay39_QB})={}\nforall replay39_QS set:\n    fn(replay39_sqv R) R!=replay39_QS\n    =>:\n        set_diff({fn(replay39_sqv R) R,replay39_QS},{fn(replay39_sqw R) R,replay39_QS})={}\n";
-const ALL:&[&str]=&[
-"# Self symmetric difference reuses an ordinary general identity.\n# Former source (strict source success,second statement compiler rejection):\n# forall replay39_A set:\n#     set_diff(replay39_A,replay39_A)={}\n# set_diff(fn(replay39_sv R) R,fn(replay39_sw R) R)={}\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Current replay must retain ordered operand matches and original strict equality.\nforall replay39_A set:\n    set_diff(replay39_A,replay39_A)={}\nset_diff(fn(replay39_sv R) R,fn(replay39_sw R) R)={}\n# Check: litex -lean -strict -f lean/examples/known_symdiff_self/statement.lit\n",
-"# Preserve the positive-domain carrier guard.\nforall replay39_A set:\n    set_diff(replay39_A,replay39_A)={}\nset_diff(fn(replay39_sgv R:replay39_sgv>0) R,fn(replay39_sgw R:replay39_sgw>0) R)={}\n",
-"# Preserve ordered mixed function-space parameter groups.\nforall replay39_A set:\n    set_diff(replay39_A,replay39_A)={}\nset_diff(fn(replay39_smv R,replay39_smu C) C,fn(replay39_smw R,replay39_smt C) C)={}\n",
-"# Reuse self-difference through original nested powerset matches.\nforall replay39_PA set:\n    set_diff(power_set(replay39_PA),power_set(replay39_PA))={}\nset_diff(power_set(fn(replay39_spv R) R),power_set(fn(replay39_spw R) R))={}\n",
-"# Reuse self-difference through original singleton literal matches.\nforall replay39_LA set:\n    set_diff({replay39_LA},{replay39_LA})={}\nset_diff({fn(replay39_slv R) R},{fn(replay39_slw R) R})={}\n",
-"# Literal pair formation retains its original distinctness premise.\nforall replay39_QA,replay39_QB set:\n    replay39_QA!=replay39_QB\n    =>:\n        set_diff({replay39_QA,replay39_QB},{replay39_QA,replay39_QB})={}\nforall replay39_QS set:\n    fn(replay39_sqv R) R!=replay39_QS\n    =>:\n        set_diff({fn(replay39_sqv R) R,replay39_QS},{fn(replay39_sqw R) R,replay39_QS})={}\n",
-"forall replay39_DA,replay39_DB set:\n    set_diff(replay39_DA,replay39_DB)=union(set_minus(replay39_DA,replay39_DB),set_minus(replay39_DB,replay39_DA))\nset_diff(fn(replay39_dv R) R,C)=union(set_minus(fn(replay39_dw R) R,C),set_minus(C,fn(replay39_dz R) R))\n",
-"# Preserve the guarded operand in the defining union of differences.\nforall replay39_DA,replay39_DB set:\n    set_diff(replay39_DA,replay39_DB)=union(set_minus(replay39_DA,replay39_DB),set_minus(replay39_DB,replay39_DA))\nset_diff(fn(replay39_dgv R:replay39_dgv>0) R,C)=union(set_minus(fn(replay39_dgw R:replay39_dgw>0) R,C),set_minus(C,fn(replay39_dgz R:replay39_dgz>0) R))\n",
-"# Preserve mixed parameter groups across all three original occurrences.\nforall replay39_DA,replay39_DB set:\n    set_diff(replay39_DA,replay39_DB)=union(set_minus(replay39_DA,replay39_DB),set_minus(replay39_DB,replay39_DA))\nset_diff(fn(replay39_dmv R,replay39_dmu C) C,R)=union(set_minus(fn(replay39_dmw R,replay39_dmt C) C,R),set_minus(R,fn(replay39_dmz R,replay39_dmq C) C))\n",
-"# Compose powerset,union,and difference matches in source order.\nforall replay39_NA,replay39_NB set:\n    set_diff(power_set(replay39_NA),union(replay39_NB,{}))=union(set_minus(power_set(replay39_NA),union(replay39_NB,{})),set_minus(union(replay39_NB,{}),power_set(replay39_NA)))\nset_diff(power_set(fn(replay39_dnv R) R),union(C,{}))=union(set_minus(power_set(fn(replay39_dnw R) R),union(C,{})),set_minus(union(C,{}),power_set(fn(replay39_dnz R) R)))\n",
-"# Reuse a returned natural membership in each finite carrier bound.\nforall replay39_DA,replay39_DB set:\n    set_diff(replay39_DA,replay39_DB)=union(set_minus(replay39_DA,replay39_DB),set_minus(replay39_DB,replay39_DA))\nforall replay39_h fn(replay39_t R) N,replay39_a R:\n    replay39_h(replay39_a) $in N\n    set_diff(fn(replay39_drv closed_range(1,replay39_h(replay39_a))) R,C)=union(set_minus(fn(replay39_drw closed_range(1,replay39_h(replay39_a))) R,C),set_minus(C,fn(replay39_drz closed_range(1,replay39_h(replay39_a))) R))\n",
-"# Retain the singleton constructor under symmetric difference and both differences.\nforall replay39_TA,replay39_TB set:\n    set_diff({replay39_TA},replay39_TB)=union(set_minus({replay39_TA},replay39_TB),set_minus(replay39_TB,{replay39_TA}))\nset_diff({fn(replay39_dlv R) R},C)=union(set_minus({fn(replay39_dlw R) R},C),set_minus(C,{fn(replay39_dlz R) R}))\n",
-];

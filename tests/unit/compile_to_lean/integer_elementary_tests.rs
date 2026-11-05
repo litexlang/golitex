@@ -3,11 +3,31 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::IntegerOperatorObjWellDefinedProofByDef as IntegerWd;
 use crate::prelude::*;
 
-const ADD: &str = include_str!("../../../lean/examples/gcd_add_argument/statement.lit");
-const NEG: &str = include_str!("../../../lean/examples/gcd_negation/statement.lit");
-const SCALE: &str = include_str!("../../../lean/examples/gcd_positive_scale/statement.lit");
-const MOD: &str = include_str!("../../../lean/examples/remainder_integer_shift/statement.lit");
-const CART: &str = include_str!("../../../lean/examples/cartesian_union/statement.lit");
+const ADD: &str = r#"thm checked_gcd_add_argument:
+    ? forall a Z,b N+:
+        gcd(a+b,b)=gcd(a,b)
+    gcd(a+b,b)=gcd(a,b)
+"#;
+const NEG: &str = r#"thm checked_gcd_negation:
+    ? forall a Z,b N+:
+        gcd(-a,b)=gcd(a,b)
+    gcd(-a,b)=gcd(a,b)
+"#;
+const SCALE: &str = r#"thm checked_gcd_positive_scale:
+    ? forall a,b,k N+:
+        gcd(k*a,k*b)=k*gcd(a,b)
+    gcd(k*a,k*b)=k*gcd(a,b)
+"#;
+const MOD: &str = r#"thm checked_remainder_shift:
+    ? forall a,k Z,m N+:
+        (a+k*m)%m=a%m
+    (a+k*m)%m=a%m
+"#;
+const CART: &str = r#"thm checked_cartesian_union:
+    ? forall S,T,U set:
+        cart(S,union(T,U))=union(cart(S,T),cart(S,U))
+    cart(S,union(T,U))=union(cart(S,T),cart(S,U))
+"#;
 
 fn rule(run: &mut RunLitexCodeResult) -> &mut Rule {
     let EqualFactSearchedProof::ByBuiltinRule(

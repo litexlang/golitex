@@ -5,19 +5,51 @@ use crate::execute::execute_by_stmt::{
 use crate::prelude::*;
 use crate::store_fact_and_infer::InferResult;
 
-const FORALL: &str =
-    include_str!("../../../lean/examples/universal_contradiction_closing/statement.lit");
-const GUARDED: &str =
-    include_str!("../../../lean/examples/guarded_universal_contradiction_closing/statement.lit");
-const NEGATED: &str =
-    include_str!("../../../lean/examples/counterexample_contradiction_closing/statement.lit");
-const UNIQUE: &str =
-    include_str!("../../../lean/examples/unique_contradiction_closing/statement.lit");
-const PAIR: &str =
-    include_str!("../../../lean/examples/unique_pair_contradiction_closing/statement.lit");
-const NAMED: &str = include_str!("../../../lean/examples/named_counterexample/statement.lit");
-const MIXED: &str =
-    include_str!("../../../lean/examples/counterexample_after_universal_use/statement.lit");
+const FORALL: &str = r#"# Close a reflexivity proof with a universal formula and its counterexample.
+by contra:
+    ? forall x R:
+        x = x
+    impossible forall y R:
+        y = y
+"#;
+const NEGATED: &str = r#"# Close a negated universal proof using its saved counterexample.
+witness exist x {0} st {x != 1} from 0
+by contra:
+    ? not forall y {0}:
+        y = 1
+    impossible not forall z {0}:
+        z = 1
+"#;
+const UNIQUE: &str = r#"# Use a unique-existence fact itself to close a contradiction.
+witness exist! x {7} st {x = 7} from 7
+by contra:
+    ? exist! y {7} st {y = 7}
+    impossible exist! z {7} st {z = 7}
+"#;
+const PAIR: &str = r#"# Close a unique-pair proof by contradicting a different alternative coordinate.
+witness exist! x R, y R st {x = 0, y = 1} from 0, 1
+by contra:
+    ? exist! u R, v R st {u = 0, v = 1}
+    impossible exist! a R, b R st {a = 0, b = 1}
+"#;
+const NAMED: &str = r#"# Save a negated universal theorem, invoke it and obtain its counterexample.
+thm not_all_one:
+    ? not forall x {0}:
+        x = 1
+    witness exist y {0} st {y != 1} from 0
+by thm not_all_one
+obtain a from exist y {0} st {y != 1}
+a != 1
+"#;
+const MIXED: &str = r#"# Reuse a universal assumption at a number before closing with a counterexample.
+witness exist x R st {x != 0} from 1
+by contra:
+    ? not forall y R:
+        y = 0
+    1 = 0
+    impossible not forall z R:
+        z = 0
+"#;
 
 fn contra(run: &mut RunLitexCodeResult) -> &mut ExecByContraStmtSuccess {
     run.statement_results
@@ -39,25 +71,6 @@ fn named(run: &mut RunLitexCodeResult) -> &mut ExecDefThmStmtSuccess {
         panic!("named theorem")
     };
     p
-}
-
-#[test]
-fn quantified_closings_replay_both_orientations_guards_and_unique_coordinates() {
-    for source in [FORALL, GUARDED, NEGATED, UNIQUE, PAIR, NAMED, MIXED] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "logical_closing").unwrap();
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "logical_closing").unwrap()
-        );
-        assert!(!output.contains("sorry"));
-        if source == UNIQUE || source == PAIR {
-            assert!(output.contains("_unique_exists"));
-            assert!(output.contains("_alternative"));
-        } else if source != NAMED {
-            assert!(output.contains("_not_universal"));
-        }
-    }
 }
 
 #[test]

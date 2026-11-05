@@ -3,10 +3,24 @@ use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtRe
 use crate::execute::{ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult};
 use crate::prelude::*;
 
-const POSITIVE: &str =
-    include_str!("../../../lean/examples/function_limit_at_eventually_positive/statement.lit");
-const NONZERO: &str =
-    include_str!("../../../lean/examples/function_limit_at_eventually_nonzero/statement.lit");
+const POSITIVE: &str = r#"# A positive limit gives positive values on a sufficiently small at neighborhood.
+thm at_eventually_positive:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        0<L
+        =>:
+            exist delta R+ st {{x R:0<(abs(x-p)) and (abs(x-p))<delta} $subset preimage_set(f,R+)}
+    release thm fn_limit_at_eventually_positive(f,p,L)
+"#;
+const NONZERO: &str = r#"# A nonzero limit gives nonzero values on a sufficiently small at neighborhood.
+thm at_eventually_nonzero:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        L!=0
+        =>:
+            exist delta R+ st {{x R:0<(abs(x-p)) and (abs(x-p))<delta} $subset preimage_set(f,R*)}
+    release thm fn_limit_at_eventually_nonzero(f,p,L)
+"#;
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(p),
@@ -24,45 +38,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
         panic!("eventual limit release")
     };
     p
-}
-
-#[test]
-fn eventual_limit_conclusions_replay_all_approaches_and_guarded_domains() {
-    for source in [
-        include_str!("../../../lean/examples/function_limit_at_eventually_positive/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_at_eventually_nonzero/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_left_eventually_positive/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_limit_left_eventually_nonzero/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_right_eventually_positive/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_right_eventually_nonzero/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_eventually_positive/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_eventually_nonzero/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_eventually_positive/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_eventually_nonzero/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_guarded_eventually_positive/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "eventual_limit")
-            .unwrap()
-            .contains("FunctionLimitEventually"));
-    }
 }
 
 #[test]

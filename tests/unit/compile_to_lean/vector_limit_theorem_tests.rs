@@ -5,35 +5,50 @@ use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
 };
 
-const DEFINITION: &str =
-    include_str!("../../../lean/examples/vector_limit_builtin_definition/statement.lit");
-const ELIMINATION: &str =
-    include_str!("../../../lean/examples/vector_limit_builtin_epsilon_control/statement.lit");
-const UNIQUE: &str =
-    include_str!("../../../lean/examples/vector_limit_builtin_unique/statement.lit");
-const EXISTS: &str =
-    include_str!("../../../lean/examples/vector_limit_builtin_exists/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/vector_limit_builtin_selected/statement.lit");
-const GENERIC_UNIQUE: &str =
-    include_str!("../../../lean/examples/vector_limit_builtin_generic_unique/statement.lit");
-
-#[test]
-fn vector_limit_theorems_replay_all_five_original_schemas_and_distinct_dimensions() {
-    for (source, law) in [
-        (DEFINITION, "Litex.multivariableVectorLimitOfClauses"),
-        (ELIMINATION, "Litex.multivariableVectorLimitClauses"),
-        (UNIQUE, "Litex.multivariableVectorLimitUnique"),
-        (EXISTS, "Litex.multivariableVectorExistsOfCandidate"),
-        (SELECTED, "Litex.multivariableVectorLimitValueSelected"),
-        (GENERIC_UNIQUE, "Litex.multivariableVectorLimitUnique"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "vector_schema").unwrap();
-        assert!(output.contains(law));
-        assert_eq!(output, compiler.compile_run(&run, "vector_schema").unwrap());
-    }
-}
+const DEFINITION: &str = r#"# Invoke the vector-limit introduction theorem with its exact domain and output dimensions.
+thm checked_vector_limit_builtin_definition:
+    ? forall f fn(x cart_n(R, 2)) cart_n(R, 3), p cart_n(R, 2), L cart_n(R, 3):
+        forall radius R+:
+            exist x cart_n(R, 2) st {0 < euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2), euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2) < radius}
+        forall epsilon R+:
+            exist delta R+ st {{x cart_n(R, 2): 0 < euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2), euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2) < delta} $subset {y cart_n(R, 2): euclidean_norm(fn(k closed_range(1, 3)) R{f(y)(k) - L(k)}, 3) < epsilon}}
+        =>:
+            $has_vector_limit_at(f, p, 2, 3, L)
+    release thm vector_limit_at_from_definition(f, p, 2, 3, L)
+"#;
+const ELIMINATION: &str = r#"# A vector limit supplies epsilon control in the declared three-dimensional output space.
+thm checked_vector_limit_builtin_epsilon_control:
+    ? forall f fn(x cart_n(R, 2)) cart_n(R, 3), p cart_n(R, 2), L cart_n(R, 3), epsilon R+:
+        $has_vector_limit_at(f, p, 2, 3, L)
+        =>:
+            exist delta R+ st {{x cart_n(R, 2): 0 < euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2), euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2) < delta} $subset {y cart_n(R, 2): euclidean_norm(fn(k closed_range(1, 3)) R{f(y)(k) - L(k)}, 3) < epsilon}}
+    release thm vector_limit_at_to_definition(f, p, 2, 3, L)
+"#;
+const UNIQUE: &str = r#"# Limits of a map from the real plane to three-dimensional real vectors are unique.
+thm checked_vector_limit_builtin_unique:
+    ? forall f fn(x cart_n(R, 2)) cart_n(R, 3), p cart_n(R, 2), L, K cart_n(R, 3):
+        $has_vector_limit_at(f, p, 2, 3, L)
+        $has_vector_limit_at(f, p, 2, 3, K)
+        =>:
+            L = K
+    release thm vector_limit_at_unique(f, p, 2, 3, L, K)
+"#;
+const EXISTS: &str = r#"# A vector limit provides an existential witness in the exact output dimension.
+thm checked_vector_limit_builtin_exists:
+    ? forall f fn(x cart_n(R, 2)) cart_n(R, 3), p cart_n(R, 2), L cart_n(R, 3):
+        $has_vector_limit_at(f, p, 2, 3, L)
+        =>:
+            exist value cart_n(R, 3) st {$has_vector_limit_at(f, p, 2, 3, value)}
+    release thm vector_limit_at_exists(f, p, 2, 3, L)
+"#;
+const SELECTED: &str = r#"# The vector selector retains an original witness and both declared dimensions.
+thm checked_vector_limit_builtin_selected:
+    ? forall f fn(x cart_n(R, 2)) cart_n(R, 3), p cart_n(R, 2):
+        exist value cart_n(R, 3) st {$has_vector_limit_at(f, p, 2, 3, value)}
+        =>:
+            $has_vector_limit_at(f, p, 2, 3, lim_vector_at(f, p, 2, 3))
+    release thm vector_limit_at_selected(f, p, 2, 3)
+"#;
 
 #[test]
 fn vector_limit_theorem_retains_all_original_stages_and_both_output_formations() {

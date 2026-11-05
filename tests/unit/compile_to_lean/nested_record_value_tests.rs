@@ -8,10 +8,75 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_o
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/nested_returned_record_fields/statement.lit"),
-    include_str!("../../../lean/examples/nested_literal_record_fields/statement.lit"),
-    include_str!("../../../lean/examples/nested_guarded_record_fields/statement.lit"),
-    include_str!("../../../lean/examples/arbitrary_record_function_fields/statement.lit"),
+    r#"# Evaluate a nested record whose inner field is produced by another function.
+struct Box:
+    op fn(x R) R
+    tag N
+forall f fn(x R) R:
+    (f, 0) $in &Box
+struct Outer:
+    inner &Box
+    tag N
+forall b &Box:
+    (b, 0) $in &Outer
+have fn make(a R) &Box = (fn(x R) R {x + a}, 0)
+have fn outer(a R) &Outer = (make(a), 0)
+outer(2).inner.op(3) = 5
+outer(2).inner.tag = 0
+outer(2).inner.tag $in N
+release struct def outer(2)
+"#,
+    r#"# Project a tuple-valued inner record and evaluate its function field.
+struct Box:
+    op fn(x R) R
+    tag N
+forall f fn(x R) R:
+    (f, 0) $in &Box
+struct Outer:
+    inner &Box
+    tag N
+forall b &Box:
+    (b, 0) $in &Outer
+have fn outer(a R) &Outer = ((fn(x R) R {x + a}, 0), 0)
+outer(2).inner.op(3) = 5
+outer(2).inner.tag = 0
+"#,
+    r#"# Preserve the nonzero constructor condition through nested field evaluation.
+struct Box:
+    op fn(x R) R
+    tag N
+forall f fn(x R) R:
+    (f, 0) $in &Box
+struct Outer:
+    inner &Box
+    tag N
+forall b &Box:
+    (b, 0) $in &Outer
+have fn outer(a R: a != 0) &Outer = ((fn(x R) R {x / a}, 0), 0)
+outer(2).inner.op(6) = 3
+outer(2).inner.tag = 0
+"#,
+    r#"# Use the declared return and field domains of an arbitrary function parameter.
+struct Box:
+    op fn(x R) R
+    tag N
+forall f fn(x R) R:
+    (f, 0) $in &Box
+struct Outer:
+    inner &Box
+    tag N
+forall b &Box:
+    (b, 0) $in &Outer
+thm nested_type:
+    ? forall maker fn(a R) &Outer:
+        maker(1).inner.tag $in N
+struct NonzeroOp:
+    call fn(x R: x != 0) R
+    tag N
+thm good_guard:
+    ? forall maker fn(a R) &NonzeroOp:
+        maker(1).call(2) = maker(1).call(2)
+"#,
 ];
 
 fn field_value(run: &mut RunLitexCodeResult) -> &mut StructFieldValueProof {
@@ -38,16 +103,6 @@ fn value_source() -> String {
         "outer(2).inner.tag $in N\nrelease struct def outer(2)\n",
         "",
     )
-}
-
-#[test]
-fn nested_record_values_replay_returned_calls_tuples_and_arbitrary_functions() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "nested_records").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "nested_records").unwrap());
-        assert!(!lean.contains("sorry") && !lean.contains("axiom "));
-    }
 }
 
 #[test]

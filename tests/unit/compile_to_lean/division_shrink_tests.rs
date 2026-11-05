@@ -5,7 +5,14 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_proof_block_stmt::{ExecClaimBodyProof, ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/division_shrinks_positive/statement.lit");
+const SOURCE: &str = r#"# Dividing a positive real number by a real factor greater than one shrinks it.
+claim:
+    ? forall a R+, b R:
+        1 < b
+        =>:
+            a/b < a
+    a/b < a
+"#;
 
 fn atomic(run: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

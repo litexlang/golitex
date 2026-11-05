@@ -7,20 +7,71 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const POWER: &str = include_str!("../../../lean/examples/native_matrix_power_add/statement.lit");
-const NORM: &str = include_str!("../../../lean/examples/native_frobenius_norm_scale/statement.lit");
-const REPEATED: &str =
-    include_str!("../../../lean/examples/native_matrix_power_add_repeated_exponent/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_power_frobenius_reverse/statement.lit");
-const ZERO: &str =
-    include_str!("../../../lean/examples/native_power_frobenius_zero_cases/statement.lit");
-const REAL: &str = include_str!("../../../lean/examples/native_power_frobenius_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_power_frobenius_transport/statement.lit");
-const EXPLICIT_POWER: &str = include_str!("../../../lean/examples/matrix_power_add/statement.lit");
-const EXPLICIT_NORM: &str =
-    include_str!("../../../lean/examples/frobenius_norm_scale/statement.lit");
+const POWER: &str = r#"# Natural matrix powers add exponents by multiplying the powers.
+forall replay_power_n, replay_power_p, replay_power_q N, replay_power_A matrix(C,replay_power_n,replay_power_n):
+    matrix_power(replay_power_A,replay_power_n,replay_power_p+replay_power_q) = matrix_mul(matrix_power(replay_power_A,replay_power_n,replay_power_p),matrix_power(replay_power_A,replay_power_n,replay_power_q),replay_power_n,replay_power_n,replay_power_n)
+"#;
+const NORM: &str = r#"# The Frobenius norm scales by the complex magnitude of the scalar.
+forall replay_frob_m, replay_frob_n N, replay_frob_z C, replay_frob_A matrix(C,replay_frob_m,replay_frob_n):
+    frobenius_norm(matrix_scale(replay_frob_z,replay_frob_A,replay_frob_m,replay_frob_n),replay_frob_m,replay_frob_n) = C_abs(replay_frob_z)*frobenius_norm(replay_frob_A,replay_frob_m,replay_frob_n)
+"#;
+const REPEATED: &str = r#"# Multiplying equal powers doubles the natural exponent.
+forall replay_power_n, replay_power_p N, replay_power_A matrix(C,replay_power_n,replay_power_n):
+    matrix_power(replay_power_A,replay_power_n,replay_power_p+replay_power_p) = matrix_mul(matrix_power(replay_power_A,replay_power_n,replay_power_p),matrix_power(replay_power_A,replay_power_n,replay_power_p),replay_power_n,replay_power_n,replay_power_n)
+"#;
+const REVERSE: &str = r#"# Reverse both power-addition and Frobenius-scaling equalities.
+forall replay_power_n, replay_power_p, replay_power_q N, replay_power_A matrix(C,replay_power_n,replay_power_n):
+    matrix_mul(matrix_power(replay_power_A,replay_power_n,replay_power_p),matrix_power(replay_power_A,replay_power_n,replay_power_q),replay_power_n,replay_power_n,replay_power_n) = matrix_power(replay_power_A,replay_power_n,replay_power_p+replay_power_q)
+forall replay_frob_m, replay_frob_n N, replay_frob_z C, replay_frob_A matrix(C,replay_frob_m,replay_frob_n):
+    C_abs(replay_frob_z)*frobenius_norm(replay_frob_A,replay_frob_m,replay_frob_n) = frobenius_norm(matrix_scale(replay_frob_z,replay_frob_A,replay_frob_m,replay_frob_n),replay_frob_m,replay_frob_n)
+"#;
+const ZERO: &str = r#"# Power addition and Frobenius scaling retain zero exponents, dimensions and scalar.
+forall replay_power_n, replay_power_q N, replay_power_A matrix(C,replay_power_n,replay_power_n):
+    matrix_power(replay_power_A,replay_power_n,0+replay_power_q) = matrix_mul(matrix_power(replay_power_A,replay_power_n,0),matrix_power(replay_power_A,replay_power_n,replay_power_q),replay_power_n,replay_power_n,replay_power_n)
+forall replay_power_n, replay_power_p N, replay_power_A matrix(C,replay_power_n,replay_power_n):
+    matrix_power(replay_power_A,replay_power_n,replay_power_p+0) = matrix_mul(matrix_power(replay_power_A,replay_power_n,replay_power_p),matrix_power(replay_power_A,replay_power_n,0),replay_power_n,replay_power_n,replay_power_n)
+forall replay_power_p, replay_power_q N, replay_power_A matrix(C,0,0):
+    matrix_power(replay_power_A,0,replay_power_p+replay_power_q) = matrix_mul(matrix_power(replay_power_A,0,replay_power_p),matrix_power(replay_power_A,0,replay_power_q),0,0,0)
+forall replay_frob_n N, replay_frob_z C, replay_frob_A matrix(C,0,replay_frob_n):
+    frobenius_norm(matrix_scale(replay_frob_z,replay_frob_A,0,replay_frob_n),0,replay_frob_n) = C_abs(replay_frob_z)*frobenius_norm(replay_frob_A,0,replay_frob_n)
+forall replay_frob_m N, replay_frob_z C, replay_frob_A matrix(C,replay_frob_m,0):
+    frobenius_norm(matrix_scale(replay_frob_z,replay_frob_A,replay_frob_m,0),replay_frob_m,0) = C_abs(replay_frob_z)*frobenius_norm(replay_frob_A,replay_frob_m,0)
+forall replay_frob_m, replay_frob_n N, replay_frob_A matrix(C,replay_frob_m,replay_frob_n):
+    frobenius_norm(matrix_scale(0,replay_frob_A,replay_frob_m,replay_frob_n),replay_frob_m,replay_frob_n) = C_abs(0)*frobenius_norm(replay_frob_A,replay_frob_m,replay_frob_n)
+"#;
+const REAL: &str = r#"# Prove complex carriers explicitly for real matrices and scalars before using the laws.
+forall replay_power_n, replay_power_p, replay_power_q N, replay_power_A matrix(R,replay_power_n,replay_power_n):
+    replay_power_A $in matrix(C,replay_power_n,replay_power_n)
+    matrix_power(replay_power_A,replay_power_n,replay_power_p+replay_power_q) = matrix_mul(matrix_power(replay_power_A,replay_power_n,replay_power_p),matrix_power(replay_power_A,replay_power_n,replay_power_q),replay_power_n,replay_power_n,replay_power_n)
+forall replay_frob_m, replay_frob_n N, replay_frob_z R, replay_frob_A matrix(R,replay_frob_m,replay_frob_n):
+    replay_frob_z $in C
+    replay_frob_A $in matrix(C,replay_frob_m,replay_frob_n)
+    frobenius_norm(matrix_scale(replay_frob_z,replay_frob_A,replay_frob_m,replay_frob_n),replay_frob_m,replay_frob_n) = C_abs(replay_frob_z)*frobenius_norm(replay_frob_A,replay_frob_m,replay_frob_n)
+"#;
+const TRANSPORT: &str = r#"# An assumed canonical endpoint equality transports each original selected law.
+forall replay_power_n, replay_power_p, replay_power_q N, replay_power_A matrix(C,replay_power_n,replay_power_n), replay_power_D matrix(C,replay_power_n,replay_power_n):
+    matrix_mul(matrix_power(replay_power_A,replay_power_n,replay_power_p),matrix_power(replay_power_A,replay_power_n,replay_power_q),replay_power_n,replay_power_n,replay_power_n) = replay_power_D
+    =>:
+        matrix_power(replay_power_A,replay_power_n,replay_power_p+replay_power_q) = replay_power_D
+forall replay_frob_m, replay_frob_n N, replay_frob_z C, replay_frob_A matrix(C,replay_frob_m,replay_frob_n), replay_frob_value R:
+    C_abs(replay_frob_z)*frobenius_norm(replay_frob_A,replay_frob_m,replay_frob_n) = replay_frob_value
+    =>:
+        frobenius_norm(matrix_scale(replay_frob_z,replay_frob_A,replay_frob_m,replay_frob_n),replay_frob_m,replay_frob_n) = replay_frob_value
+"#;
+const EXPLICIT_POWER: &str = r#"# Prove natural matrix powers add exponents by multiplying the powers.
+thm replay_matrix_power_add:
+    ? forall replay_power_n, replay_power_p, replay_power_q N, replay_power_A matrix(C,replay_power_n,replay_power_n):
+        matrix_power(replay_power_A,replay_power_n,replay_power_p+replay_power_q) = matrix_mul(matrix_power(replay_power_A,replay_power_n,replay_power_p),matrix_power(replay_power_A,replay_power_n,replay_power_q),replay_power_n,replay_power_n,replay_power_n)
+    release thm matrix_power_add(replay_power_A,replay_power_n,replay_power_p,replay_power_q)
+release thm replay_matrix_power_add(2,3,4,zero_matrix(2,2))
+"#;
+const EXPLICIT_NORM: &str = r#"# Prove the Frobenius norm scales by the complex magnitude of the scalar.
+thm replay_frobenius_norm_scale:
+    ? forall replay_frob_m, replay_frob_n N, replay_frob_z C, replay_frob_A matrix(C,replay_frob_m,replay_frob_n):
+        frobenius_norm(matrix_scale(replay_frob_z,replay_frob_A,replay_frob_m,replay_frob_n),replay_frob_m,replay_frob_n) = C_abs(replay_frob_z)*frobenius_norm(replay_frob_A,replay_frob_m,replay_frob_n)
+    release thm frobenius_norm_scale(replay_frob_z,replay_frob_A,replay_frob_m,replay_frob_n)
+release thm replay_frobenius_norm_scale(2,3,1+i,zero_matrix(2,3))
+"#;
 
 fn selected(statement: &mut ExecStmtResult, index: usize) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(

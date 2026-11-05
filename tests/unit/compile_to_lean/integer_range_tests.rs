@@ -117,30 +117,6 @@ fn integer_range_expansion_fact_is_visible_only_after_publication() {
 }
 
 #[test]
-fn integer_range_examples_cover_boundaries_arithmetic_and_reuse() {
-    for source in [
-        include_str!("../../../lean/examples/expand_half_open_integer_range/statement.lit"),
-        include_str!("../../../lean/examples/expand_closed_integer_range/statement.lit"),
-        include_str!("../../../lean/examples/expand_singleton_integer_range/statement.lit"),
-        include_str!("../../../lean/examples/expand_calculated_integer_range/statement.lit"),
-        include_str!("../../../lean/examples/integer_range_bounds/statement.lit"),
-        include_str!("../../../lean/examples/integer_range_carriers_and_singletons/statement.lit"),
-        include_str!("../../../lean/examples/integer_range_square_bound/statement.lit"),
-        "expand: 0 $in closed_range(0, 0)\n",
-        "sketch:\n    expand: 1 $in range(0, 3)\n",
-        "$is_set(range(0, 0))\n1 $in range(0, 3)\n",
-        "forall x closed_range(2, 2):\n    x = 2\n",
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "range_example")
-            .unwrap_or_else(|e| panic!("{source}\n{e}"));
-        assert_eq!(lean, compiler.compile_run(&run, "range_example").unwrap());
-        assert!(lean.len() < 100_000, "{} bytes: {source}", lean.len());
-    }
-}
-
-#[test]
 fn integer_range_constructor_requires_ordered_endpoint_wd_and_integer_evidence() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef;
     for mutation in 0..4 {

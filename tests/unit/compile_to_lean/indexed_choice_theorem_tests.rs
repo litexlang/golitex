@@ -4,9 +4,24 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     IndexCartObjWellDefinedProof, SetOperatorObjWellDefinedProofByDef,
 };
 use crate::prelude::*;
-const FAMILY: &str =
-    include_str!("../../../lean/examples/indexed_choice_from_family/statement.lit");
-const POINT: &str = include_str!("../../../lean/examples/indexed_choice_pointwise/statement.lit");
+const FAMILY: &str = r#"# A family of nonempty sets has a choice function on its nonempty index domain.
+thm checked_indexed_choice_from_family:
+    ? forall T,S nonempty_set, g fn(k T) S:
+        forall A S:
+            $is_nonempty_set(A)
+        =>:
+            $is_nonempty_set(index_cart(T,S,g))
+    release thm index_cart_nonempty_by_choice_from_family(index_cart(T,S,g))
+"#;
+const POINT: &str = r#"# Pointwise nonempty factors give a nonempty indexed Cartesian product.
+thm checked_indexed_choice_pointwise:
+    ? forall T,S nonempty_set, g fn(k T) S:
+        forall k T:
+            $is_nonempty_set(g(k))
+        =>:
+            $is_nonempty_set(index_cart(T,S,g))
+    release thm index_cart_nonempty_by_choice_from_pointwise(index_cart(T,S,g))
+"#;
 fn original_cart_wd(run: &mut RunLitexCodeResult) -> &mut IndexCartObjWellDefinedProof {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(named),

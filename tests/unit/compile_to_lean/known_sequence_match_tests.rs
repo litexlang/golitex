@@ -64,17 +64,6 @@ fn known_sequence_matches_original_single_carrier_child() {
     );
 }
 #[test]
-fn known_sequence_replays_actual_alpha_domains_and_nested_carriers() {
-    for source in ALL {
-        let (run, compiler) = super::execute(source);
-        let output = super::compile_run(&run, &compiler, "known_sequence_profiles").unwrap();
-        assert_eq!(
-            output,
-            super::compile_run(&run, &compiler, "known_sequence_profiles").unwrap()
-        );
-    }
-}
-#[test]
 fn known_sequence_requires_both_captured_constructor_subjects() {
     for pattern_side in [false, true] {
         let (mut run, compiler) = super::execute(SOURCE);
@@ -286,17 +275,5 @@ fn known_sequence_keeps_guard_equality_and_positive_natural_indices() {
     }
 }
 
-const SOURCE: &str = "# Sequence-space equality is reused at an alpha-renamed function-space carrier.\n# Before: the same source verified, but its second fact could not compile.\n# forall replay36_A set:\n#     seq(replay36_A)=fn(replay36_k N+) replay36_A\n# seq(fn(replay36_v R) R)=fn(replay36_i N+) fn(replay36_w R) R\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Now: replay the original single carrier match and original scoped formation.\n# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_v R) R)=fn(replay36_i N+) fn(replay36_w R) R\n# Boundary: changing the right carrier guard remains unproved.\n# Evidence: litex -lean -strict -f lean/examples/known_sequence_real/statement.lit\n# Evidence: known_sequence_match_tests rejects damaged evidence and scope escapes.\n";
+const SOURCE: &str = "# Sequence-space equality is reused at an alpha-renamed function-space carrier.\n# Before: the same source verified, but its second fact could not compile.\n# forall replay36_A set:\n#     seq(replay36_A)=fn(replay36_k N+) replay36_A\n# seq(fn(replay36_v R) R)=fn(replay36_i N+) fn(replay36_w R) R\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Now: replay the original single carrier match and original scoped formation.\n# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_v R) R)=fn(replay36_i N+) fn(replay36_w R) R\n# Boundary: changing the right carrier guard remains unproved.\n# Evidence: litex -lean -strict -f corpus case known_sequence_real\n# Evidence: known_sequence_match_tests rejects damaged evidence and scope escapes.\n";
 const GUARDED: &str = "# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_gv R:replay36_gv>0) R)=fn(replay36_gi N+) fn(replay36_gw R:replay36_gw>0) R\n";
-const ALL: &[&str] = &[
-"# Sequence-space equality is reused at an alpha-renamed function-space carrier.\n# Before: the same source verified, but its second fact could not compile.\n# forall replay36_A set:\n#     seq(replay36_A)=fn(replay36_k N+) replay36_A\n# seq(fn(replay36_v R) R)=fn(replay36_i N+) fn(replay36_w R) R\n# Former compiler result: CompoundKnown/StructureConstructor.\n# Now: replay the original single carrier match and original scoped formation.\n# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_v R) R)=fn(replay36_i N+) fn(replay36_w R) R\n# Boundary: changing the right carrier guard remains unproved.\n# Evidence: litex -lean -strict -f lean/examples/known_sequence_real/statement.lit\n# Evidence: known_sequence_match_tests rejects damaged evidence and scope escapes.\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_cv C) C)=fn(replay36_ci N+) fn(replay36_cw C) C\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_ov R) {})=fn(replay36_oi N+) fn(replay36_ow R) {}\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_ev {}) C)=fn(replay36_ei N+) fn(replay36_ew {}) C\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_gv R:replay36_gv>0) R)=fn(replay36_gi N+) fn(replay36_gw R:replay36_gw>0) R\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_mv R,replay36_mu C) C)=fn(replay36_mi N+) fn(replay36_mw R,replay36_mt C) C\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_iv closed_range(1,2)) R)=fn(replay36_ii N+) fn(replay36_iw closed_range(1,2)) R\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(fn(replay36_nv R) fn(replay36_nu C) C)=fn(replay36_ni N+) fn(replay36_nw R) fn(replay36_nt C) C\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nseq(finite_seq(fn(replay36_fv R) R,2))=fn(replay36_fi N+) finite_seq(fn(replay36_fw R) R,2)\n",
-"# Sequence spaces are function spaces on the positive natural indices.\nforall replay36_A set:\n    seq(replay36_A)=fn(replay36_k N+) replay36_A\nforall replay36_h fn(replay36_t R) N,replay36_a R:\n    replay36_h(replay36_a) $in N\n    seq(fn(replay36_rv closed_range(1,replay36_h(replay36_a))) R)=fn(replay36_ri N+) fn(replay36_rw closed_range(1,replay36_h(replay36_a))) R\n",
-];

@@ -118,15 +118,30 @@ impl LitexToLeanCompiler {
         body_text.extend(definitions);
         for (index, (source, step)) in proof.statement.proof.iter().zip(steps).enumerate() {
             validate_statement_capture(source, step)?;
-            body_text.push(self.compile_statement_in_scope(
-                step,
-                &SourcePosition {
-                    before: head_count + index,
-                    ..*position
-                },
-                index + 1,
-                true,
-            )?);
+            body_text.push(
+                self.compile_statement_in_scope(
+                    step,
+                    &SourcePosition {
+                        before: head_count + index,
+                        ..*position
+                    },
+                    index + 1,
+                    true,
+                )
+                .map_err(|mut error| {
+                    error.message = format!(
+                        "{} Claim step {}: {}",
+                        error.message,
+                        index + 1,
+                        source
+                            .readable_string()
+                            .lines()
+                            .next()
+                            .unwrap_or("<empty source>")
+                    );
+                    error
+                })?,
+            );
         }
         let mut conclusions = Vec::new();
         for (expected, result) in expected.iter().zip(results) {
@@ -201,13 +216,8 @@ impl LitexToLeanCompiler {
                 let mut propositions = Vec::new();
                 for (source, formation) in fact.then_facts.iter().zip(&wd.detailed_ref().then) {
                     let source = claim_goal_component(source)?;
-                    self.compile_fact_wd(formation, &source, &complete)?;
-                    let formed = SourcePosition::new(
-                        Some(&complete),
-                        SourceOwner::FactWD(formation),
-                        usize::MAX,
-                    );
-                    propositions.push(self.fact_proposition(&source, &formed)?);
+                    propositions
+                        .push(self.compile_formed_fact_proposition(formation, &source, &complete)?);
                 }
                 let meaning =
                     self.scope_proposition(conjunction_proposition(propositions)?, &definitions);
@@ -226,15 +236,11 @@ impl LitexToLeanCompiler {
                 | Fact::NotExistFact(_)
                 | Fact::ExistUniqueFact(_),
                 _,
-            ) => {
-                let formed =
-                    SourcePosition::new(Some(position), SourceOwner::FactWD(goal_wd), usize::MAX);
-                Ok((
-                    self.fact_proposition(&proof.statement.fact, &formed)?,
-                    Vec::new(),
-                    Vec::new(),
-                ))
-            }
+            ) => Ok((
+                self.compile_formed_fact_proposition(goal_wd, &proof.statement.fact, position)?,
+                Vec::new(),
+                Vec::new(),
+            )),
             _ => Err(LeanCompileError::unsupported("Claim/GoalBodyShape")),
         }
     }

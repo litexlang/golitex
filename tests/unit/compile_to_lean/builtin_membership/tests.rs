@@ -81,7 +81,11 @@ fn identical_premise_and_return_id_obeys_the_original_stage_boundary() {
 
 #[test]
 fn selected_membership_publishes_its_inference_for_the_next_statement() {
-    let source = include_str!("../../../../lean/examples/square_set_membership/statement.lit");
+    let source = r#"# A real number belongs to the set defined by nonnegativity of its square.
+have b R
+by thm set_builder_member(b, {x R: 0 <= x^2}) => b $in {x R: 0 <= x^2}
+0 <= b^2
+"#;
     let (result, compiler) = super::execute(source);
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(last)) = &result.statement_results[2]
     else {
@@ -105,7 +109,13 @@ fn selected_membership_publishes_its_inference_for_the_next_statement() {
 
 #[test]
 fn cart_membership_theorem_preserves_the_complete_finite_domain() {
-    let source = include_str!("../../../../lean/examples/cart_membership_theorem/statement.lit");
+    let source = r#"# A real pair and a numeric tuple belong to their Cartesian carriers.
+release thm cart_member_from_coordinates((1, 2), cart(R, R))
+thm widen_cart:
+    ? forall point_arg cart(R, R):
+        point_arg $in cart(C, C)
+    by thm cart_member_from_coordinates(point_arg, cart(C, C)) => point_arg $in cart(C, C)
+"#;
     let (result, compiler) = super::execute(source);
     let output = compiler.compile_run(&result, "cart_member").unwrap();
     assert!(output.contains("Litex.FunctionSemantics M"));
@@ -154,9 +164,14 @@ fn cart_membership_theorem_preserves_the_complete_finite_domain() {
 fn function_membership_replays_both_inclusions_for_release_and_selected_calls() {
     use crate::execute::execute_by_stmt::BuiltinFunctionDomainProof;
     use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
-    let (run, compiler) = super::execute(include_str!(
-        "../../../../lean/examples/reordered_function_membership/statement.lit"
-    ));
+    let (run, compiler) = super::execute(
+        r#"# Reordered nonzero conditions describe the same complete domains, and real outputs can also be viewed as complex outputs.
+have fn membership_shift(x R: x != 0, x != 1) R = x + 1
+release thm fn_set_member(membership_shift, fn(y R: y != 1, y != 0) C)
+have fn membership_quotient(x, y R: y != 0, x != 0) R = x / y
+by thm fn_set_member(membership_quotient, fn(a, b R: a != 0, b != 0) C) => membership_quotient $in fn(a, b R: a != 0, b != 0) C
+"#,
+    );
     for index in [1, 3] {
         let domain = match &run.statement_results[index] {
             ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
@@ -185,31 +200,19 @@ fn function_membership_replays_both_inclusions_for_release_and_selected_calls() 
 }
 
 #[test]
-fn function_membership_replays_positive_domains_and_abstract_citations() {
-    for source in [
-        include_str!("../../../../lean/examples/positive_function_membership/statement.lit"),
-        include_str!(
-            "../../../../lean/examples/abstract_function_membership_domains/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "equivalent_function_domains")
-            .unwrap();
-        assert!(lean.contains("Litex.SetSemantics.ext"));
-        assert!(lean.contains("Litex.FunctionSemantics.fnSet_of_returns"));
-    }
-}
-
-#[test]
 fn function_membership_rejects_swapped_inclusions_and_forged_alpha_comparisons() {
     use crate::execute::execute_by_stmt::BuiltinFunctionDomainProof;
     use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
     for index in [1, 3] {
         for mutation in 0..3 {
-            let (mut run, compiler) = super::execute(include_str!(
-                "../../../../lean/examples/reordered_function_membership/statement.lit"
-            ));
+            let (mut run, compiler) = super::execute(
+                r#"# Reordered nonzero conditions describe the same complete domains, and real outputs can also be viewed as complex outputs.
+have fn membership_shift(x R: x != 0, x != 1) R = x + 1
+release thm fn_set_member(membership_shift, fn(y R: y != 1, y != 0) C)
+have fn membership_quotient(x, y R: y != 0, x != 0) R = x / y
+by thm fn_set_member(membership_quotient, fn(a, b R: a != 0, b != 0) C) => membership_quotient $in fn(a, b R: a != 0, b != 0) C
+"#,
+            );
             let domain = match &mut run.statement_results[index] {
                 ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
                     ExecReleaseThmStmtResult::Success(p),
@@ -253,9 +256,14 @@ fn function_membership_rejects_swapped_inclusions_and_forged_alpha_comparisons()
 #[test]
 fn function_membership_domain_comparison_cannot_cite_later_return_proofs() {
     use crate::execute::execute_by_stmt::BuiltinFunctionDomainProof;
-    let (run, compiler) = super::execute(include_str!(
-        "../../../../lean/examples/reordered_function_membership/statement.lit"
-    ));
+    let (run, compiler) = super::execute(
+        r#"# Reordered nonzero conditions describe the same complete domains, and real outputs can also be viewed as complex outputs.
+have fn membership_shift(x R: x != 0, x != 1) R = x + 1
+release thm fn_set_member(membership_shift, fn(y R: y != 1, y != 0) C)
+have fn membership_quotient(x, y R: y != 0, x != 0) R = x / y
+by thm fn_set_member(membership_quotient, fn(a, b R: a != 0, b != 0) C) => membership_quotient $in fn(a, b R: a != 0, b != 0) C
+"#,
+    );
     for index in [1, 3] {
         let (owner, domain, id) = match &run.statement_results[index] {
             ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
@@ -321,9 +329,13 @@ fn function_membership_replays_complete_composition_domains() {
     use crate::execute::execute_fact_stmt::function_domain::{
         CompleteFunctionDomainSourceProof, FunctionDomainComparisonProof,
     };
-    let (run, compiler) = super::execute(include_str!(
-        "../../../../lean/examples/composed_quotient_membership/statement.lit"
-    ));
+    let (run, compiler) = super::execute(
+        r#"# Squaring a quotient of nonzero reals gives a complex-valued function on the same two-input domain.
+have fn membership_square(x R) R = x ^ 2
+have fn membership_quotient(x, y R: y != 0, x != 0) R = x / y
+release thm fn_set_member(membership_square ∘ membership_quotient, fn(a, b R: a != 0, b != 0) C)
+"#,
+    );
     let ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
         ExecReleaseThmStmtResult::Success(p),
     )) = &run.statement_results[2]
@@ -350,8 +362,12 @@ fn function_membership_replays_complete_composition_domains() {
 
 #[test]
 fn function_membership_replays_original_guards_and_return_forall() {
-    let source =
-        include_str!("../../../../lean/examples/function_membership_theorem/statement.lit");
+    let source = r#"# Formula functions retain their nonzero input conditions when their return bound is widened.
+release thm fn_set_member(fn(x R) R {x}, fn(y R) C)
+have fn recip_fn(x R: x != 0) R = 1 / x
+by thm fn_set_member(recip_fn, fn(y R: y != 0) C) => recip_fn $in fn(y R: y != 0) C
+release thm fn_set_member(fn(x R, y R: y != 0) R {x / y}, fn(u R, v R: v != 0) C)
+"#;
     let (result, compiler) = super::execute(source);
     let output = compiler.compile_run(&result, "fn_member").unwrap();
     assert!(output.contains("Litex.FunctionSemantics.fnSet_of_returns"));

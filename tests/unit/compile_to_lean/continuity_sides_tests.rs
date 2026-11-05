@@ -5,13 +5,41 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const LEFT: &str = include_str!("../../../lean/examples/function_continuous_to_left/statement.lit");
-const RIGHT: &str =
-    include_str!("../../../lean/examples/function_continuous_to_right/statement.lit");
-const BOTH: &str =
-    include_str!("../../../lean/examples/function_continuous_from_sides/statement.lit");
-const CHAIN: &str =
-    include_str!("../../../lean/examples/function_continuous_side_chain/statement.lit");
+const LEFT: &str = r#"# Relate full and one-sided continuity at the same point of the complete domain.
+thm checked_function_continuous_to_left:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        =>:
+            $is_continuous_left(f,p)
+    release thm fn_continuous_at_to_left(f,p)
+"#;
+const RIGHT: &str = r#"# Relate full and one-sided continuity at the same point of the complete domain.
+thm checked_function_continuous_to_right:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        =>:
+            $is_continuous_right(f,p)
+    release thm fn_continuous_at_to_right(f,p)
+"#;
+const BOTH: &str = r#"# Relate full and one-sided continuity at the same point of the complete domain.
+thm checked_function_continuous_from_sides:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        $is_continuous_right(f,p)
+        =>:
+            $is_continuous_at(f,p)
+    release thm fn_continuous_from_sides(f,p)
+"#;
+const CHAIN: &str = r#"# Compose the original side-restriction and recombination rules at one point.
+thm checked_function_continuous_side_chain:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        =>:
+            $is_continuous_at(f,p)
+    release thm fn_continuous_at_to_left(f,p)
+    release thm fn_continuous_at_to_right(f,p)
+    release thm fn_continuous_from_sides(f,p)
+"#;
 
 fn body(run: &mut RunLitexCodeResult) -> &mut ExecDefThmForallProof {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -34,35 +62,6 @@ fn final_invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSucc
         panic!("final release")
     };
     call
-}
-
-#[test]
-fn continuity_sides_replay_all_three_schemas_guarded_points_constructors_chain_and_transport() {
-    for source in [
-        LEFT,
-        RIGHT,
-        BOTH,
-        CHAIN,
-        include_str!("../../../lean/examples/function_continuous_guarded_to_left/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_guarded_to_right/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_guarded_from_sides/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_expression_point/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_side_transport/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_inline_function/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "continuity_sides")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(
-            output.contains("Litex.functionContinuousAtRestrictSide")
-                || output.contains("Litex.functionContinuousAtFromSides")
-        );
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "continuity_sides").unwrap()
-        );
-    }
 }
 
 #[test]
@@ -211,9 +210,17 @@ fn continuity_sides_keep_real_function_context_and_guarded_complete_domain() {
         "proof_order",
         "store_order",
     ] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/function_continuous_guarded_to_left/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Relate full and one-sided continuity at the same point of the complete domain.
+thm checked_function_continuous_guarded_to_left:
+    ? forall f fn(x R+: x!=2) R, p R+:
+        p!=2
+        $is_continuous_at(f,p)
+        =>:
+            $is_continuous_left(f,p)
+    release thm fn_continuous_at_to_left(f,p)
+"#,
+        );
         let call = invocation(&mut run);
         match change {
             "proof_order" => call.dom_proofs.swap(0, 1),

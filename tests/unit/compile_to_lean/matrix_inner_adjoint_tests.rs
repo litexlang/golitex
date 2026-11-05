@@ -2,34 +2,19 @@ use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_by_stmt::BuiltinThmApplication;
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/matrix_inner_adjoint/statement.lit");
+const SOURCE: &str = r#"# Moving a finite complex matrix across an inner product takes its conjugate transpose.
+thm checked_matrix_inner_adjoint_preparation:
+    ? forall m, n N, A matrix(C,m,n), u cart_n(C,n), v cart_n(C,m):
+        inner_product(matrix_apply(A,u,m,n),v,m)=inner_product(u,matrix_apply(conjugate_transpose(A,m,n),v,n,m),n)
+    release thm matrix_inner_product_adjoint(A,u,v,m,n)
+
+"#;
 
 fn goal(b: &mut BuiltinThmApplication) -> &mut EqualFact {
     let Fact::AtomicFact(AtomicFact::EqualFact(f)) = &mut b.conclusions[0] else {
         panic!()
     };
     f
-}
-
-#[test]
-fn matrix_inner_adjoint_replays_complex_real_each_empty_axis_and_original_constructor_input() {
-    for source in [
-        SOURCE,
-        include_str!("../../../lean/examples/matrix_inner_adjoint_real/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inner_adjoint_empty_rows/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inner_adjoint_empty_cols/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inner_adjoint_zero_matrix/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let out = compiler
-            .compile_run(&run, "matrix_inner_adjoint")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains("Litex.matrixInnerProductAdjoint"));
-        assert_eq!(
-            out,
-            compiler.compile_run(&run, "matrix_inner_adjoint").unwrap()
-        );
-    }
 }
 
 #[test]

@@ -1,7 +1,9 @@
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
-const SOURCE: &str =
-    include_str!("../../../lean/examples/empty_determinant_evaluation/statement.lit");
+const SOURCE: &str = r#"# Evaluate the empty determinant; its multiplicative identity is one.
+eval det(zero_matrix(0,0),0)
+det(zero_matrix(0,0),0)=1
+"#;
 
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
     run.statement_results

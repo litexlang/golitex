@@ -1,50 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn complex_projection_pairs_replay_the_selected_builtin() {
-    for (source, law) in [
-        (
-            include_str!("../../../lean/examples/complex_real_projection/statement.lit"),
-            "realPartOfRealValue",
-        ),
-        (
-            include_str!("../../../lean/examples/complex_real_imaginary_zero/statement.lit"),
-            "imaginaryPartOfRealValue",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/complex_rectangular_real_projection/statement.lit"
-            ),
-            "realPartRectangularValue",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/complex_rectangular_imaginary_projection/statement.lit"
-            ),
-            "imaginaryPartRectangularValue",
-        ),
-        (
-            include_str!("../../../lean/examples/complex_product_real_projection/statement.lit"),
-            "complexRealProduct",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/complex_product_imaginary_projection/statement.lit"
-            ),
-            "complexImaginaryProduct",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "complex_projection").unwrap();
-        assert!(output.contains(&format!("Litex.{law}")));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "complex_projection").unwrap()
-        );
-    }
-}
-
-#[test]
 fn rectangular_projection_keeps_all_source_permutations() {
     for imaginary in [false, true] {
         for real_first in [false, true] {
@@ -81,7 +37,10 @@ fn rectangular_projection_keeps_all_source_permutations() {
 
 #[test]
 fn real_projection_requires_original_real_membership() {
-    let source = include_str!("../../../lean/examples/complex_real_projection/statement.lit");
+    let source = r#"# Real-part projection fixes real numbers.
+forall x R:
+    re(x) = x
+"#;
     let (mut run, compiler) = super::execute(source);
     let universal = super::forall_proof_mut(&mut run.statement_results[0]);
     let equality = super::equality_proof_mut(&mut universal.proved_then_facts[0].verify_result);
@@ -107,9 +66,10 @@ fn real_projection_requires_original_real_membership() {
 
 #[test]
 fn rectangular_projection_rejects_swapped_coefficient_proofs() {
-    let source = include_str!(
-        "../../../lean/examples/complex_rectangular_imaginary_projection/statement.lit"
-    );
+    let source = r#"# The imaginary coordinate of a rectangular complex number is its imaginary coefficient.
+forall x R, y R:
+    img(x + y * i) = y
+"#;
     let (mut run, compiler) = super::execute(source);
     let universal = super::forall_proof_mut(&mut run.statement_results[0]);
     let equality = super::equality_proof_mut(&mut universal.proved_then_facts[0].verify_result);

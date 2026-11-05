@@ -5,8 +5,17 @@ use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtRe
 use crate::execute::ExecDefinitionStmtResult;
 use crate::prelude::*;
 
-const SUM: &str =
-    include_str!("../../../lean/examples/function_limit_at_add_by_theorem/statement.lit");
+const SUM: &str = r#"# Transfer two at limits through add on the same complete domain.
+thm at_add_limits:
+    ? forall f,g,s fn(x R) R, p,a,b R:
+        $has_limit_at(f,p,a)
+        $has_limit_at(g,p,b)
+        forall x R:
+            s(x)=f(x)+g(x)
+        =>:
+            $has_limit_at(s,p,a+b)
+    by thm fn_limit_at_add(f,g,s,p,a,b) => $has_limit_at(s,p,a+b)
+"#;
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(p),
@@ -23,49 +32,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
         panic!("binary limit invocation")
     };
     p
-}
-
-#[test]
-fn binary_limit_algebra_replays_all_five_approaches() {
-    for source in [
-        SUM,
-        include_str!("../../../lean/examples/function_limit_at_subtract_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_at_multiply_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_add_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_left_subtract_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_left_multiply_by_theorem/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_limit_right_add_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_right_subtract_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_right_multiply_by_theorem/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_limit_pos_inf_add_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_subtract_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_multiply_by_theorem/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_limit_neg_inf_add_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_subtract_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_multiply_by_theorem/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "binary_limit")
-            .unwrap()
-            .contains("FunctionLimitMapTwo"));
-    }
 }
 
 #[test]
@@ -135,30 +101,21 @@ fn binary_limit_algebra_rejects_a_changed_formula_or_result() {
 }
 
 #[test]
-fn division_limits_replay_both_nonzero_obligations_in_all_approaches() {
-    for source in [
-        include_str!("../../../lean/examples/function_limit_at_divide_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_divide_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_divide_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_divide_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_divide_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_guarded_multiply_by_theorem/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "division_limit").unwrap();
-    }
-}
-
-#[test]
 fn division_limits_reject_missing_or_changed_nonzero_evidence() {
-    let source =
-        include_str!("../../../lean/examples/function_limit_at_divide_by_theorem/statement.lit");
+    let source = r#"# Divide two at limits with a nonzero limit and nonzero denominator calls.
+thm at_quotient_limit:
+    ? forall f,g,q fn(x R) R, p,a,b R:
+        $has_limit_at(f,p,a)
+        $has_limit_at(g,p,b)
+        b!=0
+        forall x R:
+            g(x)!=0
+        forall x R:
+            q(x)=f(x)/g(x)
+        =>:
+            $has_limit_at(q,p,a/b)
+    by thm fn_limit_at_divide(f,g,q,p,a,b) => $has_limit_at(q,p,a/b)
+"#;
     for mutation in 0..4 {
         let (mut run, compiler) = super::execute(source);
         let p = invocation(&mut run);
@@ -186,18 +143,4 @@ fn division_limits_reject_missing_or_changed_nonzero_evidence() {
             .compile_run(&run, "invalid_division_limit")
             .expect_err("nonzero limit and nonzero calls have distinct source evidence");
     }
-}
-
-#[test]
-fn polynomial_limit_chain_keeps_generated_output_bounded() {
-    let source =
-        include_str!("../../../lean/examples/function_limit_polynomial_chain/statement.lit");
-    let (run, compiler) = super::execute(source);
-    let lean = compiler.compile_run(&run, "polynomial_chain").unwrap();
-    assert!(
-        lean.len() < 1_000_000,
-        "a seventeen-statement chain must share earlier certificates"
-    );
-    assert!(lean.contains("FunctionLimitMapTwo"));
-    assert!(lean.contains("finiteFunctionLimitEqCandidate"));
 }

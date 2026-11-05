@@ -3,19 +3,48 @@ use crate::builtin_theorem::BuiltinTheoremId;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
 use crate::prelude::*;
 
-const SELECTED: &str =
-    include_str!("../../../lean/examples/range_sum_bijective_enumerations/statement.lit");
-const RELEASE: &str =
-    include_str!("../../../lean/examples/range_sum_bijective_enumerations_release/statement.lit");
+const SELECTED: &str = r#"# Checked named callbacks preserve the two original bijections.
+thm checked_bijective_sum_enumerations:
+    ? forall f fn(t {1, 2}) R, e1, e2 fn(u closed_range(1, 2)) {1, 2}, left_fn, right_fn fn(k closed_range(1, 2)) R:
+        $bijective(closed_range(1, 2), {1, 2}, e1)
+        $bijective(closed_range(1, 2), {1, 2}, e2)
+        left_fn = fn(k closed_range(1, 2)) R{f(e1(k))}
+        right_fn = fn(k closed_range(1, 2)) R{f(e2(k))}
+        =>:
+            sum(1, 2, left_fn) = sum(1, 2, right_fn)
+    by thm sum_over_bijective_finite_set_enumerations(sum(1, 2, left_fn), sum(1, 2, right_fn)) => sum(1, 2, left_fn) = sum(1, 2, right_fn)
+"#;
+const RELEASE: &str = r#"# Checked named callbacks preserve the two original bijections.
+thm checked_bijective_sum_enumerations_release:
+    ? forall f fn(t {1, 2}) R, e1, e2 fn(u closed_range(1, 2)) {1, 2}, left_fn, right_fn fn(k closed_range(1, 2)) R:
+        $bijective(closed_range(1, 2), {1, 2}, e1)
+        $bijective(closed_range(1, 2), {1, 2}, e2)
+        left_fn = fn(k closed_range(1, 2)) R{f(e1(k))}
+        right_fn = fn(k closed_range(1, 2)) R{f(e2(k))}
+        =>:
+            sum(1, 2, left_fn) = sum(1, 2, right_fn)
+    release thm sum_over_bijective_finite_set_enumerations(sum(1, 2, left_fn), sum(1, 2, right_fn))
+    sum(1, 2, left_fn) = sum(1, 2, right_fn)
+"#;
 
 #[test]
 fn enumeration_sum_replays_named_callback_equations_and_both_original_bijections() {
     for source in [
         SELECTED,
         RELEASE,
-        include_str!(
-            "../../../lean/examples/range_sum_bijective_enumerations_general/statement.lit"
-        ),
+        r#"# Arbitrary finite targets and integer intervals retain their original bounds.
+thm checked_bijective_sum_enumerations_general:
+    ? forall A finite_set, a, b Z, f fn(t A) C, e1, e2 fn(u closed_range(a, b)) A, left_fn, right_fn fn(k closed_range(a, b)) C:
+        a <= b
+        $bijective(closed_range(a, b), A, e1)
+        $bijective(closed_range(a, b), A, e2)
+        left_fn = fn(k closed_range(a, b)) C{f(e1(k))}
+        right_fn = fn(k closed_range(a, b)) C{f(e2(k))}
+        =>:
+            sum(a, b, left_fn) = sum(a, b, right_fn)
+    release thm sum_over_bijective_finite_set_enumerations(sum(a, b, left_fn), sum(a, b, right_fn))
+    sum(a, b, left_fn) = sum(a, b, right_fn)
+"#,
     ] {
         let (run, compiler) = super::execute(source);
         let output = compiler.compile_run(&run, "enumeration_sum").unwrap();

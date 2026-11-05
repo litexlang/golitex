@@ -2,35 +2,83 @@ use crate::execute::execute_fact_stmt::function_domain::{CompleteFunctionDomainS
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::result::FunctionGraphNonemptyFromDomainStrategySingleStep;
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
-macro_rules! source {
-    ($s:literal) => {
-        include_str!(concat!(
-            "../../../lean/examples/function_graph_nonempty_",
-            $s,
-            "/statement.lit"
-        ))
-    };
-}
-const DOMAIN: &str = source!("domain");
-const GROUPS: &str = source!("groups");
-const ARGS: &str = source!("arguments");
-const EXIST: &str = source!("multiple_exist");
+const DOMAIN: &str = r#"# A function graph is nonempty when its complete input domain is nonempty.
+forall replay_graph_A nonempty_set,replay_graph_B set,replay_graph_f fn(replay_graph_x replay_graph_A) replay_graph_B:
+    $is_nonempty_set(replay_graph_f)
+"#;
+const GROUPS: &str = r#"# Nonempty parameter groups supply a complete input for the function graph.
+forall replay_graph_group_A nonempty_set,replay_graph_group_B nonempty_set,replay_graph_group_C set,replay_graph_group_f fn(replay_graph_group_x,replay_graph_group_y replay_graph_group_A,replay_graph_group_z replay_graph_group_B) replay_graph_group_C:
+    $is_nonempty_set(replay_graph_group_f)
+"#;
+const ARGS: &str = r#"# The ordered singleton inputs satisfy both guards of a three-argument function.
+forall replay_graph_args_C set,replay_graph_args_f fn(replay_graph_args_x {2},replay_graph_args_y {3},replay_graph_args_z {4}:replay_graph_args_x<replay_graph_args_y,replay_graph_args_y<replay_graph_args_z) replay_graph_args_C:
+    $is_nonempty_set(replay_graph_args_f)
+"#;
+const EXIST: &str = r#"# A joint guarded input witness supplies a point of a two-argument graph.
+forall replay_graph_multi_A,replay_graph_multi_B set,replay_graph_multi_c,replay_graph_multi_d R,replay_graph_multi_f fn(replay_graph_multi_x replay_graph_multi_A,replay_graph_multi_y replay_graph_multi_B:replay_graph_multi_x!=replay_graph_multi_c,replay_graph_multi_y!=replay_graph_multi_d) R:
+    exist replay_graph_multi_w replay_graph_multi_A,replay_graph_multi_z replay_graph_multi_B st {replay_graph_multi_w!=replay_graph_multi_c,replay_graph_multi_z!=replay_graph_multi_d}
+    =>:
+        $is_nonempty_set(replay_graph_multi_f)
+"#;
 const ALL: &[&str] = &[
     DOMAIN,
     GROUPS,
     ARGS,
     EXIST,
-    source!("guard"),
-    source!("exist"),
-    source!("closed_range"),
-    source!("half_open"),
-    source!("anonymous"),
-    source!("composition"),
-    source!("matrix"),
-    source!("application"),
-    source!("selector"),
-    source!("subject_transport"),
-    source!("carrier_transport"),
+    r#"# The original admissible zero input supplies a point of the function graph.
+forall replay_graph_guard_B set,replay_graph_guard_f fn(replay_graph_guard_x R: replay_graph_guard_x=0) replay_graph_guard_B:
+    $is_nonempty_set(replay_graph_guard_f)
+"#,
+    r#"# An existing guarded input witness supplies a point of the function graph.
+forall replay_graph_exist_A set,replay_graph_exist_B set,replay_graph_exist_c R,replay_graph_exist_f fn(replay_graph_exist_x replay_graph_exist_A: replay_graph_exist_x!=replay_graph_exist_c) replay_graph_exist_B:
+    exist replay_graph_exist_w replay_graph_exist_A st {replay_graph_exist_w!=replay_graph_exist_c}
+    =>:
+        $is_nonempty_set(replay_graph_exist_f)
+"#,
+    r#"# The left endpoint of an ordered closed integer interval is an admissible input.
+forall replay_graph_range_a,replay_graph_range_b Z,replay_graph_range_C set,replay_graph_range_f fn(replay_graph_range_x closed_range(replay_graph_range_a,replay_graph_range_b):replay_graph_range_x=replay_graph_range_x) replay_graph_range_C:
+    replay_graph_range_a<=replay_graph_range_b
+    =>:
+        $is_nonempty_set(replay_graph_range_f)
+"#,
+    r#"# The left endpoint of a strictly ordered half-open integer interval is admissible.
+forall replay_graph_half_a,replay_graph_half_b Z,replay_graph_half_C set,replay_graph_half_f fn(replay_graph_half_x range(replay_graph_half_a,replay_graph_half_b):replay_graph_half_x=replay_graph_half_x) replay_graph_half_C:
+    replay_graph_half_a<replay_graph_half_b
+    =>:
+        $is_nonempty_set(replay_graph_half_f)
+"#,
+    r#"# The identity function on positive real inputs has a nonempty graph.
+$is_nonempty_set(fn(replay_graph_anon_x R+) R {replay_graph_anon_x})
+"#,
+    r#"# The composition of real identity functions has a nonempty graph.
+have fn replay_graph_identity(replay_graph_identity_x R) R = replay_graph_identity_x
+$is_nonempty_set(replay_graph_identity ∘ replay_graph_identity)
+"#,
+    r#"# A positive-order identity matrix has a nonempty graph of entries.
+$is_nonempty_set(identity_matrix(2))
+"#,
+    r#"# A returned function on the real line has a nonempty graph.
+forall replay_graph_higher_f fn(replay_graph_higher_x R) fn(replay_graph_higher_y R) R,replay_graph_higher_p R:
+    $is_nonempty_set(replay_graph_higher_f(replay_graph_higher_p))
+"#,
+    r#"# A selected two-coordinate gradient has a nonempty finite graph.
+forall replay_graph_select_f fn(replay_graph_select_x cart_n(R,2)) R,replay_graph_select_p,replay_graph_select_g cart_n(R,2):
+    $has_gradient_at(replay_graph_select_f,replay_graph_select_p,2,replay_graph_select_g)
+    =>:
+        $is_nonempty_set(gradient_at(replay_graph_select_f,replay_graph_select_p,2))
+"#,
+    r#"# Equality to an identity function transports graph nonemptiness.
+forall replay_graph_alias_A nonempty_set,replay_graph_alias_f set:
+    replay_graph_alias_f=fn(replay_graph_alias_x replay_graph_alias_A) replay_graph_alias_A {replay_graph_alias_x}
+    =>:
+        $is_nonempty_set(replay_graph_alias_f)
+"#,
+    r#"# An original function-space equality retains the nonempty input domain.
+forall replay_graph_car_A nonempty_set,replay_graph_car_B set,replay_graph_car_S set,replay_graph_car_f replay_graph_car_S:
+    replay_graph_car_S=fn(replay_graph_car_x replay_graph_car_A) replay_graph_car_B
+    =>:
+        $is_nonempty_set(replay_graph_car_f)
+"#,
 ];
 fn atom(statement: &mut ExecStmtResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) = statement else {
@@ -273,7 +321,20 @@ fn graph_nonempty_argument_membership_retains_original_wd_and_citation() {
 }
 #[test]
 fn graph_nonempty_integer_range_start_retains_integer_order_and_carrier_evidence() {
-    for source in [source!("closed_range"), source!("half_open")] {
+    for source in [
+        r#"# The left endpoint of an ordered closed integer interval is an admissible input.
+forall replay_graph_range_a,replay_graph_range_b Z,replay_graph_range_C set,replay_graph_range_f fn(replay_graph_range_x closed_range(replay_graph_range_a,replay_graph_range_b):replay_graph_range_x=replay_graph_range_x) replay_graph_range_C:
+    replay_graph_range_a<=replay_graph_range_b
+    =>:
+        $is_nonempty_set(replay_graph_range_f)
+"#,
+        r#"# The left endpoint of a strictly ordered half-open integer interval is admissible.
+forall replay_graph_half_a,replay_graph_half_b Z,replay_graph_half_C set,replay_graph_half_f fn(replay_graph_half_x range(replay_graph_half_a,replay_graph_half_b):replay_graph_half_x=replay_graph_half_x) replay_graph_half_C:
+    replay_graph_half_a<replay_graph_half_b
+    =>:
+        $is_nonempty_set(replay_graph_half_f)
+"#,
+    ] {
         for change in ["integer", "order", "wd"] {
             let (mut run, c) = super::execute(source);
             let E::ArgumentWitness { memberships, .. } =
@@ -376,7 +437,20 @@ fn graph_nonempty_membership_source_needs_its_original_fact_and_subject() {
 }
 #[test]
 fn graph_nonempty_transports_retain_the_actual_subject_and_carrier_paths() {
-    for source in [source!("subject_transport"), source!("carrier_transport")] {
+    for source in [
+        r#"# Equality to an identity function transports graph nonemptiness.
+forall replay_graph_alias_A nonempty_set,replay_graph_alias_f set:
+    replay_graph_alias_f=fn(replay_graph_alias_x replay_graph_alias_A) replay_graph_alias_A {replay_graph_alias_x}
+    =>:
+        $is_nonempty_set(replay_graph_alias_f)
+"#,
+        r#"# An original function-space equality retains the nonempty input domain.
+forall replay_graph_car_A nonempty_set,replay_graph_car_B set,replay_graph_car_S set,replay_graph_car_f replay_graph_car_S:
+    replay_graph_car_S=fn(replay_graph_car_x replay_graph_car_A) replay_graph_car_B
+    =>:
+        $is_nonempty_set(replay_graph_car_f)
+"#,
+    ] {
         for change in ["missing", "citation"] {
             let (mut run, c) = super::execute(source);
             let path = match &mut selected(&mut run.statement_results[0]).source.source {
@@ -397,7 +471,12 @@ fn graph_nonempty_transports_retain_the_actual_subject_and_carrier_paths() {
 #[test]
 fn graph_nonempty_returned_function_keeps_original_application_wd_and_signature() {
     for change in ["wd", "ret"] {
-        let (mut run, c) = super::execute(source!("application"));
+        let (mut run, c) = super::execute(
+            r#"# A returned function on the real line has a nonempty graph.
+forall replay_graph_higher_f fn(replay_graph_higher_x R) fn(replay_graph_higher_y R) R,replay_graph_higher_p R:
+    $is_nonempty_set(replay_graph_higher_f(replay_graph_higher_p))
+"#,
+        );
         let S::ApplicationReturn {
             application_check,
             return_space,
@@ -420,13 +499,24 @@ fn graph_nonempty_returned_function_keeps_original_application_wd_and_signature(
 }
 #[test]
 fn graph_nonempty_matrix_and_selector_sources_keep_original_constructor_subjects() {
-    let (mut run, c) = super::execute(source!("matrix"));
+    let (mut run, c) = super::execute(
+        r#"# A positive-order identity matrix has a nonempty graph of entries.
+$is_nonempty_set(identity_matrix(2))
+"#,
+    );
     selected(&mut run.statement_results[0])
         .source
         .signature
         .ret_set = Box::new(Obj::StandardSet(StandardSet::C));
     reject(&run, &c, "matrix_signature");
-    let (mut run, c) = super::execute(source!("selector"));
+    let (mut run, c) = super::execute(
+        r#"# A selected two-coordinate gradient has a nonempty finite graph.
+forall replay_graph_select_f fn(replay_graph_select_x cart_n(R,2)) R,replay_graph_select_p,replay_graph_select_g cart_n(R,2):
+    $has_gradient_at(replay_graph_select_f,replay_graph_select_p,2,replay_graph_select_g)
+    =>:
+        $is_nonempty_set(gradient_at(replay_graph_select_f,replay_graph_select_p,2))
+"#,
+    );
     let S::MultivariableSelector(p) = &mut selected(&mut run.statement_results[0]).source.source
     else {
         panic!()

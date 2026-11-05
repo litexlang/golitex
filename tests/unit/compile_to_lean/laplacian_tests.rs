@@ -1,19 +1,5 @@
 use crate::prelude::*;
 #[test]
-fn laplacians_replay_selection_existence_coordinates_and_partial_definition() {
-    for source in [
-        include_str!("../../../lean/examples/laplacian_selection/statement.lit"),
-        include_str!("../../../lean/examples/laplacian_existence/statement.lit"),
-        include_str!("../../../lean/examples/laplacian_generic_dimension/statement.lit"),
-        include_str!("../../../lean/examples/laplacian_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/laplacian_from_second_partials/statement.lit"),
-        include_str!("../../../lean/examples/laplacian_guarded_domain/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "laplacian_replay").expect(source);
-    }
-}
-#[test]
 fn laplacians_reject_changed_point_domain_and_inference_subjects() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -21,9 +7,15 @@ fn laplacians_reject_changed_point_domain_and_inference_subjects() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/laplacian_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select a certified Laplacian and reuse its real membership.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), d R:
+    $has_laplacian_at(f,p,2,d)
+    =>:
+        laplacian(f,p,2)=d
+        laplacian(f,p,2) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         if mutation == 0 {
             let FactWellDefinedProof::AtomicExceptEquality(p) =

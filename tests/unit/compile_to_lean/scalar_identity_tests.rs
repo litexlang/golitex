@@ -4,52 +4,84 @@ use crate::prelude::*;
 
 const CASES: [(&str, &str, &str); 10] = [
     (
-        include_str!("../../../lean/examples/absolute_difference_symmetry/statement.lit"),
+        r#"# Absolute difference is symmetric.
+forall a,b R:
+    abs(a-b)=abs(b-a)
+"#,
         "AbsDifferenceSymmetry",
         "absDifferenceSymmetryValue",
     ),
     (
-        include_str!("../../../lean/examples/floor_negation/statement.lit"),
+        r#"# Negating a real exchanges floor and negative ceiling.
+forall x R:
+    floor(-x)=0-ceil(x)
+"#,
         "FloorNegation",
         "roundingNegationValue",
     ),
     (
-        include_str!("../../../lean/examples/ceil_negation/statement.lit"),
+        r#"# Negating a real exchanges ceiling and negative floor.
+forall x R:
+    ceil(-x)=0-floor(x)
+"#,
         "CeilNegation",
         "roundingNegationValue",
     ),
     (
-        include_str!("../../../lean/examples/floor_integer_translation/statement.lit"),
+        r#"# Floor commutes with an integer translation.
+forall x R, n Z:
+    floor(x+n)=floor(x)+n
+"#,
         "FloorIntegerTranslation",
         "roundingIntegerTranslationValue",
     ),
     (
-        include_str!("../../../lean/examples/ceil_integer_translation/statement.lit"),
+        r#"# Ceiling commutes with an integer translation.
+forall x R, n Z:
+    ceil(x+n)=ceil(x)+n
+"#,
         "CeilIntegerTranslation",
         "roundingIntegerTranslationValue",
     ),
     (
-        include_str!("../../../lean/examples/minimum_maximum_absorption/statement.lit"),
+        r#"# The minimum absorbs a maximum containing the same real.
+forall x,y R:
+    min(x,max(x,y))=x
+"#,
         "MinMaxAbsorption",
         "minMaxAbsorptionValue",
     ),
     (
-        include_str!("../../../lean/examples/maximum_minimum_absorption/statement.lit"),
+        r#"# The maximum absorbs a minimum containing the same real.
+forall x,y R:
+    max(x,min(x,y))=x
+"#,
         "MaxMinAbsorption",
         "minMaxAbsorptionValue",
     ),
     (
-        include_str!("../../../lean/examples/least_common_multiple_zero/statement.lit"),
+        r#"# An integer and zero have least common multiple zero.
+forall n Z:
+    lcm(n,0)=0
+"#,
         "LcmZero",
         "lcmZeroValue",
     ),
     (
-        include_str!("../../../lean/examples/sign_zero_reflection/statement.lit"),
+        r#"forall x R:
+    sign(x)=0
+    =>:
+        x=0
+"#,
         "SignZeroReflection",
         "signZeroReflectionValue",
     ),
     (
-        include_str!("../../../lean/examples/absolute_zero_reflection/statement.lit"),
+        r#"forall x R:
+    abs(x)=0
+    =>:
+        x=0
+"#,
         "AbsZeroArgument",
         "absoluteZeroReflectionValue",
     ),

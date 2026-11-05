@@ -4,35 +4,38 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
 use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
 
-const MEMBERS: &str = include_str!("../../../lean/examples/intersection_membership/statement.lit");
-const BOUNDS: &str =
-    include_str!("../../../lean/examples/intersection_subset_bounds/statement.lit");
+const MEMBERS: &str = r#"# Introduce membership in an intersection and recover each original membership.
+forall next_inter_A, next_inter_B set, next_inter_x R:
+    next_inter_x $in next_inter_A
+    next_inter_x $in next_inter_B
+    =>:
+        next_inter_x $in intersect(next_inter_A, next_inter_B)
 
-#[test]
-fn intersection_replays_membership_projections_and_subset_routes() {
-    for (source, laws) in [
-        (MEMBERS, vec!["inIntersect_iff"]),
-        (
-            BOUNDS,
-            vec![
-                "intersectSubsetLeft",
-                "intersectSubsetRight",
-                "intersectSubsetOfLeft",
-                "intersectSubsetOfRight",
-                "subsetIntersect",
-            ],
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "intersection").unwrap();
-        assert!(lean.contains("Litex.SetSemantics M"));
-        assert!(lean.contains("Litex.intersect "));
-        for law in laws {
-            assert!(lean.contains(&format!("Litex.{law} ")));
-        }
-        assert_eq!(lean, compiler.compile_run(&run, "intersection").unwrap());
-    }
-}
+forall proj_inter_A, proj_inter_B set, proj_inter_x intersect(proj_inter_A, proj_inter_B):
+    proj_inter_x $in proj_inter_A
+    proj_inter_x $in proj_inter_B
+"#;
+const BOUNDS: &str = r#"# An intersection lies in either factor and inherits their upper and lower bounds.
+forall subset_inter_A, subset_inter_B set:
+    intersect(subset_inter_A, subset_inter_B) $subset subset_inter_A
+    intersect(subset_inter_A, subset_inter_B) $subset subset_inter_B
+
+forall upper_inter_A, upper_inter_B, upper_inter_D set:
+    upper_inter_A $subset upper_inter_D
+    =>:
+        intersect(upper_inter_A, upper_inter_B) $subset upper_inter_D
+
+forall right_upper_inter_A, right_upper_inter_B, right_upper_inter_D set:
+    right_upper_inter_B $subset right_upper_inter_D
+    =>:
+        intersect(right_upper_inter_A, right_upper_inter_B) $subset right_upper_inter_D
+
+forall lower_inter_A, lower_inter_B, lower_inter_D set:
+    lower_inter_D $subset lower_inter_A
+    lower_inter_D $subset lower_inter_B
+    =>:
+        lower_inter_D $subset intersect(lower_inter_A, lower_inter_B)
+"#;
 
 #[test]
 fn intersection_rejects_missing_or_reordered_constructor_wd() {
@@ -223,32 +226,19 @@ fn intersection_rejects_missing_or_reordered_subset_requirements() {
 }
 
 #[test]
-fn intersection_nested_memberships_and_named_theorem_replay() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/intersection_reassociation/statement.lit"
-    ));
-    let lean = compiler
-        .compile_run(&run, "intersection_association")
-        .unwrap();
-    assert!(lean.contains("Litex.inIntersect_iff "));
-}
-
-#[test]
-fn intersection_alias_membership_and_sethood_compile() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/named_intersection/statement.lit"
-    ));
-    let lean = compiler.compile_run(&run, "named_intersection").unwrap();
-    assert!(lean.contains("Litex.intersect "));
-    assert!(lean.contains("Litex.inIntersect_iff "));
-}
-
-#[test]
 fn intersection_nested_strategy_rejects_missing_or_reordered_requirements() {
     for change in 0..3 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/intersection_reassociation/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Regroup nested intersections using membership facts, then apply the theorem.
+thm reassociate_intersection_member:
+    ? forall assoc_inter_A, assoc_inter_B, assoc_inter_C set, assoc_inter_x intersect(intersect(assoc_inter_A, assoc_inter_B), assoc_inter_C):
+        assoc_inter_x $in intersect(assoc_inter_A, intersect(assoc_inter_B, assoc_inter_C))
+    assoc_inter_x $in intersect(assoc_inter_A, assoc_inter_B)
+    assoc_inter_x $in intersect(assoc_inter_A, intersect(assoc_inter_B, assoc_inter_C))
+
+by thm reassociate_intersection_member(R, C, C, 1) => 1 $in intersect(R, intersect(C, C))
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(named),
         )) = &mut run.statement_results[0]

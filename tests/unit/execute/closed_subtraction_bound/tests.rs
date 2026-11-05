@@ -334,7 +334,9 @@ fn symbolic_bound_output_and_compiler_boundaries_are_explicit() {
                 .stringify();
             assert!(detail.contains("ClosedSubtraction"));
             assert!(detail.contains("cite_fact_id") && detail.contains("translated_bound"));
-            assert!(crate::compile_to_lean::compile_run(&run, rt, "symbolic_bound").is_err());
+            let lean = crate::compile_to_lean::compile_run(&run, rt, "symbolic_bound")
+                .expect("closed subtraction bounds have a Lean adapter");
+            assert!(!lean.contains("sorry"));
         }
     }
 }

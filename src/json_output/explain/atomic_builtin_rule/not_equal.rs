@@ -32,23 +32,23 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::StructuralRealSign(p) => {
                 super::structural_real_sign::sign_text(p, OutputLanguage::English)
             }
-            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
-            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "For real x with sin(x)≠0, sin(-x)=-sin(x)≠0."),
+            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "For real x with cos(x)≠0, cos(-x)=cos(x)≠0."),
             Self::SinNonzeroIntegerPiShift(_) => text(
                 "SinNonzeroIntegerPiShift",
-                "sin(x)!=0, k integer => sin(x+k*pi)!=0",
+                "For real x and integer k, sin(x±k*pi)=(-1)^k sin(x). Thus sin(x)≠0 is preserved by these shifts.",
             ),
             Self::CosNonzeroIntegerPiShift(_) => text(
                 "CosNonzeroIntegerPiShift",
-                "cos(x)!=0, k integer => cos(x+k*pi)!=0",
+                "For real x and integer k, cos(x±k*pi)=(-1)^k cos(x). Thus cos(x)≠0 is preserved by these shifts.",
             ),
             Self::TanNonzeroFromSin(_) => text(
                 "TanNonzeroFromSin",
-                "Defined tan(x), sin(x)!=0 => tan(x)!=0",
+                "For real x with cos(x)≠0, tan(x)=sin(x)/cos(x); a nonzero numerator sin(x) therefore gives tan(x)≠0.",
             ),
             Self::CotNonzeroFromCos(_) => text(
                 "CotNonzeroFromCos",
-                "Defined cot(x), cos(x)!=0 => cot(x)!=0",
+                "For real x with sin(x)≠0, cot(x)=cos(x)/sin(x); a nonzero numerator cos(x) therefore gives cot(x)≠0.",
             ),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
@@ -60,7 +60,7 @@ impl NotEqualFactSearchProofByBuiltinRule {
             ),
             Self::SechNonzero(_) => text(
                 "SechNonzero",
-                "Defined sech(x) != 0; enclosing WD retains the domain",
+                "For real x, cosh(x)≥1, so sech(x)=1/cosh(x)>0 and in particular sech(x)≠0.",
             ),
             Self::CothNonzero(_) => crate::json_output::explain::text::text(
                 "Hyperbolic cotangent is nonzero",
@@ -68,27 +68,27 @@ impl NotEqualFactSearchProofByBuiltinRule {
             ),
             Self::CschNonzero(_) => text(
                 "CschNonzero",
-                "Defined csch(x) != 0; enclosing WD retains the domain",
+                "For nonzero real x, sinh(x)≠0, so csch(x)=1/sinh(x)≠0.",
             ),
             Self::SecNonzero(_) => text(
                 "SecNonzero",
-                "Defined sec(x) != 0; enclosing WD retains the domain",
+                "For real x with cos(x)≠0, sec(x)=1/cos(x)≠0.",
             ),
             Self::CscNonzero(_) => text(
                 "CscNonzero",
-                "Defined csc(x) != 0; enclosing WD retains the domain",
+                "For real x with sin(x)≠0, csc(x)=1/sin(x)≠0.",
             ),
             Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
             Self::SinhNonzeroFromArgument(_) => text(
                 "SinhNonzeroFromArgument",
-                "x != 0 and checked domain => sinh(x) != 0",
+                "On the real line, sinh(x)=0 only at x=0; thus x≠0 implies sinh(x)≠0.",
             ),
             Self::ConjugateNonzeroFromArgument(_) => crate::json_output::explain::text::text(
                 "Conjugation preserves nonzero values",
                 "For complex z≠0, conjugate(z)≠0.",
             ),
             Self::SinComplementNonzeroFromCos(_) => {
-                text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
+                text("SinComplementNonzeroFromCos", "For real x with cos(x)≠0, sin(pi/2-x)=cos(x)≠0.")
             }
             Self::ExpNonzero(_) => crate::json_output::explain::text::text(
                 "Exponential is nonzero",
@@ -99,10 +99,10 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "For n ∈ ℕ, n! is a positive integer, including 0!=1.",
             ),
             Self::SignNonzeroFromArgument(_) => {
-                text("Nonzero sign from argument", "x in R, x!=0 => sign(x)!=0")
+                text("Nonzero sign from argument", "For real x with x≠0, sign(x) is either -1 or 1 and is therefore nonzero.")
             }
             Self::SignNonzeroReflection(_) => {
-                text("Nonzero sign reflection", "x in R, sign(x)!=0 => x!=0")
+                text("Nonzero sign reflection", "For real x, sign(0)=0, so sign(x)≠0 implies x≠0.")
             }
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_en(),
@@ -172,23 +172,29 @@ impl NotEqualFactSearchProofByBuiltinRule {
             Self::StructuralRealSign(p) => {
                 super::structural_real_sign::sign_text(p, OutputLanguage::Chinese)
             }
-            Self::SinNonzeroNegation(_) => text("SinNonzeroNegation", "sin(x)!=0 => sin(-x)!=0"),
-            Self::CosNonzeroNegation(_) => text("CosNonzeroNegation", "cos(x)!=0 => cos(-x)!=0"),
+            Self::SinNonzeroNegation(_) => text(
+                "正弦非零在取相反数下保持",
+                "对满足 sin(x)≠0 的实数 x，由 sin(-x)=-sin(x) 得 sin(-x)≠0。",
+            ),
+            Self::CosNonzeroNegation(_) => text(
+                "余弦非零在取相反数下保持",
+                "对满足 cos(x)≠0 的实数 x，由 cos(-x)=cos(x) 得 cos(-x)≠0。",
+            ),
             Self::SinNonzeroIntegerPiShift(_) => text(
-                "SinNonzeroIntegerPiShift",
-                "sin(x)!=0, k integer => sin(x+k*pi)!=0",
+                "正弦非零在整数倍 π 平移下保持",
+                "对实数 x 和整数 k，sin(x±k*pi)=(-1)^k sin(x)，因此 sin(x)≠0 在这些平移下保持。",
             ),
             Self::CosNonzeroIntegerPiShift(_) => text(
-                "CosNonzeroIntegerPiShift",
-                "cos(x)!=0, k integer => cos(x+k*pi)!=0",
+                "余弦非零在整数倍 π 平移下保持",
+                "对实数 x 和整数 k，cos(x±k*pi)=(-1)^k cos(x)，因此 cos(x)≠0 在这些平移下保持。",
             ),
             Self::TanNonzeroFromSin(_) => text(
-                "TanNonzeroFromSin",
-                "Defined tan(x), sin(x)!=0 => tan(x)!=0",
+                "由正弦非零得到正切非零",
+                "在实数定义域 cos(x)≠0 上，tan(x)=sin(x)/cos(x)，因此 sin(x)≠0 蕴含 tan(x)≠0。",
             ),
             Self::CotNonzeroFromCos(_) => text(
-                "CotNonzeroFromCos",
-                "Defined cot(x), cos(x)!=0 => cot(x)!=0",
+                "由余弦非零得到余切非零",
+                "在实数定义域 sin(x)≠0 上，cot(x)=cos(x)/sin(x)，因此 cos(x)≠0 蕴含 cot(x)≠0。",
             ),
             Self::EulerNonunit(_) => text("EulerNonunit", "e>1 => e!=1"),
             Self::ProductFactorNonzeroWithZeroAlias(_) => {
@@ -199,37 +205,36 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "对实数 x，cosh(x)≥1，因此 cosh(x)≠0。",
             ),
             Self::SechNonzero(_) => text(
-                "SechNonzero",
-                "Defined sech(x) != 0; enclosing WD retains the domain",
+                "双曲正割非零",
+                "对实数 x，cosh(x)≥1，故 sech(x)=1/cosh(x)>0，特别地 sech(x)≠0。",
             ),
             Self::CothNonzero(_) => crate::json_output::explain::text::text(
                 "双曲余切非零",
                 "对非零实数 x，coth(x)=cosh(x)/sinh(x) 非零。",
             ),
             Self::CschNonzero(_) => text(
-                "CschNonzero",
-                "Defined csch(x) != 0; enclosing WD retains the domain",
+                "双曲余割非零",
+                "对非零实数 x，sinh(x)≠0，故 csch(x)=1/sinh(x)≠0。",
             ),
-            Self::SecNonzero(_) => text(
-                "SecNonzero",
-                "Defined sec(x) != 0; enclosing WD retains the domain",
-            ),
-            Self::CscNonzero(_) => text(
-                "CscNonzero",
-                "Defined csc(x) != 0; enclosing WD retains the domain",
-            ),
+            Self::SecNonzero(_) => {
+                text("正割非零", "对满足 cos(x)≠0 的实数 x，sec(x)=1/cos(x)≠0。")
+            }
+            Self::CscNonzero(_) => {
+                text("余割非零", "对满足 sin(x)≠0 的实数 x，csc(x)=1/sin(x)≠0。")
+            }
             Self::NegationNonzero(_) => text("NegationNonzero", "x != 0 => -x != 0"),
             Self::SinhNonzeroFromArgument(_) => text(
-                "SinhNonzeroFromArgument",
-                "x != 0 and checked domain => sinh(x) != 0",
+                "非零实数的双曲正弦非零",
+                "在实数域上，sinh(x)=0 仅在 x=0 时成立，因此 x≠0 蕴含 sinh(x)≠0。",
             ),
             Self::ConjugateNonzeroFromArgument(_) => crate::json_output::explain::text::text(
                 "共轭保持非零",
                 "对非零复数 z，conjugate(z)≠0。",
             ),
-            Self::SinComplementNonzeroFromCos(_) => {
-                text("SinComplementNonzeroFromCos", "cos(x)!=0 => sin(pi/2-x)!=0")
-            }
+            Self::SinComplementNonzeroFromCos(_) => text(
+                "由余弦非零得到余角的正弦非零",
+                "对满足 cos(x)≠0 的实数 x，由 sin(pi/2-x)=cos(x) 得 sin(pi/2-x)≠0。",
+            ),
             Self::ExpNonzero(_) => crate::json_output::explain::text::text(
                 "指数函数非零",
                 "对实数 x，exp(x)>0，因此 exp(x)≠0。",
@@ -238,10 +243,14 @@ impl NotEqualFactSearchProofByBuiltinRule {
                 "阶乘非零",
                 "对 n ∈ ℕ，n! 为正整数；其中 0!=1。",
             ),
-            Self::SignNonzeroFromArgument(_) => {
-                text("非零参数的 sign 非零", "x in R, x!=0 => sign(x)!=0")
-            }
-            Self::SignNonzeroReflection(_) => text("sign 的非零反射", "x in R, sign(x)!=0 => x!=0"),
+            Self::SignNonzeroFromArgument(_) => text(
+                "非零实数的符号函数值非零",
+                "对非零实数 x，sign(x) 的值为 -1 或 1，因此 sign(x)≠0。",
+            ),
+            Self::SignNonzeroReflection(_) => text(
+                "符号函数值非零推出参数非零",
+                "对实数 x，由 sign(0)=0 可知，sign(x)≠0 蕴含 x≠0。",
+            ),
             Self::CosNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
             Self::SinNonzeroOnFirstQuadrant(p) => p.rule_name_and_message_zh(),
             Self::PeriodicTrigNonzero(_) => text(

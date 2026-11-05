@@ -3,7 +3,42 @@ use crate::compile_to_lean::helper::source_subject;
 use crate::execute::execute_register_stmt::*;
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../../lean/examples/registered_equality/statement.lit");
+const SOURCE: &str = r#"# Equality is reflexive, symmetric and transitive on arbitrary Litex objects.
+prop lean_eqrel(x, y set):
+    x = y
+
+register reflexive:
+    ? forall reg_x set:
+        $lean_eqrel(reg_x, reg_x)
+
+register symmetric:
+    ? forall reg_x, reg_y set:
+        $lean_eqrel(reg_x, reg_y)
+        =>:
+            $lean_eqrel(reg_y, reg_x)
+
+register transitive:
+    ? forall reg_x, reg_y, reg_z set:
+        $lean_eqrel(reg_x, reg_y)
+        $lean_eqrel(reg_y, reg_z)
+        =>:
+            $lean_eqrel(reg_x, reg_z)
+
+$lean_eqrel(1, 1)
+
+forall reg_a, reg_b, reg_c set:
+    $lean_eqrel(reg_a, reg_b)
+    $lean_eqrel(reg_b, reg_c)
+    =>:
+        $lean_eqrel(reg_a, reg_c)
+
+thm locally_registered_equality:
+    ? forall reg_t set:
+        $lean_eqrel(reg_t, reg_t)
+    register reflexive:
+        ? forall local_reg_t set:
+            $lean_eqrel(local_reg_t, local_reg_t)
+"#;
 
 #[test]
 fn registrations_export_the_original_checked_laws() {
@@ -131,8 +166,43 @@ fn registered_rewrite_rejects_missing_producer_and_corrupt_permutation() {
 }
 
 fn transitivity_source() -> String {
-    let source =
-        include_str!("../../../../examples/proof_nodes/atomic/by_known_rewrite/transitivity.lit");
+    let source = r#"# A user-defined real order reuses its proved, registered transitivity law.
+# Before: register transitive supported chain storage, but ordinary goals had
+# no KnownRewrite/Transitivity route. Order-specific shortcuts could mask this.
+prop below(x, y set):
+    x $in R
+    y $in R
+    x <= y
+
+claim:
+    ? forall x, y, z set:
+        $below(x, y)
+        $below(y, z)
+        =>:
+            $below(x, z)
+    x <= y <= z
+    by def $below(x, z)
+
+register transitive:
+    ? forall x, y, z set:
+        $below(x, y)
+        $below(y, z)
+        =>:
+            $below(x, z)
+
+# Now: the registered rewrite can select below(a,b), check below(b,c), then
+# apply the checked law. Ordinary verification may first cite the ambient forall;
+# focused kernel/compiler tests select and replay the actual rewrite entrypoint.
+forall a, b, c R:
+    $below(a, b)
+    $below(b, c)
+    =>:
+        $below(a, c)
+
+# Boundary: residual verification cannot use another registered rewrite.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_known_rewrite/transitivity.lit
+# Implementation: search_transitive_relation.rs and known rewrite dispatcher.
+"#;
     let prefix = source.split("# Now:").next().unwrap();
     format!("{prefix}\nhave rel_a R=1\nhave rel_b R=2\nhave rel_c R=3\nby def $below(rel_a,rel_b)\nby def $below(rel_b,rel_c)\n$below(rel_a,rel_c)\n")
 }

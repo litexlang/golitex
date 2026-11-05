@@ -3,8 +3,18 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
     IntegerOperatorObjWellDefinedProofByDef, ModObjWellDefinedProof,
 };
 use crate::prelude::*;
-const TWO: &str = include_str!("../../../lean/examples/complete_residues_two/statement.lit");
-const THREE: &str = include_str!("../../../lean/examples/complete_residues_three/statement.lit");
+const TWO: &str = r#"# Every integer has one of the two possible residues modulo two.
+thm checked_complete_residues_two:
+    ? forall n Z:
+        n%2=0 or n%2=1
+    n%2=0 or n%2=1
+"#;
+const THREE: &str = r#"# Residue alternatives modulo three retain shuffled branches and equality orientation.
+thm checked_complete_residues_three:
+    ? forall n Z:
+        2=n%3 or n%3=0 or 1=n%3
+    2=n%3 or n%3=0 or 1=n%3
+"#;
 fn remainder_wd(run: &mut RunLitexCodeResult) -> &mut ModObjWellDefinedProof {
     let FactWellDefinedProof::Equality(wd) = &mut target(run)
         .well_defined_proof

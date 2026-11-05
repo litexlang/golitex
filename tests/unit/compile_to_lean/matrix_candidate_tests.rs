@@ -1,34 +1,25 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
-const NONZERO: &str =
-    include_str!("../../../lean/examples/matrix_invertible_candidate/statement.lit");
-const INVERSE: &str = include_str!("../../../lean/examples/matrix_inverse_candidate/statement.lit");
-
-#[test]
-fn matrix_candidates_replay_both_schemas_zero_literal_real_and_chained_profiles() {
-    for source in [
-        NONZERO,
-        INVERSE,
-        include_str!("../../../lean/examples/matrix_candidate_empty/statement.lit"),
-        include_str!("../../../lean/examples/matrix_candidate_identity/statement.lit"),
-        include_str!("../../../lean/examples/matrix_candidate_real/statement.lit"),
-        include_str!("../../../lean/examples/matrix_candidate_chain/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "matrix_candidates")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(
-            output.contains("Litex.matrixCandidateDeterminantNonzero")
-                || output.contains("Litex.matrixInverseOfCandidate")
-        );
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "matrix_candidates").unwrap()
-        );
-    }
-}
+const NONZERO: &str = r#"# Keep both candidate products on the original complex square-matrix domain.
+thm checked_matrix_invertible_candidate:
+    ? forall n N, A, B matrix(C,n,n):
+        matrix_mul(A,B,n,n,n)=identity_matrix(n)
+        matrix_mul(B,A,n,n,n)=identity_matrix(n)
+        =>:
+            det(A,n)!=0
+    release thm matrix_invertible_from_candidate(A,B,n)
+"#;
+const INVERSE: &str = r#"# Keep both candidate products on the original complex square-matrix domain.
+thm checked_matrix_inverse_candidate:
+    ? forall n N, A, B matrix(C,n,n):
+        matrix_mul(A,B,n,n,n)=identity_matrix(n)
+        matrix_mul(B,A,n,n,n)=identity_matrix(n)
+        det(A,n)!=0
+        =>:
+            matrix_inv(A,n)=B
+    release thm matrix_inverse_from_candidate(A,B,n)
+"#;
 
 #[test]
 fn matrix_candidates_require_every_original_stage_including_repeated_natural_contexts() {

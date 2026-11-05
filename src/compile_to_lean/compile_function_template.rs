@@ -559,9 +559,9 @@ impl LitexToLeanCompiler {
             }
             Obj::InstantiatedTemplateObj(instance) =>
                 self.compile_template_raw_value(instance, position, bindings),
-            Obj::Identifier(IdentifierObj::Plain { id, .. }) => {
-                if let Some(value) = bindings.get(id) {
-                    return Ok(value.clone());
+            Obj::Identifier(identifier) => {
+                if let Some(value) = self.raw_bound_identifier(identifier, position, bindings)? {
+                    return Ok(value);
                 }
                 Ok(format!(
                     "(Litex.denote {})",
@@ -1259,12 +1259,12 @@ impl LitexToLeanCompiler {
                     FnObjHead::FieldAccess(field) => Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field.clone())),
                 };
                 let mut head = if let Some(value) = match &object {
-                    Obj::Identifier(IdentifierObj::Plain { id, .. }) => bindings.get(id),
+                    Obj::Identifier(identifier) => self.raw_bound_identifier(identifier, position, bindings)?,
                     _ => None,
                 } {
                     // A recursive interpretation is supplied by this exact
                     // source binder, not by a compiler-owned function registry.
-                    value.clone()
+                    value
                 } else {
                     if matches!(object, Obj::Identifier(_)) {
                         self.validate_formula_head_producer(&object, position)?;
@@ -1331,10 +1331,78 @@ impl LitexToLeanCompiler {
         if let Obj::FunctionSpace(FunctionSpace::AnonymousFn(_)) = object {
             return Ok(());
         }
+        if let Obj::Identifier(identifier) = object {
+            if !matches!(identifier, IdentifierObj::Plain { .. }) {
+                let (bound, _, captured) =
+                    position.qualified_identifier_scope(identifier, &self.runtime)?;
+                if matches!(
+                    captured,
+                    crate::exec_env::StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType(_)
+                ) && matches!(position.visible_parameter(bound.id, &self.runtime),
+                        Ok((_, Some(carrier), _, _)) if callable_carrier(carrier))
+                {
+                    // Reuse the parameter resolver's exact declaration,
+                    // introduction-stage and same-file context checks.
+                    self.compile_object_reference(object, position)?;
+                    return Ok(());
+                }
+            }
+            if position
+                .visible_recursive_self_identifier(identifier, &self.runtime)
+                .is_ok()
+            {
+                return Ok(());
+            }
+            if position
+                .visible_piecewise_identifier(identifier, &self.runtime)
+                .is_ok()
+            {
+                return Ok(());
+            }
+            if position
+                .visible_recursive_identifier(identifier, &self.runtime)
+                .is_ok()
+            {
+                return Ok(());
+            }
+            if position
+                .visible_selected_identifier(identifier, &self.runtime)
+                .is_ok()
+            {
+                return Ok(());
+            }
+        }
         position.with_visible_alias(object, &self.runtime, &mut |_, value, result, producer| {
             self.compile_wd(success_object_wd(result, value)?, producer)?;
             self.validate_formula_head_producer(value, producer)
         })?.ok_or_else(|| LeanCompileError::new("Function/BodyCallProducer", &format!("The raw call head `{}` must cite an original function parameter, formula constructor or its RHS/let alias.", object.readable_string())))
+    }
+
+    // A qualified spelling can denote a source ID already bound by this exact
+    // body/header. This only reads the supplied semantic bindings; it creates
+    // no producer or WD evidence. Temporary preflight IDs retain precedence.
+    fn raw_bound_identifier(
+        &self,
+        identifier: &IdentifierObj,
+        position: &SourcePosition<'_>,
+        bindings: &HashMap<IdentifierId, String>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        if bindings.is_empty() {
+            return Ok(None);
+        }
+        let id = match identifier {
+            IdentifierObj::Plain { id, .. } => *id,
+            _ => match position.preflight_parameter(identifier, &self.runtime)? {
+                Some(parameter) => parameter.id,
+                None => {
+                    position
+                        .qualified_identifier_scope(identifier, &self.runtime)?
+                        .0
+                        .id
+                }
+            },
+        };
+        Ok(bindings.get(&id).cloned())
     }
 
     pub(in crate::compile_to_lean) fn compile_function_raw_clause(
@@ -1493,7 +1561,12 @@ impl LitexToLeanCompiler {
         }
         if matches!(
             fact,
-            AtomicFact::NotNormalAtomicFact(_)
+            AtomicFact::NotLessFact(_)
+                | AtomicFact::NotLessEqualFact(_)
+                | AtomicFact::NotGreaterFact(_)
+                | AtomicFact::NotGreaterEqualFact(_)
+                | AtomicFact::NotSubsetFact(_)
+                | AtomicFact::NotNormalAtomicFact(_)
                 | AtomicFact::NotSupersetFact(_)
                 | AtomicFact::NotProperSubsetFact(_)
                 | AtomicFact::NotProperSupersetFact(_)
@@ -1536,6 +1609,20 @@ impl LitexToLeanCompiler {
             AtomicFact::NotEqualFact(_) => format!("(¬ ({} = {}))", arguments[0], arguments[1]),
             AtomicFact::InFact(_) => format!("(M.mem {} {})", arguments[0], arguments[1]),
             AtomicFact::NotInFact(_) => format!("(¬ M.mem {} {})", arguments[0], arguments[1]),
+            AtomicFact::IsChoiceFunctionForFact(_) | AtomicFact::NotIsChoiceFunctionForFact(_) => {
+                // This is the existing IsChoiceFunctionFor definition. Its set
+                // argument is checked by source WD and transported in order,
+                // even though the proposition's truth does not depend on it.
+                let choice = format!(
+                    "(∀ (_choice_index : M.Value), M.mem _choice_index {} → M.mem (Litex.FunctionSemantics.callValue (M := M) {} _choice_index) (Litex.FunctionSemantics.callValue (M := M) {} _choice_index))",
+                    arguments[0], arguments[3], arguments[2]
+                );
+                if matches!(fact, AtomicFact::NotIsChoiceFunctionForFact(_)) {
+                    format!("(¬ {choice})")
+                } else {
+                    choice
+                }
+            }
             AtomicFact::IsSetFact(_) => format!("(M.isSet {})", arguments[0]),
             AtomicFact::IsFiniteSetFact(_) => {
                 format!("(Litex.memberSet (M := M) {}).Finite", arguments[0])
@@ -1728,6 +1815,15 @@ impl LitexToLeanCompiler {
                 )
             }
             AtomicFact::NormalAtomicFact(normal) => {
+                if super::compile_antiderivative::is_predicate(&normal.predicate) {
+                    if arguments.len() != 3 {
+                        return Err(super::compile_antiderivative::invalid("PredicateArity"));
+                    }
+                    return Ok(format!(
+                        "(Litex.IsAntiderivativeOnValue M {})",
+                        arguments.join(" ")
+                    ));
+                }
                 if super::compile_riemann_integral::is_enclosure(&normal.predicate) {
                     if arguments.len() != 7 {
                         return Err(super::compile_riemann_integral::invalid("EnclosureArity"));

@@ -1,8 +1,19 @@
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::VerifyAtomicExceptEqualityFactSuccess;
 use crate::prelude::*;
 const CASES: [&str; 2] = [
-    include_str!("../../../lean/examples/finite_set_equality_transport/statement.lit"),
-    include_str!("../../../lean/examples/finite_set_equality_chain_transport/statement.lit"),
+    r#"forall A,B set:
+    A=B
+    $is_finite_set(A)
+    =>:
+        $is_finite_set(B)
+"#,
+    r#"forall A,B,D set:
+    A=B
+    B=D
+    $is_finite_set(A)
+    =>:
+        $is_finite_set(D)
+"#,
 ];
 fn target(run: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     let p = super::forall_proof_mut(&mut run.statement_results[0]);

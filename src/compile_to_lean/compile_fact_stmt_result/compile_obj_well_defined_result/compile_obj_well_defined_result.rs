@@ -542,6 +542,8 @@ impl LitexToLeanCompiler {
                         && args.len() == 2)
                         || (crate::compile_to_lean::compile_riemann_integral::is_enclosure(name)
                             && args.len() == 7)
+                        || (crate::compile_to_lean::compile_antiderivative::is_predicate(name)
+                            && args.len() == 3)
                 });
                 if !supported_certificate
                     && certificate.is_some_and(|name| {
@@ -872,6 +874,13 @@ impl LitexToLeanCompiler {
                         return Err(LeanCompileError::unsupported("WD/NumberPredicateDomain"));
                     }
                 }
+                self.validate_antiderivative_domain(
+                    fact,
+                    &requirements
+                        .iter()
+                        .map(|r| &r.requirement)
+                        .collect::<Vec<_>>(),
+                )?;
                 self.validate_real_bound_domain(
                     fact,
                     &requirements
@@ -897,6 +906,7 @@ impl LitexToLeanCompiler {
                     fact,
                     AtomicFact::NormalAtomicFact(_) | AtomicFact::NotNormalAtomicFact(_)
                 ) && !requirements.is_empty()
+                    && crate::compile_to_lean::compile_antiderivative::parts(fact).is_none()
                 {
                     return Err(LeanCompileError::new(
                         "WD/PropDomain",

@@ -2,10 +2,30 @@ use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_by_stmt::BuiltinThmApplication;
 use crate::prelude::*;
 
-const UPPER: &str =
-    include_str!("../../../lean/examples/matrix_det_upper_triangular/statement.lit");
-const LOWER: &str =
-    include_str!("../../../lean/examples/matrix_det_lower_triangular/statement.lit");
+const UPPER: &str = r#"# A triangular finite complex determinant is the product of its diagonal entries.
+thm checked_det_upper_preparation:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            col<row
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+    release thm matrix_det_upper_triangular(A,n)
+
+"#;
+const LOWER: &str = r#"# A triangular finite complex determinant is the product of its diagonal entries.
+thm checked_det_lower_preparation:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            row<col
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+    release thm matrix_det_lower_triangular(A,n)
+
+"#;
 fn condition(b: &mut BuiltinThmApplication) -> &mut ForallFact {
     let Fact::ForallFact(f) = &mut b.requirements[3] else {
         panic!()
@@ -26,49 +46,6 @@ fn callback(b: &mut BuiltinThmApplication) -> &mut AnonymousFn {
         panic!()
     };
     f
-}
-
-#[test]
-fn triangular_determinants_replay_both_sides_complex_real_empty_and_zero_constructor_inputs() {
-    for (source, native) in [
-        (UPPER, "matrixDeterminantUpperTriangularFormula"),
-        (LOWER, "matrixDeterminantLowerTriangularFormula"),
-        (
-            include_str!("../../../lean/examples/matrix_det_upper_triangular_real/statement.lit"),
-            "matrixDeterminantUpperTriangularFormula",
-        ),
-        (
-            include_str!("../../../lean/examples/matrix_det_lower_triangular_real/statement.lit"),
-            "matrixDeterminantLowerTriangularFormula",
-        ),
-        (
-            include_str!("../../../lean/examples/matrix_det_upper_triangular_empty/statement.lit"),
-            "matrixDeterminantUpperTriangularFormula",
-        ),
-        (
-            include_str!("../../../lean/examples/matrix_det_lower_triangular_empty/statement.lit"),
-            "matrixDeterminantLowerTriangularFormula",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/matrix_det_upper_triangular_zero_matrix/statement.lit"
-            ),
-            "matrixDeterminantUpperTriangularFormula",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/matrix_det_lower_triangular_zero_matrix/statement.lit"
-            ),
-            "matrixDeterminantLowerTriangularFormula",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let out = compiler
-            .compile_run(&run, "triangular_det")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains(&format!("Litex.{native}")));
-        assert_eq!(out, compiler.compile_run(&run, "triangular_det").unwrap());
-    }
 }
 
 #[test]

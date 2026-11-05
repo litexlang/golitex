@@ -14,23 +14,6 @@ fn requirements(result: &mut VerifyFactResult) -> &mut Vec<VerifyFactResult> {
 }
 
 #[test]
-fn integer_interval_contexts_replay_numeric_subsets_and_captured_endpoints() {
-    for source in [
-        include_str!("../../../lean/examples/integer_interval_subsets/statement.lit"),
-        include_str!("../../../lean/examples/captured_integer_interval/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "integer_intervals")
-            .expect(source);
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "integer_intervals").unwrap()
-        );
-    }
-}
-
-#[test]
 fn integer_interval_subset_requires_the_original_start_membership() {
     for carrier in ["N", "N+"] {
         for interval in ["range", "closed_range"] {

@@ -107,8 +107,14 @@ fn tuple_coordinate_inference_rejects_missing_or_reordered_capture() {
 #[test]
 fn tuple_uniform_membership_replays_arbitrary_valid_index() {
     for source in [
-        include_str!("../../../lean/examples/tuple_uniform_variable_index/statement.lit"),
-        include_str!("../../../lean/examples/tuple_uniform_function_body/statement.lit"),
+        r#"# Every valid coordinate of a real pair is real.
+forall a, b R, k closed_range(1,2):
+    (a,b)(k) $in R
+"#,
+        r#"# Construct a real-valued function selecting any valid coordinate of a real pair.
+forall a, b R:
+    $is_set(fn(k closed_range(1,2)) R {(a,b)(k)})
+"#,
     ] {
         let (run, compiler) = checked(source);
         let generated = compiler.compile_run(&run, "uniform_tuple").unwrap();

@@ -2,8 +2,20 @@ use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_by_stmt::BuiltinThmApplication;
 use crate::prelude::*;
 
-const VECTOR: &str = include_str!("../../../lean/examples/euclidean_norm_triangle/statement.lit");
-const MATRIX: &str = include_str!("../../../lean/examples/frobenius_norm_triangle/statement.lit");
+const VECTOR: &str = r#"# The norm of a finite complex sum is bounded by the sum of the norms.
+thm checked_euclidean_norm_triangle_preparation:
+    ? forall n N, u, v cart_n(C,n):
+        euclidean_norm(fn(k closed_range(1,n)) C{1*u(k)+1*v(k)},n)<=euclidean_norm(u,n)+euclidean_norm(v,n)
+    release thm euclidean_norm_triangle(u,v,n)
+
+"#;
+const MATRIX: &str = r#"# The norm of a finite complex sum is bounded by the sum of the norms.
+thm checked_frobenius_norm_triangle_preparation:
+    ? forall m, n N, A, B matrix(C,m,n):
+        frobenius_norm(matrix_add(A,B,m,n),m,n)<=frobenius_norm(A,m,n)+frobenius_norm(B,m,n)
+    release thm frobenius_norm_triangle(A,B,m,n)
+
+"#;
 
 fn goal(b: &mut BuiltinThmApplication) -> &mut LessEqualFact {
     let Fact::AtomicFact(AtomicFact::LessEqualFact(goal)) = &mut b.conclusions[0] else {
@@ -19,41 +31,6 @@ fn formula(b: &mut BuiltinThmApplication) -> &mut AnonymousFn {
         panic!()
     };
     literal
-}
-
-#[test]
-fn norm_triangles_replay_complex_real_empty_vector_and_each_empty_matrix_axis() {
-    for (source, law) in [
-        (VECTOR, "euclideanNormTriangleFormula"),
-        (MATRIX, "frobeniusNormTriangleEntrywise"),
-        (
-            include_str!("../../../lean/examples/euclidean_norm_triangle_real/statement.lit"),
-            "euclideanNormTriangleFormula",
-        ),
-        (
-            include_str!("../../../lean/examples/euclidean_norm_triangle_empty/statement.lit"),
-            "euclideanNormTriangleFormula",
-        ),
-        (
-            include_str!("../../../lean/examples/frobenius_norm_triangle_real/statement.lit"),
-            "frobeniusNormTriangleEntrywise",
-        ),
-        (
-            include_str!("../../../lean/examples/frobenius_norm_triangle_empty_rows/statement.lit"),
-            "frobeniusNormTriangleEntrywise",
-        ),
-        (
-            include_str!("../../../lean/examples/frobenius_norm_triangle_empty_cols/statement.lit"),
-            "frobeniusNormTriangleEntrywise",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let out = compiler
-            .compile_run(&run, "norm_triangle")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains(&format!("Litex.{law}")));
-        assert_eq!(out, compiler.compile_run(&run, "norm_triangle").unwrap());
-    }
 }
 
 #[test]

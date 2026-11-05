@@ -10,18 +10,70 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const EXP_LT: &str = include_str!("../../../lean/examples/exp_strict_monotone/statement.lit");
-const EXP_LE: &str = include_str!("../../../lean/examples/exp_weak_monotone/statement.lit");
-const LN_LT: &str = include_str!("../../../lean/examples/ln_strict_monotone/statement.lit");
-const LN_LE: &str = include_str!("../../../lean/examples/ln_weak_monotone/statement.lit");
-const EXP_LT_REV: &str =
-    include_str!("../../../lean/examples/exp_strict_order_reflection/statement.lit");
-const EXP_LE_REV: &str =
-    include_str!("../../../lean/examples/exp_weak_order_reflection/statement.lit");
-const LN_LT_REV: &str =
-    include_str!("../../../lean/examples/ln_strict_order_reflection/statement.lit");
-const LN_LE_REV: &str =
-    include_str!("../../../lean/examples/ln_weak_order_reflection/statement.lit");
+const EXP_LT: &str = r#"# exp preserves strict order on its real domain.
+claim:
+    ? forall x R, y R:
+        x < y
+        =>:
+            exp(x) < exp(y)
+    exp(x) < exp(y)
+"#;
+const EXP_LE: &str = r#"# exp preserves weak order on its real domain.
+claim:
+    ? forall x R, y R:
+        x <= y
+        =>:
+            exp(x) <= exp(y)
+    exp(x) <= exp(y)
+"#;
+const LN_LT: &str = r#"# ln preserves strict order on its real domain.
+claim:
+    ? forall x R+, y R+:
+        x < y
+        =>:
+            ln(x) < ln(y)
+    ln(x) < ln(y)
+"#;
+const LN_LE: &str = r#"# ln preserves weak order on its real domain.
+claim:
+    ? forall x R+, y R+:
+        x <= y
+        =>:
+            ln(x) <= ln(y)
+    ln(x) <= ln(y)
+"#;
+const EXP_LT_REV: &str = r#"# exp reflects strict order on its real domain.
+claim:
+    ? forall x R, y R:
+        exp(x) < exp(y)
+        =>:
+            x < y
+    x < y
+"#;
+const EXP_LE_REV: &str = r#"# exp reflects weak order on its real domain.
+claim:
+    ? forall x R, y R:
+        exp(x) <= exp(y)
+        =>:
+            x <= y
+    x <= y
+"#;
+const LN_LT_REV: &str = r#"# ln reflects strict order on its real domain.
+claim:
+    ? forall x R+, y R+:
+        ln(x) < ln(y)
+        =>:
+            x < y
+    x < y
+"#;
+const LN_LE_REV: &str = r#"# ln reflects weak order on its real domain.
+claim:
+    ? forall x R+, y R+:
+        ln(x) <= ln(y)
+        =>:
+            x <= y
+    x <= y
+"#;
 
 fn selected_premise(run: &mut RunLitexCodeResult) -> (&mut VerifyFactResult, &'static str) {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

@@ -5,8 +5,17 @@ use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtRe
 use crate::execute::ExecDefinitionStmtResult;
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/function_limit_at_from_epsilon_by_theorem/statement.lit");
+const SOURCE: &str = r#"# Invoke the explicit epsilon-definition theorem for a at real function limit.
+thm explicit_at_function_limit_intro:
+    ? forall f fn(x R) R, x0 R, L R:
+        forall r R+:
+            exist x R st {0 < abs(x-x0) and abs(x-x0) < r}
+        forall epsilon R+:
+            exist delta R+ st {{x R: 0 < abs(x-x0) and abs(x-x0) < delta} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_at(f,x0,L)
+    by thm fn_limit_at_from_epsilon(f,x0,L) => $has_limit_at(f,x0,L)
+"#;
 
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -24,34 +33,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
         panic!("explicit epsilon theorem")
     };
     p
-}
-
-#[test]
-fn function_limit_from_epsilon_replays_five_approaches_and_a_guarded_domain() {
-    for source in [
-        SOURCE,
-        include_str!(
-            "../../../lean/examples/function_limit_left_from_epsilon_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_right_from_epsilon_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_from_epsilon_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_from_epsilon_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_guarded_from_epsilon_by_theorem/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "explicit_epsilon")
-            .unwrap()
-            .contains("FunctionLimitOfForall"));
-    }
 }
 
 #[test]

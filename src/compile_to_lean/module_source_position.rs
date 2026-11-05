@@ -22,7 +22,31 @@ impl<'a> SourcePosition<'a> {
         self.module_context().map(|(_, file, _)| file)
     }
 
-    fn module_context(&self) -> Option<(&'a LeanSourceClosure, usize, usize)> {
+    /// Qualification of a declaration published by this original source file.
+    pub(super) fn file_qualified_name(&self, name: &str) -> AtomicName {
+        let name = name.to_owned();
+        match self
+            .module_context()
+            .map(|(closure, file, _)| &closure.files[file].source)
+        {
+            Some(CodeSource::RootExport { export_file_id, .. }) => AtomicName::WithExportFileId {
+                export_file_id: *export_file_id,
+                name,
+            },
+            Some(CodeSource::ImportedExport {
+                global_mod_id,
+                export_file_id,
+                ..
+            }) => AtomicName::WithModAndExportFileId {
+                global_mod_id: *global_mod_id,
+                export_file_id: *export_file_id,
+                name,
+            },
+            _ => AtomicName::Plain { name },
+        }
+    }
+
+    pub(super) fn module_context(&self) -> Option<(&'a LeanSourceClosure, usize, usize)> {
         let mut cursor = Some(self);
         while let Some(site) = cursor {
             if let SourceOwner::ModuleFile { closure, file, run } = site.owner {
@@ -34,6 +58,39 @@ impl<'a> SourcePosition<'a> {
             cursor = site.parent;
         }
         None
+    }
+
+    /// Only free parameter introductions are inherited from preceding files.
+    /// Ordinary facts and local binders keep their original file/scope boundary.
+    pub(super) fn inherited_parameter_statements(
+        &self,
+    ) -> Vec<(Self, usize, &'a ExecStmtResult, usize)> {
+        let Some((closure, file, _)) = self.module_context() else {
+            return Vec::new();
+        };
+        closure
+            .files
+            .iter()
+            .take(file)
+            .enumerate()
+            .flat_map(|(file, original)| {
+                original
+                    .run
+                    .statement_results
+                    .iter()
+                    .enumerate()
+                    .filter_map(move |(index, statement)| {
+                        super::source_position::context_parameter_parts(statement).map(|_| {
+                            (
+                                Self::module_file(closure, file, index),
+                                index,
+                                statement,
+                                usize::MAX,
+                            )
+                        })
+                    })
+            })
+            .collect()
     }
 
     /// Ordinary fact/WD ID resolution reads this file's completed environment.
@@ -145,6 +202,92 @@ impl<'a> SourcePosition<'a> {
 }
 
 impl<'a> SourcePosition<'a> {
+    /// A root declaration's hypothetical preflight retains its public spelling,
+    /// but its captured ParamType binding is still a temporary parameter.
+    pub(super) fn parameter_identifier(
+        &self,
+        parameter: &BoundName,
+    ) -> Result<IdentifierObj, LeanCompileError> {
+        let published = |site: &Self| match site.file_qualified_name(&parameter.name) {
+            AtomicName::WithExportFileId {
+                export_file_id,
+                name,
+            } => IdentifierObj::WithExportFileId {
+                export_file_id,
+                name,
+            },
+            AtomicName::WithModAndExportFileId {
+                global_mod_id,
+                export_file_id,
+                name,
+            } => IdentifierObj::WithModAndExportFileId {
+                global_mod_id,
+                export_file_id,
+                name,
+            },
+            _ => IdentifierObj::from_bound_name(parameter),
+        };
+        let mut cursor = Some(self);
+        while let Some(site) = cursor {
+            if let SourceOwner::HaveEqualType(proof) = site.owner {
+                if let Some(kind) = proof.statement.param_def.groups.iter().find_map(|group| {
+                    group
+                        .params
+                        .iter()
+                        .any(|p| p == parameter)
+                        .then_some(&group.param_type)
+                }) {
+                    let captured = proof
+                        .type_local_env
+                        .definitions
+                        .identifiers
+                        .get(&parameter.name);
+                    if !matches!(captured, Some(crate::exec_env::StoredIdentifierDefinition::ParamType((bound, stored)))
+                        if bound == parameter && stored == kind)
+                    {
+                        return Err(LeanCompileError::unsupported("Parameters/PreflightCapture"));
+                    }
+                    if let Some(statement) = site.parent {
+                        if let SourceOwner::Statement(ExecStmtResult::Definition(
+                            ExecDefinitionStmtResult::DefineObj(
+                                ExecDefineObjStmtResult::HaveObjEqual(
+                                    ExecHaveObjEqualStmtResult::Success(original),
+                                ),
+                            ),
+                        )) = statement.owner
+                        {
+                            if std::ptr::eq(original, proof)
+                                && statement.parent.is_some_and(|parent| {
+                                    matches!(parent.owner, SourceOwner::ModuleFile { .. })
+                                })
+                            {
+                                return Ok(published(site));
+                            }
+                        }
+                    }
+                    return Ok(IdentifierObj::from_bound_name(parameter));
+                }
+            }
+            cursor = site.parent;
+        }
+        for (owner, _, statement, _) in self.context_statements() {
+            if !matches!(owner.owner, SourceOwner::ModuleFile { .. }) {
+                continue;
+            }
+            if super::source_position::context_parameter_parts(statement).is_some_and(
+                |(groups, _)| {
+                    groups
+                        .iter()
+                        .flat_map(|g| &g.params)
+                        .any(|bound| bound == parameter)
+                },
+            ) {
+                return Ok(published(&owner));
+            }
+        }
+        Ok(IdentifierObj::from_bound_name(parameter))
+    }
+
     /// Public qualification preserves the original declaration's bound ID;
     /// local binders retain Plain, even when an enclosing file promotes names.
     pub(super) fn defining_identifier(
@@ -255,6 +398,132 @@ impl<'a> SourcePosition<'a> {
         };
         Ok((bound, scope, captured))
     }
+
+    /// Resolve the declaration behind either spelling of the same function.
+    /// A qualified capture still needs its original completed source producer.
+    pub(super) fn visible_piecewise_identifier(
+        &self,
+        identifier: &IdentifierObj,
+        runtime: &'a Runtime,
+    ) -> Result<
+        (
+            &'a crate::execute::ExecHaveFnEqualCaseByCaseStmtSuccessResult,
+            Self,
+        ),
+        LeanCompileError,
+    > {
+        if let IdentifierObj::Plain { id, .. } = identifier {
+            return self.visible_piecewise_function(id);
+        }
+        let (bound, scope, captured) = self.qualified_identifier_scope(identifier, runtime)?;
+        let crate::exec_env::StoredIdentifierDefinition::HaveFnEqualCaseByCase((key, declaration)) =
+            captured
+        else {
+            return Err(LeanCompileError::unsupported(
+                "PiecewiseFunction/DeclarationKind",
+            ));
+        };
+        let (proof, producer) = scope.visible_piecewise_function(&bound.id)?;
+        if key != &bound.name || declaration.as_ref() != &proof.statement {
+            return Err(LeanCompileError::unsupported(
+                "PiecewiseFunction/DeclarationCapture",
+            ));
+        }
+        Ok((proof, producer))
+    }
+
+    pub(super) fn visible_selected_identifier(
+        &self,
+        identifier: &IdentifierObj,
+        runtime: &'a Runtime,
+    ) -> Result<
+        (
+            &'a crate::execute::ExecHaveFnByForallExistUniqueStmtSuccessResult,
+            Self,
+        ),
+        LeanCompileError,
+    > {
+        if let IdentifierObj::Plain { id, .. } = identifier {
+            return self.visible_selected_function(id);
+        }
+        let (bound, scope, captured) = self.qualified_identifier_scope(identifier, runtime)?;
+        let crate::exec_env::StoredIdentifierDefinition::HaveFnByForallExistUnique((
+            key,
+            declaration,
+        )) = captured
+        else {
+            return Err(LeanCompileError::unsupported(
+                "SelectedFunction/DeclarationKind",
+            ));
+        };
+        let (proof, producer) = scope.visible_selected_function(&bound.id)?;
+        if key != &bound.name || declaration.as_ref() != &proof.statement {
+            return Err(LeanCompileError::unsupported(
+                "SelectedFunction/DeclarationCapture",
+            ));
+        }
+        Ok((proof, producer))
+    }
+
+    /// The active restricted self binder retains the declaration's public
+    /// spelling inside exported bodies, but is not its completed public graph.
+    pub(super) fn visible_recursive_self_identifier(
+        &self,
+        identifier: &IdentifierObj,
+        runtime: &'a Runtime,
+    ) -> Result<(&'a crate::execute::ExecHaveFnByInducStmtSuccessResult, Self), LeanCompileError>
+    {
+        if let IdentifierObj::Plain { id, .. } = identifier {
+            return self.visible_recursive_self(id);
+        }
+        let (bound, _, captured) = self.qualified_identifier_scope(identifier, runtime)?;
+        let crate::exec_env::StoredIdentifierDefinition::HaveFnByInduc((key, declaration)) =
+            captured
+        else {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveFunction/DeclarationKind",
+            ));
+        };
+        let (proof, producer) = self.visible_recursive_self(&bound.id)?;
+        if key != &bound.name || declaration.as_ref() != &proof.statement {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveFunction/SelfCapture",
+            ));
+        }
+        Ok((proof, producer))
+    }
+
+    pub(super) fn visible_recursive_identifier(
+        &self,
+        identifier: &IdentifierObj,
+        runtime: &'a Runtime,
+    ) -> Result<
+        (
+            &'a crate::execute::ExecHaveFnByInducStmtSuccessResult,
+            Self,
+            usize,
+        ),
+        LeanCompileError,
+    > {
+        if let IdentifierObj::Plain { id, .. } = identifier {
+            return self.visible_recursive_function(id);
+        }
+        let (bound, scope, captured) = self.qualified_identifier_scope(identifier, runtime)?;
+        let crate::exec_env::StoredIdentifierDefinition::HaveFnByInduc((key, declaration)) =
+            captured
+        else {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveFunction/DeclarationKind",
+            ));
+        };
+        let (proof, producer, index) = scope.visible_recursive_function(&bound.id)?;
+        if key != &bound.name || declaration.as_ref() != &proof.statement {
+            return Err(LeanCompileError::unsupported(
+                "RecursiveFunction/DeclarationCapture",
+            ));
+        }
+        Ok((proof, producer, index))
+    }
 }
 
 fn captured_binding<'a>(
@@ -265,6 +534,9 @@ fn captured_binding<'a>(
     let parameters = match definition {
         D::LetObj((_, p)) => return (&p.name.name == name).then_some(&p.name),
         D::HaveFnEqual((_, p)) => return (&p.name.name == name).then_some(&p.name),
+        D::HaveFnEqualCaseByCase((_, p)) => return (&p.name.name == name).then_some(&p.name),
+        D::HaveFnByInduc((_, p)) => return (&p.name.name == name).then_some(&p.name),
+        D::HaveFnByForallExistUnique((_, p)) => return (&p.name.name == name).then_some(&p.name),
         D::HaveObjEqual((_, p)) => &p.param_def,
         D::HaveObjInNonemptySetOrParamType((_, p)) => &p.param_def,
         D::HaveObjByExistFacts((_, p)) => &p.param_def,

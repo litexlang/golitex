@@ -63,14 +63,95 @@ impl LitexToLeanCompiler {
             // a free parameter's hypothesis. Only the former takes model and
             // source-context arguments; both retain their original namespace.
             let (original, reference) = declaration.visible_fact(*original_id, &self.runtime)?;
-            if original.ir() != released.ir() {
+            // Selected-function uniqueness rebuilds its bound candidate with
+            // a fresh ID. Only bound renaming is allowed; free source identity,
+            // ordered carriers, premises and conclusions remain exact.
+            let fresh_selected_candidate = matches!(definition,
+            ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+                crate::execute::ExecHaveFnByForallExistUniqueStmtResult::Success(p),
+            ) if *original_id == p.uniqueness_forall_fact_id
+                && super::helper::instantiated_fact_matches(
+                    &original, released, &std::collections::HashMap::new(),
+                ));
+            if original.ir() != released.ir() && !fresh_selected_candidate {
                 return Err(LeanCompileError::new(
                     "ReleaseObj/Subject",
                     "The released fact differs from its introducing declaration's fact.",
                 ));
             }
             self.validate_store(&store.store, released)?;
-            let proposition = self.fact_proposition(released, &declaration)?;
+            let (proposition, reference) = if let Fact::ForallFact(forall) = released {
+                // The original declaration already checked and published this
+                // header. Release specializes that theorem to the canonical
+                // semantic objects; it has no second forall-WD verification.
+                let proposition = match (definition, &original) {
+                    (
+                        ExecDefinitionStmtResult::HaveFnByInduc(
+                            crate::execute::ExecHaveFnByInducStmtResult::Success(p),
+                        ),
+                        Fact::ForallFact(source),
+                    ) => {
+                        let (prefix, mut bindings) = self.compile_canonical_predicate_header(
+                            forall,
+                            &declaration,
+                            &std::collections::HashMap::new(),
+                        )?;
+                        let object = self.compile_object_reference(
+                            &Obj::Identifier(proof.statement.name.clone()),
+                            &declaration,
+                        )?;
+                        bindings.insert(p.statement.name.id, format!("(Litex.denote {object})"));
+                        // The original case owns any returned literal's WD.
+                        // Render there, substituting the public graph for self;
+                        // do not hoist that private constructor into the caller.
+                        let conclusion = self
+                            .compile_recursive_published_conclusion(
+                                p,
+                                source,
+                                &declaration,
+                                &bindings,
+                            )?
+                            .ok_or_else(|| {
+                                LeanCompileError::unsupported("ReleaseObj/RecursivePublication")
+                            })?;
+                        format!("({prefix}{conclusion})")
+                    }
+                    _ => self.compile_canonical_predicate_value(
+                        released,
+                        &declaration,
+                        &std::collections::HashMap::new(),
+                    )?,
+                };
+                let (parameters, _) = self.compile_canonical_predicate_binders(
+                    &forall.typed_parameters,
+                    &declaration,
+                    &std::collections::HashMap::new(),
+                )?;
+                let mut binders = Vec::new();
+                let mut arguments = Vec::new();
+                for (index, (value, carrier)) in parameters.iter().enumerate() {
+                    let member = format!("_released_member_{index}");
+                    binders.push(format!(
+                        "({value} : Litex.Obj (M := M) M.Value) ({member} : {carrier})"
+                    ));
+                    arguments.extend([value.clone(), member]);
+                }
+                // Apply object arguments explicitly so the original theorem's
+                // implicit host and Representation are determined before its
+                // remaining domains/conclusion are checked.
+                let reference = if binders.is_empty() {
+                    reference
+                } else {
+                    format!(
+                        "(fun {} => {reference} {})",
+                        binders.join(" "),
+                        arguments.join(" ")
+                    )
+                };
+                (proposition, reference)
+            } else {
+                (self.fact_proposition(released, &declaration)?, reference)
+            };
             emitted.push(self.emit_fact(
                 released,
                 (proposition.clone(), reference),
@@ -211,6 +292,79 @@ fn original_release_facts<'a>(
                     equal_to_anon,
                     p.store_and_infer_result.defining_equal.primary_fact_id(),
                 ),
+            ])
+        }
+        (
+            ExecDefinitionStmtResult::HaveFnEqualCaseByCase(
+                crate::execute::ExecHaveFnEqualCaseByCaseStmtResult::Success(p),
+            ),
+            ReleaseObjDefByKind::HaveFnEqualCaseByCase {
+                membership,
+                case_foralls,
+            },
+        ) => {
+            let stores = &p.store_and_infer_result;
+            if p.statement.name.id != id
+                || p.statement.name.name != name
+                || case_foralls.len() != stores.case_defining.len()
+            {
+                return Err(wrong());
+            }
+            Ok(
+                std::iter::once((membership, stores.membership.primary_fact_id()))
+                    .chain(
+                        case_foralls
+                            .iter()
+                            .zip(&stores.case_defining)
+                            .map(|(fact, store)| (fact, store.primary_fact_id())),
+                    )
+                    .collect(),
+            )
+        }
+        (
+            ExecDefinitionStmtResult::HaveFnByInduc(
+                crate::execute::ExecHaveFnByInducStmtResult::Success(p),
+            ),
+            ReleaseObjDefByKind::HaveFnByInduc {
+                membership,
+                case_foralls,
+            },
+        ) => {
+            let stores = &p.store_and_infer_result;
+            if p.statement.name.id != id
+                || p.statement.name.name != name
+                || case_foralls.len() != stores.case_defining.len()
+            {
+                return Err(wrong());
+            }
+            Ok(
+                std::iter::once((membership, stores.membership.primary_fact_id()))
+                    .chain(
+                        case_foralls
+                            .iter()
+                            .zip(&stores.case_defining)
+                            .map(|(fact, store)| (fact, store.primary_fact_id())),
+                    )
+                    .collect(),
+            )
+        }
+        (
+            ExecDefinitionStmtResult::HaveFnByForallExistUnique(
+                crate::execute::ExecHaveFnByForallExistUniqueStmtResult::Success(p),
+            ),
+            ReleaseObjDefByKind::HaveFnByForallExistUnique {
+                membership,
+                property_forall,
+                uniqueness_forall,
+            },
+        ) => {
+            if p.statement.name.id != id || p.statement.name.name != name {
+                return Err(wrong());
+            }
+            Ok(vec![
+                (membership, p.membership.primary_fact_id()),
+                (property_forall, p.property.primary_fact_id()),
+                (uniqueness_forall, p.uniqueness.primary_fact_id()),
             ])
         }
         _ => Err(LeanCompileError::unsupported("ReleaseObj/DefinitionFamily")),

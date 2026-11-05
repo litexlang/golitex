@@ -3,22 +3,75 @@ use crate::run_module::{load_file_for_lean, LoadLeanSourceResult, LoadedLeanSour
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::{EqualitySearchProofByObjectDefinition, by_identifier::EqualitySearchProofByIdentifierObjectDefinition};
 
-fn load_tracer() -> LoadedLeanSource {
-    let command = parse_launch_command(&[
-        "-lean".into(),
-        "-strict".into(),
-        "-f".into(),
-        "lean/examples/module_additive_constant/statement.lit".into(),
-    ])
-    .unwrap();
-    let LoadLeanSourceResult::Success(loaded) = load_file_for_lean(command).unwrap() else {
-        panic!("original source must verify")
-    };
-    loaded
+fn load_tracer() -> super::module_fixtures::LoadedProject {
+    super::module_fixtures::load("module_additive_constant")
 }
+
+#[test]
+fn module_arbitrary_parameters_preserve_their_generic_hosts_and_source_facts() {
+    for name in [
+        "module_real_parameter",
+        "module_set_kind_parameters",
+        "module_function_parameter",
+        "module_coordinate_parameters",
+        "module_derivative_parameter",
+    ] {
+        let (loaded, _project_1) = load_example(name);
+        let compiler = super::LitexToLeanCompiler::new(loaded.runtime);
+        let output = compiler
+            .compile_module(&loaded.closure, "ArbitraryRealParameter")
+            .unwrap();
+        assert!(output.contains("Litex.Representation M _Host_i"));
+        assert!(output.contains("Litex.Obj (M := M) _Host_i"));
+        assert_eq!(
+            output,
+            compiler
+                .compile_module(&loaded.closure, "ArbitraryRealParameter")
+                .unwrap()
+        );
+    }
+}
+
+#[test]
+fn module_arbitrary_parameter_keeps_its_original_introduction_stage() {
+    let (loaded, _project_2) = load_example("module_real_parameter");
+    let compiler = super::LitexToLeanCompiler::new(loaded.runtime);
+    let object = Obj::Identifier(IdentifierObj::WithExportFileId {
+        export_file_id: 0,
+        name: "a".into(),
+    });
+    let before = SourcePosition::module_file(&loaded.closure, 0, 0);
+    assert!(compiler.compile_object_reference(&object, &before).is_err());
+    let after = SourcePosition {
+        before: 1,
+        ..before
+    };
+    assert!(compiler
+        .compile_object_reference(&object, &after)
+        .unwrap()
+        .starts_with("_value_i"));
+}
+
+#[test]
+fn module_arbitrary_parameter_rejects_another_source_declaration_capture() {
+    for name in ["module_real_parameter", "module_derivative_parameter"] {
+        let (mut loaded, _project_3) = load_example(name);
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
+            ExecDefineObjStmtResult::HaveObjInNonemptySet(
+                ExecHaveObjInNonemptySetStmtResult::Success(p),
+            ),
+        )) = &mut loaded.closure.files[0].run.statement_results[0]
+        else {
+            panic!()
+        };
+        p.statement.param_def.groups[0].params[0].name = "unrelated".into();
+        assert!(!compiles(loaded));
+    }
+}
+
 #[test]
 fn module_identifier_replays_original_let_publication_and_selected_definition_residual() {
-    let loaded = load_tracer();
+    let (loaded, _project_4) = load_tracer();
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
         ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(declaration)),
     )) = &loaded.closure.files[0].run.statement_results[0]
@@ -65,18 +118,8 @@ fn module_identifier_replays_original_let_publication_and_selected_definition_re
     assert!(output.contains("source_0.h_"));
 }
 
-fn load_example(name: &str) -> LoadedLeanSource {
-    let command = parse_launch_command(&[
-        "-lean".into(),
-        "-strict".into(),
-        "-f".into(),
-        format!("lean/examples/{name}/statement.lit"),
-    ])
-    .unwrap();
-    let LoadLeanSourceResult::Success(loaded) = load_file_for_lean(command).unwrap() else {
-        panic!("original source must verify: {name}")
-    };
-    loaded
+fn load_example(name: &str) -> super::module_fixtures::LoadedProject {
+    super::module_fixtures::load(name)
 }
 #[test]
 fn module_identifier_replays_typed_reverse_nested_imported_and_released_definitions() {
@@ -89,7 +132,7 @@ fn module_identifier_replays_typed_reverse_nested_imported_and_released_definiti
         "module_identifier_guarded_value",
         "module_identifier_alias_collision",
     ] {
-        let loaded = load_example(name);
+        let (loaded, _project_5) = load_example(name);
         let output = super::LitexToLeanCompiler::new(loaded.runtime)
             .compile_module(&loaded.closure, name)
             .unwrap();
@@ -136,17 +179,17 @@ fn let_fold_mut(loaded: &mut LoadedLeanSource) -> &mut crate::execute::execute_f
 }
 #[test]
 fn module_identifier_requires_original_binding_capture_and_store_subject() {
-    let mut loaded = load_tracer();
+    let (mut loaded, _project_6) = load_tracer();
     let changed_id = loaded.runtime.global_ids.allocate_identifier_id();
     let_mut(&mut loaded).statement.name.id = changed_id;
     assert!(
         !compiles(loaded),
         "a qualified spelling cannot hide another bound ID"
     );
-    let mut loaded = load_tracer();
+    let (mut loaded, _project_7) = load_tracer();
     let_mut(&mut loaded).stored_fact_ids.clear();
     assert!(!compiles(loaded));
-    let mut loaded = load_tracer();
+    let (mut loaded, _project_8) = load_tracer();
     let id = let_mut(&mut loaded).stored_fact_ids[0];
     let fact = loaded.runtime.global_module_manager.root_exports[0]
         .exec_env
@@ -166,7 +209,7 @@ fn module_identifier_requires_original_binding_capture_and_store_subject() {
 }
 #[test]
 fn module_identifier_rejects_missing_future_producer_and_foreign_ordinary_fact() {
-    let loaded = load_tracer();
+    let (loaded, _project_9) = load_tracer();
     let object = Obj::Identifier(IdentifierObj::WithExportFileId {
         export_file_id: 0,
         name: "two".into(),
@@ -197,10 +240,10 @@ fn module_identifier_rejects_missing_future_producer_and_foreign_ordinary_fact()
 }
 #[test]
 fn module_identifier_keeps_recorded_expansion_and_residual_endpoint() {
-    let mut loaded = load_tracer();
+    let (mut loaded, _project_10) = load_tracer();
     let_fold_mut(&mut loaded).expanded_rhs = Obj::StandardSet(StandardSet::R);
     assert!(!compiles(loaded));
-    let mut loaded = load_tracer();
+    let (mut loaded, _project_11) = load_tracer();
     let p = let_fold_mut(&mut loaded);
     let VerifyFactResult::Equality(child) = &mut p.residual_equal else {
         panic!("child")
@@ -213,7 +256,7 @@ fn module_identifier_keeps_recorded_expansion_and_residual_endpoint() {
 }
 #[test]
 fn module_identifier_release_borrows_only_original_constructor_after_publication() {
-    let loaded = load_example("module_identifier_release");
+    let (loaded, _project_12) = load_example("module_identifier_release");
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
         ExecDefineObjStmtResult::LetObj(ExecLetObjStmtResult::Success(p)),
     )) = &loaded.closure.files[0].run.statement_results[0]
@@ -254,7 +297,7 @@ fn module_identifier_release_borrows_only_original_constructor_after_publication
 
 #[test]
 fn module_identifier_guard_constructor_keeps_original_fact_namespace() {
-    let loaded = load_example("module_identifier_guarded_value");
+    let (loaded, _project_13) = load_example("module_identifier_guarded_value");
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) =
         &loaded.closure.files[0].run.statement_results[2]
     else {
@@ -276,7 +319,7 @@ fn module_identifier_guard_constructor_keeps_original_fact_namespace() {
 #[test]
 fn module_identifier_package_bindings_keep_identity_and_visibility() {
     use crate::runtime::CodeSource;
-    let loaded = load_example("module_identifier_alias_collision");
+    let (loaded, _project_14) = load_example("module_identifier_alias_collision");
     let CodeSource::ImportedExport {
         global_mod_id: left,
         ..
@@ -337,7 +380,7 @@ fn module_identifier_package_bindings_keep_identity_and_visibility() {
 #[test]
 fn module_identifier_release_keeps_original_capture_and_store_count() {
     use crate::execute::execute_release_obj_def_stmt::ExecReleaseObjDefStmtResult;
-    let mut loaded = load_example("module_identifier_release");
+    let (mut loaded, _project_15) = load_example("module_identifier_release");
     let changed_id = loaded.runtime.global_ids.allocate_identifier_id();
     let ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::ObjDef(
         ExecReleaseObjDefStmtResult::Success(p),
@@ -351,7 +394,7 @@ fn module_identifier_release_keeps_original_capture_and_store_count() {
     };
     std::rc::Rc::make_mut(statement).name.id = changed_id;
     assert!(!compiles(loaded));
-    let mut loaded = load_example("module_identifier_release");
+    let (mut loaded, _project_16) = load_example("module_identifier_release");
     let ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::ObjDef(
         ExecReleaseObjDefStmtResult::Success(p),
     )) = &mut loaded.closure.files[1].run.statement_results[0]
@@ -363,7 +406,7 @@ fn module_identifier_release_keeps_original_capture_and_store_count() {
 }
 #[test]
 fn module_identifier_does_not_reinterpret_an_actual_typed_definition_route_as_let() {
-    let mut typed = load_example("module_typed_constant");
+    let (mut typed, _project_17) = load_example("module_typed_constant");
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) =
         typed.closure.files[1].run.statement_results.pop().unwrap()
     else {
@@ -384,7 +427,7 @@ fn module_identifier_does_not_reinterpret_an_actual_typed_definition_route_as_le
         )
     ));
     let recorded = p.searched_proof;
-    let mut loaded = load_tracer();
+    let (mut loaded, _project_18) = load_tracer();
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) =
         &mut loaded.closure.files[1].run.statement_results[0]
     else {

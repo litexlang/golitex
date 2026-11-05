@@ -1,0 +1,2 @@
+# A singular matrix has no inverse selector value.
+matrix_inv(zero_matrix(2,2),2)(1,1) = 0

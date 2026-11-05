@@ -1,40 +1,23 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
-const FROM: &str =
-    include_str!("../../../lean/examples/unary_derivative_builtin_from_limit/statement.lit");
-const TO: &str =
-    include_str!("../../../lean/examples/unary_derivative_builtin_to_limit/statement.lit");
-
-#[test]
-fn derivative_quotient_builtins_replay_both_original_directions() {
-    for (source, law) in [
-        (FROM, "derivativeOfQuotientGraph"),
-        (TO, "derivativeQuotientGraph"),
-        (
-            include_str!(
-                "../../../lean/examples/unary_derivative_builtin_positive_from_limit/statement.lit"
-            ),
-            "derivativeOfQuotientGraph",
-        ),
-        (
-            include_str!(
-                "../../../lean/examples/unary_derivative_builtin_guarded_to_limit/statement.lit"
-            ),
-            "derivativeQuotientGraph",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "derivative_quotient")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains(&format!("Litex.{law}")));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "derivative_quotient").unwrap()
-        );
-    }
-}
+const FROM: &str = r#"# An interior neighborhood and the punctured difference-quotient limit give the derivative.
+thm checked_unary_derivative_builtin_from_limit:
+    ? forall f fn(x R) R, p, L R:
+        exist radius R+ st {{x R: abs(x-p)<radius} $subset R}
+        $has_limit_at(fn(x R: x-p != 0) R {(f(x)-f(p))/(x-p)},p,L)
+        =>:
+            $has_derivative_at(f,p,L)
+    release thm fn_derivative_at_from_limit(f,p,L)
+"#;
+const TO: &str = r#"# A derivative candidate gives its original punctured difference-quotient limit.
+thm checked_unary_derivative_builtin_to_limit:
+    ? forall f fn(x R) R, p, L R:
+        $has_derivative_at(f,p,L)
+        =>:
+            $has_limit_at(fn(x R: x-p != 0) R {(f(x)-f(p))/(x-p)},p,L)
+    release thm fn_derivative_at_to_limit(f,p,L)
+"#;
 
 #[test]
 fn derivative_quotient_builtins_reject_changed_prerequisite_and_output_stages() {

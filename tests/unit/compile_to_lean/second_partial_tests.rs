@@ -1,27 +1,18 @@
 use crate::prelude::*;
-#[test]
-fn second_partial_replays_formation_candidates_existence_and_original_clauses() {
-    for source in [
-        include_str!("../../../lean/examples/second_partial_citation/statement.lit"),
-        include_str!("../../../lean/examples/second_partial_guarded_domain/statement.lit"),
-        include_str!("../../../lean/examples/second_partial_generic_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/second_partial_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/second_partial_from_definition/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "second_partial_derivative")
-            .expect(source);
-    }
-}
 
 #[test]
 fn second_partial_keeps_point_domain_axis_and_real_value_requirements() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
     for mutation in 0..4 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/second_partial_citation/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Retain a certified second partial and its local first-derivative witness.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), d R:
+    $has_second_partial_derivative_at(f,p,2,1,2,d)
+    =>:
+        $has_second_partial_derivative_at(f,p,2,1,2,d)
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         let FactWellDefinedProof::AtomicExceptEquality(wd) =
             &mut root.assumed_dom_facts[0].well_defined
@@ -57,9 +48,14 @@ fn second_partial_inference_requires_original_clauses_and_producer_identity() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/second_partial_citation/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Retain a certified second partial and its local first-derivative witness.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), d R:
+    $has_second_partial_derivative_at(f,p,2,1,2,d)
+    =>:
+        $has_second_partial_derivative_at(f,p,2,1,2,d)
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         let Some(InferResult::AtomicFact(InferAtomicFactResult::MultivariableAnalysisFact(rules))) =
             &mut root.assumed_dom_facts[0].store_and_infer.infer

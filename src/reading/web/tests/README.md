@@ -1964,3 +1964,131 @@ unchanged. A wrong argument count has no successful application or publication.
 The test uses actual source hover/pin rather than interpreting the general
 `selectStatement` summary as an invocation proof. No lazy export or browser
 geometry is claimed.
+
+
+## Theorem invocation closing failures
+
+Run `node src/reading/web/tests/theorem-closing-failures.cjs --binary <executable>`.
+The suite also accepts `--reader <asset>`, `--endpoint <local-origin>`,
+`--cases <comma-separated names>`, `--modes ordinary,registered` and
+`--receipt <compact-report.json>`. Native proof graphs stay in memory.
+
+Seven strict source inputs cover five actual rejected calls and two explicit
+interface repairs. In the rejected calls, a caller universal supplies a function
+interface that is checked and stored locally by the theorem invocation; the
+final caller formation check still stops. The viewer exposes completed local
+checks, the actual universal source and substitutions, the local selected
+conclusion proof, the failed caller expression, a temporary release prefix and
+an unchecked caller suffix. This is a display of actual verifier behavior, not
+a repair of callable-interface discovery. An explicit membership statement in
+the caller repairs the checked source without introducing an assumption.
+
+Ordinary and real two-file registered projects produce14 source contexts and
+40 bilingual editable/read-only views per asset.21 independent corrupt-record
+controls check source, scope, callee, argument proof/store, local conclusion WD,
+selection, closing WD, publication, prefix index/store/WD and pending-goal
+correspondence. Missing or foreign records cannot advertise a completed closing
+history. Function lookup reasons with no failed-argument index cannot identify
+one call among several possible arguments.
+
+Hover, keyboard focus, whole-keyword help, pinning, actual local return citations,
+definition navigation and exact Back preserve their source execution. WD stays
+in one final outer disclosure, initially closed; local proof exploration keeps
+its own separate checks. Editing invalidates explanations. Failed calls have
+no published or inferred caller results, and explanations add no source rows.
+The endpoint mode checks real compiler POSTs and the complete bundle digest.
+It does not claim browser geometry or current-producer coverage for legacy or
+still-unobserved theorem result variants.
+
+
+## Checked-source builtin theorem derivations
+
+`source-theorem-derivations.cjs` compiles the seven existing sequence theorem
+examples and one atomic `by thm` call. Ordinary files and a real two-source
+registered project give16 contexts and64 en/zh editable/read-only views per
+reader. The Cauchy-bounded source supplies18 corrupt-record controls per context:
+foreign scopes, missing stages, and wrong retained resolved declarations must
+not acquire a completed proof view. The generic declaration comes from the
+actual resolved callee, not a generated name lookup. The generic proof's final
+citation opens its real local execution and Back restores the invocation.
+
+```sh
+node src/reading/web/tests/source-theorem-derivations.cjs --binary target/release/litex
+```
+
+Use `--reader` for a controlled asset, `--cases` for comma-separated example
+names, `--modes ordinary` or `--modes registered`, and `--receipt` for compact
+metadata. `--endpoint http://127.0.0.1:PORT` exercises the actual compiler POST
+path; it never fetches the webpage. CLI inputs are tool-managed temporary files
+and are removed; raw native graphs stay in memory. The existing UI/source
+examples are the mathematical inputs, not new assumptions or theorem fixtures.
+
+These checks cover retained declarations, ordered steps, scope-qualified local
+execution evidence, proof references/Back, initially closed formation, editor
+invalidation and unchanged Native/source rows. A step can still carry an honest
+incomplete explanation from a specialized existing observer; zero generic
+fallbacks does not mean every nested proof narrative is complete. Generated
+source mappings, all language branches, browser geometry and deployment are not
+certified by this file-backed DOM suite.
+
+`source-theorem-instance-matching.cjs` checks an actual retained generic AST
+node against itself under a nonidentity captured argument binding: it must be
+rejected, while the actual instantiated return must match. The helper is
+exposed only in memory, Native stays unchanged, and no proof is fabricated.
+
+## Generated proof correspondence
+
+`generated-proof-correspondence.cjs` follows the actual Cauchy-bounded function
+unfolding and the internal lemma in monotone convergence. It checks the captured
+expansion, defining-equality citation, residual proof, explicit resolved lemma,
+argument bindings, premises and the call's own stored limit conclusion. The
+earlier lemma's proof stays closed until requested. Citations open their actual
+local evidence; Back restores the invocation without creating user source rows.
+
+```sh
+node src/reading/web/tests/generated-proof-correspondence.cjs --binary target/release/litex
+```
+
+The options match `source-theorem-derivations.cjs`. Ordinary and registered
+projects give4 contexts and16 bilingual editable/read-only views per reader.
+The44 corrupt-record controls reject missing expansion paths/citations/WD,
+foreign scopes, a borrowed user-source position, wrong explicit callees,
+argument or type/premise pair ordering, wrong returned conclusions and missing
+callee proof stages. Native stays unchanged; edits invalidate explanations and
+outer formation remains last and initially closed. These file-backed DOM and
+optional compiler-POST checks do not certify browser geometry or all generated
+proof/result branches.
+
+
+## Nested checked-source proofs
+
+`nested-source-proofs.cjs` follows the actual Cauchy-bounded nested claims and
+its two case branches, then the independent sign split inside the earlier
+Cauchy-completeness lemma. These are two existing strict theorem examples;
+no proof, assumption or native result is fabricated.
+
+```sh
+node src/reading/web/tests/nested-source-proofs.cjs --binary target/release/litex
+```
+
+`--reader`, `--endpoint`, `--modes`, `--cases` and `--receipt` select the same
+file-backed reader/compiler surfaces as the checked-source theorem suite.
+Four ordinary/registered contexts provide16 bilingual editable/read-only
+scenarios and80 actual citation/Back navigations. The claim bodies retain4,
+1 and3 steps; the case bodies retain4/12 and1/1 steps in their own scopes.
+Branch assumptions are labelled as assumptions, with their actual retained
+scope. A cited chain consequence keeps its actual inference rule, original
+chain, arbitrary parameters and case condition. Following the chain then
+returning twice preserves both selections. Native and editor row counts stay
+unchanged, source edits close stale explanations, and claim/atomic formation
+stays last and initially closed.
+
+The38 corrupt-record controls cover missing goal, assumption and coverage WD,
+foreign case scopes, mismatched condition/identity/store, coverage ordering,
+missing publication, body/source mismatch and incorrect closing proof/store.
+They cannot acquire a completed case disclosure. The generated branch observer
+currently accepts retained `ThenFacts` closings. No generated `Impossible`
+closing occurs in the audited retained source prefix; this suite neither
+constructs one nor certifies that unobserved branch. Ordinary case/contradiction
+viewers retain their separate coverage. File-backed DOM and compiler POSTs
+provide no browser-geometry guarantee.

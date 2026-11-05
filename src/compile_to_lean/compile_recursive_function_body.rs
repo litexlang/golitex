@@ -1,7 +1,7 @@
 use super::compile_general_recursive_result::general_error;
 use super::compile_real_set_bounds::contains_parameter;
 use super::helper::*;
-use super::source_position::{SourceOwner, SourcePosition};
+use super::source_position::{visit_complete_wd, SourceConstructor, SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
 use crate::execute::ExecHaveFnByInducStmtSuccessResult;
@@ -9,6 +9,111 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl LitexToLeanCompiler {
+    pub(super) fn recursive_identifier_is_self(
+        &self,
+        identifier: &IdentifierObj,
+        declaration: &ExecHaveFnByInducStmtSuccessResult,
+        site: &SourcePosition<'_>,
+    ) -> Result<bool, LeanCompileError> {
+        let id = match identifier {
+            IdentifierObj::Plain { id, .. } => *id,
+            _ => match site.preflight_parameter(identifier, &self.runtime)? {
+                Some(parameter) => parameter.id,
+                None => {
+                    site.qualified_identifier_scope(identifier, &self.runtime)?
+                        .0
+                        .id
+                }
+            },
+        };
+        Ok(id == declaration.statement.name.id)
+    }
+
+    /// Traverse the checked constructor tree, including qualified identifiers.
+    /// Cached children resolve to their preceding original WD, never a new proof.
+    /// Requirements may conservatively add a dependency; they cannot hide one.
+    pub(super) fn recursive_body_uses_self(
+        &self,
+        object: &Obj,
+        declaration: &ExecHaveFnByInducStmtSuccessResult,
+        site: &SourcePosition<'_>,
+    ) -> Result<bool, LeanCompileError> {
+        match object {
+            Obj::Identifier(identifier) => {
+                return self.recursive_identifier_is_self(identifier, declaration, site);
+            }
+            Obj::Literal(_) | Obj::StandardSet(_) => return Ok(false),
+            _ => {}
+        }
+        // Ordinary local binders retain the existing capture-aware fast path.
+        if contains_parameter(object, declaration.statement.name.id) {
+            return Ok(true);
+        }
+        if let Some((_, children)) = arithmetic_constructor_pairs(object, object) {
+            for (child, _) in children {
+                if self.recursive_body_uses_self(child, declaration, site)? {
+                    return Ok(true);
+                }
+            }
+            return Ok(false);
+        }
+        if let Obj::FnObj(call) = object {
+            // The function head can be certified by membership rather than a
+            // separate Identifier WD child; inspect its typed identity directly.
+            if let FnObjHead::Identifier(identifier) = call.head.as_ref() {
+                if self.recursive_identifier_is_self(identifier, declaration, site)? {
+                    return Ok(true);
+                }
+            }
+        }
+        site.with_visible_wd(object, &mut |proof, owner| {
+            Ok(visit_complete_wd(
+                proof,
+                owner,
+                &mut |constructor, producer| {
+                    let SourceConstructor::Checked(child) = constructor else {
+                        return Ok(None);
+                    };
+                    if let Obj::Identifier(identifier) = child.obj() {
+                        if self.recursive_identifier_is_self(identifier, declaration, producer)? {
+                            return Ok(Some(()));
+                        }
+                    } else if let Obj::FnObj(call) = child.obj() {
+                        if let FnObjHead::Identifier(identifier) = call.head.as_ref() {
+                            if self.recursive_identifier_is_self(
+                                identifier,
+                                declaration,
+                                producer,
+                            )? {
+                                return Ok(Some(()));
+                            }
+                        }
+                        if matches!(
+                            child.detailed_ref(),
+                            DetailedObjWellDefinedProof::ByKnown { .. }
+                        ) && self.recursive_body_uses_self(child.obj(), declaration, producer)?
+                        {
+                            return Ok(Some(()));
+                        }
+                    } else if matches!(
+                        child.detailed_ref(),
+                        DetailedObjWellDefinedProof::ByKnown { .. }
+                    ) && self.recursive_body_uses_self(
+                        child.obj(),
+                        declaration,
+                        producer,
+                    )? {
+                        return Ok(Some(()));
+                    }
+                    Ok(None)
+                },
+                &mut |_, _| Ok(None),
+            )?
+            .is_some())
+        })?
+        .ok_or_else(|| general_error("DependencyWD"))
+    }
+
     pub(super) fn compile_recursive_application_congruence(
         &self,
         object: &Obj,
@@ -31,7 +136,12 @@ impl LitexToLeanCompiler {
                 Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(f.clone()))
             }
         };
-        let recursive = matches!(&head, Obj::Identifier(IdentifierObj::Plain {id, ..}) if *id == declaration.statement.name.id);
+        let recursive = match &head {
+            Obj::Identifier(identifier) => {
+                self.recursive_identifier_is_self(identifier, declaration, site)?
+            }
+            _ => false,
+        };
         let mut equality = if recursive {
             String::new()
         } else {

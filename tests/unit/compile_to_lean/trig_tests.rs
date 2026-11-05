@@ -2,22 +2,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOpe
 use crate::prelude::*;
 
 #[test]
-fn trig_examples_compile_original_wd_and_selected_rules() {
-    for source in [
-        include_str!("../../../lean/examples/trigonometric_periodic_values/statement.lit"),
-        include_str!("../../../lean/examples/trigonometric_special_values/statement.lit"),
-        include_str!("../../../lean/examples/trigonometric_real_output/statement.lit"),
-        include_str!("../../../lean/examples/trigonometric_pythagorean/statement.lit"),
-        include_str!("../../../lean/examples/tangent_quotient/statement.lit"),
-        include_str!("../../../lean/examples/trigonometric_functions/statement.lit"),
-        include_str!("../../../lean/examples/trigonometric_cotangent_values/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "trig").unwrap();
-    }
-}
-
-#[test]
 fn trig_wd_rejects_missing_or_altered_evidence() {
     for source in [
         "let value = sin(0)",
@@ -145,27 +129,6 @@ fn tangent_wd_rejects_wrong_nonzero_subject() {
 }
 
 #[test]
-fn integer_periodic_examples_replay_recorded_memberships() {
-    for source in [
-        include_str!("../../../lean/examples/partial_derivative_integer_period/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_integer_period_beta/statement.lit"),
-        include_str!("../../../lean/examples/partial_derivative_integer_period_linear_combination/statement.lit"),
-        include_str!("../../../lean/examples/integer_periodic_values/statement.lit"),
-        include_str!("../../../lean/examples/integer_periodic_linear_combination/statement.lit"),
-        include_str!("../../../lean/examples/integer_periodic_product/statement.lit"),
-        include_str!("../../../lean/examples/integer_periodic_repeated_terms/statement.lit"),
-        include_str!("../../../lean/examples/integer_periodic_cancellation/statement.lit"),
-        include_str!("../../../lean/examples/integer_periodic_tangent/statement.lit"),
-        include_str!("../../../lean/examples/integer_periodic_cotangent/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "integer_period").unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(lean.contains("_period_angle"));
-        assert_eq!(lean, compiler.compile_run(&run, "integer_period").unwrap());
-    }
-}
-
-#[test]
 fn integer_periodic_source_rejects_noninteger_offsets_and_poles() {
     for source in [
         "forall k R:\n    sin(2*k*pi+pi/6)=1/2",
@@ -237,32 +200,6 @@ fn integer_periodic_nonzero_requires_original_integer_facts() {
                 .compile_run(&run, "bad_integer_nonzero")
                 .expect_err("nonzero WD must retain every original integer premise");
         }
-    }
-}
-
-#[test]
-fn rational_angle_nonzero_examples_compile_original_certificates() {
-    for source in [
-        include_str!("../../../lean/examples/rational_angle_tangent_domain/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_cotangent_domain/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_reciprocal_domains/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_nonzero_facts/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_negative_offsets/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_multiple_periods/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_membership_premise/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_function_return/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_large_coefficients/statement.lit"),
-        include_str!(
-            "../../../lean/examples/partial_derivative_rational_angle_coefficient/statement.lit"
-        ),
-        include_str!("../../../lean/examples/rational_angle_formula_function/statement.lit"),
-        include_str!("../../../lean/examples/rational_angle_alias_reuse/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "rational_angle")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert_eq!(lean, compiler.compile_run(&run, "rational_angle").unwrap());
     }
 }
 

@@ -3,27 +3,36 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::resu
 use crate::prelude::*;
 const CASES: [(&str, &str); 6] = [
     (
-        include_str!("../../../lean/examples/one_integer_power/statement.lit"),
+        r#"forall n Z => 1^n=1
+"#,
         "onePowerValue",
     ),
     (
-        include_str!("../../../lean/examples/zero_positive_natural_power/statement.lit"),
+        r#"forall n N+ => 0^n=0
+"#,
         "zeroPositiveExponentPowerValue",
     ),
     (
-        include_str!("../../../lean/examples/negative_integer_power_reciprocal/statement.lit"),
+        r#"forall a C,n Z:
+    a!=0
+    =>:
+        a^(-n)=1/(a^n)
+"#,
         "negativeIntegerPowerReciprocalValue",
     ),
     (
-        include_str!("../../../lean/examples/reciprocal_negative_one_power/statement.lit"),
+        r#"forall a R* => 1/a=a^(-1)
+"#,
         "reciprocalNegativeOnePowerValue",
     ),
     (
-        include_str!("../../../lean/examples/quotient_negative_one_power/statement.lit"),
+        r#"forall a R,b R* => a/b=a*b^(-1)
+"#,
         "quotientNegativeOnePowerValue",
     ),
     (
-        include_str!("../../../lean/examples/natural_power_product_distribution/statement.lit"),
+        r#"forall a,b C,n N => (a*b)^n=a^n*b^n
+"#,
         "naturalPowerProductValue",
     ),
 ];
@@ -166,8 +175,12 @@ fn zero_power_rule_does_not_accept_zero_exponent_or_omit_nonzero_assumptions() {
 
 #[test]
 fn positive_integer_power_cancellation_replays_exact_original_requirements_and_path() {
-    let source =
-        include_str!("../../../lean/examples/positive_integer_power_injective/statement.lit");
+    let source = r#"forall a,b R+,n Z:
+    n!=0
+    a^n=b^n
+    =>:
+        a=b
+"#;
     for change in [
         "unchanged",
         "missing",
@@ -228,7 +241,8 @@ fn positive_integer_power_cancellation_replays_exact_original_requirements_and_p
 #[test]
 fn nested_remainder_unit_uses_both_original_parent_integer_wd_certificates() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_extra::ScalarExtraEqualityProof as Extra;
-    let source = include_str!("../../../lean/examples/nested_remainder_unit/statement.lit");
+    let source = r#"forall a Z,b Z* => (a%b)%1=a%1
+"#;
     for change in ["unchanged", "wd", "modulus", "subject"] {
         let (mut run, compiler) = super::execute(source);
         let p = equality(&mut run);

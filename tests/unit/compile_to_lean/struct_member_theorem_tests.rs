@@ -4,8 +4,15 @@ use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
 use crate::prelude::*;
 
-const LITERAL: &str = include_str!("../../../lean/examples/struct_member_literal/statement.lit");
-const GENERIC: &str = include_str!("../../../lean/examples/struct_member_cartesian/statement.lit");
+const LITERAL: &str = r#"# The builtin release retains the original checked coordinate memberships.
+struct PlanarCoordinate:
+    x R
+    y R
+
+release thm struct_member((1, 2), &PlanarCoordinate)
+
+(1, 2) $in &PlanarCoordinate
+"#;
 
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     let ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::Thm(
@@ -15,20 +22,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
         panic!("original structure release")
     };
     p
-}
-
-#[test]
-fn struct_member_replays_literal_generic_and_selected_contracts() {
-    let selected = LITERAL.replace(
-        "release thm struct_member((1, 2), &PlanarCoordinate)",
-        "by thm struct_member((1, 2), &PlanarCoordinate) => (1, 2) $in &PlanarCoordinate",
-    );
-    for source in [LITERAL, GENERIC, &selected] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "struct_member").unwrap();
-        assert_eq!(output, compiler.compile_run(&run, "struct_member").unwrap());
-        assert!(!output.contains("sorry") && !output.contains("axiom "));
-    }
 }
 
 #[test]

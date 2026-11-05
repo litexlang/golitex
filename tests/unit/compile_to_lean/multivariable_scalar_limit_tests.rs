@@ -2,30 +2,12 @@ use crate::prelude::*;
 use crate::store_fact_and_infer::{
     InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
 };
-const SELECTED: &str =
-    include_str!("../../../lean/examples/multivariable_scalar_limit_selection/statement.lit");
-#[test]
-fn euclidean_scalar_selector_replays_candidates_existence_and_generic_dimensions() {
-    for source in [
-        SELECTED,
-        include_str!("../../../lean/examples/multivariable_scalar_limit_existence/statement.lit"),
-        include_str!(
-            "../../../lean/examples/multivariable_scalar_limit_generic_dimension/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_scalar_limit_guarded_domain/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_scalar_limit_negative_citation/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/multivariable_scalar_limit_nested_objects/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "scalar_euclidean_limit").expect(source);
-    }
-}
+const SELECTED: &str = r#"# Select the finite Euclidean limit of a two-variable real function from its proved candidate.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), L R:
+    $has_multi_limit_at(f,p,2,L)
+    =>:
+        lim_multi_at(f,p,2)=L
+"#;
 #[test]
 fn euclidean_scalar_inference_requires_original_identity_domain_and_clause_order() {
     for mutation in 0..4 {
@@ -119,9 +101,17 @@ fn euclidean_scalar_selector_rejects_missing_original_wd_children() {
 fn function_alpha_renaming_preserves_free_coordinate_references() {
     use crate::compile_to_lean::helper::instantiated_object_matches;
     use std::collections::{HashMap, HashSet};
-    let (mut run, mut compiler) = super::execute(include_str!(
-        "../../../lean/examples/multivariable_scalar_limit_from_definition/statement.lit"
-    ));
+    let (mut run, mut compiler) = super::execute(
+        r#"# Recognize a Euclidean scalar limit from its accumulation and epsilon-delta clauses.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), L R:
+    forall radius R+:
+        exist x cart_n(R,2) st {0<euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2), euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<radius}
+    forall epsilon R+:
+        exist delta R+ st {{x cart_n(R,2): 0<euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2), euclidean_norm(fn(k closed_range(1,2)) R {x(k)-p(k)},2)<delta} $subset {y cart_n(R,2): abs(f(y)-L)<epsilon}}
+    =>:
+        $has_multi_limit_at(f,p,2,L)
+"#,
+    );
     let root = super::forall_proof_mut(&mut run.statement_results[0]);
     let Fact::ForallFact(acc) = &root.fact.dom_facts[0] else {
         panic!("accumulation premise");
@@ -169,14 +159,4 @@ fn function_alpha_renaming_preserves_free_coordinate_references() {
             expected
         );
     }
-}
-
-#[test]
-fn euclidean_scalar_definition_replays_its_original_clauses() {
-    let (run, c) = super::execute(include_str!(
-        "../../../lean/examples/multivariable_scalar_limit_from_definition/statement.lit"
-    ));
-    let lean = c.compile_run(&run, "scalar_euclidean_definition").unwrap();
-    assert!(lean.contains("_multivariable_clause_0"));
-    assert!(lean.contains("_multivariable_clause_1"));
 }

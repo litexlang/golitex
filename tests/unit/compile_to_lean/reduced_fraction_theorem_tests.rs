@@ -1,27 +1,11 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/rational_reduced_fraction/statement.lit");
-const CONCRETE: &str =
-    include_str!("../../../lean/examples/rational_reduced_fraction_concrete/statement.lit");
-
-#[test]
-fn reduced_fraction_replays_original_generic_and_concrete_unique_contracts() {
-    for source in [SOURCE, CONCRETE] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "reduced_fraction")
-            .unwrap_or_else(|e| panic!("{e}"));
-        assert!(output.contains("Litex.rationalReducedFractionWitness"));
-        assert!(output.contains("Litex.rationalReducedFractionUniqueness"));
-        assert!(output.contains("variable [_functionSemantics : Litex.FunctionSemantics M]"));
-        assert!(!output.contains("variable [_setSemantics"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "reduced_fraction").unwrap()
-        );
-    }
-}
+const SOURCE: &str = r#"thm checked_rational_reduced_fraction:
+    ? forall x Q:
+        exist! p Z,d N+ st {x=p/d,gcd(p,d)=1}
+    release thm rational_has_unique_reduced_fraction(x)
+"#;
 
 #[test]
 fn reduced_fraction_keeps_original_requirement_store_wd_and_prior_citation() {

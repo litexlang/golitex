@@ -1,0 +1,2 @@
+# A common element is excluded from the symmetric difference.
+0 $in set_diff({0},{0})

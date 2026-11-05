@@ -2,12 +2,23 @@ use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
 
-const GENERIC: &str =
-    include_str!("../../../lean/examples/inner_product_positive_theorem/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/inner_product_positive_selected/statement.lit");
-const EMPTY: &str =
-    include_str!("../../../lean/examples/inner_product_positive_empty/statement.lit");
+const GENERIC: &str = r#"# Self inner products are real and nonnegative for every finite complex vector.
+thm checked_inner_product_positive:
+    ? forall n N, v cart_n(C, n):
+        inner_product(v, v, n) $in R
+        0 <= re(inner_product(v, v, n))
+        img(inner_product(v, v, n)) = 0
+    release thm inner_product_positive(v, n)
+"#;
+const SELECTED: &str = r#"# Selection preserves all original builtin stages before returning real membership.
+thm checked_inner_product_positive_selected:
+    ? forall n N, v cart_n(C, n):
+        inner_product(v, v, n) $in R
+    by thm inner_product_positive(v, n) => inner_product(v, v, n) $in R
+"#;
+const EMPTY: &str = r#"# The zero-dimensional vector retains the same nonnegative self-inner contract.
+release thm inner_product_positive(tuple(), 0)
+"#;
 
 #[test]
 fn inner_positive_replays_real_membership_both_projections_and_empty_dimension() {

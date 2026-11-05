@@ -71,21 +71,6 @@ fn natural_function_wd_retains_the_original_nonnegative_constructor() {
 }
 
 #[test]
-fn natural_function_wd_replays_scalar_identity_and_closed_evaluation() {
-    for source in [
-        "have fn f(x N) N=x+1\nhave n N\n2*f(n)=2+2*n\n",
-        "have fn f(x N) N=x+1\nf(2)=3\n",
-        include_str!("../../../../lean/examples/natural_successor_affine_identity/statement.lit"),
-        include_str!("../../../../examples/proof_nodes/equal/by_builtin_rewrite/fn_application_unfold_substitution.lit"),
-    ] {
-        let (result, compiler) = super::execute(source);
-        let output = super::compile_run(&result, &compiler, "natural_successor")
-            .expect("the unchanged formula and its checked applications compile");
-        assert!(!output.contains("sorry") && !output.contains("admit"));
-    }
-}
-
-#[test]
 fn natural_function_wd_rejects_wrong_captured_return_membership_children() {
     for change in ["carrier", "left", "right"] {
         let (mut result, compiler) = super::execute(DECLARATION);

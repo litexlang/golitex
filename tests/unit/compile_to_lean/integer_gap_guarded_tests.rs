@@ -1,21 +1,46 @@
 use crate::prelude::*;
 
-const GUARDED: &str = include_str!("../../../lean/examples/integer_gap_guarded/statement.lit");
-const CACHED: &str = include_str!("../../../lean/examples/integer_gap_cached_guard/statement.lit");
-const FUNCTION: &str =
-    include_str!("../../../lean/examples/integer_gap_function_guard/statement.lit");
+const GUARDED: &str = r#"# Preserve integer separation after cancelling certified nonzero real factors.
+forall a, b Z, c R:
+    c != 0
+    a < b
+    =>:
+        a * c / c + 1 <= b
 
-#[test]
-fn guarded_integer_gap_replays_division_power_cached_and_function_wd() {
-    for source in [GUARDED, CACHED, FUNCTION] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "guarded_gap").unwrap();
-        assert!(lean.contains("Litex.integerGapLe"));
-        assert!(lean.contains("nativeNonzeroOfDenote"));
-        assert!(lean.contains("litex_normalize_rational"));
-        assert_eq!(lean, compiler.compile_run(&run, "guarded_gap").unwrap());
-    }
-}
+forall a, b Z, c R:
+    c != 0
+    a < b
+    =>:
+        a <= b * c / c - 1
+
+forall a, b Z, c, d R:
+    c != 0
+    d != 0
+    a < b
+    =>:
+        a * c * d / (c * d) + 1 <= b
+
+forall a, b Z, c, d R:
+    c != 0
+    d != 0
+    a < b
+    =>:
+        a * (c / d) / (c / d) + 1 <= b
+
+forall a, b Z, c R:
+    c != 0
+    a < b
+    =>:
+        a * c^(-1) / c^(-1) + 1 <= b
+"#;
+const CACHED: &str = r#"# Reuse the quotient's earlier WD when strengthening an integer inequality.
+forall a, b Z, c R:
+    c != 0
+    a < b
+    =>:
+        a * c / c $in R
+        a * c / c + 1 <= b
+"#;
 
 #[test]
 fn guarded_integer_gap_resolves_the_original_cached_quotient_wd() {

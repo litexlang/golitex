@@ -788,6 +788,25 @@ impl LitexToLeanCompiler {
                 LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonnegDifference(p) => {
                     self.compile_order_from_difference(goal, &p.premise_proof, false, position)
                 }
+                LessEqualFactSearchProofByBuiltinRule::NonpositiveDifferenceFromLessEqual(p) => {
+                    self.compile_nonpositive_difference_order(
+                        goal,
+                        &p.premise_proof,
+                        false,
+                        position,
+                    )
+                }
+                LessEqualFactSearchProofByBuiltinRule::LessEqualFromNonpositiveDifference(p) => {
+                    self.compile_nonpositive_difference_order(
+                        goal,
+                        &p.premise_proof,
+                        true,
+                        position,
+                    )
+                }
+                LessEqualFactSearchProofByBuiltinRule::NonnegDifferenceFromLessEqual(p) => {
+                    self.compile_nonnegative_difference_from_order(goal, &p.premise_proof, position)
+                }
                 LessEqualFactSearchProofByBuiltinRule::LessEqualFromPosDivProductBound(p) => self
                     .compile_positive_div_product_bound(
                         goal,
@@ -958,6 +977,9 @@ impl LitexToLeanCompiler {
                         true,
                         position,
                     ),
+                GreaterEqualFactSearchProofByBuiltinRule::FromKnownInPositiveNatural(p) => {
+                    self.compile_positive_natural_lower_bound(goal, &p.premise_proof, position)
+                }
                 GreaterEqualFactSearchProofByBuiltinRule::PredecessorNonNegFromAtLeastOne(p) => {
                     self.compile_predecessor_nonnegative_known(
                         goal,

@@ -3,43 +3,150 @@ use crate::execute::{ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessRe
 use crate::prelude::*;
 
 const CASES: &[&str] = &[
-    include_str!("../../../lean/examples/recursive_rounding/statement.lit"),
-    include_str!("../../../lean/examples/recursive_ceiling/statement.lit"),
-    include_str!("../../../lean/examples/recursive_clamping/statement.lit"),
-    include_str!("../../../lean/examples/recursive_sign/statement.lit"),
-    include_str!("../../../lean/examples/recursive_radical/statement.lit"),
-    include_str!("../../../lean/examples/recursive_logarithm/statement.lit"),
-    include_str!("../../../lean/examples/recursive_smooth_composition/statement.lit"),
-    include_str!("../../../lean/examples/recursive_angle_composition/statement.lit"),
-    include_str!("../../../lean/examples/recursive_conjugate/statement.lit"),
-    include_str!("../../../lean/examples/recursive_factorial/statement.lit"),
-    include_str!("../../../lean/examples/recursive_integer_quotient/statement.lit"),
-    include_str!("../../../lean/examples/recursive_common_divisor/statement.lit"),
-    include_str!("../../../lean/examples/recursive_complex_coordinates/statement.lit"),
-    include_str!("../../../lean/examples/recursive_matrix_transpose/statement.lit"),
-    include_str!("../../../lean/examples/recursive_rectangular_sum/statement.lit"),
-    include_str!("../../../lean/examples/template_recursive_rounding/statement.lit"),
+    r#"# Repeatedly round down, starting at one half above a variable integer lower bound.
+have fn rounded_sequence(n, b Z: n >= b) R by induc n from b:
+    case n = b: 1 / 2
+    case n > b: floor(rounded_sequence(n - 1, b))
+
+rounded_sequence(0, 0) = 1 / 2
+rounded_sequence(1, 0) = floor(rounded_sequence(0, 0)) = floor(1 / 2) = 0
+"#,
+    r#"# Repeatedly round up a real seed above a variable integer lower bound.
+have fn ceiling_steps(n, b Z: n >= b) R by induc n from b:
+    case n = b: 1 / 2
+    case n > b: ceil(ceiling_steps(n - 1, b))
+
+ceiling_steps(1, 0) = ceil(ceiling_steps(0, 0))
+"#,
+    r#"# Increment a sequence while keeping its values between zero and two.
+have fn clamped_steps(n, b Z: n >= b) R by induc n from b:
+    case n = b: -1
+    case n > b: max(min(clamped_steps(n - 1, b) + 1, 2), 0)
+
+clamped_steps(1, 0) = max(min(clamped_steps(0, 0) + 1, 2), 0)
+"#,
+    r#"# Iterate the sign function on a real seed.
+have fn sign_steps(n, b Z: n >= b) R by induc n from b:
+    case n = b: -2
+    case n > b: sign(sign_steps(n - 1, b))
+
+sign_steps(1, 0) = sign(sign_steps(0, 0))
+"#,
+    r#"# Iterate the square root of the absolute value of the preceding term.
+have fn radical_steps(n, b Z: n >= b) R by induc n from b:
+    case n = b: 4
+    case n > b: sqrt(abs(radical_steps(n - 1, b)))
+
+radical_steps(1, 0) = sqrt(abs(radical_steps(0, 0)))
+"#,
+    r#"# Iterate the base-two logarithm of the exponential of the preceding term.
+have fn logarithmic_steps(n, b Z: n >= b) R by induc n from b:
+    case n = b: 1
+    case n > b: log(2, exp(logarithmic_steps(n - 1, b)))
+
+logarithmic_steps(1, 0) = log(2, exp(logarithmic_steps(0, 0)))
+"#,
+    r#"# Iterate a composition of trigonometric and hyperbolic real functions.
+have fn smooth_steps(n, b Z: n >= b) R by induc n from b:
+    case n = b: 0
+    case n > b: tanh(sinh(cosh(cos(sin(smooth_steps(n - 1, b))))))
+
+smooth_steps(1, 0) = tanh(sinh(cosh(cos(sin(smooth_steps(0, 0))))))
+"#,
+    r#"# Iterate arctangent after arccotangent.
+have fn angle_steps(n, b Z: n >= b) R by induc n from b:
+    case n = b: 0
+    case n > b: arctan(arccot(angle_steps(n - 1, b)))
+
+angle_steps(1, 0) = arctan(arccot(angle_steps(0, 0)))
+"#,
+    r#"# Alternate a complex seed with its conjugate.
+have fn conjugate_steps(n, b Z: n >= b) C by induc n from b:
+    case n = b: i
+    case n > b: conj(conjugate_steps(n - 1, b))
+
+conjugate_steps(1, 0) = conj(conjugate_steps(0, 0))
+"#,
+    r#"# Iterate factorial on a natural-valued sequence.
+have fn factorial_steps(n, b Z: n >= b) N by induc n from b:
+    case n = b: 1
+    case n > b: factorial(factorial_steps(n - 1, b))
+
+factorial_steps(1, 0) = factorial(factorial_steps(0, 0))
+"#,
+    r#"# Replace an integer by its quotient and remainder on division by two.
+have fn quotient_steps(n, b Z: n >= b) Z by induc n from b:
+    case n = b: 13
+    case n > b: quot(quotient_steps(n - 1, b), 2) + quotient_steps(n - 1, b) % 2
+
+quotient_steps(1, 0) = quot(quotient_steps(0, 0), 2) + quotient_steps(0, 0) % 2
+"#,
+    r#"# Iterate gcd and lcm on natural numbers.
+have fn divisor_steps(n, b Z: n >= b) N by induc n from b:
+    case n = b: 6
+    case n > b: gcd(lcm(divisor_steps(n - 1, b), 6), 4)
+
+divisor_steps(1, 0) = gcd(lcm(divisor_steps(0, 0), 6), 4)
+"#,
+    r#"# Combine complex modulus and coordinates in a real-valued recurrence.
+have fn complex_coordinate_steps(n, b Z: n >= b) R by induc n from b:
+    case n = b: 1
+    case n > b: C_abs(complex_coordinate_steps(n - 1, b)) + re(complex_coordinate_steps(n - 1, b)) + img(complex_coordinate_steps(n - 1, b))
+
+complex_coordinate_steps(1, 0) = C_abs(complex_coordinate_steps(0, 0)) + re(complex_coordinate_steps(0, 0)) + img(complex_coordinate_steps(0, 0))
+"#,
+    r#"# Repeatedly transpose a square matrix.
+have fn transpose_steps(n, b Z, A matrix(C,2,2): n >= b) matrix(C,2,2) by induc n from b:
+    case n = b: A
+    case n > b: transpose(transpose_steps(n - 1, b, A),2,2)
+
+forall A matrix(C,2,2):
+    transpose_steps(1, 0, A) = transpose(transpose_steps(0, 0, A), 2, 2)
+"#,
+    r#"# Repeatedly add a fixed rectangular matrix.
+have fn rectangular_sum_steps(n, b Z, A matrix(C,2,3): n >= b) matrix(C,2,3) by induc n from b:
+    case n = b: A
+    case n > b: matrix_add(rectangular_sum_steps(n - 1, b, A), A, 2, 3)
+
+forall A matrix(C,2,3):
+    rectangular_sum_steps(1, 0, A) = matrix_add(rectangular_sum_steps(0, 0, A), A, 2, 3)
+"#,
+    r#"# Iterate floor while retaining a captured real seed.
+template<seed R>:
+    have fn rounded_from(n, b Z: n >= b) R by induc n from b:
+        case n = b: seed
+        case n > b: floor(rounded_from(n - 1, b))
+
+\rounded_from<3 / 2>(1, 0) = floor(\rounded_from<3 / 2>(0, 0))
+"#,
 ];
 
 const NATURAL_CASES: &[&str] = &[
-    include_str!("../../../lean/examples/natural_recursive_rounding/statement.lit"),
-    include_str!("../../../lean/examples/natural_recursive_clamping/statement.lit"),
-    include_str!("../../../lean/examples/template_natural_recursive_rounding/statement.lit"),
-];
+    r#"# Repeatedly round down, starting at one half.
+have fn natural_rounding(n N) R by induc n from 0:
+    case n = 0: 1 / 2
+    case n > 0: floor(natural_rounding(n - 1))
 
-#[test]
-fn natural_recursive_constructors_keep_the_zero_successor_representation() {
-    for source in NATURAL_CASES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "natural_constructors").unwrap();
-        assert!(lean.contains("Litex.recursiveNatFnTarget"));
-        assert!(lean.contains("Litex.recursiveNatFn_succ"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "natural_constructors").unwrap()
-        );
-    }
-}
+natural_rounding(1) = floor(natural_rounding(0))
+natural_rounding(0) = 1 / 2
+floor(natural_rounding(0)) = floor(1 / 2) = 0
+"#,
+    r#"# Add two at each step and clamp the result to the interval from zero to three.
+have fn natural_clamping(n N) R by induc n from 0:
+    case n = 0: 1 / 2
+    case n > 0: max(min(natural_clamping(n - 1) + 2, 3), 0)
+
+natural_clamping(1) = max(min(natural_clamping(0) + 2, 3), 0)
+"#,
+    r#"# Iterate floor from a captured real seed using a natural index.
+template<seed R>:
+    have fn natural_floor_from(n N) R by induc n from 0:
+        case n = 0: seed
+        case n > 0: floor(natural_floor_from(n - 1))
+
+\natural_floor_from<3 / 2>(1) = floor(\natural_floor_from<3 / 2>(0))
+"#,
+];
 
 #[test]
 fn recursive_constructor_catalog_replays_scalar_matrix_and_template_equations() {

@@ -1,23 +1,12 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
-const SOURCE: &str = include_str!("../../../lean/examples/matrix_rank_product/statement.lit");
-
-#[test]
-fn rank_product_replays_rectangular_complex_real_and_empty_domains_deterministically() {
-    for source in [
-        SOURCE,
-        include_str!("../../../lean/examples/matrix_rank_product_real/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_product_empty_inner/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_product_empty_rows/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let out = compiler
-            .compile_run(&run, "rank_product")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains("Litex.matrixRankProductBounds"));
-        assert_eq!(out, compiler.compile_run(&run, "rank_product").unwrap());
-    }
-}
+const SOURCE: &str = r#"# Bound product rank by each original rectangular factor rank.
+thm checked_matrix_rank_product_preparation:
+    ? forall m, k, n N, A matrix(C,m,k), B matrix(C,k,n):
+        matrix_rank(matrix_mul(A,B,m,k,n),m,n)<=matrix_rank(A,m,k)
+        matrix_rank(matrix_mul(A,B,m,k,n),m,n)<=matrix_rank(B,k,n)
+    release thm matrix_rank_product(A,B,m,k,n)
+"#;
 
 #[test]
 fn rank_product_requires_all_six_stages_repeated_inner_dimension_and_both_output_wd() {

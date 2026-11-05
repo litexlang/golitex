@@ -1,5 +1,5 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "ast_source": "src/ast/obj.rs",
   "objects": [
     {
@@ -1445,7 +1445,6 @@
       "positive_cases": [
         "P05",
         "P06",
-        "P07",
         "P04",
         "P01",
         "P02",
@@ -1951,7 +1950,7 @@
         "Obj::ProductShape::ObjAtIndex"
       ],
       "retired": true,
-      "retired_reason": "ObjAtIndex AST removed by explicit authorization; all six correct coordinate goals moved to fn_obj P10–P15; original negative fixtures retained."
+      "retired_reason": "ObjAtIndex AST removed by explicit authorization; all six correct coordinate goals moved to fn_obj P10\u2013P15; original negative fixtures retained."
     },
     {
       "name": "fn_set",
@@ -3298,6 +3297,520 @@
         {
           "id": "N03",
           "file": "negative/identifier_with_mod_and_export_file_id__n03/main.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "matrix_arithmetic",
+      "ast_paths": [
+        "Obj::MatrixOperator::Add",
+        "Obj::MatrixOperator::Subtract",
+        "Obj::MatrixOperator::Scale",
+        "Obj::MatrixOperator::Multiply",
+        "Obj::MatrixOperator::Apply",
+        "Obj::MatrixOperator::Power",
+        "Obj::MatrixOperator::Diagonal",
+        "Obj::MatrixOperator::OuterProduct"
+      ],
+      "positive_file": "matrix_arithmetic.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_shape.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "matrix_operators",
+      "ast_paths": [
+        "Obj::MatrixOperator::ZeroMatrix",
+        "Obj::MatrixOperator::IdentityMatrix",
+        "Obj::MatrixOperator::Transpose",
+        "Obj::MatrixOperator::ConjugateTranspose",
+        "Obj::MatrixOperator::Trace"
+      ],
+      "positive_file": "matrix_operators.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_index.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "matrix_minors_inverse",
+      "ast_paths": [
+        "Obj::MatrixOperator::Minor",
+        "Obj::MatrixOperator::Cofactor",
+        "Obj::MatrixOperator::Adjugate",
+        "Obj::MatrixOperator::Inverse",
+        "Obj::MatrixOperator::Rank"
+      ],
+      "positive_file": "matrix_minors_inverse.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_inverse.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "finite_inner_product_norm",
+      "ast_paths": [
+        "Obj::MatrixOperator::InnerProduct",
+        "Obj::MatrixOperator::EuclideanNorm",
+        "Obj::MatrixOperator::FrobeniusNorm"
+      ],
+      "positive_file": "finite_inner_product_norm.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_shape.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "determinant",
+      "ast_paths": [
+        "Obj::MatrixOperator::Determinant"
+      ],
+      "positive_file": "determinant.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_shape.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "matrix_fn_space",
+      "ast_paths": [
+        "Obj::SetFormer::MatrixSet"
+      ],
+      "positive_file": "matrix_fn_space.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_shape.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "cart_n",
+      "ast_paths": [],
+      "positive_file": "cart_n.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/tuple__n01.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "matrix_bt_rules",
+      "ast_paths": [],
+      "positive_file": "matrix_bt_rules.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_inverse.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "matrix_rank_factorization",
+      "ast_paths": [],
+      "positive_file": "matrix_rank_factorization.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_inverse.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "native_matrix_determinant_formulas",
+      "ast_paths": [],
+      "positive_file": "native_matrix_determinant_formulas.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_inverse.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "native_matrix_inverse_predicates",
+      "ast_paths": [],
+      "positive_file": "native_matrix_inverse_predicates.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_inverse.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "native_matrix_properties",
+      "ast_paths": [],
+      "positive_file": "native_matrix_properties.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/native_matrix_inverse.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "tuple_comma_syntax",
+      "ast_paths": [],
+      "positive_file": "tuple_comma_syntax.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/tuple__n01.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "sequence_limit",
+      "ast_paths": [
+        "Obj::LimitOperator::Sequence"
+      ],
+      "positive_file": "../proof_nodes/equal/by_builtin_rule/sequence_limit_selected.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "../wd_negative/sequence_limit_unproved.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "sequence_limsup",
+      "ast_paths": [
+        "Obj::LimitOperator::SequenceLimsup"
+      ],
+      "positive_file": "../stmt_nodes/release_and_expand/builtin_thm/seq_limsup_selected.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "../wd_negative/sequence_extrema_without_candidate.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "sequence_liminf",
+      "ast_paths": [
+        "Obj::LimitOperator::SequenceLiminf"
+      ],
+      "positive_file": "../stmt_nodes/release_and_expand/builtin_thm/seq_liminf_selected.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/liminf_without_candidate.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "multivariable_limits",
+      "ast_paths": [
+        "Obj::LimitOperator::MultivariableScalar",
+        "Obj::LimitOperator::MultivariableVector",
+        "Obj::DerivativeOperator::Partial",
+        "Obj::DerivativeOperator::ScalarDifferential",
+        "Obj::DerivativeOperator::TotalDifferential",
+        "Obj::DerivativeOperator::Gradient",
+        "Obj::DerivativeOperator::Jacobian",
+        "Obj::DerivativeOperator::Hessian",
+        "Obj::DerivativeOperator::Divergence",
+        "Obj::DerivativeOperator::Curl",
+        "Obj::DerivativeOperator::Laplacian"
+      ],
+      "positive_file": "../real_analysis/multivariable/main.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "../wd_negative/multivariable_without_proof.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "reciprocal_trig",
+      "ast_paths": [
+        "Obj::TrigOperator::Sec",
+        "Obj::TrigOperator::Csc"
+      ],
+      "positive_file": "../proof_nodes/equal/by_builtin_rule/reciprocal_trigonometry.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/reciprocal_trig_poles.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "symmetric_difference",
+      "ast_paths": [
+        "Obj::SetOperator::SymmetricDifference"
+      ],
+      "positive_file": "../proof_nodes/equal/by_builtin_rule/symmetric_difference.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/symmetric_difference_member.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "real_extrema",
+      "ast_paths": [
+        "Obj::BoundOperator::Supremum",
+        "Obj::BoundOperator::Infimum"
+      ],
+      "positive_file": "../real_analysis/open_interval_bounds.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "../wd_negative/real_bounds_empty_lub.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "complex_conjugate",
+      "ast_paths": [
+        "Obj::ComplexOperator::Conjugate"
+      ],
+      "positive_file": "../proof_nodes/equal/by_builtin_rule/complex_conjugation.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/complex_conjugate_sign.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "point_derivative",
+      "ast_paths": [
+        "Obj::DerivativeOperator::AtPoint"
+      ],
+      "positive_file": "../proof_nodes/atomic/by_builtin_strategy/pointwise_derivative.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/derivative_without_candidate.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "function_composition",
+      "ast_paths": [
+        "Obj::FunctionSpace::Composition"
+      ],
+      "positive_file": "../wd/function_composition.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "../wd_negative/checked_function_composition_zero_denominator.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "hyperbolic_functions",
+      "ast_paths": [
+        "Obj::HyperbolicOperator::Sinh",
+        "Obj::HyperbolicOperator::Cosh",
+        "Obj::HyperbolicOperator::Tanh",
+        "Obj::HyperbolicOperator::Coth",
+        "Obj::HyperbolicOperator::Sech",
+        "Obj::HyperbolicOperator::Csch"
+      ],
+      "positive_file": "../proof_nodes/equal/by_builtin_rule/hyperbolic_functions.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "negative/hyperbolic_pole.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "riemann_integral",
+      "ast_paths": [
+        "Obj::IntegralOperator::Riemann"
+      ],
+      "positive_file": "../real_analysis/riemann_integral_domains.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "../wd_negative/riemann_integral_without_proof.lit"
+        }
+      ],
+      "gaps": []
+    },
+    {
+      "name": "function_limit",
+      "ast_paths": [
+        "Obj::LimitOperator::Function"
+      ],
+      "positive_file": "../proof_nodes/equal/by_builtin_rule/function_limit_selected.lit",
+      "whole_file": true,
+      "helper_paths": [],
+      "positive_cases": [
+        "whole-file"
+      ],
+      "negative_cases": [
+        {
+          "id": "N01",
+          "file": "../wd_negative/real_function_limit_without_proof.lit"
         }
       ],
       "gaps": []

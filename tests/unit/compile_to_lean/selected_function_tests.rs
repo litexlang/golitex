@@ -4,31 +4,30 @@ use crate::execute::{
 };
 use crate::prelude::*;
 
-const COPY: &str = include_str!("../../../lean/examples/selected_identity_function/statement.lit");
-const RECIPROCAL: &str =
-    include_str!("../../../lean/examples/selected_reciprocal_function/statement.lit");
-
-#[test]
-fn selected_function_replays_unique_source_and_published_call_property() {
-    for source in [
-        COPY,
-        RECIPROCAL,
-        include_str!("../../../lean/examples/selected_sum_function/statement.lit"),
-        include_str!("../../../lean/examples/selected_set_identity_function/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "selected_function").unwrap();
-        assert!(output.contains("Litex.selectedFn "));
-        assert!(output.contains("Litex.existsUniqueValueOfObjects"));
-        assert!(output.contains("Litex.selectedFn_call_spec"));
-        assert!(output.contains("Litex.selectedFn_unique"));
-        assert!(!output.contains("sorry"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "selected_function").unwrap()
-        );
-    }
-}
+const COPY: &str = r#"# Select the identity function from its unique output specification.
+thm unique_copy:
+    ? forall seed R:
+        exist! value R st {value = seed}
+    witness exist! value R st {value = seed} from seed
+have fn selected by exist!:
+    ? forall x R:
+        exist! y R st {y = x}
+selected(3) = 3
+"#;
+const RECIPROCAL: &str = r#"# Select a reciprocal function on the nonzero real numbers.
+thm unique_reciprocal:
+    ? forall seed R:
+        seed != 0
+        =>:
+            exist! value R st {value = 1 / seed}
+    witness exist! value R st {value = 1 / seed} from 1 / seed
+have fn selected by exist!:
+    ? forall x R:
+        x != 0
+        =>:
+            exist! y R st {y = 1 / x}
+selected(2) = 1 / 2
+"#;
 
 fn selected(run: &mut RunLitexCodeResult) -> &mut ExecHaveFnByForallExistUniqueStmtSuccessResult {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnByForallExistUnique(

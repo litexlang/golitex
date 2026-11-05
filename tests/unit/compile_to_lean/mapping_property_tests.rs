@@ -1,18 +1,21 @@
-const IDENTITY: &str = include_str!("../../../lean/examples/identity_bijection/statement.lit");
-
-#[test]
-fn mapping_properties_replay_identity_definition_and_inferences() {
-    let (run, compiler) = super::execute(IDENTITY);
-    let lean = compiler.compile_run(&run, "identity_bijection").unwrap();
-    assert!(lean.contains("Litex.injectiveValue_iff"));
-    assert!(lean.contains("Litex.surjectiveValue_iff"));
-    assert!(lean.contains("Litex.bijectiveValue"));
-    assert_eq!(
-        lean,
-        compiler.compile_run(&run, "identity_bijection").unwrap()
-    );
-    assert!(lean.len() < 200_000);
-}
+const IDENTITY: &str = r#"# The real identity is injective, surjective and bijective.
+have fn identity(x R) R = x
+claim:
+    ? forall left, right R:
+        identity(left) = identity(right)
+        =>:
+            left = right
+    left = identity(left)
+    identity(right) = right
+    left = right
+by def $injective(R, R, identity)
+claim:
+    ? forall target R:
+        exist source R st {target = identity(source)}
+    witness exist source R st {target = identity(source)} from target
+by def $surjective(R, R, identity)
+by def $bijective(R, R, identity)
+"#;
 
 use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByDefStmtSuccess};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
@@ -89,19 +92,6 @@ fn mapping_properties_reject_changed_definition_and_wd() {
     }
 }
 
-#[test]
-fn mapping_properties_compile_generic_preimages_and_inferences() {
-    for source in [
-        include_str!("../../../lean/examples/bijective_unique_preimages/statement.lit"),
-        include_str!("../../../lean/examples/mapping_property_inference/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "mapping_rules").unwrap();
-        assert!(lean.contains("Litex.FunctionSemantics M"));
-        assert!(!lean.contains("sorry"));
-    }
-}
-
 fn preimage(run: &mut RunLitexCodeResult) -> &mut VerifyExistUniqueFactSuccess {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) = &mut run.statement_results[0] else {
         panic!()
@@ -130,9 +120,18 @@ fn mapping_preimage_requires_exact_certificate_target_and_independent_witness() 
         ExistShapedFactSearchProofByBuiltinRule, ExistShapedFactSearchedProof,
     };
     for mutation in 0..4 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/bijective_unique_preimages/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Every target of a bijection has exactly one preimage, in either equation orientation.
+forall A, B set, f fn(t A)B, y B:
+    $bijective(A, B, f)
+    =>:
+        exist! x A st {f(x) = y}
+forall A, B set, f fn(t A)B, y B:
+    $bijective(A, B, f)
+    =>:
+        exist! x A st {y = f(x)}
+"#,
+        );
         let p = preimage(&mut run);
         let ExistShapedFactSearchedProof::ByBuiltinRule(
             ExistShapedFactSearchProofByBuiltinRule::BijectivePreimage(e),

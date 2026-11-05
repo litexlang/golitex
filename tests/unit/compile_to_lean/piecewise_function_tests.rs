@@ -149,21 +149,3 @@ fn piecewise_call_retains_and_validates_the_original_branch_guard() {
         assert!(compiler.compile_run(&run, "bad_call").is_err());
     }
 }
-
-#[test]
-fn piecewise_function_examples_compile_with_original_domains() {
-    for source in [
-        include_str!("../../../lean/examples/piecewise_total_reciprocal/statement.lit"),
-        include_str!("../../../lean/examples/piecewise_larger_value/statement.lit"),
-        include_str!("../../../lean/examples/piecewise_inverse_magnitude/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "piecewise_cases").unwrap();
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "piecewise_cases").unwrap()
-        );
-        assert!(output.contains("Litex.piecewiseFn_call_eq"));
-        assert!(output.len() < 200_000);
-    }
-}

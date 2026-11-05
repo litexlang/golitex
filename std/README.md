@@ -9,7 +9,6 @@ import; these modules supply reusable source mathematics above them.
 | Subject | Modules and current source scope |
 | --- | --- |
 | Natural numbers and recursion | [natural_numbers](natural_numbers/README.md): actual index-dependent recursion on any set, unique existence, unique predecessors and natural Euclidean division. |
-| Computation and logic | [turing_machines](turing_machines/README.md): a two-way unary-increment machine with arbitrary-length first-halting and whole-tape correctness; [lambda_calculus](lambda_calculus/README.md): finite de Bruijn syntax, capture-avoiding instantiation and compatible beta reduction; [hol](hol/README.md): the attributed shallow HOL interpretation as a reusable source package. |
 | Sets, relations and order | [set_laws](set_laws/README.md): pair-display compatibility, relative-complement partitions and the bounded Russell diagonal; [relations](relations/README.md): equivalence classes and partitions, partial orders, subset extrema, monotone maps and order embeddings. |
 | Finite Cartesian products | [finite_products](finite_products/README.md): actual products of arbitrary finite families, the singleton empty product, finite choice by induction and empty-factor/positive native-product compatibility laws. |
 | Equinumerosity and cardinality | [cardinality](cardinality/README.md): bijections on arbitrary sets, source/native finite-cardinality correspondence, finite image bounds and sequence/function-space counting with empty cases. |

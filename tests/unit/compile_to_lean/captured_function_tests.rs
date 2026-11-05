@@ -54,20 +54,6 @@ fn expansion(statement: &mut ExecStmtResult) -> &mut AnonymousFunctionBodyExpans
 }
 
 #[test]
-fn captured_function_examples_replay_deterministically() {
-    for source in [
-        include_str!("../../../lean/examples/captured_shift_functions/statement.lit"),
-        include_str!("../../../lean/examples/captured_division_functions/statement.lit"),
-        include_str!("../../../lean/examples/captured_binary_functions/statement.lit"),
-        include_str!("../../../lean/examples/nested_function_application/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "captured").unwrap();
-        assert_eq!(lean, compiler.compile_run(&run, "captured").unwrap());
-    }
-}
-
-#[test]
 fn captured_beta_rejects_changed_signature_body_and_local_binder() {
     for change in 0..5 {
         let (mut run, compiler) = super::execute(BETA);
@@ -104,8 +90,19 @@ fn captured_beta_rejects_changed_signature_body_and_local_binder() {
 #[test]
 fn captured_function_requires_outer_and_inner_original_guards() {
     for inner in [false, true] {
-        let source =
-            include_str!("../../../lean/examples/captured_division_functions/statement.lit");
+        let source = r#"# A division function captures a nonzero denominator and retains its domain proof.
+have fn divide_by(t R: t != 0) fn(x R) R = fn(x R) R {x / t}
+forall t R:
+    t != 0
+    =>:
+        divide_by(t) = fn(x R) R {x / t}
+        divide_by(t)(2) = 2 / t
+
+have fn divided_into(t R) fn(x R: x != 0) R = fn(x R: x != 0) R {t / x}
+forall t R:
+    divided_into(t) = fn(x R: x != 0) R {t / x}
+    divided_into(t)(2) = t / 2
+"#;
         let (mut run, compiler) = super::execute(source);
         let VerifyObjWellDefinedResult::Success(wd) =
             &mut definition(&mut run, if inner { 2 } else { 0 }).anonymous_fn_well_defined

@@ -1,23 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn imaginary_examples_replay_values_polynomials_and_function_proofs() {
-    for source in [
-        include_str!("../../../lean/examples/imaginary_unit_values/statement.lit"),
-        include_str!("../../../lean/examples/complex_polynomial_identity/statement.lit"),
-        include_str!("../../../lean/examples/complex_rotation/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "complex_numbers").unwrap();
-        assert!(output.contains("Complex.I"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "complex_numbers").unwrap()
-        );
-    }
-}
-
-#[test]
 fn imaginary_closed_equality_rejects_changed_real_and_imaginary_certificates() {
     for imaginary in [false, true] {
         let (mut run, compiler) = super::execute("i * i = -1\n");

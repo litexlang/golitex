@@ -86,14 +86,71 @@ fn replacement_rejects_a_missing_uniqueness_citation() {
     assert!(compiler.compile_run(&run, "missing_unique").is_err());
 }
 
-const CHOICE: &str = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/lean/examples/nonempty_family_choice/statement.lit"
-));
-const ZORN: &str = include_str!(concat!(
-    env!("CARGO_MANIFEST_DIR"),
-    "/lean/examples/poset_maximal_element/statement.lit"
-));
+const CHOICE: &str = r#"# Every family of nonempty sets admits a choice function.
+claim:
+    ? forall F set:
+        forall A F:
+            $is_nonempty_set(A)
+        =>:
+            exist f fn(A F) family_union(F) st {$is_choice_function_for(F, F, fn(B F) F {B}, f)}
+    release axiom_of_choice: set F:
+        forall A F:
+            $is_nonempty_set(A)
+"#;
+const ZORN: &str = r#"# A nonempty partially ordered set whose chains have upper bounds has a maximal element.
+have S set
+abstract_prop leq(x, y)
+prop upper_bound(c power_set(S), u S):
+    forall x c:
+        $leq(x, u)
+prop maximal(m S):
+    forall x S:
+        $leq(m, x)
+        =>:
+            x = m
+
+claim:
+    ? forall:
+        $is_nonempty_set(S)
+        forall x S:
+            $leq(x, x)
+        forall x, y, z S:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y S:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(S):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u S st {$upper_bound(c, u)}
+        =>:
+            exist m S st {$maximal(m)}
+    release zorn_lemma: set S, prop leq, prop upper_bound, prop maximal:
+        $is_nonempty_set(S)
+        forall x S:
+            $leq(x, x)
+        forall x, y, z S:
+            $leq(x, y)
+            $leq(y, z)
+            =>:
+                $leq(x, z)
+        forall x, y S:
+            $leq(x, y)
+            $leq(y, x)
+            =>:
+                x = y
+        forall c power_set(S):
+            forall x, y c:
+                $leq(x, y) or $leq(y, x)
+            =>:
+                exist u S st {$upper_bound(c, u)}
+"#;
 
 #[test]
 fn choice_replays_the_original_release_block() {
@@ -327,10 +384,13 @@ fn local_assumption_rejects_missing_original_body_wd() {
 
 #[test]
 fn template_instance_rejects_missing_nonzero_obligation() {
-    let (mut run, compiler) = super::execute(include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/lean/examples/template_guarded_quotient/statement.lit"
-    )));
+    let (mut run, compiler) = super::execute(
+        r#"# A two-argument quotient template retains the nonzero denominator condition.
+template<x R, y R: y != 0,>:
+    have quotient R = x / y
+\quotient<6, 2> = 3
+"#,
+    );
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(fact)) = &mut run.statement_results[1]
     else {
         panic!()

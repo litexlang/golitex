@@ -30,7 +30,7 @@ impl LitexToLeanCompiler {
                 .projection_steps
                 .last()
                 .ok_or_else(|| LeanCompileError::unsupported("StructField/ProjectionStages"))?;
-            let (declaration, _, _) = scope.visible_struct(&step.carrier.name)?;
+            let (declaration, _, _) = scope.visible_struct(&step.carrier.name, &self.runtime)?;
             let mut substitution = header_substitution(&declaration.statement, &step.carrier)?;
             substitution.extend(field_substitution(
                 &declaration.statement,
@@ -110,6 +110,13 @@ impl LitexToLeanCompiler {
         let mut arguments = if let Some(instance) = instance.filter(|_| !carrier.params.is_empty())
         {
             self.compile_template_record_arguments(instance, carrier, position)?
+        } else if matches!(access.obj.as_ref(), Obj::Identifier(_)) {
+            self.with_struct_receiver(&access.obj, position, |declared, _, producer| {
+                if declared != carrier {
+                    return Err(LeanCompileError::unsupported("StructField/ReceiverCarrier"));
+                }
+                self.compile_struct_reference_arguments(carrier, producer)
+            })?
         } else {
             self.compile_struct_reference_arguments(carrier, position)?
         };
@@ -117,14 +124,14 @@ impl LitexToLeanCompiler {
         let mut constructor = None;
         for (depth, step) in proof.projection_steps.iter().enumerate() {
             let (declaration, producer, declaration_index) =
-                position.visible_struct(&step.carrier.name)?;
+                position.visible_struct(&step.carrier.name, &self.runtime)?;
             let n = declaration.statement.fields.len();
             let index = step.field_index;
             let coordinate = index + 1;
             let receiver = format!("_field_value_{depth}");
             let member = format!("_field_member_{depth}");
-            let structure =
-                self.context_application(&format!("struct_{}", declaration_index + 1), &producer);
+            let structure = position
+                .declaration_reference(&format!("struct_{}", declaration_index + 1), &producer)?;
             let structure = apply_arguments(&structure, &arguments);
             lines.push(format!("let _field_carrier_{depth} := {structure}"));
             let mut base = format!("_field_carrier_{depth}");
@@ -178,7 +185,7 @@ impl LitexToLeanCompiler {
                 proof: ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::FieldAccess(proof)), ..
             } = wd.detailed_ref() else { return Ok(None); };
             let step = proof.projection_steps.last().ok_or_else(|| LeanCompileError::unsupported("StructField/ProjectionStages"))?;
-            let (declaration, _, _) = caller.visible_struct(&step.carrier.name)?;
+            let (declaration, _, _) = caller.visible_struct(&step.carrier.name, &self.runtime)?;
             let mut substitution = header_substitution(&declaration.statement, &step.carrier)?;
             substitution.extend(field_substitution(&declaration.statement, &field_receiver(access, access.fields.len().saturating_sub(1))));
             if !has_field_constructor(object, &substitution, declaration, step.field_index, caller)? {
@@ -218,7 +225,8 @@ impl LitexToLeanCompiler {
         if access.obj.ir() != layer.obj.ir() {
             return Ok(None);
         }
-        let (declaration, producer, _) = caller.visible_struct(&layer.struct_obj.name)?;
+        let (declaration, producer, _) =
+            caller.visible_struct(&layer.struct_obj.name, &self.runtime)?;
         validate_struct(declaration)?;
         let index = declaration
             .statement
@@ -469,7 +477,7 @@ impl LitexToLeanCompiler {
             .zip(&access.fields)
             .enumerate()
         {
-            let (declaration, _, _) = position.visible_struct(&step.carrier.name)?;
+            let (declaration, _, _) = position.visible_struct(&step.carrier.name, &self.runtime)?;
             validate_struct(declaration)?;
             let field = declaration
                 .statement
@@ -598,7 +606,7 @@ impl LitexToLeanCompiler {
             && super::compile_struct_fields::has_direct_record_receiver(access)
         {
             let (carrier, _) = self.compile_struct_receiver(&access.obj, position)?;
-            let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+            let (declaration, _, _) = position.visible_struct(&carrier.name, &self.runtime)?;
             validate_struct(declaration)?;
             let index = declaration
                 .statement

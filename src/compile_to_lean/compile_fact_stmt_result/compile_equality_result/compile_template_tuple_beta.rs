@@ -41,7 +41,8 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("TemplateTuple/Subject"));
         }
         self.validate_template_function(instance, signature, None, position)?;
-        let (declaration, producer, _) = position.visible_template(&instance.template_name)?;
+        let (declaration, producer, _) =
+            position.visible_template(&instance.template_name, &self.runtime)?;
         let TemplateDefEnum::HaveFnEqualStmt(source) = &declaration.statement.template_def_stmt
         else {
             return Err(LeanCompileError::unsupported("TemplateTuple/Declaration"));

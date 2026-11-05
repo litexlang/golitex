@@ -27,6 +27,57 @@ impl LitexToLeanCompiler {
                 "BuiltinMembership/Application",
             ));
         };
+        if super::compile_builtin_sequence_program::program_identity(builtin.theorem) {
+            return self.compile_builtin_sequence_program(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::AntiderivativeCompose
+                | BuiltinTheoremId::AntiderivativeDifferenceConstant
+        ) {
+            return self.compile_builtin_antiderivative_calculus(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::ScalarDifferentialAtPartial
+                | BuiltinTheoremId::ScalarDifferentialAtGradient
+                | BuiltinTheoremId::TotalDerivativeAtJacobian
+        ) {
+            return self.compile_builtin_differential_projections(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if matches!(
             builtin.theorem,
             BuiltinTheoremId::SequenceLimsupAddConstant
@@ -646,6 +697,83 @@ impl LitexToLeanCompiler {
                 position,
             );
         }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::PartialAtAdd
+                | BuiltinTheoremId::PartialAtSubtract
+                | BuiltinTheoremId::PartialAtMultiply
+                | BuiltinTheoremId::PartialAtDivide
+        ) {
+            return self.compile_builtin_partial_algebra(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::AntiderivativeFromDefinition
+                | BuiltinTheoremId::AntiderivativeToDefinition
+                | BuiltinTheoremId::AntiderivativeRestrict
+        ) {
+            return self.compile_builtin_antiderivative(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::AntiderivativeShift
+                | BuiltinTheoremId::AntiderivativeAdd
+                | BuiltinTheoremId::AntiderivativeScale
+        ) {
+            return self.compile_builtin_antiderivative_algebra(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::JacobianAtDivergence
+                | BuiltinTheoremId::HessianAtLaplacian
+                | BuiltinTheoremId::JacobianAtCurl
+        ) {
+            return self.compile_builtin_matrix_differential(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
         if super::compile_builtin_derivative_schema::supports(builtin.theorem) {
             return self.compile_builtin_derivative_schema(
                 call,
@@ -784,6 +912,54 @@ impl LitexToLeanCompiler {
                 | BuiltinTheoremId::RiemannIntegralUnique
         ) {
             return self.compile_builtin_riemann_certificate(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::RiemannIntegralCompare | BuiltinTheoremId::RiemannIntegralBound
+        ) {
+            return self.compile_builtin_riemann_order(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if builtin.theorem == BuiltinTheoremId::RiemannIntegralConstant {
+            return self.compile_builtin_riemann_constant(
+                call,
+                builtin,
+                derivation,
+                type_proofs,
+                type_stores,
+                function_domain,
+                dom_proofs,
+                dom_stores,
+                conclusions_wd,
+                position,
+            );
+        }
+        if matches!(
+            builtin.theorem,
+            BuiltinTheoremId::RiemannIntegralReverse | BuiltinTheoremId::RiemannIntegralExtensional
+        ) {
+            return self.compile_builtin_riemann_transport(
                 call,
                 builtin,
                 derivation,

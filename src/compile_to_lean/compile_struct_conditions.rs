@@ -169,7 +169,7 @@ impl LitexToLeanCompiler {
         carrier: &StructObj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        let (declaration, _, _) = position.visible_struct(&carrier.name, &self.runtime)?;
         let family = if declaration.statement.equivalent_facts.is_empty() {
             "struct"
         } else {
@@ -197,7 +197,7 @@ impl LitexToLeanCompiler {
         member: &str,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        let (declaration, _, _) = position.visible_struct(&carrier.name, &self.runtime)?;
         if declaration.statement.equivalent_facts.is_empty() {
             return Ok(member.into());
         }
@@ -277,7 +277,7 @@ impl LitexToLeanCompiler {
             else {
                 return Err(LeanCompileError::unsupported("Struct/PublishedLawCarrier"));
             };
-            if !matches!(&carrier.name, AtomicName::Plain { name } if name==&proof.statement.name)
+            if carrier.name != position.file_qualified_name(&proof.statement.name)
                 || carrier.params.len() != parameters.len()
                 || carrier.params.iter().zip(&parameters).any(|(a, (p, _))| {
                     a.ir() != Obj::Identifier(IdentifierObj::from_bound_name(p)).ir()

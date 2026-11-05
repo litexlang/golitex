@@ -66,7 +66,7 @@ impl LitexToLeanCompiler {
         let (returned, congruent) = self.compile_general_recursive_branches(p, &scope)?;
         let value = format!("(show Litex.Obj (M := M) (Litex.RecursiveFn M) from by\n  classical\n  let _signature := ({checked_set}).val\n  let _recursive_domain := {recursive_domain}\n  let _body := fun (_input _prefix : M.Value) => {body}\n  let _rank := fun (_input : M.Value) => (Litex.NativeBridge.integerValue (M := M) {measure} - Litex.NativeBridge.integerValue (M := M) {lower}).toNat\n  let _data : Litex.RecursiveFn M := ⟨_signature, _rank, _recursive_domain, _body⟩\n  have _formation : ∀ _input : M.Value, M.mem _input _signature.domain → M.mem {} (M.standard .integer) ∧ M.mem {} (M.standard .integer) ∧ {} := {formation}\n  exact Litex.recursiveFn _data ⟨{domain_sound}, {returned}, {congruent}⟩)", measure, lower,
             self.compile_function_raw_predicate(&source_subject(&p.measure_ge_lower)?, &scope, &bindings)?);
-        let object = Obj::Identifier(IdentifierObj::from_bound_name(&p.statement.name));
+        let object = Obj::Identifier(parent.defining_identifier(&p.statement.name, &self.runtime)?);
         let mut declarations =
             vec![self.bind_alias(&p.statement.name, &object, &object, &value, local, parent)?];
         let name = format!("_object_i{}", p.statement.name.id.value());
@@ -425,7 +425,7 @@ impl LitexToLeanCompiler {
         site: &SourcePosition<'_>,
         bindings: &HashMap<IdentifierId, String>,
     ) -> Result<String, LeanCompileError> {
-        if !contains_parameter(object, p.statement.name.id) {
+        if !self.recursive_body_uses_self(object, p, site)? {
             let value = self.compile_function_raw_expression_bound(object, site, bindings)?;
             return Ok(format!("(show {value} = {value} from rfl)"));
         }
@@ -483,7 +483,7 @@ impl LitexToLeanCompiler {
         let Obj::FnObj(call) = object else {
             return Err(general_error("CallWD"));
         };
-        if !matches!(call.head.as_ref(), FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) if *id == p.statement.name.id)
+        if !matches!(call.head.as_ref(), FnObjHead::Identifier(identifier) if self.recursive_identifier_is_self(identifier, p, owner)?)
             || call.body.is_empty()
         {
             return Err(general_error("CallSelfEvidence"));
@@ -761,8 +761,11 @@ impl LitexToLeanCompiler {
             }
         }
         let body = leaf.ok_or_else(|| general_error("EquationBody"))?;
-        if eq.right != *body
-            || !matches!(&eq.left,Obj::FnObj(call) if matches!(call.head.as_ref(),FnObjHead::Identifier(IdentifierObj::Plain{id,..}) if *id==p.statement.name.id) && call.body.len()==1 && call.body[0].len()==parameters.len() && call.body[0].iter().zip(&parameters).all(|(a,(p,_))|a.as_ref()==&Obj::Identifier(IdentifierObj::from_bound_name(p))))
+        let expected = parent.defining_identifier(&p.statement.name, &self.runtime)?;
+        let self_binding =
+            HashMap::from([(p.statement.name.id, Obj::Identifier(expected.clone()))]);
+        if !instantiated_object_matches(body, &eq.right, &self_binding)
+            || !matches!(&eq.left,Obj::FnObj(call) if matches!(call.head.as_ref(),FnObjHead::Identifier(identifier) if identifier == &expected) && call.body.len()==1 && call.body[0].len()==parameters.len() && call.body[0].iter().zip(&parameters).all(|(a,(p,_))|a.as_ref()==&Obj::Identifier(IdentifierObj::from_bound_name(p))))
         {
             return Err(general_error("EquationBody"));
         }

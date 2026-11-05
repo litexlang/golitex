@@ -1,34 +1,30 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
-const FROM: &str =
-    include_str!("../../../lean/examples/function_uniform_from_epsilon/statement.lit");
-const CONTROL: &str = include_str!("../../../lean/examples/function_uniform_control/statement.lit");
-const CONTINUOUS: &str =
-    include_str!("../../../lean/examples/function_uniform_continuous/statement.lit");
-
-#[test]
-fn uniform_continuity_replays_schemas_definition_inferences_and_negative_transport() {
-    for source in [
-        FROM,
-        CONTROL,
-        CONTINUOUS,
-        include_str!("../../../lean/examples/function_uniform_definition/statement.lit"),
-        include_str!("../../../lean/examples/function_uniform_positive_from_epsilon/statement.lit"),
-        include_str!("../../../lean/examples/function_uniform_positive_control/statement.lit"),
-        include_str!("../../../lean/examples/function_uniform_guarded_continuous/statement.lit"),
-        include_str!("../../../lean/examples/function_uniform_negative_transport/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "uniform_continuity")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains("Litex.FunctionUniformContinuous"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "uniform_continuity").unwrap()
-        );
-    }
-}
+const FROM: &str = r#"# The exact whole-domain epsilon-delta control implies uniform continuity.
+thm checked_function_uniform_from_epsilon:
+    ? forall f fn(x R) R:
+        forall epsilon R+:
+            exist delta R+ st {{p cart(R,R): abs(p(1)-p(2))<delta} $subset {q cart(R,R): abs(f(q(1))-f(q(2)))<epsilon}}
+        =>:
+            $is_uniformly_continuous(f)
+    release thm fn_uniform_from_epsilon(f)
+"#;
+const CONTROL: &str = r#"# Uniform continuity supplies a positive control radius on the same actual domain.
+thm checked_function_uniform_control:
+    ? forall f fn(x R) R, epsilon R+:
+        $is_uniformly_continuous(f)
+        =>:
+            exist delta R+ st {{p cart(R,R): abs(p(1)-p(2))<delta} $subset {q cart(R,R): abs(f(q(1))-f(q(2)))<epsilon}}
+    release thm fn_uniform_control(f,epsilon)
+"#;
+const CONTINUOUS: &str = r#"# Uniform continuity implies continuity at every point of the actual domain.
+thm checked_function_uniform_continuous:
+    ? forall f fn(x R) R:
+        $is_uniformly_continuous(f)
+        =>:
+            $is_continuous(f)
+    release thm fn_uniform_continuous(f)
+"#;
 #[test]
 fn uniform_continuity_requires_all_original_stages() {
     for source in [FROM, CONTROL, CONTINUOUS] {
@@ -193,9 +189,17 @@ fn uniform_continuity_inference_retains_source_and_one_original_clause() {
 #[test]
 fn uniform_continuity_negative_transport_rejects_continuity_and_future_citations() {
     for change in ["property", "future"] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/function_uniform_negative_transport/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Non-uniform-continuity transports along equality of the original function objects.
+thm checked_function_uniform_negative_transport:
+    ? forall f, g fn(x R) R:
+        f=g
+        not $is_uniformly_continuous(f)
+        =>:
+            not $is_uniformly_continuous(g)
+    not $is_uniformly_continuous(g)
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(named),
         )) = &mut run.statement_results[0]

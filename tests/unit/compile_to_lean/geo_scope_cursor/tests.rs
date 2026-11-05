@@ -833,6 +833,123 @@ fn geo_scope_cursor_obtain_uses_original_store_subjects_without_external_paramet
 }
 
 #[test]
+fn case_statement_publishes_completed_builder_inferences_before_its_return() {
+    use crate::execute::execute_proof_block_stmt::{
+        ExecClaimBodyProof, ExecClaimStmtResult, ExecProofBlockStmtResult,
+    };
+    let (run, runtime) = checked(
+        r#"thm contextual_tuple_case_publication:
+    ? forall n,cutoff N+:
+        n>cutoff
+        cart({k N+:k>=cutoff},{k N+:k>=cutoff}) $subset {p cart(N+,N+):p(1)>=cutoff}
+        =>:
+            n>=cutoff
+    claim:
+        ? n>=cutoff
+        by cases:
+            ? n>=cutoff
+            case n<=cutoff:
+                impossible n<=cutoff
+            case n>cutoff:
+                n $in {k N+:k>=cutoff}
+                cutoff $in {k N+:k>=cutoff}
+                (n,cutoff) $in cart({k N+:k>=cutoff},{k N+:k>=cutoff})
+                (n,cutoff) $in {p cart(N+,N+):p(1)>=cutoff}
+                n>=cutoff
+
+thm contextual_tuple_case_function_condition:
+    ? forall a seq(R),cutoff N+:
+        cart({k N+:k>=cutoff},{k N+:k>=cutoff}) $subset {p cart(N+,N+):a(p(1))=a(p(1))}
+        =>:
+            cutoff=cutoff
+    claim:
+        ? forall n N+:
+            a(n)=a(n)
+        claim:
+            ? a(n)=a(n)
+            by cases:
+                ? a(n)=a(n)
+                case n<=cutoff:
+                    a(n)=a(n)
+                case n>cutoff:
+                    n $in {k N+:k>=cutoff}
+                    cutoff $in {k N+:k>=cutoff}
+                    (n,cutoff) $in cart({k N+:k>=cutoff},{k N+:k>=cutoff})
+                    (n,cutoff) $in {p cart(N+,N+):a(p(1))=a(p(1))}
+                    a(n)=a(n)
+    cutoff=cutoff
+
+
+"#,
+    );
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+        crate::execute::ExecDefThmStmtResult::Success(theorem),
+    )) = &run.statement_results[0]
+    else {
+        panic!("named theorem")
+    };
+    let crate::execute::ExecDefThmBodyProof::Forall(body) = &theorem.body else {
+        panic!("forall theorem body")
+    };
+    let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
+        claim,
+    ))) = &body.proof_steps[0]
+    else {
+        panic!("claim body")
+    };
+    let ExecClaimBodyProof::NonForall(body) = &claim.body else {
+        panic!("plain claim")
+    };
+    let ExecStmtResult::By(ExecByStmtResult::Cases(ExecByCasesStmtResult::Success(cases))) =
+        &body.proof_steps[0]
+    else {
+        panic!("case split")
+    };
+    let branch = &cases.branches[1];
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) = &branch.proof_steps[3]
+    else {
+        panic!("builder membership")
+    };
+    let store = &statement.store_and_infer_result;
+    let root = SourcePosition::new(None, SourceOwner::Run(&run), 0);
+    // The fourth statement is still being compiled in the enclosing branch.
+    let scope = SourcePosition::new(Some(&root), SourceOwner::CasesBranch(branch), 5);
+    let stages = prop_inference_stages(store);
+    let (index, base) = stages
+        .iter()
+        .enumerate()
+        .find(|(_, stage)| {
+            scope
+                .source_fact(stage.primary_fact_id(), &runtime)
+                .is_ok_and(|fact| fact.ir().ends_with("$in cart(N+, N+)"))
+        })
+        .expect("original inferred base membership");
+    let id = base.primary_fact_id();
+    let pending = SourcePosition::new(Some(&scope), SourceOwner::PropInference(store), index);
+    assert_eq!(
+        pending.visible_fact(id, &runtime).unwrap_err().route,
+        "Inference/FutureProducer"
+    );
+    let published = SourcePosition {
+        before: index + 1,
+        ..pending
+    };
+    assert!(published.visible_fact(id, &runtime).is_ok());
+    assert_eq!(
+        scope.visible_fact(id, &runtime).unwrap_err().route,
+        "Scope/FutureProducer"
+    );
+    let sibling = SourcePosition::new(
+        Some(&root),
+        SourceOwner::CasesBranch(&cases.branches[0]),
+        usize::MAX,
+    );
+    assert!(sibling.visible_fact(id, &runtime).is_err());
+    let outside = SourcePosition::new(None, SourceOwner::Run(&run), 1);
+    assert!(outside.visible_fact(id, &runtime).is_err());
+}
+
+#[test]
 fn geo_scope_cursor_cart_coordinate_stores_follow_original_inference_order() {
     let (run, runtime) = checked("have fn dot(u, v cart(R, R)) R = u(1) * v(1) + u(2) * v(2)\n");
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(

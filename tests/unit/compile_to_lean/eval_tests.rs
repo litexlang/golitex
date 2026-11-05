@@ -2,11 +2,24 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Arithme
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
 use crate::runtime::runtime_ids::FactId;
+const CITATIONS: &str = r#"# Evaluate an expression using the previously proved value of a real object.
+have eval_input_a R = 10
+eval eval_input_a + 1
+eval_input_a + 1 = 11
+have eval_input_b R = 4
+eval eval_input_a * eval_input_b - eval_input_b
+eval_input_a * eval_input_b - eval_input_b = 36
+"#;
+const LOCAL: &str = r#"# Keep an evaluated local equality inside its sketch, then reuse the name.
+sketch:
+    let eval_local_x = 2
+    eval eval_local_x + 1
+    eval_local_x + 1 = 3
 
-const ARITHMETIC: &str = include_str!("../../../lean/examples/evaluated_arithmetic/statement.lit");
-const CITATIONS: &str =
-    include_str!("../../../lean/examples/evaluated_numeric_citations/statement.lit");
-const LOCAL: &str = include_str!("../../../lean/examples/evaluated_local_facts/statement.lit");
+let eval_local_x = 5
+eval eval_local_x + 1
+eval_local_x + 1 = 6
+"#;
 const TWO_VALUES: &str = "have a R = 10\nhave b R = 4\neval a * b - b\na * b - b = 36\n";
 
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
@@ -19,15 +32,6 @@ fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess 
 }
 fn number(s: &str) -> Obj {
     Obj::Literal(Literal::Number(Number::new(s.to_string())))
-}
-
-#[test]
-fn eval_replays_exact_arithmetic_citations_and_local_publication() {
-    for source in [ARITHMETIC, CITATIONS, LOCAL, TWO_VALUES] {
-        let (run, compiler) = super::execute(source);
-        let out = compiler.compile_run(&run, "eval_result").expect(source);
-        assert!(!out.contains("sorry") && !out.contains("admit"));
-    }
 }
 
 #[test]

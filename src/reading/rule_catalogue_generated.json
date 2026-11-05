@@ -7,11 +7,11 @@
     "labels": {
       "en": {
         "name": "IsMatrixInvSelected",
-        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+        "message": "For n in N and a complex n-by-n matrix A with det(A,n)\u22600, the selected B=matrix_inv(A,n) satisfies AB=BA=I_n."
       },
       "zh": {
-        "name": "IsMatrixInvSelected",
-        "message": "The selected inverse is a two-sided inverse on its proved nonsingular domain."
+        "name": "\u9009\u53d6\u7684\u77e9\u9635\u9006\u6ee1\u8db3\u53cc\u4fa7\u9006\u5173\u7cfb",
+        "message": "\u5bf9 n\u2208\u2115 \u7684\u590d\u6570 n\u00d7n \u77e9\u9635 A\uff0c\u82e5 det(A,n)\u22600\uff0c\u5219\u9009\u53d6\u7684 B=matrix_inv(A,n) \u6ee1\u8db3 AB=BA=I_n\u3002"
       },
       "zh-hant": {
         "name": "IsMatrixInvSelected",
@@ -55,11 +55,11 @@
     "labels": {
       "en": {
         "name": "MatrixInversibleFromDeterminant",
-        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+        "message": "For n in N and a complex n-by-n matrix A, det(A,n)\u22600 guarantees a complex n-by-n matrix B with AB=BA=I_n."
       },
       "zh": {
-        "name": "MatrixInversibleFromDeterminant",
-        "message": "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse."
+        "name": "\u975e\u96f6\u884c\u5217\u5f0f\u4fdd\u8bc1\u77e9\u9635\u53ef\u9006",
+        "message": "\u5bf9 n\u2208\u2115 \u7684\u590d\u6570 n\u00d7n \u77e9\u9635 A\uff0cdet(A,n)\u22600 \u4fdd\u8bc1\u5b58\u5728\u540c\u9636\u590d\u77e9\u9635 B\uff0c\u4f7f AB=BA=I_n\u3002"
       },
       "zh-hant": {
         "name": "MatrixInversibleFromDeterminant",
@@ -103,11 +103,11 @@
     "labels": {
       "en": {
         "name": "NotMatrixInversibleFromDeterminant",
-        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+        "message": "For n in N and a complex n-by-n matrix A, det(A,n)=0 excludes a complex n-by-n matrix B satisfying AB=BA=I_n."
       },
       "zh": {
-        "name": "NotMatrixInversibleFromDeterminant",
-        "message": "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A."
+        "name": "\u96f6\u884c\u5217\u5f0f\u6392\u9664\u77e9\u9635\u7684\u53cc\u4fa7\u9006",
+        "message": "\u5bf9 n\u2208\u2115 \u7684\u590d\u6570 n\u00d7n \u77e9\u9635 A\uff0c\u82e5 det(A,n)=0\uff0c\u5219\u4e0d\u5b58\u5728\u540c\u9636\u590d\u77e9\u9635 B \u4f7f AB=BA=I_n\u3002"
       },
       "zh-hant": {
         "name": "NotMatrixInversibleFromDeterminant",
@@ -23874,11 +23874,11 @@
     "labels": {
       "en": {
         "name": "CosNonzeroIntegerPiShift",
-        "message": "cos(x)!=0, k integer => cos(x+k*pi)!=0"
+        "message": "For real x and integer k, cos(x\u00b1k*pi)=(-1)^k cos(x). Thus cos(x)\u22600 is preserved by these shifts."
       },
       "zh": {
-        "name": "CosNonzeroIntegerPiShift",
-        "message": "cos(x)!=0, k integer => cos(x+k*pi)!=0"
+        "name": "\u4f59\u5f26\u975e\u96f6\u5728\u6574\u6570\u500d \u03c0 \u5e73\u79fb\u4e0b\u4fdd\u6301",
+        "message": "\u5bf9\u5b9e\u6570 x \u548c\u6574\u6570 k\uff0ccos(x\u00b1k*pi)=(-1)^k cos(x)\uff0c\u56e0\u6b64 cos(x)\u22600 \u5728\u8fd9\u4e9b\u5e73\u79fb\u4e0b\u4fdd\u6301\u3002"
       },
       "zh-hant": {
         "name": "CosNonzeroIntegerPiShift",
@@ -23922,11 +23922,11 @@
     "labels": {
       "en": {
         "name": "CosNonzeroNegation",
-        "message": "cos(x)!=0 => cos(-x)!=0"
+        "message": "For real x with cos(x)\u22600, cos(-x)=cos(x)\u22600."
       },
       "zh": {
-        "name": "CosNonzeroNegation",
-        "message": "cos(x)!=0 => cos(-x)!=0"
+        "name": "\u4f59\u5f26\u975e\u96f6\u5728\u53d6\u76f8\u53cd\u6570\u4e0b\u4fdd\u6301",
+        "message": "\u5bf9\u6ee1\u8db3 cos(x)\u22600 \u7684\u5b9e\u6570 x\uff0c\u7531 cos(-x)=cos(x) \u5f97 cos(-x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "CosNonzeroNegation",
@@ -24114,11 +24114,11 @@
     "labels": {
       "en": {
         "name": "CotNonzeroFromCos",
-        "message": "Defined cot(x), cos(x)!=0 => cot(x)!=0"
+        "message": "For real x with sin(x)\u22600, cot(x)=cos(x)/sin(x); a nonzero numerator cos(x) therefore gives cot(x)\u22600."
       },
       "zh": {
-        "name": "CotNonzeroFromCos",
-        "message": "Defined cot(x), cos(x)!=0 => cot(x)!=0"
+        "name": "\u7531\u4f59\u5f26\u975e\u96f6\u5f97\u5230\u4f59\u5207\u975e\u96f6",
+        "message": "\u5728\u5b9e\u6570\u5b9a\u4e49\u57df sin(x)\u22600 \u4e0a\uff0ccot(x)=cos(x)/sin(x)\uff0c\u56e0\u6b64 cos(x)\u22600 \u8574\u542b cot(x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "CotNonzeroFromCos",
@@ -24210,11 +24210,11 @@
     "labels": {
       "en": {
         "name": "CscNonzero",
-        "message": "Defined csc(x) != 0; enclosing WD retains the domain"
+        "message": "For real x with sin(x)\u22600, csc(x)=1/sin(x)\u22600."
       },
       "zh": {
-        "name": "CscNonzero",
-        "message": "Defined csc(x) != 0; enclosing WD retains the domain"
+        "name": "\u4f59\u5272\u975e\u96f6",
+        "message": "\u5bf9\u6ee1\u8db3 sin(x)\u22600 \u7684\u5b9e\u6570 x\uff0ccsc(x)=1/sin(x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "CscNonzero",
@@ -24258,11 +24258,11 @@
     "labels": {
       "en": {
         "name": "CschNonzero",
-        "message": "Defined csch(x) != 0; enclosing WD retains the domain"
+        "message": "For nonzero real x, sinh(x)\u22600, so csch(x)=1/sinh(x)\u22600."
       },
       "zh": {
-        "name": "CschNonzero",
-        "message": "Defined csch(x) != 0; enclosing WD retains the domain"
+        "name": "\u53cc\u66f2\u4f59\u5272\u975e\u96f6",
+        "message": "\u5bf9\u975e\u96f6\u5b9e\u6570 x\uff0csinh(x)\u22600\uff0c\u6545 csch(x)=1/sinh(x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "CschNonzero",
@@ -25410,11 +25410,11 @@
     "labels": {
       "en": {
         "name": "SecNonzero",
-        "message": "Defined sec(x) != 0; enclosing WD retains the domain"
+        "message": "For real x with cos(x)\u22600, sec(x)=1/cos(x)\u22600."
       },
       "zh": {
-        "name": "SecNonzero",
-        "message": "Defined sec(x) != 0; enclosing WD retains the domain"
+        "name": "\u6b63\u5272\u975e\u96f6",
+        "message": "\u5bf9\u6ee1\u8db3 cos(x)\u22600 \u7684\u5b9e\u6570 x\uff0csec(x)=1/cos(x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "SecNonzero",
@@ -25458,11 +25458,11 @@
     "labels": {
       "en": {
         "name": "SechNonzero",
-        "message": "Defined sech(x) != 0; enclosing WD retains the domain"
+        "message": "For real x, cosh(x)\u22651, so sech(x)=1/cosh(x)>0 and in particular sech(x)\u22600."
       },
       "zh": {
-        "name": "SechNonzero",
-        "message": "Defined sech(x) != 0; enclosing WD retains the domain"
+        "name": "\u53cc\u66f2\u6b63\u5272\u975e\u96f6",
+        "message": "\u5bf9\u5b9e\u6570 x\uff0ccosh(x)\u22651\uff0c\u6545 sech(x)=1/cosh(x)>0\uff0c\u7279\u522b\u5730 sech(x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "SechNonzero",
@@ -25506,11 +25506,11 @@
     "labels": {
       "en": {
         "name": "Nonzero sign from argument",
-        "message": "x in R, x!=0 => sign(x)!=0"
+        "message": "For real x with x\u22600, sign(x) is either -1 or 1 and is therefore nonzero."
       },
       "zh": {
-        "name": "\u975e\u96f6\u53c2\u6570\u7684 sign \u975e\u96f6",
-        "message": "x in R, x!=0 => sign(x)!=0"
+        "name": "\u975e\u96f6\u5b9e\u6570\u7684\u7b26\u53f7\u51fd\u6570\u503c\u975e\u96f6",
+        "message": "\u5bf9\u975e\u96f6\u5b9e\u6570 x\uff0csign(x) \u7684\u503c\u4e3a -1 \u6216 1\uff0c\u56e0\u6b64 sign(x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "\u975e\u96f6\u53c3\u6578\u7684 sign \u975e\u96f6",
@@ -25554,11 +25554,11 @@
     "labels": {
       "en": {
         "name": "Nonzero sign reflection",
-        "message": "x in R, sign(x)!=0 => x!=0"
+        "message": "For real x, sign(0)=0, so sign(x)\u22600 implies x\u22600."
       },
       "zh": {
-        "name": "sign \u7684\u975e\u96f6\u53cd\u5c04",
-        "message": "x in R, sign(x)!=0 => x!=0"
+        "name": "\u7b26\u53f7\u51fd\u6570\u503c\u975e\u96f6\u63a8\u51fa\u53c2\u6570\u975e\u96f6",
+        "message": "\u5bf9\u5b9e\u6570 x\uff0c\u7531 sign(0)=0 \u53ef\u77e5\uff0csign(x)\u22600 \u8574\u542b x\u22600\u3002"
       },
       "zh-hant": {
         "name": "sign \u7684\u975e\u96f6\u53cd\u5c04",
@@ -25602,11 +25602,11 @@
     "labels": {
       "en": {
         "name": "SinComplementNonzeroFromCos",
-        "message": "cos(x)!=0 => sin(pi/2-x)!=0"
+        "message": "For real x with cos(x)\u22600, sin(pi/2-x)=cos(x)\u22600."
       },
       "zh": {
-        "name": "SinComplementNonzeroFromCos",
-        "message": "cos(x)!=0 => sin(pi/2-x)!=0"
+        "name": "\u7531\u4f59\u5f26\u975e\u96f6\u5f97\u5230\u4f59\u89d2\u7684\u6b63\u5f26\u975e\u96f6",
+        "message": "\u5bf9\u6ee1\u8db3 cos(x)\u22600 \u7684\u5b9e\u6570 x\uff0c\u7531 sin(pi/2-x)=cos(x) \u5f97 sin(pi/2-x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "SinComplementNonzeroFromCos",
@@ -25698,11 +25698,11 @@
     "labels": {
       "en": {
         "name": "SinNonzeroIntegerPiShift",
-        "message": "sin(x)!=0, k integer => sin(x+k*pi)!=0"
+        "message": "For real x and integer k, sin(x\u00b1k*pi)=(-1)^k sin(x). Thus sin(x)\u22600 is preserved by these shifts."
       },
       "zh": {
-        "name": "SinNonzeroIntegerPiShift",
-        "message": "sin(x)!=0, k integer => sin(x+k*pi)!=0"
+        "name": "\u6b63\u5f26\u975e\u96f6\u5728\u6574\u6570\u500d \u03c0 \u5e73\u79fb\u4e0b\u4fdd\u6301",
+        "message": "\u5bf9\u5b9e\u6570 x \u548c\u6574\u6570 k\uff0csin(x\u00b1k*pi)=(-1)^k sin(x)\uff0c\u56e0\u6b64 sin(x)\u22600 \u5728\u8fd9\u4e9b\u5e73\u79fb\u4e0b\u4fdd\u6301\u3002"
       },
       "zh-hant": {
         "name": "SinNonzeroIntegerPiShift",
@@ -25746,11 +25746,11 @@
     "labels": {
       "en": {
         "name": "SinNonzeroNegation",
-        "message": "sin(x)!=0 => sin(-x)!=0"
+        "message": "For real x with sin(x)\u22600, sin(-x)=-sin(x)\u22600."
       },
       "zh": {
-        "name": "SinNonzeroNegation",
-        "message": "sin(x)!=0 => sin(-x)!=0"
+        "name": "\u6b63\u5f26\u975e\u96f6\u5728\u53d6\u76f8\u53cd\u6570\u4e0b\u4fdd\u6301",
+        "message": "\u5bf9\u6ee1\u8db3 sin(x)\u22600 \u7684\u5b9e\u6570 x\uff0c\u7531 sin(-x)=-sin(x) \u5f97 sin(-x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "SinNonzeroNegation",
@@ -25890,11 +25890,11 @@
     "labels": {
       "en": {
         "name": "SinhNonzeroFromArgument",
-        "message": "x != 0 and checked domain => sinh(x) != 0"
+        "message": "On the real line, sinh(x)=0 only at x=0; thus x\u22600 implies sinh(x)\u22600."
       },
       "zh": {
-        "name": "SinhNonzeroFromArgument",
-        "message": "x != 0 and checked domain => sinh(x) != 0"
+        "name": "\u975e\u96f6\u5b9e\u6570\u7684\u53cc\u66f2\u6b63\u5f26\u975e\u96f6",
+        "message": "\u5728\u5b9e\u6570\u57df\u4e0a\uff0csinh(x)=0 \u4ec5\u5728 x=0 \u65f6\u6210\u7acb\uff0c\u56e0\u6b64 x\u22600 \u8574\u542b sinh(x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "SinhNonzeroFromArgument",
@@ -26041,11 +26041,11 @@
     "labels": {
       "en": {
         "name": "TanNonzeroFromSin",
-        "message": "Defined tan(x), sin(x)!=0 => tan(x)!=0"
+        "message": "For real x with cos(x)\u22600, tan(x)=sin(x)/cos(x); a nonzero numerator sin(x) therefore gives tan(x)\u22600."
       },
       "zh": {
-        "name": "TanNonzeroFromSin",
-        "message": "Defined tan(x), sin(x)!=0 => tan(x)!=0"
+        "name": "\u7531\u6b63\u5f26\u975e\u96f6\u5f97\u5230\u6b63\u5207\u975e\u96f6",
+        "message": "\u5728\u5b9e\u6570\u5b9a\u4e49\u57df cos(x)\u22600 \u4e0a\uff0ctan(x)=sin(x)/cos(x)\uff0c\u56e0\u6b64 sin(x)\u22600 \u8574\u542b tan(x)\u22600\u3002"
       },
       "zh-hant": {
         "name": "TanNonzeroFromSin",
@@ -27427,11 +27427,11 @@
     "labels": {
       "en": {
         "name": "CompositionRangeSubset",
-        "message": "The image of f \u2218 g is a subset of the image of f"
+        "message": "For a well-defined composition, every value of f \u2218 g is a value of f, so fn_range(f \u2218 g) \u2286 fn_range(f). No surjectivity of g is required."
       },
       "zh": {
-        "name": "CompositionRangeSubset",
-        "message": "The image of f \u2218 g is a subset of the image of f"
+        "name": "\u590d\u5408\u51fd\u6570\u7684\u50cf\u5305\u542b\u4e8e\u5916\u5c42\u51fd\u6570\u7684\u50cf",
+        "message": "\u5f53\u590d\u5408\u51fd\u6570\u6709\u5b9a\u4e49\u65f6\uff0cf \u2218 g \u7684\u6bcf\u4e2a\u503c\u90fd\u662f\u5916\u5c42\u51fd\u6570 f \u7684\u503c\uff0c\u56e0\u6b64 fn_range(f \u2218 g) \u2286 fn_range(f)\uff1b\u65e0\u9700\u5047\u8bbe g \u6ee1\u5c04\u3002"
       },
       "zh-hant": {
         "name": "CompositionRangeSubset",

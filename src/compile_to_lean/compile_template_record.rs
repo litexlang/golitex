@@ -66,7 +66,8 @@ impl LitexToLeanCompiler {
         carrier: &StructObj,
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        let (template, producer, _) = position.visible_template(&instance.template_name)?;
+        let (template, producer, _) =
+            position.visible_template(&instance.template_name, &self.runtime)?;
         let original = match &template.statement.template_def_stmt {
             TemplateDefEnum::HaveObjEqualStmt(_) => {
                 let body = alias_body(template)?;
@@ -191,7 +192,8 @@ impl LitexToLeanCompiler {
         carrier: &StructObj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (template, _, _) = position.visible_template(&instance.template_name)?;
+        let (template, producer, _) =
+            position.visible_template(&instance.template_name, &self.runtime)?;
         let body = alias_body(template)?;
         let binding = template_output(template, instance.template_name.local_name())?.0;
         let group = body
@@ -229,8 +231,12 @@ impl LitexToLeanCompiler {
             .iter()
             .find(|p| p.source_fact_id == source_id)
             .ok_or_else(|| LeanCompileError::unsupported("TemplateRecord/MembershipPublication"))?;
-        let (_, reference) =
-            position.visible_fact(published.store_and_infer.primary_fact_id(), &self.runtime)?;
+        // This template invocation owns the exact generated publication; it
+        // does not make the exporting file's unrelated facts visible.
+        let reference = position.declaration_reference(
+            &format!("h_{}", published.store_and_infer.primary_fact_id().value()),
+            &producer,
+        )?;
         let object = Obj::InstantiatedTemplateObj(instance.clone());
         position
             .with_visible_wd(&object, &mut |wd, producer| {
@@ -256,7 +262,7 @@ impl LitexToLeanCompiler {
         value: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (template, _, _) = position.visible_template(&instance.template_name)?;
+        let (template, _, _) = position.visible_template(&instance.template_name, &self.runtime)?;
         let rhs = template_alias_rhs(template, instance.template_name.local_name())?;
         let substitution = template_substitution(template, instance)?;
         if !instantiated_object_matches(rhs, value, &substitution) {

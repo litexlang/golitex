@@ -114,7 +114,18 @@ fn geo_witness_rejects_missing_original_equality_stage() {
 
 #[test]
 fn nonempty_witness_compiles_local_membership_and_publishes_only_nonemptiness() {
-    let source = include_str!("../../../../lean/examples/nonempty_witness/statement.lit");
+    let source = r#"# A positive-real builder and every real singleton are nonempty.
+witness $is_nonempty_set({x R: x > 0}) from 1:
+    1 > 0
+
+$is_nonempty_set({x R: x > 0})
+
+thm singleton_nonempty:
+    ? forall singleton_elem R:
+        $is_nonempty_set({singleton_elem})
+    witness $is_nonempty_set({singleton_elem}) from singleton_elem:
+        singleton_elem $in {singleton_elem}
+"#;
     let (run, runtime) = checked(source);
     let compiler = LitexToLeanCompiler::new(runtime);
     let output = compiler.compile_run(&run, "nonempty_witness").unwrap();
@@ -164,9 +175,20 @@ fn nonempty_witness_compiles_local_membership_and_publishes_only_nonemptiness() 
 fn nonempty_witness_rejects_missing_body_or_changed_membership() {
     use crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult;
     for change in ["body", "membership", "source"] {
-        let (mut run, runtime) = checked(include_str!(
-            "../../../../lean/examples/nonempty_witness/statement.lit"
-        ));
+        let (mut run, runtime) = checked(
+            r#"# A positive-real builder and every real singleton are nonempty.
+witness $is_nonempty_set({x R: x > 0}) from 1:
+    1 > 0
+
+$is_nonempty_set({x R: x > 0})
+
+thm singleton_nonempty:
+    ? forall singleton_elem R:
+        $is_nonempty_set({singleton_elem})
+    witness $is_nonempty_set({singleton_elem}) from singleton_elem:
+        singleton_elem $in {singleton_elem}
+"#,
+        );
         let ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(
             ExecWitnessNonemptySetStmtResult::Success(proof),
         )) = &mut run.statement_results[0]

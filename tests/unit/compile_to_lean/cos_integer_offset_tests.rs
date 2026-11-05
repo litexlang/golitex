@@ -2,9 +2,18 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_b
 use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_equal::NotEqualFactSearchProofByBuiltinRule;
 
-const SOURCE: &str = include_str!("../../../lean/examples/cosine_integer_offset/statement.lit");
-const REVERSED: &str =
-    include_str!("../../../lean/examples/cosine_integer_offset_reversed/statement.lit");
+const SOURCE: &str = r#"# Replay the actual integer offset under the original real parameter.
+forall angle R:
+    (angle - pi / 2) / pi $in Z
+    =>:
+        cos(angle) = 0
+"#;
+const REVERSED: &str = r#"# Equality to a source integer supplies the reversed cosine-zero conclusion.
+forall angle R, offset Z:
+    (angle - pi / 2) / pi = offset
+    =>:
+        0 = cos(angle)
+"#;
 
 fn original(result: &mut RunLitexCodeResult) -> &mut VerifyEqualitySuccess {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =

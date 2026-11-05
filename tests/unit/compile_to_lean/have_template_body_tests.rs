@@ -6,10 +6,66 @@ use crate::execute::{
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/template_nonempty_member/statement.lit"),
-    include_str!("../../../lean/examples/template_singleton_selection/statement.lit"),
-    include_str!("../../../lean/examples/template_function_space_member/statement.lit"),
-    include_str!("../../../lean/examples/template_larger_real/statement.lit"),
+    r#"# Choose an element of each nonempty set and retain its membership.
+template<S nonempty_set>:
+    have selected_member S
+
+\selected_member<R> $in R
+forall S nonempty_set:
+    \selected_member<S> $in S
+"#,
+    r#"# Choosing from a singleton defines the identity function.
+template<a R>:
+    have singleton_choice {a}
+
+\singleton_choice<2> = 2
+
+thm singleton_is_real:
+    ? forall a R:
+        \singleton_choice<a> $in R
+    \singleton_choice<a> $in {a}
+
+have fn choose_singleton(a R) R = \singleton_choice<a>
+
+thm singleton_choice_value:
+    ? forall a R:
+        choose_singleton(a) = a
+    \singleton_choice<a> $in {a}
+    choose_singleton(a) = \singleton_choice<a> = a
+
+choose_singleton(3) = 3
+"#,
+    r#"# A function chosen between nonempty sets can be called and composed.
+template<A, B nonempty_set>:
+    have selected_function fn(x A) B
+
+\selected_function<R, R> $in fn(x R) R
+\selected_function<R, R>(2) $in R
+
+have fn chosen_real_value(a R) R = \selected_function<R, R>(a)
+
+chosen_real_value(2) = \selected_function<R, R>(2)
+forall a R:
+    chosen_real_value(a) = \selected_function<R, R>(a)
+"#,
+    r#"# Choose a larger real for every input and retain that inequality through a function.
+template<a R>:
+    have larger R:
+        larger > a
+
+\larger<2> $in R
+\larger<2> > 2
+
+have fn larger_value(a R) R = \larger<a>
+larger_value(2) > 2
+
+thm larger_value_grows:
+    ? forall a R:
+        larger_value(a) > a
+    \larger<a> $in R
+    \larger<a> > a
+    larger_value(a) = \larger<a>
+"#,
 ];
 
 fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResult {
@@ -18,16 +74,6 @@ fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResu
             ExecDefTemplateStmtResult::Success(p),
         )) => p,
         _ => panic!("checked template"),
-    }
-}
-
-#[test]
-fn have_template_bodies_replay_nonempty_members_and_original_existentials() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "have_template").expect(source);
-        assert!(lean.contains("Litex.obtainedObject"));
-        assert_eq!(lean, compiler.compile_run(&run, "have_template").unwrap());
     }
 }
 

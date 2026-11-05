@@ -111,13 +111,20 @@ fn tuple_projection_cites_exact_published_value_and_keeps_wrong_value_unknown() 
     exec_ok(&mut rt, "have q cart(R,R) = p");
     exec_ok(&mut rt, "q = (a,b)");
     for goal in ["p(1) = a", "a = p(1)", "q(2) = b"] {
-        let Known::TupleProjection(p) = known(&mut rt, goal) else {
-            panic!("projection")
+        let before = store_sizes(&rt);
+        let fact = equal(&mut rt, goal);
+        let VerifyEqualityResult::Success(proof) = known_with_wd(&mut rt, goal) else {
+            panic!("published coordinate equality: {goal}")
         };
-        assert!(!p.tuple.tuple_equal.path.is_empty());
-        for (_, _, id) in p.tuple.tuple_equal.path {
-            assert!(rt.fact_by_id_in_stack(id).is_some());
-        }
+        let EqualFactSearchedProof::ByEquivalenceClass(
+            EqualFactSearchedProofByEquivalenceClass::KnownPath(path),
+        ) = proof.searched_proof
+        else {
+            panic!("the stored coordinate equality is reused before another projection search")
+        };
+        assert!(!path.path.is_empty());
+        check_path(&rt, &path, &fact.left, &fact.right);
+        assert_eq!(store_sizes(&rt), before);
     }
     assert!(matches!(
         verify(&mut rt, "p(1) = b", known_state()),

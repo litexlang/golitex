@@ -110,6 +110,12 @@ impl LitexToLeanCompiler {
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(access)) => {
                 self.compile_struct_field_reference(access, position)
             }
+            Obj::SetFormer(SetFormer::IntervalObj(interval)) => {
+                let (lower, upper, left_closed, right_closed) = real_interval_parts(interval);
+                let (lower, lower_real) = self.compile_inferred_real_endpoint(lower, position)?;
+                let (upper, upper_real) = self.compile_inferred_real_endpoint(upper, position)?;
+                Ok(format!("(Litex.realInterval {left_closed} {right_closed} {lower} {upper} {lower_real} {upper_real})"))
+            }
             Obj::ProductShape(ProductShape::Cart(cart)) => {
                 let factors = cart
                     .args
@@ -134,6 +140,38 @@ impl LitexToLeanCompiler {
                 .compile_inferred_numeric_obj(object, position)
                 .map(|p| p.0),
         }
+    }
+
+    // Inference-owned interval subjects may contain min/max endpoints without
+    // a second standalone WD tree. Retain their exact constructor shape and
+    // consume the original visible real-membership certificates of the leaves.
+    fn compile_inferred_real_endpoint(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+    ) -> Result<(String, String), LeanCompileError> {
+        let operands = match object {
+            Obj::ArithmeticOperator(ArithmeticOperator::Min(value)) => {
+                Some(("min", value.left.as_ref(), value.right.as_ref()))
+            }
+            Obj::ArithmeticOperator(ArithmeticOperator::Max(value)) => {
+                Some(("max", value.left.as_ref(), value.right.as_ref()))
+            }
+            _ => None,
+        };
+        if let Some((operation, left, right)) = operands {
+            let (left, left_real) = self.compile_inferred_real_endpoint(left, position)?;
+            let (right, right_real) = self.compile_inferred_real_endpoint(right, position)?;
+            let term = format!("(Litex.{operation} {left} {right} {left_real} {right_real})");
+            return Ok((
+                term.clone(),
+                format!("(Litex.minMaxMember {term} (Litex.R (M := M)) {left_real} {right_real})"),
+            ));
+        }
+        Ok((
+            self.compile_object_reference(object, position)?,
+            self.compile_real_membership_certificate(object, position)?,
+        ))
     }
 
     pub(in crate::compile_to_lean) fn compile_inferred_numeric_obj(

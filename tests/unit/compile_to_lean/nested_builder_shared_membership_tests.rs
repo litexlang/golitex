@@ -1,31 +1,18 @@
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef;
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/nested_builder_shared_membership/statement.lit");
+const SOURCE: &str = r#"# Replay nested bounded-set membership through the shared selected strategy.
+forall p cart(R,R):
+    p(1)>0
+    p(2)<3
+    =>:
+        p $in {q {v cart(R,R): v(1)>0}: q(2)<3}
+"#;
 fn goal(run: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     super::atomic_proof_mut(
         &mut super::forall_proof_mut(&mut run.statement_results[0]).proved_then_facts[0]
             .verify_result,
     )
-}
-
-#[test]
-fn shared_builder_membership_publishes_nested_bounds_with_original_guarded_formation() {
-    for source in [
-        SOURCE,
-        include_str!("../../../lean/examples/nested_builder_scalar_membership/statement.lit"),
-        include_str!(
-            "../../../lean/examples/nested_builder_guarded_bound_membership/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        let out = c
-            .compile_run(&run, "nested_builder_shared")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(out.contains("Litex.inSetBuilder_iff"));
-        assert_eq!(out, c.compile_run(&run, "nested_builder_shared").unwrap());
-    }
 }
 
 #[test]

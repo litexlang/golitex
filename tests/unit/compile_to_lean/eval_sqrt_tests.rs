@@ -1,18 +1,11 @@
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogOperatorObjWellDefinedProofByDef;
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
-
-const SOURCE: &str = include_str!("../../../lean/examples/evaluated_square_roots/statement.lit");
-const FRACTIONS: &str =
-    include_str!("../../../lean/examples/evaluated_fractional_square_roots/statement.lit");
-const CITATIONS: &str =
-    include_str!("../../../lean/examples/evaluated_cited_square_roots/statement.lit");
-const FUNCTIONS: &str =
-    include_str!("../../../lean/examples/evaluated_function_square_roots/statement.lit");
-const LOCAL: &str =
-    include_str!("../../../lean/examples/evaluated_local_square_roots/statement.lit");
-const AGGREGATES: &str =
-    include_str!("../../../lean/examples/evaluated_square_root_aggregates/statement.lit");
+const CITATIONS: &str = r#"# Evaluate a square root from a previously established real value.
+have sqrt_eval_a R = 9
+eval sqrt(sqrt_eval_a)
+sqrt(sqrt_eval_a)=3
+"#;
 
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -21,16 +14,6 @@ fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess 
         panic!("successful eval")
     };
     p
-}
-
-#[test]
-fn sqrt_eval_replays_exact_values_citations_functions_and_scope() {
-    for source in [SOURCE, FRACTIONS, CITATIONS, FUNCTIONS, LOCAL, AGGREGATES] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "sqrt_eval").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "sqrt_eval").unwrap());
-        assert!(!lean.contains("sorry") && !lean.contains("admit"));
-    }
 }
 
 #[test]

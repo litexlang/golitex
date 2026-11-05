@@ -35,14 +35,33 @@ impl LitexToLeanCompiler {
         }
         let cited_args = atomic_fact_args_ref(cited);
         let goal_args = atomic_fact_args_ref(goal);
-        if proof.why_parameters_of_known_fact_are_equal_to_givens.len() != goal_args.len() {
+        if cited_args.len() != goal_args.len()
+            || proof.why_parameters_of_known_fact_are_equal_to_givens.len() != goal_args.len()
+        {
             return Err(LeanCompileError::new(
                 "KnownAtomic",
                 "Argument equality evidence has the wrong ordered arity.",
             ));
         }
+        // SameIr is an empty identity witness. With the exact same original
+        // argument objects, the cited proposition already is the target. No
+        // new host constructor is needed merely to emit reflexivity, including
+        // for value-level subjects introduced by a retained inference rule.
+        if cited_args
+            .iter()
+            .zip(&goal_args)
+            .zip(&proof.why_parameters_of_known_fact_are_equal_to_givens)
+            .all(|((cited, given), equality)| {
+                cited == given
+                    && matches!(
+                        equality,
+                        EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
+                    )
+            })
+        {
+            return Ok(registered.1);
+        }
         let mut arguments = Vec::new();
-        let mut exact_identity = true;
         for ((cited, given), equality) in cited_args
             .iter()
             .zip(&goal_args)
@@ -58,14 +77,6 @@ impl LitexToLeanCompiler {
                 line_file: None,
             };
             arguments.push(self.compile_equality_search(&obligation, equality, position)?);
-            exact_identity &= cited.ir() == given.ir()
-                && matches!(
-                    equality,
-                    EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
-                );
-        }
-        if exact_identity {
-            return Ok(registered.1);
         }
         if matches!(
             cited,
@@ -133,64 +144,12 @@ impl LitexToLeanCompiler {
                 &registered.1,
                 position,
             ),
-            _ if matches!(
-                goal,
-                AtomicFact::NormalAtomicFact(_)
-                    | AtomicFact::NotNormalAtomicFact(_)
-                    | AtomicFact::IsNonemptySetFact(_)
-                    | AtomicFact::IsFiniteSetFact(_)
-                    | AtomicFact::SupersetFact(_)
-                    | AtomicFact::NotSupersetFact(_)
-                    | AtomicFact::ProperSubsetFact(_)
-                    | AtomicFact::NotProperSubsetFact(_)
-                    | AtomicFact::ProperSupersetFact(_)
-                    | AtomicFact::NotProperSupersetFact(_)
-                    | AtomicFact::NotIsSetFact(_)
-                    | AtomicFact::NotIsNonemptySetFact(_)
-                    | AtomicFact::NotIsFiniteSetFact(_)
-                    | AtomicFact::PrimeFact(_)
-                    | AtomicFact::NotPrimeFact(_)
-                    | AtomicFact::CoprimeFact(_)
-                    | AtomicFact::NotCoprimeFact(_)
-                    | AtomicFact::DvdFact(_)
-                    | AtomicFact::NotDvdFact(_)
-                    | AtomicFact::SequenceAnalysisFact(_)
-                    | AtomicFact::NotSequenceAnalysisFact(_)
-                    | AtomicFact::HasSequenceLimsupFact(_)
-                    | AtomicFact::NotHasSequenceLimsupFact(_)
-                    | AtomicFact::HasSequenceLiminfFact(_)
-                    | AtomicFact::NotHasSequenceLiminfFact(_)
-                    | AtomicFact::HasDerivativeAtFact(_)
-                    | AtomicFact::NotHasDerivativeAtFact(_)
-                    | AtomicFact::FunctionDifferentiableAtFact(_)
-                    | AtomicFact::NotFunctionDifferentiableAtFact(_)
-                    | AtomicFact::HasSequenceLimitFact(_)
-                    | AtomicFact::NotHasSequenceLimitFact(_)
-                    | AtomicFact::HasFunctionLimitFact(_)
-                    | AtomicFact::NotHasFunctionLimitFact(_)
-                    | AtomicFact::HasRiemannIntegralFact(_)
-                    | AtomicFact::NotHasRiemannIntegralFact(_)
-                    | AtomicFact::FunctionRiemannIntegrableFact(_)
-                    | AtomicFact::NotFunctionRiemannIntegrableFact(_)
-                    | AtomicFact::FunctionContinuousAtFact(_)
-                    | AtomicFact::NotFunctionContinuousAtFact(_)
-                    | AtomicFact::FunctionContinuousFact(_)
-                    | AtomicFact::NotFunctionContinuousFact(_)
-                    | AtomicFact::FunctionLipschitzFact(_)
-                    | AtomicFact::NotFunctionLipschitzFact(_)
-                    | AtomicFact::RealAccumulationFact(_)
-                    | AtomicFact::NotRealAccumulationFact(_)
-                    | AtomicFact::RealSetBoundFact(_)
-                    | AtomicFact::NotRealSetBoundFact(_)
-                    | AtomicFact::RealSetBoundedFact(_)
-                    | AtomicFact::NotRealSetBoundedFact(_)
-            ) =>
-            {
+            // Predicate meaning belongs to the shared raw renderer. It fails
+            // closed for an unmodeled family; the original citation and all
+            // ordered equality certificates have already been checked above.
+            _ => {
                 self.compile_raw_atomic_transport(cited, goal, &arguments, &registered.1, position)
             }
-            _ => Err(LeanCompileError::unsupported(
-                "KnownAtomic/PredicateTransport",
-            )),
         }
     }
 
@@ -239,12 +198,11 @@ impl LitexToLeanCompiler {
                     // express this already-checked object, retain its original
                     // representation; no source WD or equality is reconstructed.
                     let object = self.compile_object_reference(argument, position)?;
-                    if matches!(argument, Obj::FunctionSpace(FunctionSpace::FnRange(_))) {
-                        if let Ok(value) = self.compile_function_raw_expression_bound(
-                            argument,
-                            position,
-                            &std::collections::HashMap::new(),
-                        ) {
+                    if matches!(
+                        argument,
+                        Obj::ArithmeticOperator(_) | Obj::FunctionSpace(FunctionSpace::FnRange(_))
+                    ) {
+                        if let Ok(value) = self.compile_normalization_value(argument, position) {
                             return Ok(value);
                         }
                     }

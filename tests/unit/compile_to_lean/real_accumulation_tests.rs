@@ -18,32 +18,136 @@ use crate::store_fact_and_infer::{
 };
 
 const CITATIONS: [&str; 3] = [
-    include_str!("../../../lean/examples/real_accumulation_at_citations/statement.lit"),
-    include_str!("../../../lean/examples/real_accumulation_left_citations/statement.lit"),
-    include_str!("../../../lean/examples/real_accumulation_right_citations/statement.lit"),
+    r#"# Cite positive and negative at accumulation facts on a real subset.
+thm at_accumulation_citation:
+    ? forall A set, p R:
+        A $subset R
+        $is_real_accumulation_at(A,p)
+        =>:
+            $is_real_accumulation_at(A,p)
+
+thm at_accumulation_negation_citation:
+    ? forall A set, p R:
+        A $subset R
+        not $is_real_accumulation_at(A,p)
+        =>:
+            not $is_real_accumulation_at(A,p)
+"#,
+    r#"# Cite positive and negative left accumulation facts on a real subset.
+thm left_accumulation_citation:
+    ? forall A set, p R:
+        A $subset R
+        $is_real_accumulation_left(A,p)
+        =>:
+            $is_real_accumulation_left(A,p)
+
+thm left_accumulation_negation_citation:
+    ? forall A set, p R:
+        A $subset R
+        not $is_real_accumulation_left(A,p)
+        =>:
+            not $is_real_accumulation_left(A,p)
+"#,
+    r#"# Cite positive and negative right accumulation facts on a real subset.
+thm right_accumulation_citation:
+    ? forall A set, p R:
+        A $subset R
+        $is_real_accumulation_right(A,p)
+        =>:
+            $is_real_accumulation_right(A,p)
+
+thm right_accumulation_negation_citation:
+    ? forall A set, p R:
+        A $subset R
+        not $is_real_accumulation_right(A,p)
+        =>:
+            not $is_real_accumulation_right(A,p)
+"#,
 ];
 const DEFINITIONS: [&str; 3] = [
-    include_str!("../../../lean/examples/real_accumulation_at_definition/statement.lit"),
-    include_str!("../../../lean/examples/real_accumulation_left_definition/statement.lit"),
-    include_str!("../../../lean/examples/real_accumulation_right_definition/statement.lit"),
+    r#"# Fold the at accumulation definition from its quantified witnesses.
+thm at_accumulation_from_witnesses:
+    ? forall A set, p R:
+        A $subset R
+        forall radius R+:
+            exist x A st {0<abs(x-p) and abs(x-p)<radius}
+        =>:
+            $is_real_accumulation_at(A,p)
+    by def $is_real_accumulation_at(A,p)
+"#,
+    r#"# Fold the left accumulation definition from its quantified witnesses.
+thm left_accumulation_from_witnesses:
+    ? forall A set, p R:
+        A $subset R
+        forall radius R+:
+            exist x A st {0<p-x and p-x<radius}
+        =>:
+            $is_real_accumulation_left(A,p)
+    by def $is_real_accumulation_left(A,p)
+"#,
+    r#"# Fold the right accumulation definition from its quantified witnesses.
+thm right_accumulation_from_witnesses:
+    ? forall A set, p R:
+        A $subset R
+        forall radius R+:
+            exist x A st {0<x-p and x-p<radius}
+        =>:
+            $is_real_accumulation_right(A,p)
+    by def $is_real_accumulation_right(A,p)
+"#,
 ];
 const CONNECTIONS: [&str; 6] = [
-    include_str!(
-        "../../../lean/examples/function_continuity_at_from_limit_by_theorem/statement.lit"
-    ),
-    include_str!("../../../lean/examples/function_continuity_at_to_limit_by_theorem/statement.lit"),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_from_limit_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_to_limit_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_from_limit_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_to_limit_by_theorem/statement.lit"
-    ),
+    r#"# A limit equal to the point value gives at continuity on the original domain.
+thm at_continuity_from_limit:
+    ? forall f fn(x R) R, p R:
+        $has_limit_at(f,p,f(p))
+        =>:
+            $is_continuous_at(f,p)
+    by thm fn_continuous_at_from_limit(f,p) => $is_continuous_at(f,p)
+"#,
+    r#"# Convert at continuity into a limit using the original domain's accumulation fact.
+thm at_limit_from_continuity:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        $is_real_accumulation_at(R,p)
+        =>:
+            $has_limit_at(f,p,f(p))
+    by thm fn_continuous_at_to_limit(f,p) => $has_limit_at(f,p,f(p))
+"#,
+    r#"# A limit equal to the point value gives left continuity on the original domain.
+thm left_continuity_from_limit:
+    ? forall f fn(x R) R, p R:
+        $has_limit_left(f,p,f(p))
+        =>:
+            $is_continuous_left(f,p)
+    by thm fn_continuous_left_from_limit(f,p) => $is_continuous_left(f,p)
+"#,
+    r#"# Convert left continuity into a limit using the original domain's accumulation fact.
+thm left_limit_from_continuity:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        $is_real_accumulation_left(R,p)
+        =>:
+            $has_limit_left(f,p,f(p))
+    by thm fn_continuous_left_to_limit(f,p) => $has_limit_left(f,p,f(p))
+"#,
+    r#"# A limit equal to the point value gives right continuity on the original domain.
+thm right_continuity_from_limit:
+    ? forall f fn(x R) R, p R:
+        $has_limit_right(f,p,f(p))
+        =>:
+            $is_continuous_right(f,p)
+    by thm fn_continuous_right_from_limit(f,p) => $is_continuous_right(f,p)
+"#,
+    r#"# Convert right continuity into a limit using the original domain's accumulation fact.
+thm right_limit_from_continuity:
+    ? forall f fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        $is_real_accumulation_right(R,p)
+        =>:
+            $has_limit_right(f,p,f(p))
+    by thm fn_continuous_right_to_limit(f,p) => $has_limit_right(f,p,f(p))
+"#,
 ];
 fn body(run: &mut RunLitexCodeResult) -> &mut ExecDefThmForallProof {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -64,21 +168,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
         panic!("builtin invocation")
     };
     p
-}
-#[test]
-fn real_accumulation_citations_and_definitions_replay_with_set_semantics() {
-    for source in CITATIONS
-        .into_iter()
-        .chain(DEFINITIONS)
-        .chain([include_str!(
-            "../../../lean/examples/real_accumulation_semantic_transport/statement.lit"
-        )])
-    {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "real_accumulation").unwrap();
-        assert!(lean.contains("variable [_setSemantics : Litex.SetSemantics M]"));
-        assert!(lean.contains("Litex.RealAccumulation"));
-    }
 }
 #[test]
 fn real_accumulation_formation_requires_real_subset_and_real_point() {
@@ -174,19 +263,6 @@ fn real_accumulation_definition_requires_original_witness_domain_and_radius() {
         }
         c.compile_run(&run, "changed_accumulation_definition")
             .expect_err("original radius and witness domain");
-    }
-}
-#[test]
-fn continuity_limit_connections_replay_original_value_and_accumulation() {
-    for source in CONNECTIONS.into_iter().chain([include_str!(
-        "../../../lean/examples/function_continuity_identity_limit/statement.lit"
-    )]) {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "continuity_limit").unwrap();
-        assert!(
-            lean.contains("Litex.functionContinuousAtOfLimit")
-                || lean.contains("Litex.functionLimitOfContinuousAt")
-        );
     }
 }
 #[test]

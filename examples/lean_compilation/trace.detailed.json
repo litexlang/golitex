@@ -2,7 +2,7 @@
   "kind": "run",
   "run_result": "success",
   "target": "file",
-  "path": "lean/examples/add_zero/statement.lit",
+  "path": "examples/lean_compilation/source.lit",
   "detail": "detailed",
   "language": "en",
   "statement_results": [

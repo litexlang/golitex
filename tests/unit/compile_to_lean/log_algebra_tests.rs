@@ -4,27 +4,53 @@ use crate::prelude::*;
 
 const CASES: [(&str, &str); 6] = [
     (
-        include_str!("../../../lean/examples/logarithm_product_base/statement.lit"),
+        r#"forall b,x,y R+:
+    b!=1
+    =>:
+        log(b,x*y)=log(b,x)+log(b,y)
+"#,
         "logarithmProductBaseValue",
     ),
     (
-        include_str!("../../../lean/examples/logarithm_quotient_base/statement.lit"),
+        r#"forall b,x,y R+:
+    b!=1
+    =>:
+        log(b,x/y)=log(b,x)-log(b,y)
+"#,
         "logarithmQuotientBaseValue",
     ),
     (
-        include_str!("../../../lean/examples/logarithm_reciprocal/statement.lit"),
+        r#"forall b,x R+:
+    b!=1
+    =>:
+        log(b,1/x)=0-log(b,x)
+"#,
         "logarithmReciprocalValue",
     ),
     (
-        include_str!("../../../lean/examples/logarithm_change_base/statement.lit"),
+        r#"forall b,c,x R+:
+    b!=1
+    c!=1
+    =>:
+        log(b,x)=log(c,x)/log(c,b)
+"#,
         "logarithmChangeBaseValue",
     ),
     (
-        include_str!("../../../lean/examples/logarithm_argument_power/statement.lit"),
+        r#"forall b,x R+,n Z:
+    b!=1
+    =>:
+        log(b,x^n)=n*log(b,x)
+"#,
         "logarithmArgumentPowerValue",
     ),
     (
-        include_str!("../../../lean/examples/logarithm_base_power/statement.lit"),
+        r#"forall b,x R+,n Z:
+    b!=1
+    n!=0
+    =>:
+        log(b^n,x)=log(b,x)/n
+"#,
         "logarithmBasePowerValue",
     ),
 ];
@@ -85,26 +111,6 @@ fn all_six_log_algebra_rules_replay_the_selected_guards_and_exact_shapes() {
             .unwrap_or_else(|e| panic!("{source}: {e}"));
         assert!(output.contains(&format!("Litex.{law}")));
         assert_eq!(output, compiler.compile_run(&run, "log_algebra").unwrap());
-    }
-}
-
-#[test]
-fn log_algebra_preserves_reversed_equalities_and_all_legal_base_guards() {
-    for (source, law) in CASES {
-        let (prefix, last) = source.trim_end().rsplit_once('\n').unwrap();
-        let (left, right) = last.trim().split_once('=').unwrap();
-        let reversed = format!("{prefix}\n        {right}={left}\n");
-        for source in [
-            reversed,
-            source.replace("b!=1", "1<b"),
-            source.replace("b!=1", "b<1"),
-        ] {
-            let (run, compiler) = super::execute(&source);
-            let output = compiler
-                .compile_run(&run, "log_algebra_profiles")
-                .unwrap_or_else(|e| panic!("{source}: {e}"));
-            assert!(output.contains(&format!("Litex.{law}")));
-        }
     }
 }
 

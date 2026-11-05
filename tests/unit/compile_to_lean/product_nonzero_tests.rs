@@ -10,13 +10,40 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/nonzero_product_factors/statement.lit");
-const REVERSED: &str =
-    include_str!("../../../lean/examples/nonzero_product_reversed/statement.lit");
-const COMPUTED_ZERO: &str =
-    include_str!("../../../lean/examples/nonzero_product_computed_zero/statement.lit");
-const ZERO_PRODUCT: &str =
-    include_str!("../../../lean/examples/nonzero_product_zero_product/statement.lit");
+const SOURCE: &str = r#"# A nonzero complex product has nonzero factors.
+claim:
+    ? forall a C, b C:
+        a*b != 0
+        =>:
+            a != 0
+            b != 0
+    a != 0
+    b != 0
+"#;
+const REVERSED: &str = r#"# A nonzero product gives its right factor in reverse orientation.
+claim:
+    ? forall a C, b C:
+        0 != a*b
+        =>:
+            0 != b
+    0 != b
+"#;
+const COMPUTED_ZERO: &str = r#"# Nonzero products and factors can be compared to a calculated zero.
+claim:
+    ? forall a C, b C:
+        a*b != 1-1
+        =>:
+            a != 1-1
+    a != 1-1
+"#;
+const ZERO_PRODUCT: &str = r#"# A zero product on the left is distinct from a nonzero product.
+claim:
+    ? forall a C, b C:
+        0*1 != a*b
+        =>:
+            0*1 != b
+    0*1 != b
+"#;
 
 fn selected_rule(run: &mut RunLitexCodeResult) -> &mut ProductComponentNonzeroBuiltinRuleProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

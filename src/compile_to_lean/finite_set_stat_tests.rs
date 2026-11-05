@@ -52,9 +52,16 @@ fn finite_extrema_literal_selection() {
 
 #[test]
 fn finite_extrema_function_bodies_retain_original_domain_and_beta_evidence() {
-    compile(include_str!(
-        "../../lean/examples/finite_extremum_functions/statement.lit"
-    ));
+    compile(
+        r#"# Finite nonempty real sets have maximum, minimum and span functions with explicit domain conditions.
+have fn finite_maximum(A power_set(R): $is_finite_set(A), $is_nonempty_set(A)) R = finite_set_max(A)
+finite_maximum({1,2}) = 2
+have fn finite_minimum(A power_set(R): $is_finite_set(A), $is_nonempty_set(A)) R = finite_set_min(A)
+finite_minimum({1,2}) = 1
+have fn finite_span(A power_set(R): $is_finite_set(A), $is_nonempty_set(A)) R = finite_set_max(A) - finite_set_min(A)
+finite_span({0-1,2}) = 3
+"#,
+    );
 }
 
 #[test]

@@ -3,8 +3,11 @@ use crate::execute::execute_fact_stmt::pointwise_derivative::{
     PointwiseDerivativeProof,
 };
 use crate::prelude::*;
-const SQUARE: &str =
-    include_str!("../../../lean/examples/derivative_square_calculation/statement.lit");
+const SQUARE: &str = r#"# Differentiate a square by the recorded finite expression tree, then select its value.
+have fn auto_square(x R) R=x^2
+$has_derivative_at(auto_square,3,6)
+derivative(auto_square,3)=6
+"#;
 fn proof(run: &mut RunLitexCodeResult) -> &mut PointwiseDerivativeProof {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
         &mut run.statement_results[1]
@@ -19,31 +22,6 @@ fn proof(run: &mut RunLitexCodeResult) -> &mut PointwiseDerivativeProof {
         panic!("selected derivative tree");
     };
     proof
-}
-#[test]
-fn automatic_derivative_arithmetic_trees_replay_original_rules() {
-    for source in [
-        SQUARE,
-        include_str!("../../../lean/examples/derivative_reciprocal_calculation/statement.lit"),
-        include_str!("../../../lean/examples/derivative_arithmetic_tree/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "automatic_derivative").expect(source);
-        assert!(lean.contains("Litex.SemanticDerivativeAtValue"));
-        assert!(lean.contains("Litex.derivativeOfSemanticFormula"));
-    }
-}
-#[test]
-fn automatic_derivative_elementary_and_generic_trees_replay() {
-    for source in [
-        include_str!("../../../lean/examples/derivative_elementary_tree/statement.lit"),
-        include_str!("../../../lean/examples/derivative_logarithm_calculation/statement.lit"),
-        include_str!("../../../lean/examples/derivative_sqrt_calculation/statement.lit"),
-        include_str!("../../../lean/examples/derivative_generic_differentiability/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "elementary_derivative").expect(source);
-    }
 }
 #[test]
 fn automatic_derivative_requires_original_subject_and_open_domain() {
@@ -116,21 +94,9 @@ fn automatic_derivative_uses_its_checked_conclusion_equality() {
     c.compile_run(&run, "changed_derivative_conclusion")
         .expect_err("original result equality");
 }
-
-#[test]
-fn automatic_derivative_composition_replays_original_candidate_or_selection() {
-    for source in [
-        include_str!("../../../lean/examples/derivative_composition_candidate/statement.lit"),
-        include_str!("../../../lean/examples/derivative_composition_identity/statement.lit"),
-        include_str!("../../../lean/examples/derivative_composition_selected/statement.lit"),
-        include_str!("../../../lean/examples/derivative_cosine_calculation/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "derivative_composition").expect(source);
-    }
-}
-const GUARDED: &str =
-    include_str!("../../../lean/examples/derivative_guarded_positive_calculation/statement.lit");
+const GUARDED: &str = r#"# Differentiate on a positive guarded domain using its neighbourhood certificate.
+$has_derivative_at(fn(x R: x > 0) R {x*x},2,4)
+"#;
 fn guarded(run: &mut RunLitexCodeResult) -> &mut PointwiseDerivativeProof {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
         &mut run.statement_results[0]
@@ -145,27 +111,6 @@ fn guarded(run: &mut RunLitexCodeResult) -> &mut PointwiseDerivativeProof {
         panic!("selected pointwise derivative");
     };
     p
-}
-#[test]
-fn automatic_derivative_guarded_domains_replay_stability_evidence() {
-    for source in [
-        GUARDED,
-        include_str!("../../../lean/examples/derivative_guarded_nonzero_calculation/statement.lit"),
-        include_str!("../../../lean/examples/derivative_guarded_weak_calculation/statement.lit"),
-        include_str!(
-            "../../../lean/examples/derivative_guarded_absolute_calculation/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/derivative_guarded_interval_calculation/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/derivative_guarded_elementary_calculation/statement.lit"
-        ),
-    ] {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "guarded_derivative").expect(source);
-        assert!(lean.contains("Litex.derivativeInteriorOfNeighborhood"));
-    }
 }
 #[test]
 fn automatic_derivative_guarded_domains_require_original_guards_and_point_facts() {

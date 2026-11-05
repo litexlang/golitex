@@ -2,7 +2,15 @@ use crate::execute::execute_by_stmt::{ExecReleaseThmStmtResult, ExecReleaseThmSt
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/finite_subset_theorem/statement.lit");
+const SOURCE: &str = r#"# A subset of a finite set is finite, using the explicit reserved theorem.
+thm finite_subset:
+    ? forall A set,B set:
+        $is_finite_set(B)
+        A $subset B
+        =>:
+            $is_finite_set(A)
+    release thm subset_of_finite_set_is_finite(A,B)
+"#;
 
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(

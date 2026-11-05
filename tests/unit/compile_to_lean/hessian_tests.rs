@@ -1,19 +1,5 @@
 use crate::prelude::*;
 #[test]
-fn hessians_replay_selection_existence_coordinates_and_partial_definition() {
-    for source in [
-        include_str!("../../../lean/examples/hessian_selection/statement.lit"),
-        include_str!("../../../lean/examples/hessian_existence/statement.lit"),
-        include_str!("../../../lean/examples/hessian_generic_dimension/statement.lit"),
-        include_str!("../../../lean/examples/hessian_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/hessian_from_second_partials/statement.lit"),
-        include_str!("../../../lean/examples/hessian_guarded_domain/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "hessian_replay").expect(source);
-    }
-}
-#[test]
 fn hessians_reject_changed_point_domain_and_inference_subjects() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -21,9 +7,15 @@ fn hessians_reject_changed_point_domain_and_inference_subjects() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..3 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/hessian_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select the matrix of ordered second partials and use its entries.
+forall f fn(x cart_n(R,2)) R, p cart_n(R,2), H matrix(R,2,2):
+    $has_hessian_at(f,p,2,H)
+    =>:
+        hessian(f,p,2)=H
+        hessian(f,p,2)(1,2)+hessian(f,p,2)(2,1) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         if mutation == 0 {
             let FactWellDefinedProof::AtomicExceptEquality(p) =

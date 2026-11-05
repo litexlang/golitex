@@ -1,10 +1,22 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
-const GENERIC: &str =
-    include_str!("../../../lean/examples/family_intersection_member_facts/statement.lit");
-const SINGLETON: &str =
-    include_str!("../../../lean/examples/family_intersection_singleton_member/statement.lit");
+const GENERIC: &str = r#"# An element of a nonempty family intersection belongs to every member of that family.
+thm checked_family_intersection_member_facts:
+    ? forall S nonempty_set, x family_intersect(S), A S:
+        x $in A
+    release thm family_intersect_member_facts(x,family_intersect(S))
+    A $in S
+    x $in A
+"#;
+const SINGLETON: &str = r#"# Membership in a singleton family intersection yields membership in its sole factor.
+thm checked_family_intersection_singleton_member:
+    ? forall S set, x family_intersect({S}):
+        x $in S
+    release thm family_intersect_member_facts(x,family_intersect({S}))
+    S $in {S}
+    x $in S
+"#;
 #[test]
 fn intersection_facts_replays_original_member_and_publishes_usable_forall() {
     for source in [GENERIC, SINGLETON] {

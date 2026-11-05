@@ -6,17 +6,52 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixO
 use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::prelude::*;
 
-const LEFT: &str = include_str!("../../../lean/examples/native_matrix_adjugate_left/statement.lit");
-const RIGHT: &str =
-    include_str!("../../../lean/examples/native_matrix_adjugate_right/statement.lit");
-const EXPLICIT: &str =
-    include_str!("../../../lean/examples/matrix_adjugate_identity/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_adjugate_reverse/statement.lit");
-const ZERO: &str = include_str!("../../../lean/examples/native_matrix_adjugate_zero/statement.lit");
-const REAL: &str = include_str!("../../../lean/examples/native_matrix_adjugate_real/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_adjugate_transport/statement.lit");
+const LEFT: &str = r#"# Original AdjugateLeft means adj(A) times A.
+forall replay_adjugate_n N, replay_adjugate_A matrix(C,replay_adjugate_n,replay_adjugate_n):
+    matrix_mul(matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_A,replay_adjugate_n,replay_adjugate_n,replay_adjugate_n) = matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n)
+"#;
+const RIGHT: &str = r#"# Original AdjugateRight means A times adj(A).
+forall replay_adjugate_n N, replay_adjugate_A matrix(C,replay_adjugate_n,replay_adjugate_n):
+    matrix_mul(replay_adjugate_A,matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_n,replay_adjugate_n,replay_adjugate_n) = matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n)
+"#;
+const EXPLICIT: &str = r#"# The actual combined theorem has both original conclusions.
+thm replay_matrix_adjugate_identity:
+    ? forall replay_adjugate_n N, replay_adjugate_A matrix(C,replay_adjugate_n,replay_adjugate_n):
+        matrix_mul(replay_adjugate_A,matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_n,replay_adjugate_n,replay_adjugate_n) = matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n)
+        matrix_mul(matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_A,replay_adjugate_n,replay_adjugate_n,replay_adjugate_n) = matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n)
+    release thm matrix_adjugate_identity(replay_adjugate_A,replay_adjugate_n)
+release thm replay_matrix_adjugate_identity(2,zero_matrix(2,2))
+"#;
+const REVERSE: &str = r#"# Reverse both original selected adjugate product clauses.
+forall replay_adjugate_n N, replay_adjugate_A matrix(C,replay_adjugate_n,replay_adjugate_n):
+    matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n) = matrix_mul(replay_adjugate_A,matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_n,replay_adjugate_n,replay_adjugate_n)
+forall replay_adjugate_n N, replay_adjugate_A matrix(C,replay_adjugate_n,replay_adjugate_n):
+    matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n) = matrix_mul(matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_A,replay_adjugate_n,replay_adjugate_n,replay_adjugate_n)
+"#;
+const ZERO: &str = r#"# Natural order includes the empty square matrix.
+forall replay_adjugate_A matrix(C,0,0):
+    matrix_mul(replay_adjugate_A,matrix_adjugate(replay_adjugate_A,0),0,0,0) = matrix_scale(det(replay_adjugate_A,0),identity_matrix(0),0,0)
+forall replay_adjugate_A matrix(C,0,0):
+    matrix_mul(matrix_adjugate(replay_adjugate_A,0),replay_adjugate_A,0,0,0) = matrix_scale(det(replay_adjugate_A,0),identity_matrix(0),0,0)
+"#;
+const REAL: &str = r#"# Retain the proved complex-carrier intermediate for each real matrix.
+forall replay_adjugate_n N, replay_adjugate_A matrix(R,replay_adjugate_n,replay_adjugate_n):
+    replay_adjugate_A $in matrix(C,replay_adjugate_n,replay_adjugate_n)
+    matrix_mul(replay_adjugate_A,matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_n,replay_adjugate_n,replay_adjugate_n) = matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n)
+forall replay_adjugate_n N, replay_adjugate_A matrix(R,replay_adjugate_n,replay_adjugate_n):
+    replay_adjugate_A $in matrix(C,replay_adjugate_n,replay_adjugate_n)
+    matrix_mul(matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_A,replay_adjugate_n,replay_adjugate_n,replay_adjugate_n) = matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n)
+"#;
+const TRANSPORT: &str = r#"# Transport each original scaled-identity endpoint through the given equality.
+forall replay_adjugate_n N, replay_adjugate_A, replay_adjugate_D matrix(C,replay_adjugate_n,replay_adjugate_n):
+    matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n) = replay_adjugate_D
+    =>:
+        matrix_mul(replay_adjugate_A,matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_n,replay_adjugate_n,replay_adjugate_n) = replay_adjugate_D
+forall replay_adjugate_n N, replay_adjugate_A, replay_adjugate_D matrix(C,replay_adjugate_n,replay_adjugate_n):
+    matrix_scale(det(replay_adjugate_A,replay_adjugate_n),identity_matrix(replay_adjugate_n),replay_adjugate_n,replay_adjugate_n) = replay_adjugate_D
+    =>:
+        matrix_mul(matrix_adjugate(replay_adjugate_A,replay_adjugate_n),replay_adjugate_A,replay_adjugate_n,replay_adjugate_n,replay_adjugate_n) = replay_adjugate_D
+"#;
 
 fn selected(statement: &mut ExecStmtResult, index: usize) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(

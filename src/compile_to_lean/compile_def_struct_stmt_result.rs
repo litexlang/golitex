@@ -204,8 +204,8 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let arguments = self.compile_struct_arguments(object, proof, position)?;
-        let (_, producer, index) = position.visible_struct(&object.name)?;
-        let name = self.context_application(&format!("struct_{}", index + 1), &producer);
+        let (_, producer, index) = position.visible_struct(&object.name, &self.runtime)?;
+        let name = position.declaration_reference(&format!("struct_{}", index + 1), &producer)?;
         Ok(if arguments.is_empty() {
             name
         } else {

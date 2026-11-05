@@ -50,7 +50,7 @@ fn calculus_substitution_whole_image_and_failed_candidate_are_checked() {
 }
 
 #[test]
-fn calculus_substitution_chain_provenance_and_lean_boundary() {
+fn calculus_substitution_chain_provenance_and_lean_replay() {
     let mut rt = runtime();
     let source="thm chain_relation:\n    ? forall F,f,g,dg,H,h fn(x R) R:\n        $is_antiderivative_on(F,f,R)\n        forall x R:\n            $has_derivative_at(g,x,dg(x))\n        forall x R:\n            H(x)=F(g(x))\n            h(x)=f(g(x))*dg(x)\n        =>:\n            $is_antiderivative_on(H,h,R)\n    release thm antiderivative_compose(F,f,g,dg,H,h,R,R)";
     let result = run(&mut rt, source, true);
@@ -58,9 +58,11 @@ fn calculus_substitution_chain_provenance_and_lean_boundary() {
         crate::json_output::project_run_detailed(&result, &rt, "substitution", None).stringify();
     assert!(json.contains("antiderivative_compose"));
     assert!(json.contains("is_antiderivative_on"));
-    assert!(crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+    let lean = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&result, "chain_relation_boundary")
-        .is_err());
+        .expect("the checked antiderivative composition has a Lean adapter");
+    assert!(lean.contains("Litex.antiderivativeComposeFunctions"));
+    assert!(!lean.contains("sorry"));
 }
 
 #[test]

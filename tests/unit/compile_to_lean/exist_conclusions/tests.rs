@@ -256,9 +256,37 @@ fn geo_exist_real_equality_rejects_another_successful_child() {
 
 #[test]
 fn real_line_comparison_witnesses_replay_every_relation_and_orientation() {
-    let (run, compiler) = checked(include_str!(
-        "../../../../lean/examples/real_line_witnesses/statement.lit"
-    ));
+    let (run, compiler) = checked(
+        r#"# Real witnesses for equality, inequality and order, with either operand orientation.
+forall real_line_seed R:
+    exist witness R st {witness = real_line_seed}
+    exist witness R st {real_line_seed = witness}
+    exist witness R st {witness != real_line_seed}
+    exist witness R st {real_line_seed != witness}
+    exist witness R st {witness < real_line_seed}
+    exist witness R st {real_line_seed < witness}
+    exist witness R st {witness > real_line_seed}
+    exist witness R st {real_line_seed > witness}
+    exist witness R st {witness <= real_line_seed}
+    exist witness R st {real_line_seed <= witness}
+    exist witness R st {witness >= real_line_seed}
+    exist witness R st {real_line_seed >= witness}
+
+forall real_line_pair_seed R:
+    exist x, y R st {x = y}
+    exist x, y R st {y = x}
+    exist x, y R st {x != y}
+    exist x, y R st {y != x}
+    exist x, y R st {x < y}
+    exist x, y R st {y < x}
+    exist x, y R st {x > y}
+    exist x, y R st {y > x}
+    exist x, y R st {x <= y}
+    exist x, y R st {y <= x}
+    exist x, y R st {x >= y}
+    exist x R, y R st {y >= x}
+"#,
+    );
     let lean = compiler.compile_run(&run, "real_line_comparisons").unwrap();
     assert!(lean.contains("Litex.existsRealAbove"));
     assert!(lean.contains("Litex.existsRealBelow"));

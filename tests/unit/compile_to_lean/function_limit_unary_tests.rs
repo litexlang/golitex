@@ -5,8 +5,16 @@ use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtRe
 use crate::execute::ExecDefinitionStmtResult;
 use crate::prelude::*;
 
-const NEG: &str =
-    include_str!("../../../lean/examples/function_limit_at_neg_by_theorem/statement.lit");
+const NEG: &str = r#"# Transfer a at limit through neg, retaining the complete function domains.
+thm at_neg_limit:
+    ? forall f,g fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        forall x R:
+            g(x)=-f(x)
+        =>:
+            $has_limit_at(g,p,-L)
+    by thm fn_limit_at_neg(f,g,p,L) => $has_limit_at(g,p,-L)
+"#;
 
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -24,28 +32,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
         panic!("unary limit invocation")
     };
     p
-}
-
-#[test]
-fn unary_limit_algebra_replays_all_five_approaches() {
-    for source in [
-        NEG,
-        include_str!("../../../lean/examples/function_limit_at_abs_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_neg_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_abs_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_neg_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_abs_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_pos_inf_neg_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_pos_inf_abs_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_neg_inf_neg_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_neg_inf_abs_by_theorem/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "unary_limit")
-            .unwrap()
-            .contains("FunctionLimitMap"));
-    }
 }
 
 #[test]
@@ -118,43 +104,28 @@ fn unary_limit_algebra_rejects_a_changed_output_limit_or_approach() {
 }
 
 #[test]
-fn unary_limit_parameters_replay_real_scalars_and_natural_exponents() {
-    for source in [
-        include_str!("../../../lean/examples/function_limit_at_scale_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_scale_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_scale_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_scale_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_scale_by_theorem/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_limit_at_power_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_power_by_theorem/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_power_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_inf_power_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_inf_power_by_theorem/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_natural_power_by_theorem/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_limit_guarded_neg_by_theorem/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "parameterized_limit").unwrap();
-    }
-}
-
-#[test]
 fn unary_limit_parameters_reject_changed_carriers_and_missing_evidence() {
     for source in [
-        include_str!("../../../lean/examples/function_limit_at_scale_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_natural_power_by_theorem/statement.lit"
-        ),
+        r#"# Transfer a at limit through scale with its original parameter evidence.
+thm at_scale_limit:
+    ? forall f,g fn(x R) R, p,L,c R:
+        $has_limit_at(f,p,L)
+        forall x R:
+            g(x)=c*f(x)
+        =>:
+            $has_limit_at(g,p,c*L)
+    by thm fn_limit_at_scale(f,g,p,L,c) => $has_limit_at(g,p,c*L)
+"#,
+        r#"# A variable natural power preserves a finite real function limit.
+thm natural_power_limit:
+    ? forall f,g fn(x R) R, p,L R, n N:
+        $has_limit_at(f,p,L)
+        forall x R:
+            g(x)=f(x)^n
+        =>:
+            $has_limit_at(g,p,L^n)
+    by thm fn_limit_at_power(f,g,p,L,n) => $has_limit_at(g,p,L^n)
+"#,
     ] {
         for missing in [false, true] {
             let (mut run, compiler) = super::execute(source);

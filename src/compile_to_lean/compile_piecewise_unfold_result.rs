@@ -44,11 +44,11 @@ impl LitexToLeanCompiler {
         let Obj::FnObj(application) = original else {
             return Err(LeanCompileError::unsupported("PiecewiseUnfold/Application"));
         };
-        let FnObjHead::Identifier(IdentifierObj::Plain { id, .. }) = application.head.as_ref()
-        else {
+        let FnObjHead::Identifier(identifier) = application.head.as_ref() else {
             return Err(LeanCompileError::unsupported("PiecewiseUnfold/Head"));
         };
-        let (declaration, _) = position.visible_piecewise_function(id)?;
+        let (declaration, producer) =
+            position.visible_piecewise_identifier(identifier, &self.runtime)?;
         let signature = piecewise_signature(declaration);
         let parameters = signature
             .set_bound_parameters
@@ -115,7 +115,8 @@ impl LitexToLeanCompiler {
                 .case_defining_fact_ids
                 .get(index)
                 .ok_or_else(|| LeanCompileError::unsupported("PiecewiseUnfold/EquationProducer"))?;
-            let (_, equation) = self.cited_fact_reference(*stored, position)?;
+            let equation =
+                position.declaration_reference(&format!("h_{}", stored.value()), &producer)?;
             let mut lines = vec![format!("let _checked_call := {call_term}")];
             let mut arguments = Vec::new();
             let mut requirements = Vec::new();

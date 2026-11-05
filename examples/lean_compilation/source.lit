@@ -1,0 +1,3 @@
+# Adding zero preserves every complex value.
+forall a C:
+    a + 0 = a

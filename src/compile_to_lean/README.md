@@ -13,6 +13,12 @@ the scalar foundation; the larger semantic families retain conservative
 source-order dependencies. Local Lean gates compile and fingerprint the entire
 local import closure, rather than just the entrypoint.
 
+The complete `lean/examples/` corpus is an optional local checkout, ignored by
+the main repository. Core regressions contain self-contained inputs; only tiny file-based CLI
+fixtures remain in [`tests/fixtures/compile_to_lean/`](../../tests/fixtures/compile_to_lean/README.md).
+Bulk output acceptance tests live with the optional corpus in its `_acceptance/` package. Historical corpus links below refer to that optional checkout;
+they do not introduce a build or test dependency.
+
 This README explains that architecture and its implementation owners. Complete
 worked examples live in their own READMEs: [adding zero](../../docs/examples/litex_to_lean/add_zero/README.md),
 [Newton's single-step identity](../../docs/examples/litex_to_lean/newton_residual/README.md)
@@ -69,8 +75,8 @@ local free hypotheses retain their hypothesis references. Qualified
 formation, explicit release, checked arguments/guards and selected body
 normalization through its exact equality citation and residual. Imported aliases
 and same-named functions in distinct packages preserve their producer identity.
-Other function/object/struct/template consumers and cross-file free parameter/axiom
-contracts remain open. Ordinary fact visibility stays local
+Cross-file free source parameters and user-axiom contexts still need a module
+context contract. Ordinary fact visibility stays local
 to each original file; imported declarations use separate qualified lookup.
 [RunLitexCodeResult](../run/run_command_outcome.rs) retains the ordered
 statement results. Their successful branches contain the original subjects,
@@ -261,7 +267,7 @@ per declaration. See [element pairs](../../lean/examples/member_coordinate_pairs
 [choice and local aliases](../../lean/examples/chosen_repeated_coordinates/).
 
 Structures require at least two fields. Self/forward field dependencies,
-finite-set header kinds, structure-header guards, and local/qualified structure
+finite-set header kinds, structure-header guards, and local structure
 definitions remain unsupported. Standalone existential and disjunctive defining
 conditions are also outside this consumer's current boundary. Further field-path
 and function-receiver cases are described below.
@@ -1921,9 +1927,123 @@ after the full snapshot without task production changes. Later accepted
 [predicate](../../lean/examples/module_nested_predicates/),
 [object release](../../lean/examples/module_identifier_guarded_value/) and
 [function](../../lean/examples/module_function_guarded/) profiles preserve their
-original qualified bindings and evidence. Cross-file free parameters/axioms and
-other qualified object/struct/template/registration/strategy contracts remain
+original qualified bindings and evidence. Qualified structures now retain their
+original file's declaration and namespace, including same-named structures in
+different exports/imports, parameterized carriers, defining laws and dependent
+function fields. See [coordinate fields across exports](../../lean/examples/module_coordinate_fields/)
+and [imported structure fields and laws](../../lean/examples/module_imported_structure_fields/).
+Their generated output passes real Lean checks; citations preserve the original
+declaration capture and source prefix. Cross-file free parameters/axioms and
+other qualified object/template/registration/strategy contracts remain
 open; the full module phase still requires its remaining contracts and audit.
+[Exported record values](../../lean/examples/module_coordinate_value/) now retain
+the hypothetical preflight's own parameter identity, then cite the completed
+declaration for later membership, release and coordinate evaluation. A local
+`point.x = 4` remains distinct from the exported `base::point.x = 2` in the checked
+example. Original constructor/WD references retain the producer's namespace.
+Type WD can cross the preflight boundary by abstracting its original parameter
+prefix and applying the already emitted objects and member IDs. Temporary facts
+remain inside that Lean lambda. Checked examples cover a
+[dependent record](../../lean/examples/module_dependent_record_value/) and
+[Cartesian and function values](../../lean/examples/module_dependent_function_and_vector/)
+over a carrier introduced in the same declaration.
+[An exported dependent pair](../../lean/examples/module_exported_dependent_record/)
+also retains that carrier's original scope when another file projects its fields.
+The example forms both fields, releases the recorded definition and proves their
+sum is `5`. The receiver callback borrows the original published type position;
+it does not register new facts or expose the producer's ordinary fact scope.
+
+Templates also retain their original export/import owner. Lookup checks the
+captured declaration and its source prefix; instance formation replays the
+recorded argument WD and header conditions. Constructors, signatures and
+definition publications use their producer namespace and original IDs.
+See [exported translations and guarded quotients](../../lean/examples/module_template_values/),
+[same-named imported translations](../../lean/examples/module_imported_templates/),
+[generic pair fields](../../lean/examples/module_template_record_fields/) and
+[a selected function's signature and calls](../../lean/examples/module_template_selected_function/).
+[Case-based maps, a recursive reciprocal sequence and returned functions](../../lean/examples/module_template_recursive_and_cases/)
+also compile through the same owner-preserving interface.
+These profiles pass real Lean checks. They preserve the restriction on ordinary
+foreign facts and do not add compiler-owned proof state.
+
+[The exported zero-extended reciprocal](../../lean/examples/module_piecewise_reciprocal/)
+also covers an ordinary case-defined function. Explicit object-definition
+release republishes its original membership and ordered branch equations;
+subsequent calls cite the original constructor and case theorem. The example
+checks zero, a nonzero argument and the guarded formula for an arbitrary real
+member, with no new source assumptions.
+
+[Exported natural recursion](../../lean/examples/module_recursive_constant/)
+and [integer recursion with a variable lower bound](../../lean/examples/module_recursive_guarded/)
+retain the restricted prefix graph inside the recursive body and the completed
+function outside it. Recursive calls consume their original domain and decrease
+proofs. Explicit release cites the original membership and case equations;
+canonical object arguments specialize the original polymorphic theorem without
+changing the source proof. Both generated pairs pass real Lean and axiom audits.
+
+[Recursion returning functions](../../lean/examples/module_recursive_function_values/)
+also retains the private self binder inside returned literals. Its source
+constructs a typed curried value, releases the original function equations and
+checks sethood. Released propositions render the literal in its original branch
+and substitute the public graph for self; local WD never becomes a caller's
+free assumption. Direct evaluation of the curried result is a separate source
+proof-search boundary and is not claimed by this example.
+
+[The imported version](../../lean/examples/module_imported_recursive_values/)
+also checks curried WD and real return membership for arbitrary natural indices
+and real arguments, preserving their generic host representations.
+
+[Public real parameters](../../lean/examples/module_real_parameter/),
+[set kinds](../../lean/examples/module_set_kind_parameters/) and
+[arbitrary functions](../../lean/examples/module_function_parameter/) retain
+their original parameter IDs, membership hypotheses and generic host types.
+Their public spellings come from the original top-level introductions;
+preflight parameters retain their own scope and introduction stage.
+
+[Cartesian points and finite vectors](../../lean/examples/module_coordinate_parameters/)
+also replay coordinate WD with symbolic lengths and indices. Closed and half-open
+[integer-range strategies](../../lean/examples/integer_range_membership_strategy/)
+consume the recorded integer membership and two ordered bounds, then use existing
+Lean bridges. [Arbitrary matrix parameters](../../lean/examples/module_matrix_parameters/)
+cover a nonempty witness, coordinates, determinant, transpose and legal entries.
+These examples pass actual compiler generation and Lean checks.
+
+[Supremum selection](../../lean/examples/module_selector_parameter/) and
+[derivative selection](../../lean/examples/module_derivative_parameter/) also
+work with public arbitrary parameters. The constructors consume the local
+least-upper-bound or derivative-candidate evidence. The derivative example
+does not construct a derivative without an existence certificate. Qualified
+function heads reuse the same parameter resolver, including its original
+declaration capture and introduction-stage checks.
+
+[Cross-file parameters](../../lean/examples/module_cross_file_parameters/) and
+[imported aliases](../../lean/examples/module_imported_parameters/) inherit the
+parameters and membership facts introduced by preceding captured source files,
+in execution order. Their original IDs and generic host representations stay
+unchanged. Unused preceding parameters can therefore appear in the generated
+interface. A reference supplies the producer's original parameter prefix;
+parameters introduced later are not passed back to it.
+
+This covers real and function parameters, a new object in an earlier set,
+captured expression aliases, theorem calls and distinct parameters with the
+same source name. Both generated pairs pass real Lean and axiom audits.
+Source facts still follow explicit `release obj def` and ordinary citation
+rules. Foreign declarations requiring a `trust` assumption or abstract-predicate
+context remain rejected with `Module/DeclarationContextArguments`; inheriting
+parameters does not silently add those assumptions.
+
+[The exported selected identity](../../lean/examples/module_selected_identity/)
+constructs a function from the recorded unique-existence proof. Its explicit
+release republishes membership, the defining property and uniqueness in order.
+The rebuilt uniqueness candidate may have a fresh bound ID; only that original
+publication permits bound renaming. The generated pair checks a concrete call
+and the defining property for an arbitrary real object in Lean.
+
+[Imported function composition](../../lean/examples/module_imported_function_forms/)
+combines the piecewise, recursive and selected functions from separate modules.
+The source records the nonzero premise before selecting the reciprocal branch,
+then compiles nested calls and a composition law for an arbitrary nonzero real
+object. The actual generated file also passes Lean and the axiom audit.
 
 
 Coordinate partial derivatives and gradient vectors now have checked formation,
@@ -1935,7 +2055,7 @@ and [a gradient from its partial derivatives](../../lean/examples/gradient_from_
 The gradient contract is the vector of coordinate partials; exporting Mathlib
 `HasGradientAt` additionally requires total differentiability.
 
-The final common-Core gate passes 31 strict source/generated pairs, deterministic
+An earlier common-Core gate passed 31 strict source/generated pairs, deterministic
 regeneration and real Lean/Mathlib 4.31.0 checks. All 54 audited exports use only
 `Classical.choice`, `Quot.sound` and `propext`; all 1,726 compiler Rust tests pass.
 Core: `eb4de89a59c07de704e6e19ce8dd7fc0f6377ed48d6b4629ff0168d53dbb28bd`.

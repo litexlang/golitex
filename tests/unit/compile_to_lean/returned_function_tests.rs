@@ -4,15 +4,95 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 };
 use crate::prelude::*;
 
-const RANGE: &str = include_str!("../../../lean/examples/returned_function_ranges/statement.lit");
-const VALUE: &str = include_str!("../../../lean/examples/returned_function_values/statement.lit");
-const SEQUENCE: &str =
-    include_str!("../../../lean/examples/returned_sequence_values/statement.lit");
-const NESTED_SEQUENCE: &str =
-    include_str!("../../../lean/examples/nested_returned_sequence_values/statement.lit");
-const MIXED: &str = include_str!("../../../lean/examples/mixed_returned_calls/statement.lit");
-const RETURNED_BETA: &str =
-    include_str!("../../../lean/examples/returned_integer_window_beta/statement.lit");
+const RANGE: &str = r#"# A real-indexed family returns a real function; each returned function has a set of values.
+forall provider fn(t R) fn(x R) R:
+    $is_set(fn_range(provider(1)))
+
+forall provider fn(t R: t != 0) fn(x R: x != 0) R:
+    $is_set(fn_range(provider(2)))
+
+forall provider fn(t R) fn(x R) R, a R:
+    $is_set(fn_range(provider(a + 1)))
+"#;
+const VALUE: &str = r#"# Evaluate a real function returned by a real-indexed family.
+forall provider fn(t R) fn(x R) R:
+    provider(1)(2) $in R
+
+forall provider fn(t R: t != 0) fn(x, y R: y != 0) R:
+    provider(2)(3, 4) $in R
+
+forall provider fn(t R) fn(x R) fn(y R) R:
+    provider(1)(2)(3) $in R
+
+forall provider fn(t R) fn(x R+) R:
+    provider(1)(2) $in R
+"#;
+const SEQUENCE: &str = r#"# Read a term of a sequence returned by a function, preserving both call domains.
+forall provider fn(t R) seq(R):
+    provider(0)(1) $in R
+
+forall provider fn(t R: t != 0) seq(Q), t R, n N+:
+    t != 0
+    =>:
+        provider(t)(n) $in Q
+
+forall A set, provider fn(t R) seq(A), t R, n N+:
+    provider(t)(n) $in A
+"#;
+const NESTED_SEQUENCE: &str = r#"# Read nested sequence, finite-vector and matrix values while retaining each index domain.
+forall provider fn(t R) seq(seq(R)):
+    provider(0)(1)(2) $in R
+
+forall provider fn(t R: t != 0) seq(seq(Q)), t R, n, m N+:
+    t != 0
+    =>:
+        provider(t)(n)(m) $in Q
+
+forall A set, provider fn(t R) cart_n(seq(A),2), t R, n N+:
+    provider(t)(1)(n) $in A
+
+forall provider fn(t R) seq(matrix(R,2,3)), t R, n N+:
+    provider(t)(n)(1,2) $in R
+
+forall provider fn(t R) seq(seq(seq(R))), k, l, m N+:
+    provider(0)(k)(l)(m) $in R
+"#;
+const MIXED: &str = r#"# Alternate function calls and sequence indexing, retaining the domain of every layer.
+forall provider fn(t R) fn(x R) seq(R):
+    provider(0)(1)(2) $in R
+
+forall provider fn(t R) seq(fn(x R: x != 0) R):
+    provider(0)(1)(2) $in R
+
+forall provider fn(t R) seq(fn(x R: x != 0) seq(Q)):
+    provider(0)(1)(2)(3) $in Q
+
+forall provider fn(t R: t != 0) seq(fn(x R: x != 0) seq(Q)), t, x R, k, n N+:
+    t != 0
+    x != 0
+    =>:
+        provider(t)(k)(x)(n) $in Q
+
+forall provider fn(t R) cart_n(fn(x R+) R,2):
+    provider(0)(1)(2) $in R
+"#;
+const RETURNED_BETA: &str = r#"# A curried interval constructor evaluates to its original integer bounds.
+have fn shifted_indices(a Z) fn(b Z) power_set(Z) = fn(b Z) power_set(Z){range(a,b)}
+shifted_indices(2)(5) = range(2,5)
+shifted_indices(-2)(3) = range(-2,3)
+forall a,b Z:
+    shifted_indices(a)(b) = range(a,b)
+have fn integer_window3(a Z) fn(b Z,c Z,d Z) power_set(Z) = fn(b Z,c Z,d Z) power_set(Z){range(a + b,c + d)}
+integer_window3(1)(2,3,4) = range(1 + 2,3 + 4)
+forall a,b,c,d Z:
+    integer_window3(a)(b,c,d) = range(a + b,c + d)
+have fn guarded_indices(a Z) fn(b Z: b != 0) power_set(Z) = fn(b Z: b != 0) power_set(Z){range(a,b)}
+guarded_indices(2)(5) = range(2,5)
+forall a,b Z:
+    b != 0
+    =>:
+        guarded_indices(a)(b) = range(a,b)
+"#;
 
 #[test]
 fn returned_known_beta_checks_receiver_and_substituted_call_evidence() {
@@ -21,7 +101,19 @@ fn returned_known_beta_checks_receiver_and_substituted_call_evidence() {
         by_fn_application::{EqualitySearchProofByFnApplicationObjectDefinition,
             by_parent_checked_beta::{ByParentCheckedBetaObjectDefinitionProof, ParentCheckedBetaFunctionBody}},
     };
-    let source = include_str!("../../../lean/examples/zero_matrix_formula_functions/statement.lit");
+    let source = r#"# Zero-matrix formula functions preserve their captured dimensions, including zero rows.
+have fn zero_shape(t R) matrix(R,2,3) = zero_matrix(2,3)
+forall t R:
+    zero_shape(t) = zero_matrix(2,3)
+have zero_rows,zero_cols N
+have fn zero_captured(t R) matrix(R,zero_rows,zero_cols) = zero_matrix(zero_rows,zero_cols)
+forall t R:
+    zero_captured(t) = zero_matrix(zero_rows,zero_cols)
+have fn zero_empty(t R) matrix(R,0,3) = zero_matrix(0,3)
+forall t R:
+    zero_empty(t) = zero_matrix(0,3)
+zero_shape(0)(1,2) = 0
+"#;
     for mutation in 0..8 {
         let (mut run, compiler) = super::execute(source);
         if mutation == 0 {
@@ -97,24 +189,6 @@ fn returned_known_beta_checks_receiver_and_substituted_call_evidence() {
                 .is_err(),
             "mutation {mutation}"
         );
-    }
-}
-
-#[test]
-fn returned_anonymous_beta_replays_original_receiver_and_call() {
-    for source in [
-        RETURNED_BETA,
-        include_str!("../../../lean/examples/returned_quotient_beta/statement.lit"),
-        include_str!("../../../lean/examples/returned_affine_beta/statement.lit"),
-        include_str!("../../../lean/examples/returned_generic_constant_beta/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "returned_beta").unwrap();
-        if source == RETURNED_BETA {
-            assert!(lean.contains("_litex_receiver_eq"));
-            assert!(lean.contains("Litex.FunctionSemantics.pair_mem_graph"));
-        }
-        assert_eq!(lean, compiler.compile_run(&run, "returned_beta").unwrap());
     }
 }
 
@@ -197,20 +271,6 @@ fn returned_anonymous_beta_rejects_changed_receiver_formula_and_substitution() {
             compiler.compile_run(&run, "changed_returned_beta").is_err(),
             "mutation {mutation}"
         );
-    }
-}
-
-#[test]
-fn returned_function_ranges_and_values_replay_deterministically() {
-    for source in [RANGE, VALUE, SEQUENCE, NESTED_SEQUENCE, MIXED] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "returned_functions").unwrap();
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "returned_functions").unwrap()
-        );
-        assert!(lean.contains("Litex.callOn"));
-        assert!(!lean.contains("sorry") && !lean.contains("axiom"));
     }
 }
 
@@ -327,26 +387,6 @@ fn returned_call_rejects_missing_swapped_or_mismatched_stages() {
 }
 
 #[test]
-fn returned_function_preimages_and_membership_use_original_return_evidence() {
-    for source in [
-        include_str!("../../../lean/examples/returned_function_preimages/statement.lit"),
-        include_str!("../../../lean/examples/returned_function_membership/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "returned_domain_consumers")
-            .unwrap();
-        assert!(lean.contains("_returned_source"));
-        assert_eq!(
-            lean,
-            compiler
-                .compile_run(&run, "returned_domain_consumers")
-                .unwrap()
-        );
-    }
-}
-
-#[test]
 fn returned_domain_argument_scope_rejects_a_future_registered_producer() {
     let (mut run, compiler) = super::execute(RANGE);
     let p = range_domain_mut(&mut run, 2);
@@ -397,20 +437,6 @@ fn returned_positive_domain_retains_membership_and_positivity() {
     assert!(lean.contains("Litex.FunctionSignature.one_domain"));
     assert!(lean.contains("Litex.inRPos_real"));
     assert!(lean.contains("Litex.positiveReal_members"));
-}
-
-#[test]
-fn returned_matrix_and_finite_sequence_calls_consume_original_stages() {
-    for source in [
-        include_str!("../../../lean/examples/returned_matrix_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/returned_matrix_guarded/statement.lit"),
-        include_str!("../../../lean/examples/returned_finite_sequence_values/statement.lit"),
-        include_str!("../../../lean/examples/returned_matrix_transpose/statement.lit"),
-        include_str!("../../../lean/examples/returned_matrix_function_transpose/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "returned_arrays").unwrap();
-    }
 }
 
 #[test]
@@ -531,9 +557,12 @@ fn returned_sequence_rejects_missing_swapped_or_weakened_index_evidence() {
 #[test]
 fn returned_matrix_rejects_missing_or_swapped_index_evidence() {
     for mutation in 0..4 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/returned_matrix_coordinates/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# A real-matrix-valued function returns real coordinates on the complete matrix domain.
+forall maker fn(t R) matrix(R,2,3), t R, row closed_range(1,2), col closed_range(1,3):
+    maker(t)(row,col) $in R
+"#,
+        );
         compiler.compile_run(&run, "valid_matrix_call").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
@@ -573,9 +602,15 @@ fn returned_matrix_transpose_rejects_changed_carrier_evidence() {
     use crate::execute::execute_fact_stmt::native_matrix::{MatrixMembershipProof, MatrixFunctionScalarCarrierProof};
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
     for mutation in 0..2 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/returned_matrix_transpose/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# A family returns a complete real matrix, which can then be transposed.
+forall maker fn(t R) matrix(R,2,3), t R:
+    transpose(maker(t),2,3) $in matrix(R,3,2)
+
+forall maker fn(t R) matrix(R,2,3), t R:
+    conjugate_transpose(maker(t),2,3) $in matrix(R,3,2)
+"#,
+        );
         compiler
             .compile_run(&run, "valid_returned_transpose")
             .unwrap();

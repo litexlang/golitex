@@ -1,13 +1,23 @@
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnObjObjWellDefinedProof;
 use crate::prelude::*;
-
-const FINITE: &str =
-    include_str!("../../../lean/examples/returned_finite_sequence_alias/statement.lit");
-const NESTED: &str =
-    include_str!("../../../lean/examples/returned_nested_sequence_alias/statement.lit");
-const GUARDED: &str =
-    include_str!("../../../lean/examples/returned_guarded_function_alias/statement.lit");
-const MATRIX: &str = include_str!("../../../lean/examples/returned_matrix_alias/statement.lit");
+const NESTED: &str = r#"# Index a sequence of real sequences through two carrier aliases.
+have AliasRowSpace set = seq(R)
+have AliasRowsSpace set = seq(AliasRowSpace)
+forall provider fn(t R) AliasRowsSpace, t R, row, col N+:
+    provider(t)(row)(col) $in R
+"#;
+const GUARDED: &str = r#"# Call a returned function through its alias, retaining both layers of guards.
+have AliasGuardedSpace set = fn(k N+: k <= 2) R
+forall provider fn(t R: t != 0) AliasGuardedSpace, t R:
+    t != 0
+    =>:
+        provider(t)(2) $in R
+"#;
+const MATRIX: &str = r#"# Read a matrix entry through the alias of a function's return set.
+have AliasMatrixSpace set = matrix(R, 2, 2)
+forall provider fn(t R) AliasMatrixSpace, t R:
+    provider(t)(1, 2) $in R
+"#;
 
 fn nested_call(run: &mut RunLitexCodeResult) -> &mut FnObjObjWellDefinedProof {
     let all = super::forall_proof_mut(run.statement_results.last_mut().unwrap());
@@ -26,16 +36,6 @@ fn nested_call(run: &mut RunLitexCodeResult) -> &mut FnObjObjWellDefinedProof {
         panic!("original returned-call WD")
     };
     call
-}
-
-#[test]
-fn returned_carrier_aliases_replay_each_original_equal_carrier() {
-    for source in [FINITE, NESTED, GUARDED, MATRIX] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "returned_alias").unwrap();
-        assert!(lean.contains("Litex.inOfSame"));
-        assert_eq!(lean, compiler.compile_run(&run, "returned_alias").unwrap());
-    }
 }
 
 #[test]

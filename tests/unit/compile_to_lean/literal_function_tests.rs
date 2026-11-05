@@ -4,8 +4,11 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_t
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
 use crate::prelude::*;
 
-const SIGNATURES: &str =
-    include_str!("../../../lean/examples/literal_function_signatures/statement.lit");
+const SIGNATURES: &str = r#"# Shifts and guarded quotients belong to their declared function spaces, independently of binder names.
+fn(x R) R {x + 1} $in fn(y R) R
+fn(x R: x != 0) R {1 / x} $in fn(y R: y != 0) R
+fn(x, y R: y != 0) R {x / y} $in fn(a, b R: b != 0) R
+"#;
 
 fn atomic_mut(
     run: &mut RunLitexCodeResult,
@@ -120,20 +123,5 @@ fn return_carrier_alpha_proof_cannot_change_the_codomain_or_guard() {
         assert!(compiler
             .compile_fn_return_set_match(&source, &target, &evidence, &scope)
             .is_err());
-    }
-}
-
-#[test]
-fn constructed_returned_functions_and_function_arguments_replay() {
-    for source in [
-        include_str!("../../../lean/examples/selected_shift_function/statement.lit"),
-        include_str!("../../../lean/examples/function_identity_operator/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "constructed_functions").unwrap();
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "constructed_functions").unwrap()
-        );
     }
 }

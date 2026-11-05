@@ -1,8 +1,22 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
-const VECTOR: &str = include_str!("../../../lean/examples/euclidean_norm_zero/statement.lit");
-const MATRIX: &str = include_str!("../../../lean/examples/frobenius_norm_zero/statement.lit");
+const VECTOR: &str = r#"# A finite complex vector has Euclidean norm zero exactly when it is zero.
+thm checked_euclidean_norm_zero:
+    ? forall n N, v cart_n(C,n):
+        euclidean_norm(v,n)=0
+        =>:
+            v=fn(k closed_range(1,n)) C{0}
+    release thm euclidean_norm_zero(v,n)
+"#;
+const MATRIX: &str = r#"# A finite complex matrix has Frobenius norm zero exactly when it is zero.
+thm checked_frobenius_norm_zero:
+    ? forall m, n N, A matrix(C,m,n):
+        frobenius_norm(A,m,n)=0
+        =>:
+            A=zero_matrix(m,n)
+    release thm frobenius_norm_zero(A,m,n)
+"#;
 
 fn retain_reverse_shape(b: &mut crate::execute::execute_by_stmt::BuiltinThmApplication) {
     let Fact::ForallFact(forward) = &b.conclusions[0] else {
@@ -25,19 +39,47 @@ fn norm_zero_replays_both_original_implications_for_complex_real_and_empty_domai
         (VECTOR, "euclideanNormZeroFormula"),
         (MATRIX, "frobeniusNormZeroCharacterization"),
         (
-            include_str!("../../../lean/examples/euclidean_norm_zero_real/statement.lit"),
+            r#"# A finite complex vector has Euclidean norm zero exactly when it is zero.
+thm checked_euclidean_norm_zero_real_forward:
+    ? forall n N, v cart_n(R,n):
+        euclidean_norm(v,n)=0
+        =>:
+            v=fn(k closed_range(1,n)) C{0}
+    release thm euclidean_norm_zero(v,n)
+"#,
             "euclideanNormZeroFormula",
         ),
         (
-            include_str!("../../../lean/examples/frobenius_norm_zero_real/statement.lit"),
+            r#"# A finite complex matrix has Frobenius norm zero exactly when it is zero.
+thm checked_frobenius_norm_zero_real_forward:
+    ? forall m, n N, A matrix(R,m,n):
+        frobenius_norm(A,m,n)=0
+        =>:
+            A=zero_matrix(m,n)
+    release thm frobenius_norm_zero(A,m,n)
+"#,
             "frobeniusNormZeroCharacterization",
         ),
         (
-            include_str!("../../../lean/examples/euclidean_norm_zero_empty/statement.lit"),
+            r#"# A finite complex vector has Euclidean norm zero exactly when it is zero.
+thm checked_euclidean_norm_zero_empty:
+    ? forall v cart_n(C,0):
+        euclidean_norm(v,0)=0
+        =>:
+            v=fn(k closed_range(1,0)) C{0}
+    release thm euclidean_norm_zero(v,0)
+"#,
             "euclideanNormZeroFormula",
         ),
         (
-            include_str!("../../../lean/examples/frobenius_norm_zero_empty/statement.lit"),
+            r#"# A finite complex matrix has Frobenius norm zero exactly when it is zero.
+thm checked_frobenius_norm_zero_empty:
+    ? forall A matrix(C,0,3):
+        frobenius_norm(A,0,3)=0
+        =>:
+            A=zero_matrix(0,3)
+    release thm frobenius_norm_zero(A,0,3)
+"#,
             "frobeniusNormZeroCharacterization",
         ),
     ] {

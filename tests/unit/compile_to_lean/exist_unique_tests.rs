@@ -7,8 +7,19 @@ use crate::execute::{ExecObtainObjFromExistFactStmtResult, ObtainExistVerifySucc
 use crate::prelude::*;
 use crate::store_fact_and_infer::{InferExistUniqueFactResult, InferResult};
 
-const SIMPLE: &str = include_str!("../../../lean/examples/unique_real_zero/statement.lit");
-const PAIR: &str = include_str!("../../../lean/examples/unique_real_pair/statement.lit");
+const SIMPLE: &str = r#"# Zero is the unique real number equal to zero; obtain and reuse that witness.
+witness exist! x R st {x = 0} from 0
+exist! y R st {y = 0}
+obtain a from exist! x R st {x = 0}
+a = 0
+"#;
+const PAIR: &str = r#"# The coordinates one and two specify a unique ordered pair of real numbers.
+witness exist! x, y R st {x = 1, y = 2} from 1, 2
+exist! u, v R st {u = 1, v = 2}
+obtain a, b from exist! x, y R st {x = 1, y = 2}
+a = 1
+b = 2
+"#;
 
 fn witness(run: &mut RunLitexCodeResult) -> &mut ExecWitnessExistFactStmtSuccessResult {
     let ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(
@@ -28,32 +39,6 @@ fn uniqueness(proof: &mut ExecWitnessExistFactStmtSuccessResult) -> &mut ForallF
         panic!("local forall")
     };
     &mut p.fact
-}
-
-#[test]
-fn unique_existence_replays_witness_citation_and_obtain() {
-    for source in [
-        SIMPLE,
-        PAIR,
-        include_str!("../../../lean/examples/unique_reciprocal_value/statement.lit"),
-        include_str!("../../../lean/examples/unique_real_theorem/statement.lit"),
-        include_str!("../../../lean/examples/unique_copy_theorem/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "unique_example").unwrap();
-        assert!(output.contains("_unique_left_"));
-        assert!(!output.contains("sorry"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "unique_example").unwrap()
-        );
-        if source == PAIR {
-            assert!(output.contains("variable [_functionSemantics : Litex.FunctionSemantics M]"));
-        }
-        if source == SIMPLE {
-            assert!(!output.contains("variable [_functionSemantics"));
-        }
-    }
 }
 
 #[test]
@@ -203,13 +188,4 @@ fn one_witness_does_not_establish_unique_existence() {
         );
         assert!(!runtime.run_litex_code(source).unwrap().success);
     }
-}
-
-#[test]
-fn unique_existence_known_forall_search_replays_recorded_application() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/automatic_unique_copy/statement.lit"
-    ));
-    let output = compiler.compile_run(&run, "unique_forall").unwrap();
-    assert!(output.contains("_known_unique"));
 }

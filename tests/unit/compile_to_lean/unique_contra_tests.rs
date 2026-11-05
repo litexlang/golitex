@@ -3,17 +3,34 @@ use crate::execute::execute_by_stmt::{
     ExecByContraStmtResult, ExecByContraStmtSuccess, ExecByStmtResult,
 };
 use crate::prelude::*;
-
-const SINGLE: &str =
-    include_str!("../../../lean/examples/unique_singleton_by_contradiction/statement.lit");
-const PAIR: &str =
-    include_str!("../../../lean/examples/unique_pair_by_contradiction/statement.lit");
-const GUARDED: &str =
-    include_str!("../../../lean/examples/unique_guarded_value_by_contradiction/statement.lit");
-const DEPENDENT: &str =
-    include_str!("../../../lean/examples/unique_dependent_pair_by_contradiction/statement.lit");
-const GENERIC: &str =
-    include_str!("../../../lean/examples/unique_copy_by_contradiction/statement.lit");
+const PAIR: &str = r#"# Prove by contradiction that the real coordinates (0, 1) form a unique pair.
+by contra:
+    ? exist! x R, y R st {x = 0, y = 1}
+    obtain a, b from exist u R, v R st {u = 0, v = 1, u != 0 or v != 1}
+    impossible a != 0 or b != 1
+"#;
+const GUARDED: &str = r#"# Prove uniqueness of a nonzero real value while preserving its reciprocal WD.
+by contra:
+    ? exist! x R st {x != 0, x = 2, 1 / x = 1 / 2}
+    obtain a from exist y R st {y != 0, y = 2, 1 / y = 1 / 2, y != 2}
+    impossible a != 2
+"#;
+const DEPENDENT: &str = r#"# Prove a unique pair when the second coordinate belongs to the first's singleton.
+by contra:
+    ? exist! x {7}, y {x} st {y = x}
+    obtain a, b from exist u {7}, v {u} st {v = u, u != 7 or v != 7}
+    impossible a != 7 or b != 7
+"#;
+const GENERIC: &str = r#"# Prove unique copies for arbitrary real inputs, then invoke the theorem.
+thm unique_copy:
+    ? forall seed R:
+        exist! x R st {x = seed}
+    by contra:
+        ? exist! x R st {x = seed}
+        obtain other from exist y R st {y = seed, y != seed}
+        impossible other != seed
+by thm unique_copy(3)
+"#;
 
 fn contra(run: &mut RunLitexCodeResult) -> &mut ExecByContraStmtSuccess {
     let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(p))) =
@@ -22,30 +39,6 @@ fn contra(run: &mut RunLitexCodeResult) -> &mut ExecByContraStmtSuccess {
         panic!("contra")
     };
     p
-}
-
-#[test]
-fn unique_contra_replays_single_pair_guard_and_generic_theorem() {
-    for source in [
-        SINGLE,
-        PAIR,
-        GUARDED,
-        DEPENDENT,
-        GENERIC,
-        include_str!("../../../lean/examples/unique_set_copy_by_contradiction/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "unique_contra").unwrap();
-        assert!(output.contains("_no_alternative"));
-        assert!(output.contains("Litex.semanticObject"));
-        assert!(!output.contains("sorry"));
-        assert_eq!(output, compiler.compile_run(&run, "unique_contra").unwrap());
-        if source == PAIR {
-            assert!(output.contains("Litex.FiniteFunction.tupleValue"));
-            assert!(output.contains("Or.inl _different"));
-            assert!(output.contains("Or.inr _different"));
-        }
-    }
 }
 
 #[test]

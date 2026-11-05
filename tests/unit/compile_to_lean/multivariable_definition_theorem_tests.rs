@@ -1,23 +1,17 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
 use crate::prelude::*;
-const FIXED: &str =
-    include_str!("../../../lean/examples/multivariable_limit_builtin_definition/statement.lit");
-const GENERIC: &str = include_str!(
-    "../../../lean/examples/multivariable_limit_generic_builtin_definition/statement.lit"
-);
-#[test]
-fn multivariable_definition_replays_original_complete_domain_and_both_clauses() {
-    for source in [FIXED, GENERIC] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "multi_definition").unwrap();
-        assert!(output.contains("Litex.multivariableScalarLimitOfClauses"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "multi_definition").unwrap()
-        );
-    }
-}
+const FIXED: &str = r#"# Accumulation and epsilon-delta control give a Euclidean scalar limit.
+thm checked_multivariable_limit_by_builtin_definition:
+    ? forall f fn(x cart_n(R, 2)) R, p cart_n(R, 2), L R:
+        forall radius R+:
+            exist x cart_n(R, 2) st {0 < euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2), euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2) < radius}
+        forall epsilon R+:
+            exist delta R+ st {{x cart_n(R, 2): 0 < euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2), euclidean_norm(fn(k closed_range(1, 2)) R{x(k) - p(k)}, 2) < delta} $subset {y cart_n(R, 2): abs(f(y) - L) < epsilon}}
+        =>:
+            $has_multi_limit_at(f, p, 2, L)
+    release thm multi_limit_at_from_definition(f, p, 2, L)
+"#;
 #[test]
 fn multivariable_definition_preserves_all_six_proof_store_and_formation_stages() {
     for change in [

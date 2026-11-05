@@ -2,12 +2,24 @@ use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
 
-const GENERIC: &str =
-    include_str!("../../../lean/examples/inner_product_linear_right_theorem/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/inner_product_linear_right_selected/statement.lit");
-const EMPTY: &str =
-    include_str!("../../../lean/examples/inner_product_linear_right_empty/statement.lit");
+const GENERIC: &str = r#"# The complex inner product is linear in its second vector.
+thm checked_inner_product_linear_right:
+    ? forall n N, u, v, w cart_n(C, n), a, b C:
+        inner_product(u, fn(k closed_range(1, n)) C{a * v(k) + b * w(k)}, n) = a * inner_product(u, v, n) + b * inner_product(u, w, n)
+    release thm inner_product_linear_right(u, v, w, a, b, n)
+"#;
+const SELECTED: &str = r#"# Select the original builtin equality for linearity in the second vector.
+thm checked_inner_product_linear_right_selected:
+    ? forall n N, u, v, w cart_n(C, n), a, b C:
+        inner_product(u, fn(k closed_range(1, n)) C{a * v(k) + b * w(k)}, n) = a * inner_product(u, v, n) + b * inner_product(u, w, n)
+    by thm inner_product_linear_right(u, v, w, a, b, n) => inner_product(u, fn(k closed_range(1, n)) C{a * v(k) + b * w(k)}, n) = a * inner_product(u, v, n) + b * inner_product(u, w, n)
+"#;
+const EMPTY: &str = r#"# Linearity also holds for vectors with an empty coordinate domain.
+thm checked_inner_product_linear_right_empty:
+    ? forall u, v, w cart_n(C, 0), a, b C:
+        inner_product(u, fn(k closed_range(1, 0)) C{a * v(k) + b * w(k)}, 0) = a * inner_product(u, v, 0) + b * inner_product(u, w, 0)
+    release thm inner_product_linear_right(u, v, w, a, b, 0)
+"#;
 
 #[test]
 fn inner_linear_replays_release_selected_and_empty_dimension() {
@@ -173,7 +185,12 @@ fn inner_linear_rejects_future_conclusion_citation() {
 #[test]
 fn inner_alpha_requires_exact_free_vectors_dimension_domain_and_coordinate_body() {
     use super::super::source_position::{SourceOwner, SourcePosition};
-    let source = include_str!("../../../lean/examples/vector_bound_names/statement.lit");
+    let source = r#"# Renaming a coordinate binder preserves a finite inner product.
+thm checked_vector_bound_names:
+    ? forall n N, u, v cart_n(C, n), a C:
+        inner_product(u, fn(k closed_range(1, n)) C{a * v(k)}, n) = inner_product(u, fn(j closed_range(1, n)) C{a * v(j)}, n)
+    inner_product(u, fn(k closed_range(1, n)) C{a * v(k)}, n) = inner_product(u, fn(j closed_range(1, n)) C{a * v(j)}, n)
+"#;
     let (run, compiler) = super::execute(source);
     compiler.compile_run(&run, "vector_alpha").unwrap();
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(

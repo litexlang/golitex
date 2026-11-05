@@ -2,17 +2,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetForm
 use crate::prelude::*;
 
 #[test]
-fn disjunctive_set_builders_replay_formation_membership_projection_and_capture() {
-    for source in [
-        include_str!("../../../lean/examples/disjunctive_set_builder/statement.lit"),
-        include_str!("../../../lean/examples/guarded_disjunctive_set/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "disjunctive_set").expect(source);
-    }
-}
-
-#[test]
 fn disjunctive_set_formation_requires_every_original_ordered_branch() {
     for change in 0..2 {
         let (mut run, compiler) =

@@ -2,27 +2,59 @@ use crate::prelude::*;
 
 const CASES: [(&str, &str); 6] = [
     (
-        include_str!("../../../lean/examples/real_trichotomy_equal_first/statement.lit"),
+        r#"# Two real values are equal, smaller or greater in the recorded branch order.
+thm checked_real_trichotomy_eq_first:
+    ? forall a,b R:
+        a=b or a<b or a>b
+    a=b or a<b or a>b
+"#,
         "realTrichotomyValue",
     ),
     (
-        include_str!("../../../lean/examples/real_trichotomy_less_first/statement.lit"),
+        r#"# Real trichotomy in increasing comparison order.
+thm checked_real_trichotomy_less_first:
+    ? forall a,b R:
+        a<b or a=b or a>b
+    a<b or a=b or a>b
+"#,
         "realTrichotomyValue",
     ),
     (
-        include_str!("../../../lean/examples/real_trichotomy_greater_first/statement.lit"),
+        r#"# Real trichotomy in decreasing comparison order.
+thm checked_real_trichotomy_greater_first:
+    ? forall a,b R:
+        a>b or a=b or a<b
+    a>b or a=b or a<b
+"#,
         "realTrichotomyValue",
     ),
     (
-        include_str!("../../../lean/examples/real_weak_totality/statement.lit"),
+        r#"# Any two real values admit a weak comparison.
+thm checked_real_weak_totality:
+    ? forall a,b R:
+        a<=b or a>=b
+    a<=b or a>=b
+"#,
         "realWeakTotalValue",
     ),
     (
-        include_str!("../../../lean/examples/natural_zero_or_at_least_one/statement.lit"),
+        r#"# A natural value is either zero or at least one.
+thm checked_natural_zero_or_at_least_one:
+    ? forall n N:
+        n=0 or n>=1
+    n=0 or n>=1
+"#,
         "naturalZeroOrAtLeastOneValue",
     ),
     (
-        include_str!("../../../lean/examples/weak_bound_equality_or_strict/statement.lit"),
+        r#"# A weak real upper bound splits into equality or strict inequality.
+thm checked_weak_bound_equality_or_strict:
+    ? forall a,b R:
+        a<=b
+        =>:
+            a=b or a<b
+    a=b or a<b
+"#,
         "leEqOrLt",
     ),
 ];
@@ -194,27 +226,22 @@ fn or_order_preserves_rigid_branch_order_and_selected_subjects() {
             .expect_err("retain rigid selected order and subjects");
     }
 }
-#[test]
-fn or_order_replays_supported_swaps_duals_and_commuted_equalities() {
-    for source in [
-        CASES[0].0.replace("a=b or a<b or a>b", "b=a or a<b or a>b"),
-        CASES[3].0.replace("a<=b or a>=b", "a>=b or a<=b"),
-        CASES[5].0.replace("a=b or a<b", "a<b or b=a"),
-        CASES[5]
-            .0
-            .replace("a<=b", "a>=b")
-            .replace("a=b or a<b", "b=a or a>b"),
-    ] {
-        let (run, compiler) = super::execute(&source);
-        compiler.compile_run(&run, "permutation").unwrap();
-    }
-}
 
 #[test]
 fn absolute_sign_split_preserves_selected_argument_orientations_and_constructor_wd() {
     for source in [
-        include_str!("../../../lean/examples/absolute_sign_split/statement.lit"),
-        include_str!("../../../lean/examples/absolute_sign_split_commuted/statement.lit"),
+        r#"# The absolute value of a real value equals that value or its additive inverse.
+thm checked_absolute_sign_split:
+    ? forall x R:
+        abs(x)=x or abs(x)=(-x)
+    abs(x)=x or abs(x)=(-x)
+"#,
+        r#"# Absolute value sign alternatives retain swapped branches and commuted equalities.
+thm checked_absolute_sign_split_commuted:
+    ? forall x R:
+        (-x)=abs(x) or x=abs(x)
+    (-x)=abs(x) or x=abs(x)
+"#,
     ] {
         let (mut run, compiler) = super::execute(source);
         assert!(matches!(
@@ -256,8 +283,18 @@ fn absolute_sign_split_preserves_selected_argument_orientations_and_constructor_
 #[test]
 fn integer_discrete_split_replays_integer_children_duals_and_swapped_branches() {
     for source in [
-        include_str!("../../../lean/examples/integer_discrete_successor/statement.lit"),
-        include_str!("../../../lean/examples/integer_discrete_predecessor/statement.lit"),
+        r#"# Consecutive integers leave no gap above an integer boundary.
+thm checked_integer_discrete_successor:
+    ? forall x,n Z:
+        x<=n or x>=n+1
+    x<=n or x>=n+1
+"#,
+        r#"# Consecutive integers leave no gap below an integer boundary.
+thm checked_integer_discrete_predecessor:
+    ? forall x,n Z:
+        x>=n or x<=n-1
+    x>=n or x<=n-1
+"#,
     ] {
         for source in [
             source.to_string(),

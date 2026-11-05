@@ -293,7 +293,7 @@ fn full_add2_chain_and_projection_boundaries() {
         "by_matching_one_arg_by_one",
         "by_closed_calculation",
         "domain_fn_set",
-        "TupleProjection",
+        "known_path",
     ] {
         assert!(detailed.contains(node), "{node}");
     }

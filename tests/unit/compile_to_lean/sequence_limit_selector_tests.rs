@@ -3,8 +3,14 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::execute::execute_proof_block_stmt::{ExecClaimBodyProof, ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::prelude::*;
 
-const SELECTED: &str =
-    include_str!("../../../lean/examples/sequence_limit_selected_value/statement.lit");
+const SELECTED: &str = r#"# A proved real sequence limit is the value of the limit object.
+claim:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            lim(a) = L
+    lim(a) = L
+"#;
 
 fn selected(run: &mut RunLitexCodeResult) -> &mut crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::VerifyEqualitySuccess{
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
@@ -32,10 +38,38 @@ fn selected(run: &mut RunLitexCodeResult) -> &mut crate::execute::execute_fact_s
 fn sequence_limit_replays_candidate_and_both_signature_shapes() {
     for source in [
         SELECTED,
-        include_str!("../../../lean/examples/sequence_limit_function_signature/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_reverse_equality/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_exists_object/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limit_real/statement.lit"),
+        r#"# A unary positive-natural real function has the same limit contract.
+claim:
+    ? forall a fn(k N+) R, L R:
+        $has_seq_limit(a,L)
+        =>:
+            lim(a) = L
+    lim(a) = L
+"#,
+        r#"# The selected limit equals its proved value in the reversed orientation.
+claim:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            L = lim(a)
+    L = lim(a)
+"#,
+        r#"# A real sequence with an existing limit has a well-defined limit object.
+claim:
+    ? forall a seq(R):
+        exist L R st {$has_seq_limit(a,L)}
+        =>:
+            $is_set(lim(a))
+    $is_set(lim(a))
+"#,
+        r#"# A proved real sequence limit is real.
+claim:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a,L)
+        =>:
+            lim(a) $in R
+    lim(a) $in R
+"#,
     ] {
         let (run, compiler) = super::execute(source);
         let lean = compiler.compile_run(&run, "sequence_limit").expect(source);
@@ -97,10 +131,24 @@ fn sequence_limit_without_convergence_is_not_well_defined() {
 #[test]
 fn sequence_limit_uniqueness_replays_both_candidate_citations() {
     for source in [
-        include_str!("../../../lean/examples/sequence_limit_unique/statement.lit"),
-        include_str!(
-            "../../../lean/examples/sequence_limit_unique_function_signature/statement.lit"
-        ),
+        r#"# Two proved real limits of the same sequence are equal.
+claim:
+    ? forall a seq(R), L R, K R:
+        $has_seq_limit(a,L)
+        $has_seq_limit(a,K)
+        =>:
+            L = K
+    L = K
+"#,
+        r#"# Two proved real limits of the same sequence are equal.
+claim:
+    ? forall a fn(k N+) R, L R, K R:
+        $has_seq_limit(a,L)
+        $has_seq_limit(a,K)
+        =>:
+            L = K
+    L = K
+"#,
     ] {
         let (mut run, compiler) = super::execute(source);
         assert!(matches!(
@@ -118,7 +166,15 @@ fn sequence_limit_uniqueness_replays_both_candidate_citations() {
 
 #[test]
 fn sequence_limit_uniqueness_rejects_a_changed_candidate() {
-    let source = include_str!("../../../lean/examples/sequence_limit_unique/statement.lit");
+    let source = r#"# Two proved real limits of the same sequence are equal.
+claim:
+    ? forall a seq(R), L R, K R:
+        $has_seq_limit(a,L)
+        $has_seq_limit(a,K)
+        =>:
+            L = K
+    L = K
+"#;
     let (mut run, compiler) = super::execute(source);
     let EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLimit(
         SequenceLimitEqualityProof::Uniqueness(p),
@@ -138,7 +194,15 @@ fn sequence_limit_uniqueness_rejects_a_changed_candidate() {
 #[test]
 fn sequence_limit_uniqueness_rejects_invalid_citation() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactSearchedProof;
-    let source = include_str!("../../../lean/examples/sequence_limit_unique/statement.lit");
+    let source = r#"# Two proved real limits of the same sequence are equal.
+claim:
+    ? forall a seq(R), L R, K R:
+        $has_seq_limit(a,L)
+        $has_seq_limit(a,K)
+        =>:
+            L = K
+    L = K
+"#;
     let (mut run, compiler) = super::execute(source);
     let EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::SequenceLimit(
         SequenceLimitEqualityProof::Uniqueness(p),

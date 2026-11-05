@@ -24,27 +24,13 @@ fn sequence_wd(run: &mut RunLitexCodeResult) -> &mut FiniteSeqSetObjWellDefinedP
 }
 
 #[test]
-fn finite_sequence_spaces_keep_generic_carriers_lengths_and_child_references() {
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/finite_sequence_spaces/statement.lit"
-    ));
-    let output = compiler
-        .compile_run(&run, "finite_sequence_spaces")
-        .unwrap();
-    assert!(output.contains("Litex.finiteSeq"));
-    assert_eq!(
-        output,
-        compiler
-            .compile_run(&run, "finite_sequence_spaces")
-            .unwrap()
-    );
-}
-
-#[test]
 fn finite_sequence_coordinates_replay_original_function_membership() {
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/finite_sequence_coordinates/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# A finite sequence returns an element of its carrier at every legal index.
+forall A set, n N, f finite_seq(A, n), k closed_range(1, n):
+    f(k) $in A
+"#,
+    );
     let id = expansion(&mut run).derived.primary_fact_id();
     let output = compiler
         .compile_run(&run, "finite_sequence_coordinates")
@@ -84,9 +70,12 @@ fn expansion(
 #[test]
 fn finite_sequence_expansion_rejects_changed_receiver_domain_length_range_and_store_id() {
     for mutation in 0..5 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/finite_sequence_coordinates/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# A finite sequence returns an element of its carrier at every legal index.
+forall A set, n N, f finite_seq(A, n), k closed_range(1, n):
+    f(k) $in A
+"#,
+        );
         let p = expansion(&mut run);
         let StoreFactResult::AtomicFact(stored) = &mut p.derived.store else {
             panic!("membership")

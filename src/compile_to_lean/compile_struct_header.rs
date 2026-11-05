@@ -92,7 +92,7 @@ impl LitexToLeanCompiler {
         proof: &StructObjObjWellDefinedProof,
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        let (declaration, _, _) = position.visible_struct(&object.name)?;
+        let (declaration, _, _) = position.visible_struct(&object.name, &self.runtime)?;
         validate_struct(declaration)?;
         let subst = header_substitution(&declaration.statement, object)?;
         let params = declaration
@@ -173,10 +173,11 @@ impl LitexToLeanCompiler {
         family: &str,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, producer, index) = position.visible_struct(&object.name)?;
+        let (declaration, producer, index) =
+            position.visible_struct(&object.name, &self.runtime)?;
         validate_struct(declaration)?;
         header_substitution(&declaration.statement, object)?;
-        let name = self.context_application(&format!("{family}_{}", index + 1), &producer);
+        let name = position.declaration_reference(&format!("{family}_{}", index + 1), &producer)?;
         if declaration.statement.param_def_with_dom.is_none() {
             return Ok(name);
         }
@@ -189,7 +190,7 @@ impl LitexToLeanCompiler {
         object: &StructObj,
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        let (declaration, _, _) = position.visible_struct(&object.name)?;
+        let (declaration, _, _) = position.visible_struct(&object.name, &self.runtime)?;
         validate_struct(declaration)?;
         header_substitution(&declaration.statement, object)?;
         if object.params.is_empty() {
@@ -197,8 +198,8 @@ impl LitexToLeanCompiler {
         }
         let source =
             Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(object.clone()));
-        position
-            .with_visible_wd(&source, &mut |wd, producer| {
+        let checked =
+            position.with_visible_wd(&source, &mut |wd, producer| {
                 let DetailedObjWellDefinedProof::ByDef {
                     proof:
                         ObjWellDefinedProofByDef::Structish(
@@ -211,16 +212,20 @@ impl LitexToLeanCompiler {
                 };
                 let cursor = SourcePosition::new(Some(producer), SourceOwner::WD(wd), 0);
                 self.compile_struct_arguments(object, p, &cursor)
-            })?
-            .ok_or_else(|| {
-                LeanCompileError::new(
-                    "Struct/ArgumentProducer",
-                    &format!(
-                        "No original argument evidence is visible for {}.",
-                        source.ir()
-                    ),
-                )
-            })
+            })?;
+        if let Some(arguments) = checked {
+            return Ok(arguments);
+        }
+        if let Some(arguments) = self.compile_declared_struct_arguments(object, position)? {
+            return Ok(arguments);
+        }
+        Err(LeanCompileError::new(
+            "Struct/ArgumentProducer",
+            &format!(
+                "No original argument evidence is visible for {}.",
+                source.ir()
+            ),
+        ))
     }
 
     pub(super) fn struct_header_raw_bindings(

@@ -23,10 +23,63 @@ fn check(rt: &mut Runtime, source: &str, expected: bool) -> String {
 #[test]
 fn native_matrix_determinant_formulas_forward_reverse_and_boundaries() {
     for source in [
-        include_str!("../../../../examples/test_objs/native_matrix_determinant_formulas.lit"),
-        include_str!(
-            "../../../../lean/examples/native_matrix_determinant_formulas_reverse/statement.lit"
-        ),
+        r#"# Direct determinant formulas reuse the existing native mathematical contracts.
+# Previously the first theorem needed this proof statement:
+#     release thm matrix_det_upper_triangular(A,n)
+# Focused check: target/release/litex -strict -lang en -f examples/test_objs/native_matrix_determinant_formulas.lit
+
+thm direct_det_upper:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            col<row
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+
+thm direct_det_lower:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            row<col
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+
+thm direct_det_row:
+    ? forall n N+, A matrix(C,n,n), row closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(row,k)*matrix_cofactor(A,n,row,k)})
+
+thm direct_det_column:
+    ? forall n N+, A matrix(C,n,n), col closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,col)*matrix_cofactor(A,n,k,col)})
+"#,
+        r#"thm direct_det_upper_reverse:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            col<row
+            =>:
+                A(row,col)=0
+        =>:
+            finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})=det(A,n)
+
+thm direct_det_lower_reverse:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            row<col
+            =>:
+                A(row,col)=0
+        =>:
+            finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})=det(A,n)
+
+thm direct_det_row_reverse:
+    ? forall n N+, A matrix(C,n,n), row closed_range(1,n):
+        finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(row,k)*matrix_cofactor(A,n,row,k)})=det(A,n)
+
+thm direct_det_column_reverse:
+    ? forall n N+, A matrix(C,n,n), col closed_range(1,n):
+        finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,col)*matrix_cofactor(A,n,k,col)})=det(A,n)
+"#,
     ] {
         let json = check(&mut runtime(), source, true);
         for rule in [
@@ -42,9 +95,102 @@ fn native_matrix_determinant_formulas_forward_reverse_and_boundaries() {
         }
         assert!(json.contains("requirement_proofs"));
     }
-    let boundaries = include_str!(
-        "../../../../lean/examples/native_matrix_determinant_boundaries/statement.lit"
-    );
+    let boundaries = r#"# The triangular determinant identity holds at this carrier and finite order.
+thm direct_matrix_det_upper_triangular_real:
+    ? forall n N, A matrix(R,n,n):
+        forall row, col closed_range(1,n):
+            col<row
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+    A $in matrix(C,n,n)
+
+# The triangular determinant identity holds at this carrier and finite order.
+thm direct_matrix_det_lower_triangular_real:
+    ? forall n N, A matrix(R,n,n):
+        forall row, col closed_range(1,n):
+            row<col
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+    A $in matrix(C,n,n)
+
+# The triangular determinant identity holds at this carrier and finite order.
+thm direct_matrix_det_upper_triangular_empty:
+    ? forall A matrix(C,0,0):
+        forall row, col closed_range(1,0):
+            col<row
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,0)=finite_set_product(closed_range(1,0),fn(k closed_range(1,0)) C{A(k,k)})
+
+# The triangular determinant identity holds at this carrier and finite order.
+thm direct_matrix_det_lower_triangular_empty:
+    ? forall A matrix(C,0,0):
+        forall row, col closed_range(1,0):
+            row<col
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,0)=finite_set_product(closed_range(1,0),fn(k closed_range(1,0)) C{A(k,k)})
+
+# The triangular determinant identity holds at this carrier and finite order.
+thm direct_matrix_det_upper_triangular_zero_matrix:
+    ? forall n N:
+        det(zero_matrix(n,n),n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{zero_matrix(n,n)(k,k)})
+    zero_matrix(n,n) $in matrix(C,n,n)
+    forall row,col closed_range(1,n):
+        col<row
+        =>:
+            (zero_matrix(n,n))(row,col)=0
+
+# The triangular determinant identity holds at this carrier and finite order.
+thm direct_matrix_det_lower_triangular_zero_matrix:
+    ? forall n N:
+        det(zero_matrix(n,n),n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{zero_matrix(n,n)(k,k)})
+    zero_matrix(n,n) $in matrix(C,n,n)
+    forall row,col closed_range(1,n):
+        row<col
+        =>:
+            (zero_matrix(n,n))(row,col)=0
+
+# Expand a real square matrix determinant along a chosen row.
+thm direct_matrix_det_laplace_row_real:
+    ? forall n N+, A matrix(R,n,n), row closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(row,k)*matrix_cofactor(A,n,row,k)})
+    A $in matrix(C,n,n)
+
+# Expand a real square matrix determinant along a chosen column.
+thm direct_matrix_det_laplace_column_real:
+    ? forall n N+, A matrix(R,n,n), col closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,col)*matrix_cofactor(A,n,k,col)})
+    A $in matrix(C,n,n)
+
+# Expand a one by one matrix determinant along a chosen row.
+thm direct_matrix_det_laplace_row_one:
+    ? forall A matrix(C,1,1):
+        det(A,1)=finite_set_sum(closed_range(1,1),fn(k closed_range(1,1)) C{A(1,k)*matrix_cofactor(A,1,1,k)})
+
+# Expand a one by one matrix determinant along a chosen column.
+thm direct_matrix_det_laplace_column_one:
+    ? forall A matrix(C,1,1):
+        det(A,1)=finite_set_sum(closed_range(1,1),fn(k closed_range(1,1)) C{A(k,1)*matrix_cofactor(A,1,k,1)})
+
+# Expand a zero matrix determinant along a chosen row.
+thm direct_matrix_det_laplace_row_zero_matrix:
+    ? forall n N+, row closed_range(1,n):
+        det(zero_matrix(n,n),n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{zero_matrix(n,n)(row,k)*matrix_cofactor(zero_matrix(n,n),n,row,k)})
+    zero_matrix(n,n) $in matrix(C,n,n)
+
+# Expand a zero matrix determinant along a chosen column.
+thm direct_matrix_det_laplace_column_zero_matrix:
+    ? forall n N+, col closed_range(1,n):
+        det(zero_matrix(n,n),n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{zero_matrix(n,n)(k,col)*matrix_cofactor(zero_matrix(n,n),n,k,col)})
+    zero_matrix(n,n) $in matrix(C,n,n)
+"#;
     // Each profile must work independently of earlier exported generic theorems.
     for block in boundaries.split("thm ").skip(1) {
         let source = format!("thm {block}");
@@ -107,8 +253,37 @@ fn native_matrix_determinant_formulas_respect_inherited_ceiling() {
 
 #[test]
 fn native_matrix_determinant_formulas_all_languages_retain_rule_identity() {
-    let source =
-        include_str!("../../../../examples/test_objs/native_matrix_determinant_formulas.lit");
+    let source = r#"# Direct determinant formulas reuse the existing native mathematical contracts.
+# Previously the first theorem needed this proof statement:
+#     release thm matrix_det_upper_triangular(A,n)
+# Focused check: target/release/litex -strict -lang en -f examples/test_objs/native_matrix_determinant_formulas.lit
+
+thm direct_det_upper:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            col<row
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+
+thm direct_det_lower:
+    ? forall n N, A matrix(C,n,n):
+        forall row, col closed_range(1,n):
+            row<col
+            =>:
+                A(row,col)=0
+        =>:
+            det(A,n)=finite_set_product(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,k)})
+
+thm direct_det_row:
+    ? forall n N+, A matrix(C,n,n), row closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(row,k)*matrix_cofactor(A,n,row,k)})
+
+thm direct_det_column:
+    ? forall n N+, A matrix(C,n,n), col closed_range(1,n):
+        det(A,n)=finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C{A(k,col)*matrix_cofactor(A,n,k,col)})
+"#;
     for language in OutputLanguage::ALL {
         let mut rt = Runtime::new_with_result_detail(
             LaunchCommand::Eval {

@@ -1,22 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn jacobians_replay_rectangular_selection_existence_and_definition() {
-    for source in [
-        include_str!("../../../lean/examples/jacobian_selection/statement.lit"),
-        include_str!("../../../lean/examples/jacobian_generic_dimensions/statement.lit"),
-        include_str!("../../../lean/examples/jacobian_existence/statement.lit"),
-        include_str!("../../../lean/examples/jacobian_guarded_domain/statement.lit"),
-        include_str!("../../../lean/examples/jacobian_negative_citation/statement.lit"),
-        include_str!("../../../lean/examples/jacobian_from_partials/statement.lit"),
-        include_str!("../../../lean/examples/jacobian_nested_objects/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "jacobian_replay").expect(source);
-    }
-}
-
-#[test]
 fn jacobians_reject_changed_domains_dimensions_and_inference_subjects() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -24,9 +8,16 @@ fn jacobians_reject_changed_domains_dimensions_and_inference_subjects() {
         InferAtomicFactResult, InferMultivariableAnalysisFactResult, InferResult,
     };
     for mutation in 0..4 {
-        let (mut run, c) = super::execute(include_str!(
-            "../../../lean/examples/jacobian_selection/statement.lit"
-        ));
+        let (mut run, c) = super::execute(
+            r#"# Select a rectangular Jacobian from its coordinate partial derivatives.
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), J matrix(R,3,2):
+    $has_jacobian_at(f,p,2,3,J)
+    =>:
+        jacobian(f,p,2,3)=J
+        jacobian(f,p,2,3) $in matrix(R,3,2)
+        jacobian(f,p,2,3)(1,2) $in R
+"#,
+        );
         let root = super::forall_proof_mut(&mut run.statement_results[0]);
         if mutation < 2 {
             let FactWellDefinedProof::AtomicExceptEquality(p) =
@@ -82,9 +73,16 @@ fn jacobians_require_all_original_constructor_arguments() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
         DetailedObjWellDefinedProof, ObjWellDefinedProofByDef,
     };
-    let (mut run, c) = super::execute(include_str!(
-        "../../../lean/examples/jacobian_selection/statement.lit"
-    ));
+    let (mut run, c) = super::execute(
+        r#"# Select a rectangular Jacobian from its coordinate partial derivatives.
+forall f fn(x cart_n(R,2)) cart_n(R,3), p cart_n(R,2), J matrix(R,3,2):
+    $has_jacobian_at(f,p,2,3,J)
+    =>:
+        jacobian(f,p,2,3)=J
+        jacobian(f,p,2,3) $in matrix(R,3,2)
+        jacobian(f,p,2,3)(1,2) $in R
+"#,
+    );
     let root = super::forall_proof_mut(&mut run.statement_results[0]);
     let equal = super::equality_proof_mut(&mut root.proved_then_facts[0].verify_result);
     let DetailedObjWellDefinedProof::ByDef {

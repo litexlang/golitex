@@ -11,13 +11,38 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const SIN: &str = include_str!("../../../lean/examples/sine_nonzero_under_negation/statement.lit");
-const COS: &str =
-    include_str!("../../../lean/examples/cosine_nonzero_under_negation/statement.lit");
-const SIN_ZERO: &str =
-    include_str!("../../../lean/examples/sine_nonzero_under_zero_subtraction/statement.lit");
-const COS_ZERO: &str =
-    include_str!("../../../lean/examples/cosine_nonzero_under_zero_subtraction/statement.lit");
+const SIN: &str = r#"# A nonzero sine stays nonzero when its real argument is negated.
+claim:
+    ? forall t R:
+        sin(t) != 0
+        =>:
+            sin(-t) != 0
+    sin(-t) != 0
+"#;
+const COS: &str = r#"# A nonzero cosine stays nonzero when its real argument is negated.
+claim:
+    ? forall t R:
+        cos(t) != 0
+        =>:
+            cos(-t) != 0
+    cos(-t) != 0
+"#;
+const SIN_ZERO: &str = r#"# Zero differs from sine after subtracting a nonzero-sine argument from zero.
+claim:
+    ? forall t R:
+        0 != sin(t)
+        =>:
+            0 != sin(0-t)
+    0 != sin(0-t)
+"#;
+const COS_ZERO: &str = r#"# Zero differs from cosine after subtracting a nonzero-cosine argument from zero.
+claim:
+    ? forall t R:
+        0 != cos(t)
+        =>:
+            0 != cos(0-t)
+    0 != cos(0-t)
+"#;
 
 fn selected_premise(
     run: &mut RunLitexCodeResult,

@@ -5,16 +5,26 @@ use crate::prelude::*;
 use crate::execute::execute_by_stmt::ExecReleaseThmStmtResult;
 use crate::execute::ExecReleaseAndExpandStmtResult;
 
-const SYMMETRY: &str =
-    include_str!("../../../lean/examples/native_inner_product_symmetry/statement.lit");
-const NORM: &str =
-    include_str!("../../../lean/examples/native_euclidean_norm_square/statement.lit");
-const REAL: &str =
-    include_str!("../../../lean/examples/native_euclidean_norm_real_vector/statement.lit");
-const EXPLICIT_S: &str =
-    include_str!("../../../lean/examples/inner_product_conjugate_symmetry/statement.lit");
-const EXPLICIT_N: &str =
-    include_str!("../../../lean/examples/euclidean_norm_square_inner/statement.lit");
+const SYMMETRY: &str = r#"forall replay_dimension N, replay_left, replay_right cart_n(C, replay_dimension):
+    conj(inner_product(replay_right, replay_left, replay_dimension)) = inner_product(replay_left, replay_right, replay_dimension)
+"#;
+const NORM: &str = r#"forall replay_dimension N, replay_vector cart_n(C, replay_dimension):
+    euclidean_norm(replay_vector, replay_dimension)^2 = inner_product(replay_vector, replay_vector, replay_dimension)
+"#;
+const REAL: &str = r#"forall replay_dimension N, replay_vector cart_n(R, replay_dimension):
+    replay_vector $in cart_n(C, replay_dimension)
+    euclidean_norm(replay_vector, replay_dimension)^2 = inner_product(replay_vector, replay_vector, replay_dimension)
+"#;
+const EXPLICIT_S: &str = r#"thm replay_inner_symmetry:
+    ? forall replay_dimension N, replay_left, replay_right cart_n(C, replay_dimension):
+        inner_product(replay_left, replay_right, replay_dimension) = conj(inner_product(replay_right, replay_left, replay_dimension))
+    release thm inner_product_conjugate_symmetry(replay_left, replay_right, replay_dimension)
+"#;
+const EXPLICIT_N: &str = r#"thm replay_euclidean_square:
+    ? forall replay_dimension N, replay_vector cart_n(C, replay_dimension):
+        euclidean_norm(replay_vector, replay_dimension)^2 = inner_product(replay_vector, replay_vector, replay_dimension)
+    release thm euclidean_norm_square(replay_vector, replay_dimension)
+"#;
 
 fn selected(statement: &mut ExecStmtResult) -> &mut MatrixLawApplicationProof {
     selected_at(statement, 0)

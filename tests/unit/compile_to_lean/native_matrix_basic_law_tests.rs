@@ -3,14 +3,18 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 };
 use crate::prelude::*;
 
-const POWER_ZERO: &str =
-    include_str!("../../../lean/examples/native_matrix_power_zero/statement.lit");
-const POWER_NEXT: &str =
-    include_str!("../../../lean/examples/native_matrix_power_successor/statement.lit");
-const RANK_ZERO: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_zero/statement.lit");
-const RANK_ID: &str =
-    include_str!("../../../lean/examples/native_matrix_rank_identity/statement.lit");
+const POWER_ZERO: &str = r#"forall replay_order N, replay_matrix matrix(C, replay_order, replay_order):
+    matrix_power(replay_matrix, replay_order, 0) = identity_matrix(replay_order)
+"#;
+const POWER_NEXT: &str = r#"forall replay_order, replay_exponent N, replay_matrix matrix(C, replay_order, replay_order):
+    matrix_power(replay_matrix, replay_order, replay_exponent + 1) = matrix_mul(matrix_power(replay_matrix, replay_order, replay_exponent), replay_matrix, replay_order, replay_order, replay_order)
+"#;
+const RANK_ZERO: &str = r#"forall replay_rows, replay_cols N:
+    matrix_rank(zero_matrix(replay_rows, replay_cols), replay_rows, replay_cols) = 0
+"#;
+const RANK_ID: &str = r#"forall replay_order N:
+    replay_order = matrix_rank(identity_matrix(replay_order), replay_order, replay_order)
+"#;
 
 fn selected(statement: &mut ExecStmtResult) -> &mut MatrixLawApplicationProof {
     let all = super::forall_proof_mut(statement);

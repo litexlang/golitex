@@ -3,10 +3,46 @@ use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSucc
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/matrix_trace_evaluation/statement.lit"),
-    include_str!("../../../lean/examples/finite_inner_product_evaluation/statement.lit"),
-    include_str!("../../../lean/examples/frobenius_norm_evaluation/statement.lit"),
-    include_str!("../../../lean/examples/euclidean_norm_evaluation/statement.lit"),
+    r#"# Evaluate diagonal sums, then use a computed trace in a guarded reciprocal.
+have fn diagonal_sum_matrix(r,c closed_range(1,2)) R = r + c
+
+trace(diagonal_sum_matrix,2) = 6
+
+have fn reciprocal_score(x R: x != 0) R = 1 / x
+
+reciprocal_score(trace(diagonal_sum_matrix,2)) = 1/6
+
+have fn trace_eval_matrix(r,c closed_range(1,2)) R = 2 * r
+
+eval trace(trace_eval_matrix,2)
+"#,
+    r#"# Evaluate finite real inner products, including conjugation and recorded coordinate calls.
+have fn component_vector(k closed_range(1,2)) R = k
+
+inner_product(component_vector,component_vector,2) = 5
+
+have fn inner_eval_vector(k closed_range(1,2)) R = k + 1
+
+eval inner_product(inner_eval_vector,inner_eval_vector,2)
+"#,
+    r#"# Evaluate two by two Frobenius norms through their nested finite sums.
+have fn unit_matrix(r,c closed_range(1,2)) R = 1
+
+frobenius_norm(unit_matrix,2,2) = 2
+
+have fn norm_eval_matrix(r,c closed_range(1,2)) R = 2
+
+eval frobenius_norm(norm_eval_matrix,2,2)
+"#,
+    r#"# Evaluate Euclidean norms of positive and negative components through square-modulus sums.
+have fn three_vector(k closed_range(1,1)) R = 3
+
+euclidean_norm(three_vector,1) = 3
+
+have fn norm_eval_vector(k closed_range(1,1)) R = -4
+
+eval euclidean_norm(norm_eval_vector,1)
+"#,
 ];
 
 fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
@@ -22,23 +58,6 @@ fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
 }
 fn number(s: &str) -> Obj {
     Obj::Literal(Literal::Number(Number::new(s.into())))
-}
-
-#[test]
-fn matrix_scalar_evaluation_replays_nonempty_terms_and_guarded_reuse() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let generated = compiler
-            .compile_run(&run, "matrix_scalar_evaluation")
-            .expect(source);
-        assert_eq!(
-            generated,
-            compiler
-                .compile_run(&run, "matrix_scalar_evaluation")
-                .unwrap()
-        );
-        assert!(generated.contains("finiteAggregateValueList"));
-    }
 }
 
 #[test]

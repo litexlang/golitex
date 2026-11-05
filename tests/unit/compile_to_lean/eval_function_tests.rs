@@ -2,11 +2,27 @@ use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSucc
 use crate::prelude::*;
 use crate::runtime::runtime_ids::FactId;
 
-const CALLS: &str = include_str!("../../../lean/examples/evaluated_formula_calls/statement.lit");
-const CAPTURED: &str =
-    include_str!("../../../lean/examples/evaluated_captured_values/statement.lit");
-const NESTED: &str = include_str!("../../../lean/examples/evaluated_nested_calls/statement.lit");
-const LOCAL: &str = include_str!("../../../lean/examples/evaluated_local_calls/statement.lit");
+const CALLS: &str = r#"# Evaluate a real shift and a guarded two-argument quotient, then cite the results.
+have fn evaluated_shift(x R) R = x + 1
+eval evaluated_shift(2)
+evaluated_shift(2) = 3
+
+have fn evaluated_ratio(x R, y R: y != 0) R = x / y
+eval evaluated_ratio(6,3)
+evaluated_ratio(6,3) = 2
+"#;
+const CAPTURED: &str = r#"# Use a proved real value in a function body and in its call argument.
+have eval_offset R = 10
+have fn evaluated_offset(x R) R = eval_offset + x
+eval evaluated_offset(2)
+evaluated_offset(2) = 12
+eval evaluated_offset(3) + evaluated_offset(4)
+evaluated_offset(3) + evaluated_offset(4) = 27
+
+have fn evaluated_shift(x R) R = x + 1
+eval evaluated_shift(eval_offset)
+evaluated_shift(eval_offset) = 11
+"#;
 
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -18,14 +34,6 @@ fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess 
 }
 fn number(n: &str) -> Obj {
     Obj::Literal(Literal::Number(Number::new(n.into())))
-}
-
-#[test]
-fn eval_function_examples_replay_original_calls() {
-    for source in [CALLS, CAPTURED, NESTED, LOCAL] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "eval_calls").expect(source);
-    }
 }
 
 #[test]

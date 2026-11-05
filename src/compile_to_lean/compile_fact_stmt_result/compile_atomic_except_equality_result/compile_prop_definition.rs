@@ -544,6 +544,25 @@ impl LitexToLeanCompiler {
         normal: &NormalAtomicFact,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if crate::compile_to_lean::compile_antiderivative::is_predicate(&normal.predicate) {
+            if normal.body.len() != 3 {
+                return Err(crate::compile_to_lean::compile_antiderivative::invalid(
+                    "PredicateArity",
+                ));
+            }
+            let args = normal
+                .body
+                .iter()
+                .map(|x| {
+                    self.compile_object_reference(x, position)
+                        .map(|s| format!("(Litex.denote {s})"))
+                })
+                .collect::<Result<Vec<_>, _>>()?;
+            return Ok(format!(
+                "Litex.IsAntiderivativeOnValue M {}",
+                args.join(" ")
+            ));
+        }
         if crate::compile_to_lean::compile_riemann_integral::is_enclosure(&normal.predicate) {
             if normal.body.len() != 7 {
                 return Err(LeanCompileError::unsupported(
@@ -594,8 +613,12 @@ impl LitexToLeanCompiler {
         for object in &normal.body {
             arguments.push(self.compile_object_reference(object, position)?);
         }
-        let predicate = position
-            .declaration_reference(&format!("prop_{}", index + 1), &declaration_position)?;
+        let name = crate::compile_to_lean::compile_def_prop_stmt_result::concrete_prop_name(
+            declaration,
+            index + 1,
+            declaration_position.is_local(),
+        )?;
+        let predicate = position.declaration_reference(&name, &declaration_position)?;
         Ok(if arguments.is_empty() {
             predicate
         } else {
@@ -725,6 +748,15 @@ impl LitexToLeanCompiler {
             Fact::AtomicFact(AtomicFact::NormalAtomicFact(normal)) => normal,
             _ => return Ok(Vec::new()),
         };
+        if crate::compile_to_lean::compile_antiderivative::is_predicate(&normal.predicate) {
+            return if normal.body.len() == 3 && rules.is_empty() {
+                Ok(Vec::new())
+            } else {
+                Err(crate::compile_to_lean::compile_antiderivative::invalid(
+                    "OriginalInference",
+                ))
+            };
+        }
         if crate::compile_to_lean::compile_riemann_integral::is_enclosure(&normal.predicate) {
             return if normal.body.len() == 7 && rules.is_empty() {
                 Ok(Vec::new())

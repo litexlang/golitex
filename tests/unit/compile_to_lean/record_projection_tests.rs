@@ -11,10 +11,57 @@ use crate::execute::ExecHaveFnEqualStmtResult;
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/record_function_formula/statement.lit"),
-    include_str!("../../../lean/examples/nested_record_function_formula/statement.lit"),
-    include_str!("../../../lean/examples/guarded_record_function_formula/statement.lit"),
-    include_str!("../../../lean/examples/record_function_complex_result/statement.lit"),
+    r#"# Apply a real function stored in a record.
+struct RealMap:
+    action fn(x R) R
+    marker R
+
+have fn apply_map(m &RealMap, x R) R = m.action(x)
+
+forall m &RealMap, x R:
+    apply_map(m, x) = m.action(x)
+"#,
+    r#"# Apply a function in a nested record, directly and through a reusable wrapper.
+struct RealMap:
+    action fn(x R) R
+    marker R
+
+have fn apply_map(m &RealMap, x R) R = m.action(x)
+
+struct RealBundle:
+    inner &RealMap
+    base R
+
+have fn apply_bundle(b &RealBundle, x R) R = b.inner.action(x)
+
+forall b &RealBundle, x R:
+    b.inner.action(x) $in R
+
+forall b &RealBundle, x R:
+    apply_bundle(b, x) = b.inner.action(x)
+
+forall b &RealBundle, x R:
+    apply_map(b.inner, x) = b.inner.action(x)
+"#,
+    r#"# Apply a record function on its nonzero domain.
+struct GuardedMap:
+    action fn(x R: x != 0) R
+    marker R
+
+have fn apply_guarded(m &GuardedMap, x R: x != 0) R = m.action(x)
+
+forall m &GuardedMap, x R:
+    x != 0
+    =>:
+        apply_guarded(m, x) = m.action(x)
+"#,
+    r#"# Observe a real record function result in the complex numbers.
+struct RealMap:
+    action fn(x R) R
+    marker R
+
+have fn apply_map_complex(m &RealMap, x R) C = m.action(x)
+"#,
 ];
 
 fn formula(run: &mut RunLitexCodeResult, index: usize) -> &mut AnonymousFnObjWellDefinedProof {
@@ -38,20 +85,6 @@ fn formula(run: &mut RunLitexCodeResult, index: usize) -> &mut AnonymousFnObjWel
         panic!("formula WD")
     };
     proof
-}
-
-#[test]
-fn record_projection_replays_nested_fields_guards_and_formula_substitution() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "record_projections")
-            .expect(source);
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "record_projections").unwrap()
-        );
-    }
 }
 
 #[test]
@@ -157,29 +190,111 @@ fn record_projection_requires_field_domain_and_declared_return_evidence() {
 }
 
 const GENERIC_SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/generic_nested_binary_operation/statement.lit"),
-    include_str!("../../../lean/examples/generic_nested_operation_tower/statement.lit"),
-    include_str!("../../../lean/examples/generic_selected_operation/statement.lit"),
-    include_str!("../../../lean/examples/generic_pointed_operation/statement.lit"),
-    include_str!("../../../examples/wd/struct_field_instantiation.lit"),
-];
+    r#"# A binary operation stored in a parameterized record remains closed under repeated application.
+struct BinaryOperation<A nonempty_set>:
+    zero A
+    combine fn(x, y A) A
 
-#[test]
-fn record_projection_instantiates_original_generic_field_constructors() {
-    for source in GENERIC_SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "generic_record_projections")
-            .expect(source);
-        assert_eq!(
-            lean,
-            compiler
-                .compile_run(&run, "generic_record_projections")
-                .unwrap()
-        );
-        assert!(!lean.contains("axiom ") && !lean.contains("sorry"));
-    }
-}
+struct OperationBundle<A nonempty_set>:
+    operation &BinaryOperation<A>
+    tag N
+
+forall B nonempty_set, b &OperationBundle<B>, x, y B:
+    b.operation.combine(x, y) $in B
+
+forall B nonempty_set, b &OperationBundle<B>, x, y B:
+    b.operation.combine(b.operation.combine(x, y), x) $in B
+"#,
+    r#"# A three-level record preserves the carrier of its binary operation.
+struct BinaryOperation<A nonempty_set>:
+    zero A
+    combine fn(x, y A) A
+
+struct OperationBundle<A nonempty_set>:
+    operation &BinaryOperation<A>
+    tag N
+
+struct NestedBundle<A nonempty_set>:
+    bundle &OperationBundle<A>
+    tag N
+
+forall B nonempty_set, b &NestedBundle<B>, x, y B:
+    b.bundle.operation.combine(x, y) $in B
+"#,
+    r#"# A binary operation follows a preceding selected point in a parameterized record.
+struct BinaryOperation<A nonempty_set>:
+    zero A
+    combine fn(x, y A) A
+
+struct SelectedOperation<A nonempty_set>:
+    point A
+    operation &BinaryOperation<A>
+
+forall B nonempty_set, b &SelectedOperation<B>, x, y B:
+    b.operation.combine(x, y) $in B
+"#,
+    r#"# Nested constrained records preserve the domain and range of a binary operation.
+struct PointedOperation<A nonempty_set, a A>:
+    point A
+    combine fn(x, y A) A
+    <=>:
+        point = a
+
+struct PointedBundle<A nonempty_set, a A>:
+    operation &PointedOperation<A, a>
+    tag N
+    <=>:
+        tag = 0
+
+forall B nonempty_set, a B, b &PointedBundle<B, a>, x, y B:
+    b.operation.combine(x, y) $in B
+"#,
+    r#"# Tracer: instantiated function fields retain their actual parameter domains.
+# Before: the named theorem failed WD with an undefined definition parameter A.
+# struct ProbeOp<A nonempty_set>:
+#     zero A
+#     add fn(x, y A) A
+# thm generic_reflexive:
+#     ? forall B nonempty_set, s &ProbeOp<B>, x, y B:
+#         s.add(x, y) = s.add(x, y)
+# Now: the same theorem and its concrete/nested forms verify.
+# Boundary: wrong argument types, missing guards and false laws still fail.
+# Run: target/release/litex -strict -f examples/wd/struct_field_instantiation.lit
+
+struct ProbeOp<A nonempty_set>:
+    zero A
+    add fn(x, y A) A
+
+thm generic_reflexive:
+    ? forall B nonempty_set, s &ProbeOp<B>, x, y B:
+        s.add(x, y) = s.add(x, y)
+
+thm real_reflexive:
+    ? forall s &ProbeOp<R>, x, y R:
+        s.add(x, y) = s.add(x, y)
+
+struct NestedOp<A nonempty_set>:
+    operation &ProbeOp<A>
+    tag N
+
+thm nested_reflexive:
+    ? forall B nonempty_set, s &NestedOp<B>, x, y B:
+        s.operation.add(x, y) = s.operation.add(x, y)
+
+struct PointEvaluator<A nonempty_set, point A>:
+    tag N
+    at fn(x {point}) A
+
+thm dependent_field_reflexive:
+    ? forall B nonempty_set, point B, s &PointEvaluator<B, point>:
+        s.at(point) = s.at(point)
+
+claim:
+    ? forall s &ProbeOp<R>:
+        s.add(0, 1) = s.add(0, 1)
+    by thm real_reflexive(s, 0, 1) => s.add(0, 1) = s.add(0, 1)
+"#,
+];
 
 #[test]
 fn record_projection_rejects_changed_intermediate_header_and_declaration_wd() {

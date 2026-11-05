@@ -24,7 +24,8 @@ impl LitexToLeanCompiler {
                     .projection_steps
                     .last()
                     .ok_or_else(|| LeanCompileError::unsupported("StructField/ProjectionStages"))?;
-                let (declaration, _, _) = scope.visible_struct(&step.carrier.name)?;
+                let (declaration, _, _) =
+                    scope.visible_struct(&step.carrier.name, &self.runtime)?;
                 let mut substitution = header_substitution(&declaration.statement, &step.carrier)?;
                 let receiver = super::compile_struct_projection::field_receiver(
                     access,
@@ -46,8 +47,8 @@ impl LitexToLeanCompiler {
         let [field] = access.fields.as_slice() else {
             return Err(LeanCompileError::unsupported("StructField/NestedPath"));
         };
-        let (carrier, member) = self.compile_struct_receiver(&access.obj, position)?;
-        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        self.with_struct_receiver(&access.obj, position, |carrier, member, type_position| {
+        let (declaration, _, _) = type_position.visible_struct(&carrier.name, &self.runtime)?;
         let fields = &declaration.statement.fields;
         let index = fields
             .iter()
@@ -65,9 +66,10 @@ impl LitexToLeanCompiler {
             ));
         }
         let receiver = self.compile_object_reference(&access.obj, position)?;
-        let member = self.compile_struct_cart_membership(&carrier, &receiver, &member, position)?;
+        let member = self.compile_struct_cart_membership(carrier, &receiver, member, type_position)?;
         let n = fields.len();
         Ok(format!("(Litex.FiniteFunction.coordinate_mem_number (M := M) {member} ({index} : Fin {n}) ({} : ℂ) (by norm_num))", index + 1))
+        })
     }
 
     pub(super) fn compile_struct_receiver(
@@ -75,6 +77,19 @@ impl LitexToLeanCompiler {
         object: &Obj,
         position: &SourcePosition<'_>,
     ) -> Result<(StructObj, String), LeanCompileError> {
+        self.with_struct_receiver(object, position, |carrier, member, _| {
+            Ok((carrier.clone(), member.to_owned()))
+        })
+    }
+
+    /// A published value retains the scope of its declared type. Consume that
+    /// type before leaving its producer; its free IDs need not name callers.
+    pub(super) fn with_struct_receiver<T>(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+        mut consume: impl FnMut(&StructObj, &str, &SourcePosition<'_>) -> Result<T, LeanCompileError>,
+    ) -> Result<T, LeanCompileError> {
         if let Obj::FnObj(application) = object {
             return position
                 .with_visible_wd(object, &mut |wd, producer| {
@@ -94,15 +109,27 @@ impl LitexToLeanCompiler {
                     else {
                         return Err(LeanCompileError::unsupported("StructField/ReceiverReturn"));
                     };
-                    Ok((carrier, member))
+                    consume(&carrier, &member, &scope)
                 })?
                 .ok_or_else(|| LeanCompileError::unsupported("StructField/ReceiverCallWD"));
         }
-        let Obj::Identifier(IdentifierObj::Plain { id, .. }) = object else {
+        let Obj::Identifier(identifier) = object else {
             return Err(LeanCompileError::unsupported("StructField/Receiver"));
         };
-        let (carrier, member) = match position.visible_parameter(*id, &self.runtime) {
-            Ok((_, Some(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier))), _, member)) => (carrier.clone(), member),
+        let preflight = position.preflight_parameter(identifier, &self.runtime)?;
+        let parameter = preflight.map(|p| p.id).or_else(|| match identifier {
+            IdentifierObj::Plain { id, .. } => Some(*id),
+            _ => None,
+        });
+        let scoped = parameter
+            .map(|id| position.visible_parameter(id, &self.runtime))
+            .unwrap_or_else(|| {
+                Err(LeanCompileError::unsupported(
+                    "StructField/ParameterReceiver",
+                ))
+            });
+        match scoped {
+            Ok((_, Some(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier))), _, member)) => consume(carrier, &member, position),
             Ok(_) => return Err(LeanCompileError::unsupported("StructField/DeclaredCarrier")),
             Err(error) => position.with_visible_alias(object, &self.runtime, &mut |parameter, _, _, producer| {
                 let SourceOwner::Statement(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
@@ -116,16 +143,19 @@ impl LitexToLeanCompiler {
                 let ParamType::Obj(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier))) = carrier else {
                     return Err(LeanCompileError::unsupported("StructField/DeclaredCarrier"));
                 };
-                let store = &p.store_and_infer_result.store_and_infer_results[index];
-                let (fact, member) = position.visible_fact(store.primary_fact_id(), &self.runtime)?;
+                let count = p.statement.param_def.groups.iter().map(|g| g.params.len()).sum::<usize>();
+                let store = p.store_and_infer_result.store_and_infer_results.get(index)
+                    .ok_or_else(|| LeanCompileError::unsupported("StructField/AliasMembership"))?;
+                let published = SourcePosition { before: 2 * count + index + 1, ..*producer };
+                let (fact, _) = published.visible_fact(store.primary_fact_id(), &self.runtime)?;
                 if !matches!(fact, Fact::AtomicFact(AtomicFact::InFact(m)) if m.element.ir()==object.ir()
                     && matches!(&m.set, Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(s)) if s==carrier)) {
                     return Err(LeanCompileError::unsupported("StructField/AliasMembership"));
                 }
-                Ok((carrier.clone(), member))
-            })?.ok_or(error)?,
-        };
-        Ok((carrier, member))
+                let member = position.declaration_reference(&format!("h_{}", store.primary_fact_id().value()), producer)?;
+                consume(carrier, &member, &published)
+            })?.ok_or(error),
+        }
     }
 
     pub(super) fn compile_struct_field_reference(
@@ -142,8 +172,8 @@ impl LitexToLeanCompiler {
         let [field] = access.fields.as_slice() else {
             return Err(LeanCompileError::unsupported("StructField/NestedPath"));
         };
-        let (carrier, member) = self.compile_struct_receiver(&access.obj, position)?;
-        let (declaration, _, _) = position.visible_struct(&carrier.name)?;
+        self.with_struct_receiver(&access.obj, position, |carrier, member, type_position| {
+        let (declaration, _, _) = type_position.visible_struct(&carrier.name, &self.runtime)?;
         validate_struct(declaration)?;
         let Some(index) = declaration
             .statement
@@ -156,9 +186,10 @@ impl LitexToLeanCompiler {
         let n = declaration.statement.fields.len();
         let receiver = self.compile_object_reference(&access.obj, position)?;
         let structure =
-            self.compile_struct_cart_reference(&carrier, &receiver, &member, position)?;
-        let member = self.compile_struct_cart_membership(&carrier, &receiver, &member, position)?;
+            self.compile_struct_cart_reference(carrier, &receiver, member, type_position)?;
+        let member = self.compile_struct_cart_membership(carrier, &receiver, member, type_position)?;
         Ok(format!("(Litex.cartCall {receiver} {structure} (Litex.number (M := M) ({} : ℂ)) {member} (by change M.mem (M.number ({} : ℂ)) (Litex.FiniteFunction.indexSet {n}); simpa [Litex.FiniteFunction.index] using (Litex.FiniteFunction.index_mem (M := M) ({index} : Fin {n}))))", index + 1, index + 1))
+        })
     }
 
     pub(super) fn compile_struct_field_wd(
@@ -297,7 +328,12 @@ impl LitexToLeanCompiler {
         for (index, ((parameter_index, parameter, carrier), layer)) in
             expected.iter().zip(layers).enumerate()
         {
-            let obj = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
+            let identifier = if position.is_local() {
+                position.parameter_identifier(parameter)?
+            } else {
+                position.defining_identifier(parameter, &self.runtime)?
+            };
+            let obj = Obj::Identifier(identifier);
             if layer.obj.ir() != obj.ir() || &layer.struct_obj != *carrier {
                 return Err(LeanCompileError::unsupported(
                     "StructRelease/ParameterSubject",
@@ -327,7 +363,7 @@ impl LitexToLeanCompiler {
         member: &str,
         position: &SourcePosition<'_>,
     ) -> Result<Vec<String>, LeanCompileError> {
-        let (declaration, _, _) = position.visible_struct(&layer.struct_obj.name)?;
+        let (declaration, _, _) = position.visible_struct(&layer.struct_obj.name, &self.runtime)?;
         validate_struct(declaration)?;
         let mut header = header_substitution(&declaration.statement, &layer.struct_obj)?;
         header.extend(field_substitution(&declaration.statement, &layer.obj));

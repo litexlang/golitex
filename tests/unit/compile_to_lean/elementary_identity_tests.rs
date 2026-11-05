@@ -4,27 +4,45 @@ use crate::prelude::*;
 fn elementary_minmax_pairs_replay_selected_certificates() {
     for (source, law) in [
         (
-            include_str!("../../../lean/examples/minimum_associativity/statement.lit"),
+            r#"# Minimum is associative on real numbers.
+forall x R, y R, z R:
+    min(min(x,y),z) = min(x,min(y,z))
+"#,
             "minMaxAssociativeValue",
         ),
         (
-            include_str!("../../../lean/examples/maximum_associativity/statement.lit"),
+            r#"# Maximum is associative on real numbers.
+forall x R, y R, z R:
+    max(max(x,y),z) = max(x,max(y,z))
+"#,
             "minMaxAssociativeValue",
         ),
         (
-            include_str!("../../../lean/examples/minimum_maximum_sum/statement.lit"),
+            r#"# Sorting two real numbers preserves their sum.
+forall x R, y R:
+    min(x,y) + max(x,y) = x + y
+"#,
             "minMaxSumValue",
         ),
         (
-            include_str!("../../../lean/examples/minimum_maximum_product/statement.lit"),
+            r#"# Sorting two real numbers preserves their product.
+forall x R, y R:
+    min(x,y) * max(x,y) = x * y
+"#,
             "minMaxProductValue",
         ),
         (
-            include_str!("../../../lean/examples/minimum_translation/statement.lit"),
+            r#"# A common real translation commutes with minimum.
+forall x R, y R, z R:
+    min(x+z,y+z) = min(x,y)+z
+"#,
             "minTranslationValue",
         ),
         (
-            include_str!("../../../lean/examples/maximum_negation/statement.lit"),
+            r#"# Negation exchanges the real maximum and minimum.
+forall x R, y R:
+    max(-x,-y) = -min(x,y)
+"#,
             "maxNegationValue",
         ),
     ] {
@@ -85,8 +103,14 @@ fn sorted_pair_rules_preserve_each_operand_and_orientation() {
 
 #[test]
 fn elementary_certificate_cannot_change_its_operation() {
-    let source = include_str!("../../../lean/examples/minimum_associativity/statement.lit");
-    let other = include_str!("../../../lean/examples/maximum_associativity/statement.lit");
+    let source = r#"# Minimum is associative on real numbers.
+forall x R, y R, z R:
+    min(min(x,y),z) = min(x,min(y,z))
+"#;
+    let other = r#"# Maximum is associative on real numbers.
+forall x R, y R, z R:
+    max(max(x,y),z) = max(x,max(y,z))
+"#;
     let (mut original, _) = super::execute(source);
     let (mut target, compiler) = super::execute(other);
     let original = super::forall_proof_mut(&mut original.statement_results[0]);

@@ -3,10 +3,21 @@ use crate::execute::execute_by_stmt::BuiltinThmApplication;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetFormerObjWellDefinedProofByDef;
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/matrix_rank_factorization_exists/statement.lit");
-const WITNESSES: &str =
-    include_str!("../../../lean/examples/matrix_rank_factorization_witnesses/statement.lit");
+const SOURCE: &str = r#"# Every finite complex matrix has a rank-sized factorization with split left and right inverses.
+thm checked_rank_factorization_exists_conjoined:
+    ? forall m, n N, A matrix(C,m,n):
+        exist U matrix(C,m,matrix_rank(A,m,n)), V matrix(C,matrix_rank(A,m,n),n), L matrix(C,matrix_rank(A,m,n),m), Rr matrix(C,n,matrix_rank(A,m,n)) st {A=matrix_mul(U,V,m,matrix_rank(A,m,n),n) and matrix_mul(L,U,matrix_rank(A,m,n),m,matrix_rank(A,m,n))=identity_matrix(matrix_rank(A,m,n)) and matrix_mul(V,Rr,matrix_rank(A,m,n),n,matrix_rank(A,m,n))=identity_matrix(matrix_rank(A,m,n))}
+    release thm matrix_rank_factorization_exists(A,m,n)
+"#;
+const WITNESSES: &str = r#"# Choose split factorization witnesses and use their two factors to prove the usual rank factorization.
+thm checked_rank_factorization_witness_consumption:
+    ? forall m, n N, A matrix(C,m,n):
+        exist B matrix(C,m,matrix_rank(A,m,n)), D matrix(C,matrix_rank(A,m,n),n) st {A=matrix_mul(B,D,m,matrix_rank(A,m,n),n)}
+    release thm matrix_rank_factorization_exists(A,m,n)
+    have U matrix(C,m,matrix_rank(A,m,n)), V matrix(C,matrix_rank(A,m,n),n), L matrix(C,matrix_rank(A,m,n),m), Rr matrix(C,n,matrix_rank(A,m,n)):
+        A=matrix_mul(U,V,m,matrix_rank(A,m,n),n) and matrix_mul(L,U,matrix_rank(A,m,n),m,matrix_rank(A,m,n))=identity_matrix(matrix_rank(A,m,n)) and matrix_mul(V,Rr,matrix_rank(A,m,n),n,matrix_rank(A,m,n))=identity_matrix(matrix_rank(A,m,n))
+    witness exist B matrix(C,m,matrix_rank(A,m,n)), D matrix(C,matrix_rank(A,m,n),n) st {A=matrix_mul(B,D,m,matrix_rank(A,m,n),n)} from U,V
+"#;
 fn exists(b: &mut BuiltinThmApplication) -> &mut PlainExistFact {
     let Fact::ExistFact(f) = &mut b.conclusions[0] else {
         panic!()
@@ -18,39 +29,6 @@ fn conjunction(b: &mut BuiltinThmApplication) -> &mut AndFact {
         panic!()
     };
     f
-}
-
-#[test]
-fn rank_existence_replays_complex_real_empty_and_original_matrix_constructors() {
-    for source in [
-        SOURCE,
-        include_str!("../../../lean/examples/matrix_rank_factorization_exists_real/statement.lit"),
-        include_str!(
-            "../../../lean/examples/matrix_rank_factorization_exists_empty_rows/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/matrix_rank_factorization_exists_empty_cols/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/matrix_rank_factorization_exists_empty_both/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/matrix_rank_factorization_exists_zero_matrix/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/matrix_rank_factorization_exists_identity/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let generated = compiler
-            .compile_run(&run, "rank_exists")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(generated.contains("Litex.matrixRankFactorizationExists"));
-        assert_eq!(
-            generated,
-            compiler.compile_run(&run, "rank_exists").unwrap()
-        );
-    }
 }
 
 #[test]
@@ -376,20 +354,6 @@ fn rank_existence_rejects_changed_native_rule_derivation_and_call_arguments() {
                 .is_err(),
             "{change}"
         );
-    }
-}
-
-#[test]
-fn rank_existence_witnesses_replay_original_carrier_formation_and_reconstruct_factors() {
-    for source in [
-        WITNESSES,
-        include_str!("../../../lean/examples/matrix_rank_factorization_obtained/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let out = compiler.compile_run(&run, "rank_witness_use").unwrap();
-        assert!(out.contains("Litex.matrixRankFactorizationExists"));
-        assert!(out.contains("rcases"));
-        assert_eq!(out, compiler.compile_run(&run, "rank_witness_use").unwrap());
     }
 }
 

@@ -59,20 +59,26 @@ impl LitexToLeanCompiler {
         };
         let type_check = (|| {
             let position = &type_position;
+            let mut introduced_count = 0;
             for (group, wd) in groups
                 .iter()
                 .zip(&proof.type_preflight.param_type_well_defined)
             {
+                let prior = SourcePosition {
+                    before: introduced_count,
+                    ..*position
+                };
                 match (&group.param_type, wd) {
                     (ParamType::Obj(set), ParamTypeWellDefinedProof::Obj(proof)) => {
                         ensure_object(set, proof)?;
-                        self.compile_wd(proof, position)?;
+                        self.compile_wd(proof, &prior)?;
                     }
                     (ParamType::Set(_), ParamTypeWellDefinedProof::Set)
                     | (ParamType::NonemptySet(_), ParamTypeWellDefinedProof::NonemptySet)
                     | (ParamType::FiniteSet(_), ParamTypeWellDefinedProof::FiniteSet) => {}
                     _ => return Err(LeanCompileError::unsupported("HaveEqual/ParameterKind")),
                 }
+                introduced_count += group.params.len();
             }
             Ok(())
         })();
@@ -95,7 +101,9 @@ impl LitexToLeanCompiler {
         }
         let mut members = Vec::new();
         let mut offset = 0;
+        let mut substitution = std::collections::HashMap::new();
         for group in groups {
+            let group_start = offset;
             for _ in &group.params {
                 let member = self.compile_verify(
                     &proof.membership_checks[offset],
@@ -108,7 +116,7 @@ impl LitexToLeanCompiler {
                     &group.param_type,
                     &proof.statement.objs_equal_to[offset],
                     &source_subject(&proof.membership_checks[offset])?,
-                    &std::collections::HashMap::new(),
+                    &substitution,
                 ) {
                     return Err(LeanCompileError::new(
                         "HaveEqual/Membership",
@@ -117,6 +125,15 @@ impl LitexToLeanCompiler {
                 }
                 members.push(member);
                 offset += 1;
+            }
+            // Execution instantiates each group's carrier using the values
+            // of preceding groups, before publishing the new bindings.
+            for (parameter, value) in group
+                .params
+                .iter()
+                .zip(&proof.statement.objs_equal_to[group_start..offset])
+            {
+                substitution.insert(parameter.id, value.clone());
             }
         }
         let mut declarations = Vec::new();

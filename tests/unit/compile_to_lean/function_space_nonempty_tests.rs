@@ -3,29 +3,70 @@ use crate::execute::execute_fact_stmt::function_domain::{
     FunctionSpaceNonemptyProof as P,
 };
 use crate::prelude::*;
+const GENERIC: &str = r#"# A nonempty codomain supplies a constant function on any domain.
+forall replay_space_domain set, replay_space_codomain nonempty_set:
+    $is_nonempty_set(fn(replay_space_arg replay_space_domain) replay_space_codomain)
+"#;
+const GUARDED: &str = r#"# A constant function exists on the guarded domain when the codomain is nonempty.
+forall replay_ne_guard_A set, replay_ne_guard_B nonempty_set:
+    $is_nonempty_set(fn(replay_ne_guard_x replay_ne_guard_A: replay_ne_guard_x=replay_ne_guard_x) replay_ne_guard_B)
+"#;
+const NESTED: &str = r#"# Nonempty codomains give nonempty nested function spaces.
+forall replay_ne_nested_A set, replay_ne_nested_B nonempty_set:
+    $is_nonempty_set(fn(replay_ne_nested_x replay_ne_nested_A) fn(replay_ne_nested_y replay_ne_nested_A) replay_ne_nested_B)
+"#;
+const CART: &str = r#"# A function space with a product of nonempty codomain factors is nonempty.
+forall replay_ne_cart_A set, replay_ne_cart_B,replay_ne_cart_C nonempty_set:
+    $is_nonempty_set(fn(replay_ne_cart_x replay_ne_cart_A) cart(replay_ne_cart_B,replay_ne_cart_C))
+"#;
+const TRANSPORT: &str = r#"# A carrier equal to a nonempty function space is a valid nonempty codomain.
+forall replay_ne_path_A,replay_ne_path_B set, replay_ne_path_C nonempty_set:
+    replay_ne_path_B = fn(replay_ne_path_y replay_ne_path_A) replay_ne_path_C
+    =>:
+        $is_nonempty_set(fn(replay_ne_path_x replay_ne_path_A) replay_ne_path_B)
+"#;
+const NESTED_EMPTY: &str = r#"# An empty-domain function space can serve as a nonempty codomain.
+forall replay_ne_void_A set:
+    $is_nonempty_set(fn(replay_ne_void_x replay_ne_void_A) fn(replay_ne_void_y {}) {})
+"#;
+const EMPTY: &str = r#"# A function from the empty set to the empty set exists.
+$is_nonempty_set(fn(replay_ne_empty_x {}) {})
+"#;
+const ALIAS: &str = r#"# A parameter carrier equal to the empty set gives an empty complete domain.
+forall replay_ne_alias_A set:
+    replay_ne_alias_A = {}
+    =>:
+        $is_nonempty_set(fn(replay_ne_alias_x replay_ne_alias_A) {})
+"#;
+const CHECKED: &str = r#"# An empty parameter carrier permits a function with an empty codomain.
+forall replay_ne_checked_A set:
+    not $is_nonempty_set(replay_ne_checked_A)
+    =>:
+        $is_nonempty_set(fn(replay_ne_checked_x replay_ne_checked_A) {})
+"#;
+const GUARDS: &str = r#"# Incompatible input guards permit the empty function into an empty carrier.
+$is_nonempty_set(fn(replay_ne_other_x R: replay_ne_other_x=replay_ne_other_x, replay_ne_other_x!=replay_ne_other_x) {})
+"#;
+const SEQUENCES: &str = r#"# Finite and infinite sequences exist over every nonempty carrier.
+forall replay_ne_seq_B nonempty_set, replay_ne_seq_n N:
+    $is_nonempty_set(finite_seq(replay_ne_seq_B,replay_ne_seq_n))
+    $is_nonempty_set(seq(replay_ne_seq_B))
+"#;
+const SCOPES: &str = r#"# Independent quantified sequence and function spaces have their own nonempty carriers.
+forall replay_ne_scope_B nonempty_set:
+    $is_nonempty_set(seq(replay_ne_scope_B))
 
-macro_rules! source {
-    ($name:literal) => {
-        include_str!(concat!(
-            "../../../lean/examples/function_space_nonempty_",
-            $name,
-            "/statement.lit"
-        ))
-    };
-}
-const GENERIC: &str = source!("codomain");
-const GUARDED: &str = source!("guarded");
-const NESTED: &str = source!("nested");
-const CART: &str = source!("cartesian");
-const TRANSPORT: &str = source!("transport");
-const NESTED_EMPTY: &str = source!("nested_empty");
-const EMPTY: &str = source!("empty_list");
-const ALIAS: &str = source!("empty_alias");
-const CHECKED: &str = source!("checked_empty");
-const GUARDS: &str = source!("other_guards");
-const SEQUENCES: &str = source!("sequences");
-const SCOPES: &str = source!("scopes");
-const CHAIN: &str = source!("transport_chain");
+forall replay_space_domain set, replay_space_codomain nonempty_set:
+    $is_nonempty_set(fn(replay_space_arg replay_space_domain) replay_space_codomain)
+"#;
+const CHAIN: &str = r#"# Transitive carrier equalities give a nonempty codomain after the equality is proved.
+forall replay_ne_chain_A,replay_ne_chain_B,replay_ne_chain_D set,replay_ne_chain_C nonempty_set:
+    replay_ne_chain_B = replay_ne_chain_D
+    replay_ne_chain_D = fn(replay_ne_chain_y replay_ne_chain_A) replay_ne_chain_C
+    =>:
+        replay_ne_chain_B = fn(replay_ne_chain_y replay_ne_chain_A) replay_ne_chain_C
+        $is_nonempty_set(fn(replay_ne_chain_x replay_ne_chain_A) replay_ne_chain_B)
+"#;
 const ALL: &[&str] = &[
     GENERIC,
     GUARDED,
@@ -40,17 +81,45 @@ const ALL: &[&str] = &[
     SEQUENCES,
     SCOPES,
     CHAIN,
-    source!("empty_ranges"),
-    source!("excluded_guard"),
-    source!("finite_zero"),
-    source!("matrix_empty"),
-    source!("nested_sequence"),
-    source!("positive_exclusion"),
-    source!("positive_guard"),
-    source!("standard"),
-    source!("three_empty"),
-    source!("mixed_codomain"),
-    source!("mixed_empty"),
+    r#"# Empty half-open and closed integer ranges permit functions into the empty set.
+$is_nonempty_set(fn(replay_ne_range_x range(2,2)) {})
+$is_nonempty_set(fn(replay_ne_range_y closed_range(2,1)) {})
+"#,
+    r#"# An impossible input guard permits a function with empty output carrier.
+$is_nonempty_set(fn(replay_ne_excluded_x R: replay_ne_excluded_x!=replay_ne_excluded_x) {})
+"#,
+    r#"# The empty finite sequence exists over an empty carrier.
+$is_nonempty_set(finite_seq({},0))
+"#,
+    r#"# A matrix with zero rows and two columns exists over the empty entry carrier.
+$is_nonempty_set(matrix({},0,2))
+"#,
+    r#"# A nonempty sequence space can serve as a function codomain.
+forall replay_ne_ns_A set,replay_ne_ns_B nonempty_set:
+    $is_nonempty_set(fn(replay_ne_ns_x replay_ne_ns_A) seq(replay_ne_ns_B))
+"#,
+    r#"# A strictly self-greater input guard gives an empty complete domain.
+$is_nonempty_set(fn(replay_ne_positive_exclusion_x R: replay_ne_positive_exclusion_x>replay_ne_positive_exclusion_x) R)
+"#,
+    r#"# An impossible guard on positive real inputs leaves a nonempty function space.
+$is_nonempty_set(fn(replay_ne_positive_x R+: replay_ne_positive_x!=replay_ne_positive_x) R)
+"#,
+    r#"# Unary, binary and ternary real function spaces are nonempty.
+$is_nonempty_set(fn(replay_ne_std_x R) R)
+$is_nonempty_set(fn(replay_ne_std_x, replay_ne_std_y R) R)
+$is_nonempty_set(fn(replay_ne_std_x, replay_ne_std_y, replay_ne_std_z R) R)
+"#,
+    r#"# One empty parameter carrier makes a ternary complete domain empty.
+$is_nonempty_set(fn(replay_ne_three_x R,replay_ne_three_y {},replay_ne_three_z R) {})
+"#,
+    r#"# Nonempty sequence, matrix and function spaces form a nonempty product codomain.
+forall replay_ne_mix_A set,replay_ne_mix_B nonempty_set,replay_ne_mix_m,replay_ne_mix_n N:
+    $is_nonempty_set(fn(replay_ne_mix_x replay_ne_mix_A) cart(replay_ne_mix_B,seq(replay_ne_mix_B),finite_seq(replay_ne_mix_B,replay_ne_mix_n),matrix(replay_ne_mix_B,replay_ne_mix_m,replay_ne_mix_n)))
+"#,
+    r#"# Nonempty sequence, matrix and function spaces form a nonempty product codomain.
+forall replay_ne_mix_empty_A set:
+    $is_nonempty_set(fn(replay_ne_mix_empty_x replay_ne_mix_empty_A) cart(fn(replay_ne_mix_empty_y {}) {},finite_seq({},0),matrix({},0,2)))
+"#,
 ];
 
 fn atom(
@@ -330,9 +399,16 @@ fn nonempty_empty_carrier_retains_the_group_identity_path_and_selected_evidence(
     for source in [
         EMPTY,
         ALIAS,
-        source!("empty_ranges"),
-        source!("finite_zero"),
-        source!("matrix_empty"),
+        r#"# Empty half-open and closed integer ranges permit functions into the empty set.
+$is_nonempty_set(fn(replay_ne_range_x range(2,2)) {})
+$is_nonempty_set(fn(replay_ne_range_y closed_range(2,1)) {})
+"#,
+        r#"# The empty finite sequence exists over an empty carrier.
+$is_nonempty_set(finite_seq({},0))
+"#,
+        r#"# A matrix with zero rows and two columns exists over the empty entry carrier.
+$is_nonempty_set(matrix({},0,2))
+"#,
     ] {
         for change in ["group", "carrier", "evidence"] {
             let (mut run, compiler) = super::execute(source);

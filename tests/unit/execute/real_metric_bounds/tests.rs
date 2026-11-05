@@ -202,7 +202,7 @@ fn leaf_permissions_and_failed_publication_remain_bounded() {
 }
 
 #[test]
-fn all_output_languages_and_unsupported_lean_routes_remain_explicit() {
+fn all_output_languages_and_lean_support_boundaries_remain_explicit() {
     for language in crate::launch_command::OutputLanguage::ALL {
         for source in [MAX_BOUND, MIN_BOUND, SYMMETRY, TRIANGLE, POSITIVE_MIN] {
             let mut rt = runtime(language);
@@ -215,9 +215,12 @@ fn all_output_languages_and_unsupported_lean_routes_remain_explicit() {
     for source in [SYMMETRY, TRIANGLE, MAX_BOUND, POSITIVE_MIN] {
         let mut rt = runtime(crate::launch_command::OutputLanguage::English);
         let run = check(&mut rt, source, true);
-        assert!(
-            crate::compile_to_lean::compile_run(&run, rt, "metric_bound").is_err(),
-            "No Lean theorem adapter was added"
-        );
+        let compiled = crate::compile_to_lean::compile_run(&run, rt, "metric_bound");
+        if source == SYMMETRY {
+            let lean = compiled.expect("absolute-difference symmetry has a Lean adapter");
+            assert!(!lean.contains("sorry"));
+        } else {
+            compiled.expect_err("the remaining metric-bound routes are unsupported");
+        }
     }
 }

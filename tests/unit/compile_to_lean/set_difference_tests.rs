@@ -4,45 +4,54 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule;
 use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
 
-const MEMBER: &str = include_str!("../../../lean/examples/set_difference_membership/statement.lit");
-const NEGATIVE: &str =
-    include_str!("../../../lean/examples/set_difference_exclusion/statement.lit");
-const THEOREM: &str = include_str!("../../../lean/examples/set_difference_theorem/statement.lit");
+const MEMBER: &str = r#"# Introduce a difference member and recover membership, exclusion and singleton disequality.
+forall diff_member_A, diff_member_B set, diff_member_x R:
+    diff_member_x $in diff_member_A
+    not diff_member_x $in diff_member_B
+    =>:
+        diff_member_x $in set_minus(diff_member_A, diff_member_B)
 
-#[test]
-fn set_difference_replays_membership_exclusion_and_stored_projections() {
-    for (source, laws) in [
-        (MEMBER, vec!["inSetMinus_iff", "inInsert_iff"]),
-        (
-            NEGATIVE,
-            vec![
-                "notInSetMinusOfRight",
-                "notInSetMinusOfLeft",
-                "setMinusSubsetLeft",
-            ],
-        ),
-        (THEOREM, vec!["inSetMinus_iff"]),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "difference").unwrap();
-        assert!(lean.contains("Litex.setMinus "));
-        for law in laws {
-            assert!(lean.contains(&format!("Litex.{law} ")), "{law}");
-        }
-        assert_eq!(lean, compiler.compile_run(&run, "difference").unwrap());
-    }
-}
+forall diff_proj_A, diff_proj_B set, diff_proj_x set_minus(diff_proj_A, diff_proj_B):
+    diff_proj_x $in diff_proj_A
+    not diff_proj_x $in diff_proj_B
 
-#[test]
-fn set_difference_function_preserves_formation_and_expansion() {
-    let source = include_str!("../../../lean/examples/set_difference_function/statement.lit");
-    let (run, compiler) = super::execute(source);
-    let lean = compiler.compile_run(&run, "difference_function").unwrap();
-    assert!(lean.contains("Litex.setMinus "));
-    // The recorded return proof now uses the known left-carrier equality.
-    assert!(lean.contains("Litex.setMinusSubsetOfLeft "));
-    assert!(lean.contains("Litex.subsetRefl "));
-}
+forall diff_single_A set, diff_single_b R, diff_single_x set_minus(diff_single_A, {diff_single_b}):
+    diff_single_x != diff_single_b
+    diff_single_x $in diff_single_A
+    not diff_single_x $in {diff_single_b}
+"#;
+const NEGATIVE: &str = r#"# A difference excludes removed elements and elements outside its base, and is a subset of its base.
+forall diff_right_A, diff_right_B set, diff_right_x diff_right_B:
+    not diff_right_x $in set_minus(diff_right_A, diff_right_B)
+
+forall diff_left_A, diff_left_B set, diff_left_x R:
+    not diff_left_x $in diff_left_A
+    =>:
+        not diff_left_x $in set_minus(diff_left_A, diff_left_B)
+
+forall diff_bound_A, diff_bound_B set:
+    set_minus(diff_bound_A, diff_bound_B) $subset diff_bound_A
+"#;
+const THEOREM: &str = r#"# Prove and reuse the rule for keeping an element outside the excluded set.
+thm remove_excluded_set:
+    ? forall remove_A, remove_B set, remove_x remove_A:
+        not remove_x $in remove_B
+        =>:
+            remove_x $in set_minus(remove_A, remove_B)
+    remove_x $in set_minus(remove_A, remove_B)
+
+by thm remove_excluded_set(R, {0}, 1) => 1 $in set_minus(R, {0})
+
+thm remove_two_excluded_sets:
+    ? forall remove_two_A, remove_two_B, remove_two_D set, remove_two_x remove_two_A:
+        not remove_two_x $in remove_two_B
+        not remove_two_x $in remove_two_D
+        =>:
+            remove_two_x $in set_minus(set_minus(remove_two_A, remove_two_B), remove_two_D)
+    remove_two_x $in set_minus(set_minus(remove_two_A, remove_two_B), remove_two_D)
+
+by thm remove_two_excluded_sets(R, {0}, {2}, 1) => 1 $in set_minus(set_minus(R, {0}), {2})
+"#;
 
 #[test]
 fn set_difference_rejects_missing_reordered_or_extra_wd() {

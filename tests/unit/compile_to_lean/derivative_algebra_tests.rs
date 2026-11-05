@@ -1,46 +1,63 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
-const NEG: &str = include_str!("../../../lean/examples/unary_derivative_algebra_neg/statement.lit");
-const SCALE: &str =
-    include_str!("../../../lean/examples/unary_derivative_algebra_scale/statement.lit");
-const POWER: &str =
-    include_str!("../../../lean/examples/unary_derivative_algebra_power/statement.lit");
-const DIVIDE: &str =
-    include_str!("../../../lean/examples/unary_derivative_algebra_divide/statement.lit");
-const COMPOSE: &str =
-    include_str!("../../../lean/examples/unary_derivative_algebra_compose/statement.lit");
-
-#[test]
-fn derivative_algebra_replays_all_original_unary_and_binary_schemas() {
-    for (source, law) in [
-        (NEG, "semanticDerivativeNeg"),
-        (SCALE, "semanticDerivativeScale"),
-        (POWER, "semanticDerivativePower"),
-        (
-            include_str!("../../../lean/examples/unary_derivative_algebra_add/statement.lit"),
-            "semanticDerivativeAdd",
-        ),
-        (
-            include_str!("../../../lean/examples/unary_derivative_algebra_subtract/statement.lit"),
-            "semanticDerivativeSub",
-        ),
-        (
-            include_str!("../../../lean/examples/unary_derivative_algebra_multiply/statement.lit"),
-            "semanticDerivativeMul",
-        ),
-        (DIVIDE, "semanticDerivativeDiv"),
-        (COMPOSE, "semanticDerivativeComposeCandidates"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let out = compiler.compile_run(&run, "derivative_algebra").unwrap();
-        assert!(out.contains(&format!("Litex.{law}")));
-        assert_eq!(
-            out,
-            compiler.compile_run(&run, "derivative_algebra").unwrap()
-        );
-    }
-}
+const NEG: &str = r#"# Negating a real function negates its derivative on the original output domain.
+thm checked_unary_derivative_algebra_neg:
+    ? forall f, g fn(x R) R, p, a R:
+        $has_derivative_at(f,p,a)
+        exist radius R+ st {{x R: abs(x-p)<radius} $subset R}
+        forall x R:
+            g(x)=-f(x)
+        =>:
+            $has_derivative_at(g,p,-a)
+    release thm fn_derivative_at_neg(f,g,p,a)
+"#;
+const SCALE: &str = r#"# The scale derivative rule retains the checked function domains and interior.
+thm checked_unary_derivative_algebra_scale:
+    ? forall f, g fn(x R) R, p, a, c R:
+        $has_derivative_at(f,p,a)
+        exist radius R+ st {{x R: abs(x-p)<radius} $subset R}
+        forall x R:
+            g(x)=c*f(x)
+        =>:
+            $has_derivative_at(g,p,c*a)
+    release thm fn_derivative_at_scale(f,g,p,a,c)
+"#;
+const POWER: &str = r#"# The power derivative rule retains the checked function domains and interior.
+thm checked_unary_derivative_algebra_power:
+    ? forall f, g fn(x R) R, p, a R, n N:
+        $has_derivative_at(f,p,a)
+        exist radius R+ st {{x R: abs(x-p)<radius} $subset R}
+        forall x R:
+            g(x)=f(x)^n
+        =>:
+            $has_derivative_at(g,p,n*f(p)^(max(n,1)-1)*a)
+    release thm fn_derivative_at_power(f,g,p,a,n)
+"#;
+const DIVIDE: &str = r#"# The divide derivative rule retains the checked function domains and interior.
+thm checked_unary_derivative_algebra_divide:
+    ? forall f, h fn(x R) R, g fn(x R) R*, p, a, b R:
+        $has_derivative_at(f,p,a)
+        $has_derivative_at(g,p,b)
+        exist radius R+ st {{x R: abs(x-p)<radius} $subset R}
+        forall x R:
+            h(x)=f(x)/g(x)
+        =>:
+            $has_derivative_at(h,p,(a*g(p)-f(p)*b)/g(p)/g(p))
+    release thm fn_derivative_at_divide(f,g,h,p,a,b)
+"#;
+const COMPOSE: &str = r#"# The chain rule uses the original outer derivative at the inner function's value.
+thm checked_unary_derivative_algebra_compose:
+    ? forall f, g, h fn(x R) R, p, a, b R:
+        $has_derivative_at(f,p,a)
+        $has_derivative_at(g,f(p),b)
+        exist radius R+ st {{x R: abs(x-p)<radius} $subset R}
+        forall x R:
+            h(x)=g(f(x))
+        =>:
+            $has_derivative_at(h,p,b*a)
+    release thm fn_derivative_at_compose(f,g,h,p,a,b)
+"#;
 
 #[test]
 fn derivative_algebra_rejects_changed_stages_actual_domains_and_output_formation() {

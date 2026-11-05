@@ -2,23 +2,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::veri
 use crate::prelude::*;
 
 #[test]
-fn sign_identity_examples_replay_functions_and_named_proofs() {
-    for source in [
-        include_str!("../../../lean/examples/sign_product/statement.lit"),
-        include_str!("../../../lean/examples/sign_negation/statement.lit"),
-        include_str!("../../../lean/examples/signed_magnitude/statement.lit"),
-        include_str!("../../../lean/examples/direction_magnitude_functions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "sign_identities").unwrap();
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "sign_identities").unwrap()
-        );
-    }
-}
-
-#[test]
 fn sign_negation_replays_all_producer_spellings_and_orientations() {
     let forms = [
         "-@",

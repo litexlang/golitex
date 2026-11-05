@@ -47,15 +47,15 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
         match self {
             Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
                 "IsMatrixInvSelected",
-                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+                "For n in N and a complex n-by-n matrix A with det(A,n)≠0, the selected B=matrix_inv(A,n) satisfies AB=BA=I_n.",
             ),
             Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
                 "MatrixInversibleFromDeterminant",
-                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+                "For n in N and a complex n-by-n matrix A, det(A,n)≠0 guarantees a complex n-by-n matrix B with AB=BA=I_n.",
             ),
             Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
                 "NotMatrixInversibleFromDeterminant",
-                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+                "For n in N and a complex n-by-n matrix A, det(A,n)=0 excludes a complex n-by-n matrix B satisfying AB=BA=I_n.",
             ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_en(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_en(),
@@ -104,16 +104,16 @@ impl AtomicExceptEqualityFactSearchProofByBuiltinRule {
     pub fn rule_name_and_message_zh(&self) -> BuiltinRuleText {
         match self {
             Self::IsMatrixInvFact(_) => crate::json_output::explain::text::text(
-                "IsMatrixInvSelected",
-                "The selected inverse is a two-sided inverse on its proved nonsingular domain.",
+                "选取的矩阵逆满足双侧逆关系",
+                "对 n∈ℕ 的复数 n×n 矩阵 A，若 det(A,n)≠0，则选取的 B=matrix_inv(A,n) 满足 AB=BA=I_n。",
             ),
             Self::MatrixInversibleFact(_) => crate::json_output::explain::text::text(
-                "MatrixInversibleFromDeterminant",
-                "det(A,n) != 0 implies that the complex square matrix A has a two-sided inverse.",
+                "非零行列式保证矩阵可逆",
+                "对 n∈ℕ 的复数 n×n 矩阵 A，det(A,n)≠0 保证存在同阶复矩阵 B，使 AB=BA=I_n。",
             ),
             Self::NotMatrixInversibleFact(_) => crate::json_output::explain::text::text(
-                "NotMatrixInversibleFromDeterminant",
-                "det(A,n) = 0 excludes a two-sided inverse of the complex square matrix A.",
+                "零行列式排除矩阵的双侧逆",
+                "对 n∈ℕ 的复数 n×n 矩阵 A，若 det(A,n)=0，则不存在同阶复矩阵 B 使 AB=BA=I_n。",
             ),
             Self::BijectiveFact(bf) => bf.rule_name_and_message_zh(),
             Self::CoprimeFact(cf) => cf.rule_name_and_message_zh(),

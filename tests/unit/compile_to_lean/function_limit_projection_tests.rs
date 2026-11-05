@@ -3,10 +3,22 @@ use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtRe
 use crate::execute::{ExecDefinitionStmtResult, ExecReleaseAndExpandStmtResult};
 use crate::prelude::*;
 
-const ACCUMULATION: &str =
-    include_str!("../../../lean/examples/function_limit_at_accumulation_by_theorem/statement.lit");
-const CONTROL: &str =
-    include_str!("../../../lean/examples/function_limit_at_control_by_theorem/statement.lit");
+const ACCUMULATION: &str = r#"# Extract the at limit accumulation certificate on the original real domain.
+thm explicit_at_accumulation:
+    ? forall f fn(x R) R, p R, L R, r R+:
+        $has_limit_at(f,p,L)
+        =>:
+            exist x R st {0<abs(x-p) and abs(x-p)<r}
+    release thm fn_limit_at_accumulation(f,p,L)
+"#;
+const CONTROL: &str = r#"# Extract the at limit control certificate on the original real domain.
+thm explicit_at_control:
+    ? forall f fn(x R) R, p R, L R, epsilon R+:
+        $has_limit_at(f,p,L)
+        =>:
+            exist threshold R+ st {{x R:0<abs(x-p) and abs(x-p)<threshold} $subset preimage_set(f,{v R:abs(v-L)<epsilon})}
+    release thm fn_limit_at_control(f,p,L,epsilon)
+"#;
 
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -25,25 +37,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecReleaseThmStmtSuccess {
         panic!("released projection")
     };
     p
-}
-
-#[test]
-fn function_limit_projections_replay_five_approaches() {
-    for (source, law) in [
-        (ACCUMULATION, "FunctionLimitAccumulation"),
-        (CONTROL, "FunctionLimitControl"),
-        (include_str!("../../../lean/examples/function_limit_left_accumulation_by_theorem/statement.lit"), "FunctionLimitAccumulation"),
-        (include_str!("../../../lean/examples/function_limit_right_accumulation_by_theorem/statement.lit"), "FunctionLimitAccumulation"),
-        (include_str!("../../../lean/examples/function_limit_pos_inf_accumulation_by_theorem/statement.lit"), "FunctionLimitAccumulation"),
-        (include_str!("../../../lean/examples/function_limit_neg_inf_accumulation_by_theorem/statement.lit"), "FunctionLimitAccumulation"),
-        (include_str!("../../../lean/examples/function_limit_left_control_by_theorem/statement.lit"), "FunctionLimitControl"),
-        (include_str!("../../../lean/examples/function_limit_right_control_by_theorem/statement.lit"), "FunctionLimitControl"),
-        (include_str!("../../../lean/examples/function_limit_pos_inf_control_by_theorem/statement.lit"), "FunctionLimitControl"),
-        (include_str!("../../../lean/examples/function_limit_neg_inf_control_by_theorem/statement.lit"), "FunctionLimitControl"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler.compile_run(&run, "project_limit").unwrap().contains(law));
-    }
 }
 
 #[test]
@@ -98,14 +91,4 @@ fn function_limit_control_rejects_a_changed_domain_threshold_or_preimage() {
             .compile_run(&run, "changed_projection_subject")
             .expect_err("threshold, original domain and preimage function are fixed");
     }
-}
-
-#[test]
-fn released_accumulation_instantiates_a_generic_source_radius_by_its_denotation() {
-    let (run, compiler) = super::execute(ACCUMULATION);
-    let lean = compiler.compile_run(&run, "generic_limit_radius").unwrap();
-    assert!(lean.contains("let _known_argument_0 := _value_i5"));
-    assert!(lean.contains(
-        "(Litex.semanticObject (Litex.denote _known_argument_0) (Litex.isSet _known_argument_0))"
-    ));
 }

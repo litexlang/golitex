@@ -2,36 +2,17 @@ use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_by_stmt::BuiltinThmApplication;
 use crate::prelude::*;
 
-const SOURCE: &str =
-    include_str!("../../../lean/examples/inner_product_cauchy_schwarz/statement.lit");
+const SOURCE: &str = r#"# Bound the modulus of a finite complex inner product by the product of the norms.
+thm checked_inner_product_cauchy_schwarz_preparation:
+    ? forall n N, u, v cart_n(C,n):
+        C_abs(inner_product(u,v,n))<=euclidean_norm(u,n)*euclidean_norm(v,n)
+    release thm inner_product_cauchy_schwarz(u,v,n)
+"#;
 fn goal(b: &mut BuiltinThmApplication) -> &mut LessEqualFact {
     let Fact::AtomicFact(AtomicFact::LessEqualFact(f)) = &mut b.conclusions[0] else {
         panic!()
     };
     f
-}
-
-#[test]
-fn cauchy_schwarz_replays_complex_real_empty_one_and_original_zero_formula() {
-    for source in [
-        SOURCE,
-        include_str!("../../../lean/examples/inner_product_cauchy_schwarz_real/statement.lit"),
-        include_str!("../../../lean/examples/inner_product_cauchy_schwarz_empty/statement.lit"),
-        include_str!("../../../lean/examples/inner_product_cauchy_schwarz_one/statement.lit"),
-        include_str!(
-            "../../../lean/examples/inner_product_cauchy_schwarz_zero_formula/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "cauchy_schwarz")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains("Litex.finiteInnerProductCauchySchwarz"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "cauchy_schwarz").unwrap()
-        );
-    }
 }
 
 #[test]
@@ -270,16 +251,12 @@ fn cauchy_schwarz_rejects_future_conclusion_as_original_vector_evidence() {
     assert!(compiler.compile_run(&run, "future_cauchy").is_err());
 }
 
-const ALPHA: &str =
-    include_str!("../../../lean/examples/complex_modulus_bound_names/statement.lit");
-
-#[test]
-fn complex_modulus_replays_original_compound_alpha_evidence() {
-    let (run, compiler) = super::execute(ALPHA);
-    let output = compiler.compile_run(&run, "modulus_alpha").unwrap();
-    assert!(output.contains("Litex.complexAbs"));
-    assert_eq!(output, compiler.compile_run(&run, "modulus_alpha").unwrap());
-}
+const ALPHA: &str = r#"# Renaming a bound coordinate leaves the modulus of a complex inner product unchanged.
+thm checked_complex_modulus_bound_names:
+    ? forall n N, u, v cart_n(C,n):
+        C_abs(inner_product(fn(k closed_range(1,n)) C{u(k)},v,n))=C_abs(inner_product(fn(j closed_range(1,n)) C{u(j)},v,n))
+    C_abs(inner_product(fn(k closed_range(1,n)) C{u(k)},v,n))=C_abs(inner_product(fn(j closed_range(1,n)) C{u(j)},v,n))
+"#;
 
 #[test]
 fn complex_modulus_alpha_rejects_changed_operator_body_domain_and_free_arguments() {

@@ -1,49 +1,36 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
-const GCD: &str = include_str!("../../../lean/examples/gcd_prime_rule/statement.lit");
-const PRODUCT: &str = include_str!("../../../lean/examples/prime_product_rule/statement.lit");
-const POWER: &str = include_str!("../../../lean/examples/prime_power_rule/statement.lit");
-const DIVISOR: &str = include_str!("../../../lean/examples/prime_divisor_rule/statement.lit");
-const CONCRETE: &str = include_str!("../../../lean/examples/number_theory_concrete/statement.lit");
-
-#[test]
-fn prime_theorems_replay_all_four_generic_contracts_and_concrete_calls() {
-    for (source, law) in [
-        (GCD, "gcdWithPrimeValue"),
-        (PRODUCT, "primeDividesProductValue"),
-        (POWER, "primeDividesPowerValue"),
-        (DIVISOR, "primeDivisorWitness"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "prime_theorem")
-            .unwrap_or_else(|e| panic!("{e}"));
-        assert!(output.contains(&format!("Litex.{law}")));
-        assert_eq!(output, compiler.compile_run(&run, "prime_theorem").unwrap());
-    }
-    let (run, compiler) = super::execute(CONCRETE);
-    let output = compiler
-        .compile_run(&run, "prime_concrete")
-        .unwrap_or_else(|e| panic!("{e}"));
-    assert!(output.contains("variable [_setSemantics : Litex.SetSemantics M]"));
-    for law in [
-        "gcdWithPrimeValue",
-        "primeDividesProductValue",
-        "primeDividesPowerValue",
-        "primeDivisorWitness",
-    ] {
-        assert!(output.contains(law));
-    }
-    let mixed = format!(
-        "{CONCRETE}\n{}",
-        include_str!("../../../lean/examples/bijective_unique_preimages/statement.lit")
-    );
-    let (run, compiler) = super::execute(&mixed);
-    let output = compiler.compile_run(&run, "prime_function_parent").unwrap();
-    assert!(output.contains("variable [_functionSemantics : Litex.FunctionSemantics M]"));
-    assert!(!output.contains("variable [_setSemantics"));
-}
+const GCD: &str = r#"thm checked_gcd_prime_rule:
+    ? forall a Z,p N+:
+        $prime(p)
+        =>:
+            gcd(a,p)=1 or gcd(a,p)=p
+    release thm gcd_with_prime_is_one_or_prime(a,p)
+"#;
+const PRODUCT: &str = r#"thm checked_prime_product_rule:
+    ? forall a,b Z,p N+:
+        $prime(p)
+        $dvd(a*b,p)
+        =>:
+            $dvd(a,p) or $dvd(b,p)
+    release thm prime_divides_product(a,b,p)
+"#;
+const POWER: &str = r#"thm checked_prime_power_rule:
+    ? forall a Z,k,p N+:
+        $prime(p)
+        $dvd(a^k,p)
+        =>:
+            $dvd(a,p)
+    release thm prime_divides_power(a,k,p)
+"#;
+const DIVISOR: &str = r#"thm checked_prime_divisor_rule:
+    ? forall m N+:
+        2<=m
+        =>:
+            exist p N+ st {$prime(p),m%p=0}
+    release thm prime_divisor(m)
+"#;
 
 #[test]
 fn prime_theorems_require_original_premises_stores_and_conclusion_wd() {

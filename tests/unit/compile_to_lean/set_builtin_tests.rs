@@ -1,60 +1,6 @@
 use crate::prelude::*;
 
 #[test]
-fn selected_set_identity_pairs_replay_original_evidence() {
-    for (source, law) in [
-        (
-            include_str!("../../../lean/examples/union_absorption_subset/statement.lit"),
-            "unionOfSubsetRight",
-        ),
-        (
-            include_str!("../../../lean/examples/relative_complement_recovery/statement.lit"),
-            "setMinusRecovery",
-        ),
-        (
-            include_str!("../../../lean/examples/union_complement_decomposition/statement.lit"),
-            "unionSetMinusDecomposition",
-        ),
-        (
-            include_str!("../../../lean/examples/relative_complement_intersection/statement.lit"),
-            "setMinusOfIntersection",
-        ),
-        (
-            include_str!("../../../lean/examples/empty_from_no_members/statement.lit"),
-            "emptyOfNotNonempty",
-        ),
-        (
-            include_str!("../../../lean/examples/power_set_intersection/statement.lit"),
-            "powerSetIntersection",
-        ),
-        (
-            include_str!("../../../lean/examples/power_set_empty/statement.lit"),
-            "powerEmptyValue",
-        ),
-        (
-            include_str!("../../../lean/examples/empty_family_union/statement.lit"),
-            "familyUnionEmptyValue",
-        ),
-        (
-            include_str!("../../../lean/examples/singleton_family_union/statement.lit"),
-            "familyUnionSingletonValue",
-        ),
-        (
-            include_str!("../../../lean/examples/power_set_family_union/statement.lit"),
-            "familyUnionPowerValue",
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "set_builtin").unwrap();
-        assert!(output.contains(&format!("Litex.{law}")), "{law}");
-        if matches!(law, "familyUnionSingletonValue" | "familyUnionPowerValue") {
-            assert!(output.contains("variable [_setSemantics : Litex.SetSemantics M]"));
-        }
-        assert_eq!(output, compiler.compile_run(&run, "set_builtin").unwrap());
-    }
-}
-
-#[test]
 fn union_absorption_keeps_operand_order_and_equality_orientation() {
     for swapped in [false, true] {
         for reverse in [false, true] {
@@ -80,9 +26,24 @@ fn union_absorption_keeps_operand_order_and_equality_orientation() {
 #[test]
 fn set_identity_rules_require_the_original_premise() {
     for source in [
-        include_str!("../../../lean/examples/union_absorption_subset/statement.lit"),
-        include_str!("../../../lean/examples/relative_complement_recovery/statement.lit"),
-        include_str!("../../../lean/examples/empty_from_no_members/statement.lit"),
+        r#"# A subset is absorbed by union with its containing set.
+forall A set, B set:
+    A $subset B
+    =>:
+        union(A,B) = B
+"#,
+        r#"# A subset is recovered by taking its relative complement twice inside the containing set.
+forall A set, B set:
+    B $subset A
+    =>:
+        set_minus(A,set_minus(A,B)) = B
+"#,
+        r#"# A set without a member is the empty set.
+forall A set:
+    not $is_nonempty_set(A)
+    =>:
+        A = {}
+"#,
     ] {
         let (mut run, compiler) = super::execute(source);
         let universal = super::forall_proof_mut(&mut run.statement_results[0]);

@@ -1,10 +1,21 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
-const GENERIC: &str =
-    include_str!("../../../lean/examples/constant_sequence_limit_theorem/statement.lit");
-const SELECTED: &str =
-    include_str!("../../../lean/examples/constant_sequence_limit_selected/statement.lit");
+const GENERIC: &str = r#"# A real sequence equal to one real value at every positive index has that limit.
+thm checked_constant_sequence_limit:
+    ? forall a seq(R), L R:
+        forall n N+:
+            a(n) = L
+        =>:
+            $has_seq_limit(a, L)
+    release thm seq_limit_constant(a, L)
+"#;
+const SELECTED: &str = r#"# A constant function is a real sequence with its constant value as limit.
+thm checked_constant_sequence_limit_selected:
+    ? forall c R:
+        $has_seq_limit(fn(n N+) R{c}, c)
+    by thm seq_limit_constant(fn(k N+) R{c}, c) => $has_seq_limit(fn(n N+) R{c}, c)
+"#;
 #[test]
 fn sequence_constant_replays_the_original_constant_equation_for_generic_and_anonymous_sequences() {
     for source in [GENERIC, SELECTED] {

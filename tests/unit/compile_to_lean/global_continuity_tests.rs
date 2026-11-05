@@ -1,36 +1,23 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 
-const FROM: &str =
-    include_str!("../../../lean/examples/function_continuous_from_pointwise/statement.lit");
-const POINT: &str =
-    include_str!("../../../lean/examples/function_continuous_at_point/statement.lit");
-
-#[test]
-fn global_continuity_replays_both_schemas_definition_guarded_domains_and_negative_transport() {
-    for source in [
-        FROM,
-        POINT,
-        include_str!("../../../lean/examples/function_continuous_constant/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_identity/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_continuous_guarded_from_pointwise/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_continuous_guarded_at_point/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_definition/statement.lit"),
-        include_str!("../../../lean/examples/function_continuous_negative_transport/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "global_continuity")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains("Litex.FunctionContinuous"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "global_continuity").unwrap()
-        );
-    }
-}
+const FROM: &str = r#"# Continuity at every point of the actual function domain gives global continuity.
+thm checked_function_continuous_from_pointwise:
+    ? forall f fn(x R) R:
+        forall x R:
+            $is_continuous_at(f,x)
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_from_pointwise(f)
+"#;
+const POINT: &str = r#"# A globally continuous function is continuous at a point in its actual domain.
+thm checked_function_continuous_at_point:
+    ? forall f fn(x R) R, p R:
+        $is_continuous(f)
+        =>:
+            $is_continuous_at(f,p)
+    release thm fn_continuous_at(f,p)
+"#;
 
 #[test]
 fn global_continuity_requires_original_stages_and_output_formation() {
@@ -125,9 +112,17 @@ fn global_continuity_replays_exact_inference_identity_and_derived_forall() {
 #[test]
 fn global_continuity_negative_transport_rejects_another_property_and_future_citation() {
     for change in ["property", "future"] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/function_continuous_negative_transport/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Non-continuity transports along equality of the original function values.
+thm checked_function_continuous_negative_transport:
+    ? forall f, g fn(x R) R:
+        f=g
+        not $is_continuous(f)
+        =>:
+            not $is_continuous(g)
+    not $is_continuous(g)
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(named),
         )) = &mut run.statement_results[0]
@@ -166,11 +161,27 @@ fn global_continuity_negative_transport_rejects_another_property_and_future_cita
 fn global_continuity_formulas_retain_original_context_carrier_and_complete_equation() {
     for (source, constant) in [
         (
-            include_str!("../../../lean/examples/function_continuous_constant/statement.lit"),
+            r#"# Global continuity of the constant formula on the original function domain.
+thm checked_function_continuous_constant:
+    ? forall f fn(x R) R, c R:
+        forall x R:
+            f(x)=c
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_constant(f,c)
+"#,
             true,
         ),
         (
-            include_str!("../../../lean/examples/function_continuous_identity/statement.lit"),
+            r#"# Global continuity of the identity formula on the original function domain.
+thm checked_function_continuous_identity:
+    ? forall f fn(x R) R:
+        forall x R:
+            f(x)=x
+        =>:
+            $is_continuous(f)
+    release thm fn_continuous_identity(f)
+"#,
             false,
         ),
     ] {

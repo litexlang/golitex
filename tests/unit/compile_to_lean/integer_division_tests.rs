@@ -2,23 +2,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Integer
 use crate::prelude::*;
 
 #[test]
-fn integer_division_examples_replay_original_results() {
-    for source in [
-        include_str!("../../../lean/examples/signed_integer_division/statement.lit"),
-        include_str!("../../../lean/examples/quotient_remainder_decomposition/statement.lit"),
-        include_str!("../../../lean/examples/integer_division_functions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "integer_division").unwrap();
-        assert!(output.contains("Litex.quot"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "integer_division").unwrap()
-        );
-    }
-}
-
-#[test]
 fn integer_division_decomposition_preserves_product_order_and_equality_orientation() {
     for first in [true, false] {
         for reversed in [true, false] {
@@ -237,9 +220,30 @@ fn integer_division_rejects_zero_noninteger_and_wrong_sign_domains() {
 #[test]
 fn integer_division_congruence_requires_each_original_argument_proof() {
     for missing in [true, false] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/integer_division_functions/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Define integer division functions, expand a composed call and reuse a named theorem.
+have fn quotient(n Z, d N+) Z = quot(n, d)
+have fn remainder(n Z, d Z: d != 0) Z = n % d
+have fn next(n Z) Z = n + 1
+have fn bucket(n Z, d N+) Z = quot(next(n), d)
+
+quotient(-7, 3) = -3
+remainder(-7, -3) = 2
+bucket(6, 3) = quot(next(6), 3)
+next(6) = 7
+quot(next(6), 3) = quot(7, 3)
+quot(7, 3) = 2
+bucket(6, 3) = 2
+
+thm divide_one:
+    ? forall n Z:
+        quotient(n, 1) = n
+    quotient(n, 1) = quot(n, 1)
+    quot(n, 1) = n
+
+by thm divide_one(-7) => quotient(-7, 1) = -7
+"#,
+        );
         let equality = super::equality_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[8]).verify_result,
         );

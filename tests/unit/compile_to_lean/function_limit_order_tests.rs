@@ -4,7 +4,17 @@ use crate::execute::execute_by_stmt::{
 use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtResult};
 use crate::execute::ExecDefinitionStmtResult;
 use crate::prelude::*;
-const SOURCE: &str = include_str!("../../../lean/examples/function_limit_at_compare/statement.lit");
+const SOURCE: &str = r#"# A local weak comparison passes to the two at limit values.
+thm at_limits_compare:
+    ? forall f,g fn(x R) R, p,a,b R, r R+:
+        $has_limit_at(f,p,a)
+        $has_limit_at(g,p,b)
+        forall x {t R:0<(abs(t-p)) and (abs(t-p))<r}:
+            f(x)<=g(x)
+        =>:
+            a<=b
+    by thm fn_limit_at_compare(f,g,p,a,b,r) => a<=b
+"#;
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(p),
@@ -21,23 +31,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
         panic!("comparison")
     };
     p
-}
-#[test]
-fn local_limit_order_replays_all_approaches_and_guarded_domains() {
-    for source in [
-        include_str!("../../../lean/examples/function_limit_at_compare/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_left_compare/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_right_compare/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_pos_inf_compare/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_neg_inf_compare/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_guarded_compare/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        assert!(c
-            .compile_run(&run, "limit_order")
-            .unwrap()
-            .contains("FunctionLimitCompare"));
-    }
 }
 #[test]
 fn local_limit_order_requires_original_candidates_and_local_radius() {

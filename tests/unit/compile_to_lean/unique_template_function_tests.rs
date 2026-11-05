@@ -7,10 +7,69 @@ use crate::execute::{
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/unique_record_field/statement.lit"),
-    include_str!("../../../lean/examples/unique_record_with_field/statement.lit"),
-    include_str!("../../../lean/examples/template_unique_guarded_scalar/statement.lit"),
-    include_str!("../../../lean/examples/template_unique_record_field/statement.lit"),
+    r#"# A record field is the unique element equal to that field.
+struct Point<K nonempty_set, S nonempty_set>:
+    value S
+    tag N
+
+thm unique_value:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>:
+        exist! x S st {x = t.value}
+    witness exist! x S st {x = t.value} from t.value
+"#,
+    r#"# A uniquely specified record retains a property of its own field.
+struct Point<K nonempty_set, S nonempty_set>:
+    value S
+    tag N
+
+thm unique_record_with_field:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>:
+        exist! u &Point<K, S> st {u = t and u.value = t.value}
+    witness exist! u &Point<K, S> st {u = t and u.value = t.value} from t
+"#,
+    r#"# Select a unique scalar with nonzero template and call parameters.
+thm unique_scalar:
+    ? forall a R:
+        exist! x R st {x = a}
+    witness exist! x R st {x = a} from a
+
+template<a R: a != 0,>:
+    have fn selected_scalar by exist!:
+        ? forall index R:
+            index != 0
+            =>:
+                exist! x R st {x = a}
+
+\selected_scalar<2>(3) = 2
+"#,
+    r#"# Select the unique record value and use it as a nested function argument.
+struct Point<K nonempty_set, S nonempty_set>:
+    value S
+    tag N
+
+thm unique_value:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>:
+        exist! x S st {x = t.value}
+    witness exist! x S st {x = t.value} from t.value
+
+template<K nonempty_set, S nonempty_set, t &Point<K, S>>:
+    have fn selected_value by exist!:
+        ? forall index N:
+            exist! x S st {x = t.value}
+
+thm selected_value_spec:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>:
+        \selected_value<K, S, t>(0) = t.value
+
+struct Unary<S nonempty_set>:
+    call fn(x S) S
+    tag N
+
+# The template occurs under another call, whose WD uses read-only premises.
+thm selected_value_nested:
+    ? forall K nonempty_set, S nonempty_set, t &Point<K, S>, op &Unary<S>:
+        op.call(\selected_value<K, S, t>(0)) $in S
+"#,
 ];
 fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResult {
     run.statement_results
@@ -31,15 +90,6 @@ fn selected(run: &mut RunLitexCodeResult) -> &mut ExecHaveFnByForallExistUniqueS
         panic!("selected template body")
     };
     p
-}
-#[test]
-fn unique_fields_and_templates_replay_original_existence_and_call_proofs() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let code = compiler.compile_run(&run, "unique_fields").expect(source);
-        assert_eq!(code, compiler.compile_run(&run, "unique_fields").unwrap());
-        assert!(!code.contains("sorry") && !code.contains("axiom "));
-    }
 }
 #[test]
 fn selected_template_requires_its_original_membership_and_unique_property() {

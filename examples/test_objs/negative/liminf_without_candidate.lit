@@ -1,0 +1,3 @@
+# A finite liminf selector requires a proved real candidate.
+have fn unbounded(k N+) R = k
+liminf(unbounded) $in R

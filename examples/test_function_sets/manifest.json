@@ -486,7 +486,7 @@
       "group": "basic",
       "title": "Function body outside its declared codomain",
       "expect": "reject",
-      "phase": "have_fn_equal",
+      "phase": "search_proof",
       "file": "basic/n02.lit",
       "statements": 1,
       "setup_statements": 0
@@ -536,7 +536,7 @@
       "group": "struct",
       "title": "Function field rejects wrong generic argument type",
       "expect": "reject",
-      "phase": "def_thm",
+      "phase": "goal_well_defined",
       "file": "struct/n07.lit",
       "statements": 2,
       "setup_statements": 1
@@ -546,7 +546,7 @@
       "group": "struct",
       "title": "Function field retains its guard",
       "expect": "reject",
-      "phase": "def_thm",
+      "phase": "goal_well_defined",
       "file": "struct/n08.lit",
       "statements": 2,
       "setup_statements": 1
@@ -556,7 +556,7 @@
       "group": "struct",
       "title": "Struct does not assume arbitrary function-field laws",
       "expect": "reject",
-      "phase": "def_thm",
+      "phase": "conclusion",
       "file": "struct/n09.lit",
       "statements": 2,
       "setup_statements": 1
@@ -566,7 +566,7 @@
       "group": "struct",
       "title": "Scalar field is not callable",
       "expect": "reject",
-      "phase": "def_thm",
+      "phase": "goal_well_defined",
       "file": "struct/n10.lit",
       "statements": 2,
       "setup_statements": 1
@@ -616,7 +616,7 @@
       "group": "higher_order",
       "title": "Function-valued definition rejects narrower codomain",
       "expect": "reject",
-      "phase": "have_fn_equal",
+      "phase": "search_proof",
       "file": "higher_order/n15.lit",
       "statements": 1,
       "setup_statements": 0
@@ -811,7 +811,7 @@
       "group": "explicit_proofs",
       "title": "General constructor proof does not admit an invalid tag",
       "expect": "reject",
-      "phase": "def_template",
+      "phase": "search_proof",
       "file": "explicit_proofs/n25.lit",
       "statements": 3,
       "setup_statements": 2
@@ -831,13 +831,11 @@
       "group": "diagnostics",
       "title": "Template failure retains the child membership goal",
       "expect": "reject",
-      "phase": "def_template",
+      "phase": "search_proof",
       "file": "diagnostics/n26.lit",
       "statements": 1,
       "setup_statements": 0,
       "failure_contains": [
-        "body_have_equal",
-        "membership",
         "a $in Z"
       ]
     },

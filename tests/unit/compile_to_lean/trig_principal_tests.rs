@@ -5,51 +5,85 @@ use crate::prelude::*;
 
 const BOUNDS: [(&str, &str, bool); 4] = [
     (
-        include_str!("../../../lean/examples/sine_lower_unit_bound/statement.lit"),
+        r#"forall x R => -1<=sin(x)
+"#,
         "sineLowerBoundValue",
         true,
     ),
     (
-        include_str!("../../../lean/examples/sine_upper_unit_bound/statement.lit"),
+        r#"forall x R => sin(x)<=1
+"#,
         "sineUpperBoundValue",
         false,
     ),
     (
-        include_str!("../../../lean/examples/cosine_lower_unit_bound/statement.lit"),
+        r#"forall x R => -1<=cos(x)
+"#,
         "cosineLowerBoundValue",
         true,
     ),
     (
-        include_str!("../../../lean/examples/cosine_upper_unit_bound/statement.lit"),
+        r#"forall x R => cos(x)<=1
+"#,
         "cosineUpperBoundValue",
         false,
     ),
 ];
 const NONZERO: [(&str, &str); 2] = [
     (
-        include_str!("../../../lean/examples/cosine_nonzero_principal/statement.lit"),
+        r#"forall x R:
+    (-pi)/2<x
+    x<pi/2
+    =>:
+        cos(x)!=0
+"#,
         "cosineNonzeroOnPrincipalInterval",
     ),
     (
-        include_str!("../../../lean/examples/sine_nonzero_principal/statement.lit"),
+        r#"forall x R:
+    0<x
+    x<pi
+    =>:
+        sin(x)!=0
+"#,
         "sineNonzeroOnPrincipalInterval",
     ),
 ];
 const INVERSES: [(&str, &str); 4] = [
     (
-        include_str!("../../../lean/examples/arcsine_sine_principal/statement.lit"),
+        r#"forall x R:
+    (-pi)/2<=x
+    x<=pi/2
+    =>:
+        arcsin(sin(x))=x
+"#,
         "arcsineSinePrincipalValue",
     ),
     (
-        include_str!("../../../lean/examples/arccosine_cosine_principal/statement.lit"),
+        r#"forall x R:
+    0<=x
+    x<=pi
+    =>:
+        arccos(cos(x))=x
+"#,
         "arccosineCosinePrincipalValue",
     ),
     (
-        include_str!("../../../lean/examples/arctangent_tangent_principal/statement.lit"),
+        r#"forall x R:
+    (-pi)/2<x
+    x<pi/2
+    =>:
+        arctan(tan(x))=x
+"#,
         "arctangentTangentPrincipalValue",
     ),
     (
-        include_str!("../../../lean/examples/arccotangent_cotangent_principal/statement.lit"),
+        r#"forall x R:
+    0<x
+    x<pi
+    =>:
+        arccot(cot(x))=x
+"#,
         "arccotangentCotangentPrincipalValue",
     ),
 ];
@@ -271,7 +305,15 @@ fn principal_identities_allow_reversed_equalities_and_comparison_spelling() {
 #[test]
 fn known_sine_preserves_original_equality_path_and_two_principal_bounds() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_scalar_extra::ScalarExtraEqualityProof as Extra;
-    let source = include_str!("../../../lean/examples/arcsine_from_known_sine/statement.lit");
+    let source = r#"forall x,y R:
+    (-pi)/2<=y
+    y<=pi/2
+    x=sin(y)
+    -1<=x
+    x<=1
+    =>:
+        arcsin(x)=y
+"#;
     for change in [
         "unchanged",
         "missing",

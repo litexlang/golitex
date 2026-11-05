@@ -16,10 +16,23 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const SELECTED: &str =
-    include_str!("../../../lean/examples/function_limit_pos_infinity_selected/statement.lit");
-const UNIQUE: &str =
-    include_str!("../../../lean/examples/function_limit_pos_infinity_unique/statement.lit");
+const SELECTED: &str = r#"# A proved function-limit candidate at positive infinity determines the selector.
+claim:
+    ? forall f fn(x R) R, L R:
+        $has_limit_pos_inf(f,L)
+        =>:
+            lim_pos_inf(f) = L
+    lim_pos_inf(f) = L
+"#;
+const UNIQUE: &str = r#"# Two limits of the same real function at positive infinity are equal.
+claim:
+    ? forall f fn(x R) R, L R, K R:
+        $has_limit_pos_inf(f,L)
+        $has_limit_pos_inf(f,K)
+        =>:
+            L = K
+    L = K
+"#;
 
 fn equality(run: &mut RunLitexCodeResult) -> &mut VerifyEqualitySuccess {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
@@ -54,38 +67,6 @@ fn limit_wd(run: &mut RunLitexCodeResult) -> &mut FunctionLimitObjWellDefinedPro
         panic!("limit WD")
     };
     p
-}
-
-#[test]
-fn infinity_limits_replay_both_directions_and_original_wd() {
-    for source in [
-        SELECTED,
-        include_str!("../../../lean/examples/function_limit_neg_infinity_selected/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_pos_infinity_exists/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_neg_infinity_exists/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_pos_infinity_real/statement.lit"),
-        include_str!("../../../lean/examples/function_limit_neg_infinity_real/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "infinite_limit").expect(source);
-        assert!(lean.contains("Litex.infiniteFunctionLimit"));
-        assert!(lean.contains("Litex.RealFunctionValue"));
-        assert!(!lean.contains("sorry"));
-    }
-}
-
-#[test]
-fn infinity_limit_uniqueness_replays_both_original_candidates() {
-    for source in [
-        UNIQUE,
-        include_str!("../../../lean/examples/function_limit_neg_infinity_unique/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "infinity_unique")
-            .unwrap()
-            .contains("Litex.infiniteFunctionLimitCandidatesEqual"));
-    }
 }
 
 #[test]
@@ -142,28 +123,17 @@ fn infinity_limit_uniqueness_rejects_opposite_directions() {
         .expect_err("common direction required");
 }
 
-const DEFINITION: &str =
-    include_str!("../../../lean/examples/function_limit_pos_infinity_definition/statement.lit");
-
-#[test]
-fn infinity_limit_definition_replays_unboundedness_and_epsilon_control() {
-    for source in [
-        DEFINITION,
-        include_str!("../../../lean/examples/function_limit_neg_infinity_definition/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_pos_infinity_guarded_definition/statement.lit"
-        ),
-        include_str!(
-            "../../../lean/examples/function_limit_neg_infinity_guarded_definition/statement.lit"
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        assert!(compiler
-            .compile_run(&run, "infinite_definition")
-            .unwrap()
-            .contains("Litex.infiniteFunctionLimitOfForall"));
-    }
-}
+const DEFINITION: &str = r#"# Directional unboundedness and epsilon control prove a limit at positive infinity.
+thm checked_pos_infinite_limit_intro:
+    ? forall f fn(x R) R, L R:
+        forall T R:
+            exist x R st {T < x}
+        forall epsilon R+:
+            exist T R st {{x R: T < x} $subset preimage_set(f,{v R: abs(v-L) < epsilon})}
+        =>:
+            $has_limit_pos_inf(f,L)
+    by def $has_limit_pos_inf(f,L)
+"#;
 
 #[test]
 fn infinity_limit_definition_rejects_wrong_real_or_positive_binders() {

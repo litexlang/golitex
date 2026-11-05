@@ -203,14 +203,22 @@ def run(binary, name, inputs, strict, expect):
         if 'statement_success' in expect:
             if [result.get('statement_result') == 'accepted' for result in results] != expect['statement_success']:
                 errors.append('statement success sequence differs')
+        diagnostics = output.get('errors', [])
         if expect.get('session_error_contains'):
             if expect['session_error_contains'] not in str(termination):
                 errors.append('wrong session error')
-        elif 'failed_phase' in expect:
-            failed = [result for result in results if result.get('statement_result') == 'rejected']
+        if 'error_contains' in expect:
+            if not any(expect['error_contains'] in str(error.get('message', ''))
+                       for error in diagnostics):
+                errors.append('wrong failure diagnostic')
+        if 'failed_phase' in expect:
+            failed = [index for index, result in enumerate(results)
+                      if result.get('statement_result') == 'rejected']
             if session_terminated or termination is not None or not failed:
                 errors.append('expected a soft statement failure')
-            elif [result.get('why_failed', {}).get('phase') for result in failed] != expect['failed_phase']:
+            elif [error.get('statement_index') for error in diagnostics] != failed:
+                errors.append('failure diagnostic indices differ')
+            elif [error.get('phase') for error in diagnostics] != expect['failed_phase']:
                 errors.append('wrong failure phase')
         if expect.get('empty_effects'):
             if any(result.get('stores') or result.get('infers') for result in results):

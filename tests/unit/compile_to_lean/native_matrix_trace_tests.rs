@@ -5,19 +5,50 @@ use crate::execute::ExecReleaseAndExpandStmtResult;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::{MatrixLawApplicationProof, MatrixLawOrientation, NativeMatrixLawProof};
 use crate::prelude::*;
 
-const ADD: &str = include_str!("../../../lean/examples/native_matrix_trace_add/statement.lit");
-const SCALE: &str = include_str!("../../../lean/examples/native_matrix_trace_scale/statement.lit");
-const CYCLIC: &str =
-    include_str!("../../../lean/examples/native_matrix_trace_cyclic/statement.lit");
-const REVERSE: &str =
-    include_str!("../../../lean/examples/native_matrix_trace_reverse/statement.lit");
-const ZERO: &str =
-    include_str!("../../../lean/examples/native_matrix_trace_zero_order/statement.lit");
-const TRANSPORT: &str =
-    include_str!("../../../lean/examples/native_matrix_trace_transport/statement.lit");
-const LINEAR: &str = include_str!("../../../lean/examples/matrix_trace_linearity/statement.lit");
-const EXPLICIT_CYCLIC: &str =
-    include_str!("../../../lean/examples/matrix_trace_cyclic/statement.lit");
+const ADD: &str = r#"# Preserve the original trace-law premises, constructors and selected proof.
+forall replay_trace_order N, replay_trace_A, replay_trace_B matrix(C, replay_trace_order, replay_trace_order):
+    trace(matrix_add(replay_trace_A, replay_trace_B, replay_trace_order, replay_trace_order), replay_trace_order) = trace(replay_trace_A, replay_trace_order) + trace(replay_trace_B, replay_trace_order)
+"#;
+const SCALE: &str = r#"# Preserve the original trace-law premises, constructors and selected proof.
+forall replay_trace_order N, replay_trace_scalar C, replay_trace_A matrix(C, replay_trace_order, replay_trace_order):
+    trace(matrix_scale(replay_trace_scalar, replay_trace_A, replay_trace_order, replay_trace_order), replay_trace_order) = replay_trace_scalar * trace(replay_trace_A, replay_trace_order)
+"#;
+const CYCLIC: &str = r#"# Preserve the original trace-law premises, constructors and selected proof.
+forall replay_trace_rows, replay_trace_inner N, replay_trace_A matrix(C, replay_trace_rows, replay_trace_inner), replay_trace_B matrix(C, replay_trace_inner, replay_trace_rows):
+    trace(matrix_mul(replay_trace_A, replay_trace_B, replay_trace_rows, replay_trace_inner, replay_trace_rows), replay_trace_rows) = trace(matrix_mul(replay_trace_B, replay_trace_A, replay_trace_inner, replay_trace_rows, replay_trace_inner), replay_trace_inner)
+"#;
+const REVERSE: &str = r#"# Preserve the original trace-law premises, constructors and selected proof.
+forall replay_trace_order N, replay_trace_A, replay_trace_B matrix(C, replay_trace_order, replay_trace_order):
+    trace(replay_trace_A, replay_trace_order) + trace(replay_trace_B, replay_trace_order) = trace(matrix_add(replay_trace_A, replay_trace_B, replay_trace_order, replay_trace_order), replay_trace_order)
+forall replay_trace_order N, replay_trace_scalar C, replay_trace_A matrix(C, replay_trace_order, replay_trace_order):
+    replay_trace_scalar * trace(replay_trace_A, replay_trace_order) = trace(matrix_scale(replay_trace_scalar, replay_trace_A, replay_trace_order, replay_trace_order), replay_trace_order)
+forall replay_trace_rows, replay_trace_inner N, replay_trace_A matrix(C, replay_trace_rows, replay_trace_inner), replay_trace_B matrix(C, replay_trace_inner, replay_trace_rows):
+    trace(matrix_mul(replay_trace_B, replay_trace_A, replay_trace_inner, replay_trace_rows, replay_trace_inner), replay_trace_inner) = trace(matrix_mul(replay_trace_A, replay_trace_B, replay_trace_rows, replay_trace_inner, replay_trace_rows), replay_trace_rows)
+"#;
+const ZERO: &str = r#"# Preserve the original trace-law premises, constructors and selected proof.
+forall replay_trace_A, replay_trace_B matrix(C,0,0):
+    trace(matrix_add(replay_trace_A,replay_trace_B,0,0),0) = trace(replay_trace_A,0) + trace(replay_trace_B,0)
+"#;
+const TRANSPORT: &str = r#"# Preserve the original trace-law premises, constructors and selected proof.
+thm replay_trace_transport:
+    ? forall replay_trace_order N, replay_trace_A, replay_trace_B matrix(C, replay_trace_order, replay_trace_order):
+        trace(matrix_add(replay_trace_A, replay_trace_B, replay_trace_order, replay_trace_order), replay_trace_order) = trace(replay_trace_B, replay_trace_order) + trace(replay_trace_A, replay_trace_order)
+    trace(replay_trace_A, replay_trace_order) + trace(replay_trace_B, replay_trace_order) = trace(replay_trace_B, replay_trace_order) + trace(replay_trace_A, replay_trace_order)
+"#;
+const LINEAR: &str = r#"# Preserve the original trace-law premises, constructors and selected proof.
+thm replay_trace_linearity:
+    ? forall replay_trace_order N, replay_trace_A, replay_trace_B matrix(C, replay_trace_order, replay_trace_order), replay_trace_scalar C:
+        trace(matrix_add(replay_trace_A, replay_trace_B, replay_trace_order, replay_trace_order), replay_trace_order) = trace(replay_trace_A, replay_trace_order) + trace(replay_trace_B, replay_trace_order)
+        trace(matrix_scale(replay_trace_scalar, replay_trace_A, replay_trace_order, replay_trace_order), replay_trace_order) = replay_trace_scalar * trace(replay_trace_A, replay_trace_order)
+    release thm matrix_trace_linearity(replay_trace_A, replay_trace_B, replay_trace_scalar, replay_trace_order)
+"#;
+const EXPLICIT_CYCLIC: &str = r#"# Preserve the original trace-law premises, constructors and selected proof.
+thm replay_trace_cyclic:
+    ? forall replay_trace_rows, replay_trace_inner N, replay_trace_A matrix(C, replay_trace_rows, replay_trace_inner), replay_trace_B matrix(C, replay_trace_inner, replay_trace_rows):
+        trace(matrix_mul(replay_trace_A, replay_trace_B, replay_trace_rows, replay_trace_inner, replay_trace_rows), replay_trace_rows) = trace(matrix_mul(replay_trace_B, replay_trace_A, replay_trace_inner, replay_trace_rows, replay_trace_inner), replay_trace_inner)
+    release thm matrix_trace_cyclic(replay_trace_A, replay_trace_B, replay_trace_rows, replay_trace_inner)
+by thm replay_trace_cyclic(2,3,zero_matrix(2,3),zero_matrix(3,2)) => trace(matrix_mul(zero_matrix(2,3),zero_matrix(3,2),2,3,2),2) = trace(matrix_mul(zero_matrix(3,2),zero_matrix(2,3),3,2,3),3)
+"#;
 
 fn application(proof: &mut VerifyFactResult) -> &mut MatrixLawApplicationProof {
     let eq = super::equality_proof_mut(proof);

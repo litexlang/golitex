@@ -3,24 +3,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::Equa
 use crate::prelude::*;
 
 #[test]
-fn matrix_ranks_replay_membership_laws_aliases_and_functions() {
-    for source in [
-        include_str!("../../../lean/examples/matrix_rank_membership/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_bounds/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_zero/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_identity/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_empty/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_alias/statement.lit"),
-        include_str!("../../../lean/examples/matrix_rank_function/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "matrix_ranks")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
-
-#[test]
 fn matrix_ranks_reject_missing_reordered_and_changed_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef as W;
     for changed in 0..4 {
@@ -126,9 +108,15 @@ fn matrix_ranks_reject_invalid_domains_and_unproved_positive_rank() {
 #[test]
 fn matrix_ranks_reject_missing_or_reordered_alias_congruence() {
     for missing in [false, true] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/matrix_rank_alias/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Matrix and rank aliases retain their natural membership and cited identity value.
+let rank_named_matrix = identity_matrix(2)
+let named_matrix_rank = matrix_rank(rank_named_matrix,2,2)
+named_matrix_rank $in N
+release thm matrix_rank_identity(2)
+named_matrix_rank = 2
+"#,
+        );
         compiler.compile_run(&run, "valid_rank_alias").unwrap();
         let equality = super::equality_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[4]).verify_result,
@@ -159,9 +147,11 @@ fn matrix_exact_determinants_reject_changed_function_evaluations() {
         MatrixDefinitionResidualProof, MatrixEqualityProof,
     };
     for changed in 0..7 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/matrix_exact_named_determinant/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"have replay_exact_identity matrix(C, 2, 2) = identity_matrix(2)
+det(replay_exact_identity, 2) = 1
+"#,
+        );
         compiler
             .compile_run(&run, "valid_exact_determinant")
             .unwrap();
@@ -205,25 +195,6 @@ fn matrix_exact_determinants_reject_changed_function_evaluations() {
         assert!(compiler
             .compile_run(&run, "changed_exact_determinant")
             .is_err());
-    }
-}
-
-#[test]
-fn matrix_inverses_replay_guarded_carriers_coordinates_and_definition() {
-    for source in [
-        include_str!("../../../lean/examples/matrix_inverse_membership/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inverse_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inverse_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inverse_real_values/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inverse_empty/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inverse_two_steps/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inverse_theorem/statement.lit"),
-        include_str!("../../../lean/examples/matrix_inverse_alias/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "matrix_inverses")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
     }
 }
 
@@ -346,24 +317,6 @@ fn matrix_inverses_reject_missing_guard_zero_determinant_and_wrong_shapes() {
 }
 
 #[test]
-fn matrix_adjugates_replay_carriers_coordinates_empty_and_definition() {
-    for source in [
-        include_str!("../../../lean/examples/matrix_adjugate_membership/statement.lit"),
-        include_str!("../../../lean/examples/matrix_adjugate_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_adjugate_empty/statement.lit"),
-        include_str!("../../../lean/examples/matrix_adjugate_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_adjugate_alias/statement.lit"),
-        include_str!("../../../lean/examples/matrix_adjugate_theorem/statement.lit"),
-        include_str!("../../../lean/examples/matrix_adjugate_two_steps/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "matrix_adjugates")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
-
-#[test]
 fn matrix_adjugates_reject_missing_reordered_or_changed_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef as W;
     for changed in 0..3 {
@@ -461,21 +414,6 @@ fn matrix_adjugates_reject_negative_nonsquare_and_outside_indices() {
         assert!(super::LitexToLeanCompiler::new(runtime)
             .compile_run(&run, "invalid_adjugate_domain")
             .is_err());
-    }
-}
-
-#[test]
-fn matrix_cofactors_replay_carriers_small_orders_and_references() {
-    for source in [
-        include_str!("../../../lean/examples/matrix_cofactor_membership/statement.lit"),
-        include_str!("../../../lean/examples/matrix_cofactor_small_orders/statement.lit"),
-        include_str!("../../../lean/examples/matrix_cofactor_alias/statement.lit"),
-        include_str!("../../../lean/examples/matrix_cofactor_theorem/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "matrix_cofactors")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
     }
 }
 
@@ -591,22 +529,6 @@ fn matrix_cofactors_reject_changed_expansion_and_invalid_domains() {
 }
 
 #[test]
-fn matrix_minors_replay_domains_and_coordinates() {
-    for source in [
-        include_str!("../../../lean/examples/matrix_minor_membership/statement.lit"),
-        include_str!("../../../lean/examples/matrix_minor_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_minor_empty/statement.lit"),
-        include_str!("../../../lean/examples/matrix_minor_theorem/statement.lit"),
-        include_str!("../../../lean/examples/matrix_minor_alias/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "matrix_minors")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
-
-#[test]
 fn matrix_minors_reject_missing_reordered_and_misassigned_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef as W;
     for changed in 0..4 {
@@ -694,23 +616,6 @@ fn matrix_minors_reject_invalid_domains() {
         assert!(super::LitexToLeanCompiler::new(runtime)
             .compile_run(&run, "invalid_minor_domain")
             .is_err());
-    }
-}
-
-#[test]
-fn matrix_powers_replay_domains_and_selected_theorems() {
-    for source in [
-        include_str!("../../../lean/examples/matrix_power_membership/statement.lit"),
-        include_str!("../../../lean/examples/matrix_power_literal/statement.lit"),
-        include_str!("../../../lean/examples/matrix_power_empty/statement.lit"),
-        include_str!("../../../lean/examples/matrix_power_alias/statement.lit"),
-        include_str!("../../../lean/examples/matrix_power_zero/statement.lit"),
-        include_str!("../../../lean/examples/matrix_power_successor/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "matrix_powers")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
     }
 }
 
@@ -805,8 +710,20 @@ fn matrix_powers_reject_changed_theorem_and_invalid_domains() {
     use crate::execute::execute_by_stmt::ExecReleaseThmStmtResult;
     use crate::execute::ExecReleaseAndExpandStmtResult;
     for source in [
-        include_str!("../../../lean/examples/matrix_power_zero/statement.lit"),
-        include_str!("../../../lean/examples/matrix_power_successor/statement.lit"),
+        r#"# Every square matrix has identity as its zeroth power; reuse the named theorem.
+thm checked_matrix_power_zero:
+    ? forall n N, A matrix(C,n,n):
+        matrix_power(A,n,0) = identity_matrix(n)
+    release thm matrix_power_zero(A,n)
+
+by thm checked_matrix_power_zero(2,zero_matrix(2,2)) => matrix_power(zero_matrix(2,2),2,0) = identity_matrix(2)
+"#,
+        r#"# The next matrix power multiplies the preceding power by the same matrix.
+thm checked_matrix_power_successor:
+    ? forall n, p N, A matrix(C,n,n):
+        matrix_power(A,n,p+1) = matrix_mul(matrix_power(A,n,p),A,n,n,n)
+    release thm matrix_power_successor(A,n,p)
+"#,
     ] {
         for changed in 0..3 {
             let (mut run, compiler) = super::execute(source);
@@ -860,22 +777,6 @@ fn matrix_powers_reject_changed_theorem_and_invalid_domains() {
 }
 
 #[test]
-fn matrix_determinants_replay_original_domains_and_laws() {
-    for source in [
-        include_str!("../../../lean/examples/matrix_determinant/statement.lit"),
-        include_str!("../../../lean/examples/matrix_determinant_identity/statement.lit"),
-        include_str!("../../../lean/examples/matrix_determinant_transpose/statement.lit"),
-        include_str!("../../../lean/examples/matrix_determinant_adjoint/statement.lit"),
-        include_str!("../../../lean/examples/matrix_determinant_small_orders/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "matrix_determinants")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
-
-#[test]
 fn matrix_determinants_reject_missing_or_reordered_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef as W;
     for changed in 0..3 {
@@ -912,9 +813,26 @@ fn matrix_determinants_reject_changed_builtin_contracts() {
     use crate::execute::execute_by_stmt::ExecReleaseThmStmtResult;
     use crate::execute::ExecReleaseAndExpandStmtResult;
     for source in [
-        include_str!("../../../lean/examples/matrix_determinant_identity/statement.lit"),
-        include_str!("../../../lean/examples/matrix_determinant_transpose/statement.lit"),
-        include_str!("../../../lean/examples/matrix_determinant_adjoint/statement.lit"),
+        r#"# The determinant of every finite identity matrix is one.
+thm checked_det_identity:
+    ? forall n N:
+        det(identity_matrix(n),n) = 1
+    release thm matrix_det_identity(n)
+
+by thm checked_det_identity(2) => det(identity_matrix(2),2) = 1
+"#,
+        r#"# Transposition preserves the determinant.
+thm checked_det_transpose:
+    ? forall n N, A matrix(C,n,n):
+        det(transpose(A,n,n),n) = det(A,n)
+    release thm matrix_det_transpose(A,n)
+"#,
+        r#"# Conjugate transposition conjugates the determinant.
+thm checked_det_adjoint:
+    ? forall n N, A matrix(C,n,n):
+        det(conjugate_transpose(A,n,n),n) = conj(det(A,n))
+    release thm matrix_det_adjoint(A,n)
+"#,
     ] {
         for changed in 0..3 {
             let (mut run, compiler) = super::execute(source);
@@ -988,23 +906,6 @@ fn matrix_determinants_reject_changed_expansion_and_invalid_domain() {
 }
 
 #[test]
-fn matrix_norms_replay_original_wd_and_square_theorems() {
-    for source in [
-        include_str!("../../../lean/examples/euclidean_norm_definition/statement.lit"),
-        include_str!("../../../lean/examples/frobenius_norm_definition/statement.lit"),
-        include_str!("../../../lean/examples/euclidean_norm/statement.lit"),
-        include_str!("../../../lean/examples/frobenius_norm/statement.lit"),
-        include_str!("../../../lean/examples/euclidean_norm_nonnegative/statement.lit"),
-        include_str!("../../../lean/examples/frobenius_norm_nonnegative/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "matrix_norms")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
-
-#[test]
 fn matrix_norms_reject_missing_or_reordered_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef as W;
     for source in [
@@ -1059,8 +960,24 @@ fn matrix_norms_reject_changed_builtin_certificate() {
     use crate::execute::execute_by_stmt::ExecReleaseThmStmtResult;
     use crate::execute::ExecReleaseAndExpandStmtResult;
     for source in [
-        include_str!("../../../lean/examples/euclidean_norm_nonnegative/statement.lit"),
-        include_str!("../../../lean/examples/frobenius_norm_nonnegative/statement.lit"),
+        r#"# The squared-norm theorem proves that a complex vector norm is nonnegative.
+thm checked_euclidean_norm_nonnegative:
+    ? forall n N, v cart_n(C,n):
+        0 <= euclidean_norm(v,n)
+    release thm euclidean_norm_square(v,n)
+    0 <= euclidean_norm(v,n)
+
+by thm checked_euclidean_norm_nonnegative(2,(1,i)) => 0 <= euclidean_norm((1,i),2)
+"#,
+        r#"# The squared-norm theorem proves that a complex matrix norm is nonnegative.
+thm checked_frobenius_norm_nonnegative:
+    ? forall m,n N, A matrix(C,m,n):
+        0 <= frobenius_norm(A,m,n)
+    release thm frobenius_norm_square(A,m,n)
+    0 <= frobenius_norm(A,m,n)
+
+by thm checked_frobenius_norm_nonnegative(0,2,zero_matrix(0,2)) => 0 <= frobenius_norm(zero_matrix(0,2),0,2)
+"#,
     ] {
         for changed in 0..5 {
             let (mut run, compiler) = super::execute(source);
@@ -1129,8 +1046,18 @@ fn matrix_norms_reject_wrong_dimensions_and_missing_input_carriers() {
 fn matrix_norms_reject_changed_definition_expression() {
     use crate::execute::execute_fact_stmt::native_matrix::MatrixEqualityProof;
     for source in [
-        include_str!("../../../lean/examples/euclidean_norm_definition/statement.lit"),
-        include_str!("../../../lean/examples/frobenius_norm_definition/statement.lit"),
+        r#"# Unfold the norm after its squared-magnitude sum is known nonnegative.
+forall n N, v cart_n(C,n):
+    0 <= finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {C_abs(v(k))^2})
+    =>:
+        euclidean_norm(v,n) = sqrt(finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) R {C_abs(v(k))^2}))
+"#,
+        r#"# Unfold the matrix norm with the original square-root WD premise.
+forall m,n N, A matrix(C,m,n):
+    0 <= finite_set_sum(closed_range(1,m),fn(r closed_range(1,m)) R {finite_set_sum(closed_range(1,n),fn(c closed_range(1,n)) R {C_abs(A(r,c))^2})})
+    =>:
+        frobenius_norm(A,m,n) = sqrt(finite_set_sum(closed_range(1,m),fn(r closed_range(1,m)) R {finite_set_sum(closed_range(1,n),fn(c closed_range(1,n)) R {C_abs(A(r,c))^2})}))
+"#,
     ] {
         let (mut run, compiler) = super::execute(source);
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
@@ -1145,73 +1072,6 @@ fn matrix_norms_reject_changed_definition_expression() {
         };
         proof.expression = Obj::Literal(Literal::Number(Number::new("0".into())));
         assert!(compiler.compile_run(&run, "bad_norm_expression").is_err());
-    }
-}
-
-#[test]
-fn matrix_spaces_and_coordinates_compile_recorded_results() {
-    for source in [
-        include_str!("../../../lean/examples/matrix_spaces/statement.lit"),
-        include_str!("../../../lean/examples/matrix_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_membership/statement.lit"),
-        include_str!("../../../lean/examples/matrix_alias/statement.lit"),
-        include_str!("../../../lean/examples/zero_matrix/statement.lit"),
-        include_str!("../../../lean/examples/zero_matrix_definition/statement.lit"),
-        include_str!("../../../lean/examples/zero_matrix_return/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose_real/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose_twice/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose_zero/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose_theorem/statement.lit"),
-        include_str!("../../../lean/examples/matrix_conjugate_transpose/statement.lit"),
-        include_str!("../../../lean/examples/matrix_conjugate_transpose_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_conjugate_transpose_real/statement.lit"),
-        include_str!("../../../lean/examples/matrix_conjugate_transpose_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_conjugate_transpose_nested/statement.lit"),
-        include_str!("../../../lean/examples/matrix_conjugate_transpose_involution/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose_involution/statement.lit"),
-        include_str!("../../../lean/examples/matrix_addition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_subtraction/statement.lit"),
-        include_str!("../../../lean/examples/matrix_entrywise_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_addition_commutative/statement.lit"),
-        include_str!("../../../lean/examples/matrix_entrywise_real/statement.lit"),
-        include_str!("../../../lean/examples/matrix_entrywise_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_scale/statement.lit"),
-        include_str!("../../../lean/examples/matrix_scale_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_scale_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_scale_one/statement.lit"),
-        include_str!("../../../lean/examples/finite_inner_product/statement.lit"),
-        include_str!("../../../lean/examples/finite_inner_product_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_product_real_values/statement.lit"),
-        include_str!("../../../lean/examples/matrix_vector_application/statement.lit"),
-        include_str!("../../../lean/examples/matrix_vector_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_vector_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_multiplication/statement.lit"),
-        include_str!("../../../lean/examples/matrix_multiplication_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_multiplication_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_trace/statement.lit"),
-        include_str!("../../../lean/examples/matrix_trace_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_diagonal/statement.lit"),
-        include_str!("../../../lean/examples/matrix_diagonal_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_diagonal_formula/statement.lit"),
-        include_str!("../../../lean/examples/matrix_diagonal_literal/statement.lit"),
-        include_str!("../../../lean/examples/matrix_outer_product/statement.lit"),
-        include_str!("../../../lean/examples/matrix_outer_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/matrix_outer_definition/statement.lit"),
-        include_str!("../../../lean/examples/matrix_outer_transpose/statement.lit"),
-        include_str!("../../../lean/examples/finite_sequence_carrier_widening/statement.lit"),
-        include_str!("../../../lean/examples/matrix_outer_literal/statement.lit"),
-        include_str!("../../../lean/examples/matrix_transpose_twice_real/statement.lit"),
-        include_str!("../../../lean/examples/finite_tuple_function_carrier/statement.lit"),
-        include_str!("../../../lean/examples/identity_matrix/statement.lit"),
-        include_str!("../../../lean/examples/identity_matrix_coordinates/statement.lit"),
-        include_str!("../../../lean/examples/identity_matrix_values/statement.lit"),
-        include_str!("../../../lean/examples/identity_matrix_formula/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "matrix_spaces").unwrap();
     }
 }
 
@@ -1803,9 +1663,12 @@ fn outer_product_rejects_wrong_vector_length_and_coordinate() {
 #[test]
 fn function_set_strategy_rejects_missing_or_changed_requirement() {
     for missing in [false, true] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/finite_sequence_carrier_widening/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# A real finite sequence is also a complex sequence with exactly the same domain.
+forall n N, a cart_n(R,n):
+    a $in cart_n(C,n)
+"#,
+        );
         compiler
             .compile_run(&run, "valid_sequence_widening")
             .unwrap();
@@ -1971,9 +1834,12 @@ fn matrix_trace_rejects_changed_input_domain() {
 #[test]
 fn matrix_trace_rejects_changed_diagonal_formula() {
     use crate::execute::execute_fact_stmt::native_matrix::MatrixEqualityProof;
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/matrix_trace_definition/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# The trace is the finite sum of all diagonal entries on the complete index set.
+forall n N, A matrix(C,n,n):
+    trace(A,n) = finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C {A(k,k)})
+"#,
+    );
     compiler.compile_run(&run, "valid_trace_formula").unwrap();
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
     let eq = super::equality_proof_mut(&mut all.proved_then_facts[0].verify_result);
@@ -2035,9 +1901,15 @@ fn matrix_multiply_rejects_changed_summand_or_inner_dimension() {
     use crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof;
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
     for changed_body in [false, true] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/matrix_multiplication/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# The product of compatible rectangular complex or real matrices preserves its scalar field.
+forall m,k,n N, A matrix(C,m,k), B matrix(C,k,n):
+    matrix_mul(A,B,m,k,n) $in matrix(C,m,n)
+
+forall m,k,n N, A matrix(R,m,k), B matrix(R,k,n):
+    matrix_mul(A,B,m,k,n) $in matrix(R,m,n)
+"#,
+        );
         compiler.compile_run(&run, "valid_product").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
@@ -2108,9 +1980,15 @@ fn matrix_apply_rejects_changed_summand_or_vector_domain() {
     use crate::execute::execute_fact_stmt::native_matrix::MatrixMembershipProof;
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule;
     for changed_body in [false, true] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/matrix_vector_application/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Applying a compatible matrix to a finite vector preserves the complex or real carrier.
+forall m,n N, A matrix(C,m,n), v cart_n(C,n):
+    matrix_apply(A,v,m,n) $in cart_n(C,m)
+
+forall m,n N, A matrix(R,m,n), v cart_n(R,n):
+    matrix_apply(A,v,m,n) $in cart_n(R,m)
+"#,
+        );
         compiler.compile_run(&run, "valid_apply").unwrap();
         let all = super::forall_proof_mut(&mut run.statement_results[0]);
         let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
@@ -2145,9 +2023,15 @@ fn matrix_apply_rejects_changed_summand_or_vector_domain() {
 #[test]
 fn inner_product_rejects_changed_vector_wd() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef;
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/finite_inner_product/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# Finite complex inner products are complex; real input vectors give a real value.
+forall n N, v,w cart_n(C,n):
+    inner_product(v,w,n) $in C
+
+forall n N, v,w cart_n(R,n):
+    inner_product(v,w,n) $in R
+"#,
+    );
     compiler.compile_run(&run, "valid_inner_product").unwrap();
     let all = super::forall_proof_mut(&mut run.statement_results[0]);
     let atom = super::atomic_proof_mut(&mut all.proved_then_facts[0].verify_result);
@@ -2173,9 +2057,12 @@ fn inner_product_rejects_changed_vector_wd() {
 #[test]
 fn inner_product_rejects_missing_left_conjugation() {
     use crate::execute::execute_fact_stmt::native_matrix::MatrixEqualityProof;
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/finite_inner_product_definition/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# The finite inner product conjugates its left vector before summing coordinate products.
+forall n N, v,w cart_n(C,n):
+    inner_product(v,w,n) = finite_set_sum(closed_range(1,n),fn(k closed_range(1,n)) C {conj(v(k))*w(k)})
+"#,
+    );
     compiler
         .compile_run(&run, "valid_inner_definition")
         .unwrap();

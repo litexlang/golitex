@@ -2,7 +2,17 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::execute::{ExecHaveFnByInducStmtResult, ExecHaveFnByInducStmtSuccessResult};
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/local_recursive_sequence/statement.lit");
+const SOURCE: &str = r#"# A local recursive constant sequence witnesses two prescribed initial values.
+thm repeated_seed:
+    ? forall a R:
+        exist f fn(n N) R st {f(0) = a, f(1) = a}
+    have fn sequence(n N) R by induc n from 0:
+        case n = 0: a
+        case n > 0: sequence(n - 1)
+    sequence(0) = a
+    sequence(1) = sequence(0) = a
+    witness exist f fn(n N) R st {f(0) = a, f(1) = a} from sequence
+"#;
 
 fn recursive(run: &mut RunLitexCodeResult) -> &mut ExecHaveFnByInducStmtSuccessResult {
     let theorem = super::named_theorem_mut(&mut run.statement_results[0]);
@@ -16,20 +26,6 @@ fn recursive(run: &mut RunLitexCodeResult) -> &mut ExecHaveFnByInducStmtSuccessR
         panic!()
     };
     proof
-}
-
-#[test]
-fn local_recursive_witness_replays_its_original_equations() {
-    for source in [
-        SOURCE,
-        include_str!("../../../lean/examples/local_recursive_reciprocal/statement.lit"),
-        include_str!("../../../lean/examples/local_recursive_accumulation/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "local_sequence").unwrap();
-        assert!(lean.contains("Litex.recursiveNatFnTarget"));
-        assert_eq!(lean, compiler.compile_run(&run, "local_sequence").unwrap());
-    }
 }
 
 #[test]

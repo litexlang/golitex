@@ -8,27 +8,57 @@ use crate::store_fact_and_infer::InferResult;
 const SOURCES66: &[(&str, &str)] = &[
     (
         "nonempty_set_counterexample",
-        include_str!("../../../lean/examples/notforall_setkind_nonempty_set_counterexample/statement.lit"),
+        r#"# A singleton refutes the claim that every nonempty set excludes zero.
+witness exist sc66_nonempty_w nonempty_set st {0 $in sc66_nonempty_w} from {0}
+not forall sc66_nonempty_S nonempty_set:
+    not 0 $in sc66_nonempty_S
+"#,
     ),
     (
         "finite_set_counterexample",
-        include_str!("../../../lean/examples/notforall_setkind_finite_set_counterexample/statement.lit"),
+        r#"# A singleton refutes the claim that every finite set excludes zero.
+witness exist sc66_finite_w finite_set st {0 $in sc66_finite_w} from {0}
+not forall sc66_finite_S finite_set:
+    not 0 $in sc66_finite_S
+"#,
     ),
     (
         "finite_set_dependent_counterexample",
-        include_str!("../../../lean/examples/notforall_setkind_finite_set_dependent_counterexample/statement.lit"),
+        r#"# A finite set and one of its members refute exclusion of that member.
+witness exist sc66_dep_S finite_set,sc66_dep_x sc66_dep_S st {sc66_dep_x $in sc66_dep_S} from {0},0
+not forall sc66_dep_T finite_set,sc66_dep_y sc66_dep_T:
+    not sc66_dep_y $in sc66_dep_T
+"#,
     ),
     (
         "nonempty_set_dependent_counterexample",
-        include_str!("../../../lean/examples/notforall_setkind_nonempty_set_dependent_counterexample/statement.lit"),
+        r#"# A nonempty set and one of its members refute exclusion of that member.
+witness exist sc66_depN_S nonempty_set,sc66_depN_x sc66_depN_S st {sc66_depN_x $in sc66_depN_S} from {0},0
+not forall sc66_depN_T nonempty_set,sc66_depN_y sc66_depN_T:
+    not sc66_depN_y $in sc66_depN_T
+"#,
     ),
     (
         "nonempty_set_premise_inferred_witness",
-        include_str!("../../../lean/examples/notforall_setkind_nonempty_set_premise_inferred_witness/statement.lit"),
+        r#"# A nonuniversal exclusion premise supplies a nonempty-set counterexample.
+thm sc66_nonempty_counterexample:
+    ? forall sc66_a R:
+        not forall sc66_S nonempty_set:
+            not sc66_a $in sc66_S
+        =>:
+            exist sc66_T nonempty_set st {sc66_a $in sc66_T}
+"#,
     ),
     (
         "finite_set_premise_inferred_witness",
-        include_str!("../../../lean/examples/notforall_setkind_finite_set_premise_inferred_witness/statement.lit"),
+        r#"# A nonuniversal exclusion premise supplies a finite-set counterexample.
+thm sc66_finite_counterexample:
+    ? forall sc66_a R:
+        not forall sc66_S finite_set:
+            not sc66_a $in sc66_S
+        =>:
+            exist sc66_T finite_set st {sc66_a $in sc66_T}
+"#,
     ),
 ];
 

@@ -8,9 +8,15 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
 };
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/euler_not_one/statement.lit");
-const REVERSED: &str = include_str!("../../../lean/examples/euler_not_one_reversed/statement.lit");
-const COMPUTED: &str = include_str!("../../../lean/examples/euler_not_computed_one/statement.lit");
+const SOURCE: &str = r#"# Euler's number is different from one.
+e != 1
+"#;
+const REVERSED: &str = r#"# One is different from Euler's number.
+1 != e
+"#;
+const COMPUTED: &str = r#"# Euler's number differs from a computed representation of one.
+1+0 != e
+"#;
 
 fn selected(run: &mut RunLitexCodeResult) -> &mut VerifyAtomicExceptEqualityFactSuccess {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =

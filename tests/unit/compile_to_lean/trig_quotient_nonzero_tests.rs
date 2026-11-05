@@ -11,13 +11,42 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const TAN: &str = include_str!("../../../lean/examples/tangent_nonzero_from_sine/statement.lit");
-const COT: &str =
-    include_str!("../../../lean/examples/cotangent_nonzero_from_cosine/statement.lit");
-const TAN_REV: &str =
-    include_str!("../../../lean/examples/tangent_nonzero_from_sine_reversed/statement.lit");
-const COT_REV: &str =
-    include_str!("../../../lean/examples/cotangent_nonzero_from_cosine_reversed/statement.lit");
+const TAN: &str = r#"# A defined tangent is nonzero when its sine numerator is nonzero.
+claim:
+    ? forall t R:
+        sin(t) != 0
+        cos(t) != 0
+        =>:
+            tan(t) != 0
+    tan(t) != 0
+"#;
+const COT: &str = r#"# A defined cotangent is nonzero when its cosine numerator is nonzero.
+claim:
+    ? forall t R:
+        sin(t) != 0
+        cos(t) != 0
+        =>:
+            cot(t) != 0
+    cot(t) != 0
+"#;
+const TAN_REV: &str = r#"# Zero differs from a defined tangent whose sine numerator is nonzero.
+claim:
+    ? forall t R:
+        sin(t) != 0
+        cos(t) != 0
+        =>:
+            0 != tan(t)
+    0 != tan(t)
+"#;
+const COT_REV: &str = r#"# Zero differs from a defined cotangent whose cosine numerator is nonzero.
+claim:
+    ? forall t R:
+        sin(t) != 0
+        cos(t) != 0
+        =>:
+            0 != cot(t)
+    0 != cot(t)
+"#;
 
 fn selected_premise(
     run: &mut RunLitexCodeResult,

@@ -2,10 +2,18 @@ use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::less_equal::LessEqualFactSearchProofByBuiltinRule as Rule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::scalar_order_relations::IntegerSuccessorGapProof;
 
-const SUCCESSOR: &str =
-    include_str!("../../../lean/examples/integer_successor_unit_gap/statement.lit");
-const PREDECESSOR: &str =
-    include_str!("../../../lean/examples/integer_predecessor_gap/statement.lit");
+const SUCCESSOR: &str = r#"# Strict integer order retains a full unit of separation.
+forall gap_a, gap_b Z:
+    gap_a < gap_b
+    =>:
+        gap_a + 1 <= gap_b
+"#;
+const PREDECESSOR: &str = r#"# The original greater-than premise is transposed without a new search.
+forall gap_left, gap_right Z:
+    gap_right > gap_left
+    =>:
+        gap_left <= gap_right - 1
+"#;
 
 fn selected(run: &mut RunLitexCodeResult) -> &mut IntegerSuccessorGapProof {
     let root = super::forall_proof_mut(&mut run.statement_results[0]);

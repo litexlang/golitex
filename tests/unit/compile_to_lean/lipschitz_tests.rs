@@ -1,33 +1,25 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
 use crate::prelude::*;
-const FROM: &str =
-    include_str!("../../../lean/examples/function_lipschitz_from_estimate/statement.lit");
-const UNIFORM: &str =
-    include_str!("../../../lean/examples/function_lipschitz_uniform/statement.lit");
-#[test]
-fn lipschitz_replays_schemas_definition_zero_guarded_chain_and_transport() {
-    for source in [
-        FROM,
-        UNIFORM,
-        include_str!("../../../lean/examples/function_lipschitz_definition/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_lipschitz_positive_from_estimate/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_lipschitz_guarded_uniform/statement.lit"),
-        include_str!("../../../lean/examples/function_lipschitz_zero_uniform/statement.lit"),
-        include_str!("../../../lean/examples/function_lipschitz_negative_transport/statement.lit"),
-        include_str!("../../../lean/examples/function_lipschitz_chain/statement.lit"),
-        include_str!("../../../lean/examples/function_lipschitz_transport_uniform/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler
-            .compile_run(&run, "lipschitz")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
-        assert!(output.contains("Litex.FunctionLipschitz"));
-        assert_eq!(output, compiler.compile_run(&run, "lipschitz").unwrap());
-    }
-}
+const FROM: &str = r#"# A nonnegative Lipschitz estimate controls every pair on the complete domain.
+thm checked_function_lipschitz_from_estimate:
+    ? forall f fn(x R) R, K R:
+        K>=0
+        forall p cart(R,R):
+            abs(f(p(1))-f(p(2)))<=K*abs(p(1)-p(2))
+        =>:
+            $is_lipschitz(f,K)
+    release thm fn_lipschitz_from_estimate(f,K)
+"#;
+const UNIFORM: &str = r#"# A nonnegative Lipschitz estimate controls every pair on the complete domain.
+thm checked_function_lipschitz_uniform:
+    ? forall f fn(x R) R, K R:
+        K>=0
+        $is_lipschitz(f,K)
+        =>:
+            $is_uniformly_continuous(f)
+    release thm fn_lipschitz_uniform(f,K)
+"#;
 #[test]
 fn lipschitz_requires_all_original_stages_and_exact_subjects() {
     for source in [FROM, UNIFORM] {
@@ -240,9 +232,20 @@ fn lipschitz_definition_inference_retains_original_source_and_one_clause() {
 #[test]
 fn lipschitz_negative_transport_rejects_another_constant_and_future_citation() {
     for change in ["constant", "future"] {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/function_lipschitz_negative_transport/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Non-Lipschitzness transports along equal function objects and equal constants.
+thm checked_function_lipschitz_negative_transport:
+    ? forall f, g fn(x R) R, K, L R:
+        K>=0
+        L>=0
+        f=g
+        K=L
+        not $is_lipschitz(f,K)
+        =>:
+            not $is_lipschitz(g,L)
+    not $is_lipschitz(g,L)
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(named),
         )) = &mut run.statement_results[0]

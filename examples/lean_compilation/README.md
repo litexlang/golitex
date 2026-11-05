@@ -21,7 +21,7 @@ earlier verification stage.
 
 ## One fact, one recorded route
 
-The existing [source](../../lean/examples/add_zero/statement.lit) says:
+The existing [source](source.lit) says:
 
 ```litex
 forall a C:
@@ -42,7 +42,7 @@ The recorded result introduces a complex member, stores its membership as
 See the [complete Detailed snapshot](trace.detailed.json). IDs belong to this
 captured run; they are not permanent names for mathematical propositions.
 
-The [actual generated file](../../lean/examples/add_zero/statement.lean) retains
+The [actual generated file](Generated.lean) retains
 `h_15`, constructs the sum with `Litex.add`, and compiles the rational route
 through native numeric observations and `Litex.NativeBridge.sameOfDenoteNumber`.
 The emitted `(by ring!)` is a fixed normalization check within that selected
@@ -128,3 +128,7 @@ excerpts in full. Selecting a node connects the actual Detailed evidence,
 emitted Lean code and relevant semantic-library declaration. The sections
 above explain how those three layers relate, including the separate Adapter
 step needed for an ordinary Lean/Mathlib interface.
+
+## Refresh the checked capture
+
+Run `python3 examples/lean_compilation/capture.py` from the repository root. It reuses the shared Cargo build, captures Detailed JSON and Lean from the same successful Runtime, checks byte equality with the CLI, and checks the generated proof with the existing pinned Lake project. Only then does it refresh the paired source/output, evidence and offline viewer. `RUSTUP_TOOLCHAIN` can select the installed Rust toolchain without changing the global default.

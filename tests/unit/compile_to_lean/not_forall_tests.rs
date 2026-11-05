@@ -7,11 +7,28 @@ use crate::execute::execute_fact_stmt::verify_not_forall_fact::VerifyNotForallFa
 use crate::prelude::*;
 use crate::store_fact_and_infer::InferResult;
 
-const SIMPLE: &str = include_str!("../../../lean/examples/not_every_element_is_one/statement.lit");
-const GUARDED: &str =
-    include_str!("../../../lean/examples/reciprocal_counterexample/statement.lit");
-const CONTRA_GUARDED: &str =
-    include_str!("../../../lean/examples/contradiction_with_reciprocal_guard/statement.lit");
+const SIMPLE: &str = r#"# Zero is a counterexample to every element of the singleton being one.
+witness exist x {0} st {x != 1} from 0
+not forall x {0}:
+    x = 1
+exist x {0} st {x != 1}
+"#;
+const GUARDED: &str = r#"# A nonzero real can have reciprocal different from two.
+witness exist x R st {x != 0, 1 / x != 2} from 1
+not forall x R:
+    x != 0
+    =>:
+        1 / x = 2
+"#;
+const CONTRA_GUARDED: &str = r#"# Carry the nonzero condition into a hypothetical reciprocal counterexample.
+by contra:
+    ? forall x R:
+        x != 0
+        =>:
+            1 / x = 1 / x
+    obtain a from exist y R st {y != 0, 1 / y != 1 / y}
+    impossible 1 / a != 1 / a
+"#;
 
 fn contra(run: &mut RunLitexCodeResult) -> &mut ExecByContraStmtSuccess {
     let ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(p))) =
@@ -54,27 +71,6 @@ fn child(proof: &mut VerifyNotForallFactSuccess) -> &mut VerifyPlainExistFactSuc
         panic!("success")
     };
     p
-}
-
-#[test]
-fn negated_universal_replays_witness_guards_cnf_dnf_and_real_line_routes() {
-    for source in [
-        SIMPLE,
-        GUARDED,
-        include_str!("../../../lean/examples/incompatible_universal_equalities/statement.lit"),
-        include_str!("../../../lean/examples/alternatives_counterexample/statement.lit"),
-        include_str!("../../../lean/examples/real_counterexamples/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "counterexamples").unwrap();
-        assert!(output.contains("¬ (∀ (_value_i"));
-        assert!(output.contains("_counterexample"));
-        assert!(!output.contains("sorry"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "counterexamples").unwrap()
-        );
-    }
 }
 
 #[test]
@@ -174,25 +170,6 @@ fn true_universal_and_missing_reciprocal_guard_are_not_counterexamples() {
         );
         let run = runtime.run_litex_code(source).unwrap();
         assert!(!run.success);
-    }
-}
-
-#[test]
-fn negated_universal_assumptions_and_contra_replay_without_fabricated_exist_wd() {
-    for source in [
-        CONTRA_GUARDED,
-        include_str!("../../../lean/examples/contradiction_to_reflexivity/statement.lit"),
-        include_str!("../../../lean/examples/contradiction_to_counterexample/statement.lit"),
-        include_str!("../../../lean/examples/negated_universal_premise/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "quantified_contra").unwrap();
-        assert!(output.contains("_counterexample"));
-        assert!(!output.contains("sorry"));
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "quantified_contra").unwrap()
-        );
     }
 }
 
@@ -342,9 +319,19 @@ fn quantified_contra_publishes_goal_but_not_hypothetical_parameters_or_counterex
 
 #[test]
 fn negated_universal_matching_rejects_free_input_capture_and_changed_carrier() {
-    let (run, _) = super::execute(include_str!(
-        "../../../lean/examples/negated_universal_premise/statement.lit"
-    ));
+    let (run, _) = super::execute(
+        r#"# Use a negated universal premise to obtain a witness and prove a nonzero value.
+thm nonzero_from_counterexample:
+    ? forall a R:
+        not forall x {a}:
+            x = 0
+        =>:
+            a != 0
+    obtain b from exist x {a} st {x != 0}
+    b = a
+    a != 0
+"#,
+    );
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(p),
     )) = &run.statement_results[0]

@@ -5,12 +5,28 @@ use crate::prelude::*;
 #[test]
 fn guarded_range_aggregates_replay_original_coverage() {
     for source in [
-        include_str!("../../lean/examples/guarded_symbolic_sum/statement.lit"),
-        include_str!("../../lean/examples/guarded_natural_product/statement.lit"),
-        include_str!("../../lean/examples/guarded_closed_sum/statement.lit"),
-        include_str!("../../lean/examples/captured_range_sum/statement.lit"),
-        include_str!("../../lean/examples/captured_function_space/statement.lit"),
-        include_str!("../../lean/examples/captured_real_interval/statement.lit"),
+        r#"# Sum a real function over a checked positive integer interval.
+forall n N+, f fn(k Z: 1 <= k, k <= n) R:
+    sum(1, n, f) $in R
+"#,
+        r#"# Every natural index in the product satisfies the upper-domain guard.
+forall n N+:
+    product(1, n, fn(k N: k <= n) R {k}) $in R
+"#,
+        r#"# Sum three integers using the recorded nonzero checks at each argument.
+sum(1, 3, fn(k Z: k != 0) Z {k}) = 6
+"#,
+        r#"# A prefix-sum function captures its endpoint in the summand domain.
+have fn running_total(n N+) R = sum(1, n, fn(k Z: 1 <= k, k <= n) R {k})
+running_total(3) = 6
+"#,
+        r#"# The function-space domain depends on the surrounding set-builder parameter.
+have guarded_spaces set = {n N+: $is_nonempty_set(fn(k Z: 1 <= k, k <= n) R)}
+"#,
+        r#"# A set-valued function forms a real interval using its parameter as endpoint.
+have fn interval_at(x R) power_set(R) = '[0, x]
+interval_at(2) = '[0, 2]
+"#,
     ] {
         let (runtime, run) = execute(source);
         assert!(run.success, "{source}");
@@ -23,9 +39,11 @@ fn guarded_range_aggregates_replay_original_coverage() {
 #[test]
 fn guarded_range_aggregates_reject_missing_or_reordered_evidence() {
     for mutation in 0..3 {
-        let (runtime, mut run) = execute(include_str!(
-            "../../lean/examples/guarded_closed_sum/statement.lit"
-        ));
+        let (runtime, mut run) = execute(
+            r#"# Sum three integers using the recorded nonzero checks at each argument.
+sum(1, 3, fn(k Z: k != 0) Z {k}) = 6
+"#,
+        );
         assert!(run.success);
         let DetailedObjWellDefinedProof::ByDef {
             proof: ObjWellDefinedProofByDef::IteratedOperator(P::Sum(proof)),
@@ -462,10 +480,27 @@ fn finite_aggregate_named_set_finiteness_keeps_original_equality_citations() {
 #[test]
 fn bounded_and_general_finite_aggregates_replay_original_domains() {
     for source in [
-        include_str!("../../lean/examples/bounded_finite_aggregate_closure/statement.lit"),
-        include_str!("../../lean/examples/general_finite_aggregate_closure/statement.lit"),
-        include_str!("../../lean/examples/bounded_finite_aggregate_values/statement.lit"),
-        include_str!("../../lean/examples/integer_ranges_finite/statement.lit"),
+        r#"# Finite sums and products retain the value carrier of a function on the exact bounded index set.
+forall n N, f fn(k closed_range(1,n)) R:
+    finite_set_sum(closed_range(1,n),f) $in R
+    finite_set_product(closed_range(1,n),f) $in R
+"#,
+        r#"# A finite subset of any explicit function domain can be summed or multiplied.
+forall A finite_set, B set, f fn(x B) R:
+    A $subset B
+    =>:
+        finite_set_sum(A,f) $in R
+        finite_set_product(A,f) $in R
+"#,
+        r#"# Exact evaluation keeps the bounded domain of the summand and factor function.
+finite_set_sum({1,2,3},fn(k closed_range(1,3)) Z {k}) = 6
+finite_set_product({1,2,3},fn(k closed_range(1,3)) Z {k}) = 6
+"#,
+        r#"# Every integer interval is finite, including empty intervals with reversed endpoints.
+forall a,b Z:
+    $is_finite_set(closed_range(a,b))
+    $is_finite_set(range(a,b))
+"#,
     ] {
         let (runtime, run) = execute(source);
         assert!(run.success);
@@ -506,9 +541,12 @@ fn bounded_finite_aggregate_rejects_changed_input_signature() {
 
 #[test]
 fn finite_aggregate_alpha_checks_original_iterand_body() {
-    let (runtime, mut run) = execute(include_str!(
-        "../../lean/examples/finite_aggregate_bound_names/statement.lit"
-    ));
+    let (runtime, mut run) = execute(
+        r#"# Renaming a summand or factor's bound parameter does not change the aggregate.
+finite_set_sum({1,2},fn(x Z) Z {x}) = finite_set_sum({1,2},fn(y Z) Z {y})
+finite_set_product({1,2},fn(x Z) Z {x}) = finite_set_product({1,2},fn(y Z) Z {y})
+"#,
+    );
     assert!(run.success);
     let compiler = super::LitexToLeanCompiler::new(runtime);
     compiler.compile_run(&run, "valid_aggregate_alpha").unwrap();
@@ -528,8 +566,27 @@ fn finite_aggregate_alpha_checks_original_iterand_body() {
 #[test]
 fn range_input_coverage_replays_positive_and_arbitrary_carriers() {
     for source in [
-        include_str!("../../lean/examples/positive_range_aggregates/statement.lit"),
-        include_str!("../../lean/examples/covered_range_aggregates/statement.lit"),
+        r#"# Sum and multiply over positive numeric input carriers with the recorded lower bound.
+forall n N+:
+    sum(1,n,fn(k N+) R{k}) $in R
+    product(1,n,fn(k Q+) R{k}) $in R
+    sum(1,n,fn(k R+) R{k}) $in R
+
+forall n N+, f fn(k R+: 1 <= k, k <= n) R:
+    product(1,n,f) $in R
+
+sum(1,3,fn(k R+: k != 0) R{1/k}) = sum(1,3,fn(k R+: k != 0) R{1/k})
+"#,
+        r#"# An explicit interval inclusion supplies every iterand input, for any carrier set.
+forall A set, n N+, f fn(k A) R:
+    closed_range(1,n) $subset A
+    =>:
+        sum(1,n,f) $in R
+        product(1,n,f) $in R
+
+forall n N+, f fn(k closed_range(1,n)) R:
+    sum(1,n,f) $in R
+"#,
     ] {
         let (runtime, run) = execute(source);
         assert!(run.success, "{source}");
@@ -635,8 +692,37 @@ fn range_input_coverage_rejects_foreign_interval_inclusion() {
 #[test]
 fn aggregate_domain_coverage_finite_aggregates_replay_guards_and_positive_carriers() {
     for source in [
-        include_str!("../../lean/examples/positive_finite_aggregates/statement.lit"),
-        include_str!("../../lean/examples/guarded_finite_aggregates/statement.lit"),
+        r#"# Finite sums and products accept positive numeric input carriers.
+forall S finite_set, f fn(k N+) R:
+    S $subset N+
+    =>:
+        finite_set_sum(S,f) $in R
+forall S finite_set, f fn(k Q+) R:
+    S $subset Q+
+    =>:
+        finite_set_product(S,f) $in R
+forall S finite_set, f fn(k R+) R:
+    S $subset R+
+    =>:
+        finite_set_sum(S,f) $in R
+        finite_set_product(S,f) $in R
+finite_set_sum({1,2},fn(k R+) R{k}) = 3
+finite_set_product({1,2},fn(k N+) R{k}) = 2
+"#,
+        r#"# Only members of the finite index set must satisfy the iterand's explicit conditions.
+forall S finite_set, f fn(k R+: k != 0) R:
+    S $subset R+
+    forall k S:
+        k != 0
+    =>:
+        finite_set_sum(S,f) $in R
+        finite_set_product(S,f) $in R
+
+finite_set_sum({1,2},fn(k Z: k != 0) Z{k}) = 3
+finite_set_sum({1,2},fn(k R+: k != 0) R{1/k}) = 3/2
+finite_set_product({1,2},fn(k R+: k != 0) R{1/k}) = 1/2
+finite_set_sum({},fn(k R+: k != 0) R{1/k}) = 0
+"#,
     ] {
         let (runtime, run) = execute(source);
         assert!(run.success, "{source}");

@@ -3,18 +3,14 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
 };
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
-
-const REAL: &str = include_str!("../../../lean/examples/evaluated_real_operations/statement.lit");
-const CITATIONS: &str =
-    include_str!("../../../lean/examples/evaluated_real_citations/statement.lit");
-const FUNCTIONS: &str =
-    include_str!("../../../lean/examples/evaluated_real_functions/statement.lit");
-const LOCAL: &str =
-    include_str!("../../../lean/examples/evaluated_local_real_operations/statement.lit");
-const AGGREGATES: &str =
-    include_str!("../../../lean/examples/evaluated_real_aggregates/statement.lit");
-const SIGNED: &str =
-    include_str!("../../../lean/examples/evaluated_signed_representations/statement.lit");
+const CITATIONS: &str = r#"# Evaluate extrema, rounding and sign using previously proved rational values.
+have real_eval_a R = -7/3
+have real_eval_b R = 1/2
+eval min(real_eval_a,real_eval_b) + ceil(real_eval_a)
+min(real_eval_a,real_eval_b) + ceil(real_eval_a) = -13/3
+eval sign(real_eval_a) * abs(real_eval_a)
+sign(real_eval_a) * abs(real_eval_a) = -7/3
+"#;
 
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -23,18 +19,6 @@ fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess 
         panic!("eval")
     };
     p
-}
-
-#[test]
-fn real_eval_replays_exact_values_citations_calls_aggregates_and_local_scope() {
-    for source in [REAL, CITATIONS, FUNCTIONS, LOCAL, AGGREGATES, SIGNED] {
-        let (run, compiler) = super::execute(source);
-        let output = compiler.compile_run(&run, "real_evaluation").expect(source);
-        assert_eq!(
-            output,
-            compiler.compile_run(&run, "real_evaluation").unwrap()
-        );
-    }
 }
 
 #[test]

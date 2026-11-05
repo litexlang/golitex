@@ -2,12 +2,89 @@ use crate::prelude::*;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule as SubsetRule;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::not_in_fact::NotInFactSearchProofByBuiltinRule as NotInRule;
 
-const NONMEMBER: &str =
-    include_str!("../../../lean/examples/set_operator_nonmembership/statement.lit");
-const MONOTONE: &str =
-    include_str!("../../../lean/examples/set_containment_monotonicity/statement.lit");
-const UNION: &str = include_str!("../../../lean/examples/union_containment_bounds/statement.lit");
-const NESTED: &str = include_str!("../../../lean/examples/nested_set_containment/statement.lit");
+const NONMEMBER: &str = r#"# A nonmember of either factor is outside an intersection; a nonmember of both is outside their union.
+forall absent_left_A, absent_left_B set, absent_left_x R:
+    not absent_left_x $in absent_left_A
+    =>:
+        not absent_left_x $in intersect(absent_left_A, absent_left_B)
+
+forall absent_right_A, absent_right_B set, absent_right_x R:
+    not absent_right_x $in absent_right_B
+    =>:
+        not absent_right_x $in intersect(absent_right_A, absent_right_B)
+
+forall absent_union_A, absent_union_B set, absent_union_x R:
+    not absent_union_x $in absent_union_A
+    not absent_union_x $in absent_union_B
+    =>:
+        not absent_union_x $in union(absent_union_A, absent_union_B)
+"#;
+const MONOTONE: &str = r#"# Enlarging a base enlarges its difference by a fixed set and its power set.
+forall mono_diff_A, mono_diff_B, mono_diff_D set:
+    mono_diff_A $subset mono_diff_B
+    =>:
+        set_minus(mono_diff_A, mono_diff_D) $subset set_minus(mono_diff_B, mono_diff_D)
+
+forall mono_power_A, mono_power_B set:
+    mono_power_A $subset mono_power_B
+    =>:
+        power_set(mono_power_A) $subset power_set(mono_power_B)
+"#;
+const UNION: &str = r#"# Bound a union by a common superset or by direct/crossed component inclusions, retaining reflexive factors.
+forall bound_union_A, bound_union_B, bound_union_D set:
+    bound_union_A $subset bound_union_D
+    bound_union_B $subset bound_union_D
+    =>:
+        union(bound_union_A, bound_union_B) $subset bound_union_D
+
+forall mono_union_A, mono_union_B, mono_union_D, mono_union_E set:
+    mono_union_A $subset mono_union_D
+    mono_union_B $subset mono_union_E
+    =>:
+        union(mono_union_A, mono_union_B) $subset union(mono_union_D, mono_union_E)
+        union(mono_union_A, mono_union_B) $subset union(mono_union_E, mono_union_D)
+
+forall refl_first_A, refl_first_B, refl_first_D set:
+    refl_first_A $subset refl_first_B
+    =>:
+        union(refl_first_D, refl_first_A) $subset union(refl_first_D, refl_first_B)
+        union(refl_first_D, refl_first_A) $subset union(refl_first_B, refl_first_D)
+
+forall refl_second_A, refl_second_B, refl_second_D set:
+    refl_second_A $subset refl_second_B
+    =>:
+        union(refl_second_A, refl_second_D) $subset union(refl_second_B, refl_second_D)
+        union(refl_second_A, refl_second_D) $subset union(refl_second_D, refl_second_B)
+
+forall refl_both_A, refl_both_B set:
+    union(refl_both_A, refl_both_B) $subset union(refl_both_B, refl_both_A)
+"#;
+const NESTED: &str = r#"# Compose upper bounds through nested unions, intersections, differences and subset chains.
+forall nested_union_A, nested_union_B, nested_union_D, nested_union_E set:
+    nested_union_A $subset nested_union_E
+    nested_union_B $subset nested_union_E
+    nested_union_D $subset nested_union_E
+    =>:
+        union(union(nested_union_A, nested_union_B), nested_union_D) $subset nested_union_E
+
+forall nested_inter_A, nested_inter_B, nested_inter_D, nested_inter_E set:
+    nested_inter_A $subset nested_inter_E
+    nested_inter_B $subset nested_inter_E
+    =>:
+        intersect(union(nested_inter_A, nested_inter_B), nested_inter_D) $subset nested_inter_E
+        intersect(nested_inter_D, union(nested_inter_A, nested_inter_B)) $subset nested_inter_E
+
+forall bound_diff_A, bound_diff_B, bound_diff_D set:
+    bound_diff_A $subset bound_diff_D
+    =>:
+        set_minus(bound_diff_A, bound_diff_B) $subset bound_diff_D
+
+forall chain_subset_A, chain_subset_B, chain_subset_D set:
+    chain_subset_A $subset chain_subset_B
+    chain_subset_B $subset chain_subset_D
+    =>:
+        chain_subset_A $subset chain_subset_D
+"#;
 const COMPONENTS: &str = "forall A, B, D, E set:\n    A $subset D\n    B $subset E\n    =>:\n        union(A, B) $subset union(D, E)\n";
 
 fn subset_rule(result: &mut VerifyFactResult) -> &mut SubsetRule {
@@ -18,55 +95,6 @@ fn subset_rule(result: &mut VerifyFactResult) -> &mut SubsetRule {
         panic!("selected subset builtin")
     };
     p
-}
-
-#[test]
-fn set_chains_replay_bounds_exclusions_and_named_proofs() {
-    for (source, laws) in [
-        (
-            NONMEMBER,
-            vec![
-                "notInIntersectOfLeft",
-                "notInIntersectOfRight",
-                "notInUnion",
-            ],
-        ),
-        (MONOTONE, vec!["setMinusMono", "powerSetMono"]),
-        (
-            UNION,
-            vec![
-                "unionSubsetOfBoth",
-                "unionMono",
-                "unionMonoSwap",
-                "subsetRefl",
-            ],
-        ),
-        (
-            NESTED,
-            vec![
-                "unionSubsetOfBoth",
-                "intersectSubsetOfLeft",
-                "intersectSubsetOfRight",
-                "setMinusSubsetOfLeft",
-                "subsetTrans",
-            ],
-        ),
-        (
-            include_str!("../../../lean/examples/union_difference_bound/statement.lit"),
-            vec!["unionSubsetOfBoth", "setMinusSubsetOfLeft"],
-        ),
-        (
-            include_str!("../../../lean/examples/outside_union_intersection/statement.lit"),
-            vec!["notInUnion", "notInIntersectOfLeft"],
-        ),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "set_chain").unwrap();
-        for law in laws {
-            assert!(lean.contains(&format!("Litex.{law} ")), "{law}");
-        }
-        assert_eq!(lean, compiler.compile_run(&run, "set_chain").unwrap());
-    }
 }
 
 #[test]

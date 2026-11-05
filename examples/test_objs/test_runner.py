@@ -68,18 +68,27 @@ class RunnerBoundaryTests(unittest.TestCase):
 
     def test_real_verifier_rejection_is_distinct_from_launch_failure(self):
         envelope = {"kind": "run", "run_result": "failure", "statement_results": [
-            {"statement_result": "rejected", "statement": "<wd_failed>", "why_failed": {"phase": "well_defined"}}],
+            {"statement_result": "rejected", "statement": "<wd_failed>"}],
+            "errors": [{"statement_index": 0, "phase": "well_defined"}],
             "session_terminated": False, "termination": None}
         self.assertEqual(self.evaluate(envelope, 1)["observed"], "reject")
         self.assertEqual(self.evaluate(envelope, 2)["observed"], "infrastructure_failure")
 
     def test_current_parse_rejection_protocol(self):
-        envelope = {"kind": "run", "run_result": "failure", "statement_results": [],
-            "session_terminated": True,
-            "termination": {"phase": "parse", "message": "parse_error: cart_dim is removed at line 2"}}
+        envelope = {"kind": "run", "run_result": "failure",
+            "statement_results": [{"statement_result": "rejected"}],
+            "errors": [{"statement_index": 0, "phase": "parse",
+                        "message": "cart_dim is removed at line 2"}],
+            "session_terminated": False, "termination": None}
         result = self.evaluate(envelope, 1)
         self.assertEqual((result["observed"], result["phase"]), ("reject", "parse"))
         self.assertEqual(self.evaluate(envelope, 2)["observed"], "infrastructure_failure")
+
+    def test_missing_failure_diagnostic_is_not_a_valid_rejection(self):
+        envelope = {"kind": "run", "run_result": "failure",
+            "statement_results": [{"statement_result": "rejected"}],
+            "errors": [], "session_terminated": False, "termination": None}
+        self.assertEqual(self.evaluate(envelope, 1)["observed"], "infrastructure_failure")
 
     def test_panic_and_invalid_json_are_not_negative_test_successes(self):
         process = subprocess.CompletedProcess([], -6, "", "thread panicked")

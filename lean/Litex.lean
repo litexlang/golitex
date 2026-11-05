@@ -52,6 +52,20 @@ import Litex.SequenceExtremaEpsilon
 import Litex.SequenceExtremaTransport
 import Litex.SequenceExtremaAffine
 import Litex.SecondPartial
+import Litex.PartialAlgebra
+import Litex.Antiderivative
+import Litex.AntiderivativeAlgebra
+import Litex.MatrixDifferentialProjections
+import Litex.RiemannTransport
+import Litex.RiemannConstant
+import Litex.RiemannComparison
+import Litex.RiemannBound
+import Litex.ScalarDifferentialProjections
+import Litex.TotalDifferentialProjections
+import Litex.AntiderivativeComposition
+import Litex.AntiderivativeDifference
+import Litex.OrderDifference
+import Litex.FunctionRangeFinite
 /-! Stable entrypoint for the Litex semantic library and its proved compiler adapters. -/
 
 namespace Litex
@@ -166,4 +180,3 @@ theorem matrixInversibleCarrier {M : Semantics.{u}} [F : FunctionSemantics M]
   exact hb.2.1
 
 end Litex
-

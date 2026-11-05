@@ -282,16 +282,20 @@ impl LitexToLeanCompiler {
         )
     }
 
-    pub(in crate::compile_to_lean) fn compile_quantified_head(
+    /// Replay only an original parameter-group prefix. No source domain or
+    /// later parameter facts become visible through this lexical closure.
+    pub(in crate::compile_to_lean) fn compile_parameter_prefix(
         &self,
         parameters: &TypedParameterList,
-        domains: &[Fact],
         introduced: &IntroduceTypedParametersResult,
-        assumed: &[AssumeDomFactResult],
+        group_count: usize,
         position: &SourcePosition<'_>,
     ) -> Result<(Vec<String>, Vec<String>, Vec<String>), LeanCompileError> {
-        let groups = &parameters.groups;
-        let parameters = groups
+        let full_groups = &parameters.groups;
+        let groups = full_groups
+            .get(..group_count)
+            .ok_or_else(|| LeanCompileError::unsupported("Parameters/Prefix"))?;
+        let parameters = full_groups
             .iter()
             .flat_map(|group| &group.params)
             .collect::<Vec<_>>();
@@ -305,7 +309,7 @@ impl LitexToLeanCompiler {
                 "Duplicate source parameter identity.",
             ));
         }
-        if introduced.param_type_well_defined.len() != groups.len() {
+        if introduced.param_type_well_defined.len() != full_groups.len() {
             return Err(LeanCompileError::new(
                 "Forall/Parameters",
                 "Parameter evidence does not match the supported plain groups.",
@@ -314,12 +318,14 @@ impl LitexToLeanCompiler {
         let expected_count: usize = groups.iter().map(|group| group.params.len()).sum();
         self.validate_parameter_store_capture(&introduced.defined_params)?;
         let stores = &introduced.defined_params.store_and_infer_results;
-        if stores.len() != expected_count {
+        let full_count: usize = full_groups.iter().map(|g| g.params.len()).sum();
+        if stores.len() != full_count {
             return Err(LeanCompileError::new(
                 "Forall/ParameterStores",
                 "Parameter introduction needs its actual ordered stores.",
             ));
         }
+        let stores = &stores[..expected_count];
         let mut binders = Vec::new();
         let mut introductions = Vec::new();
         let mut definitions = Vec::new();
@@ -433,12 +439,66 @@ impl LitexToLeanCompiler {
             before: expected_count,
             ..*position
         };
+        let layer_count: usize = groups
+            .iter()
+            .filter(|group| {
+                matches!(
+                    group.param_type,
+                    ParamType::Obj(Obj::StructAndFieldAccessObj(
+                        StructAndFieldAccessObj::StructObj(_)
+                    ))
+                )
+            })
+            .map(|group| group.params.len())
+            .sum();
+        let layers = introduced
+            .auto_opened_struct_layers
+            .as_deref()
+            .unwrap_or(&[]);
+        let full_layer_count: usize = full_groups
+            .iter()
+            .filter(|group| {
+                matches!(
+                    group.param_type,
+                    ParamType::Obj(Obj::StructAndFieldAccessObj(
+                        StructAndFieldAccessObj::StructObj(_)
+                    ))
+                )
+            })
+            .map(|group| group.params.len())
+            .sum();
+        if layers.len() != full_layer_count {
+            return Err(LeanCompileError::unsupported(
+                "StructRelease/ParameterLayers",
+            ));
+        }
+        let layers = layers
+            .get(..layer_count)
+            .ok_or_else(|| LeanCompileError::unsupported("StructRelease/ParameterLayers"))?;
         definitions.extend(self.compile_auto_struct_layers(
             groups,
             stores,
-            introduced.auto_opened_struct_layers.as_deref(),
+            Some(layers),
             &complete,
         )?);
+        Ok((binders, introductions, definitions))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_quantified_head(
+        &self,
+        parameters: &TypedParameterList,
+        domains: &[Fact],
+        introduced: &IntroduceTypedParametersResult,
+        assumed: &[AssumeDomFactResult],
+        position: &SourcePosition<'_>,
+    ) -> Result<(Vec<String>, Vec<String>, Vec<String>), LeanCompileError> {
+        let expected_count: usize = parameters.groups.iter().map(|g| g.params.len()).sum();
+        let (mut binders, mut introductions, mut definitions) = self.compile_parameter_prefix(
+            parameters,
+            introduced,
+            parameters.groups.len(),
+            position,
+        )?;
         if assumed.len() != domains.len() {
             return Err(LeanCompileError::new(
                 "Forall/Domain",

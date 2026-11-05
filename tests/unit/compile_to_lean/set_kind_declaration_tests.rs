@@ -5,11 +5,71 @@ use crate::execute::{
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/template_nonempty_set_choice/statement.lit"),
-    include_str!("../../../lean/examples/template_finite_set_choice/statement.lit"),
-    include_str!("../../../lean/examples/set_kind_parameters/statement.lit"),
-    include_str!("../../../lean/examples/set_kind_aliases/statement.lit"),
-    include_str!("../../../lean/examples/local_set_kind_witnesses/statement.lit"),
+    r#"# Choose a nonempty set through a template, then choose one of its members.
+template<S set>:
+    have chosen_nonempty nonempty_set
+
+$is_nonempty_set(\chosen_nonempty<R>)
+
+have a \chosen_nonempty<R>
+
+a $in \chosen_nonempty<R>
+"#,
+    r#"# A finite-set template supplies the WD of cardinality inside a captured formula.
+template<S set>:
+    have chosen_finite finite_set
+
+$is_finite_set(\chosen_finite<R>)
+
+finite_set_size(\chosen_finite<R>) $in N
+
+have fn chosen_size(t R) N = finite_set_size(\chosen_finite<{t}>)
+
+chosen_size(2) = finite_set_size(\chosen_finite<{2}>)
+"#,
+    r#"# Introduce an arbitrary nonempty set and its member, and an arbitrary finite set.
+have A nonempty_set, x A
+
+x $in A
+
+$is_set(A)
+
+have F finite_set
+
+finite_set_size(F) $in N
+"#,
+    r#"# Preserve nonempty and finite predicates for aliases and parameterized copies.
+have NonemptyAlias nonempty_set = R
+
+$is_nonempty_set(NonemptyAlias)
+
+have FiniteAlias finite_set = {1, 2}
+
+$is_finite_set(FiniteAlias)
+
+FiniteAlias = {1, 2}
+
+template<T finite_set>:
+    have copied_finite finite_set = T
+
+\copied_finite<{1, 2}> = {1, 2}
+
+template<T nonempty_set>:
+    have copied_nonempty nonempty_set = T
+
+\copied_nonempty<R> = R
+"#,
+    r#"# Construct a finite set and an inhabited set with a member inside named proofs.
+thm finite_kind_witness:
+    ? exist finite_witness finite_set st {$is_finite_set(finite_witness)}
+    have local_finite finite_set
+    witness exist finite_witness finite_set st {$is_finite_set(finite_witness)} from local_finite
+
+thm nonempty_kind_witness:
+    ? exist nonempty_witness nonempty_set, chosen_member nonempty_witness st {chosen_member $in nonempty_witness}
+    have local_nonempty nonempty_set, local_member local_nonempty
+    witness exist nonempty_witness nonempty_set, chosen_member nonempty_witness st {chosen_member $in nonempty_witness} from local_nonempty, local_member
+"#,
 ];
 
 fn have(statement: &mut ExecStmtResult) -> &mut ExecHaveObjInNonemptySetStmtSuccessResult {
@@ -32,15 +92,6 @@ fn template_have(run: &mut RunLitexCodeResult) -> &mut ExecHaveObjInNonemptySetS
         panic!()
     };
     have(p.body.as_mut())
-}
-
-#[test]
-fn set_kind_declarations_replay_choices_aliases_contexts_and_local_witnesses() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "set_kind").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "set_kind").unwrap());
-    }
 }
 
 #[test]

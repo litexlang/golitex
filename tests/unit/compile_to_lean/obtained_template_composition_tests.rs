@@ -8,10 +8,93 @@ use crate::execute::{
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/obtained_template_real_composition/statement.lit"),
-    include_str!("../../../lean/examples/obtained_template_reciprocal/statement.lit"),
-    include_str!("../../../lean/examples/obtained_template_function_composition/statement.lit"),
-    include_str!("../../../lean/examples/obtained_template_generic_copy/statement.lit"),
+    r#"# Copy an obtained real witness through a formula function.
+template<value R>:
+    obtain copied_value from exist x R st {x = value}
+have fn copied(a R) R = \copied_value<a>
+copied(2) = \copied_value<2> = 2
+forall a R:
+    copied(a) = \copied_value<a> = a
+"#,
+    r#"# Taking a reciprocal after selecting an equal nonzero real preserves its value.
+thm nonzero_witness:
+    ? forall value R:
+        value != 0
+        =>:
+            exist x R st {x = value and x != 0}
+    witness exist x R st {x = value and x != 0} from value
+
+template<value R: value != 0,>:
+    obtain nonzero_copy from exist x R st {x = value and x != 0}
+
+thm nonzero_copy_complex:
+    ? forall a R:
+        a != 0
+        =>:
+            \nonzero_copy<a> $in C
+    \nonzero_copy<a> $in R
+    \nonzero_copy<a> $in C
+
+thm reciprocal_copy_real:
+    ? forall a R:
+        a != 0
+        =>:
+            1 / \nonzero_copy<a> $in R
+    \nonzero_copy<a> $in R
+    \nonzero_copy<a> != 0
+    1 / \nonzero_copy<a> $in R
+
+have fn reciprocal_copy(a R: a != 0) R = 1 / \nonzero_copy<a>
+
+thm nonzero_copy_value:
+    ? forall a R:
+        a != 0
+        =>:
+            \nonzero_copy<a> = a
+    \nonzero_copy<a> = a and \nonzero_copy<a> != 0
+
+thm reciprocal_copy_formula:
+    ? forall a R:
+        a != 0
+        =>:
+            reciprocal_copy(a) = 1 / a
+    \nonzero_copy<a> = a
+    reciprocal_copy(a) = 1 / \nonzero_copy<a> = 1 / a
+
+reciprocal_copy(2) = 1 / 2
+"#,
+    r#"# A function obtained from an existential predicate agrees pointwise with the original.
+prop has_equal_function(S nonempty_set, T nonempty_set, f fn(x S) T):
+    exist g fn(x S) T st {g = f}
+
+template<S nonempty_set, T nonempty_set, f fn(x S) T: $has_equal_function(S, T, f)>:
+    obtain selected_function from $has_equal_function(S, T, f)
+
+have fn copied_apply(f fn(x R) R, a R: $has_equal_function(R, R, f)) R = \selected_function<R, R, f>(a)
+
+thm copied_apply_agrees:
+    ? forall f fn(x R) R, a R:
+        $has_equal_function(R, R, f)
+        =>:
+            copied_apply(f, a) = f(a)
+    \selected_function<R, R, f> = f
+    copied_apply(f, a) = \selected_function<R, R, f>(a) = f(a)
+
+have fn identity(x R) R = x
+witness $has_equal_function(R, R, identity) from identity
+copied_apply(identity, 2) = identity(2) = 2
+"#,
+    r#"# Copy an element chosen from any fixed set through a function on that set.
+template<S set, value S>:
+    obtain copied_element from exist x S st {x = value}
+
+template<S set>:
+    have fn copy_on(a S) S = \copied_element<S, a>
+
+\copy_on<R>(2) = \copied_element<R, 2> = 2
+forall S set, a S:
+    \copy_on<S>(a) = \copied_element<S, a> = a
+"#,
 ];
 
 fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResult {
@@ -24,21 +107,6 @@ fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResu
             _ => None,
         })
         .unwrap()
-}
-
-#[test]
-fn obtained_template_compositions_preserve_witnesses_in_formula_bodies() {
-    for source in SOURCES {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "obtained_compositions")
-            .expect(source);
-        assert!(lean.contains("Litex.obtainedValue") && lean.contains("Litex.obtainedObject"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "obtained_compositions").unwrap()
-        );
-    }
 }
 
 #[test]

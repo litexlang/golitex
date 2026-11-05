@@ -10,17 +10,34 @@ use crate::prelude::*;
 const NAMED: &str = "have fn return_pair(x R, y R: y != 0) R = x / y\nreturn_pair(3, 2) $in C\n";
 const ANONYMOUS: &str = "fn(x R) R {x}(2) $in C\n";
 const WEAKER: &str = "have fn call_weak_return(x R) C = x\n$is_set(call_weak_return(2))\nforall call_unused R:\n    call_weak_return $in fn(y R) R\n    =>:\n        call_weak_return(2) $in R\n";
-const FINITE_COORDINATE: &str =
-    include_str!("../../lean/examples/finite_coordinate_symbolic_index/statement.lit");
+const FINITE_COORDINATE: &str = r#"# Every valid coordinate of a finite real vector is real.
+forall p cart(R,R), k closed_range(1,2):
+    p(k) $in R
+"#;
 
 #[test]
 fn function_return_finite_domain_replays_declared_and_stronger_codomains() {
     for source in [
         FINITE_COORDINATE,
-        include_str!("../../lean/examples/finite_coordinate_integer_return/statement.lit"),
-        include_str!("../../lean/examples/finite_coordinate_formula/statement.lit"),
-        include_str!("../../lean/examples/finite_coordinate_refined_return/statement.lit"),
-        include_str!("../../lean/examples/partial_derivative_reduced_coordinate/statement.lit"),
+        r#"# An integer-valued finite complex vector has real coordinates.
+forall p cart(C,C), k closed_range(1,2):
+    p $in fn(j closed_range(1,2)) Z
+    =>:
+        p(k) $in R
+"#,
+        r#"# A real-valued formula selects a coordinate with an exactly computed index.
+have fn reduced_coordinate_value(p cart(R,R)) R = p(1+1)
+"#,
+        r#"# A finite complex vector with a real-valued function interface has real coordinates.
+forall p cart(C,C), k closed_range(1,2):
+    p $in fn(j closed_range(1,2)) R
+    =>:
+        p(k) $in R
+"#,
+        r#"# Differentiate a squared coordinate whose index is an exact expression.
+forall p cart(R,R):
+    $has_partial_derivative_at(fn(q cart(R,R)) R {q(1+1)^2},p,2,2,2*p(2))
+"#,
     ] {
         let (run, c) = checked(source);
         let lean = c
@@ -38,8 +55,18 @@ fn function_return_finite_domain_replays_declared_and_stronger_codomains() {
 fn function_return_finite_domain_rejects_changed_signature_and_requirements() {
     for source in [
         FINITE_COORDINATE,
-        include_str!("../../lean/examples/finite_coordinate_refined_return/statement.lit"),
-        include_str!("../../lean/examples/finite_coordinate_integer_return/statement.lit"),
+        r#"# A finite complex vector with a real-valued function interface has real coordinates.
+forall p cart(C,C), k closed_range(1,2):
+    p $in fn(j closed_range(1,2)) R
+    =>:
+        p(k) $in R
+"#,
+        r#"# An integer-valued finite complex vector has real coordinates.
+forall p cart(C,C), k closed_range(1,2):
+    p $in fn(j closed_range(1,2)) Z
+    =>:
+        p(k) $in R
+"#,
     ] {
         for change in 0..6 {
             let (mut run, c) = checked(source);

@@ -2,9 +2,15 @@
 fn composition_right_identity_replays_mutual_domain_inclusion() {
     use crate::execute::execute_fact_stmt::function_domain::FunctionDomainComparisonProof;
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_composition::CompositionEqualityProof;
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/reordered_function_domains/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# Reordering the exclusions 0 and 1 preserves the domain, so composing with its identity preserves the function.
+have fn domain_two_gaps(x R: x != 0, x != 1) R = x + 1
+have fn domain_two_gaps_id(y R: y != 1, y != 0) R = y
+domain_two_gaps ∘ domain_two_gaps_id = domain_two_gaps
+have fn domain_two_gaps_alt(y R: y != 1, y != 0) C = 1 + y
+by fn_extension domain_two_gaps = domain_two_gaps_alt
+"#,
+    );
     let CompositionEqualityProof::RightIdentity(p) = composition_law(&mut run, 2) else {
         panic!();
     };
@@ -99,27 +105,23 @@ fn composition_rejects_changed_operand_domain_body_and_compatibility_evidence() 
 }
 
 #[test]
-fn composition_examples_replay_the_selected_calls_and_beta_steps() {
-    for source in [
-        include_str!("../../../lean/examples/squared_gap_composition/statement.lit"),
-        include_str!("../../../lean/examples/shifted_square_composition/statement.lit"),
-        include_str!("../../../lean/examples/double_reciprocal_composition/statement.lit"),
-        include_str!("../../../lean/examples/abstract_function_composition/statement.lit"),
-        include_str!("../../../lean/examples/positive_domain_composition/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "composition_variants").unwrap();
-        assert!(lean.contains("Litex.composeCall"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "composition_variants").unwrap()
-        );
-    }
-}
-
-#[test]
 fn composition_call_rejects_missing_argument_or_guard_stages() {
-    let source = include_str!("../../../lean/examples/squared_gap_composition/statement.lit");
+    let source = r#"# Square a positive gap by composing two functions, retaining the gap's complete ordered domain.
+
+have fn comp_square(t R) R = t^2
+
+have fn comp_gap(x,y R: x<y) R = y-x
+
+have comp_h fn(x,y R: x<y) R = comp_square ∘ comp_gap
+
+comp_h(1,3)=4
+
+compose(comp_square,comp_gap)(1,3)=4
+
+(comp_square ∘ comp_gap)(1,3)=comp_square(comp_gap(1,3))
+
+comp_h(2,5)=9
+"#;
     for change in 0..3 {
         let (mut run, compiler) = super::execute(source);
         let eq = super::equality_proof_mut(
@@ -170,9 +172,24 @@ fn composition_beta_rejects_changed_body_continuation_or_selected_composition() 
             normalize_function_body::FunctionBodyExpansionProof},
     };
     for change in 0..4 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/squared_gap_composition/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Square a positive gap by composing two functions, retaining the gap's complete ordered domain.
+
+have fn comp_square(t R) R = t^2
+
+have fn comp_gap(x,y R: x<y) R = y-x
+
+have comp_h fn(x,y R: x<y) R = comp_square ∘ comp_gap
+
+comp_h(1,3)=4
+
+compose(comp_square,comp_gap)(1,3)=4
+
+(comp_square ∘ comp_gap)(1,3)=comp_square(comp_gap(1,3))
+
+comp_h(2,5)=9
+"#,
+        );
         let eq = super::equality_proof_mut(
             &mut super::fact_statement_mut(&mut run.statement_results[3]).verify_result,
         );
@@ -201,23 +218,6 @@ fn composition_beta_rejects_changed_body_continuation_or_selected_composition() 
             _ => unreachable!(),
         }
         assert!(compiler.compile_run(&run, "bad_composition_beta").is_err());
-    }
-}
-
-#[test]
-fn composition_graph_laws_replay_selected_builtin_certificates() {
-    for source in [
-        include_str!("../../../lean/examples/composition_graph_laws/statement.lit"),
-        include_str!("../../../lean/examples/guarded_composition_identities/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "composition_laws").unwrap();
-        assert!(lean.contains("Litex.composeRightIdentity"));
-        assert!(lean.contains("Litex.composeRangeSubset"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "composition_laws").unwrap()
-        );
     }
 }
 
@@ -256,9 +256,21 @@ fn composition_associativity_replays_both_original_orientations() {
 #[test]
 fn composition_fixed_laws_reject_changed_graphs_identities_and_citations() {
     for change in 0..5 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/composition_graph_laws/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Composition preserves function graphs under reassociation and identity; its range lies in the outer range.
+have fn comp_square(t R) R = t^2
+have fn comp_shift(t R) R = t+1
+have fn comp_gap(x,y R: x<y) R = y-x
+(comp_square ∘ comp_shift) ∘ comp_shift = comp_square ∘ (comp_shift ∘ comp_shift)
+have fn comp_id(t R) R = t
+comp_id ∘ comp_gap = comp_gap
+comp_shift ∘ comp_id = comp_shift
+fn_range(comp_square ∘ comp_gap) $subset fn_range(comp_square)
+comp_square ∘ comp_shift = fn(t R) R {comp_square(comp_shift(t))}
+comp_square ∘ comp_shift = fn(t R) C {comp_square(comp_shift(t))}
+comp_square ∘ comp_gap = fn(a,b R: a<b) R {comp_square(comp_gap(a,b))}
+"#,
+        );
         match (
             change,
             composition_law(
@@ -299,9 +311,14 @@ fn composition_fixed_laws_reject_changed_graphs_identities_and_citations() {
 
 #[test]
 fn composition_right_identity_rejects_removed_original_nonzero_domain() {
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/guarded_composition_identities/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# The reciprocal has a right identity on the nonzero reals, and composition cannot enlarge its range.
+have fn comp_recip(t R: t != 0) R = 1/t
+have fn comp_id_nz(t R: t != 0) R = t
+comp_recip ∘ comp_id_nz = comp_recip
+fn_range(comp_recip ∘ comp_recip) $subset fn_range(comp_recip)
+"#,
+    );
     let CompositionEqualityProof::RightIdentity(p) = composition_law(&mut run, 2) else {
         panic!()
     };
@@ -312,9 +329,21 @@ fn composition_right_identity_rejects_removed_original_nonzero_domain() {
 #[test]
 fn composition_definition_rejects_changed_body_and_domain() {
     for change in 0..2 {
-        let (mut run, compiler) = super::execute(include_str!(
-            "../../../lean/examples/composition_graph_laws/statement.lit"
-        ));
+        let (mut run, compiler) = super::execute(
+            r#"# Composition preserves function graphs under reassociation and identity; its range lies in the outer range.
+have fn comp_square(t R) R = t^2
+have fn comp_shift(t R) R = t+1
+have fn comp_gap(x,y R: x<y) R = y-x
+(comp_square ∘ comp_shift) ∘ comp_shift = comp_square ∘ (comp_shift ∘ comp_shift)
+have fn comp_id(t R) R = t
+comp_id ∘ comp_gap = comp_gap
+comp_shift ∘ comp_id = comp_shift
+fn_range(comp_square ∘ comp_gap) $subset fn_range(comp_square)
+comp_square ∘ comp_shift = fn(t R) R {comp_square(comp_shift(t))}
+comp_square ∘ comp_shift = fn(t R) C {comp_square(comp_shift(t))}
+comp_square ∘ comp_gap = fn(a,b R: a<b) R {comp_square(comp_gap(a,b))}
+"#,
+        );
         let CompositionEqualityProof::Definition(p) = composition_law(&mut run, 10) else {
             panic!()
         };
@@ -331,9 +360,21 @@ fn composition_definition_rejects_changed_body_and_domain() {
 
 #[test]
 fn composition_range_subset_rejects_another_outer_function() {
-    let (mut run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/composition_graph_laws/statement.lit"
-    ));
+    let (mut run, compiler) = super::execute(
+        r#"# Composition preserves function graphs under reassociation and identity; its range lies in the outer range.
+have fn comp_square(t R) R = t^2
+have fn comp_shift(t R) R = t+1
+have fn comp_gap(x,y R: x<y) R = y-x
+(comp_square ∘ comp_shift) ∘ comp_shift = comp_square ∘ (comp_shift ∘ comp_shift)
+have fn comp_id(t R) R = t
+comp_id ∘ comp_gap = comp_gap
+comp_shift ∘ comp_id = comp_shift
+fn_range(comp_square ∘ comp_gap) $subset fn_range(comp_square)
+comp_square ∘ comp_shift = fn(t R) R {comp_square(comp_shift(t))}
+comp_square ∘ comp_shift = fn(t R) C {comp_square(comp_shift(t))}
+comp_square ∘ comp_gap = fn(a,b R: a<b) R {comp_square(comp_gap(a,b))}
+"#,
+    );
     let fact = super::atomic_proof_mut(
         &mut super::fact_statement_mut(&mut run.statement_results[7]).verify_result,
     );

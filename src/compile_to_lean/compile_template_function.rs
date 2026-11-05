@@ -85,7 +85,8 @@ impl LitexToLeanCompiler {
         instance: &InstantiatedTemplateObj,
         position: &SourcePosition<'_>,
     ) -> Result<FnSet, LeanCompileError> {
-        let (declaration, producer, _) = position.visible_template(&instance.template_name)?;
+        let (declaration, producer, _) =
+            position.visible_template(&instance.template_name, &self.runtime)?;
         let complete = SourcePosition::new(
             Some(&producer),
             SourceOwner::Template(declaration),
@@ -127,7 +128,8 @@ impl LitexToLeanCompiler {
         term: &str,
         position: &SourcePosition<'_>,
     ) -> Result<(String, String), LeanCompileError> {
-        let (declaration, producer, _) = position.visible_template(&instance.template_name)?;
+        let (declaration, producer, _) =
+            position.visible_template(&instance.template_name, &self.runtime)?;
         let binding = template_output(declaration, instance.template_name.local_name())?.0;
         let member_id = template_output_member_id(declaration, &binding.name)?;
         let theorem = match declaration.statement.template_def_stmt {
@@ -169,8 +171,13 @@ impl LitexToLeanCompiler {
             .iter()
             .find(|p| p.source_fact_id == member_id)
             .ok_or_else(|| LeanCompileError::unsupported("Template/FunctionMemberPublication"))?;
-        let (_, member) =
-            position.visible_fact(publication.store_and_infer.primary_fact_id(), &self.runtime)?;
+        let member = position.declaration_reference(
+            &format!(
+                "h_{}",
+                publication.store_and_infer.primary_fact_id().value()
+            ),
+            &producer,
+        )?;
         let object = Obj::InstantiatedTemplateObj(instance.clone());
         position
             .with_visible_wd(&object, &mut |wd, site| {
@@ -185,10 +192,10 @@ impl LitexToLeanCompiler {
                 let args = self
                     .compile_template_arguments(instance, evidence, &scope)?
                     .join(" ");
-                let signature = self.context_application(
+                let signature = position.declaration_reference(
                     &format!("_template_signature_i{}", binding.id.value()),
                     &producer,
-                );
+                )?;
                 Ok((
                     format!("({signature} {args})"),
                     format!("({member} {args})"),

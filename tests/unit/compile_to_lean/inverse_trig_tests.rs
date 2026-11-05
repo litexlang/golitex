@@ -2,23 +2,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOpe
 use crate::prelude::*;
 
 #[test]
-fn inverse_trig_examples_replay_original_results() {
-    for source in [
-        include_str!("../../../lean/examples/inverse_trigonometric_values/statement.lit"),
-        include_str!("../../../lean/examples/inverse_trigonometric_left_inverses/statement.lit"),
-        include_str!("../../../lean/examples/inverse_trigonometric_domains/statement.lit"),
-        include_str!("../../../lean/examples/reciprocal_trigonometric_definitions/statement.lit"),
-        include_str!("../../../lean/examples/reciprocal_trigonometric_values/statement.lit"),
-        include_str!("../../../lean/examples/inverse_trigonometric_functions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler
-            .compile_run(&run, "inverse_trig")
-            .unwrap_or_else(|e| panic!("{source}\n{e:?}"));
-    }
-}
-
-#[test]
 fn inverse_trig_wd_rejects_missing_or_altered_evidence() {
     for expression in [
         "arcsin(0)",

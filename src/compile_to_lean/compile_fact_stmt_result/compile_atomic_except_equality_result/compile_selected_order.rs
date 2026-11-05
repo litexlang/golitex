@@ -493,6 +493,79 @@ impl LitexToLeanCompiler {
         ))
     }
 
+    pub(in crate::compile_to_lean) fn compile_nonnegative_difference_from_order(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (zero, expression, strict) = source_order_oriented(goal)?;
+        let Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) = expression else {
+            return Err(LeanCompileError::unsupported(
+                "NonnegativeDifference/Constructor",
+            ));
+        };
+        let (low, high, premise_strict) = source_order_oriented(&premise.fact)?;
+        if strict
+            || premise_strict
+            || !is_exact_zero(zero)
+            || low.ir() != sub.right.ir()
+            || high.ir() != sub.left.ir()
+        {
+            return Err(LeanCompileError::new(
+                "NonnegativeDifference/Subject",
+                "The original weak order must compare this exact subtrahend and minuend.",
+            ));
+        }
+        let child = self.compile_order_known_premise(premise, position)?.1;
+        Ok(format!(
+            "(Litex.subNonnegative {} {child})",
+            self.compile_object_reference(expression, position)?
+        ))
+    }
+
+    pub(in crate::compile_to_lean) fn compile_nonpositive_difference_order(
+        &self,
+        goal: &AtomicFact,
+        premise: &AtomicExceptEqualityFactKnownProof,
+        from_difference: bool,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let (order, bound) = if from_difference {
+            (goal, &premise.fact)
+        } else {
+            (&premise.fact, goal)
+        };
+        let (low, high, strict) = source_order_oriented(order)?;
+        let (expression, zero, bound_strict) = source_order_oriented(bound)?;
+        let Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) = expression else {
+            return Err(LeanCompileError::unsupported(
+                "NonpositiveDifference/Constructor",
+            ));
+        };
+        if strict
+            || bound_strict
+            || !is_exact_zero(zero)
+            || low.ir() != sub.left.ir()
+            || high.ir() != sub.right.ir()
+        {
+            return Err(LeanCompileError::unsupported(
+                "NonpositiveDifference/Subject",
+            ));
+        }
+        let child = self.compile_order_known_premise(premise, position)?.1;
+        let difference = self.compile_object_reference(expression, position)?;
+        if from_difference {
+            Ok(format!(
+                "(Litex.subNonpositiveToLe {difference} {} {} {child})",
+                self.compile_real_membership_certificate(&sub.left, position)?,
+                self.compile_real_membership_certificate(&sub.right, position)?
+            ))
+        } else {
+            Ok(format!("(Litex.subNonpositive {difference} {child})"))
+        }
+    }
+
     pub(in crate::compile_to_lean) fn compile_predecessor_nonnegative_known(
         &self,
         goal: &AtomicFact,

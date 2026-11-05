@@ -320,9 +320,28 @@ thm affine_coordinate:
 
 #[test]
 fn have_by_existence_replays_global_and_local_choices() {
-    let (run, runtime) = checked(include_str!(
-        "../../../../lean/examples/have_from_existence/statement.lit"
-    ));
+    let (run, runtime) = checked(
+        r#"# Choose a real equal to two, calculate with it, and choose locally inside a theorem.
+witness exist chosen_source R st {chosen_source = 2} from 2
+have chosen_two R:
+    chosen_two = 2
+chosen_two + 1 = 3
+
+thm choose_positive:
+    ? exist positive_choice R st {positive_choice > 0}
+    have local_choice R:
+        local_choice = 2
+    witness exist positive_choice R st {positive_choice > 0} from local_choice:
+        local_choice > 0
+
+witness exist have_num, have_den R st {have_den != 0, have_num = 1 / have_den} from 1, 1:
+    1 / 1 = 1
+have selected_num, selected_den R:
+    selected_den != 0
+    selected_num = 1 / selected_den
+selected_num = 1 / selected_den
+"#,
+    );
     let compiler = LitexToLeanCompiler::new(runtime);
     let output = compiler.compile_run(&run, "have_by_existence").unwrap();
     assert!(output.contains("Classical.choose"));
@@ -379,9 +398,28 @@ fn have_by_existence_replays_global_and_local_choices() {
 #[test]
 fn have_by_existence_rejects_changed_existential_or_missing_store() {
     for change_source in [true, false] {
-        let (mut run, runtime) = checked(include_str!(
-            "../../../../lean/examples/have_from_existence/statement.lit"
-        ));
+        let (mut run, runtime) = checked(
+            r#"# Choose a real equal to two, calculate with it, and choose locally inside a theorem.
+witness exist chosen_source R st {chosen_source = 2} from 2
+have chosen_two R:
+    chosen_two = 2
+chosen_two + 1 = 3
+
+thm choose_positive:
+    ? exist positive_choice R st {positive_choice > 0}
+    have local_choice R:
+        local_choice = 2
+    witness exist positive_choice R st {positive_choice > 0} from local_choice:
+        local_choice > 0
+
+witness exist have_num, have_den R st {have_den != 0, have_num = 1 / have_den} from 1, 1:
+    1 / 1 = 1
+have selected_num, selected_den R:
+    selected_den != 0
+    selected_num = 1 / selected_den
+selected_num = 1 / selected_den
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjByExistFacts(
                 crate::execute::ExecHaveObjByExistFactsStmtResult::Success(proof),
@@ -415,9 +453,35 @@ fn have_by_existence_does_not_relax_obtain_binder_freshness() {
 
 #[test]
 fn have_from_universal_existence_replays_cited_conclusion() {
-    let (run, runtime) = checked(include_str!(
-        "../../../../lean/examples/choice_from_universal/statement.lit"
-    ));
+    let (run, runtime) = checked(
+        r#"# A universal square witness can be chosen and used for an arbitrary real.
+thm square_witness_for_each_real:
+    ? forall seed R:
+        exist root R st {root * root = seed * seed}
+    witness exist root R st {root * root = seed * seed} from seed
+have square_seed R
+have square_root_choice R:
+    square_root_choice * square_root_choice = square_seed * square_seed
+square_root_choice * square_root_choice = square_seed * square_seed
+
+thm reciprocal_witness_for_nonzero:
+    ? forall divisor R:
+        divisor != 0
+        =>:
+            exist reciprocal R st {reciprocal * divisor = 1}
+    witness exist reciprocal R st {reciprocal * divisor = 1} from 1 / divisor:
+        (1 / divisor) * divisor = 1
+
+thm reciprocal_choice_use:
+    ? forall nonzero_seed R:
+        nonzero_seed != 0
+        =>:
+            exist selected R st {selected * nonzero_seed = 1}
+    have local_inverse R:
+        local_inverse * nonzero_seed = 1
+    witness exist selected R st {selected * nonzero_seed = 1} from local_inverse
+"#,
+    );
     let lean = LitexToLeanCompiler::new(runtime)
         .compile_run(&run, "universal_choice")
         .unwrap();
@@ -428,9 +492,35 @@ fn have_from_universal_existence_replays_cited_conclusion() {
 fn have_from_universal_existence_rejects_corrupt_matching_evidence() {
     use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
     for corruption in 0..4 {
-        let (mut run, runtime) = checked(include_str!(
-            "../../../../lean/examples/choice_from_universal/statement.lit"
-        ));
+        let (mut run, runtime) = checked(
+            r#"# A universal square witness can be chosen and used for an arbitrary real.
+thm square_witness_for_each_real:
+    ? forall seed R:
+        exist root R st {root * root = seed * seed}
+    witness exist root R st {root * root = seed * seed} from seed
+have square_seed R
+have square_root_choice R:
+    square_root_choice * square_root_choice = square_seed * square_seed
+square_root_choice * square_root_choice = square_seed * square_seed
+
+thm reciprocal_witness_for_nonzero:
+    ? forall divisor R:
+        divisor != 0
+        =>:
+            exist reciprocal R st {reciprocal * divisor = 1}
+    witness exist reciprocal R st {reciprocal * divisor = 1} from 1 / divisor:
+        (1 / divisor) * divisor = 1
+
+thm reciprocal_choice_use:
+    ? forall nonzero_seed R:
+        nonzero_seed != 0
+        =>:
+            exist selected R st {selected * nonzero_seed = 1}
+    have local_inverse R:
+        local_inverse * nonzero_seed = 1
+    witness exist selected R st {selected * nonzero_seed = 1} from local_inverse
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
             ExecDefineObjStmtResult::HaveObjByExistFacts(
                 crate::execute::ExecHaveObjByExistFactsStmtResult::Success(have),
@@ -485,9 +575,35 @@ fn have_from_universal_existence_rejects_corrupt_matching_evidence() {
 fn have_from_universal_existence_rejects_missing_guard_and_future_citation() {
     use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof;
     for future in [false, true] {
-        let (mut run, runtime) = checked(include_str!(
-            "../../../../lean/examples/choice_from_universal/statement.lit"
-        ));
+        let (mut run, runtime) = checked(
+            r#"# A universal square witness can be chosen and used for an arbitrary real.
+thm square_witness_for_each_real:
+    ? forall seed R:
+        exist root R st {root * root = seed * seed}
+    witness exist root R st {root * root = seed * seed} from seed
+have square_seed R
+have square_root_choice R:
+    square_root_choice * square_root_choice = square_seed * square_seed
+square_root_choice * square_root_choice = square_seed * square_seed
+
+thm reciprocal_witness_for_nonzero:
+    ? forall divisor R:
+        divisor != 0
+        =>:
+            exist reciprocal R st {reciprocal * divisor = 1}
+    witness exist reciprocal R st {reciprocal * divisor = 1} from 1 / divisor:
+        (1 / divisor) * divisor = 1
+
+thm reciprocal_choice_use:
+    ? forall nonzero_seed R:
+        nonzero_seed != 0
+        =>:
+            exist selected R st {selected * nonzero_seed = 1}
+    have local_inverse R:
+        local_inverse * nonzero_seed = 1
+    witness exist selected R st {selected * nonzero_seed = 1} from local_inverse
+"#,
+        );
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(last),
         )) = run.statement_results.last_mut().unwrap()

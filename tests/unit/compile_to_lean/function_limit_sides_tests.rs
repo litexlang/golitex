@@ -5,10 +5,25 @@ use crate::execute::execute_def_thm_stmt::{ExecDefThmBodyProof, ExecDefThmStmtRe
 use crate::execute::ExecDefinitionStmtResult;
 use crate::prelude::*;
 
-const LEFT: &str =
-    include_str!("../../../lean/examples/function_limit_at_to_left_by_theorem/statement.lit");
-const COMBINED: &str =
-    include_str!("../../../lean/examples/function_limit_from_sides_by_theorem/statement.lit");
+const LEFT: &str = r#"# Restrict a two-sided limit only when the selected side accumulates in the domain.
+thm limit_at_to_left:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_at(f,p,L)
+        forall r R+:
+            exist x R st {0<(p-x) and (p-x)<r}
+        =>:
+            $has_limit_left(f,p,L)
+    by thm fn_limit_at_to_left(f,p,L) => $has_limit_left(f,p,L)
+"#;
+const COMBINED: &str = r#"# Equal left and right limits give a two-sided limit on the same complete domain.
+thm bridge_from_sides:
+    ? forall f fn(x R) R, p,L R:
+        $has_limit_left(f,p,L)
+        $has_limit_right(f,p,L)
+        =>:
+            $has_limit_at(f,p,L)
+    by thm fn_limit_from_sides(f,p,L) => $has_limit_at(f,p,L)
+"#;
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(p),
@@ -25,22 +40,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
         panic!("side bridge")
     };
     p
-}
-
-#[test]
-fn side_limit_bridges_replay_restriction_combination_and_mismatch() {
-    for source in [
-        LEFT,
-        COMBINED,
-        include_str!("../../../lean/examples/function_limit_at_to_right_by_theorem/statement.lit"),
-        include_str!(
-            "../../../lean/examples/function_limit_sides_mismatch_by_theorem/statement.lit"
-        ),
-        include_str!("../../../lean/examples/function_limit_guarded_at_to_left/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "limit_sides").unwrap();
-    }
 }
 
 #[test]

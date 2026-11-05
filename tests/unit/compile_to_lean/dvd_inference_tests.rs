@@ -2,7 +2,13 @@ use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::prelude::*;
 use crate::store_fact_and_infer::{InferAtomicFactResult, InferDvdFactResult, InferResult};
 
-const SOURCE: &str = include_str!("../../../lean/examples/dvd_definition_replay/statement.lit");
+const SOURCE: &str = r#"forall a,b Z:
+    b!=0
+    $dvd(a,b)
+    =>:
+        a%b=0
+        exist k Z st {a=k*b}
+"#;
 
 #[test]
 fn dvd_definition_replays_both_original_stores_and_only_published_modulo() {
@@ -92,9 +98,10 @@ fn dvd_definition_replays_both_original_stores_and_only_published_modulo() {
         "local constructor aliases have no parameters"
     );
     assert_eq!(output, compiler.compile_run(&run, "dvd_inference").unwrap());
-    let (run, compiler) = super::execute(include_str!(
-        "../../../lean/examples/dvd_definition_from_certificates/statement.lit"
-    ));
+    let (run, compiler) = super::execute(
+        r#"$dvd(6*10,3)
+"#,
+    );
     compiler.compile_run(&run, "dvd_top_level").unwrap();
 }
 

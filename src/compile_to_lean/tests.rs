@@ -28,6 +28,8 @@ mod log_algebra_tests;
 mod logical_closing_tests;
 #[path = "../../tests/unit/compile_to_lean/member_witness_tests.rs"]
 mod member_witness_tests;
+#[path = "../../tests/unit/compile_to_lean/module_fixtures.rs"]
+mod module_fixtures;
 #[path = "../../tests/unit/compile_to_lean/multi_output_template_tests.rs"]
 mod multi_output_template_tests;
 #[path = "../../tests/unit/compile_to_lean/multivariable_interior_tests.rs"]
@@ -3995,9 +3997,6 @@ mod integer_interval_context_tests;
 #[path = "../../tests/unit/compile_to_lean/disjunctive_set_builder_tests.rs"]
 mod disjunctive_set_builder_tests;
 
-#[path = "../../tests/unit/compile_to_lean/raw_set_function_tests.rs"]
-mod raw_set_function_tests;
-
 #[path = "../../tests/unit/compile_to_lean/known_interval_match_tests.rs"]
 mod known_interval_match_tests;
 
@@ -4250,3 +4249,75 @@ mod riemann_definition_theorem_tests;
 mod second_partial_definition_theorem_tests;
 #[path = "../../tests/unit/compile_to_lean/second_partial_function_tests.rs"]
 mod second_partial_function_tests;
+
+#[path = "../../tests/unit/compile_to_lean/partial_algebra_tests.rs"]
+mod partial_algebra_tests;
+
+#[path = "../../tests/unit/compile_to_lean/module_struct_tests.rs"]
+mod module_struct_tests;
+
+#[path = "../../tests/unit/compile_to_lean/module_template_tests.rs"]
+mod module_template_tests;
+
+#[path = "../../tests/unit/compile_to_lean/curried_congruence_tests.rs"]
+mod curried_congruence_tests;
+
+#[path = "../../tests/unit/compile_to_lean/antiderivative_algebra_tests.rs"]
+mod antiderivative_algebra_tests;
+#[path = "../../tests/unit/compile_to_lean/antiderivative_tests.rs"]
+mod antiderivative_tests;
+#[path = "../../tests/unit/compile_to_lean/matrix_differential_tests.rs"]
+mod matrix_differential_tests;
+#[path = "../../tests/unit/compile_to_lean/riemann_transport_tests.rs"]
+mod riemann_transport_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_alternative_context_tests.rs"]
+mod sequence_alternative_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/negative_alternative_context_tests.rs"]
+mod negative_alternative_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/set_alternative_context_tests.rs"]
+mod set_alternative_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/arithmetic_mapping_context_tests.rs"]
+mod arithmetic_mapping_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/analysis_alternative_context_tests.rs"]
+mod analysis_alternative_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/matrix_choice_alternative_context_tests.rs"]
+mod matrix_choice_alternative_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/direct_atomic_transport_context_tests.rs"]
+mod direct_atomic_transport_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/selector_context_tests.rs"]
+mod selector_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/hidden_witness_context_tests.rs"]
+mod hidden_witness_context_tests;
+
+#[path = "../../tests/unit/compile_to_lean/riemann_constant_tests.rs"]
+mod riemann_constant_tests;
+
+#[path = "../../tests/unit/compile_to_lean/riemann_order_tests.rs"]
+mod riemann_order_tests;
+
+#[path = "../../tests/unit/compile_to_lean/differential_projection_tests.rs"]
+mod differential_projection_tests;
+
+#[path = "../../tests/unit/compile_to_lean/antiderivative_calculus_tests.rs"]
+mod antiderivative_calculus_tests;
+
+#[path = "../../tests/unit/compile_to_lean/nonnegative_difference_tests.rs"]
+mod nonnegative_difference_tests;
+
+#[path = "../../tests/unit/compile_to_lean/integer_range_strategy_tests.rs"]
+mod integer_range_strategy_tests;
+
+#[path = "../../tests/unit/compile_to_lean/sequence_program_tests.rs"]
+mod sequence_program_tests;
+
+#[path = "../../tests/unit/compile_to_lean/finite_function_range_tests.rs"]
+mod finite_function_range_tests;

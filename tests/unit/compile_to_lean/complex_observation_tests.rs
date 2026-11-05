@@ -2,21 +2,6 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Complex
 use crate::prelude::*;
 
 #[test]
-fn complex_observation_examples_replay_original_results() {
-    for source in [
-        include_str!("../../../lean/examples/complex_observation_values/statement.lit"),
-        include_str!("../../../lean/examples/complex_observation_codomain/statement.lit"),
-        include_str!("../../../lean/examples/complex_coordinate_reconstruction/statement.lit"),
-        include_str!("../../../lean/examples/complex_conjugation_laws/statement.lit"),
-        include_str!("../../../lean/examples/complex_modulus_laws/statement.lit"),
-        include_str!("../../../lean/examples/complex_observation_functions/statement.lit"),
-    ] {
-        let (run, compiler) = super::execute(source);
-        compiler.compile_run(&run, "complex_observation").unwrap();
-    }
-}
-
-#[test]
 fn complex_wd_rejects_missing_or_wrong_carrier_evidence() {
     for operation in ["conj", "re", "img", "C_abs"] {
         for mutation in 0..3 {

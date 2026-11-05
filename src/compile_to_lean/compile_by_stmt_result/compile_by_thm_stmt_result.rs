@@ -369,7 +369,12 @@ impl LitexToLeanCompiler {
             if !instantiated_fact_matches(domain, &source_subject(result)?, &substitution) {
                 return Err(LeanCompileError::new(
                     "ByThm/Domain",
-                    "A premise proves another instantiated source requirement.",
+                    &format!(
+                        "A premise proves another instantiated source requirement (premise {}): source `{}`, actual `{}`.",
+                        index + 1,
+                        domain.readable_string(),
+                        source_subject(result)?.readable_string()
+                    ),
                 ));
             }
             let subject = source_subject(result)?;

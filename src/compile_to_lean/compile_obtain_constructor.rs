@@ -10,6 +10,13 @@ use crate::execute::{
 use crate::prelude::*;
 use std::collections::HashMap;
 
+#[derive(Clone, Copy)]
+enum ObtainObservation<'a> {
+    Object,
+    Numeric,
+    Membership(&'a StandardSet),
+}
+
 impl LitexToLeanCompiler {
     /// Instantiate an original existential constructor at its obtained names.
     /// The producer stores renamed clauses, but does not run their WD again.
@@ -27,12 +34,45 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         observe_numeric: bool,
     ) -> Result<Option<String>, LeanCompileError> {
+        self.compile_obtain_observation_reference(
+            object,
+            position,
+            if observe_numeric {
+                ObtainObservation::Numeric
+            } else {
+                ObtainObservation::Object
+            },
+        )
+    }
+
+    pub(in crate::compile_to_lean) fn compile_obtain_membership_reference(
+        &self,
+        object: &Obj,
+        set: &StandardSet,
+        position: &SourcePosition<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
+        self.compile_obtain_observation_reference(
+            object,
+            position,
+            ObtainObservation::Membership(set),
+        )
+    }
+
+    fn compile_obtain_observation_reference(
+        &self,
+        object: &Obj,
+        position: &SourcePosition<'_>,
+        observation: ObtainObservation<'_>,
+    ) -> Result<Option<String>, LeanCompileError> {
         if !matches!(
             object,
             Obj::ArithmeticOperator(_)
                 | Obj::MatrixOperator(_)
                 | Obj::FnObj(_)
-                | Obj::SetFormer(SetFormer::ListSet(_) | SetFormer::MatrixSet(_))
+                | Obj::SetFormer(
+                    SetFormer::ListSet(_) | SetFormer::MatrixSet(_) | SetFormer::SetBuilder(_)
+                )
+                | Obj::ProductShape(ProductShape::Cart(_))
         ) {
             return Ok(None);
         }
@@ -55,7 +95,7 @@ impl LitexToLeanCompiler {
                     &HashMap::new(),
                     current,
                     current,
-                    observe_numeric,
+                    observation,
                 )
                 .map(|found| {
                     found.map(|(factory, arguments)| apply_constructor(factory, arguments))
@@ -96,7 +136,7 @@ impl LitexToLeanCompiler {
                     &substitution,
                     &original,
                     current,
-                    observe_numeric,
+                    observation,
                 )?
                 else {
                     return Ok(None);
@@ -138,7 +178,7 @@ impl LitexToLeanCompiler {
                     &HashMap::new(),
                     current,
                     current,
-                    observe_numeric,
+                    observation,
                 )
                 .map(|found| {
                     found.map(|(factory, arguments)| apply_constructor(factory, arguments))
@@ -146,7 +186,15 @@ impl LitexToLeanCompiler {
             }
             ExecDefineObjStmtResult::HaveByFnPreimage(
                 crate::execute::ExecHaveByFnPreimageStmtResult::Success(p),
-            ) => self.compile_preimage_call_reference(object, p, current, observe_numeric),
+            ) => match observation {
+                ObtainObservation::Object => {
+                    self.compile_preimage_call_reference(object, p, current, false)
+                }
+                ObtainObservation::Numeric => {
+                    self.compile_preimage_call_reference(object, p, current, true)
+                }
+                ObtainObservation::Membership(_) => Ok(None),
+            },
             _ => Ok(None),
         })
     }
@@ -161,7 +209,7 @@ impl LitexToLeanCompiler {
         outer_substitution: &HashMap<IdentifierId, Obj>,
         original_parent: &SourcePosition<'_>,
         current: &SourcePosition<'_>,
-        observe_numeric: bool,
+        observation: ObtainObservation<'_>,
     ) -> Result<Option<(String, Vec<String>)>, LeanCompileError> {
         let ids = source.typed_parameters.ordered_param_ids();
         let renaming: HashMap<_, _> = ids
@@ -201,6 +249,15 @@ impl LitexToLeanCompiler {
                     };
                     let formed =
                         SourcePosition::new(Some(&prior), SourceOwner::ParamTypeWD(wd), usize::MAX);
+                    let member = match observation {
+                        ObtainObservation::Membership(set) => {
+                            match self.compile_visible_standard_membership(pattern, set, &formed)? {
+                                Some(member) => Some(member),
+                                None => return Ok(None),
+                            }
+                        }
+                        _ => None,
+                    };
                     return formed.with_visible_wd(pattern, &mut |checked, site| {
                         self.compile_obtain_constructor_factory(
                             source,
@@ -211,9 +268,10 @@ impl LitexToLeanCompiler {
                             parameter_count,
                             0,
                             checked,
-                            site,
+                            if member.is_some() { &formed } else { site },
                             current,
-                            observe_numeric,
+                            matches!(observation, ObtainObservation::Numeric),
+                            member.as_deref(),
                         )
                     });
                 }
@@ -250,6 +308,15 @@ impl LitexToLeanCompiler {
                     SourceOwner::FactWD(&stage.well_defined),
                     usize::MAX,
                 );
+                let member = match observation {
+                    ObtainObservation::Membership(set) => {
+                        match self.compile_visible_standard_membership(pattern, set, &formed)? {
+                            Some(member) => Some(member),
+                            None => return Ok(None),
+                        }
+                    }
+                    _ => None,
+                };
                 return formed.with_visible_wd(pattern, &mut |checked, site| {
                     self.compile_obtain_constructor_factory(
                         source,
@@ -260,9 +327,10 @@ impl LitexToLeanCompiler {
                         ids.len(),
                         index,
                         checked,
-                        site,
+                        if member.is_some() { &formed } else { site },
                         current,
-                        observe_numeric,
+                        matches!(observation, ObtainObservation::Numeric),
+                        member.as_deref(),
                     )
                 });
             }
@@ -283,6 +351,7 @@ impl LitexToLeanCompiler {
         site: &SourcePosition<'_>,
         caller: &SourcePosition<'_>,
         observe_numeric: bool,
+        observed_membership: Option<&str>,
     ) -> Result<(String, Vec<String>), LeanCompileError> {
         let (binders, definitions) = self.compile_exist_constructor_prefix(
             source,
@@ -291,25 +360,30 @@ impl LitexToLeanCompiler {
             clause_count,
             original_parent,
         )?;
-        let constructor = self.compile_wd(checked, site)?;
-        // Keep only required original producer bindings, as callee factories do.
-        // Independent matrix carriers remain direct constructor values instead
-        // of acquiring fresh tactic-local Obj metavariables at every use.
-        let body = self.scope_proposition(constructor, &definitions);
-        let body = if observe_numeric {
-            // The same retained WD factory supplies the scalar observation;
-            // obtained names have renamed stores, not a second WD proof tree.
-            let (value, denotation, member, _) = self.numeric_wd(checked, site)?;
-            // Keep the scalar field transparent to definitional reduction.
-            // A tactic-generated subtype term defers its value behind a fresh
-            // metavariable at each use of .val / .property.
-            let definitions = if definitions.is_empty() {
-                String::new()
-            } else {
-                format!("{};\n", definitions.join(";\n"))
-            };
-            format!("(let _obtained_object := {body};\n{definitions}show {{ _z : ℂ // Litex.denote _obtained_object = M.number _z ∧ Litex.In _obtained_object Litex.C }} from ⟨{value}, {denotation}, {member}⟩)")
+        let body = if let Some(membership) = observed_membership {
+            self.scope_proposition(membership.to_string(), &definitions)
         } else {
+            let constructor = self.compile_wd(checked, site)?;
+            // Keep only required original producer bindings, as callee factories do.
+            // Independent matrix carriers remain direct constructor values instead
+            // of acquiring fresh tactic-local Obj metavariables at every use.
+            let body = self.scope_proposition(constructor, &definitions);
+            let body = if observe_numeric {
+                // The same retained WD factory supplies the scalar observation;
+                // obtained names have renamed stores, not a second WD proof tree.
+                let (value, denotation, member, _) = self.numeric_wd(checked, site)?;
+                // Keep the scalar field transparent to definitional reduction.
+                // A tactic-generated subtype term defers its value behind a fresh
+                // metavariable at each use of .val / .property.
+                let definitions = if definitions.is_empty() {
+                    String::new()
+                } else {
+                    format!("{};\n", definitions.join(";\n"))
+                };
+                format!("(let _obtained_object := {body};\n{definitions}show {{ _z : ℂ // Litex.denote _obtained_object = M.number _z ∧ Litex.In _obtained_object Litex.C }} from ⟨{value}, {denotation}, {member}⟩)")
+            } else {
+                body
+            };
             body
         };
         let factory = if binders.is_empty() {

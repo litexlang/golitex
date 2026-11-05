@@ -3,13 +3,24 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::Iterate
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
 
-const RANGE: &str = include_str!("../../../lean/examples/evaluated_range_folds/statement.lit");
-const FINITE: &str = include_str!("../../../lean/examples/evaluated_finite_folds/statement.lit");
-const RATIONAL: &str = include_str!("../../../lean/examples/evaluated_rational_fold/statement.lit");
-const ARITHMETIC: &str =
-    include_str!("../../../lean/examples/evaluated_fold_arithmetic/statement.lit");
-const LOCAL: &str = include_str!("../../../lean/examples/evaluated_local_fold/statement.lit");
-const NAMED: &str = include_str!("../../../lean/examples/evaluated_named_fold/statement.lit");
+const RANGE: &str = r#"# Evaluate an ordered subtraction fold; an empty range retains its seed.
+eval reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0)
+reduce(1,3,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0) = -6
+eval reduce(2,1,fn(k Z) Z{k},fn(a,b Z) Z{a-b},7)
+reduce(2,1,fn(k Z) Z{k},fn(a,b Z) Z{a-b},7) = 7
+"#;
+const FINITE: &str = r#"# Evaluate a commutative fold in enumeration order, plus empty and singleton cases.
+eval finite_set_reduce({3,1,2},fn(k Z) Z{k},fn(a,b Z) Z{a+b},10)
+finite_set_reduce({3,1,2},fn(k Z) Z{k},fn(a,b Z) Z{a+b},10) = 16
+eval finite_set_reduce({},fn(k Z) Z{k},fn(a,b Z) Z{a+b},7)
+finite_set_reduce({},fn(k Z) Z{k},fn(a,b Z) Z{a+b},7) = 7
+eval finite_set_reduce({2},fn(k Z) Z{k},fn(a,b Z) Z{a*b},3)
+finite_set_reduce({2},fn(k Z) Z{k},fn(a,b Z) Z{a*b},3) = 6
+"#;
+const ARITHMETIC: &str = r#"# Combine an ordered subtraction fold and a commutative finite sum fold.
+eval reduce(1,2,fn(k Z) Z{k},fn(a,b Z) Z{a-b},10) + finite_set_reduce({4,5},fn(k Z) Z{k},fn(a,b Z) Z{a+b},0)
+reduce(1,2,fn(k Z) Z{k},fn(a,b Z) Z{a-b},10) + finite_set_reduce({4,5},fn(k Z) Z{k},fn(a,b Z) Z{a+b},0) = 16
+"#;
 
 fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -18,15 +29,6 @@ fn eval(run: &mut RunLitexCodeResult, index: usize) -> &mut ExecEvalStmtSuccess 
         panic!("eval result")
     };
     p
-}
-
-#[test]
-fn eval_folds_replay_order_seed_empty_rationals_names_and_local_scope() {
-    for source in [RANGE, FINITE, RATIONAL, ARITHMETIC, LOCAL, NAMED] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler.compile_run(&run, "eval_folds").expect(source);
-        assert_eq!(lean, compiler.compile_run(&run, "eval_folds").unwrap());
-    }
 }
 
 #[test]
@@ -129,7 +131,10 @@ fn eval_fold_rejects_changed_values_and_missing_constructor_evidence() {
 
 #[test]
 fn fold_bound_names_reject_changed_operation_bodies() {
-    let source = include_str!("../../../lean/examples/fold_bound_names/statement.lit");
+    let source = r#"# Renaming bound variables preserves the iterand and operation of each fold.
+reduce(1,2,fn(k Z) Z{k},fn(a,b Z) Z{a-b},0) = reduce(1,2,fn(j Z) Z{j},fn(c,d Z) Z{c-d},0)
+finite_set_reduce({1,2},fn(k Z) Z{k},fn(a,b Z) Z{a+b},0) = finite_set_reduce({1,2},fn(j Z) Z{j},fn(c,d Z) Z{c+d},0)
+"#;
     let (mut run, compiler) = super::execute(source);
     compiler.compile_run(&run, "fold_bound_names").unwrap();
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(p)) =

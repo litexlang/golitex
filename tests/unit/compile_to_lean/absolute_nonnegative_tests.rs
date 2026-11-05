@@ -4,8 +4,13 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::Equa
 use crate::execute::execute_proof_block_stmt::{ExecClaimBodyProof, ExecClaimStmtResult, ExecProofBlockStmtResult};
 use crate::prelude::*;
 
-const STRICT: &str =
-    include_str!("../../../lean/examples/absolute_value_of_positive/statement.lit");
+const STRICT: &str = r#"# Strict positivity also justifies removing an absolute value.
+claim:
+    ? forall a R+:
+        abs(a/2) = a/2
+    0 < a/2 < a
+    abs(a/2) = a/2
+"#;
 
 fn requirement(run: &mut RunLitexCodeResult) -> &mut AbsNonnegEqualsSelfBuiltinRuleProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

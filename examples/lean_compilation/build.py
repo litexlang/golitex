@@ -2,7 +2,7 @@
 """Build an offline explanation from a checked Detailed snapshot and real Lean output.
 
 This is a presentation builder, not a JSON-to-Lean compiler. Canonical compiler
-output remains under lean/examples/. An optional --capture directory refreshes
+output remains paired with source.lit in this directory. An optional --capture directory refreshes
 the snapshot from a focused same-result capture and Lean acceptance run.
 """
 import argparse
@@ -14,8 +14,8 @@ from xml.etree import ElementTree as ET
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-SOURCE = ROOT / 'lean/examples/add_zero/statement.lit'
-LEAN = SOURCE.with_suffix('.lean')
+SOURCE = HERE / 'source.lit'
+LEAN = HERE / 'Generated.lean'
 CORE = ROOT / 'lean/Litex.lean'
 SVG = 'http://www.w3.org/2000/svg'
 ET.register_namespace('', SVG)
@@ -182,7 +182,7 @@ def svg(lang, which=None):
     return ET.tostring(s,encoding='unicode').replace('id="arrow"',f'id="{marker_id}"').replace('url(#arrow)',f'url(#{marker_id})')
 
 def core_excerpt(start, end):
-    source=CORE.read_text()
+    source=(ROOT/'lean/Litex/Core.lean').read_text()
     return source[source.index(start):source.index(end,source.index(start))].strip()
 
 def main():
@@ -199,6 +199,8 @@ def main():
     assert evidence['detailed_sha256']==SHA(HERE/'trace.detailed.json'), 'Detailed snapshot differs from the checked capture'
     assert evidence['source_sha256']==SHA(SOURCE) and evidence['generated_sha256']==SHA(LEAN)
     assert evidence['core_sha256']==SHA(CORE), 'Refresh the checked snapshot after Core changes'
+    from capture import core_digest
+    assert evidence['core_tree_sha256']==core_digest(), 'Refresh after a semantic library change'
     assert evidence['lean_kernel_checked'] and evidence['canonical_byte_match']
     fact=trace['statement_results'][0]['verify']['proved_then_facts'][0]['verify_result']
     assert fact['searched_proof']=={'type':'builtin_rule','rule':'Calculation','mode':'rational'}
@@ -226,7 +228,7 @@ def main():
     template=template.replace('<!-- DATA -->',json.dumps(payload,ensure_ascii=False).replace('<','\\u003c'))
     (HERE/'index.html').write_text(template)
     acceptance={'evidence':evidence,'boundary':'Detailed JSON is an inspection view; compilation consumes typed results plus completed Runtime. Native Adapter is a separate handwritten step.',
-                'assets':{name:SHA(HERE/name) for name in ['index.html','index.template.html','viewer.js','style.css','build.py','export.cjs','README.md','trace.detailed.json','evidence.json','lean-compilation.svg','lean-compilation.zh.svg']}}
+                'assets':{name:SHA(HERE/name) for name in ['index.html','index.template.html','viewer.js','style.css','build.py','capture.py','capture.rs','source.lit','Generated.lean','export.cjs','README.md','trace.detailed.json','evidence.json','lean-compilation.svg','lean-compilation.zh.svg']}}
     (HERE/'acceptance.json').write_text(json.dumps(acceptance,ensure_ascii=False,indent=2)+'\n')
     print('Built bilingual offline evidence-to-Lean explanation from checked source/output.')
 

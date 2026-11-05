@@ -83,6 +83,15 @@ impl LitexToLeanCompiler {
             if position.module_env(&self.runtime).is_none() {
                 return Err(LeanCompileError::unsupported("Module/OriginalEnvironment"));
             }
+            // New free objects can have a carrier from an earlier file.
+            // Make that inherited header available to namespace-level variable
+            // commands as well as to each declaration's explicit signature.
+            let inherited = self.context_header(&position)?;
+            let inherited = if inherited.is_empty() {
+                String::new()
+            } else {
+                format!("variable{inherited}\n\n")
+            };
             let compiled = self
                 .compile_original_file(&original.run, &position)
                 .map_err(|mut error| {
@@ -94,7 +103,7 @@ impl LitexToLeanCompiler {
                     error
                 })?;
             declarations.push(format!(
-                "namespace source_{file}\n\n{}\n\nend source_{file}",
+                "namespace source_{file}\n\n{inherited}{}\n\nend source_{file}",
                 compiled.join("\n\n")
             ));
         }

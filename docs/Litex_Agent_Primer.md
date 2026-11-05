@@ -2,30 +2,28 @@
 
 A compact onboarding text for an agent that must write Litex. It is meant to be
 read once, as a file, instead of loading `Manual.md` or `Learn_Litex.md` into the
-conversation. The same content is bundled with the project skill
-`.agents/skills/litex-formalizer/`.
+conversation.
 
 Use it with [Agent Prompt Authoring](Agent_Prompt_Authoring.md), which explains
 the layout, the incremental checking loop and the measured effects. Every
-snippet below is a pattern the current release accepts; replace the names, not
-the shapes.
+executable snippet below is self-contained. The Facts and Moves galleries are
+schematic syntax references; their names and placeholders need a caller's context.
 
 ---
 
 One fact per line, checked in order. Accepted lines stay usable; a rejected line
-reports `why_failed`, so fix forward, never rewrite.
+reports an `errors` entry, so fix the rejected statement and continue.
 
-Check incrementally: append to `solution.lit`, then run `./step`. It sends only
-the new statements to a live session, so a statement costs milliseconds and one
-short line of output. `./check solution.lit` once at the end is the whole-file
-strict gate. Never re-run the whole file after every line: that re-checks and
-re-prints everything and is the main way a Litex session becomes expensive.
+Check incrementally in `litex -lang en -strict -session`, submitting one
+top-level statement at a time. Keep the same process after a normal failure.
+Run `litex -lang en -strict -f solution.lit` at the final checkpoint. See the
+[Agent Guide](AgentGuide.md) for accepted prefixes and deliberate restarts.
 
 ## Declarations
 
 ```litex
-have x R = 2                        # an object with a value
-have x R+                           # a positive real
+have value R = 2                    # an object with a value
+have positive R+                    # a positive real
 have fn f(x R: x != 0) R = 1 / x    # function; after the `:` are its domain conditions
 have fn sq(A, B cart(R, R)) R = (B(1) - A(1))^2 + (B(2) - A(2))^2
 
@@ -53,7 +51,9 @@ following indented line is a fact that must be provable from what came before.
 
 ## Facts
 
-```litex
+These are independent schematic forms, not consecutive steps of one proof.
+
+```text
 a = b = c                               # chain
 a <= b < c                              # chain
 |a - b| = |b - a|
@@ -65,7 +65,9 @@ exist! n N+ st {n^2 = 4}
 
 ## Moves
 
-```litex
+Supply the declarations, premises and proof body indicated by each placeholder.
+
+```text
 by def $P(a)                            # publish the predicate's conditions
 release thm name(a)                     # instantiate a root-`forall` theorem
 by thm name(a) => fact                  # one atomic conclusion
@@ -89,8 +91,9 @@ by contra:                              # assume the negation, end in `impossibl
 * Chained equalities substitute into later lines.
 * `sqrt(x^2) = x` is accepted directly when `x >= 0`; do not unfold `sqrt`.
 
-Nothing else is automatic. Expansion, factoring, substitution of a function
-body, and moving terms across `=` need their own fact line.
+These are examples of bounded automatic consequences. Definition unfolding,
+nontrivial factoring and longer derivations can still need explicit fact lines
+or proof commands.
 
 ## Unique existence, in full
 
@@ -112,34 +115,42 @@ thm t:
             u = v
 ```
 
-`prop` bodies are condition lists only. They cannot hold `exist`, `forall`, or
-any claim; writing one there gives `expected '(' ...`. Put claims in a `thm`
-goal or in a `claim:` block.
+`prop` bodies describe conditions. Put proof commands and claims in a `thm`
+body or a `claim:` block.
 
 ## Affine combinations and endpoint comparisons
 
 Collapse an affine combination in one line:
 
 ```litex
-(1 - t) * a + t * b = a + t * (b - a)
+forall a,b,t R:
+    (1 - t) * a + t * b = a + t * (b - a)
 ```
 
 A sign fact then gives the endpoint comparison:
 
 ```litex
-b - a > 0
-t * (b - a) > 0
-a + t * (b - a) > a
+forall a,b,t R:
+    a < b
+    t > 0
+    =>:
+        b - a > 0
+        t * (b - a) > 0
+        a + t * (b - a) > a
 ```
 
 Go the other way with a difference bridge: one equality for `x - a` plus a sign
 fact for that difference is enough, and `x > a` follows.
 
 ```litex
-x - a = t * (b - a)
-t * (b - a) > 0
-x - a > 0
-x > a
+forall a,b,t,x R:
+    a < b
+    t > 0
+    x - a = t * (b - a)
+    =>:
+        t * (b - a) > 0
+        x - a > 0
+        x > a
 ```
 
 Do not expand such a step into many small rewrites. One equality line can carry
@@ -151,6 +162,7 @@ Rejected line `x^2 + x >= 2` alone inside a case: `why_failed` says
 `Could not prove the goal`. Write the value first:
 
 ```litex
+have x R = 1
 x^2 + x = 1 + 1 = 2
 x^2 + x >= 2
 ```
@@ -159,20 +171,21 @@ Rejected goal `forall x R: sqrt(x^2) = x`: it is false for negative `x`, so
 the goal needs the domain condition:
 
 ```litex
-? forall x R:
-    x >= 0
-    =>:
-        sqrt(x^2) = x
-sqrt(x^2) = x
+claim:
+    ? forall x R:
+        x >= 0
+        =>:
+            sqrt(x^2) = x
+    sqrt(x^2) = x
 ```
 
 ## Working style
 
-Append one declaration or a few related facts, run `./step`, read the one-line
-result, then continue. Structure the file so that you can append: definitions and
+Submit one declaration or proof statement, read its JSON result, then continue
+in the same Session. Structure the file so that you can append: definitions and
 helper lemmas first, then the theorem. Inserting a lemma above accepted lines
-forces a full re-check. A rejected line tells you exactly which check failed; add
-the missing fact before it instead of restructuring the file. If `./step` prints
-`RESYNC`, you rewrote earlier lines and the whole file was re-checked; prefer
-appending. Run `./check solution.lit` once before you finish.
+requires deliberately restarting and replaying the accepted prefix. A rejected
+line tells you which check failed; add
+the missing fact in the live Session before retrying it. Run the saved file's
+clean strict gate before you finish.
 

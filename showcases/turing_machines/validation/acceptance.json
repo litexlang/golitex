@@ -1,0 +1,178 @@
+{
+  "date": "2026-11-04",
+  "binary_sha256": "27c82d982c6afb7bc6b788050a3dcf7d65ef2b4cdd9c17bb27085f3db79813f3",
+  "source": {
+    "command": [
+      "target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-f",
+      "showcases/turing_machines/main.lit"
+    ],
+    "exit_code": 0,
+    "kind": "run",
+    "run_result": "success",
+    "statements": 39,
+    "session_terminated": false,
+    "termination": null,
+    "seconds": 1.422,
+    "sha256": "ac85a7f7a249e57b216337d79966e7f0be290367e44a48f2651c3ee49ddb5582"
+  },
+  "independent_import": {
+    "command": [
+      "target/release/litex",
+      "-strict",
+      "-lang",
+      "en",
+      "-f",
+      "showcases/turing_machines/validation/main.lit"
+    ],
+    "exit_code": 0,
+    "kind": "run",
+    "run_result": "success",
+    "statements": 27,
+    "session_terminated": false,
+    "termination": null,
+    "seconds": 0.818,
+    "sha256": "f68fc29701e8425ecc4098ab3b86ad5563c0667a1ee7aef2a8faa12643d86a80"
+  },
+  "negative_controls": [
+    {
+      "id": "empty_input_not_halted_initially",
+      "source": "tm::run(0,tm::unary_initial(0))(1)=1",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::run(0, m0::f0::unary_initial(0))(1) = 1",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "m0::f0::run(0, m0::f0::unary_initial(0))(1) = 1"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "no_premature_halt",
+      "source": "tm::run(2,tm::unary_initial(2))(1)=1",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::run(2, m0::f0::unary_initial(2))(1) = 1",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "m0::f0::run(2, m0::f0::unary_initial(2))(1) = 1"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "right_endpoint_is_blank",
+      "source": "tm::unary_tape(3)(3)=1",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::unary_tape(3)(3) = 1",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "m0::f0::unary_tape(3)(3) = 1"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "invalid_state",
+      "source": "tm::configuration(2,0,tm::unary_tape(0))=tm::configuration(2,0,tm::unary_tape(0))",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::configuration(2, 0, m0::f0::unary_tape(0)) = m0::f0::configuration(2, 0, m0::f0::unary_tape(0))",
+          "phase": "well_defined",
+          "message": "Could not prove that the statement is well-defined.",
+          "category": "well_defined",
+          "obligation": "2 $in m0::f0::Symbol"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "negative_step_count",
+      "source": "tm::run(-1,tm::unary_initial(0))=tm::run(-1,tm::unary_initial(0))",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "m0::f0::run((-1), m0::f0::unary_initial(0)) = m0::f0::run((-1), m0::f0::unary_initial(0))",
+          "phase": "well_defined",
+          "message": "Could not prove that the statement is well-defined.",
+          "category": "well_defined",
+          "obligation": "(-1) $in N"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    },
+    {
+      "id": "constant_one_tape_does_not_halt",
+      "source": "$tm::halts(tm::configuration(0,0,tm::ones_tape))",
+      "rejected_as_intended": true,
+      "errors": [
+        {
+          "statement_index": 0,
+          "statement": "$m0::f0::halts(m0::f0::configuration(0, 0, m0::f0::ones_tape))",
+          "phase": "search_proof",
+          "message": "Could not prove the goal.",
+          "category": "proof_search",
+          "obligation": "$m0::f0::halts(m0::f0::configuration(0, 0, m0::f0::ones_tape))"
+        }
+      ],
+      "session_terminated": false,
+      "liveness_after_refusal": true
+    }
+  ],
+  "session_close": {
+    "exit_code": 0,
+    "run_result": "failure",
+    "session_terminated": false,
+    "termination": null,
+    "meaning": "Aggregate failure records the deliberate refusals; per-turn verdicts and successful follow-ups establish the controls."
+  },
+  "manifest_sha256": {
+    "litex.config": "3fdcb5ab744932ed964ad51994de2167c6408ae014f9c107e55ca0fb997ccf1b",
+    "validation/litex.config": "fb5617c8930055fd4743f28832ee92903598ef44e445240eaa18a0e5675e9ba2"
+  },
+  "relocation": {
+    "mathematical_source_unchanged": true,
+    "mathematical_source_sha256": "4707805e93cc986c656141d3da35ef04b6f4890c681538d5e3cd3b9ea7ee0458",
+    "caller_unchanged": true,
+    "negative_cases_unchanged": true,
+    "standard_library_copy_removed": true,
+    "import_mode": "Relative [import] from validation/ to ..",
+    "standard_library_search_path": "LITEX_STD_PATH removed from the verification environment"
+  },
+  "scope": "Strict showcase source and independent relative import, final-statement refusals and Session liveness. No Rust, Lean or release-wide claim.",
+  "temporary_artifacts": {
+    "remaining_task_temporary_artifacts": [],
+    "task_ledger_removed": true,
+    "task_verifier_driver_removed": true
+  },
+  "completion_audit": {
+    "strict_source_and_relative_import_passed": true,
+    "all_refusals_and_session_follow_ups_passed": true,
+    "mathematical_statements_callers_and_cases_preserved": true,
+    "old_directories_and_obsolete_references_removed": true,
+    "collection_indexes_and_local_documentation_links_checked": true,
+    "source_trust_and_user_axiom_delta": 0
+  }
+}

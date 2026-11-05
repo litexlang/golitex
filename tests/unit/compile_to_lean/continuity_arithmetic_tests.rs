@@ -6,54 +6,312 @@ use crate::execute::ExecDefinitionStmtResult;
 use crate::prelude::*;
 
 const UNARY: [&str; 12] = [
-    include_str!("../../../lean/examples/function_continuity_at_neg_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_at_abs_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_at_scale_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_at_power_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_left_neg_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_left_abs_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_left_scale_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_left_power_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_right_neg_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_right_abs_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_right_scale_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_right_power_by_theorem/statement.lit"),
+    r#"# Preserve at continuity under the neg formula on the complete real domain.
+thm at_continuity_neg:
+    ? forall f,g fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        forall x R:
+            g(x)=-f(x)
+        =>:
+            $is_continuous_at(g,p)
+    by thm fn_continuous_at_neg(f,g,p) => $is_continuous_at(g,p)
+"#,
+    r#"# Preserve at continuity under the abs formula on the complete real domain.
+thm at_continuity_abs:
+    ? forall f,g fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        forall x R:
+            g(x)=abs(f(x))
+        =>:
+            $is_continuous_at(g,p)
+    by thm fn_continuous_at_abs(f,g,p) => $is_continuous_at(g,p)
+"#,
+    r#"# Preserve at continuity under the scale formula on the complete real domain.
+thm at_continuity_scale:
+    ? forall f,g fn(x R) R, p R, c R:
+        $is_continuous_at(f,p)
+        forall x R:
+            g(x)=c*f(x)
+        =>:
+            $is_continuous_at(g,p)
+    by thm fn_continuous_at_scale(f,g,p,c) => $is_continuous_at(g,p)
+"#,
+    r#"# Preserve at continuity under the power formula on the complete real domain.
+thm at_continuity_power:
+    ? forall f,g fn(x R) R, p R, n N:
+        $is_continuous_at(f,p)
+        forall x R:
+            g(x)=f(x)^n
+        =>:
+            $is_continuous_at(g,p)
+    by thm fn_continuous_at_power(f,g,p,n) => $is_continuous_at(g,p)
+"#,
+    r#"# Preserve left continuity under the neg formula on the complete real domain.
+thm left_continuity_neg:
+    ? forall f,g fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        forall x R:
+            g(x)=-f(x)
+        =>:
+            $is_continuous_left(g,p)
+    by thm fn_continuous_left_neg(f,g,p) => $is_continuous_left(g,p)
+"#,
+    r#"# Preserve left continuity under the abs formula on the complete real domain.
+thm left_continuity_abs:
+    ? forall f,g fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        forall x R:
+            g(x)=abs(f(x))
+        =>:
+            $is_continuous_left(g,p)
+    by thm fn_continuous_left_abs(f,g,p) => $is_continuous_left(g,p)
+"#,
+    r#"# Preserve left continuity under the scale formula on the complete real domain.
+thm left_continuity_scale:
+    ? forall f,g fn(x R) R, p R, c R:
+        $is_continuous_left(f,p)
+        forall x R:
+            g(x)=c*f(x)
+        =>:
+            $is_continuous_left(g,p)
+    by thm fn_continuous_left_scale(f,g,p,c) => $is_continuous_left(g,p)
+"#,
+    r#"# Preserve left continuity under the power formula on the complete real domain.
+thm left_continuity_power:
+    ? forall f,g fn(x R) R, p R, n N:
+        $is_continuous_left(f,p)
+        forall x R:
+            g(x)=f(x)^n
+        =>:
+            $is_continuous_left(g,p)
+    by thm fn_continuous_left_power(f,g,p,n) => $is_continuous_left(g,p)
+"#,
+    r#"# Preserve right continuity under the neg formula on the complete real domain.
+thm right_continuity_neg:
+    ? forall f,g fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        forall x R:
+            g(x)=-f(x)
+        =>:
+            $is_continuous_right(g,p)
+    by thm fn_continuous_right_neg(f,g,p) => $is_continuous_right(g,p)
+"#,
+    r#"# Preserve right continuity under the abs formula on the complete real domain.
+thm right_continuity_abs:
+    ? forall f,g fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        forall x R:
+            g(x)=abs(f(x))
+        =>:
+            $is_continuous_right(g,p)
+    by thm fn_continuous_right_abs(f,g,p) => $is_continuous_right(g,p)
+"#,
+    r#"# Preserve right continuity under the scale formula on the complete real domain.
+thm right_continuity_scale:
+    ? forall f,g fn(x R) R, p R, c R:
+        $is_continuous_right(f,p)
+        forall x R:
+            g(x)=c*f(x)
+        =>:
+            $is_continuous_right(g,p)
+    by thm fn_continuous_right_scale(f,g,p,c) => $is_continuous_right(g,p)
+"#,
+    r#"# Preserve right continuity under the power formula on the complete real domain.
+thm right_continuity_power:
+    ? forall f,g fn(x R) R, p R, n N:
+        $is_continuous_right(f,p)
+        forall x R:
+            g(x)=f(x)^n
+        =>:
+            $is_continuous_right(g,p)
+    by thm fn_continuous_right_power(f,g,p,n) => $is_continuous_right(g,p)
+"#,
 ];
 const BINARY: [&str; 12] = [
-    include_str!("../../../lean/examples/function_continuity_at_add_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_at_subtract_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_at_multiply_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_at_divide_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_left_add_by_theorem/statement.lit"),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_subtract_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_multiply_by_theorem/statement.lit"
-    ),
-    include_str!("../../../lean/examples/function_continuity_left_divide_by_theorem/statement.lit"),
-    include_str!("../../../lean/examples/function_continuity_right_add_by_theorem/statement.lit"),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_subtract_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_multiply_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_divide_by_theorem/statement.lit"
-    ),
+    r#"# Preserve at continuity under the add formula on the complete real domain.
+thm at_continuity_add:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        $is_continuous_at(g,p)
+        forall x R:
+            h(x)=f(x)+g(x)
+        =>:
+            $is_continuous_at(h,p)
+    by thm fn_continuous_at_add(f,g,h,p) => $is_continuous_at(h,p)
+"#,
+    r#"# Preserve at continuity under the subtract formula on the complete real domain.
+thm at_continuity_subtract:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        $is_continuous_at(g,p)
+        forall x R:
+            h(x)=f(x)-g(x)
+        =>:
+            $is_continuous_at(h,p)
+    by thm fn_continuous_at_subtract(f,g,h,p) => $is_continuous_at(h,p)
+"#,
+    r#"# Preserve at continuity under the multiply formula on the complete real domain.
+thm at_continuity_multiply:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        $is_continuous_at(g,p)
+        forall x R:
+            h(x)=f(x)*g(x)
+        =>:
+            $is_continuous_at(h,p)
+    by thm fn_continuous_at_multiply(f,g,h,p) => $is_continuous_at(h,p)
+"#,
+    r#"# Preserve at continuity under the divide formula on the complete real domain.
+thm at_continuity_divide:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        $is_continuous_at(g,p)
+        forall x R:
+            g(x)!=0
+        forall x R:
+            h(x)=f(x)/g(x)
+        =>:
+            $is_continuous_at(h,p)
+    by thm fn_continuous_at_divide(f,g,h,p) => $is_continuous_at(h,p)
+"#,
+    r#"# Preserve left continuity under the add formula on the complete real domain.
+thm left_continuity_add:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        $is_continuous_left(g,p)
+        forall x R:
+            h(x)=f(x)+g(x)
+        =>:
+            $is_continuous_left(h,p)
+    by thm fn_continuous_left_add(f,g,h,p) => $is_continuous_left(h,p)
+"#,
+    r#"# Preserve left continuity under the subtract formula on the complete real domain.
+thm left_continuity_subtract:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        $is_continuous_left(g,p)
+        forall x R:
+            h(x)=f(x)-g(x)
+        =>:
+            $is_continuous_left(h,p)
+    by thm fn_continuous_left_subtract(f,g,h,p) => $is_continuous_left(h,p)
+"#,
+    r#"# Preserve left continuity under the multiply formula on the complete real domain.
+thm left_continuity_multiply:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        $is_continuous_left(g,p)
+        forall x R:
+            h(x)=f(x)*g(x)
+        =>:
+            $is_continuous_left(h,p)
+    by thm fn_continuous_left_multiply(f,g,h,p) => $is_continuous_left(h,p)
+"#,
+    r#"# Preserve left continuity under the divide formula on the complete real domain.
+thm left_continuity_divide:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        $is_continuous_left(g,p)
+        forall x R:
+            g(x)!=0
+        forall x R:
+            h(x)=f(x)/g(x)
+        =>:
+            $is_continuous_left(h,p)
+    by thm fn_continuous_left_divide(f,g,h,p) => $is_continuous_left(h,p)
+"#,
+    r#"# Preserve right continuity under the add formula on the complete real domain.
+thm right_continuity_add:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        $is_continuous_right(g,p)
+        forall x R:
+            h(x)=f(x)+g(x)
+        =>:
+            $is_continuous_right(h,p)
+    by thm fn_continuous_right_add(f,g,h,p) => $is_continuous_right(h,p)
+"#,
+    r#"# Preserve right continuity under the subtract formula on the complete real domain.
+thm right_continuity_subtract:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        $is_continuous_right(g,p)
+        forall x R:
+            h(x)=f(x)-g(x)
+        =>:
+            $is_continuous_right(h,p)
+    by thm fn_continuous_right_subtract(f,g,h,p) => $is_continuous_right(h,p)
+"#,
+    r#"# Preserve right continuity under the multiply formula on the complete real domain.
+thm right_continuity_multiply:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        $is_continuous_right(g,p)
+        forall x R:
+            h(x)=f(x)*g(x)
+        =>:
+            $is_continuous_right(h,p)
+    by thm fn_continuous_right_multiply(f,g,h,p) => $is_continuous_right(h,p)
+"#,
+    r#"# Preserve right continuity under the divide formula on the complete real domain.
+thm right_continuity_divide:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        $is_continuous_right(g,p)
+        forall x R:
+            g(x)!=0
+        forall x R:
+            h(x)=f(x)/g(x)
+        =>:
+            $is_continuous_right(h,p)
+    by thm fn_continuous_right_divide(f,g,h,p) => $is_continuous_right(h,p)
+"#,
 ];
 const COMPOSE: [&str; 4] = [
-    include_str!("../../../lean/examples/function_continuity_at_compose_by_theorem/statement.lit"),
-    include_str!(
-        "../../../lean/examples/function_continuity_left_compose_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_right_compose_by_theorem/statement.lit"
-    ),
-    include_str!(
-        "../../../lean/examples/function_continuity_compose_positive_domain/statement.lit"
-    ),
+    r#"# Compose at continuity of the inner function with two-sided continuity of the outer function.
+thm at_continuity_compose:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        $is_continuous_at(g,f(p))
+        forall x R:
+            h(x)=g(f(x))
+        =>:
+            $is_continuous_at(h,p)
+    by thm fn_continuous_at_compose(f,g,h,p) => $is_continuous_at(h,p)
+"#,
+    r#"# Compose left continuity of the inner function with two-sided continuity of the outer function.
+thm left_continuity_compose:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_left(f,p)
+        $is_continuous_at(g,f(p))
+        forall x R:
+            h(x)=g(f(x))
+        =>:
+            $is_continuous_left(h,p)
+    by thm fn_continuous_left_compose(f,g,h,p) => $is_continuous_left(h,p)
+"#,
+    r#"# Compose right continuity of the inner function with two-sided continuity of the outer function.
+thm right_continuity_compose:
+    ? forall f,g,h fn(x R) R, p R:
+        $is_continuous_right(f,p)
+        $is_continuous_at(g,f(p))
+        forall x R:
+            h(x)=g(f(x))
+        =>:
+            $is_continuous_right(h,p)
+    by thm fn_continuous_right_compose(f,g,h,p) => $is_continuous_right(h,p)
+"#,
+    r#"# Compose functions whose input and intermediate value must remain positive.
+thm continuity_compose_positive_domain:
+    ? forall f fn(x R+) R+, g,h fn(x R+) R, p R+:
+        $is_continuous_at(f,p)
+        $is_continuous_at(g,f(p))
+        forall x R+:
+            h(x)=g(f(x))
+        =>:
+            $is_continuous_at(h,p)
+    by thm fn_continuous_at_compose(f,g,h,p) => $is_continuous_at(h,p)
+"#,
 ];
 fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -71,16 +329,6 @@ fn invocation(run: &mut RunLitexCodeResult) -> &mut ExecByThmStmtSuccess {
         panic!("builtin invocation")
     };
     p
-}
-#[test]
-fn unary_continuity_replays_each_operation_side_and_restricted_domain() {
-    for source in UNARY.into_iter().chain([include_str!(
-        "../../../lean/examples/function_continuity_neg_restricted_domain/statement.lit"
-    )]) {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "unary_continuity").unwrap();
-        assert!(lean.contains("Litex.functionContinuousAtMap"));
-    }
 }
 #[test]
 fn unary_continuity_rejects_missing_invocation_evidence() {
@@ -153,20 +401,6 @@ fn unary_continuity_rejects_a_changed_scalar_or_natural_exponent_domain() {
         f.set = Obj::StandardSet(StandardSet::Z);
         c.compile_run(&run, "changed_continuity_parameter")
             .expect_err("real scalar / natural exponent");
-    }
-}
-
-#[test]
-fn binary_continuity_replays_operations_sides_and_guarded_quotients() {
-    for source in BINARY.into_iter().chain([include_str!(
-        "../../../lean/examples/function_continuity_divide_restricted_domain/statement.lit"
-    )]) {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "binary_continuity").unwrap();
-        assert!(
-            lean.contains("Litex.functionContinuousAtMapTwo")
-                || lean.contains("Litex.functionContinuousAtDivide")
-        );
     }
 }
 #[test]
@@ -270,15 +504,6 @@ fn quotient_continuity_also_replays_the_formula_objects_nonzero_wd() {
     c.compile_run(&run, "missing_formula_division_wd")
         .expect_err("formula WD remains required in addition to point nonzero");
 }
-
-#[test]
-fn composition_continuity_replays_all_sides_and_the_outer_positive_domain() {
-    for source in COMPOSE {
-        let (run, c) = super::execute(source);
-        let lean = c.compile_run(&run, "compose_continuity").unwrap();
-        assert!(lean.contains("Litex.functionContinuousAtCompose"));
-    }
-}
 #[test]
 fn composition_continuity_rejects_missing_mapping_or_changed_outer_point_side() {
     for source in &COMPOSE[..3] {
@@ -343,14 +568,4 @@ fn composition_continuity_rejects_a_different_mapping_carrier_or_formula() {
         c.compile_run(&run, "changed_composition_mapping")
             .expect_err("original mapping carrier and nested call formula");
     }
-}
-#[test]
-fn square_continuity_limit_chain_replays_named_formulas_and_selection() {
-    let (run, c) = super::execute(include_str!(
-        "../../../lean/examples/function_continuity_square_limit/statement.lit"
-    ));
-    let lean = c.compile_run(&run, "square_continuity_limit").unwrap();
-    assert!(lean.contains("Litex.functionContinuousAtMap"));
-    assert!(lean.contains("Litex.functionLimitOfContinuousAt"));
-    assert!(lean.contains("Litex.finiteFunctionLimitEqCandidate"));
 }

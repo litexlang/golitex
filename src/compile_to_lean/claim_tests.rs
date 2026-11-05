@@ -7,6 +7,49 @@ use crate::prelude::*;
 
 const PLAIN: &str = "claim:\n    ? 1 = 1\n    1 = 1\n1 = 1\n";
 const FORALL: &str = "claim:\n    ? forall x R:\n        x != 0\n        =>:\n            x / x = 1\n    x / x = 1\n";
+const NESTED_TUPLE_CASES: &str = r#"thm contextual_tuple_case_publication:
+    ? forall n,cutoff N+:
+        n>cutoff
+        cart({k N+:k>=cutoff},{k N+:k>=cutoff}) $subset {p cart(N+,N+):p(1)>=cutoff}
+        =>:
+            n>=cutoff
+    claim:
+        ? n>=cutoff
+        by cases:
+            ? n>=cutoff
+            case n<=cutoff:
+                impossible n<=cutoff
+            case n>cutoff:
+                n $in {k N+:k>=cutoff}
+                cutoff $in {k N+:k>=cutoff}
+                (n,cutoff) $in cart({k N+:k>=cutoff},{k N+:k>=cutoff})
+                (n,cutoff) $in {p cart(N+,N+):p(1)>=cutoff}
+                n>=cutoff
+
+thm contextual_tuple_case_function_condition:
+    ? forall a seq(R),cutoff N+:
+        cart({k N+:k>=cutoff},{k N+:k>=cutoff}) $subset {p cart(N+,N+):a(p(1))=a(p(1))}
+        =>:
+            cutoff=cutoff
+    claim:
+        ? forall n N+:
+            a(n)=a(n)
+        claim:
+            ? a(n)=a(n)
+            by cases:
+                ? a(n)=a(n)
+                case n<=cutoff:
+                    a(n)=a(n)
+                case n>cutoff:
+                    n $in {k N+:k>=cutoff}
+                    cutoff $in {k N+:k>=cutoff}
+                    (n,cutoff) $in cart({k N+:k>=cutoff},{k N+:k>=cutoff})
+                    (n,cutoff) $in {p cart(N+,N+):a(p(1))=a(p(1))}
+                    a(n)=a(n)
+    cutoff=cutoff
+
+
+"#;
 
 fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let mut runtime = Runtime::new_with_result_detail(
@@ -21,6 +64,192 @@ fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
     let result = runtime.run_litex_code(source).expect("source run");
     assert!(result.success && result.session_error.is_none(), "{source}");
     (result, LitexToLeanCompiler::new(runtime))
+}
+
+#[test]
+fn nested_claim_goals_retain_their_original_function_call_constructors() {
+    let (result, compiler) = checked(NESTED_TUPLE_CASES);
+    if let Err(error) = compiler.compile_run(&result, "nested_tuple_claim_formation") {
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+            crate::execute::ExecDefThmStmtResult::Success(theorem),
+        )) = &result.statement_results[1]
+        else {
+            panic!()
+        };
+        let crate::execute::ExecDefThmBodyProof::Forall(body) = &theorem.body else {
+            panic!()
+        };
+        let claim = claim(&body.proof_steps[0]);
+        let VerifyFactWellDefinedResult::Success(goal_wd) = &claim.goal_wd else {
+            panic!()
+        };
+        let FactWellDefinedProof::ForallFact(forall) = goal_wd else {
+            panic!()
+        };
+        if let FactWellDefinedProof::Equality(equality) = &forall.detailed_ref().then[0] {
+            for (label, wd) in [
+                ("left", &equality.detailed_ref().left),
+                ("right", &equality.detailed_ref().right),
+            ] {
+                let kind = match wd.detailed_ref() {
+                    DetailedObjWellDefinedProof::ByDef { .. } => "original constructor",
+                    DetailedObjWellDefinedProof::ByKnown { .. } => "cached reference",
+                };
+                eprintln!("ORIGINAL CLAIM {label}: {kind}, {}", wd.obj().ir());
+            }
+        }
+        let Fact::ForallFact(fact) = &theorem.statement.fact else {
+            panic!()
+        };
+        let root = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+        let parent = SourcePosition::new(
+            Some(&root),
+            SourceOwner::Named(theorem),
+            fact.typed_parameters.ordered_param_ids().len() + fact.dom_facts.len(),
+        );
+        eprintln!(
+            "INITIAL CLAIM WD: {:?}",
+            compiler.compile_fact_wd(goal_wd, &claim.statement.fact, &parent)
+        );
+        panic!("goal formation keeps original call bindings while nested cases replay: {error}");
+    }
+}
+
+#[test]
+fn completed_plain_proofs_retain_only_caller_owned_goal_formation() {
+    for declaration in ["claim:", "thm caller_abs:"] {
+        let source =
+            format!("have a R\n{declaration}\n    ? abs(a)>=0\n    abs(a)>=0\nabs(a)>=0\n");
+        let (result, compiler) = checked(&source);
+        let goal = match &result.statement_results[1] {
+            ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
+                ExecClaimStmtResult::Success(proof),
+            )) => &proof.goal_wd,
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+                crate::execute::ExecDefThmStmtResult::Success(proof),
+            )) => &proof.goal_wd,
+            _ => panic!("completed plain proof"),
+        };
+        let VerifyFactWellDefinedResult::Success(FactWellDefinedProof::AtomicExceptEquality(wd)) =
+            goal
+        else {
+            panic!("original goal formation");
+        };
+        let object = wd.detailed_ref().well_defined_of_each_parameter[0].obj();
+        let before = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+        assert!(compiler.compile_object_reference(object, &before).is_err());
+        let after = SourcePosition {
+            before: 2,
+            ..before
+        };
+        compiler.compile_object_reference(object, &after).unwrap();
+        compiler
+            .compile_run(&result, "caller_owned_goal_formation")
+            .unwrap();
+    }
+    let (result, compiler) = checked(FORALL);
+    let proof = claim(&result.statement_results[0]);
+    let VerifyFactWellDefinedResult::Success(FactWellDefinedProof::ForallFact(wd)) = &proof.goal_wd
+    else {
+        panic!("quantified goal formation");
+    };
+    let FactWellDefinedProof::Equality(wd) = &wd.detailed_ref().then[0] else {
+        panic!("original dependent division");
+    };
+    let outside = SourcePosition::new(None, SourceOwner::Run(&result), 1);
+    assert!(compiler
+        .compile_object_reference(wd.detailed_ref().left.obj(), &outside)
+        .is_err());
+}
+
+#[test]
+fn existential_returns_retain_outer_formation_before_any_hypothetical_witness() {
+    let source = "thm caller_tail:\n    ? forall a seq(R),L R,epsilon R+:\n        $has_seq_limsup(a,L)\n        =>:\n            epsilon=epsilon\n    release thm seq_limsup_bound(a,L,epsilon)\n    obtain U0 from exist cutoff N+ st {{n N+:n>=cutoff} $subset preimage_set(a,{v R:v<L+epsilon})}\n    epsilon=epsilon\n";
+    let (result, compiler) = checked(source);
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
+        crate::execute::ExecDefThmStmtResult::Success(theorem),
+    )) = &result.statement_results[0]
+    else {
+        panic!("original theorem");
+    };
+    let Fact::ForallFact(fact) = &theorem.statement.fact else {
+        panic!("forall goal");
+    };
+    let crate::execute::ExecDefThmBodyProof::Forall(body) = &theorem.body else {
+        panic!("forall body");
+    };
+    let ExecStmtResult::ReleaseAndExpand(crate::execute::ExecReleaseAndExpandStmtResult::Thm(
+        crate::execute::execute_by_stmt::ExecReleaseThmStmtResult::Success(release),
+    )) = &body.proof_steps[0]
+    else {
+        panic!("original release");
+    };
+    let FactWellDefinedProof::ExistFact(formation) = &release.stored_wd[0] else {
+        panic!("returned existential formation");
+    };
+    let FactWellDefinedProof::AtomicExceptEquality(subset) =
+        &formation.detailed_ref().assumed_body_facts[0].well_defined
+    else {
+        panic!("original subset formation");
+    };
+    let objects = &subset.detailed_ref().well_defined_of_each_parameter;
+    let root = SourcePosition::new(None, SourceOwner::Run(&result), 0);
+    let head = fact.typed_parameters.ordered_param_ids().len() + fact.dom_facts.len();
+    let before = SourcePosition::new(Some(&root), SourceOwner::Named(theorem), head);
+    assert!(compiler
+        .compile_object_reference(objects[1].obj(), &before)
+        .is_err());
+    let after = SourcePosition {
+        before: head + 1,
+        ..before
+    };
+    compiler
+        .compile_object_reference(objects[1].obj(), &after)
+        .unwrap();
+    assert!(compiler
+        .compile_object_reference(objects[0].obj(), &after)
+        .is_err());
+    let witness = formation
+        .detailed_ref()
+        .introduced_params
+        .defined_params
+        .store_and_infer_results[0]
+        .primary_fact_id();
+    assert!(after
+        .with_visible_wd(objects[1].obj(), &mut |_, producer| {
+            assert!(producer.visible_fact(witness, &compiler.runtime).is_err());
+            Ok(())
+        })
+        .unwrap()
+        .is_some());
+    compiler
+        .compile_run(&result, "caller_owned_existential_formation")
+        .unwrap();
+}
+
+#[test]
+fn original_claim_formation_supplies_constructors_without_assuming_its_goal() {
+    let (result, compiler) = checked(FORALL);
+    let proof = claim(&result.statement_results[0]);
+    let Fact::ForallFact(fact) = &proof.statement.fact else {
+        panic!()
+    };
+    let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(goal)) = &fact.then_facts[0]
+    else {
+        panic!()
+    };
+    let root = SourcePosition::new(None, SourceOwner::Run(&result), 0);
+    let before = SourcePosition::new(Some(&root), SourceOwner::Claim(proof), 0);
+    assert!(compiler
+        .compile_object_reference(&goal.left, &before)
+        .is_err());
+    let body = SourcePosition {
+        before: fact.typed_parameters.ordered_param_ids().len() + fact.dom_facts.len(),
+        ..before
+    };
+    assert!(compiler.compile_object_reference(&goal.left, &body).is_ok());
+    assert!(body.visible_fact(goal.fact_id, &compiler.runtime).is_err());
+    assert!(body.visible_fact(fact.fact_id, &compiler.runtime).is_err());
 }
 
 fn claim(statement: &ExecStmtResult) -> &ExecClaimStmtSuccess {

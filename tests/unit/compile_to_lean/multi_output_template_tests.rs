@@ -3,13 +3,91 @@ use crate::execute::{ExecDefTemplateStmtResult, ExecDefTemplateStmtSuccessResult
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/multi_output_adjacent_pair/statement.lit"),
-    include_str!("../../../lean/examples/dependent_template_point/statement.lit"),
-    include_str!("../../../lean/examples/paired_template_aliases/statement.lit"),
-    include_str!("../../../lean/examples/paired_template_function/statement.lit"),
-    include_str!("../../../lean/examples/correlated_template_witnesses/statement.lit"),
-    include_str!("../../../lean/examples/guarded_template_alias_pair/statement.lit"),
-    include_str!("../../../lean/examples/atomic_template_function_pair/statement.lit"),
+    r#"# Choose two adjacent real numbers together and use both named template outputs.
+thm adjacent_pair:
+    ? forall t R:
+        exist! x, y R st {x = t, y = t + 1}
+    witness exist! x, y R st {x = t, y = t + 1} from t, t + 1
+
+template<t R>:
+    obtain first_copy, second_copy from exist! x, y R st {x = t, y = t + 1}
+
+\first_copy<2> = 2
+
+\second_copy<2> = 3
+
+\second_copy<2> = \first_copy<2> + 1
+
+have fn paired_successor(t R) R = \second_copy<t>
+
+paired_successor(2) = \second_copy<2> = 3
+"#,
+    r#"# Choose a finite singleton and a member from the same existential witness.
+thm singleton_point:
+    ? forall t R:
+        exist A finite_set, x A st {A = {t}, x = t}
+    witness exist A finite_set, x A st {A = {t}, x = t} from {t}, t
+
+template<t R>:
+    obtain point_set, point_member from exist A finite_set, x A st {A = {t}, x = t}
+
+\point_member<4> $in \point_set<4>
+"#,
+    r#"# Give two real expressions separate template names in one declaration.
+template<t R>:
+    have alias_left, alias_right R = t, t + 1
+
+\alias_right<4> = 5
+"#,
+    r#"# Select a real label and a function together, then call the second output.
+thm function_pair:
+    ? forall t R, f fn(a R) R:
+        exist x R, g fn(a R) R st {x = t, g = f}
+    witness exist x R, g fn(a R) R st {x = t, g = f} from t, f
+
+template<t R, f fn(a R) R>:
+    obtain function_label, copied_function from exist x R, g fn(a R) R st {x = t, g = f}
+
+have fn identity_for_pair(a R) R = a
+
+\copied_function<2, identity_for_pair> = identity_for_pair
+
+\copied_function<2, identity_for_pair>(3) = identity_for_pair(3) = 3
+"#,
+    r#"# Choose adjacent numbers without uniqueness and retain their joint relation.
+witness exist x, y R st {y = x + 1} from 0, 1
+
+template<t R>:
+    obtain related_left, related_right from exist x, y R st {y = x + 1}
+
+\related_left<2> $in R
+
+\related_right<2> = \related_left<2> + 1
+"#,
+    r#"# Select a divisor and its reciprocal under their shared nonzero condition.
+template<t R: t != 0,>:
+    have divisor_copy, reciprocal_copy R = t, 1 / t
+
+\reciprocal_copy<2> = 1 / 2
+"#,
+    r#"# Obtain a label and callable companion from one predicate witness.
+have fn identity_for_pair(a R) R = a
+
+prop pair_of_function(t R, f fn(a R) R):
+    exist x R, g fn(a R) R st {x = t, g = f}
+
+thm atomic_function_pair:
+    ? forall t R, f fn(a R) R:
+        $pair_of_function(t, f)
+    witness $pair_of_function(t, f) from t, f
+
+template<t R, f fn(a R) R>:
+    obtain atomic_label, atomic_function from $pair_of_function(t, f)
+
+\atomic_function<2, identity_for_pair> = identity_for_pair
+
+\atomic_function<2, identity_for_pair>(3) = identity_for_pair(3) = 3
+"#,
 ];
 
 fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResult {
@@ -110,8 +188,11 @@ fn every_template_output_has_the_same_original_visibility_boundary() {
         let name = AtomicName::Plain {
             name: binding.name.clone(),
         };
-        assert!(before.visible_template(&name).is_err());
-        assert!(std::ptr::eq(after.visible_template(&name).unwrap().0, p));
+        assert!(before.visible_template(&name, &compiler.runtime).is_err());
+        assert!(std::ptr::eq(
+            after.visible_template(&name, &compiler.runtime).unwrap().0,
+            p
+        ));
         // Body-local identifiers and their source facts do not become globals.
         assert!(after
             .visible_parameter(binding.id, &compiler.runtime)

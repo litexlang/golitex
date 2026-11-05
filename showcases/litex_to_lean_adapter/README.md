@@ -190,8 +190,8 @@ function again, yet ordinary Lean remains concise. The checked proof body in
     ring
 ```
 
-The corresponding [complete Litex source](../../lean/examples/real_mobius_involution/statement.lit)
-and [actual generated Lean](../../lean/examples/real_mobius_involution/statement.lean)
+The corresponding [complete Litex source](mobius.lit)
+and [actual generated Lean](MobiusGenerated.lean)
 have passed strict verification, actual compilation, file-consistency checks
 and pinned-version Lean checking. The formerly blocked difference-nonzero,
 quotient-nonzero, difference-nonzero citation, and universal matching routes
@@ -255,7 +255,7 @@ from the **repository root**:
 cargo build --release
 target/release/litex -strict -lang en -f showcases/litex_to_lean_adapter/source.lit
 target/release/litex -strict -lean -f showcases/litex_to_lean_adapter/source.lit > showcases/litex_to_lean_adapter/Generated.lean
-target/release/litex -strict -lean -f lean/examples/real_mobius_involution/statement.lit > lean/examples/real_mobius_involution/statement.lean
+target/release/litex -strict -lean -f showcases/litex_to_lean_adapter/mobius.lit > showcases/litex_to_lean_adapter/MobiusGenerated.lean
 ```
 
 Then run from this showcase directory:
@@ -281,7 +281,7 @@ For your own mathematical problem:
 
 To connect this to an existing Mathlib project, first match Lean 4.31.0 and
 the pinned Mathlib version (the exact commit is in lakefile.toml). Keep the
-module names and include `Generated.lean`, `Adapter.lean`, `Final.lean`, and
+module names and include `Generated.lean`, `MobiusGenerated.lean`, `Adapter.lean`, `Final.lean`, and
 the repository's `lean/Litex.lean` as the `Litex` module. For example, when
 Core and the three modules are at the project root, add to `lakefile.toml`:
 
@@ -293,7 +293,7 @@ roots = ["Litex"]
 [[lean_lib]]
 name = "LitexExample"
 roots = ["Final"]
-globs = ["Generated", "Adapter", "Final"]
+globs = ["Generated", "MobiusGenerated", "Adapter", "Final"]
 ```
 
 After `lake build LitexExample`, user files can `import Final`. If you move

@@ -1,16 +1,124 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::prelude::*;
 const SOURCES: [&str; 10] = [
-    include_str!("../../../lean/examples/sequence_limsup_add_constant/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_scale_nonnegative/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_scale_negative/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_add_convergent/statement.lit"),
-    include_str!("../../../lean/examples/sequence_limsup_sum_bound/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_add_constant/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_scale_nonnegative/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_scale_negative/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_add_convergent/statement.lit"),
-    include_str!("../../../lean/examples/sequence_liminf_sum_bound/statement.lit"),
+    r#"# Exact finite limsup add constant contract.
+thm checked_sequence_limsup_add_constant:
+    ? forall a,b seq(R),L,c R:
+        $has_seq_limsup(a,L)
+        forall k N+:
+            b(k)=a(k)+c
+        =>:
+            $has_seq_limsup(b,L+c)
+    release thm seq_limsup_add_constant(a,b,L,c)
+"#,
+    r#"# Exact finite limsup scale nonnegative contract.
+thm checked_sequence_limsup_scale_nonnegative:
+    ? forall a,b seq(R),L,c R:
+        $has_seq_limsup(a,L)
+        0<=c
+        forall k N+:
+            b(k)=c*a(k)
+        =>:
+            $has_seq_limsup(b,c*L)
+    release thm seq_limsup_scale_nonnegative(a,b,L,c)
+"#,
+    r#"# Exact finite limsup scale negative contract.
+thm checked_sequence_limsup_scale_negative:
+    ? forall a,b seq(R),L,c R:
+        $has_seq_limsup(a,L)
+        c<0
+        forall k N+:
+            b(k)=c*a(k)
+        =>:
+            $has_seq_liminf(b,c*L)
+    release thm seq_limsup_scale_negative(a,b,L,c)
+"#,
+    r#"# Exact finite limsup add convergent contract.
+thm checked_sequence_limsup_add_convergent:
+    ? forall a,b,h seq(R),L,M R:
+        $has_seq_limsup(a,L)
+        $has_seq_limit(b,M)
+        forall k N+:
+            h(k)=a(k)+b(k)
+        =>:
+            $has_seq_limsup(h,L+M)
+    release thm seq_limsup_add_convergent(a,b,h,L,M)
+"#,
+    r#"# Exact finite limsup sum bound contract.
+thm checked_sequence_limsup_sum_bound:
+    ? forall a,b,h seq(R),L,M,U R,A,B R+:
+        $has_seq_limsup(a,L)
+        $has_seq_limsup(b,M)
+        forall k N+:
+            h(k)=a(k)+b(k)
+        $has_seq_limsup(h,U)
+        forall k N+:
+            abs(a(k))<=A
+        forall k N+:
+            abs(b(k))<=B
+        =>:
+            U<=L+M
+    release thm seq_limsup_sum_bound(a,b,h,L,M,U,A,B)
+"#,
+    r#"# Exact finite liminf add constant contract.
+thm checked_sequence_liminf_add_constant:
+    ? forall a,b seq(R),L,c R:
+        $has_seq_liminf(a,L)
+        forall k N+:
+            b(k)=a(k)+c
+        =>:
+            $has_seq_liminf(b,L+c)
+    release thm seq_liminf_add_constant(a,b,L,c)
+"#,
+    r#"# Exact finite liminf scale nonnegative contract.
+thm checked_sequence_liminf_scale_nonnegative:
+    ? forall a,b seq(R),L,c R:
+        $has_seq_liminf(a,L)
+        0<=c
+        forall k N+:
+            b(k)=c*a(k)
+        =>:
+            $has_seq_liminf(b,c*L)
+    release thm seq_liminf_scale_nonnegative(a,b,L,c)
+"#,
+    r#"# Exact finite liminf scale negative contract.
+thm checked_sequence_liminf_scale_negative:
+    ? forall a,b seq(R),L,c R:
+        $has_seq_liminf(a,L)
+        c<0
+        forall k N+:
+            b(k)=c*a(k)
+        =>:
+            $has_seq_limsup(b,c*L)
+    release thm seq_liminf_scale_negative(a,b,L,c)
+"#,
+    r#"# Exact finite liminf add convergent contract.
+thm checked_sequence_liminf_add_convergent:
+    ? forall a,b,h seq(R),L,M R:
+        $has_seq_liminf(a,L)
+        $has_seq_limit(b,M)
+        forall k N+:
+            h(k)=a(k)+b(k)
+        =>:
+            $has_seq_liminf(h,L+M)
+    release thm seq_liminf_add_convergent(a,b,h,L,M)
+"#,
+    r#"# Exact finite liminf sum bound contract.
+thm checked_sequence_liminf_sum_bound:
+    ? forall a,b,h seq(R),L,M,U R,A,B R+:
+        $has_seq_liminf(a,L)
+        $has_seq_liminf(b,M)
+        forall k N+:
+            h(k)=a(k)+b(k)
+        $has_seq_liminf(h,U)
+        forall k N+:
+            abs(a(k))<=A
+        forall k N+:
+            abs(b(k))<=B
+        =>:
+            L+M<=U
+    release thm seq_liminf_sum_bound(a,b,h,L,M,U,A,B)
+"#,
 ];
 fn value(f: &mut Fact) -> &mut Obj {
     match f {
@@ -59,38 +167,6 @@ fn sequence_extrema_affine_replays_ten_actual_ids_deterministically() {
             .unwrap_or_else(|e| panic!("{source}: {e}"));
         assert!(out.contains(&format!("Litex.{law} {}", i < 5)));
         assert_eq!(out, c.compile_run(&run, "extrema_affine").unwrap());
-    }
-}
-#[test]
-fn sequence_extrema_affine_handles_zero_negative_closed_alias_literal_and_call_profiles() {
-    for source in [
-        include_str!("../../../lean/examples/sequence_limsup_add_constant_closed/statement.lit"),
-        include_str!(
-            "../../../lean/examples/sequence_limsup_scale_nonnegative_closed/statement.lit"
-        ),
-        include_str!("../../../lean/examples/sequence_limsup_scale_negative_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_add_convergent_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_sum_bound_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_add_constant_closed/statement.lit"),
-        include_str!(
-            "../../../lean/examples/sequence_liminf_scale_nonnegative_closed/statement.lit"
-        ),
-        include_str!("../../../lean/examples/sequence_liminf_scale_negative_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_add_convergent_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_sum_bound_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_add_constant_aliased/statement.lit"),
-        include_str!("../../../lean/examples/sequence_limsup_sum_bound_aliased/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_add_constant_aliased/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_sum_bound_aliased/statement.lit"),
-        include_str!(
-            "../../../lean/examples/sequence_limsup_scale_nonnegative_literal/statement.lit"
-        ),
-        include_str!("../../../lean/examples/sequence_limsup_add_convergent_call/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_sum_bound_call/statement.lit"),
-    ] {
-        let (run, c) = super::execute(source);
-        c.compile_run(&run, "affine_profiles")
-            .unwrap_or_else(|e| panic!("{source}: {e}"));
     }
 }
 #[test]
@@ -387,8 +463,33 @@ fn sequence_extrema_affine_conclusions_preserve_operation_polarity_and_order() {
 fn sequence_extrema_affine_call_owners_require_original_bound_and_candidate_evidence() {
     use crate::execute::execute_by_stmt::{ExecByStmtResult, ExecByThmStmtResult};
     for source in [
-        include_str!("../../../lean/examples/sequence_limsup_add_convergent_call/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_sum_bound_call/statement.lit"),
+        r#"# Exact finite limsup add convergent contract.
+thm checked_sequence_limsup_add_convergent_explicit_call:
+    ? forall a,b,h seq(R),L,M R:
+        $has_seq_limsup(a,L)
+        $has_seq_limit(b,M)
+        forall k N+:
+            h(k)=a(k)+b(k)
+        =>:
+            $has_seq_limsup(h,L+M)
+    by thm seq_limsup_add_convergent(a,b,h,L,M) => $has_seq_limsup(h,L+M)
+"#,
+        r#"# Exact finite liminf sum bound contract.
+thm checked_sequence_liminf_sum_bound_explicit_call:
+    ? forall a,b,h seq(R),L,M,U R,A,B R+:
+        $has_seq_liminf(a,L)
+        $has_seq_liminf(b,M)
+        forall k N+:
+            h(k)=a(k)+b(k)
+        $has_seq_liminf(h,U)
+        forall k N+:
+            abs(a(k))<=A
+        forall k N+:
+            abs(b(k))<=B
+        =>:
+            L+M<=U
+    by thm seq_liminf_sum_bound(a,b,h,L,M,U,A,B) => L+M<=U
+"#,
     ] {
         let (mut run, c) = super::execute(source);
         let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
@@ -413,8 +514,28 @@ fn sequence_extrema_affine_call_owners_require_original_bound_and_candidate_evid
 fn sequence_extrema_affine_closed_limit_values_require_the_original_real_formation() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
     for source in [
-        include_str!("../../../lean/examples/sequence_limsup_add_convergent_closed/statement.lit"),
-        include_str!("../../../lean/examples/sequence_liminf_add_convergent_closed/statement.lit"),
+        r#"# Exact finite limsup add convergent contract.
+thm checked_sequence_limsup_add_convergent_closed:
+    ? forall a,b,h seq(R):
+        $has_seq_limsup(a,0)
+        $has_seq_limit(b,0)
+        forall k N+:
+            h(k)=a(k)+b(k)
+        =>:
+            $has_seq_limsup(h,0+0)
+    release thm seq_limsup_add_convergent(a,b,h,0,0)
+"#,
+        r#"# Exact finite liminf add convergent contract.
+thm checked_sequence_liminf_add_convergent_closed:
+    ? forall a,b,h seq(R):
+        $has_seq_liminf(a,0)
+        $has_seq_limit(b,0)
+        forall k N+:
+            h(k)=a(k)+b(k)
+        =>:
+            $has_seq_liminf(h,0+0)
+    release thm seq_liminf_add_convergent(a,b,h,0,0)
+"#,
     ] {
         for candidate in [0, 1] {
             for carrier in [false, true] {

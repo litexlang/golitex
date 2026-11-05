@@ -9,10 +9,48 @@ use crate::execute::{
 use crate::prelude::*;
 
 const SOURCES: &[&str] = &[
-    include_str!("../../../lean/examples/template_recursive_equation_citation/statement.lit"),
-    include_str!("../../../lean/examples/template_recursive_seed_citation/statement.lit"),
-    include_str!("../../../lean/examples/template_recursive_inverse_citation/statement.lit"),
-    include_str!("../../../lean/examples/template_recursive_sum_citation/statement.lit"),
+    r#"# Evaluate a recursive sequence by citing its published equation and matching its predecessor argument.
+template<S set>:
+    have fn recursive_zero(n N) N by induc n from 0:
+        case n = 0: 0
+        case n >= 1: recursive_zero(n - 1)
+\recursive_zero<R>(0) = 0
+
+\recursive_zero<R>(1) = \recursive_zero<R>(0) = 0
+"#,
+    r#"# Evaluate a constant recursive real sequence through its published case equations.
+template<a R>:
+    have fn repeat_seed(n N) R by induc n from 0:
+        case n = 0: a
+        case n >= 1: repeat_seed(n - 1)
+\repeat_seed<2>(0) = 2
+\repeat_seed<2>(1) = \repeat_seed<2>(0) = 2
+forall a R:
+    \repeat_seed<a>(0) = a
+    \repeat_seed<a>(1) = \repeat_seed<a>(0) = a
+"#,
+    r#"# Evaluate a recursive reciprocal sequence while retaining its nonzero seed condition.
+template<a R: a != 0,>:
+    have fn inverse_repeat(n N) R by induc n from 0:
+        case n = 0: 1 / a
+        case n >= 1: inverse_repeat(n - 1)
+\inverse_repeat<2>(0) = 1 / 2
+\inverse_repeat<2>(1) = \inverse_repeat<2>(0) = 1 / 2
+forall a R:
+    a != 0
+    =>:
+        \inverse_repeat<a>(0) = 1 / a
+        \inverse_repeat<a>(1) = \inverse_repeat<a>(0) = 1 / a
+"#,
+    r#"# Cite the published successor equation of a recursive running total.
+template<a R>:
+    have fn sum_seed(n N) R by induc n from 0:
+        case n = 0: 0
+        case n >= 1: sum_seed(n - 1) + a
+\sum_seed<3>(0) = 0
+\sum_seed<3>(1) = \sum_seed<3>(0) + 3 = 3
+\sum_seed<3>(2) = \sum_seed<3>(1) + 3 = 6
+"#,
 ];
 
 fn template(run: &mut RunLitexCodeResult) -> &mut ExecDefTemplateStmtSuccessResult {

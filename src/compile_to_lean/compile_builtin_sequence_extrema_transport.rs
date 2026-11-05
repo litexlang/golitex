@@ -139,6 +139,14 @@ impl LitexToLeanCompiler {
             }
             PredicateDomainProof::ByKnownFact(cite) => {
                 self.compile_known_atomic(cite, fact, &formed)?;
+                if let Some(real) = self.cited_obtained_argument_membership(
+                    cite.cite_fact_id,
+                    value,
+                    &StandardSet::R,
+                    &formed,
+                )? {
+                    return Ok(real);
+                }
                 self.with_cited_atomic_formation(cite.cite_fact_id,&formed,&mut |old,old_wd,old_prior| {
                     let Some((old_sequence,old_value,old_side))=captured_candidate(old) else {return Err(invalid("CitedValueFamily"))};
                     let same=|a:&Obj,b:&Obj| a.ir()==b.ir() || crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(a,b);

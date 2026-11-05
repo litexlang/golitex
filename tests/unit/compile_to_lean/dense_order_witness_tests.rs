@@ -4,9 +4,18 @@ use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::{
 };
 use crate::prelude::*;
 
-const RECIPROCAL: &str =
-    include_str!("../../../lean/examples/reciprocal_natural_witness/statement.lit");
-const MIDPOINT: &str = include_str!("../../../lean/examples/real_midpoint_witness/statement.lit");
+const RECIPROCAL: &str = r#"thm checked_reciprocal_witness:
+    ? forall epsilon R+:
+        exist n N+ st {1/n<epsilon}
+    exist n N+ st {1/n<epsilon}
+"#;
+const MIDPOINT: &str = r#"thm checked_real_density_witness:
+    ? forall a,b R:
+        a<b
+        =>:
+            exist x R st {a<x<b}
+    exist x R st {a<x<b}
+"#;
 
 #[test]
 fn dense_order_witnesses_replay_original_selected_exist_rules() {

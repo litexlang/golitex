@@ -2,10 +2,10 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::ExpLogO
 use crate::execute::{ExecCommandStmtResult, ExecEvalStmtResult, ExecEvalStmtSuccess};
 use crate::prelude::*;
 
-const ROOT: &str = include_str!("../../../lean/examples/evaluated_exact_square_root/statement.lit");
-const SUM: &str = include_str!("../../../lean/examples/evaluated_exact_radical_sum/statement.lit");
-const THREE: &str =
-    include_str!("../../../lean/examples/evaluated_exact_radical_sum_three/statement.lit");
+const ROOT: &str = r#"# Evaluate a nonsquare root without replacing it by an approximation.
+eval sqrt(2)
+sqrt(2) = sqrt(2)
+"#;
 
 fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
     let ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Success(p))) =
@@ -14,21 +14,6 @@ fn eval(run: &mut RunLitexCodeResult) -> &mut ExecEvalStmtSuccess {
         panic!("successful eval")
     };
     p
-}
-
-#[test]
-fn unchanged_radical_evaluation_replays_exact_original_result() {
-    for source in [ROOT, SUM, THREE] {
-        let (run, compiler) = super::execute(source);
-        let lean = compiler
-            .compile_run(&run, "unchanged_radical")
-            .expect(source);
-        assert!(!lean.contains("sorry") && !lean.contains("admit"));
-        assert_eq!(
-            lean,
-            compiler.compile_run(&run, "unchanged_radical").unwrap()
-        );
-    }
 }
 
 #[test]

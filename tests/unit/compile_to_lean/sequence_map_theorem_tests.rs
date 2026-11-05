@@ -1,18 +1,54 @@
 use super::dense_order_theorem_tests::invocation;
 use crate::builtin_theorem::BuiltinTheoremId;
 use crate::prelude::*;
-const NEG: &str =
-    include_str!("../../../lean/examples/sequence_limit_negation_theorem/statement.lit");
-const ABS: &str =
-    include_str!("../../../lean/examples/sequence_limit_absolute_theorem/statement.lit");
-const SCALE: &str =
-    include_str!("../../../lean/examples/sequence_limit_scale_theorem/statement.lit");
-const POWER: &str =
-    include_str!("../../../lean/examples/sequence_limit_natural_power_theorem/statement.lit");
-const NEGATIVE_SCALE: &str =
-    include_str!("../../../lean/examples/sequence_limit_negative_scale_selected/statement.lit");
-const ZERO_POWER: &str =
-    include_str!("../../../lean/examples/sequence_limit_zero_power_selected/statement.lit");
+const NEG: &str = r#"# Negating every term negates the limit of a real sequence.
+thm checked_sequence_limit_negation:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a, L)
+        =>:
+            $has_seq_limit(fn(n N+) R{-a(n)}, -L)
+    release thm seq_limit_neg(a, L)
+"#;
+const ABS: &str = r#"# Taking real absolute values preserves a sequence limit.
+thm checked_sequence_limit_absolute:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a, L)
+        =>:
+            $has_seq_limit(fn(n N+) R{abs(a(n))}, abs(L))
+    release thm seq_limit_abs(a, L)
+"#;
+const SCALE: &str = r#"# Multiplication by a fixed real scalar preserves a sequence limit.
+thm checked_sequence_limit_scale:
+    ? forall a seq(R), L, c R:
+        $has_seq_limit(a, L)
+        =>:
+            $has_seq_limit(fn(n N+) R{c * a(n)}, c * L)
+    release thm seq_limit_scale(a, L, c)
+"#;
+const POWER: &str = r#"# Every fixed natural power preserves a real sequence limit.
+thm checked_sequence_limit_natural_power:
+    ? forall a seq(R), L R, p N:
+        $has_seq_limit(a, L)
+        =>:
+            $has_seq_limit(fn(n N+) R{a(n) ^ p}, L ^ p)
+    release thm seq_limit_power(a, L, p)
+"#;
+const NEGATIVE_SCALE: &str = r#"# A fixed negative scalar also scales the limit of a real sequence.
+thm checked_sequence_limit_negative_scale_selected:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a, L)
+        =>:
+            $has_seq_limit(fn(n N+) R{(-2) * a(n)}, (-2) * L)
+    by thm seq_limit_scale(a, L, (-2)) => $has_seq_limit(fn(n N+) R{(-2) * a(n)}, (-2) * L)
+"#;
+const ZERO_POWER: &str = r#"# Select the limit law for the zeroth power, including sequences with zero terms.
+thm checked_sequence_limit_zero_power_selected:
+    ? forall a seq(R), L R:
+        $has_seq_limit(a, L)
+        =>:
+            $has_seq_limit(fn(n N+) R{a(n) ^ 0}, L ^ 0)
+    by thm seq_limit_power(a, L, 0) => $has_seq_limit(fn(n N+) R{a(n) ^ 0}, L ^ 0)
+"#;
 
 #[test]
 fn sequence_map_replays_all_four_selected_operations_and_literal_profiles() {

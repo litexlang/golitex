@@ -178,7 +178,17 @@ fn template_definition_stores_are_visible_in_normal_and_detailed_json() {
 
 #[test]
 fn multi_output_templates_register_and_publish_every_output_together() {
-    let code = include_str!("../../../../lean/examples/dependent_template_point/statement.lit");
+    let code = r#"# Choose a finite singleton and a member from the same existential witness.
+thm singleton_point:
+    ? forall t R:
+        exist A finite_set, x A st {A = {t}, x = t}
+    witness exist A finite_set, x A st {A = {t}, x = t} from {t}, t
+
+template<t R>:
+    obtain point_set, point_member from exist A finite_set, x A st {A = {t}, x = t}
+
+\point_member<4> $in \point_set<4>
+"#;
     check(code, &[true; 3]);
     let mut rt = runtime(true);
     let run = rt.run_litex_code(code).unwrap();
@@ -230,9 +240,18 @@ fn multi_output_guards_and_nonunique_choices_do_not_leak_extra_facts() {
     check("template<t R: t != 0,>:\n    have divisor_copy, reciprocal_copy R = t, 1 / t\n\\reciprocal_copy<2> = 1 / 2\n\\divisor_copy<0> $in R\n\\reciprocal_copy<0> $in R\n0 != 0\n", &[true, true, false, false, false]);
     let mut rt = runtime(true);
     let result = rt
-        .run_litex_code(include_str!(
-            "../../../../lean/examples/correlated_template_witnesses/statement.lit"
-        ))
+        .run_litex_code(
+            r#"# Choose adjacent numbers without uniqueness and retain their joint relation.
+witness exist x, y R st {y = x + 1} from 0, 1
+
+template<t R>:
+    obtain related_left, related_right from exist x, y R st {y = x + 1}
+
+\related_left<2> $in R
+
+\related_right<2> = \related_left<2> + 1
+"#,
+        )
         .unwrap();
     assert!(result.success);
     assert!(
@@ -284,11 +303,30 @@ fn secondary_name_collision_and_failed_body_roll_back_all_output_names() {
 #[test]
 fn secondary_alias_and_function_outputs_use_their_own_declarations() {
     check(
-        include_str!("../../../../lean/examples/paired_template_aliases/statement.lit"),
+        r#"# Give two real expressions separate template names in one declaration.
+template<t R>:
+    have alias_left, alias_right R = t, t + 1
+
+\alias_right<4> = 5
+"#,
         &[true; 2],
     );
     check(
-        include_str!("../../../../lean/examples/paired_template_function/statement.lit"),
+        r#"# Select a real label and a function together, then call the second output.
+thm function_pair:
+    ? forall t R, f fn(a R) R:
+        exist x R, g fn(a R) R st {x = t, g = f}
+    witness exist x R, g fn(a R) R st {x = t, g = f} from t, f
+
+template<t R, f fn(a R) R>:
+    obtain function_label, copied_function from exist x R, g fn(a R) R st {x = t, g = f}
+
+have fn identity_for_pair(a R) R = a
+
+\copied_function<2, identity_for_pair> = identity_for_pair
+
+\copied_function<2, identity_for_pair>(3) = identity_for_pair(3) = 3
+"#,
         &[true; 5],
     );
 }

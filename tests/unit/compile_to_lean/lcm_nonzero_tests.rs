@@ -11,8 +11,24 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const SOURCE: &str = include_str!("../../../lean/examples/lcm_nonzero/statement.lit");
-const REVERSED: &str = include_str!("../../../lean/examples/lcm_nonzero_reversed/statement.lit");
+const SOURCE: &str = r#"# The least common multiple of two nonzero integers is nonzero.
+claim:
+    ? forall a Z, b Z:
+        a != 0
+        b != 0
+        =>:
+            lcm(a,b) != 0
+    lcm(a,b) != 0
+"#;
+const REVERSED: &str = r#"# Zero is distinct from the least common multiple of two nonzero integers.
+claim:
+    ? forall a Z, b Z:
+        a != 0
+        b != 0
+        =>:
+            0 != lcm(a,b)
+    0 != lcm(a,b)
+"#;
 
 fn selected_rule(run: &mut RunLitexCodeResult) -> &mut LcmNonzeroFromNonzeroOperandsProof {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(

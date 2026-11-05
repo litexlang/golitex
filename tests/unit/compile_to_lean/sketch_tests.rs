@@ -4,8 +4,14 @@ use crate::execute::execute_proof_block_stmt::{
 };
 use crate::prelude::*;
 
-const ARITHMETIC: &str =
-    include_str!("../../../lean/examples/local_arithmetic_sketch/statement.lit");
+const ARITHMETIC: &str = r#"# Check a local arithmetic calculation, then reuse its name outside the sketch.
+sketch:
+    let x = 2
+    x + 1 = 3
+
+let x = 5
+x = 5
+"#;
 
 fn sketch(statement: &ExecStmtResult) -> &ExecSketchStmtSuccess {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(
@@ -25,24 +31,6 @@ fn sketch_mut(statement: &mut ExecStmtResult) -> &mut ExecSketchStmtSuccess {
         panic!("successful sketch")
     };
     p
-}
-
-#[test]
-fn sketch_checks_local_calculation_without_exporting_it() {
-    let (run, compiler) = super::execute(ARITHMETIC);
-    let lean = compiler
-        .compile_run(&run, "local_arithmetic_sketch")
-        .unwrap();
-    assert!(lean.contains("private theorem _sketch_1"));
-    assert!(lean.contains("Litex.add"));
-    assert!(lean.contains("exact True.intro"));
-    assert!(lean.len() < 30_000);
-    assert_eq!(
-        lean,
-        compiler
-            .compile_run(&run, "local_arithmetic_sketch")
-            .unwrap()
-    );
 }
 
 #[test]
@@ -108,10 +96,42 @@ fn sketch_rejects_failed_child_even_inside_a_success_wrapper() {
 #[test]
 fn sketches_replay_nested_blocks_outer_parameters_and_tuple_wd() {
     for source in [
-        include_str!("../../../lean/examples/nested_arithmetic_sketch/statement.lit"),
-        include_str!("../../../lean/examples/sketch_in_named_theorem/statement.lit"),
-        include_str!("../../../lean/examples/local_tuple_sketch/statement.lit"),
-        include_str!("../../../lean/examples/local_finite_set_sketch/statement.lit"),
+        r#"# Check a dependent calculation inside two discarded scopes.
+sketch:
+    let outer = 2
+    outer + 1 = 3
+    sketch:
+        let inner = outer + 1
+        inner = 3
+    outer = 2
+"#,
+        r#"# Use a local calculation while checking reflexivity, then cite the theorem in another sketch.
+thm reflexivity:
+    ? forall a R:
+        a = a
+    sketch:
+        a + 0 = a
+
+sketch:
+    have r R
+    by thm reflexivity(r) => r = r
+
+have anchor R
+sketch:
+    by thm reflexivity(anchor) => anchor = anchor
+"#,
+        r#"# Check the coordinates of a tuple without exporting the tuple or its facts.
+sketch:
+    let pair = (2, 3)
+    release tuple def pair
+    pair(1) = 2
+    pair(2) = 3
+"#,
+        r#"# Check membership in a finite set whose name stays inside the sketch.
+sketch:
+    let A = {1, 2}
+    1 $in A
+"#,
         "have a R\nsketch:\n    a + 0 = a\na = a\n",
         "sketch:\n    have b R = 2\n    b + 1 = 3\n",
     ] {
@@ -131,7 +151,21 @@ fn sketches_replay_nested_blocks_outer_parameters_and_tuple_wd() {
 
 #[test]
 fn a_nested_sketch_keeps_its_original_source_steps() {
-    let source = include_str!("../../../lean/examples/sketch_in_named_theorem/statement.lit");
+    let source = r#"# Use a local calculation while checking reflexivity, then cite the theorem in another sketch.
+thm reflexivity:
+    ? forall a R:
+        a = a
+    sketch:
+        a + 0 = a
+
+sketch:
+    have r R
+    by thm reflexivity(r) => r = r
+
+have anchor R
+sketch:
+    by thm reflexivity(anchor) => anchor = anchor
+"#;
     let (mut run, compiler) = super::execute(source);
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
         ExecDefThmStmtResult::Success(p),

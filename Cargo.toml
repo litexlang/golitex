@@ -1,6 +1,6 @@
 [package]
 name = "litex-lang"
-version = "1.1.10-beta"
+version = "1.1.11-beta"
 edition = "2021"
 description = "The Language Where Mathematics Verifies Itself"
 license = "Apache-2.0"
@@ -17,6 +17,7 @@ exclude = [
     "showcases/*",
     "scripts/*",
     "lean/.lake",
+    "lean/examples/**",
     "litex_semantics_in_lean/*",
     "**/.draft/**",
     "**/.drafts/**",
