@@ -487,27 +487,37 @@ impl LitexToLeanCompiler {
                 if let (Fact::ForallFact(fact), VerifyFactResult::ForallFact(result)) =
                     (requirement, checked)
                 {
-                    let introduced = match result.as_ref() {
+                    let (introduced, assumed, owner) = match result.as_ref() {
                         VerifyForallFactResult::Success(
                             VerifyForallFactProof::ByLocalIntroduction(p),
-                        ) => &p.introduced_params,
+                        ) => (&p.introduced_params, p.assumed_dom_facts.as_slice(), SourceOwner::Forall(p)),
                         VerifyForallFactResult::Success(
                             VerifyForallFactProof::ByKnownForallFact(p),
-                        ) => &p.well_defined.detailed_ref().introduced_params,
+                        ) => (&p.well_defined.detailed_ref().introduced_params,
+                            p.well_defined.detailed_ref().assumed_dom_facts.as_slice(), SourceOwner::KnownForall(p)),
                         VerifyForallFactResult::Success(
                             VerifyForallFactProof::ByEmptyParameterDomain(p),
-                        ) => &p.well_defined.detailed_ref().introduced_params,
+                        ) => (&p.well_defined.detailed_ref().introduced_params,
+                            p.well_defined.detailed_ref().assumed_dom_facts.as_slice(), SourceOwner::EmptyForall(p)),
                         _ => return Err(LeanCompileError::unsupported("Prop/FoldForallProof")),
                     };
+                    let scope = SourcePosition::new(Some(&term_scope), owner, 0);
+                    let (mut binders, _, mut definitions) =
+                        self.compile_forall_head(fact, introduced, assumed, &scope)?;
                     let mut arguments = Vec::new();
-                    for (id, store) in fact
+                    for (index, (id, store)) in fact
                         .typed_parameters
                         .ordered_param_ids()
                         .iter()
                         .zip(&introduced.defined_params.store_and_infer_results)
+                        .enumerate()
                     {
+                        let value = format!("_value_i{}", id.value());
+                        binders[2 * index] = format!("({value} : Litex.Obj (M := M) M.Value)");
                         arguments.extend([
-                            format!("_value_i{}", id.value()),
+                            "M.Value".to_string(),
+                            "(inferInstance)".to_string(),
+                            value,
                             format!("h_{}", store.primary_fact_id().value()),
                         ]);
                     }
@@ -516,15 +526,15 @@ impl LitexToLeanCompiler {
                             .iter()
                             .map(|f| format!("h_{}", f.fact_id().value())),
                     );
-                    let intro = if arguments.is_empty() {
-                        String::new()
-                    } else {
-                        format!("intro {}\n  ", arguments.join(" "))
-                    };
-                    format!(
-                        "(by\n  {intro}exact (show {proposition} from {term}) {})",
-                        arguments.join(" ")
-                    )
+                    // The definition's forall is over semantic objects. Fix
+                    // that telescope before checking the already selected
+                    // polymorphic proof, rather than letting an untyped intro
+                    // infer binders from a delayed proposition construction.
+                    definitions.push(format!("have _fold_forall : {proposition} := {term}"));
+                    definitions.push(format!("exact (@_fold_forall {})", arguments.join(" ")));
+                    let body = format!("(by\n  {}\n)", definitions.join("\n").replace('\n', "\n  "));
+                    if binders.is_empty() { body }
+                    else { format!("(fun {} => {body})", binders.join(" ")) }
                 } else {
                     term
                 },
@@ -610,8 +620,17 @@ impl LitexToLeanCompiler {
             position.visible_prop(&normal.predicate, &self.runtime)?;
         self.prop_argument_substitution(declaration, normal)?;
         let mut arguments = Vec::new();
-        for object in &normal.body {
-            arguments.push(self.compile_object_reference(object, position)?);
+        for (index, object) in normal.body.iter().enumerate() {
+            let term = self.compile_object_reference(object, position)?;
+            arguments.push(if declaration_position.is_local() {
+                // Local lets cannot generalize host universe levels between
+                // applications. Predicates observe denotations, so use the
+                // existing semantic view of this exact certified object.
+                let name = format!("_local_prop_argument_{index}");
+                format!("(let {name} := {term}; Litex.semanticObject (Litex.denote {name}) (Litex.isSet {name}))")
+            } else {
+                term
+            });
         }
         let name = crate::compile_to_lean::compile_def_prop_stmt_result::concrete_prop_name(
             declaration,

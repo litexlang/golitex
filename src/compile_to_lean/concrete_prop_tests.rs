@@ -26,6 +26,20 @@ fn checked(source: &str) -> (Runtime, RunLitexCodeResult) {
 }
 
 #[test]
+fn concrete_prop_retains_set_dependencies_in_its_header_and_quantified_body() {
+    for source in [
+        "prop positive_self(x N+):\n    x=x\nby def $positive_self(1)\n",
+        "claim:\n    ? 0=0\n    prop every_copy(x R):\n        forall n N+:\n            x=x\n    by def $every_copy(0)\n    0=0\n",
+    ] {
+        let (runtime, result) = checked(source);
+        let output = LitexToLeanCompiler::new(runtime)
+            .compile_run(&result, "predicate_set_dependencies")
+            .expect("declaration-local refined carriers retain their semantic instance");
+        assert!(output.contains("variable [_setSemantics : Litex.SetSemantics M]"));
+    }
+}
+
+#[test]
 fn concrete_prop_retains_domains_and_actual_explicit_definition_route() {
     let (runtime, result) = checked(NONZERO);
     let ExecStmtResult::By(ExecByStmtResult::Def(

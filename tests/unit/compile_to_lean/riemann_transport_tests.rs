@@ -390,7 +390,9 @@ fn riemann_transport_replays_nested_signed_literal_identity_in_final_citations()
             EqualFactSearchedProof::ByTheyAreTheSame(TheyAreTheSameProof::SameIr(_))
         ));
         let out = c.compile_run(&run, "signed_integral_identity").unwrap();
-        assert!(out.contains("M.neg_numbers"));
+        // The signed endpoint uses the denotation of its checked constructor,
+        // including when the numeric literal reuses an earlier negation WD.
+        assert!(out.contains("Litex.NativeBridge.denoteNeg"));
         assert!(out.contains("_known_argument_eq_3"));
     }
 }

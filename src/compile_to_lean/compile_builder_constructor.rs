@@ -116,7 +116,10 @@ impl LitexToLeanCompiler {
             let mut definitions = self.compile_parameter_inferences(binder, &binder_fact,
                 &(self.fact_proposition(&binder_fact, &introduced)?, binder_name), &introduced)?;
             let value = self.compile_object_reference(&step.source_membership.element, position)?;
-            let mut arguments = vec![format!("(Litex.semanticObject (Litex.denote {value}) (Litex.isSet {value}))")];
+            // The substituted input is one original object. Sharing it keeps
+            // its host type identical in the denotation and sethood proof.
+            let input = "_builder_input";
+            let mut arguments = vec![format!("(Litex.semanticObject (Litex.denote {input}) (Litex.isSet {input}))")];
             let base = step.projections.iter().find_map(|p| match p {
                 crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(s) => Some(s), _ => None,
             });
@@ -156,9 +159,11 @@ impl LitexToLeanCompiler {
             let constructor = formed.with_visible_wd(pattern, &mut |original, producer| self.compile_wd(original, producer))?
                 .ok_or_else(|| LeanCompileError::unsupported("SetBuilder/ConstructorProducer"))?;
             let body = if definitions.is_empty() { constructor } else {
-                format!("(by\n  {}\n  exact {constructor}\n)", definitions.join("\n").replace('\n', "\n  "))
+                // Keep the object payload transparent; only the original
+                // local proof declarations belong in proof-valued bindings.
+                format!("({};\n{constructor})", definitions.join(";\n"))
             };
-            Ok(format!("((fun {} => {body}) {})", binders.join(" "), arguments.join(" ")))
+            Ok(format!("(let {input} := {value};\n((fun {} => {body}) {}))", binders.join(" "), arguments.join(" ")))
         })
     }
 }

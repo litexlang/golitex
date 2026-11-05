@@ -92,18 +92,18 @@ impl LitexToLeanCompiler {
             // Keep elimination of domain proofs inside a proof-valued binding.
             // It must not wrap the call object and obstruct its denotation.
             let (base, _) = self.compile_function_base_domain(signature, position)?;
-            lines.push(format!("have _preimage_base : M.mem (Litex.denote {input}) {base} := by\n    {}\n    exact _preimage_base", domain_parts.join("\n    ")));
+            lines.push(format!("have _preimage_base : M.mem (Litex.denote {input}) {base} := (by\n    {}\n    exact _preimage_base)", domain_parts.join("\n    ")));
             let repack = self.compile_preimage_repack(&values, "_preimage_base");
             lines.push(format!("have _preimage_repack : Litex.denote {input} = Litex.FiniteFunction.tupleValue (M := M) ![{}] := {repack}",values.join(", ")));
             let wd=finite_vector_proof(&values.iter().enumerate().map(|(i,_)|format!("M.member_isSet (Litex.FiniteFunction.coordinate_mem_number _preimage_base ({i} : Fin {}) ({} : ℂ) (by norm_num))",values.len(),i+1)).collect::<Vec<_>>());
             (format!("(Litex.tuple (M := M) ![{}] {wd})",values.join(", ")),
              format!("(Eq.mp (congrArg (fun x => M.mem x ({sig}).domain) _preimage_repack) _preimage_domain)"))
         };
-        lines.push(format!(
-            "exact Litex.callOn {sig} {f} {argument} {hf} {domain}"
-        ));
+        let call = format!("Litex.callOn {sig} {f} {argument} {hf} {domain}");
         Ok(Some((
-            format!("(by\n  {})", lines.join("\n  ")),
+            // The domain proof is local, while the call's signature/output
+            // stays reducible when later numeric observations consume it.
+            format!("({};\n{call})", lines.join(";\n")),
             self.compile_numeric_carrier(&signature.ret_set, position)
                 .ok(),
         )))

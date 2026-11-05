@@ -1,4 +1,5 @@
-use super::helper::{conjunction_projection, conjunction_proposition, instantiated_fact_matches};
+use super::helper::{conjunction_projection, conjunction_proposition, instantiated_fact_matches, parameter_type_fact_matches};
+use super::compile_def_struct_stmt_result::struct_declaration_name;
 use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::ast::stmt::DefStructStmt;
@@ -140,27 +141,31 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         header_binders: &[String],
         base_host: &str,
+        local: bool,
     ) -> Result<String, LeanCompileError> {
         let context = format!(
             "{}{}",
-            self.context_header(position)?,
+            if local { String::new() } else { self.context_header(position)? },
             if header_binders.is_empty() {
                 String::new()
             } else {
                 format!(" {}", header_binders.join(" "))
             }
         );
-        let base =
-            self.struct_self_application(&format!("_struct_base_{index}"), proof, position)?;
-        let condition =
-            self.struct_self_application(&format!("_struct_condition_{index}"), proof, position)?;
-        let structure =
-            self.struct_self_application(&format!("struct_{index}"), proof, position)?;
+        let base_name = struct_declaration_name("_struct_base", proof, index, local);
+        let condition_name = struct_declaration_name("_struct_condition", proof, index, local);
+        let structure_name = struct_declaration_name("struct", proof, index, local);
+        let members_name = struct_declaration_name("_struct_members", proof, index, local);
+        let definition = if local { "let" } else { "noncomputable def" };
+        let lemma = if local { "have" } else { "theorem" };
+        let base = self.struct_self_application(&base_name, proof, position)?;
+        let condition = self.struct_self_application(&condition_name, proof, position)?;
+        let structure = self.struct_self_application(&structure_name, proof, position)?;
         let header =
             SourcePosition::new(Some(position), SourceOwner::StructHeader(proof), usize::MAX);
         let raw = self.compile_struct_condition_value(&proof.statement, "_struct_raw", &header)?;
-        let declarations = format!("{checked_fields}\n\nnoncomputable def _struct_base_{index}{context} : Litex.Obj (M := M) ({base_host}) :=\n  {cart}\n\nnoncomputable def _struct_condition_{index}{context} (_struct_raw : M.Value) : Prop :=\n  {raw}\n\nnoncomputable def struct_{index}{context} : Litex.Obj (M := M) (Litex.SetBuilderObj (M := M) ({base_host})) :=\n  Litex.setBuilder {base} (fun _struct_value _ => {condition} (Litex.denote _struct_value))\n\ntheorem _struct_members_{index}{context} {{_Host : Type _}} [_rep : Litex.Representation M _Host] (_struct_value : Litex.Obj (M := M) _Host) :\n    Litex.In _struct_value {structure} ↔ Litex.In _struct_value {base} ∧ {condition} (Litex.denote _struct_value) := by\n  change Litex.In _struct_value (Litex.setBuilder {base} _) ↔ _\n  rw [Litex.inSetBuilder_iff]\n  constructor\n  · rintro ⟨h, law⟩\n    exact ⟨h, law⟩\n  · rintro ⟨h, law⟩\n    exact ⟨h, law⟩");
-        let laws = self.compile_struct_condition_publications(proof, index, position)?;
+        let declarations = format!("{checked_fields}\n\n{definition} {base_name}{context} : Litex.Obj (M := M) ({base_host}) :=\n  {cart}\n\n{definition} {condition_name}{context} (_struct_raw : M.Value) : Prop :=\n  {raw}\n\n{definition} {structure_name}{context} : Litex.Obj (M := M) (Litex.SetBuilderObj (M := M) ({base_host})) :=\n  Litex.setBuilder {base} (fun _struct_value _ => {condition} (Litex.denote _struct_value))\n\n{lemma} {members_name}{context} {{_Host : Type _}} [_rep : Litex.Representation M _Host] (_struct_value : Litex.Obj (M := M) _Host) :\n    Litex.In _struct_value {structure} ↔ Litex.In _struct_value {base} ∧ {condition} (Litex.denote _struct_value) := by\n  change Litex.In _struct_value (Litex.setBuilder {base} _) ↔ _\n  rw [Litex.inSetBuilder_iff]\n  constructor\n  · rintro ⟨h, law⟩\n    exact ⟨h, law⟩\n  · rintro ⟨h, law⟩\n    exact ⟨h, law⟩");
+        let laws = self.compile_struct_condition_publications(proof, index, position, local)?;
         Ok(format!("{declarations}\n\n{}", laws.join("\n\n")))
     }
 
@@ -212,14 +217,15 @@ impl LitexToLeanCompiler {
         proof: &ExecDefStructStmtSuccessResult,
         index: usize,
         position: &SourcePosition<'_>,
+        local: bool,
     ) -> Result<Vec<String>, LeanCompileError> {
         let header =
             SourcePosition::new(Some(position), SourceOwner::StructHeader(proof), usize::MAX);
         let (header_binders, header_intros, _) = self.compile_struct_header(proof, &header)?;
         let structure =
-            self.struct_self_application(&format!("struct_{index}"), proof, position)?;
+            self.struct_self_application(&struct_declaration_name("struct", proof, index, local), proof, position)?;
         let bridge =
-            self.struct_self_application(&format!("_struct_members_{index}"), proof, position)?;
+            self.struct_self_application(&struct_declaration_name("_struct_members", proof, index, local), proof, position)?;
         let groups = proof
             .statement
             .param_def_with_dom
@@ -294,19 +300,7 @@ impl LitexToLeanCompiler {
                 parameters.iter().zip(&target.dom_facts[domain_offset..])
             {
                 let obj = Obj::Identifier(IdentifierObj::from_bound_name(parameter));
-                let valid = match (kind, fact) {
-                    (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f))) => {
-                        f.set.ir() == obj.ir()
-                    }
-                    (
-                        ParamType::NonemptySet(_),
-                        Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f)),
-                    ) => f.set.ir() == obj.ir(),
-                    (ParamType::Obj(set), Fact::AtomicFact(AtomicFact::InFact(f))) => {
-                        f.element.ir() == obj.ir() && f.set.ir() == set.ir()
-                    }
-                    _ => false,
-                };
+                let valid = parameter_type_fact_matches(kind, &obj, fact, &HashMap::new());
                 if !valid {
                     return Err(LeanCompileError::unsupported("Struct/PublishedLawDomain"));
                 }
@@ -448,7 +442,11 @@ impl LitexToLeanCompiler {
                 &fact,
                 &(
                     compiled.0,
-                    self.context_application(&format!("h_{}", fact.fact_id().value()), &completed),
+                    if local {
+                        format!("h_{}", fact.fact_id().value())
+                    } else {
+                        self.context_application(&format!("h_{}", fact.fact_id().value()), &completed)
+                    },
                 ),
                 &completed,
             )?);

@@ -1,4 +1,4 @@
-use super::compile_def_struct_stmt_result::has_dependent_fields;
+use super::compile_def_struct_stmt_result::{has_dependent_fields, struct_declaration_name};
 use super::compile_struct_conditions::field_substitution;
 use super::compile_struct_header::header_substitution;
 use super::helper::{ensure_object, instantiated_object_matches};
@@ -72,6 +72,7 @@ impl LitexToLeanCompiler {
         proof: &ExecDefStructStmtSuccessResult,
         outer: &SourcePosition<'_>,
         index: usize,
+        local: bool,
     ) -> Result<String, LeanCompileError> {
         let header = SourcePosition::new(Some(outer), SourceOwner::StructHeader(proof), usize::MAX);
         let (header_binders, _, header_definitions) = self.compile_struct_header(proof, &header)?;
@@ -137,7 +138,7 @@ impl LitexToLeanCompiler {
         checks.push(body);
         let context = format!(
             "{}{}",
-            self.context_header(outer)?,
+            if local { String::new() } else { self.context_header(outer)? },
             if header_binders.is_empty() {
                 String::new()
             } else {
@@ -149,16 +150,24 @@ impl LitexToLeanCompiler {
             .map(|i| i.to_string())
             .collect::<Vec<_>>()
             .join(", ");
-        let coordinate_declarations = format!("def _struct_indices_{index} : Fin {n} → ℂ :=\n  ![{indices}]\n\ntheorem _struct_indices_spec_{index} : ∀ i, _struct_indices_{index} i = ((i.val + 1 : ℕ) : ℂ) := by\n  intro i\n  fin_cases i <;> norm_num [_struct_indices_{index}]");
+        let definition = if local { "let" } else { "noncomputable def" };
+        let lemma = if local { "have" } else { "theorem" };
+        let indices_name = struct_declaration_name("_struct_indices", proof, index, local);
+        let indices_spec = struct_declaration_name("_struct_indices_spec", proof, index, local);
+        let fields_name = struct_declaration_name("_struct_fields", proof, index, local);
+        let fields_wd = struct_declaration_name("_struct_fields_wd", proof, index, local);
+        let structure = struct_declaration_name("struct", proof, index, local);
+        let indices_kind = if local { "let" } else { "def" };
+        let coordinate_declarations = format!("{indices_kind} {indices_name} : Fin {n} → ℂ :=\n  ![{indices}]\n\n{lemma} {indices_spec} : ∀ i, {indices_name} i = ((i.val + 1 : ℕ) : ℂ) := by\n  intro i\n  fin_cases i <;> norm_num [{indices_name}]");
         let fields =
-            self.struct_self_application(&format!("_struct_fields_{index}"), proof, outer)?;
+            self.struct_self_application(&fields_name, proof, outer)?;
         let well_formed =
-            self.struct_self_application(&format!("_struct_fields_wd_{index}"), proof, outer)?;
-        let checked = format!("{coordinate_declarations}\n\nnoncomputable def _struct_fields_{index}{context} : Litex.DependentFields M {n} :=\n  {raw}\n\ntheorem _struct_fields_wd_{index}{context} : Litex.DependentFields.WellFormed {fields} := by\n  {}", checks.join("\n").replace('\n', "\n  "));
+            self.struct_self_application(&fields_wd, proof, outer)?;
+        let checked = format!("{coordinate_declarations}\n\n{definition} {fields_name}{context} : Litex.DependentFields M {n} :=\n  {raw}\n\n{lemma} {fields_wd}{context} : Litex.DependentFields.WellFormed {fields} := by\n  {}", checks.join("\n").replace('\n', "\n  "));
         let carrier = format!("Litex.dependentCart {fields} {well_formed}");
         let host = format!("Litex.DependentCartObj M {n}");
         if proof.statement.equivalent_facts.is_empty() {
-            return Ok(format!("{checked}\n\nnoncomputable def struct_{index}{context} : Litex.Obj (M := M) ({host}) :=\n  {carrier}"));
+            return Ok(format!("{checked}\n\n{definition} {structure}{context} : Litex.Obj (M := M) ({host}) :=\n  {carrier}"));
         }
         self.compile_constrained_struct_declarations(
             proof,
@@ -168,6 +177,7 @@ impl LitexToLeanCompiler {
             outer,
             &header_binders,
             &host,
+            local,
         )
     }
 
@@ -176,17 +186,14 @@ impl LitexToLeanCompiler {
         carrier: &StructObj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (_, producer, index) = position.visible_struct(&carrier.name, &self.runtime)?;
+        let (declaration, producer, index) = position.visible_struct(&carrier.name, &self.runtime)?;
         position.validate_declaration_context(&producer)?;
-        let prefix = producer
-            .module_file_number()
+        let prefix = (!producer.is_local()).then(|| producer.module_file_number()).flatten()
             .map(|file| format!("source_{file}."))
             .unwrap_or_default();
-        Ok(format!(
-            "{prefix}_struct_indices_{} {prefix}_struct_indices_spec_{}",
-            index + 1,
-            index + 1
-        ))
+        let indices = struct_declaration_name("_struct_indices", declaration, index + 1, producer.is_local());
+        let specification = struct_declaration_name("_struct_indices_spec", declaration, index + 1, producer.is_local());
+        Ok(format!("{prefix}{indices} {prefix}{specification}"))
     }
 
     pub(super) fn compile_struct_cart_reference(

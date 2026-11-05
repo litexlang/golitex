@@ -1408,11 +1408,18 @@ impl<'a> SourcePosition<'a> {
                 }
             }
 
-            if let Some(run) = current.owner.run() {
-                for (index, statement) in run
-                    .statement_results
+            let steps = match current.owner {
+                SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
+                    Some((run.statement_results.as_slice(), 0))
+                }
+                SourceOwner::Named(proof) => Some(named_steps(proof)),
+                SourceOwner::Claim(proof) => Some(claim_steps(proof)),
+                owner => local_steps(owner),
+            };
+            if let Some((steps, head)) = steps {
+                for (index, statement) in steps
                     .iter()
-                    .take(current.before)
+                    .take(current.before.saturating_sub(head))
                     .enumerate()
                     .rev()
                 {
@@ -1420,11 +1427,17 @@ impl<'a> SourcePosition<'a> {
                         crate::execute::ExecDefStructStmtResult::Success(proof),
                     )) = statement
                     {
-                        if &proof.statement.name == name {
+                        let completed = Self {
+                            before: head + index + 1,
+                            ..*current
+                        };
+                        if &proof.statement.name == name
+                            && obeys_active_stage_ceilings(self, &completed)
+                        {
                             return Ok((
                                 proof,
                                 Self {
-                                    before: index,
+                                    before: head + index,
                                     ..*current
                                 },
                                 index,

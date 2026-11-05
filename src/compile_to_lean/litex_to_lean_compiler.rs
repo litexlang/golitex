@@ -201,6 +201,7 @@ impl LitexToLeanCompiler {
             declaration.contains("Litex.familyUnion")
                 || declaration.contains("Litex.familyIntersect")
                 || declaration.contains("Litex.IndexedUnionSemantics.")
+                || declaration.contains("Litex.dependentCart")
                 || declaration.contains("Litex.indexCart")
                 || declaration.contains("Litex.replacement")
         });
@@ -222,12 +223,6 @@ impl LitexToLeanCompiler {
             .iter()
             .map(|declaration| {
                 let mut rendered = declaration.to_owned();
-                // Preserve explicit below-recursors during elaboration. Smart
-                // unfolding can otherwise expose equation lemmas on only one side
-                // of a definitional equality. This local option adds no proof rule.
-                if declaration.contains("Nat.brecOn") {
-                    rendered = format!("set_option smartUnfolding false in\n{rendered}");
-                }
                 // Explicit dependent WD can exceed the default budget already
                 // around 200 KB (for example a complete Darboux definition).
                 // Keep the existing finite, declaration-local resource policy.
@@ -734,6 +729,11 @@ fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
         return true;
     }
     match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+            ExecDefPropStmtResult::Success(proof),
+        )) => proof.statement.typed_parameters.groups.iter().any(|group| {
+            matches!(&group.param_type, ParamType::Obj(carrier) if object_uses_sets(carrier))
+        }) || proof.statement.iff_facts.iter().any(fact_uses_sets),
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveByReplacementAxiom(_))) => true,
 
         ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::RegularityAxiom(_) | ExecReleaseAndExpandStmtResult::ZornLemma(_)) => true,

@@ -66,6 +66,10 @@ pub(super) fn program_identity(id: BuiltinTheoremId) -> bool {
 fn invalid(s: &str) -> LeanCompileError {
     LeanCompileError::unsupported(&format!("SequenceProgram/{s}"))
 }
+fn at_stage(mut error: LeanCompileError, stage: impl std::fmt::Display) -> LeanCompileError {
+    error.message = format!("Sequence program {stage}: {}", error.message);
+    error
+}
 
 impl LitexToLeanCompiler {
     pub(super) fn compile_builtin_sequence_program(
@@ -130,40 +134,54 @@ impl LitexToLeanCompiler {
         {
             return Err(invalid("ApplicationIdentity"));
         }
-        let (definitions, _) = self.compile_function_limit_requirements(
-            &builtin.requirements,
-            dom_proofs,
-            dom_stores,
-            position,
-        )?;
+        let (definitions, _) = self
+            .compile_function_limit_requirements(
+                &builtin.requirements,
+                dom_proofs,
+                dom_stores,
+                position,
+            )
+            .map_err(|error| at_stage(error, "requirements"))?;
         let completed = SourcePosition {
             before: count,
             ..*position
         };
-        self.compile_fact_wd(&conclusions_wd[0], &builtin.conclusions[0], &completed)?;
         let scope = SourcePosition::new(Some(&completed), SourceOwner::Derivation(derivation), 0);
         let mut body = Vec::new();
         for (index, step) in steps.iter().enumerate() {
-            body.push(self.compile_statement_in_scope(
-                step,
-                &SourcePosition {
-                    before: index,
-                    ..scope
-                },
-                index + 1,
-                true,
-            )?);
+            body.push(
+                self.compile_statement_in_scope(
+                    step,
+                    &SourcePosition {
+                        before: index,
+                        ..scope
+                    },
+                    index + 1,
+                    true,
+                )
+                .map_err(|error| at_stage(error, format!("source step {}", index + 1)))?,
+            );
         }
         let end = SourcePosition {
             before: steps.len(),
             ..scope
         };
-        body.push(self.compile_statement_in_scope(application, &end, steps.len() + 1, true)?);
+        body.push(
+            self.compile_statement_in_scope(application, &end, steps.len() + 1, true)
+                .map_err(|error| at_stage(error, "application"))?,
+        );
         let applied_scope =
             SourcePosition::new(Some(&end), SourceOwner::Statement(application), usize::MAX);
+        // The executor captures this formation after the checked derivation.
+        // An atomic conclusion can therefore reuse the original application
+        // fact; it is not available in the pre-program requirement prefix.
+        self.compile_fact_wd(&conclusions_wd[0], &builtin.conclusions[0], &applied_scope)
+            .map_err(|error| at_stage(error, "post-derivation conclusion formation"))?;
         body.push(format!(
             "exact {}",
-            self.compile_verify(conclusion, &applied_scope)?.1
+            self.compile_verify(conclusion, &applied_scope)
+                .map_err(|error| at_stage(error, "conclusion"))?
+                .1
         ));
         Ok((
             definitions,

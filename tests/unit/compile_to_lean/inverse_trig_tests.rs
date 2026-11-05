@@ -2,6 +2,19 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::TrigOpe
 use crate::prelude::*;
 
 #[test]
+fn inverse_trig_function_bounds_replay_reused_signed_literal_wd() {
+    for operation in ["arcsin", "arccos"] {
+        let source = format!(
+            "have fn principal(x R: -1 <= x, x <= 1) R = {operation}(x)\nprincipal(0) $in R"
+        );
+        let (run, compiler) = super::execute(&source);
+        compiler
+            .compile_run(&run, "inverse_function_signed_bound")
+            .expect("the bound keeps the representation of its previously checked WD");
+    }
+}
+
+#[test]
 fn inverse_trig_wd_rejects_missing_or_altered_evidence() {
     for expression in [
         "arcsin(0)",

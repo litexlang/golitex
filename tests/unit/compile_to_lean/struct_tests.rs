@@ -139,11 +139,55 @@ fn struct_release_checks_all_ordered_stores() {
     }
 }
 
+const LOCAL_STRUCT: &str = "sketch:\n    struct LocalPair:\n        x R\n        y R\n    forall p &LocalPair:\n        p.x $in R\n";
+
 #[test]
-fn struct_dependencies_and_local_scope_are_not_discarded() {
-    for source in ["sketch:\n    struct LocalPair:\n        x R\n        y R\n"] {
+fn local_struct_replays_fields_and_keeps_declarations_inside_the_sketch() {
+    let (run, compiler) = super::execute(LOCAL_STRUCT);
+    let output = compiler.compile_run(&run, "local_structure").unwrap();
+    assert!(output.contains("  let struct_local_i"));
+    assert!(output.contains("  have _struct_field_checks_local_i"));
+    assert!(!output.contains("noncomputable def struct_"));
+}
+
+#[test]
+fn local_struct_retains_headers_dependencies_and_conditions() {
+    for source in [
+        "have A set\nsketch:\n    struct Box<T set>:\n        value T\n        copy T\n    forall p &Box<A>:\n        p.value $in A\n",
+        "sketch:\n    struct Fiber<A set>:\n        base A\n        element {base}\n    forall A set, p &Fiber<A>:\n        p.element = p.base\n",
+        "sketch:\n    struct EqualPair:\n        x R\n        y R\n        <=>:\n            x = y\n    forall p &EqualPair:\n        p.x = p.y\n",
+        "thm coordinates:\n    ? forall a R:\n        a + 0 = a\n    struct PointAtA:\n        x {a}\n        y R\n    forall p &PointAtA:\n        p.x = a\n    a + 0 = a\n",
+    ] {
         let (run, compiler) = super::execute(source);
-        assert!(compiler.compile_run(&run, "unsupported_structure").is_err());
+        compiler.compile_run(&run, "local_structure_context").unwrap();
+    }
+}
+
+#[test]
+fn local_struct_rejects_missing_field_wd_and_changed_field_identity() {
+    use crate::execute::execute_proof_block_stmt::{ExecProofBlockStmtResult, ExecSketchStmtResult};
+    for mutation in 0..4 {
+        let (mut run, compiler) = super::execute(LOCAL_STRUCT);
+        let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(
+            ExecSketchStmtResult::Success(sketch),
+        )) = &mut run.statement_results[0] else { panic!("sketch") };
+        if mutation == 3 {
+            sketch.proof_steps.swap(0, 1);
+            compiler.compile_run(&run, "future_local_struct").expect_err("a future local declaration is not a visible producer");
+            continue;
+        }
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
+            crate::execute::ExecDefStructStmtResult::Success(declaration),
+        )) = &mut sketch.proof_steps[0] else { panic!("local structure") };
+        match mutation {
+            0 => { declaration.field_scope.fields.pop(); }
+            1 => super::replace_wd_subject(
+                &mut declaration.field_scope.fields[0].well_defined,
+                Obj::StandardSet(StandardSet::Z),
+            ),
+            _ => declaration.statement.fields[1].binding.id = declaration.statement.fields[0].binding.id,
+        }
+        compiler.compile_run(&run, "changed_local_struct").expect_err("local declarations retain the same original field checks as global declarations");
     }
 }
 
@@ -856,7 +900,7 @@ fn nonempty_header_facts_keep_their_scope_and_prefix() {
 }
 
 #[test]
-fn nonempty_structures_reject_empty_arguments_and_unsupported_finite_kinds() {
+fn nonempty_structures_reject_empty_arguments() {
     let mut runtime = Runtime::new_with_result_detail(
         LaunchCommand::Eval {
             code: String::new(),
@@ -876,8 +920,116 @@ fn nonempty_structures_reject_empty_arguments_and_unsupported_finite_kinds() {
         .compile_run(&run, "empty_parameter")
         .is_err());
 
-    let (run, compiler) = super::execute("struct FinitePair<A finite_set>:\n    x A\n    y A\n");
-    assert!(compiler.compile_run(&run, "finite_parameter").is_err());
+}
+
+const FINITE_HEADER: &str = "struct FinitePair<A finite_set>:\n    x A\n    y A\n$is_set(&FinitePair<{1}>)\n";
+
+#[test]
+fn finite_set_struct_headers_replay_their_original_kind() {
+    for source in [
+        FINITE_HEADER,
+        "struct FinitePair<A finite_set>:\n    x A\n    y A\n$is_set(&FinitePair<{}>)\n",
+        "struct FinitePair<A finite_set>:\n    x A\n    y {x}\n    <=>:\n        x = y\nforall A finite_set, p &FinitePair<A>:\n    p.x = p.y\n",
+    ] {
+        let (run, compiler) = super::execute(source);
+        compiler.compile_run(&run, "finite_header").unwrap();
+    }
+}
+
+#[test]
+fn finite_set_struct_headers_reject_missing_mismatched_and_weakened_evidence() {
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef;
+    for mutation in 0..3 {
+        let (mut run, compiler) = super::execute(FINITE_HEADER);
+        let atom = super::atomic_proof_mut(&mut super::fact_statement_mut(&mut run.statement_results[1]).verify_result);
+        let DetailedObjWellDefinedProof::ByDef {
+            proof: ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(arguments)), ..
+        } = atom.well_defined_proof.as_detailed_mut().unwrap().well_defined_of_each_parameter[0].as_detailed_mut().unwrap() else { panic!("structure argument") };
+        match mutation {
+            0 => arguments.requirement_fact_verified.clear(),
+            1 => super::replace_wd_subject(&mut arguments.child_obj_well_defined[0], Obj::StandardSet(StandardSet::R)),
+            _ => {
+                let (mut weak, _) = super::execute("$is_set({1})\n");
+                let ExecStmtResult::Fact(ExecFactStmtResult::Success(weak)) = weak.statement_results.pop().unwrap() else { panic!("sethood") };
+                arguments.requirement_fact_verified[0] = weak.verify_result;
+            }
+        }
+        compiler.compile_run(&run, "bad_finite_header").expect_err("finite-set evidence cannot be omitted or replaced by sethood");
+    }
+}
+
+const FIELD_CONGRUENCE: &str = "struct Pair:\n    x R\n    y R\nhave fn copy_pair(p &Pair) &Pair = p\nforall p &Pair:\n    copy_pair(p) = p\n    copy_pair(p).x = p.x\n";
+
+#[test]
+fn struct_field_congruence_replays_the_original_receiver_equality() {
+    let (run, compiler) = super::execute(FIELD_CONGRUENCE);
+    let text = compiler.compile_run(&run, "field_congruence").unwrap();
+    assert!(text.contains("congrArg (fun (_field_raw : M.Value)"));
+}
+
+#[test]
+fn struct_field_congruence_rejects_missing_reversed_and_wrong_field_evidence() {
+    for mutation in 0..3 {
+        let (mut run, compiler) = super::execute(FIELD_CONGRUENCE);
+        let body = super::forall_proof_mut(&mut run.statement_results[2]);
+        let equality = super::equality_proof_mut(&mut body.proved_then_facts[1].verify_result);
+        let EqualFactSearchedProof::ByMatchingOneArgByOne(proof) = &mut equality.searched_proof else { panic!("field congruence") };
+        match mutation {
+            0 => proof.corresponding_arg_equal_proofs.clear(),
+            1 => {
+                let receiver = super::equality_proof_mut(&mut proof.corresponding_arg_equal_proofs[0]);
+                std::mem::swap(&mut receiver.fact.left, &mut receiver.fact.right);
+            }
+            _ => {
+                let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(field)) = &mut equality.fact.right else { panic!("field") };
+                field.fields[0] = "y".into();
+            }
+        }
+        compiler.compile_run(&run, "bad_field_congruence").expect_err("field congruence retains field paths and the exact oriented receiver equality");
+    }
+}
+
+#[test]
+fn struct_field_congruence_rejects_same_name_at_different_coordinates() {
+    let source = "struct FirstCoordinate:\n    x R\n    y R\nstruct SecondCoordinate:\n    y R\n    x R\nforall p &FirstCoordinate, q &SecondCoordinate:\n    p = q\n    =>:\n        p.x = q.x\n";
+    let (run, compiler) = super::execute(source);
+    let error = compiler.compile_run(&run, "different_field_coordinates").expect_err("the receiver equality does not identify differently positioned fields");
+    assert_eq!(error.route, "FieldCongruence/Coordinates");
+}
+
+const STRUCT_FAMILY_CONGRUENCE: &str = "struct MarkedCarrier<A set, a A, n N>:\n    selected {a}\n    index {n}\nforall A, B set, a A, b B, n, m N:\n    A = B\n    a = b\n    n = m\n    =>:\n        &MarkedCarrier<A, a, n> = &MarkedCarrier<B, b, m>\n";
+
+#[test]
+fn struct_family_congruence_replays_ordered_parameter_equalities() {
+    let (run, compiler) = super::execute(STRUCT_FAMILY_CONGRUENCE);
+    compiler.compile_run(&run, "struct_family_congruence").unwrap();
+}
+
+#[test]
+fn struct_family_congruence_rejects_missing_reordered_reversed_children_and_parent_wd() {
+    use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructishObjWellDefinedProofByDef;
+    for mutation in 0..4 {
+        let (mut run, compiler) = super::execute(STRUCT_FAMILY_CONGRUENCE);
+        let body = super::forall_proof_mut(&mut run.statement_results[1]);
+        let equality = super::equality_proof_mut(&mut body.proved_then_facts[0].verify_result);
+        if mutation == 3 {
+            let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::Structish(StructishObjWellDefinedProofByDef::StructObj(parent)), ..
+            } = equality.well_defined_proof.as_detailed_mut().unwrap().right.as_detailed_mut().unwrap() else { panic!("structure parent") };
+            parent.requirement_fact_verified.clear();
+        } else {
+            let EqualFactSearchedProof::ByMatchingOneArgByOne(proof) = &mut equality.searched_proof else { panic!("structure congruence") };
+            match mutation {
+                0 => { proof.corresponding_arg_equal_proofs.pop(); }
+                1 => proof.corresponding_arg_equal_proofs.swap(0, 2),
+                _ => {
+                    let child = super::equality_proof_mut(&mut proof.corresponding_arg_equal_proofs[0]);
+                    std::mem::swap(&mut child.fact.left, &mut child.fact.right);
+                }
+            }
+        }
+        compiler.compile_run(&run, "invalid_structure_congruence").expect_err("parameter order, original equalities and parent WD must be retained");
+    }
 }
 
 #[test]

@@ -1,5 +1,7 @@
 import Litex.FunctionLimitComposition
 import Litex.Multivariable
+import Litex.ScalarDifferentialAlgebra
+import Litex.TotalDifferentialAlgebra
 import Litex.GlobalContinuity
 import Litex.RestrictedContinuity
 import Litex.UniformContinuity

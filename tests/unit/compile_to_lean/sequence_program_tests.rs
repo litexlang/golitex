@@ -189,6 +189,14 @@ fn sequence_program_monotone_bounded_replays_original_source_completeness() {
 }
 
 #[test]
+fn sequence_program_atomic_conclusion_replays_post_derivation_formation() {
+    let (run, compiler) = super::execute(SOURCES[2]);
+    compiler
+        .compile_run(&run, "cauchy_bounded_post_derivation_formation")
+        .expect("atomic conclusion WD can cite the recorded program application");
+}
+
+#[test]
 fn sequence_program_rejects_missing_stages_and_native_substitution() {
     for source in SOURCES {
         let (mut run, compiler) = super::execute(source);

@@ -67,6 +67,51 @@ fn checked(source: &str) -> (RunLitexCodeResult, LitexToLeanCompiler) {
 }
 
 #[test]
+fn local_theorem_calls_accept_constructed_and_enclosing_generic_sequences() {
+    let source = "claim:\n    ? forall a seq(R):\n        a=a\n    prop local_sequence_self(x seq(R)):\n        x=x\n    thm local_sequence_copy:\n        ? forall x seq(R):\n            $local_sequence_self(x)\n        by def $local_sequence_self(x)\n    have fn b(n N+) R=0\n    release thm local_sequence_copy(b)\n    release thm local_sequence_copy(a)\n    a=a\n";
+    for source in [
+        source.to_owned(),
+        source.replace(
+            "release thm local_sequence_copy(a)",
+            "by thm local_sequence_copy(a) => $local_sequence_self(a)",
+        ),
+    ] {
+        let (result, compiler) = checked(&source);
+        let output = compiler
+            .compile_run(&result, "local_theorem_hosts")
+            .expect("both explicit invocation routes reuse the same local theorem");
+        assert!(output.contains("let _local_theorem_argument_0 :="));
+    }
+}
+
+#[test]
+fn local_predicate_captures_retain_the_source_and_accept_distinct_host_representations() {
+    let source = "claim:\n    ? 0=0\n    prop local_real_self(x R):\n        x=x\n    by def $local_real_self(0)\n    claim:\n        ? forall a seq(R),n N+:\n            $local_real_self(a(n))\n        by def $local_real_self(a(n))\n    0=0\n";
+    let (mut result, compiler) = checked(source);
+    compiler
+        .compile_run(&result, "local_predicate_hosts")
+        .expect("the same local predicate accepts literal and certified call values");
+    let outer = claim_mut(&mut result.statement_results[0]);
+    let ExecClaimBodyProof::NonForall(body) = &mut outer.body else {
+        panic!("plain outer claim");
+    };
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+        crate::execute::ExecDefPropStmtResult::Success(declaration),
+    )) = &mut body.proof_steps[0]
+    else {
+        panic!("original local predicate declaration");
+    };
+    declaration.statement.name.push_str("_changed");
+    assert_eq!(
+        compiler
+            .compile_run(&result, "changed_local_predicate")
+            .unwrap_err()
+            .route,
+        "Theorem/ProofStepCapture"
+    );
+}
+
+#[test]
 fn nested_claim_goals_retain_their_original_function_call_constructors() {
     let (result, compiler) = checked(NESTED_TUPLE_CASES);
     if let Err(error) = compiler.compile_run(&result, "nested_tuple_claim_formation") {

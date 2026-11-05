@@ -320,6 +320,19 @@ forall A matrix(C,2,2):
 ];
 
 #[test]
+fn matrix_power_formula_references_the_core_recursive_definition() {
+    let (source, _) = GRAPH_SOURCES
+        .iter()
+        .find(|(_, operation)| *operation == "matrixPowerRawValue")
+        .unwrap();
+    let (run, compiler) = super::execute(source);
+    let output = compiler.compile_run(&run, "matrix_power_core_reference").unwrap();
+    assert!(output.contains("Litex.matrixPowerRawValue"));
+    assert!(!output.contains("Nat.brecOn"));
+    assert!(!output.contains("smartUnfolding false"));
+}
+
+#[test]
 fn matrix_graph_formula_bodies_reject_missing_or_reordered_wd() {
     for (source, _) in GRAPH_SOURCES {
         let declaration = source.lines().take(2).collect::<Vec<_>>().join("\n");

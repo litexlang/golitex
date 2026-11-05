@@ -148,10 +148,10 @@ fn matrix_remainder_original12_ordered_direct_certificates() {
         if *name == "matrix_rank_all_operands" {
             assert!(compiled.contains("matrixRankValue"));
         }
-        assert_eq!(
-            compiled.contains("set_option smartUnfolding false in"),
-            *name == "matrix_power_all_operands"
-        );
+        assert!(!compiled.contains("set_option smartUnfolding false in"));
+        if *name == "matrix_power_all_operands" {
+            assert!(compiled.contains("Litex.matrixPowerRawValue"));
+        }
     }
 }
 #[test]
@@ -278,10 +278,10 @@ fn matrix_remainder_original12_forall_trees_and_inverse_guard() {
         let compiled = compiler
             .compile_run(&run, "Matrix60OriginalForall")
             .unwrap();
-        assert_eq!(
-            compiled.contains("set_option smartUnfolding false in"),
-            *name == "forall_matrix_power"
-        );
+        assert!(!compiled.contains("set_option smartUnfolding false in"));
+        if *name == "forall_matrix_power" {
+            assert!(compiled.contains("Litex.matrixPowerRawValue"));
+        }
     }
 }
 

@@ -1,5 +1,5 @@
-use super::compile_def_struct_stmt_result::validate_struct;
-use super::helper::{ensure_object, instantiated_object_matches, source_subject};
+use super::compile_def_struct_stmt_result::{struct_declaration_name, validate_struct};
+use super::helper::{ensure_object, parameter_type_fact_matches, source_subject};
 use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::ast::stmt::DefStructStmt;
@@ -59,7 +59,11 @@ impl LitexToLeanCompiler {
         proof: &ExecDefStructStmtSuccessResult,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let base = self.context_application(name, position);
+        let base = if position.is_local() {
+            name.to_owned()
+        } else {
+            self.context_application(name, position)
+        };
         let Some((parameters, _)) = &proof.statement.param_def_with_dom else {
             return Ok(base);
         };
@@ -135,18 +139,7 @@ impl LitexToLeanCompiler {
         {
             let fact = source_subject(evidence)?;
             let arg = &object.params[index];
-            let valid = match (kind, &fact) {
-                (ParamType::Set(_), Fact::AtomicFact(AtomicFact::IsSetFact(f))) => {
-                    f.set.ir() == arg.ir()
-                }
-                (ParamType::NonemptySet(_), Fact::AtomicFact(AtomicFact::IsNonemptySetFact(f))) => {
-                    f.set.ir() == arg.ir()
-                }
-                (ParamType::Obj(set), Fact::AtomicFact(AtomicFact::InFact(f))) => {
-                    f.element.ir() == arg.ir() && instantiated_object_matches(set, &f.set, &subst)
-                }
-                _ => false,
-            };
+            let valid = parameter_type_fact_matches(kind, arg, &fact, &subst);
             if !valid {
                 return Err(LeanCompileError::unsupported("Struct/ArgumentTypeSubject"));
             }
@@ -177,7 +170,8 @@ impl LitexToLeanCompiler {
             position.visible_struct(&object.name, &self.runtime)?;
         validate_struct(declaration)?;
         header_substitution(&declaration.statement, object)?;
-        let name = position.declaration_reference(&format!("{family}_{}", index + 1), &producer)?;
+        let name = struct_declaration_name(family, declaration, index + 1, producer.is_local());
+        let name = position.declaration_reference(&name, &producer)?;
         if declaration.statement.param_def_with_dom.is_none() {
             return Ok(name);
         }

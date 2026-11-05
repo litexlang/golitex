@@ -40,6 +40,94 @@ impl LitexToLeanCompiler {
         children: &[VerifyFactResult],
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
+        if let (
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(left)),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::FieldAccess(right)),
+        ) = (&fact.left, &fact.right)
+        {
+            if left.fields.is_empty() || left.fields != right.fields || children.len() != 1 {
+                return Err(LeanCompileError::unsupported("FieldCongruence/Shape"));
+            }
+            let child = &children[0];
+            if !matches!(source_subject(child)?, Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                if eq.left.ir() == left.obj.ir() && eq.right.ir() == right.obj.ir())
+            {
+                return Err(LeanCompileError::unsupported("FieldCongruence/ChildSubject"));
+            }
+            // Both original field constructors remain mandatory. Equal field
+            // names alone do not imply equal coordinates across record types.
+            self.compile_object_reference(&fact.left, position)?;
+            self.compile_object_reference(&fact.right, position)?;
+            let coordinates = self.struct_field_coordinates(left, position)?;
+            if coordinates != self.struct_field_coordinates(right, position)? {
+                return Err(LeanCompileError::unsupported("FieldCongruence/Coordinates"));
+            }
+            let prior = SourcePosition::new(
+                Some(position), SourceOwner::EqualityRequirements(children), 0,
+            );
+            let checked = self.compile_verify(child, &prior)?;
+            let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
+            let receiver_equality = format!(
+                "(show {} = {} from {})",
+                self.compile_normalization_value(&left.obj, &formed)?,
+                self.compile_normalization_value(&right.obj, &formed)?,
+                checked.1,
+            );
+            let projection = coordinates.iter().fold("_field_raw".to_owned(), |value, index| {
+                format!("(Litex.FunctionSemantics.callValue (M := M) {value} (M.number ({index} : ℂ)))")
+            });
+            return Ok(format!(
+                "(congrArg (fun (_field_raw : M.Value) => {projection}) {receiver_equality})"
+            ));
+        }
+        if let (
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(left)),
+            Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(right)),
+        ) = (&fact.left, &fact.right)
+        {
+            let (declaration, _, _) = position.visible_struct(&left.name, &self.runtime)?;
+            let (other, _, _) = position.visible_struct(&right.name, &self.runtime)?;
+            if !std::ptr::eq(declaration, other) {
+                return Err(LeanCompileError::unsupported("StructCongruence/Declaration"));
+            }
+            let parameters = declaration.statement.param_def_with_dom.as_ref()
+                .map(|(parameters, _)| parameters.groups.iter().flat_map(|g| &g.params).collect::<Vec<_>>())
+                .unwrap_or_default();
+            if parameters.is_empty() || left.params.len() != parameters.len()
+                || right.params.len() != parameters.len() || children.len() != parameters.len()
+            {
+                return Err(LeanCompileError::unsupported("StructCongruence/Arity"));
+            }
+            self.compile_object_reference(&fact.left, position)?;
+            self.compile_object_reference(&fact.right, position)?;
+            let mut equalities = Vec::new();
+            for (index, ((left, right), child)) in left.params.iter().zip(&right.params).zip(children).enumerate() {
+                if !matches!(source_subject(child)?, Fact::AtomicFact(AtomicFact::EqualFact(eq))
+                    if eq.left.ir() == left.ir() && eq.right.ir() == right.ir())
+                {
+                    return Err(LeanCompileError::unsupported("StructCongruence/ChildSubject"));
+                }
+                let prior = SourcePosition::new(Some(position), SourceOwner::EqualityRequirements(children), index);
+                let checked = self.compile_verify(child, &prior)?;
+                let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
+                equalities.push(format!("(show {} = {} from {})",
+                    self.compile_normalization_value(left, &formed)?,
+                    self.compile_normalization_value(right, &formed)?, checked.1));
+            }
+            // Abstract the declaration's own parameters, not the concrete
+            // caller expressions. Parent WD still certifies both applications.
+            let bindings = parameters.iter().enumerate()
+                .map(|(index, parameter)| (parameter.id, format!("_struct_parameter_{index}")))
+                .collect::<std::collections::HashMap<_, _>>();
+            let prototype = StructObj {
+                name: left.name.clone(),
+                params: parameters.iter().map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p))).collect(),
+            };
+            let body = self.compile_struct_raw_value(&prototype, position, &bindings)?;
+            let binders = (0..parameters.len()).map(|index| format!("(_struct_parameter_{index} : M.Value)"))
+                .collect::<Vec<_>>().join(" ");
+            return curried_value_congruence(&format!("(fun {binders} => {body})"), &equalities);
+        }
         let integer_operation = |closed| {
             format!("(fun (a b : M.Value) => Litex.SetSemantics.sepValue (M := M) (M.standard .integer) (fun z => ∃ lower upper k : ℤ, a = M.number (lower : ℂ) ∧ b = M.number (upper : ℂ) ∧ z = M.number (k : ℂ) ∧ lower ≤ k ∧ k {} upper))", if closed { "≤" } else { "<" })
         };
@@ -663,34 +751,9 @@ impl LitexToLeanCompiler {
                 self.compile_object_reference(left, position)?
             ));
         }
-        if matches!((left,right),
-            (Obj::Literal(Literal::Number(_)),Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)))
-                | (Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)),Obj::Literal(Literal::Number(_)))
-            if matches!(p.arg.as_ref(),Obj::Literal(Literal::Number(_))))
-        {
-            let (negative, literal, reverse) = match (left, right) {
-                (
-                    Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)),
-                    Obj::Literal(Literal::Number(n)),
-                ) => (p, n, false),
-                (
-                    Obj::Literal(Literal::Number(n)),
-                    Obj::ArithmeticOperator(ArithmeticOperator::Neg(p)),
-                ) => (p, n, true),
-                _ => unreachable!(),
-            };
-            let Obj::Literal(Literal::Number(unsigned)) = negative.arg.as_ref() else {
-                unreachable!()
-            };
-            let unsigned = number_literal(unsigned, "ℂ")?;
-            let signed = number_literal(literal, "ℂ")?;
-            let proof=format!("((M.neg_numbers {unsigned}).trans (congrArg M.number (by norm_num : -{unsigned} = {signed})))");
-            return Ok(if reverse {
-                format!("({proof}).symm")
-            } else {
-                proof
-            });
-        }
+        // A literal can reuse the WD of its same-IR signed expression. Observe
+        // both original constructors: the requested spelling alone does not
+        // determine whether its Lean endpoint is a number or a negation.
         if let Some(value) = EvalRational::from_obj(left) {
             if EvalRational::from_obj(right).as_ref() == Some(&value) {
                 let a = self.compile_numeric_observation(left, position)?;

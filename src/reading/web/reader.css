@@ -138,6 +138,8 @@
 .lr-manuscript .lr-latex-unit:has(math) { display:inline-block; max-width:100%; overflow-x:auto; vertical-align:middle; }
 .lr-manuscript .lr-latex-unit:hover,.lr-manuscript .lr-latex-unit.lr-proof-target { background:var(--reading-soft); outline:1px solid var(--reading-line); }
 .lr-manuscript .lr-latex-unit.lr-selected { background:var(--reading-select); }
+.lr-manuscript .lr-latex-unit.lr-proof-premise,.lr-manuscript .lr-latex-unit.lr-citation-peek { background:var(--reading-premise); outline:1px dotted var(--reading-accent); }
+.lr-manuscript .lr-latex-unit.lr-context-active { text-decoration:underline dotted var(--reading-line); text-underline-offset:4px; }
 .lr-manuscript .lr-latex-rejected { text-decoration:underline wavy #c62828; text-underline-offset:4px; }
 .lr-manuscript .lr-latex-unchecked { color:var(--reading-muted); }
 .lr-manuscript .lr-math-reason { display:inline-block; margin-inline:5px; font:12px/1.8 system-ui,sans-serif; }
@@ -151,6 +153,25 @@
 .lr-premise-conclusion>.lr-formula { display:inline; margin:0; white-space:normal; font:inherit; }
 .lr-math-reason-body .lr-empty-note { margin:8px 0; }
 .lr-math-reason-source { margin-top:10px; border:0; padding:0; background:transparent; color:var(--reading-accent); font:inherit; cursor:pointer; }
+.lr-math-context { font:12px/1.8 system-ui,sans-serif; }
+.lr-math-consequences { display:inline-block; border:0; padding:2px 4px; margin-inline:4px; color:var(--reading-muted); background:transparent; font:inherit; cursor:pointer; white-space:nowrap; }
+.lr-math-consequences:hover { color:var(--reading-accent); background:var(--reading-soft); }
+.lr-math-reading-tools { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 16px; margin-bottom:12px; padding-bottom:9px; border-bottom:1px solid var(--reading-line); font-size:12px; }
+.lr-math-reading-tools>details { min-width:0; max-width:100%; }
+.lr-math-reading-tools summary,.lr-math-source>summary { cursor:pointer; color:var(--reading-accent); }
+.lr-math-symbol-choices { display:flex; flex-wrap:wrap; gap:5px; padding-top:8px; }
+.lr-math-symbol.lr-chip { margin:0; cursor:help; }
+.lr-math-equality-step { display:flex; align-items:baseline; gap:10px; width:100%; padding:8px 0; border:0; border-bottom:1px solid var(--reading-line); text-align:start; color:var(--reading-ink); background:transparent; cursor:pointer; }
+.lr-math-equality-step:hover { background:var(--reading-soft); }
+.lr-math-equality-step .lr-formula { margin:0; font-size:13px; overflow-wrap:anywhere; }
+.lr-math-step-number { color:var(--reading-muted); font:11px system-ui,sans-serif; }
+.lr-math-source { margin-top:14px; font-size:12px; }
+.lr-math-source .lr-formal-source { margin:8px 0 0; }
+.lr-math-source .lr-section-label { display:none; }
+.lr-math-definition.lr-manuscript { margin:10px 0; font-size:14px; line-height:1.8; }
+.lr-math-definition .lr-latex-static:hover { background:transparent; outline:0; }
+.lr-math-definition-source { margin:8px 0; }
+.lr-math-definition-source>summary { cursor:pointer; color:var(--reading-accent); }
 .lr-manuscript .lr-empty-note { margin-top:1.5em; font:12px/1.8 system-ui,sans-serif; }
 .lr-formal-source { margin:0 0 16px; }
 .lr-formal-source pre,.lr-latex-original pre { max-height:210px; overflow:auto; margin:7px 0; padding:12px; border-radius:4px; background:var(--reading-hover); white-space:pre-wrap; overflow-wrap:anywhere; font:12px/1.8 var(--reading-code); }

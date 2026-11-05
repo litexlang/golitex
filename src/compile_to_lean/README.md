@@ -13,10 +13,12 @@ the scalar foundation; the larger semantic families retain conservative
 source-order dependencies. Local Lean gates compile and fingerprint the entire
 local import closure, rather than just the entrypoint.
 
-The complete `lean/examples/` corpus is an optional local checkout, ignored by
-the main repository. Core regressions contain self-contained inputs; only tiny file-based CLI
+The source/generated test corpus is collected locally in the ignored
+`scripts/litex_to_lean/corpus/` directory, ready for a future standalone test
+repository. Core regressions contain self-contained inputs; only tiny file-based CLI
 fixtures remain in [`tests/fixtures/compile_to_lean/`](../../tests/fixtures/compile_to_lean/README.md).
-Bulk output acceptance tests live with the optional corpus in its `_acceptance/` package. Historical corpus links below refer to that optional checkout;
+Bulk output acceptance tests live with the corpus in its `_acceptance/` package.
+Historical `lean/examples/` links below refer to the corresponding corpus folders;
 they do not introduce a build or test dependency.
 
 This README explains that architecture and its implementation owners. Complete
@@ -266,9 +268,29 @@ per declaration. See [element pairs](../../lean/examples/member_coordinate_pairs
 [nonliteral membership](../../lean/examples/equal_coordinates_membership/) and
 [choice and local aliases](../../lean/examples/chosen_repeated_coordinates/).
 
-Structures require at least two fields. Self/forward field dependencies,
-finite-set header kinds, structure-header guards, and local structure
-definitions remain unsupported. Standalone existential and disjunctive defining
+Structures require at least two fields. Local declarations in sketches and
+theorem bodies use the same Cartesian, dependent-field and defining-condition
+semantics as file-level declarations. Their Lean `let` and `have` declarations
+stay in the original scope; names use source field identities to distinguish
+nested declarations. Lookup follows the already executed local statement
+prefix, and field WD and published conditions keep their original evidence.
+
+Structure parameters accept `set`, `nonempty_set`, `finite_set` and membership
+types. A finite parameter is passed with its original `IsFiniteSet` evidence;
+ordinary sethood cannot replace that evidence. This includes dependent fields,
+local declarations and functions returning records over a finite carrier.
+
+Field congruence replays the recorded receiver equality through the original
+coordinate path. Equal field names in different record layouts are insufficient:
+the compiler checks both field constructions and rejects different coordinates.
+
+Structure-family congruence replays the ordered parameter equalities for the
+same original declaration. Both structure instances retain their checked WD;
+the existing declaration denotation supplies the function used by Lean's
+`congrArg`, including dependent fields and defining conditions.
+
+Self/forward field dependencies remain unsupported. The current parser has no
+structure-header guard syntax. Standalone existential and disjunctive defining
 conditions are also outside this consumer's current boundary. Further field-path
 and function-receiver cases are described below.
 
@@ -761,8 +783,13 @@ ordered requirements, orientations and original citations. Supported rules
 use proved Core lemmas and logical proof construction. Some routes expand into
 several lemmas or local steps; there is no required one-rule/one-line mapping.
 
-For example, the equality consumer maps recorded `SameIr` evidence to
-`Litex.sameRefl` after checking its endpoints. A selected rational-normalization
+For identical represented endpoints, the equality consumer maps recorded
+`SameIr` evidence to `Litex.sameRefl`. A signed literal may instead reuse the
+WD of an explicit negation. The consumer joins the numeric observations of
+both retained constructors, so the equality uses their actual Lean endpoints.
+Consumers that use raw predicate arguments compose the existing normalization
+denotation bridges around that equality; they retain the original certificate.
+A selected rational-normalization
 certificate instead uses the reviewed numeric observations and a fixed
 normalization proof. It does not select an unrelated add-zero lemma merely
 because the goal happens to be `a + 0 = a`. Fixed `ring` or guarded normalization

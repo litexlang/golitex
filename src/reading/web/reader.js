@@ -470,7 +470,7 @@
   // Interpret the document compiler's typography only. Mathematical expressions
   // remain its unchanged TeX, rendered by the bundled KaTeX engine. Ownership
   // comes from compiler byte spans, never formula/text matching.
-  function compiledLatex(block,statementIndex,source,onUnit){
+  function compiledLatex(block,statementIndex,source,onUnit,displayMath=value=>value,interactive=true){
     if(typeof block?.content!=="string"||!Array.isArray(block.statements))throw new Error("Missing compiler LaTeX");
     const content=block.content,positions=bytePositions(content),sourcePositions=bytePositions(source.content||"");
     const start=sourcePositions.get(block.start_byte),end=sourcePositions.get(block.end_byte);
@@ -501,9 +501,8 @@
     function unit(node,a,b){
       const candidates=spans.filter(span=>span.start<=a&&span.end>=b),owner=candidates.at(-1);
       if(!owner)throw new Error("Unmapped compiler content");
-      const control=element("button","lr-latex-unit");control.type="button";control.append(node);control.dataset.latexStatement=owner.statement_id;
-      control.dataset.latexStart=String(a);control.setAttribute("aria-expanded","false");
-      onUnit(control,owner.statement);return control;
+      const control=element(interactive?"button":"span","lr-latex-unit"+(interactive?"":" lr-latex-static"));control.append(node);control.dataset.latexStatement=owner.statement_id;
+      control.dataset.latexStart=String(a);if(interactive){control.type="button";control.setAttribute("aria-expanded","false");onUnit(control,owner.statement);}return control;
     }
     function group(at,opening,closing,limit){
       let depth=1,i=at+1;
@@ -516,7 +515,7 @@
         if(content[i]==="$"||content.startsWith("\\[",i)){
           const display=content[i]!=="$",opening=display?2:1,closing=display?"\\]":"$",end=content.indexOf(closing,i+opening);
           if(end<0||end>=limit)throw new Error("Unclosed compiler mathematics");
-          const math=element("span","lr-latex-math"),tex=content.slice(i+opening,end);
+          const math=element("span","lr-latex-math"),tex=displayMath(content.slice(i+opening,end));
           if(!global.katex?.render)throw new Error("Mathematical typesetting is unavailable");
           global.katex.render(tex,math,{displayMode:display,throwOnError:true,trust:false,strict:"ignore",maxExpand:500,maxSize:50,output:"mathml"});
           const rendered=unit(math,i,end+closing.length);rendered.setAttribute("aria-label",tex);
@@ -1577,7 +1576,7 @@
       }
       disclosure.addEventListener("toggle",positionInferences);
       panel.addEventListener("pointerenter",()=>clearTimeout(inferenceCloseTimer));panel.addEventListener("pointerleave",leaveInferences);panel.addEventListener("focusin",()=>{clearTimeout(inferenceCloseTimer);if(inferencePopover?.node===panel)inferencePopover.transient=false;});
-      const row=owner.closest(".lr-code-row");
+      const row=owner.closest(".lr-code-row,.lr-math-context");
       owner.setAttribute("aria-expanded","true");owner.setAttribute("aria-controls",id);root.append(panel);inferencePopover={node:panel,owner,transient,selection:{source:sourceId,statement:row?.dataset.statement||null,symbol:null,fact:null,wd:null,chainStep:null,issue:null,focusLine:Number(row?.dataset.line)||null,explanationOpen:false}};positionInferences();
       if(!transient)heading.focus({preventScroll:true});
     }
@@ -1925,14 +1924,17 @@
       return existentialText(fact)||(node&&quantifiedText(node,sourceId))||mathText(fact?.text||"",sourceId);
     }
     function factFormula(fact){return element("div","lr-formula",factDisplayText(fact));}
-    function latexFormula(value,display,sourceId=state.source){
-      if(typeof value!=="string"||!global.katex?.render)return null;
+    function displayLatexIdentifiers(value,sourceId=state.source){
       // Generated identifiers are escaped inside mathit; keep the surrounding
       // LaTeX structure intact, including scopes and every mathematical clause.
-      value=value.replace(/\\mathit\{((?:\\_|[\p{L}\p{N}:_])+)\}/gu,(whole,name)=>{
+      return value.replace(/\\mathit\{((?:\\_|[\p{L}\p{N}:_])+)\}/gu,(whole,name)=>{
         const plain=name.replace(/\\_/g,"_"),short=mathematicalText(plain,sourceId);
         return short===plain?whole:"\\mathit{"+short.replace(/_/g,"\\_")+"}";
       });
+    }
+    function latexFormula(value,display,sourceId=state.source){
+      if(typeof value!=="string"||!global.katex?.render)return null;
+      value=displayLatexIdentifiers(value,sourceId);
       const node=element("div","lr-latex");
       // The retained display compiler uses a root gathered environment for
       // quantified comparisons. Align only that outer layout, never matrices.
@@ -2063,7 +2065,7 @@
       const token=Array.from(codePane.querySelectorAll("[data-keyword]")).find(node=>node.dataset.keyword===state.keyword&&Number(node.closest(".lr-code-row")?.dataset.line)===state.focusLine);
       return referenceCard(token?.dataset.referenceKey||state.keyword);
     }
-    function renderInspectorContents(){if(readingLayout==="latex"&&!state.keyword&&!state.symbol&&!state.wd)appendFormalSource(detailPane,statements.get(state.statement)||statements.get(facts.get(state.fact)?.producer_statement_id));if(state.issue)appendSourceIssue(detailPane,sourceIssues.get(state.issue));else if(state.keyword&&selectedReferenceCard())appendReference(detailPane,selectedReferenceCard());else if(state.keyword==="prop")renderPropGuide(detailPane);else if(state.keyword){detailPane.append(element("p","lr-keyword-meaning",syntaxPhrases[state.keyword]?.[lang()==="zh"?0:1]||syntaxHelp[state.keyword]?.[lang()==="zh"?0:1]||t("typeUnavailable")));}else if(state.symbol)renderSymbol();else if(state.wd)renderWellDefinedness();else if(state.fact)renderFact();else if(!state.statement&&state.focusLine)renderSourceLine();else renderStatement();}
+    function renderInspectorContents(){if(readingLayout==="latex"&&!state.keyword&&!state.symbol&&!state.wd)appendMathSource(detailPane,statements.get(state.statement)||statements.get(facts.get(state.fact)?.producer_statement_id));if(state.issue)appendSourceIssue(detailPane,sourceIssues.get(state.issue));else if(state.keyword&&selectedReferenceCard())appendReference(detailPane,selectedReferenceCard());else if(state.keyword==="prop")renderPropGuide(detailPane);else if(state.keyword){detailPane.append(element("p","lr-keyword-meaning",syntaxPhrases[state.keyword]?.[lang()==="zh"?0:1]||syntaxHelp[state.keyword]?.[lang()==="zh"?0:1]||t("typeUnavailable")));}else if(state.symbol)renderSymbol();else if(state.wd)renderWellDefinedness();else if(state.fact)renderFact();else if(!state.statement&&state.focusLine)renderSourceLine();else renderStatement();}
 
     function render(){
       if(destroyed)return;
@@ -6288,7 +6290,7 @@
     function highlightLogicalScope(scopeId){
       const ancestors=new Set();while(scopeId&&!logicalContexts.has(scopeId)&&!ancestors.has(scopeId)){ancestors.add(scopeId);scopeId=scopes.get(scopeId)?.parent_id;}
       if(!logicalContexts.has(scopeId))return;
-      for(const row of codePane.querySelectorAll(".lr-code-row")){
+      for(const row of codePane.querySelectorAll(".lr-code-row,[data-latex-statement]")){
         let scope=statements.get(row.dataset.statement)?.scope_id;const seen=new Set();while(scope&&!seen.has(scope)){seen.add(scope);if(scope===scopeId){row.classList.add("lr-context-active");break;}scope=scopes.get(scope)?.parent_id;}
       }
     }
@@ -6698,8 +6700,8 @@
       if(ids.length===1)highlightLogicalScope(facts.get(ids[0])?.scope_id);
     }
     function highlightProofPremises(owner,evidences){
-      const premises=new Set(evidences.flatMap(proofGrounds).map(id=>facts.get(id)).filter(fact=>fact?.source_id===state.source&&fact.line).map(fact=>fact.line));
-      codePane.querySelectorAll(".lr-code-row").forEach(row=>row.classList.toggle("lr-proof-premise",premises.has(Number(row.dataset.line))&&row!==(owner.closest(".lr-code-row")||owner)));
+      const premises=new Set(evidences.flatMap(proofGrounds).map(id=>facts.get(id)).filter(Boolean).map(factLocation).filter(at=>at.sourceId===state.source&&at.line).map(at=>at.line));
+      codePane.querySelectorAll(".lr-code-row,[data-latex-statement]").forEach(row=>row.classList.toggle("lr-proof-premise",premises.has(Number(row.dataset.line))&&row!==(owner.closest(".lr-code-row")||owner)));
     }
     function positionProof(){
       if(!proofPopover)return;const {node,owner}=proofPopover,box=owner.getBoundingClientRect();
@@ -6757,13 +6759,17 @@
         if(symbolId&&!builtinTheoremSymbols.has(symbolId)){
           const declaration=symbolDefinitions.get(symbolId),info=element("div","lr-symbol-info");tip.append(info);
           const appendDefinition=()=>{
-            info.replaceChildren();const data=definitionSource(symbolId),parameter=symbolParameters.get(symbolId),context=symbolDeclarationContext(symbolId,token.closest(".lr-code-row")?.dataset.statement),completed=!context||context.status==="accepted";
+            info.replaceChildren();const data=definitionSource(symbolId),parameter=symbolParameters.get(symbolId),context=symbolDeclarationContext(symbolId,token.dataset.statement||token.closest(".lr-code-row")?.dataset.statement),completed=!context||context.status==="accepted";
             appendSymbolDeclarationStatus(info,context);
-            const model=completed?(context?.statement||symbolDefinitions.get(symbolId))?.mathematics:null,candidate=symbolIntroduction(symbolId,token.closest(".lr-code-row")?.dataset.statement||context?.statement?.id),introduction=completed||candidate?.kind==="struct-opening"?candidate:null,objectIntroduction=isObjectSymbolIntroduction(introduction);
+            const model=completed?(context?.statement||symbolDefinitions.get(symbolId))?.mathematics:null,candidate=symbolIntroduction(symbolId,token.dataset.statement||token.closest(".lr-code-row")?.dataset.statement||context?.statement?.id),introduction=completed||candidate?.kind==="struct-opening"?candidate:null,objectIntroduction=isObjectSymbolIntroduction(introduction);
             if(model&&["predicate_definition","abstract_predicate"].includes(model.kind)){
               const section=element("section","lr-predicate-definition");if(model.kind==="predicate_definition")appendPredicateMeaning(section,model,declaration.source_id);else section.append(formula(model.subject,declaration.source_id),element("p","lr-empty-note",t("abstractMeaning")));info.append(section);
             }
-            if(data){info.append(element("small",null,data.location));if(parameter&&completed&&!objectIntroduction)info.append(element("div","lr-symbol-domain",parameterText(parameter,data.sourceId)));info.append(element("pre","lr-definition-source",data.code));}
+            if(data){
+              info.append(element("small",null,data.location));if(parameter&&completed&&!objectIntroduction)info.append(element("div","lr-symbol-domain",parameterText(parameter,data.sourceId)));
+              const mathematical=token.classList.contains("lr-math-symbol")&&completed&&["function","objects","binding"].includes(model?.kind)&&appendMathDefinition(info,context?.statement||declaration);
+              const code=element("pre","lr-definition-source",data.code);if(mathematical){const original=element("details","lr-math-definition-source");original.append(element("summary",null,editText("Litex 源码","Litex source")),code);info.append(original);}else info.append(code);
+            }
             if(objectIntroduction)appendObjectSymbolIntroduction(info,introduction,symbolId);
             else if(introduction){if(!model||array(introduction.autoPropertyIds).length)appendIntroductionProperties(info,introduction,null,symbolId,!!model);info.append(button(introduction.kind==="function-definition"?editText("定义验证","Definition checks"):editText("引入依据","Introduction evidence"),"lr-text-link lr-introduction-link",()=>selectStatement(introduction.statementId,introduction.line)));}
             info.append(element("small",null,t("currentFileReferences").replace("{count}",referenceUses(symbolId,state.source).length)));
@@ -6778,6 +6784,7 @@
       }
       tokenHelpRenderers.set(token,render);
       function show(){
+        if(token.classList.contains("lr-math-symbol")&&proofPopover?.node.contains(token)){keepProofOpen();updateProofSymbol(token);return;}
         if(proofFocusSuppression===token||proofPopover?.persistent)return;
         if(hoverProofTarget(token))return;
         if(tokenHelp?.owner===token)return;hideTokenHelp();
@@ -6804,43 +6811,114 @@
       const block=element("div","lr-formal-source");block.append(element("div","lr-section-label","Litex"),element("pre",null,source.content.slice(start,end).trimEnd()));target.append(block);
     }
     function openMathStatement(owner,statement,persistent=false){
-      const selection={source:statement.source_id,statement:statement.id,symbol:null,fact:null,wd:null,focusLine:statement.line,explanationOpen:true};
-      openSourcePreview(owner,editText("源码与证明依据","Source and proof grounds"),body=>{
-        appendFormalSource(body,statement);renderStatement(body,statement,selection);
-      },{selection,persistent,select:()=>selectStatement(statement.id,statement.line)});
+      const data=mathStatementContext(statement),selection={source:data.statement.source_id,statement:data.statement.id,symbol:null,fact:null,wd:null,focusLine:data.statement.line,explanationOpen:true};
+      closeProof();closeExplanation();
+      if(data.issues.length)openSourceIssue(owner,data.issues.map(issue=>issue.id));
+      else if(data.actions.length)openLogicalActions(owner,data.actions.map(action=>action.id));
+      else if(data.facts.length)openProof(owner,data.facts.map(fact=>fact.id));
+      if(proofPopover?.owner!==owner)openSourcePreview(owner,editText("本句的数学含义","Mathematical meaning here"),body=>renderStatement(body,data.statement,selection),{factPreview:true,selection,select:()=>selectStatement(data.statement.id,data.statement.line)});
+      proofPopover.persistent=persistent;proofPopover.mathStatementId=statement.id;
+      const body=proofPopover.node.querySelector(".lr-proof-evidence"),tools=element("div","lr-math-reading-tools");
+      appendMathSymbols(tools,statement,data.statement);appendMathSteps(tools,data);appendMathContexts(tools,statement,data.statement);
+      if(tools.childElementCount)body.prepend(tools);
+      appendMathSource(body,statement);
       if(owner.dataset.latexStatement)owner.setAttribute("aria-expanded","true");
-      if(persistent){const pin=proofPopover.node.querySelector(".lr-proof-pin");if(pin)pin.textContent=editText("查看语句详情","Statement details");}
+      const pin=proofPopover.node.querySelector(".lr-proof-pin");if(pin)pin.textContent=persistent?editText("查看语句详情","Statement details"):editText("固定","Keep open");positionProof();
+    }
+    function mathStatementContext(original){
+      const candidate=owningStatement(original.source_id,original.line,original.start_byte),statement=candidate&&(candidate.source_statement_id||candidate.id)===original.id?candidate:original;
+      const actions=sourceLocalLogicalActions((logicalActionsByLine.get(statement.source_id+":"+statement.line)||[]).filter(action=>action.statementId===statement.id&&action.sourceVisible!==false));
+      return {statement,actions,facts:lineProofFacts(statement.source_id,statement.line,statement),issues:(issuesByLine.get(statement.source_id+":"+statement.line)||[]).filter(issue=>issue.statementId===statement.id)};
+    }
+    function appendMathSource(target,statement){
+      if(!statement)return;
+      const source=element("details","lr-math-source");source.append(element("summary",null,editText("Litex 源码","Litex source")));appendFormalSource(source,statement);if(source.querySelector("pre"))target.append(source);
+    }
+    function appendMathDefinition(target,declaration){
+      const statement=statements.get(declaration?.source_statement_id||declaration?.id)||declaration,source=sources.get(statement?.source_id),block=array(source?.latex_blocks).find(value=>value.start_byte===statement?.start_byte&&value.end_byte===statement?.end_byte&&array(value.statements).some(span=>span.statement_id===statement.id&&span.start_byte===0));
+      if(!block||typeof source.content!=="string")return false;
+      try{
+        // Read the declaration's own complete compiler block. Nested or absent
+        // blocks retain formal source rather than borrowing an enclosing proof.
+        const paper=element("div","lr-manuscript lr-math-definition");paper.lang=bundle.language||"en";paper.dir=bundle.language==="ar"?"rtl":"ltr";paper.append(compiledLatex(block,statements,source,()=>{},tex=>displayLatexIdentifiers(tex,source.id),false));target.append(paper);return true;
+      }catch(_){return false;}
+    }
+    function appendMathContexts(target,original,current){
+      const instances=[...statements.values()].filter(statement=>(statement.source_statement_id||statement.id)===original.id);if(instances.length<2)return;
+      const detail=element("details","lr-math-executions");detail.append(element("summary",null,editText("执行上下文 · ","Execution contexts · ")+instances.length));
+      for(const [index,statement] of instances.entries()){
+        const pick=button(editText("上下文 ","Context ")+(index+1)+" · "+t(statement.status),"lr-chip",()=>selectStatement(statement.id,statement.line));pick.dataset.statement=statement.id;pick.setAttribute("aria-pressed",String(statement.id===current.id));detail.append(pick);
+      }target.append(detail);
+    }
+    function appendMathSymbols(target,original,execution){
+      const source=sources.get(original.source_id),offsets=bytePositions(source?.content||""),children=(statementsBySource.get(original.source_id)||[]).filter(statement=>statement.parent_statement_id===original.id&&(statement.source_statement_id||statement.id)===statement.id);
+      const inside=value=>value.start_byte>=original.start_byte&&value.end_byte<=original.end_byte&&!children.some(child=>child.start_byte<=value.start_byte&&child.end_byte>=value.end_byte);
+      const controls=[],seen=new Set(),mentions=occurrences.filter(value=>value.source_id===original.source_id&&inside(value));
+      for(const occurrence of mentions){
+        const symbol=symbols.get(occurrence.symbol_id),start=offsets.get(occurrence.start_byte),end=offsets.get(occurrence.end_byte);if(!symbol||seen.has(symbol.id)||start===undefined||end===undefined||start>=end)continue;
+        const spelling=source.content.slice(start,end);if(["operator","punctuation"].includes(lexicalKinds.get(spelling))&&!symbolDefinitions.has(symbol.id))continue;
+        const role=symbolRoles.get(symbol.id)||"object",meaning=symbolHelp(symbol.id)||syntaxRoleHelp[role]?.[lang()==="zh"?0:1];if(!meaning)continue;
+        seen.add(symbol.id);const control=button(spelling,"lr-math-symbol lr-chip",event=>{event.stopPropagation();updateProofSymbol(control);});control.dataset.symbol=symbol.id;control.dataset.statement=execution.id;control.dataset.sourceStart=String(occurrence.start_byte);control.dataset.sourceEnd=String(occurrence.end_byte);attachTokenHelp(control,spelling,meaning,symbol.id);controls.push(control);
+      }
+      for(const token of array(source?.tokens).filter(inside)){
+        if(seen.has(token.text)||!referenceCard(token.text)||mentions.some(value=>seen.has(value.symbol_id)&&value.start_byte<=token.start_byte&&value.end_byte>=token.end_byte))continue;
+        seen.add(token.text);const card=referenceCard(token.text),control=button(token.text,"lr-math-symbol lr-chip",event=>{event.stopPropagation();updateProofSymbol(control);});control.dataset.referenceKey=token.text;control.dataset.statement=execution.id;attachTokenHelp(control,token.text,card.summary,null,builtinObjectHelp[token.text],token.text);controls.push(control);
+      }
+      if(!controls.length)return;const detail=element("details","lr-math-symbols");detail.append(element("summary",null,editText("本句符号 · ","Symbols here · ")+controls.length));const choices=element("div","lr-math-symbol-choices");controls.forEach(control=>choices.append(control));detail.append(choices);target.append(detail);
+    }
+    function appendMathSteps(target,data){
+      const candidates=data.facts.slice();for(const action of data.actions){const fact=sourceEqualityFact(action);if(fact&&!candidates.some(value=>value.id===fact.id&&value.scope_id===fact.scope_id))candidates.push(fact);}
+      const verified=data.actions.find(action=>action.kind==="verified-step"),local=verified&&{id:retainedFactId(verified.value),source_id:verified.sourceId,line:verified.line,scope_id:verified.scopeId,producer_statement_id:verified.statementId,evidence:verified.proof,role:"verified"};
+      const eligible=(local?[local]:candidates).filter(fact=>equalityProofParts(fact));if(eligible.length!==1)return;
+      const fact=eligible[0],parts=equalityProofParts(fact),steps=[];
+      parts.operators.forEach((operator,index)=>{if(operator!=="="||!equalityStepEvidence(fact,index)&&!equalityStepFailure(fact,index))return;
+        const step=button("","lr-math-equality-step",()=>{
+          if(fact.localActionId){const action=logicalActions.get(fact.localActionId);return navigate({source:action.sourceId,statement:action.statementId,symbol:null,fact:null,wd:null,chainStep:index,focusLine:action.line,explanationOpen:true});}
+          const selection=factSelection(fact.id,index,fact.scope_id);if(selection)return navigate(selection);
+        });step.dataset.fact=fact.id;step.dataset.chainStep=String(index);step.dataset.statement=fact.producer_statement_id;
+        step.setAttribute("aria-label",editText("查看第 "+(index+1)+" 步等式的依据","View proof of equality step "+(index+1)));step.append(element("span","lr-math-step-number",String(index+1)),formula(proofRelation(equalityStepEvidence(fact,index)||equalityStepFailure(fact,index)?.evidence),fact.source_id));steps.push(step);
+      });
+      if(!steps.length)return;const detail=element("details","lr-math-steps");detail.append(element("summary",null,editText("分步等式 · ","Equality steps · ")+steps.length));steps.forEach(step=>detail.append(step));target.append(detail);
     }
     function renderManuscript(source){
       const blocks=array(source.latex_blocks),paper=element("div","lr-manuscript");paper.lang=bundle.language||"en";paper.dir=bundle.language==="ar"?"rtl":"ltr";
       if(!blocks.length||pending()){
         codePane.append(element("p","lr-empty-note",editText("数学正文暂不可用，以下保留完整 Litex 源码。","Mathematical presentation is unavailable; the complete Litex source is retained below.")));return false;
       }
-      const lastUnits=new Map(),instances=new Map(),recordedFacts=new Map(array(bundle.facts).map(fact=>[fact.id,fact]));
+      const lastUnits=new Map(),contexts=new Map(),instances=new Map(),recordedFacts=new Map(array(bundle.facts).map(fact=>[fact.id,fact]));let hoveredStatement=null;
       for(const statement of statements.values()){const id=statement.source_statement_id||statement.id;instances.set(id,(instances.get(id)||0)+1);}
       try{
         for(const block of blocks)paper.append(compiledLatex(block,statements,source,(control,statement)=>{
           lastUnits.set(statement.id,{control,statement});
+          if(!contexts.has(statement.id))contexts.set(statement.id,mathStatementContext(statement));
+          const context=contexts.get(statement.id).statement;control.dataset.statement=context.id;control.dataset.line=String(context.line);
           if(statement.status==="rejected")control.classList.add("lr-latex-rejected");
           else if(statement.status==="not_exported")control.classList.add("lr-latex-unchecked");
           const selected=statements.get(state.statement)||statements.get(facts.get(state.fact)?.producer_statement_id);
           if((selected?.source_statement_id||selected?.id)===statement.id)control.classList.add("lr-selected");
           const preview=()=>{
-            if(destroyed||pending()||proofPopover?.persistent||proofFocusSuppression===control)return;
-            clearTimeout(proofCloseTimer);if(proofPopover?.owner===control||proofCandidate===control)return;
-            clearTimeout(proofTimer);proofCandidate=control;proofTimer=setTimeout(()=>{if(!destroyed&&control.isConnected&&proofCandidate===control)openMathStatement(control,statement);},450);
+            if(destroyed||pending()||state.explanationOpen||proofPopover?.persistent||proofFocusSuppression===control)return;
+            hoveredStatement=statement.id;clearTimeout(proofCloseTimer);if(proofPopover?.mathStatementId===statement.id||proofCandidate?.dataset.latexStatement===statement.id)return;
+            clearTimeout(proofTimer);proofCandidate=control;proofTimer=setTimeout(()=>{proofTimer=null;if(!destroyed&&control.isConnected&&proofCandidate===control&&hoveredStatement===statement.id)openMathStatement(control,statement);else if(proofCandidate===control)proofCandidate=null;},450);
           };
+          const leave=()=>{if(hoveredStatement===statement.id)hoveredStatement=null;clearTimeout(proofCloseTimer);if(!proofPopover?.persistent)proofCloseTimer=setTimeout(closeProof,300);};
           control.addEventListener("pointerenter",preview);control.addEventListener("focus",preview);
-          control.addEventListener("pointerleave",leaveProof);control.addEventListener("blur",leaveProof);
-          control.addEventListener("click",event=>{event.stopPropagation();if(!pending())openMathStatement(control,statement,true);});
+          control.addEventListener("pointerleave",leave);control.addEventListener("blur",leave);
+          control.addEventListener("click",event=>{event.stopPropagation();if(pending())return;
+            if(proofPopover?.mathStatementId===statement.id){
+              if(proofPopover.persistent){closeProof(true);return;}
+              proofPopover.persistent=true;const pin=proofPopover.node.querySelector(".lr-proof-pin");if(pin)pin.textContent=editText("查看语句详情","Statement details");keepProofOpen();return;
+            }openMathStatement(control,statement,true);
+          });
           control.addEventListener("keydown",event=>{if(event.key==="ArrowRight"&&proofPopover?.owner===control){event.preventDefault();proofPopover.node.querySelector(".lr-proof-pin,.lr-explanation-close")?.focus();}});
-        }));
+        },tex=>displayLatexIdentifiers(tex,source.id)));
       }catch(error){
         codePane.append(element("p","lr-empty-note",editText("数学排版或源码对应暂不可用，以下保留原文。","Typesetting or source correspondence is unavailable; the original source is retained below.")));return false;
       }
       for(const {control,statement} of lastUnits.values()){
-        const fact=facts.get(statement.mathematics?.subject_fact_id),recorded=recordedFacts.get(fact?.id);
-        if(statement.statement_kind!=="Fact"||statement.status!=="accepted"||statement.origin!=="checked"||instances.get(statement.id)!==1||!fact?.is_primary||fact.role!=="verified"||fact.producer_statement_id!==statement.id||fact.source_id!==source.id||fact.scope_id!==statement.scope_id||!recorded?.is_primary||recorded.role!=="verified"||recorded.producer_statement_id!==statement.id||recorded.source_id!==source.id||recorded.scope_id!==statement.scope_id||!array(statement.produced_fact_ids).includes(fact.id))continue;
+        const fact=facts.get(statement.mathematics?.subject_fact_id),recorded=recordedFacts.get(fact?.id),data=contexts.get(statement.id),context=data.statement,footer=element("span","lr-math-context");footer.dataset.statement=context.id;footer.dataset.line=String(context.line);
+        const eligible=statement.statement_kind==="Fact"&&statement.status==="accepted"&&statement.origin==="checked"&&instances.get(statement.id)===1&&fact?.is_primary&&fact.role==="verified"&&fact.producer_statement_id===statement.id&&fact.source_id===source.id&&fact.scope_id===statement.scope_id&&recorded?.is_primary&&recorded.role==="verified"&&recorded.producer_statement_id===statement.id&&recorded.source_id===source.id&&recorded.scope_id===statement.scope_id&&array(statement.produced_fact_ids).includes(fact.id);
+        if(eligible){
         const disclosure=element("details","lr-math-reason"),summary=element("summary",null,editText("推导","Derivation")),body=element("div","lr-math-reason-body");disclosure.dataset.statement=statement.id;disclosure.dataset.fact=fact.id;
         summary.setAttribute("aria-label",editText("展开或收起推导：","Expand or collapse derivation: ")+mathText(fact.text,source.id));disclosure.append(summary);let rendered=false;
         disclosure.addEventListener("toggle",()=>{
@@ -6849,7 +6927,14 @@
           const original=button(editText("查看 Litex 源码","View Litex source"),"lr-math-reason-source",()=>openMathStatement(original,statement,true));original.setAttribute("aria-haspopup","dialog");body.append(original);disclosure.append(body);
         });
         disclosure.addEventListener("click",event=>event.stopPropagation());
-        const parent=control.parentNode,next=parent.childNodes[Array.from(parent.childNodes).indexOf(control)+1]||null;parent.insertBefore(disclosure,next);
+        footer.append(disclosure);
+        }
+        const inferred=[...new Set([...statementInferredFacts(context).filter(id=>factInferences(id).length&&!array(logicalContexts.get(facts.get(id)?.scope_id)?.inferredIds).includes(id)),...data.actions.flatMap(action=>array(action.inferredIds))])].filter(id=>facts.has(id)&&inSourceExecution(facts.get(id),context));
+        if(inferred.length){
+          const toggle=button(editText("推论 ","Consequences ")+inferred.length+" ▸","lr-math-consequences lr-inference-toggle",event=>{event.stopPropagation();if(!pending())openInferences(inferred,source.id,toggle);});toggle.dataset.facts=JSON.stringify(inferred);toggle.setAttribute("aria-label",t("inferredFacts")+" · "+inferred.length);toggle.setAttribute("aria-expanded","false");toggle.setAttribute("aria-haspopup","dialog");
+          toggle.addEventListener("mouseenter",()=>hoverInferences(toggle));toggle.addEventListener("focus",()=>hoverInferences(toggle));toggle.addEventListener("pointerleave",leaveInferences);footer.append(toggle);
+        }
+        if(footer.childElementCount){const parent=control.parentNode,next=parent.childNodes[Array.from(parent.childNodes).indexOf(control)+1]||null;parent.insertBefore(footer,next);}
       }
       codePane.classList.add("lr-mathematical-source");codePane.append(paper);
       const uncovered=array(source.tokens).some(token=>!blocks.some(block=>block.start_byte<=token.start_byte&&block.end_byte>=token.end_byte));
@@ -7013,7 +7098,7 @@
     }
     function peekCitation(id){
       if(!codePane)return;const fact=facts.get(id),location=fact&&factLocation(fact);
-      for(const row of codePane.querySelectorAll(".lr-code-row"))row.classList.toggle("lr-citation-peek",!!location&&location.sourceId===state.source&&Number(row.dataset.line)===location.line);
+      for(const row of codePane.querySelectorAll(".lr-code-row,[data-latex-statement]"))row.classList.toggle("lr-citation-peek",!!location&&location.sourceId===state.source&&Number(row.dataset.line)===location.line);
       for(const result of codePane.querySelectorAll(".lr-inference-toggle"))result.classList.toggle("lr-citation-peek",!!id&&array(JSON.parse(result.dataset.facts||"[]")).includes(id));
     }
 

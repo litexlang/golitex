@@ -79,6 +79,57 @@ single continuous proof paragraph, joined assumption/conclusion and
 structural closures, and follows a new transition word to its original source.
 This mode retains no generated fixture files.
 
+`node src/reading/web/tests/latex-interactions.cjs <release-litex>` compares the
+complete source and mathematical proof/action/failure bodies from actual
+Native bundles. The unchanged Newton source, structured case/contradiction
+proof, square-root domain failure and finite enumeration supply54 bilingual
+comparisons. The accepted source contents run through `-e` in memory; no
+copied source projects or fixture archives are retained. A generated
+enumeration failure remains a failure, with its actual execution context.
+
+The Newton tracer exercises both locales and editable/read-only views:
+initial dwell across compiler fragments, full proof/context, collapsed exact
+UTF-8 source, click pin/repeat dismissal, two actual adjacent equalities and
+their exact Back address, independent resolved-symbol help, preserved proof
+DOM/scroll/disclosures, consequences and producing-execution Back, source
+switching and stale-edit invalidation. Missing/foreign occurrences cannot
+borrow definitions, and missing adjacent evidence cannot create proof steps.
+Leaving before dwell cannot open a stale card; keyboard entry and the
+rejected square-root condition retain the same source proof route. These DOM
+checks preserve every Native record and do not certify browser geometry or
+every kernel proof family. Source interaction regressions remain separate.
+The registered Newton file also checks resolved local display names while
+retaining the compiler's qualified bytes; removing the configuration's export
+correspondence keeps the names qualified rather than guessing an abbreviation.
+Function definition cards reuse the actual compiler block as read-only
+mathematics, keep formal source collapsed, and retain the exact source when
+that definition's block is absent. The missing-block control cannot borrow
+the neighboring proof's formulas or introduce inert proof buttons.
+Repeated enumeration selections separately check each accepted execution's
+own proof and selected-context marker; citation Back restores the precise
+adjacent-equality index before returning to the whole chain.
+
+For mathematical lazy/static acceptance, export the maintained three-chapter
+book with `litex -reading -latex -strict -export <site> -r examples/reading/book`,
+then run `node src/reading/web/tests/latex-lazy.cjs <site>`. It requires exported
+JS/CSS to equal the current shared source and exercises the public `open` API,
+bilingual chapter loading, complete proof and symbol compartments, exact source
+folds, source snapshots and source-layout override. It preserves the Native
+manifest and does not model browser geometry.
+
+Native-preview acceptance also checked the unchanged registered Newton file:
+full proof and function-unfold steps, scoped citation and exact equality Back,
+compiler-rendered function definition with closed formal source, keyboard
+Tab/ArrowRight, desktop side-by-side and390px stacked compartments. Both
+viewports had no document overflow; the narrow popup stayed within8..382px.
+Definition mathematics had2 MathML expressions and no inert proof buttons,
+and retained its compiler language. Served Native JS/CSS matched the working
+source bytes. This does not certify individual glyph hit targets or every
+generated proof history. Temporary exports, proxy and recheck files were
+removed; the local Native preview and one final PNG remain.
+This acceptance covers the shared reader and the tested Native executable;
+concurrent kernel/matrix and Lean work is outside its verification scope.
+
 The same suite opens the primary `n >= 1` derivation, verifies its native
 positive-natural premise-to-conclusion explanation, expands the membership
 premise, follows its actual citation, opens the exact formal source, and

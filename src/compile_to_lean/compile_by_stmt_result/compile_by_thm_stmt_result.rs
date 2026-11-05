@@ -234,6 +234,19 @@ impl LitexToLeanCompiler {
         }
         let mut application_arguments = Vec::new();
         let mut definitions = Vec::new();
+        // A local Lean `have` cannot generalize fresh universe levels for
+        // each use. Keep the original argument and its checked membership,
+        // but apply local declarations through their common semantic view.
+        let local_callee = match &call.name {
+            AtomicName::Plain { name } => {
+                position
+                    .visible_theorem(name)
+                    .is_ok_and(|(declaration, site, _)| {
+                        declaration.fact == *registered && site.is_local()
+                    })
+            }
+            _ => false,
+        };
         let (domains, conclusions) = match (registered, &call.arguments) {
             (Fact::ForallFact(fact), TheoremCallArguments::Parenthesized(args)) => {
                 let parameters: Vec<_> = fact
@@ -281,13 +294,20 @@ impl LitexToLeanCompiler {
                                 ));
                             }
                         }
-                        application_arguments.push(self.compile_object_reference(
+                        let argument = self.compile_object_reference(
                             arg,
                             &SourcePosition {
                                 before: offset + 1,
                                 ..*position
                             },
-                        )?);
+                        )?;
+                        application_arguments.push(if local_callee {
+                            format!(
+                                "(let _local_theorem_argument_{offset} := {argument}; Litex.semanticObject (Litex.denote _local_theorem_argument_{offset}) (Litex.isSet _local_theorem_argument_{offset}))"
+                            )
+                        } else {
+                            argument
+                        });
                         let subject = source_subject(&type_proofs[offset])?;
                         definitions.push(self.emit_internal_fact(
                             &subject,

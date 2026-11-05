@@ -203,23 +203,38 @@ impl LitexToLeanCompiler {
                         Obj::ArithmeticOperator(_) | Obj::FunctionSpace(FunctionSpace::FnRange(_))
                     ) {
                         if let Ok(value) = self.compile_normalization_value(argument, position) {
-                            return Ok(value);
+                            let bridge =
+                                self.compile_normalization_denotation(argument, position)?;
+                            return Ok((value, bridge));
                         }
                     }
-                    Ok(format!("(Litex.denote {object})"))
+                    Ok((format!("(Litex.denote {object})"), "rfl".to_string()))
                 })
                 .collect::<Result<Vec<_>, LeanCompileError>>()
         };
-        let cited_values = values(cited)?;
-        let goal_values = values(goal)?;
+        let (cited_values, cited_bridges): (Vec<_>, Vec<_>) =
+            values(cited)?.into_iter().unzip();
+        let (goal_values, goal_bridges): (Vec<_>, Vec<_>) =
+            values(goal)?.into_iter().unzip();
         let apply = |values: &[String]| format!("({predicate} {})", values.join(" "));
         let mut current = cited_values.clone();
         let mut equality = format!("(Eq.refl {})", apply(&current));
         let mut checked_equalities = Vec::new();
         for (index, argument_equality) in arguments.iter().enumerate() {
             let name = format!("_known_argument_eq_{index}");
+            // Equality evidence relates the original WD representations. When
+            // the predicate uses raw values, cross that boundary explicitly;
+            // equal source IR does not make cached host constructors reduce.
+            let endpoint_equality = if cited_bridges[index] == "rfl" && goal_bridges[index] == "rfl" {
+                argument_equality.clone()
+            } else {
+                format!(
+                    "(({}).symm.trans (({argument_equality}).trans ({})))",
+                    cited_bridges[index], goal_bridges[index]
+                )
+            };
             checked_equalities.push(format!(
-                "have {name} : {} = {} := {argument_equality}",
+                "have {name} : {} = {} := {endpoint_equality}",
                 cited_values[index], goal_values[index]
             ));
             let mut changed = current.clone();

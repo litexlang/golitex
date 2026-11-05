@@ -90,21 +90,11 @@ impl LitexToLeanCompiler {
     pub(in crate::compile_to_lean) fn scope_equal_wd(term: String, bindings: &[String]) -> String {
         if bindings.is_empty() {
             term
-        } else if bindings.iter().any(|binding| binding.starts_with("have ")) {
-            // Predicate WD can contain checked proof producers as well as
-            // object lets. Finish each original proof before growing a later
-            // dependent context, and give the proposition an explicit sort.
-            // All original WD bindings are retained, including unused proofs.
-            format!(
-                "(show Prop from (by\n  {}\n  exact {}\n))",
-                bindings.join("\n").replace('\n', "\n  "),
-                term.replace('\n', "\n  ")
-            )
         } else {
-            // Keep the proposition reducible under dependent existential
-            // binders. Elaborating the entire Prop with a tactic can leave
-            // delayed metavariables that obstruct native existence proofs and
-            // Classical.choose_spec. Proof receivers are typed separately below.
+            // Keep both object and proof bindings reducible under dependent
+            // existential binders. A tactic returning Prop delays its entire
+            // body, obstructing definition unfolding and Classical.choose_spec.
+            // Each original WD proof remains present and checked in the term.
             format!("({};\n{term})", bindings.join(";\n"))
         }
     }

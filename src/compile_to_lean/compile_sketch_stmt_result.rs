@@ -40,9 +40,15 @@ impl LitexToLeanCompiler {
                 self.context_header(position)?
             )
         };
+        let proof = format!("(by\n  {})", body.join("\n").replace('\n', "\n  "));
+        let proof = if local {
+            proof
+        } else {
+            self.share_local_proof(&proof, false)
+        };
         Ok(format!(
-            "{declaration} := by\n  {}",
-            body.join("\n").replace('\n', "\n  ")
+            "{declaration} :=\n  {}",
+            proof.replace('\n', "\n  ")
         ))
     }
 }

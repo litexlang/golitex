@@ -1029,12 +1029,36 @@ Standalone `litex -latex` remains the separate parse-only compilation command.
 
 The manuscript uses the official compiler's paragraphs, proof methods and
 mathematical notation. Proofs flow as continuous paragraphs with run-in case
-and contradiction labels, wrapping naturally to the available width. Hover or focus a fragment
-to see its exact original Litex source and the existing statement explanation.
-Click to keep the popup open; follow the same native fact references or open
-statement details. Escape and the close button dismiss the explanation. The
+and contradiction labels, wrapping naturally to the available width. Hover or
+focus a fragment to open the same complete proof, logical-action or failure
+renderer used by source reading. The exact original source starts collapsed.
+Click to keep the popup open; click again to close it. Moving between fragments
+of one compiler-owned statement preserves the dwell timer and open proof.
+Follow the same scoped native fact references or open statement details.
+Escape and the close button dismiss the explanation. The
 source button returns to the usual source reader/editor. Editing invalidates
 old proof data and disables mathematical presentation until checking completes.
+
+On-demand controls in the preview expose the statement's resolved source
+symbols, retained adjacent equality proofs and actual execution contexts.
+Symbol choices use the existing definition/domain formatter in a separate
+scrolling compartment; changing them does not rebuild the proof. They refer
+to Native source occurrences, not guessed positions or names in rendered TeX.
+The equality list uses only the recorded argument pairs and their own proof
+certificates, including a retained failed step; navigation and Back preserve
+the exact equality index and execution scope. Consequences are available
+beside the sentence through the shared inferred-fact view. Premise and citation
+highlighting also follows the mathematical statement's native source line.
+No extra proof records or frontend derivations are constructed for this view.
+Function/object definition cards can also show their own complete compiler
+block as read-only mathematics, with the exact Litex definition folded below.
+This uses the same compiler-block validation and renderer as the manuscript.
+A nested, missing or mismatched definition block retains the formal source;
+the viewer never borrows another declaration's mathematical presentation.
+Qualified compiler identifiers use the same resolved display-name table as
+source explanations. A local `newton_error::r` can therefore display as `r`;
+ambiguous names or missing export correspondences stay qualified. The original
+compiler bytes, source spans and symbol identities remain unchanged.
 Checked primary facts with a unique matching source execution also have an
 initially collapsed **Derivation** beside the sentence. Opening it lazily uses
 the same native proof renderer as fact details; reopening preserves its body.
@@ -1069,7 +1093,10 @@ the namespaced `alpha::twice(2) = 4` rejection in the focused fixture; presentat
 must not turn that native rejection into a success.
 
 Focused acceptance uses `tests/reading_latex.rs`, the reading/HTTP/LaTeX CLI
-contracts, and `web/tests/latex-mode.py` / `latex-mode.cjs`. The producer and shared
+contracts, and `web/tests/latex-mode.py` / `latex-mode.cjs`. Run
+`node src/reading/web/tests/latex-interactions.cjs target/release/litex` for
+complete source/math proof comparisons and mathematical interaction events.
+The producer and shared
 viewer exercise all 52 current statement fixtures; this is layout and source-map
 coverage, not a claim of complete mathematical explanation coverage.
 The focused acceptance receipt is

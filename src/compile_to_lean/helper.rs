@@ -811,7 +811,8 @@ pub(super) fn arithmetic_operation_term(operation: &str) -> String {
         "matrixDeterminantScalarValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order : M.Value) => (M.number (Litex.matrixComplexOn (M := M) _matrix (Litex.NativeBridge.naturalValue (M := M) _order) (Litex.NativeBridge.naturalValue (M := M) _order)).det))".into(),
         "matrixAdjugateGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order : M.Value) => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .complex) (fun _point => Litex.matrixCofactorRawValue (M := M) _matrix _order (Litex.FiniteFunction.unpack2 (M := M) _point).2 (Litex.FiniteFunction.unpack2 (M := M) _point).1)))".into(),
         "matrixInverseGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order : M.Value) => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .complex) (fun _point => M.divValue (Litex.matrixCofactorRawValue (M := M) _matrix _order (Litex.FiniteFunction.unpack2 (M := M) _point).2 (Litex.FiniteFunction.unpack2 (M := M) _point).1) (M.number (Litex.matrixComplexOn (M := M) _matrix (Litex.NativeBridge.naturalValue (M := M) _order) (Litex.NativeBridge.naturalValue (M := M) _order)).det))))".into(),
-        "matrixPowerGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _order _exponent : M.Value) => (Nat.brecOn (motive := fun _ => M.Value) (Litex.NativeBridge.naturalValue (M := M) _exponent) (fun _k _below => (match (motive := (k : ℕ) → Nat.below (motive := fun _ => M.Value) k → M.Value) _k with | 0 => fun _ => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .real) (Litex.matrixIdentityBody (M := M))) | Nat.succ _j => fun _prior => (_matrix_semantics.graphValue (Litex.realMatrixDomainValue (M := M) _order _order) (M.standard .complex) (fun _point => M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _order) (fun _index => Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue (_matrix_semantics.graphValue (_matrix_semantics.sepValue (Litex.closedRangeValue (M := M) (M.number 1) _order) (fun _ => True)) (M.standard .complex) (Litex.matrixMultiplyTerm (M := M) _prior.1 _matrix _point)) _index)))))) _below)))".into(),
+        // The Core definition owns recursion; replay its named denotation.
+        "matrixPowerGraphValue" => "(fun (_matrix _order _exponent : M.Value) => Litex.matrixPowerRawValue (M := M) _matrix _order (Litex.NativeBridge.naturalValue (M := M) _exponent))".into(),
         "matrixRankValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _rows _cols : M.Value) => (Litex.matrixRankValue (M := M) _matrix _rows _cols))".into(),
         "frobeniusNormScalarValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _rows _cols : M.Value) => (Litex.sqrtValue (M := M) (M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _rows) (fun _r => (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _cols) (fun _c => ((‖Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue _matrix (Litex.FiniteFunction.pack2 (M := M) _r _c))‖ ^ 2 : ℝ) : ℂ))))))))".into(),
         "matrixApplyGraphValue" => "(let _matrix_semantics : Litex.FunctionSemantics M := inferInstance; letI : Litex.SetSemantics M := _matrix_semantics.toSetSemantics; fun (_matrix _vector _rows _cols : M.Value) => (_matrix_semantics.graphValue (_matrix_semantics.sepValue (Litex.closedRangeValue (M := M) (M.number 1) _rows) (fun _ => True)) (M.standard .complex) (fun _point => M.number (Litex.finiteAggregateValue (M := M) false (Litex.closedRangeValue (M := M) (M.number 1) _cols) (fun _index => Litex.NativeBridge.complexValue (M := M) (_matrix_semantics.callValue (_matrix_semantics.graphValue (_matrix_semantics.sepValue (Litex.closedRangeValue (M := M) (M.number 1) _cols) (fun _ => True)) (M.standard .complex) (Litex.matrixApplyTerm (M := M) _matrix _vector _point)) _index))))))".into(),
@@ -1370,6 +1371,18 @@ pub(super) fn validate_statement_capture(
         return Ok(());
     }
     let matches = match (source, result) {
+        (
+            Stmt::Definition(DefinitionStmt::DefPropStmt(source)),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+                crate::execute::ExecDefPropStmtResult::Success(proof),
+            )),
+        ) => source == &proof.statement,
+        (
+            Stmt::Definition(DefinitionStmt::DefStructStmt(source)),
+            ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStruct(
+                crate::execute::ExecDefStructStmtResult::Success(proof),
+            )),
+        ) => source == &proof.statement,
         (
             Stmt::Definition(DefinitionStmt::HaveFnEqualStmt(source)),
             ExecStmtResult::Definition(ExecDefinitionStmtResult::HaveFnEqual(

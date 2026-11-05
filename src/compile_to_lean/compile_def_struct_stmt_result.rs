@@ -8,6 +8,24 @@ use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::StructO
 use crate::prelude::*;
 use std::collections::HashSet;
 
+/// Local declarations use a source-owned identity, so nested statement indices
+/// cannot shadow the helpers of a different structure.
+pub(super) fn struct_declaration_name(
+    family: &str,
+    proof: &ExecDefStructStmtSuccessResult,
+    index: usize,
+    local: bool,
+) -> String {
+    if local {
+        format!(
+            "{family}_local_i{}",
+            proof.statement.fields[0].binding.id.value()
+        )
+    } else {
+        format!("{family}_{index}")
+    }
+}
+
 pub(super) fn has_dependent_fields(source: &crate::ast::stmt::DefStructStmt) -> bool {
     let ids: HashSet<_> = source.fields.iter().map(|f| f.binding.id).collect();
     source.fields.iter().any(|field| {
@@ -33,7 +51,7 @@ pub(super) fn validate_struct(
             parameters.groups.iter().any(|group| {
                 !matches!(
                     group.param_type,
-                    ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::Obj(_)
+                    ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) | ParamType::Obj(_)
                 )
             })
         })
@@ -92,15 +110,12 @@ impl LitexToLeanCompiler {
         index: usize,
         local: bool,
     ) -> Result<String, LeanCompileError> {
-        if local {
-            return Err(LeanCompileError::unsupported("Struct/LocalDeclaration"));
-        }
         let ExecDefStructStmtResult::Success(proof) = result else {
             return Err(LeanCompileError::unsupported("Struct/Failed"));
         };
         validate_struct(proof)?;
         if has_dependent_fields(&proof.statement) {
-            return self.compile_dependent_struct_statement(proof, position, index);
+            return self.compile_dependent_struct_statement(proof, position, index, local);
         }
         let outer = position;
         let header = SourcePosition::new(Some(outer), SourceOwner::StructHeader(proof), usize::MAX);
@@ -156,15 +171,19 @@ impl LitexToLeanCompiler {
         checks.push("exact True.intro".into());
         let context = format!(
             "{}{}",
-            self.context_header(outer)?,
+            if local { String::new() } else { self.context_header(outer)? },
             if header_binders.is_empty() {
                 String::new()
             } else {
                 format!(" {}", header_binders.join(" "))
             }
         );
+        let checks_name = struct_declaration_name("_struct_field_checks", proof, index, local);
+        let structure_name = struct_declaration_name("struct", proof, index, local);
+        let lemma = if local { "have" } else { "theorem" };
+        let definition = if local { "let" } else { "noncomputable def" };
         let checked_fields = format!(
-            "theorem _struct_field_checks_{index}{context} : ∀ {}, True := by\n  intro {}\n  {}",
+            "{lemma} {checks_name}{context} : ∀ {}, True := by\n  intro {}\n  {}",
             binders.join(" "),
             introductions.join(" "),
             checks.join("\n").replace('\n', "\n  ")
@@ -176,7 +195,7 @@ impl LitexToLeanCompiler {
         );
         let carrier = self.scope_proposition(carrier, &header_definitions);
         if proof.statement.equivalent_facts.is_empty() {
-            return Ok(format!("{checked_fields}\n\nnoncomputable def struct_{index}{context} : Litex.Obj (M := M) (Litex.CartObj M {}) :=\n  {carrier}", values.len()));
+            return Ok(format!("{checked_fields}\n\n{definition} {structure_name}{context} : Litex.Obj (M := M) (Litex.CartObj M {}) :=\n  {carrier}", values.len()));
         }
         self.compile_constrained_struct_declarations(
             proof,
@@ -186,6 +205,7 @@ impl LitexToLeanCompiler {
             outer,
             &header_binders,
             &format!("Litex.CartObj M {}", values.len()),
+            local,
         )
     }
 
@@ -204,8 +224,9 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let arguments = self.compile_struct_arguments(object, proof, position)?;
-        let (_, producer, index) = position.visible_struct(&object.name, &self.runtime)?;
-        let name = position.declaration_reference(&format!("struct_{}", index + 1), &producer)?;
+        let (declaration, producer, index) = position.visible_struct(&object.name, &self.runtime)?;
+        let name = struct_declaration_name("struct", declaration, index + 1, producer.is_local());
+        let name = position.declaration_reference(&name, &producer)?;
         Ok(if arguments.is_empty() {
             name
         } else {
