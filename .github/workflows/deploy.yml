@@ -1,8 +1,23 @@
 name: Deploy
 
-# Manual validation only. Branch and tag pushes must not deploy or publish.
+# Manual only. Publishing requires an explicit selection and exact Cargo version.
 on:
   workflow_dispatch:
+    inputs:
+      publish:
+        description: "Publish to all channels after validation (otherwise validate only)"
+        type: boolean
+        required: true
+        default: false
+      version:
+        description: "Exact Cargo.toml version; required when publishing"
+        type: string
+        required: false
+        default: ""
+
+concurrency:
+  group: litex-release
+  cancel-in-progress: false
 
 env:
   CARGO_TERM_COLOR: always
@@ -14,7 +29,7 @@ permissions:
 
 jobs:
   # ─────────────────────────────────────────────
-  # Job 1: Validate tag
+  # Job 1: Validate release request
   # ─────────────────────────────────────────────
   validate:
     name: Validate
@@ -31,28 +46,18 @@ jobs:
           test -f std/basics/litex.config
           test -f std/basics/main.lit
 
-      - name: Extract version from tag
+      - name: Validate manual release request
         id: version
-        run: |
-          if [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
-            VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
-          else
-            VERSION="${GITHUB_REF_NAME}"
-          fi
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          if [[ "${VERSION%%+*}" == *-* ]]; then
-            echo "prerelease=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "prerelease=false" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Verify Cargo.toml version matches tag
-        run: |
-          CARGO_VERSION=$(grep '^version' Cargo.toml | head -1 | sed 's/.*"\(.*\)"/\1/')
-          if [ "$CARGO_VERSION" != "${{ steps.version.outputs.version }}" ]; then
-            echo "::error::Tag ${{ steps.version.outputs.version }} does not match Cargo.toml version $CARGO_VERSION"
-            exit 1
-          fi
+        env:
+          PUBLISH_RELEASE: ${{ inputs.publish }}
+          RELEASE_VERSION: ${{ inputs.version }}
+          CRATES_IO_TOKEN: ${{ secrets.CRATES_IO_TOKEN }}
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          SCOOP_BUCKET_TOKEN: ${{ secrets.SCOOP_BUCKET_TOKEN }}
+          WEB_DEPLOY_HOST: ${{ secrets.WEB_DEPLOY_HOST }}
+          WEB_DEPLOY_USER: ${{ secrets.WEB_DEPLOY_USER }}
+          WEB_DEPLOY_SSH_KEY: ${{ secrets.WEB_DEPLOY_SSH_KEY }}
+        run: python3 .github/scripts/release/validate_publish.py
 
   quality:
     name: Release gates
@@ -338,7 +343,7 @@ jobs:
   # Job 5: Create GitHub Release
   # ─────────────────────────────────────────────
   release:
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     name: GitHub Release
     needs: [validate, build, package-deb, package-msi]
     runs-on: ubuntu-latest
@@ -374,6 +379,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.VERSION }}
+          target_commitish: ${{ github.sha }}
           name: ${{ env.VERSION }}
           body: "Release of litex version ${{ env.VERSION }}"
           prerelease: ${{ needs.validate.outputs.prerelease == 'true' }}
@@ -389,6 +395,7 @@ jobs:
   # Job 6: Publish to crates.io
   # ─────────────────────────────────────────────
   publish-crates-io:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     name: Publish to crates.io
     needs: [validate, release]
     runs-on: ubuntu-latest
@@ -402,6 +409,7 @@ jobs:
   # Job 7: Update Homebrew tap
   # ─────────────────────────────────────────────
   publish-homebrew:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     name: Update Homebrew tap
     needs: [validate, release]
     runs-on: ubuntu-latest
@@ -497,6 +505,7 @@ jobs:
   # Job 8: Update Scoop bucket
   # ─────────────────────────────────────────────
   publish-scoop:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     name: Update Scoop bucket
     needs: [validate, release]
     runs-on: ubuntu-latest
@@ -561,9 +570,9 @@ jobs:
   # Job 9: Build and push Docker image
   # ─────────────────────────────────────────────
   publish-docker:
-    if: github.event_name == 'push'
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     name: Publish Docker image
-    needs: [validate, build]
+    needs: [validate, build, release]
     runs-on: ubuntu-latest
     env:
       VERSION: ${{ needs.validate.outputs.version }}
@@ -635,6 +644,7 @@ jobs:
   # Job 10: Deploy .deb to litexlang.com web server
   # ─────────────────────────────────────────────
   deploy-web-server:
+    if: github.event_name == 'workflow_dispatch' && inputs.publish
     name: Deploy .deb to web server
     needs: [validate, package-deb, release]
     runs-on: ubuntu-latest
