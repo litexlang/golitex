@@ -1,0 +1,14 @@
+# Before: whole-function differentiability tried to decide k=1.
+# forall k closed_range(1,2):
+#     $is_multi_differentiable_at(fn(p finite_seq(R,2)) R {p(k)+1}, (0,0), 2)
+# Now: smoothness does not depend on selecting a direction.
+# Open-domain guards require continuity, including abs at zero.
+# Boundary: abs itself is not certified differentiable at zero.
+# Evidence: target/release/litex -strict -f examples/real_analysis/multivariable_symbolic_coordinates.lit
+forall k closed_range(1,2):
+    $is_multi_differentiable_at(fn(p finite_seq(R,2)) R {p(k)+1}, (0,0), 2)
+    $is_multi_continuous_at(fn(p finite_seq(R,2): p(k)>0) R {p(1)}, (1,1), 2)
+# Expose the tuple evaluation used by the shared guard-membership verifier.
+(0,0)(1) = 0
+abs((0,0)(1)) < 1
+$has_partial_derivative_at(fn(p finite_seq(R,2): abs(p(1))<1) R {p(1)}, (0,0), 2, 1, 1)

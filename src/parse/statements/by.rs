@@ -523,9 +523,16 @@ impl Runtime {
 
         self.push_parse_scope();
         let parsed = (|| {
-            // `by induc n` selects an existing goal binder when it is visible;
-            // it introduces a binder only for a standalone induction statement.
-            if !self.plain_atom_is_visible(&param) {
+            // Quantify independently of the outer value; `from` stays outside
+            // this scope so `by induc n from n` retains its fixed lower bound.
+            if self.plain_atom_is_visible(&param) {
+                let fresh = self.fresh_internal_param();
+                self.parse_scope_stack
+                    .last_mut()
+                    .expect("induction scope")
+                    .plain
+                    .insert(param.clone(), fresh.id);
+            } else {
                 self.define_plain_atom_as_parse(tb, param.clone())?;
             }
             let mut goal_count = 0usize;

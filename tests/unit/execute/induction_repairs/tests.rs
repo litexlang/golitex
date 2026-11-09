@@ -79,6 +79,15 @@ fn induction_goal_wd_uses_the_induction_domain_without_ih() {
 }
 
 #[test]
+fn induction_isolates_outer_facts_and_preserves_the_fixed_lower_bound() {
+    for keyword in ["induc", "strong_induc"] {
+        check(&format!("by contra:\n    ? 1 = 0\n    have n Z = 0\n    by {keyword} n from 0:\n        ? n <= 1\n        n + 1 = 0 + 1\n        0 + 1 <= 1\n    2 $in Z\n    2 >= 0\n    2 <= 1\n    impossible 2 <= 1\n"), &[false]);
+        check(&format!("by contra:\n    ? 1 = 0\n    have n Z = 2\n    by {keyword} n from n:\n        ? n >= 2\n        n + 1 >= 2\n    0 $in Z\n    0 >= 0\n    0 >= 2\n    impossible 0 >= 2\n"), &[false]);
+        check(&format!("thm reflexive:\n    ? forall n N:\n        n = n\n    by {keyword} n from 0:\n        ? n = n\n        n = n\n"), &[true]);
+    }
+}
+
+#[test]
 fn induction_ordinary_proof_statements_are_scoped_and_checked() {
     for keyword in ["induc", "strong_induc"] {
         let step = if keyword == "induc" {

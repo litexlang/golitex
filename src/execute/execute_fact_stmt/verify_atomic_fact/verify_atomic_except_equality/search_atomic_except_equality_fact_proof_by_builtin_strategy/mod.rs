@@ -9,6 +9,7 @@ pub mod nonzero_product;
 pub mod numeric_carrier;
 pub mod positive_reciprocal;
 mod preimage;
+pub mod quotient_order;
 pub mod result;
 pub mod search_atomic_except_equality_fact_proof_by_builtin_strategy;
 mod search_field_arithmetic_carrier_strategy;

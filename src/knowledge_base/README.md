@@ -42,15 +42,14 @@ the `run_project_cross_mod_release_thm_and_by_def` gate checks old revisions
 | **Authority** | Sources + `litex.config` remain source of truth; KB is never hand-edited math |
 | **Scope** | **Imported** modules only (root exports stay cold unless later extended) |
 
-### 2. Product shape (definitions-only)
+### 2. Product shape (definitions and registered laws)
 
 Importers resolve `M::F::…` through finished export **`definitions`**
-(`by def`, `release thm` / `by thm`, `release obj def`, …). They do **not**
-mine foreign `facts` / WD / rewrite tables.
+(`by def`, `release thm` / `by thm`, `release obj def`, …). Registered predicate
+laws are also visible to importers. Foreign ordinary facts and WD remain local.
 
-Therefore the on-disk MVP stores **per-export `DefinitionMemory`**, not a full
-`ExecEnv`. Hit installs an `ExecEnv` whose `definitions` are remapped and whose
-facts/WD maps stay empty (same consumer contract as today).
+The cache stores per-export `DefinitionMemory` and `prop_rewrite_properties`,
+not a full `ExecEnv`. A hit remaps both products; ordinary facts/WD maps stay empty.
 
 `DefThmStmt.prove_process` is **stripped on write** (empty on load): release /
 by thm only need the goal interface.
@@ -62,6 +61,7 @@ by thm only need the goal interface.
   manifest.json                 # abi, fingerprint, mod_id↔path, export watermarks
   exports/<export_file_id>/
     definitions.json            # one DefinitionMemory (supported subset)
+    prop_rewrites.json          # reflexive, transitive and argument permutations
 ```
 
 `KB_ABI` (`paths.rs`) bumps when wire/manifest layout is incompatible or a
@@ -72,6 +72,12 @@ inequality; cached theorem interfaces omit their proof process and cannot be
 treated as freshly checked by the repaired verifier. The fingerprint includes
 the ABI revision and old manifests are rejected, so imports rebuild once and
 then use the ordinary cache again. Runtime/Env state shapes are unchanged.
+
+ABI 11 persists the registered predicate laws, remapping their module identity
+together with definitions. Older products are rebuilt so a warm import retains
+the same laws as a cold import. It also invalidates products checked before the
+induction-binding and substitution-capture repairs. Missing or malformed law
+files produce a cache miss rather than an incomplete import.
 
 ABI 10 retains the wire layout and forces source rechecking after removal of
 `:::` namespace syntax. Alias configuration bytes already participate in the

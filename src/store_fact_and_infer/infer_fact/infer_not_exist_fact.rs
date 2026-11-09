@@ -41,11 +41,8 @@ impl Runtime {
             .flat_map(|g| g.params.clone())
             .collect();
         let mut fresh = Vec::with_capacity(flat.len());
-        for (i, binder) in flat.iter().enumerate() {
-            fresh.push(BoundName::new(
-                self.global_ids.allocate_identifier_id(),
-                format!("{}_ne{i}", binder.name),
-            ));
+        for _ in &flat {
+            fresh.push(self.fresh_internal_param());
         }
 
         let mut subst = HashMap::new();

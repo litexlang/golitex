@@ -2886,7 +2886,25 @@ impl<'a> SourcePosition<'a> {
                     .iter()
                     .flat_map(|g| &g.params)
                 {
-                    let expected = site.parameter_identifier(parameter)?;
+                    let expected = match site.file_qualified_name(&parameter.name) {
+                        AtomicName::WithExportFileId {
+                            export_file_id,
+                            name,
+                        } => IdentifierObj::WithExportFileId {
+                            export_file_id,
+                            name,
+                        },
+                        AtomicName::WithModAndExportFileId {
+                            global_mod_id,
+                            export_file_id,
+                            name,
+                        } => IdentifierObj::WithModAndExportFileId {
+                            global_mod_id,
+                            export_file_id,
+                            name,
+                        },
+                        _ => IdentifierObj::from_bound_name(parameter),
+                    };
                     let matches = match identifier {
                         IdentifierObj::Plain { id, .. } => *id == parameter.id,
                         _ => expected == *identifier,
@@ -3993,6 +4011,7 @@ impl<'a> SourcePosition<'a> {
     pub fn with_visible_declared_type<T>(
         &self,
         object: &Obj,
+        runtime: &Runtime,
         callback: &mut impl FnMut(
             &ExecHaveObjEqualStmtSuccessResult,
             usize,
@@ -4036,7 +4055,7 @@ impl<'a> SourcePosition<'a> {
                         usize::MAX,
                     );
                     if let Some(value) =
-                        declared_type_in_statement(object, &producer, self, callback)?
+                        declared_type_in_statement(object, &producer, self, runtime, callback)?
                     {
                         return Ok(Some(value));
                     }
@@ -4045,7 +4064,9 @@ impl<'a> SourcePosition<'a> {
             if matches!(site.owner, SourceOwner::Statement(_))
                 && obeys_active_stage_ceilings(self, site)
             {
-                if let Some(value) = declared_type_in_statement(object, site, self, callback)? {
+                if let Some(value) =
+                    declared_type_in_statement(object, site, self, runtime, callback)?
+                {
                     return Ok(Some(value));
                 }
             }
@@ -5525,6 +5546,19 @@ fn membership_inference_groups<'a>(
 ) {
     groups.push((source, rules));
     for rule in rules {
+        if let InferInFactResult::SetBuilder(proof) = rule {
+            for step in &proof.steps {
+                for projection in &step.projections {
+                    if let crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(base) = projection {
+                        if let StoreFactResult::AtomicFact(stored) = &base.stored.store {
+                            if let AtomicFact::InFact(member) = &stored.fact {
+                                membership_inference_groups(member, &base.inferences, groups);
+                            }
+                        }
+                    }
+                }
+            }
+        }
         if let InferInFactResult::Template(proof) = rule {
             if let Some(native) = proof.expansions.last() {
                 membership_inference_groups(native, &proof.native_rules, groups);
@@ -12748,7 +12782,9 @@ fn joint_expression_search_stages<'a>(
     match &p.constructor {
         C::Constant => {}
         C::Coordinate { index_member, .. } => stages.push(AtomicSearchStage::Verify(index_member)),
-        C::Neg { argument } => joint_expression_search_stages(argument, stages),
+        C::Neg { argument } | C::Abs { argument } => {
+            joint_expression_search_stages(argument, stages)
+        }
         C::Add { left, right }
         | C::Subtract { left, right }
         | C::Multiply { left, right }
@@ -12790,7 +12826,7 @@ fn multivariable_interior_search_stages<'a>(
             multivariable_interior_search_stages(base, stages);
             for guard in guards {
                 for operand in &guard.operands {
-                    smooth_coordinate_search_stages(operand, stages);
+                    joint_expression_search_stages(operand, stages);
                 }
                 stages.push(AtomicSearchStage::Verify(&guard.point_proof));
             }
@@ -13125,6 +13161,18 @@ fn atomic_searched_stages(
     };
     let mut stages = Vec::new();
     match proof {
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLess(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLessEqual(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientScaleLess(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientScaleLessEqual(p)) => {
+            stages.extend(p.proof_of_requirement_facts.iter().map(AtomicSearchStage::Verify));
+        }
         AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(AtomicExceptEqualityFactSearchProofByBuiltinRule::IsFiniteSetFact(
             crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::is_finite_set::IsFiniteSetFactSearchProofByBuiltinRule::FunctionRangeOfFiniteDomain(p),
         )) => {
@@ -13178,6 +13226,18 @@ fn atomic_searched_stages(
         AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(proof) => {
             stages.push(AtomicSearchStage::Searched(&proof.residual));
         }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(
+            crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::DifferentiableExpression(proof),
+        )) => {
+            let p = &proof.expression;
+            complete_domain_source_stages(&p.function_domain, &mut stages);
+            multivariable_interior_search_stages(&p.geometry, &mut stages);
+            stages.push(AtomicSearchStage::WD(&p.body_well_defined));
+            for coordinate in &p.coordinates {
+                joint_expression_search_stages(&coordinate.expression, &mut stages);
+            }
+            stages.extend(proof.smooth_domains.iter().map(AtomicSearchStage::Verify));
+        },
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(
             crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::ContinuousExpression(p),
         )) => {
@@ -15771,6 +15831,7 @@ fn declared_type_in_statement<T>(
     object: &Obj,
     site: &SourcePosition<'_>,
     active: &SourcePosition<'_>,
+    runtime: &Runtime,
     callback: &mut impl FnMut(
         &ExecHaveObjEqualStmtSuccessResult,
         usize,
@@ -15808,6 +15869,22 @@ fn declared_type_in_statement<T>(
         if site.before >= ready.before && obeys_active_stage_ceilings(active, &ready) {
             if let ParamType::Obj(carrier) = &group.param_type {
                 if carrier.ir() == object.ir() {
+                    return callback(proof, index, &ready).map(Some);
+                }
+                let mut publication = std::collections::HashMap::new();
+                for parameter in proof
+                    .statement
+                    .param_def
+                    .groups
+                    .iter()
+                    .flat_map(|g| &g.params)
+                {
+                    publication.insert(
+                        parameter.id,
+                        Obj::Identifier(site.defining_identifier(parameter, runtime)?),
+                    );
+                }
+                if super::helper::instantiated_object_matches(carrier, object, &publication) {
                     return callback(proof, index, &ready).map(Some);
                 }
             }

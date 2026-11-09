@@ -108,6 +108,7 @@ impl Runtime {
     ) -> RuntimeResult<ExecHaveObjInNonemptySetStmtResult> {
         let verify_state = VerifyState::top_level();
         let shared = Rc::new(stmt.clone());
+        let substitution = super::helper::published_parameter_substitution(self, &stmt.param_def);
 
         // Telescoping `have A nonempty_set, x A` needs earlier groups defined
         // before later type/nonempty checks can see those names. Keep the whole
@@ -117,6 +118,9 @@ impl Runtime {
             let mut groups = Vec::with_capacity(stmt.param_def.groups.len());
             let mut store_and_infer_result = StoreHaveObjAndInferResult::new(Vec::new());
             for group in &stmt.param_def.groups {
+                let mut group = group.clone();
+                group.param_type =
+                    super::helper::publish_parameter_type(rt, &group.param_type, &substitution)?;
                 let one = TypedParameterList {
                     groups: vec![group.clone()],
                 };
@@ -158,8 +162,9 @@ impl Runtime {
                     defined_params,
                 });
             }
+            let published = super::helper::published_parameter_list(rt, &stmt.param_def)?;
             let auto_opened_struct_layers = match rt.auto_open_struct_layers_for_typed_parameters(
-                &stmt.param_def,
+                &published,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )? {
                 Ok(layers) => layers,

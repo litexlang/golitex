@@ -125,6 +125,30 @@ fn test_runtime() -> Runtime {
 }
 
 #[test]
+fn substitution_renames_binders_that_occur_free_in_inserted_values() {
+    for source in ["fn(x R: x > a) R", "fn(x R) R {x + a}", "{x R: x > a}"] {
+        let mut rt = test_runtime();
+        assert!(rt.run_litex_code("have a R").unwrap().success);
+        let original = free_parameter_audit_object(&mut rt, source);
+        let old_id = free_parameter_audit_binder_id(&original);
+        let a_id = rt.resolve_plain_atom("a").unwrap();
+        let actual = rt
+            .inst_obj(
+                &original,
+                &HashMap::from([(
+                    a_id,
+                    Obj::Identifier(IdentifierObj::plain(old_id, "x".into())),
+                )]),
+            )
+            .unwrap();
+        assert_ne!(free_parameter_audit_binder_id(&actual), old_id, "{source}");
+        let mut free = std::collections::HashSet::new();
+        super::collect_free_plain_ids(&actual, &std::collections::HashSet::new(), &mut free);
+        assert_eq!(free, std::collections::HashSet::from([old_id]), "{source}");
+    }
+}
+
+#[test]
 fn inst_function_value_parameter_composes_returned_application_groups() {
     use crate::ast::obj::FnObj;
     use crate::ast::stmt::{DefinitionStmt, Stmt};
@@ -458,4 +482,59 @@ claim:
     let mut rt = test_runtime();
     let result = rt.run_litex_code(code).unwrap();
     assert!(result.success && result.session_error.is_none());
+}
+
+#[test]
+fn quantified_substitution_preserves_inserted_free_binder_id() {
+    use crate::ast::fact::Fact;
+    use crate::ast::stmt::Stmt;
+    for source in [
+        "forall x R:\n    x = a",
+        "exist x R st {x = a}",
+        "not forall x R:\n    x = a",
+    ] {
+        let mut rt = test_runtime();
+        assert!(rt.run_litex_code("have a R").unwrap().success);
+        let tokens = Tokenizer::new()
+            .tokenize(source, rt.current_file.clone())
+            .unwrap();
+        let Stmt::Fact(fact) = rt.parse(&tokens).unwrap().remove(0) else {
+            panic!("fact")
+        };
+        let parameters = match &fact {
+            Fact::ForallFact(f) => &f.typed_parameters,
+            Fact::ExistFact(f) => &f.typed_parameters,
+            Fact::NotForall(f) => &f.typed_parameters,
+            _ => panic!("quantifier"),
+        };
+        let old = parameters.ordered_param_ids()[0];
+        let a = rt.resolve_plain_atom("a").unwrap();
+        let actual = rt
+            .inst_fact(
+                &fact,
+                &HashMap::from([(a, Obj::Identifier(IdentifierObj::plain(old, "x".into())))]),
+            )
+            .unwrap();
+        let (new, body) = match &actual {
+            Fact::ForallFact(f) => (
+                f.typed_parameters.ordered_param_ids()[0],
+                Fact::from(f.then_facts[0].clone()),
+            ),
+            Fact::ExistFact(f) => (
+                f.typed_parameters.ordered_param_ids()[0],
+                super::quantifier_free_fact_to_fact(f.facts[0].clone()),
+            ),
+            Fact::NotForall(f) => (
+                f.typed_parameters.ordered_param_ids()[0],
+                super::quantifier_free_fact_to_fact(f.then_facts[0].clone()),
+            ),
+            _ => panic!("quantifier"),
+        };
+        assert_ne!(new, old, "{source}");
+        let Fact::AtomicFact(AtomicFact::EqualFact(eq)) = body else {
+            panic!("equality")
+        };
+        assert!(matches!(eq.left,Obj::Identifier(IdentifierObj::Plain {id,..}) if id==new));
+        assert!(matches!(eq.right,Obj::Identifier(IdentifierObj::Plain {id,..}) if id==old));
+    }
 }

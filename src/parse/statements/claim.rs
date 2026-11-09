@@ -21,7 +21,12 @@ impl Runtime {
         let mut goal = tb.body[0].clone();
         let fact = self.parse_goal_fact(&mut goal, "claim")?;
         let proof_blocks = &tb.body[1..];
-        let proof = if let Some(params) = Self::forall_params_of_fact(&fact) {
+        let params = match &fact {
+            crate::ast::fact::Fact::ForallFact(f) => Some(&f.typed_parameters),
+            crate::ast::fact::Fact::ForallFactWithIff(f) => Some(&f.forall_fact.typed_parameters),
+            _ => None,
+        };
+        let proof = if let Some(params) = params {
             self.with_forall_params_occupied(params, &tb, |this| {
                 this.parse_nonempty_proof_body(proof_blocks, &tb, "claim")
             })?

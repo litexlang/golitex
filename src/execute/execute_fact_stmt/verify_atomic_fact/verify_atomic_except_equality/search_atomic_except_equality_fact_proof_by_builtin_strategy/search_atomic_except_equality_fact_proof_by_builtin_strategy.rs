@@ -770,6 +770,9 @@ impl Runtime {
         if let Some(proof) = self.search_positive_reciprocal_order(fact, ctx)? {
             return Ok(Some(proof));
         }
+        if let Some(proof) = self.search_quotient_order(fact, ctx)? {
+            return Ok(Some(proof));
+        }
         Ok(None)
     }
 }

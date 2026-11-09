@@ -557,6 +557,23 @@ impl Runtime {
         if !self.complete_forall_subst_from_dom_facts(&forall, &mut subst, &param_ids)? {
             return Ok(None);
         }
+        let binder_ids: std::collections::HashSet<_> = goal
+            .plain()
+            .typed_parameters
+            .ordered_param_ids()
+            .into_iter()
+            .collect();
+        for value in subst.values() {
+            let mut free = std::collections::HashSet::new();
+            crate::instantiate::collect_free_plain_ids(
+                value,
+                &std::collections::HashSet::new(),
+                &mut free,
+            );
+            if !free.is_disjoint(&binder_ids) {
+                return Ok(None);
+            }
+        }
         let forall_parameters_match_what_args =
             if self.result_detail() == crate::result_detail::OutputDetail::Detailed {
                 param_ids

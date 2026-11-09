@@ -129,32 +129,88 @@ impl LitexToLeanCompiler {
                 ))
             });
         match scoped {
-            Ok((_, Some(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier))), _, member)) => consume(carrier, &member, position),
+            Ok((
+                _,
+                Some(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier))),
+                _,
+                member,
+            )) => consume(carrier, &member, position),
             Ok(_) => return Err(LeanCompileError::unsupported("StructField/DeclaredCarrier")),
-            Err(error) => position.with_visible_alias(object, &self.runtime, &mut |parameter, _, _, producer| {
-                let SourceOwner::Statement(ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
-                    ExecDefineObjStmtResult::HaveObjEqual(ExecHaveObjEqualStmtResult::Success(p))))) = producer.owner else {
-                    return Err(LeanCompileError::unsupported("StructField/TypedAlias"));
-                };
-                let (index, (_, carrier)) = p.statement.param_def.groups.iter()
-                    .flat_map(|g| g.params.iter().map(move |p| (p, &g.param_type)))
-                    .enumerate().find(|(_, (p, _))| p.id==parameter.id)
-                    .ok_or_else(|| LeanCompileError::unsupported("StructField/AliasParameter"))?;
-                let ParamType::Obj(Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(carrier))) = carrier else {
-                    return Err(LeanCompileError::unsupported("StructField/DeclaredCarrier"));
-                };
-                let count = p.statement.param_def.groups.iter().map(|g| g.params.len()).sum::<usize>();
-                let store = p.store_and_infer_result.store_and_infer_results.get(index)
-                    .ok_or_else(|| LeanCompileError::unsupported("StructField/AliasMembership"))?;
-                let published = SourcePosition { before: 2 * count + index + 1, ..*producer };
-                let (fact, _) = published.visible_fact(store.primary_fact_id(), &self.runtime)?;
-                if !matches!(fact, Fact::AtomicFact(AtomicFact::InFact(m)) if m.element.ir()==object.ir()
-                    && matches!(&m.set, Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(s)) if s==carrier)) {
-                    return Err(LeanCompileError::unsupported("StructField/AliasMembership"));
-                }
-                let member = position.declaration_reference(&format!("h_{}", store.primary_fact_id().value()), producer)?;
-                consume(carrier, &member, &published)
-            })?.ok_or(error),
+            Err(error) => position
+                .with_visible_alias(object, &self.runtime, &mut |parameter, _, _, producer| {
+                    let SourceOwner::Statement(ExecStmtResult::Definition(
+                        ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjEqual(
+                            ExecHaveObjEqualStmtResult::Success(p),
+                        )),
+                    )) = producer.owner
+                    else {
+                        return Err(LeanCompileError::unsupported("StructField/TypedAlias"));
+                    };
+                    let (index, (_, carrier)) = p
+                        .statement
+                        .param_def
+                        .groups
+                        .iter()
+                        .flat_map(|g| g.params.iter().map(move |p| (p, &g.param_type)))
+                        .enumerate()
+                        .find(|(_, (p, _))| p.id == parameter.id)
+                        .ok_or_else(|| {
+                            LeanCompileError::unsupported("StructField/AliasParameter")
+                        })?;
+                    let ParamType::Obj(Obj::StructAndFieldAccessObj(
+                        StructAndFieldAccessObj::StructObj(carrier),
+                    )) = carrier
+                    else {
+                        return Err(LeanCompileError::unsupported("StructField/DeclaredCarrier"));
+                    };
+                    let count = p
+                        .statement
+                        .param_def
+                        .groups
+                        .iter()
+                        .map(|g| g.params.len())
+                        .sum::<usize>();
+                    let store = p
+                        .store_and_infer_result
+                        .store_and_infer_results
+                        .get(index)
+                        .ok_or_else(|| {
+                            LeanCompileError::unsupported("StructField/AliasMembership")
+                        })?;
+                    let published = SourcePosition {
+                        before: 2 * count + index + 1,
+                        ..*producer
+                    };
+                    let (fact, _) =
+                        published.visible_fact(store.primary_fact_id(), &self.runtime)?;
+                    let Fact::AtomicFact(AtomicFact::InFact(m)) = fact else {
+                        return Err(LeanCompileError::unsupported("StructField/AliasMembership"));
+                    };
+                    let formal = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                        carrier.clone(),
+                    ));
+                    let substitution = crate::execute::parameter_substitution_for_surface(
+                        identifier,
+                        &p.statement.param_def,
+                    );
+                    if m.element.ir() != object.ir()
+                        || !instantiated_object_matches(&formal, &m.set, &substitution)
+                    {
+                        return Err(LeanCompileError::unsupported("StructField/AliasMembership"));
+                    }
+                    let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                        actual_carrier,
+                    )) = &m.set
+                    else {
+                        return Err(LeanCompileError::unsupported("StructField/AliasMembership"));
+                    };
+                    let member = position.declaration_reference(
+                        &format!("h_{}", store.primary_fact_id().value()),
+                        producer,
+                    )?;
+                    consume(actual_carrier, &member, &published)
+                })?
+                .ok_or(error),
         }
     }
 
@@ -324,7 +380,19 @@ impl LitexToLeanCompiler {
                 "StructRelease/ParameterLayers",
             ));
         }
+        if expected.is_empty() {
+            return Ok(Vec::new());
+        }
         let mut output = Vec::new();
+        let mut publication = std::collections::HashMap::new();
+        for parameter in groups.iter().flat_map(|g| &g.params) {
+            let identifier = if position.is_local() {
+                position.parameter_identifier(parameter)?
+            } else {
+                position.defining_identifier(parameter, &self.runtime)?
+            };
+            publication.insert(parameter.id, Obj::Identifier(identifier));
+        }
         for (index, ((parameter_index, parameter, carrier), layer)) in
             expected.iter().zip(layers).enumerate()
         {
@@ -334,7 +402,16 @@ impl LitexToLeanCompiler {
                 position.defining_identifier(parameter, &self.runtime)?
             };
             let obj = Obj::Identifier(identifier);
-            if layer.obj.ir() != obj.ir() || &layer.struct_obj != *carrier {
+            let formal_carrier = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                (*carrier).clone(),
+            ));
+            let actual_carrier = Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(
+                layer.struct_obj.clone(),
+            ));
+            if layer.obj.ir() != obj.ir()
+                || (&layer.struct_obj != *carrier
+                    && !instantiated_object_matches(&formal_carrier, &actual_carrier, &publication))
+            {
                 return Err(LeanCompileError::unsupported(
                     "StructRelease/ParameterSubject",
                 ));
@@ -344,7 +421,7 @@ impl LitexToLeanCompiler {
                 .ok_or_else(|| LeanCompileError::unsupported("StructRelease/ParameterStore"))?;
             let (fact, member) = position.visible_fact(store.primary_fact_id(), &self.runtime)?;
             if !matches!(fact, Fact::AtomicFact(AtomicFact::InFact(m)) if m.element.ir()==obj.ir()
-                && matches!(&m.set, Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(s)) if s==*carrier))
+                && instantiated_object_matches(&actual_carrier, &m.set, &std::collections::HashMap::new()))
             {
                 return Err(LeanCompileError::unsupported(
                     "StructRelease/ParameterMembership",

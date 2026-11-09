@@ -8,6 +8,14 @@ fn load(name: &str) -> super::module_fixtures::LoadedProject {
 }
 
 #[test]
+fn exported_have_body_keeps_hypothetical_binders_local_until_publication() {
+    let (loaded, _project) = load("module_exported_have_body");
+    super::LitexToLeanCompiler::new(loaded.runtime)
+        .compile_module(&loaded.closure, "ExportedHaveBody")
+        .unwrap();
+}
+
+#[test]
 fn exported_dependent_record_fields_keep_their_original_type_scope() {
     let (loaded, _project_1) = load("module_exported_dependent_record");
     let compiler = super::LitexToLeanCompiler::new(loaded.runtime);
@@ -46,7 +54,7 @@ fn exported_dependent_record_fields_keep_their_original_type_scope() {
 }
 
 #[test]
-fn exported_record_preflight_retains_its_qualified_hypothetical_subject() {
+fn exported_record_preflight_retains_its_local_hypothetical_subject() {
     let (loaded, _project_2) = load("module_coordinate_value");
     let statement = &loaded.closure.files[0].run.statement_results[1];
     let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefineObj(
@@ -69,9 +77,8 @@ fn exported_record_preflight_retains_its_qualified_hypothetical_subject() {
         panic!("hypothetical membership")
     };
     assert!(
-        matches!(&member.element, Obj::Identifier(IdentifierObj::WithExportFileId {
-        export_file_id: 0, name,
-    }) if name=="point")
+        matches!(&member.element, Obj::Identifier(IdentifierObj::Plain { id, name })
+            if *id == proof.statement.param_def.groups[0].params[0].id && name=="point")
     );
     let ParamType::Obj(carrier) = &proof.statement.param_def.groups[0].param_type else {
         panic!("declared record carrier")
@@ -215,7 +222,7 @@ fn declared_type_specialization_waits_for_publication_and_obeys_stage_ceilings()
     };
     let root = SourcePosition::module_file(&loaded.closure, 1, 0);
     let finds = |site: &SourcePosition<'_>| {
-        site.with_visible_declared_type(carrier, &mut |found, group, _| {
+        site.with_visible_declared_type(carrier, &loaded.runtime, &mut |found, group, _| {
             Ok((group, std::ptr::eq(found, proof)))
         })
         .unwrap()

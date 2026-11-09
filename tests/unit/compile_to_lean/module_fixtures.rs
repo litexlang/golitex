@@ -31,6 +31,7 @@ pub(super) fn load(name: &str) -> LoadedProject {
         "module_diamond" => &["module_diamond"],
         "module_export_prefix" => &["module_export_prefix"],
         "module_exported_dependent_record" => &["module_exported_dependent_record"],
+        "module_exported_have_body" => &["module_exported_have_body"],
         "module_function_alias_collision" => &["module_function_alias_collision"],
         "module_function_definition" => &["module_function_definition"],
         "module_function_guarded" => &["module_function_guarded"],
@@ -119,6 +120,18 @@ fn project_survives_module_compilation_and_cleans_up_afterward() {
 }
 
 const FILES: &[(&str, &str)] = &[
+    (
+        "module_exported_have_body/base.lit",
+        "witness exist q N+ st {q > 0} from 1\nhave positive N+:\n    positive > 0\n",
+    ),
+    (
+        "module_exported_have_body/litex.config",
+        "[export]\nbase = \"base.lit\"\nmain = \"statement.lit\"\n",
+    ),
+    (
+        "module_exported_have_body/statement.lit",
+        "release obj def base::positive\nbase::positive > 0\n",
+    ),
     (
         "module_additive_constant/base.lit",
         r#"# The exported constant denotes the sum of one and one.

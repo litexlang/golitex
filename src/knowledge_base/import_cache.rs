@@ -3,7 +3,7 @@
 //! Why this file exists
 //! --------------------
 //! Rebuilding an imported package with `exec_stmt` is expensive. After a cold
-//! success we snapshot each export's **definitions** under
+//! success we snapshot each export's definitions and registered predicate laws under
 //! `__litex_knowledge_base__/`. A later import with a matching fingerprint can
 //! restore that product (with id remap) and skip re-running the export `.lit`.
 //!
@@ -14,7 +14,7 @@
 //! - **This file**: fingerprint a module tree, load+remap from disk, build an
 //!   `ExecEnv` from a mounted export, write the cache after cold success.
 //!
-//! Product: definitions-only MVP. A hit must look like a cold import for
+//! Product: definitions with their registered laws. A hit must look like a cold import for
 //! `by def` / `release thm` / `by thm` / `release obj def` consumers.
 //! Full design: `knowledge_base/README.md`.
 
@@ -167,6 +167,7 @@ pub fn exec_env_from_mounted_export(
     view.stamp_leave(global_ids_from_snapshot(&export.global_ids_at_leave));
     let mut env = ExecEnv::new(Some(view));
     env.definitions = export.definitions.clone();
+    env.prop_rewrite_properties = export.prop_rewrite_properties.clone();
     env
 }
 
@@ -217,6 +218,7 @@ pub fn write_import_cache_after_cold(
             name: recorded.name.clone(),
             relative_path,
             definitions: recorded.exec_env.definitions.clone(),
+            prop_rewrite_properties: recorded.exec_env.prop_rewrite_properties.clone(),
             global_ids_at_enter: enter,
             global_ids_at_leave: leave,
         });

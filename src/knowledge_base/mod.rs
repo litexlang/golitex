@@ -18,6 +18,7 @@ pub use json_mini::{JsonError, JsonObject, JsonValue};
 mod manifest;
 mod mount;
 mod paths;
+mod prop_rewrite_codec;
 mod remap;
 mod stored_identifier_codec;
 

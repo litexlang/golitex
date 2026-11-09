@@ -89,3 +89,32 @@ fn division_shrink_is_false_for_a_zero_numerator() {
             .success
     );
 }
+
+#[test]
+fn division_shrink_replays_reverse_written_gt_one_premise() {
+    let source = SOURCE.replace("1 < b", "b > 1");
+    let (run, compiler) = super::execute(&source);
+    assert!(compiler
+        .compile_run(&run, "reverse_division_shrink")
+        .unwrap()
+        .contains("Litex.divByGtOneLessSelf"));
+}
+
+#[test]
+fn quotient_order_new_strategies_fail_closed_without_lean_adapters() {
+    for source in [
+        "forall a,b R+:\n    a>b\n    =>:\n        a/b>1",
+        "forall a,b R+:\n    a>=b\n    =>:\n        a/b>=1",
+        "forall a,b R+:\n    b<1\n    =>:\n        a/b>a",
+        "forall a,b R:\n    a>=0\n    b>0\n    b<=1\n    =>:\n        a/b>=a",
+    ] {
+        let (run, compiler) = super::execute(source);
+        let error = compiler
+            .compile_run(&run, "quotient_order")
+            .expect_err("new native strategies have no Lean adapter");
+        assert!(
+            format!("{error:?}").contains("Atomic/BuiltinStrategy"),
+            "{error:?}"
+        );
+    }
+}

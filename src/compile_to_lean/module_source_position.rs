@@ -202,8 +202,8 @@ impl<'a> SourcePosition<'a> {
 }
 
 impl<'a> SourcePosition<'a> {
-    /// A root declaration's hypothetical preflight retains its public spelling,
-    /// but its captured ParamType binding is still a temporary parameter.
+    /// Hypothetical preflight bindings retain their local identity. Only the
+    /// accepted declaration below receives its public spelling.
     pub(super) fn parameter_identifier(
         &self,
         parameter: &BoundName,
@@ -246,24 +246,6 @@ impl<'a> SourcePosition<'a> {
                         if bound == parameter && stored == kind)
                     {
                         return Err(LeanCompileError::unsupported("Parameters/PreflightCapture"));
-                    }
-                    if let Some(statement) = site.parent {
-                        if let SourceOwner::Statement(ExecStmtResult::Definition(
-                            ExecDefinitionStmtResult::DefineObj(
-                                ExecDefineObjStmtResult::HaveObjEqual(
-                                    ExecHaveObjEqualStmtResult::Success(original),
-                                ),
-                            ),
-                        )) = statement.owner
-                        {
-                            if std::ptr::eq(original, proof)
-                                && statement.parent.is_some_and(|parent| {
-                                    matches!(parent.owner, SourceOwner::ModuleFile { .. })
-                                })
-                            {
-                                return Ok(published(site));
-                            }
-                        }
                     }
                     return Ok(IdentifierObj::from_bound_name(parameter));
                 }

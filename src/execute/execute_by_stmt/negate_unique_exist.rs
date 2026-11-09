@@ -4,7 +4,6 @@ use crate::ast::fact::{
     AndChainAtomicFact, AtomicFact, ExistOrAndChainAtomicFact, Fact, ForallFact, NotEqualFact,
     OrFact, PlainExistFact, QuantifierFreeFact,
 };
-use crate::ast::names::BoundName;
 use crate::ast::obj::{IdentifierObj, Obj};
 use crate::ast::param::{TypedParameterGroup, TypedParameterList};
 use crate::instantiate::quantifier_free_fact_to_fact;
@@ -27,10 +26,7 @@ pub(super) fn negate_unique_exist(
             .map_err(|e| format!("by contra: unique-existence carrier instantiation: {e}"))?;
         let mut params = Vec::new();
         for old in &group.params {
-            let fresh = BoundName::new(
-                runtime.global_ids.allocate_identifier_id(),
-                format!("{}_other{}", old.name, different_components.len()),
-            );
+            let fresh = runtime.fresh_internal_param();
             let other = Obj::Identifier(IdentifierObj::from_bound_name(&fresh));
             subst.insert(old.id, other.clone());
             different_components.push(AtomicFact::NotEqualFact(NotEqualFact {

@@ -103,6 +103,7 @@ fn mount_imports(
     active: &mut HashSet<PathBuf>,
     done: &mut HashSet<PathBuf>,
 ) -> RuntimeResult<()> {
+    let mut children = Vec::new();
     for import in &config.imports {
         let path = fs::canonicalize(&import.path).map_err(|error| io_error(&import.path, error))?;
         if active.contains(&path) {
@@ -128,6 +129,14 @@ fn mount_imports(
         modules
             .mount_module(label, path.clone(), imported.clone())
             .map_err(RuntimeError::Unsupported)?;
+        children.push((path, imported));
+    }
+    // Reserve this module's direct import names before traversing dependencies.
+    // A dependency's private alias cannot claim a root import's display name.
+    for (path, imported) in children {
+        if done.contains(&path) {
+            continue;
+        }
         active.insert(path.clone());
         mount_imports(modules, &imported, std_root, active, done)?;
         active.remove(&path);

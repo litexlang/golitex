@@ -102,6 +102,15 @@ impl LitexToLeanCompiler {
                 let a = id(argument)?;
                 (format!("Litex.semanticEuclideanContinuousNeg {common} _joint_raw_{a} _joint_node_{a}"),vec![format!("_joint_raw_{a}")])
             }
+            C::Abs { argument } => {
+                if !matches!(&p.expression,Obj::ArithmeticOperator(ArithmeticOperator::Abs(q)) if q.arg.ir()==argument.expression.ir())
+                {
+                    return Err(invalid("AbsSubject"));
+                }
+                self.compile_joint_expression(argument, parameter, point, n, position, lines)?;
+                let a = id(argument)?;
+                (format!("Litex.semanticEuclideanContinuousAbs {common} _joint_raw_{a} _joint_node_{a}"), vec![format!("_joint_raw_{a}")])
+            }
             C::Add { left, right }
             | C::Subtract { left, right }
             | C::Multiply { left, right }

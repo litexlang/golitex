@@ -62,9 +62,17 @@ impl Runtime {
                     line_file: member.line_file.clone(),
                 };
                 if let Some(stored) = self.store_new_set_builder_projection(&Fact::AtomicFact(
-                    AtomicFact::InFact(base_in),
+                    AtomicFact::InFact(base_in.clone()),
                 ))? {
-                    projections.push(crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(stored));
+                    // A fresh projected membership owns the same carrier
+                    // consequences as a direct one, before using its guards.
+                    let inferences = self.infer_in_fact(&base_in, verify_state)?;
+                    projections.push(
+                        crate::store_fact_and_infer::InferSetBuilderBaseMembershipResult::new(
+                            stored, inferences,
+                        )
+                        .into(),
+                    );
                 }
                 let mut subst = std::collections::HashMap::new();
                 subst.insert(builder.param_binding.id, member.element.clone());

@@ -37,6 +37,48 @@ fn continued_export_repl_lookup_projects_the_original_refined_property() {
 }
 
 #[test]
+fn continued_export_repl_resolves_objects_and_retains_context_after_failure() {
+    for source in [
+        CodeSource::RootExport {
+            path: "prefix.lit".into(),
+            export_file_id: 0,
+        },
+        CodeSource::ImportedExport {
+            path: "prefix.lit".into(),
+            global_mod_id: 7,
+            export_file_id: 0,
+        },
+    ] {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: true,
+            strict: true,
+            language: OutputLanguage::English,
+        });
+        rt.abort_source();
+        rt.begin_source(source);
+        assert!(
+            rt.run_litex_code("have step R = 2\nhave fn inc(x R) R = x + step")
+                .unwrap()
+                .success
+        );
+        rt.current_file = CodeSource::Repl;
+        assert!(!rt.run_litex_code("inc(step) = 5").unwrap().success);
+        assert!(
+            rt.run_litex_code("step = 2\ninc(step) = step + step")
+                .unwrap()
+                .success
+        );
+        assert!(rt.run_litex_code("have scratch R = 3").unwrap().success);
+        assert!(
+            rt.run_litex_code("scratch = 3\ninc(scratch) = scratch + step")
+                .unwrap()
+                .success
+        );
+    }
+}
+
+#[test]
 fn continued_export_repl_lookup_does_not_borrow_another_owner() {
     let rt = runtime(CodeSource::RootExport {
         path: "prefix.lit".into(),

@@ -1,0 +1,12 @@
+# Before: the bound n in the goal incorrectly occupied the proof's local scope.
+# claim:
+#     ? not forall n Z:
+#         n > 0
+#     have n Z = 0
+# Now: the witness is a new local object; goal-bound n is not a proof parameter.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/by/negated_forall_witness_scope.lit
+claim:
+    ? not forall n Z:
+        n > 0
+    have n Z = 0
+    witness exist k Z st {not k > 0} from n

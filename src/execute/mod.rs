@@ -1,6 +1,8 @@
 mod env_stack_lookup;
 mod exec_stmt;
 mod exec_stmt_result;
+mod helper;
+pub(crate) use helper::parameter_substitution_for_surface;
 pub mod execute_axiom_stmt;
 pub mod execute_by_stmt;
 pub mod execute_def_abstract_prop_stmt;

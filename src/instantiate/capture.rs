@@ -411,16 +411,47 @@ pub fn binder_ids_from_set_bound_parameters(list: &SetBoundParameterList) -> Vec
 }
 
 impl Runtime {
+    // Substitution is simultaneous. Rename a binder only when an inserted
+    // free identifier would otherwise be captured by that binder.
+    pub(super) fn capture_avoiding_binder_substitution<'a>(
+        &mut self,
+        binders: impl Iterator<Item = &'a mut crate::ast::names::BoundName>,
+        param_to_arg_map: &HashMap<IdentifierId, Obj>,
+    ) -> HashMap<IdentifierId, Obj> {
+        let binders: Vec<_> = binders.collect();
+        let ids: Vec<_> = binders.iter().map(|b| b.id).collect();
+        let mut substitution = shadow_binder_ids(param_to_arg_map, &ids);
+        let mut inserted_free = HashSet::new();
+        for value in substitution.values() {
+            collect_free_plain_ids(value, &HashSet::new(), &mut inserted_free);
+        }
+        for binder in binders {
+            if inserted_free.contains(&binder.id) {
+                let old_id = binder.id;
+                *binder = self.fresh_internal_param();
+                substitution.insert(
+                    old_id,
+                    Obj::Identifier(IdentifierObj::from_bound_name(binder)),
+                );
+            }
+        }
+        substitution
+    }
+
     pub(crate) fn inst_set_builder(
         &mut self,
         sb: &SetBuilder,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<SetBuilder, InstError> {
         let param_set = self.inst_obj_rec(&sb.param_set, param_to_arg_map)?;
-        let shadowed = shadow_binder_ids(param_to_arg_map, &[sb.param_binding.id]);
+        let mut param_binding = sb.param_binding.clone();
+        let shadowed = self.capture_avoiding_binder_substitution(
+            std::iter::once(&mut param_binding),
+            param_to_arg_map,
+        );
         let facts = self.inst_qf_facts_rec(&sb.facts, &shadowed)?;
         Ok(SetBuilder {
-            param_binding: sb.param_binding.clone(),
+            param_binding,
             param_set: Box::new(param_set),
             facts,
         })
@@ -431,10 +462,16 @@ impl Runtime {
         fs: &FnSet,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<FnSet, InstError> {
-        let binder_ids = binder_ids_from_set_bound_parameters(&fs.set_bound_parameters);
-        let shadowed = shadow_binder_ids(param_to_arg_map, &binder_ids);
+        let mut parameters = fs.set_bound_parameters.clone();
+        let shadowed = self.capture_avoiding_binder_substitution(
+            parameters
+                .groups
+                .iter_mut()
+                .flat_map(|g| g.params.iter_mut()),
+            param_to_arg_map,
+        );
         let mut groups = Vec::with_capacity(fs.set_bound_parameters.groups.len());
-        for group in &fs.set_bound_parameters.groups {
+        for group in &parameters.groups {
             let param_type = self.inst_obj_rec(&group.param_type, &shadowed)?;
             groups.push(SetBoundParameterGroup {
                 params: group.params.clone(),
@@ -455,9 +492,22 @@ impl Runtime {
         af: &AnonymousFn,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<AnonymousFn, InstError> {
-        let body = self.inst_fn_set(&af.body, param_to_arg_map)?;
-        let binder_ids = binder_ids_from_set_bound_parameters(&af.body.set_bound_parameters);
-        let shadowed = shadow_binder_ids(param_to_arg_map, &binder_ids);
+        let mut parameters = af.body.set_bound_parameters.clone();
+        let shadowed = self.capture_avoiding_binder_substitution(
+            parameters
+                .groups
+                .iter_mut()
+                .flat_map(|g| g.params.iter_mut()),
+            param_to_arg_map,
+        );
+        let mut body = af.body.clone();
+        body.set_bound_parameters = parameters;
+        // Both signature and body must use the same fresh binder identities.
+        for group in &mut body.set_bound_parameters.groups {
+            group.param_type = Box::new(self.inst_obj_rec(&group.param_type, &shadowed)?);
+        }
+        body.dom_facts = self.inst_qf_facts_rec(&body.dom_facts, &shadowed)?;
+        body.ret_set = Box::new(self.inst_obj_rec(&body.ret_set, &shadowed)?);
         let equal_to = self.inst_obj_rec(&af.equal_to, &shadowed)?;
         Ok(AnonymousFn {
             body,

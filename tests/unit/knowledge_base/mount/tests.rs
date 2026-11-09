@@ -89,6 +89,20 @@ fn mount_remaps_imported_source_identity_and_preserves_its_path() {
             name: "main".into(),
             relative_path: "main.lit".into(),
             definitions,
+            prop_rewrite_properties: HashMap::from([(
+                crate::ast::names::AtomicName::WithModAndExportFileId {
+                    global_mod_id: 10,
+                    export_file_id: 0,
+                    name: "law".into(),
+                },
+                vec![
+                    crate::exec_env::exec_env::PropRewriteProperty::Reflexive,
+                    crate::exec_env::exec_env::PropRewriteProperty::Transitive,
+                    crate::exec_env::exec_env::PropRewriteProperty::SymmetricArgumentPermutate(
+                        vec![vec![1, 0]],
+                    ),
+                ],
+            )]),
             global_ids_at_enter: GlobalIdsSnapshot::new(10, 1, 1, 7),
             global_ids_at_leave: GlobalIdsSnapshot::new(43, 1, 1, 8),
         }],
@@ -114,6 +128,20 @@ fn mount_remaps_imported_source_identity_and_preserves_its_path() {
     assert_eq!(fact.line_file.as_ref().unwrap().origin, expected);
     let env = crate::knowledge_base::exec_env_from_mounted_export(&mounted.exports[0], 21, path);
     assert_eq!(env.session_view.as_ref().unwrap().code_source, expected);
+    assert_eq!(
+        env.prop_rewrite_properties[&crate::ast::names::AtomicName::WithModAndExportFileId {
+            global_mod_id: 21,
+            export_file_id: 0,
+            name: "law".into()
+        }],
+        vec![
+            crate::exec_env::exec_env::PropRewriteProperty::Reflexive,
+            crate::exec_env::exec_env::PropRewriteProperty::Transitive,
+            crate::exec_env::exec_env::PropRewriteProperty::SymmetricArgumentPermutate(vec![vec![
+                1, 0
+            ]])
+        ]
+    );
     fs::remove_dir_all(root).unwrap();
 }
 
@@ -159,6 +187,7 @@ fn write_then_mount_remaps_identifier_and_fact_ids() {
             name: "main".into(),
             relative_path: "main.lit".into(),
             definitions: defs,
+            prop_rewrite_properties: HashMap::new(),
             global_ids_at_enter: enter.clone(),
             global_ids_at_leave: leave.clone(),
         }],
@@ -213,6 +242,7 @@ fn mount_misses_on_fingerprint_mismatch() {
             name: "main".into(),
             relative_path: "main.lit".into(),
             definitions: DefinitionMemory::new(),
+            prop_rewrite_properties: HashMap::new(),
             global_ids_at_enter: GlobalIdsSnapshot::new(1, 1, 1, 1),
             global_ids_at_leave: GlobalIdsSnapshot::new(1, 1, 1, 1),
         }],

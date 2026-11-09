@@ -757,3 +757,41 @@ fn exist_function_source_binders_precede_the_new_function() {
         assert_success(source, "claim:\n    ? forall x R:\n        exist! f R st {f = x}\n    witness exist! f R st {f = x} from x\nhave fn f by exist!:\n    ? forall x R:\n        exist! f R st {f = x}\nf(1) = 1\n");
     }
 }
+
+#[test]
+fn exported_have_bodies_and_dependent_carriers_keep_their_published_identity() {
+    for source in sources() {
+        assert_success(source.clone(), "witness exist q N+ st {q > 0} from 1\nhave positive N+:\n    positive > 0\npositive > 0\nrelease obj def positive\npositive > 0\n");
+        assert_success(source.clone(), "have A nonempty_set, x A\nx $in A\n");
+        assert_success(
+            source.clone(),
+            "have A set, x A = R, 0\nx $in A\nrelease obj def x\nx $in A\n",
+        );
+        assert_success(source, "have fn identity(t R) R = t\nhave by fn_preimage: pre from identity(2) $in fn_range(identity)\nrelease obj def pre\npre $in R\nidentity(pre) = identity(2)\n");
+    }
+}
+
+#[test]
+fn indexed_struct_carriers_and_negated_claim_binders_are_usable() {
+    for code in [
+        "struct S:\n    f R\n    g R\nforall v finite_seq(&S,2):\n    v(1).g $in R\n",
+        "struct S:\n    f R\n    g R\nforall v seq(&S):\n    v(3).g $in R\n",
+        "struct S:\n    f R\n    g R\nforall v matrix(&S,2,2):\n    v(1,2).g $in R\n",
+        "claim:\n    ? not forall n Z:\n        n > 0\n    have n Z = 0\n    n <= 0\n    witness exist k Z st {not k > 0} from n\n",
+    ] { assert_success(CodeSource::Eval, code); }
+}
+
+#[test]
+fn run_examples_round3_repair_tracers() {
+    for path in [
+        "examples/stmt_nodes/by/induction_binding_isolation.lit",
+        "examples/stmt_nodes/by/negated_forall_witness_scope.lit",
+        "examples/wd/refined_indexed_carriers.lit",
+        "examples/real_analysis/multivariable_symbolic_coordinates.lit",
+    ] {
+        let source =
+            std::fs::read_to_string(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(path))
+                .unwrap();
+        assert_success(CodeSource::Eval, &source);
+    }
+}

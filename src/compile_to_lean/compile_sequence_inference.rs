@@ -1,7 +1,7 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::prelude::*;
-use crate::store_fact_and_infer::{InferAtomicFactResult, InferInFactResult, InferResult};
+use crate::store_fact_and_infer::InferInFactResult;
 
 impl LitexToLeanCompiler {
     fn validate_sequence_inference(
@@ -158,24 +158,7 @@ impl LitexToLeanCompiler {
         }
         let mut current = Some(position);
         while let Some(cursor) = current {
-            let inference = match cursor.owner {
-                SourceOwner::AtomicInference(
-                    Fact::AtomicFact(AtomicFact::InFact(source)),
-                    InferAtomicFactResult::InFact(rules),
-                ) => Some((source, rules)),
-                SourceOwner::PropInference(captured) => match (&captured.store, &captured.infer) {
-                    (
-                        StoreFactResult::AtomicFact(seed),
-                        Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))),
-                    ) => match &seed.fact {
-                        AtomicFact::InFact(source) => Some((source, rules)),
-                        _ => None,
-                    },
-                    _ => None,
-                },
-                _ => None,
-            };
-            if let Some((source, rules)) = inference {
+            for (source, rules) in cursor.membership_inference_groups() {
                 for rule in rules {
                     let captured = match rule {
                         InferInFactResult::FiniteSeqExpand(proof) => &proof.derived,

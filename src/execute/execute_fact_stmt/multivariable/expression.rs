@@ -410,6 +410,20 @@ impl Runtime {
                     .reduce_multivariable_inner(&a.arg, steps, depth + 1, budget, state)?
                     .map(negate));
             }
+            if let ArithmeticOperator::Abs(a) = op {
+                let Some(argument) =
+                    self.reduce_multivariable_inner(&a.arg, steps, depth + 1, budget, state)?
+                else {
+                    return Ok(None);
+                };
+                let result = Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
+                    arg: Box::new(argument),
+                }));
+                if result == *source {
+                    return Ok(Some(result));
+                }
+                return self.reduce_multivariable_inner(&result, steps, depth + 1, budget, state);
+            }
         }
         Ok(Some(source.clone()))
     }

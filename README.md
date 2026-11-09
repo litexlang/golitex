@@ -219,7 +219,7 @@ The project is currently in **Beta**. We are actively expanding language feature
 * **GitHub Issues**: [github.com/litexlang/golitex/issues](https://github.com/litexlang/golitex/issues)
 * **Email**: litexlang@outlook.com
 
-Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Hao Wu, Keyao Zhu, and Zhaoxuan Hong for their support and advice.
+Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Hao Wu, Keyao Zhu, Zhaoxuan Hong, and Qiushi Geng for their support and advice.
 
 Released under the [Apache License 2.0](LICENSE).
 

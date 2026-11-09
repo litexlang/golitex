@@ -23,6 +23,9 @@ pub enum ContinuousExpressionConstructorProof {
     Neg {
         argument: Box<ContinuousExpressionProof>,
     },
+    Abs {
+        argument: Box<ContinuousExpressionProof>,
+    },
     Add {
         left: Box<ContinuousExpressionProof>,
         right: Box<ContinuousExpressionProof>,
@@ -128,9 +131,9 @@ impl Runtime {
             }
         } else if let Obj::ArithmeticOperator(op) = expression {
             match op {
-                ArithmeticOperator::Neg(neg) => {
+                ArithmeticOperator::Neg(Neg { arg }) | ArithmeticOperator::Abs(Abs { arg }) => {
                     let Some(argument) = self.prove_multivariable_continuous_expression(
-                        &neg.arg,
+                        arg,
                         parameter,
                         point,
                         n,
@@ -141,8 +144,14 @@ impl Runtime {
                     else {
                         return Ok(None);
                     };
-                    C::Neg {
-                        argument: Box::new(argument),
+                    if matches!(op, ArithmeticOperator::Abs(_)) {
+                        C::Abs {
+                            argument: Box::new(argument),
+                        }
+                    } else {
+                        C::Neg {
+                            argument: Box::new(argument),
+                        }
                     }
                 }
                 ArithmeticOperator::Pow(power) => {
@@ -262,6 +271,7 @@ impl Runtime {
                 | R::VectorLimit(_)
                 | R::ScalarContinuousAt(_)
                 | R::VectorContinuousAt(_)
+                | R::ScalarDifferentiableAt(_)
         ) {
             return Ok(None);
         }
@@ -331,6 +341,46 @@ impl Runtime {
             });
         }
         Ok(Some((coordinates, equalities)))
+    }
+}
+
+impl Runtime {
+    // Whole-expression differentiability is independent of a selected axis.
+    // Continuous constructors supply the common tree; sqrt needs the stronger
+    // positive-at-point condition, and abs is deliberately excluded.
+    pub(super) fn prove_expression_smoothness(
+        &mut self,
+        expression: &ContinuousExpressionProof,
+        state: VerifyState,
+        domains: &mut Vec<VerifyFactResult>,
+    ) -> RuntimeResult<bool> {
+        use ContinuousExpressionConstructorProof as C;
+        Ok(match &expression.constructor {
+            C::Constant | C::Coordinate { .. } => true,
+            C::Abs { .. } => false,
+            C::Neg { argument } | C::NaturalPower { base: argument, .. } => {
+                self.prove_expression_smoothness(argument, state, domains)?
+            }
+            C::Add { left, right }
+            | C::Subtract { left, right }
+            | C::Multiply { left, right }
+            | C::Divide { left, right, .. } => {
+                self.prove_expression_smoothness(left, state, domains)?
+                    && self.prove_expression_smoothness(right, state, domains)?
+            }
+            C::Elementary { kind, argument, .. } => {
+                if !self.prove_expression_smoothness(argument, state, domains)? {
+                    return Ok(false);
+                }
+                let condition = self.elementary_real_condition(*kind, argument.value.clone(), true);
+                let proof = self.verify_fact(&condition, state)?;
+                if proof.is_failed() {
+                    return Ok(false);
+                }
+                domains.push(proof);
+                true
+            }
+        })
     }
 }
 

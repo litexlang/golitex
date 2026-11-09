@@ -1,0 +1,45 @@
+# Tracer: compare a quotient with its numerator, for a positive denominator.
+# Before, this needed explicit multiplication and cancellation:
+# claim:
+#     ? forall a,b R+:
+#         b < 1
+#         =>:
+#             a / b > a
+#     a * 1 = a
+#     a * b < a * 1
+#     a * b < a
+#     a / b > (a * b) / b = a
+# The direct goal failed at search_proof.
+# Now, the numerator sign and the denominator's comparison with one suffice.
+forall a,b R+:
+    b < 1
+    =>:
+        a / b > a
+
+forall a,b R:
+    a > 0
+    b > 1
+    =>:
+        a / b < a
+
+forall a,b R:
+    a >= 0
+    b >= 1
+    =>:
+        a / b <= a
+
+forall a,b R:
+    a <= 0
+    b >= 1
+    =>:
+        a / b >= a
+
+forall a,b R:
+    a < 0
+    b > 0
+    b < 1
+    =>:
+        a / b < a
+
+# Boundary: numerator sign matters; a=0 and b=1 do not justify a strict bound.
+# Gate: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/quotient_scale_order.lit

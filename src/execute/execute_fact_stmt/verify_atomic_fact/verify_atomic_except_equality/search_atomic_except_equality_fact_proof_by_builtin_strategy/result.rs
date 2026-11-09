@@ -12,6 +12,10 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     AbsoluteSumTriangle(super::finite_additive_bounds::AbsoluteSumTriangleProof),
     PositiveReciprocalLessEqual(super::positive_reciprocal::PositiveReciprocalLessEqualProof),
     PositiveReciprocalLess(super::positive_reciprocal::PositiveReciprocalLessProof),
+    QuotientUnitLess(super::quotient_order::QuotientUnitLessProof),
+    QuotientUnitLessEqual(super::quotient_order::QuotientUnitLessEqualProof),
+    QuotientScaleLess(super::quotient_order::QuotientScaleLessProof),
+    QuotientScaleLessEqual(super::quotient_order::QuotientScaleLessEqualProof),
     StructuralLimit(crate::execute::execute_fact_stmt::structural_limit::StructuralLimitProof),
     MultivariableAnalysis(
         crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof,

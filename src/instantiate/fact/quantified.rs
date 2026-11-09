@@ -9,9 +9,7 @@ use crate::ast::fact::{
 use crate::ast::obj::Obj;
 use crate::runtime::Runtime;
 
-use super::super::capture;
 use super::super::error::InstError;
-use super::super::param;
 
 impl Runtime {
     pub(crate) fn inst_fact_rec(
@@ -100,9 +98,16 @@ impl Runtime {
         plain: &PlainExistFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<PlainExistFact, InstError> {
-        let ids = param::typed_param_ids(&plain.typed_parameters);
-        let shadowed = capture::shadow_binder_ids(param_to_arg_map, &ids);
-        self.inst_plain_exist_fact_contents(plain, &shadowed)
+        let mut plain = plain.clone();
+        let shadowed = self.capture_avoiding_binder_substitution(
+            plain
+                .typed_parameters
+                .groups
+                .iter_mut()
+                .flat_map(|g| g.params.iter_mut()),
+            param_to_arg_map,
+        );
+        self.inst_plain_exist_fact_contents(&plain, &shadowed)
     }
 
     fn inst_exist_fact(
@@ -152,9 +157,16 @@ impl Runtime {
         forall: &ForallFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<ForallFact, InstError> {
-        let ids = param::typed_param_ids(&forall.typed_parameters);
-        let shadowed = capture::shadow_binder_ids(param_to_arg_map, &ids);
-        self.inst_forall_fact_contents(forall, &shadowed)
+        let mut forall = forall.clone();
+        let shadowed = self.capture_avoiding_binder_substitution(
+            forall
+                .typed_parameters
+                .groups
+                .iter_mut()
+                .flat_map(|g| g.params.iter_mut()),
+            param_to_arg_map,
+        );
+        self.inst_forall_fact_contents(&forall, &shadowed)
     }
 
     fn inst_forall_fact_with_iff(
@@ -162,8 +174,15 @@ impl Runtime {
         f: &ForallFactWithIff,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<ForallFactWithIff, InstError> {
-        let ids = param::typed_param_ids(&f.forall_fact.typed_parameters);
-        let shadowed = capture::shadow_binder_ids(param_to_arg_map, &ids);
+        let mut f = f.clone();
+        let shadowed = self.capture_avoiding_binder_substitution(
+            f.forall_fact
+                .typed_parameters
+                .groups
+                .iter_mut()
+                .flat_map(|g| g.params.iter_mut()),
+            param_to_arg_map,
+        );
         let forall_fact = self.inst_forall_fact_contents(&f.forall_fact, &shadowed)?;
         let mut iff_facts = Vec::with_capacity(f.iff_facts.len());
         for iff in &f.iff_facts {
@@ -182,8 +201,14 @@ impl Runtime {
         f: &NotForallFact,
         param_to_arg_map: &HashMap<IdentifierId, Obj>,
     ) -> Result<NotForallFact, InstError> {
-        let ids = param::typed_param_ids(&f.typed_parameters);
-        let shadowed = capture::shadow_binder_ids(param_to_arg_map, &ids);
+        let mut f = f.clone();
+        let shadowed = self.capture_avoiding_binder_substitution(
+            f.typed_parameters
+                .groups
+                .iter_mut()
+                .flat_map(|g| g.params.iter_mut()),
+            param_to_arg_map,
+        );
         let typed_parameters = self.inst_typed_parameter_list(&f.typed_parameters, &shadowed)?;
         let mut dom_facts = Vec::with_capacity(f.dom_facts.len());
         for dom in &f.dom_facts {

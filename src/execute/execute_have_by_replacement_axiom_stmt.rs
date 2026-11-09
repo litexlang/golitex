@@ -114,7 +114,7 @@ impl Runtime {
             }
         };
 
-        let img = Obj::Identifier(IdentifierObj::from_bound_name(&stmt.name));
+        let img = Obj::Identifier(self.identifier_obj_for_stored_mention(&stmt.name));
         let intro = self.replacement_intro_forall(stmt, &img);
         let elim = self.replacement_elim_forall(stmt, &img);
         let introduction = self.store_fact_and_infer(

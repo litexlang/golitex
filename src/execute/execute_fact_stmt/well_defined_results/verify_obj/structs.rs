@@ -249,8 +249,9 @@ impl Runtime {
         let mut argument_scope = None;
         if let Obj::FnObj(application) = value.obj.as_ref() {
             let head = super::helper::fn_obj_head_as_obj(&application.head);
-            if let Some(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) =
-                self.definition_owned_type(&head)
+            if let Some(signature) = self
+                .definition_owned_type(&head)
+                .and_then(|carrier| self.function_space_signature(&carrier))
             {
                 // The default view belongs to this declaration. Another later
                 // signature must not bypass its own argument/guard obligations.
@@ -554,12 +555,9 @@ impl Runtime {
             // The selected witness supplies its own callable carrier, retaining
             // dependencies on the other outputs of this same template instance.
             TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
-                let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) =
-                    existential_template_carrier(&stmt.fact, index, &outputs, &mut subst)?
-                else {
-                    return None;
-                };
-                signature
+                let carrier =
+                    existential_template_carrier(&stmt.fact, index, &outputs, &mut subst)?;
+                self.function_space_signature(&carrier)?
             }
             TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
                 let definition = self.def_prop_visible(&stmt.fact.predicate)?.clone();
@@ -573,10 +571,8 @@ impl Runtime {
                     .into_iter()
                     .zip(stmt.fact.body.iter().cloned())
                     .collect();
-                match self.inst_obj(&signature, &prop_subst).ok()? {
-                    Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => signature,
-                    _ => return None,
-                }
+                let carrier = self.inst_obj(&signature, &prop_subst).ok()?;
+                self.function_space_signature(&carrier)?
             }
             other => {
                 let parameters = match other {
@@ -592,12 +588,10 @@ impl Runtime {
                         .iter()
                         .any(|p| p.name == value.template_name.local_name())
                 })?;
-                let ParamType::Obj(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) =
-                    &group.param_type
-                else {
+                let ParamType::Obj(carrier) = &group.param_type else {
                     return None;
                 };
-                signature.clone()
+                self.function_space_signature(carrier)?
             }
         };
         match self

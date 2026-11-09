@@ -111,7 +111,15 @@ impl Runtime {
     ) -> RuntimeResult<Result<IntroduceTypedParametersResult, IntroduceTypedParametersFailed>> {
         let mut param_type_well_defined = Vec::new();
         let mut defined_params = StoreHaveObjAndInferResult::new(Vec::new());
+        let substitution = if shared_have.is_some() {
+            super::helper::published_parameter_substitution(self, typed_parameters)
+        } else {
+            std::collections::HashMap::new()
+        };
         for group in &typed_parameters.groups {
+            let mut group = group.clone();
+            group.param_type =
+                super::helper::publish_parameter_type(self, &group.param_type, &substitution)?;
             let one = TypedParameterList {
                 groups: vec![group.clone()],
             };
@@ -136,19 +144,23 @@ impl Runtime {
             defined_params.extend(defined);
         }
 
-        let auto_opened_struct_layers = match self
-            .auto_open_struct_layers_for_typed_parameters(typed_parameters, verify_state)?
-        {
-            Ok(layers) => layers,
-            Err((opened_before_fail, failed)) => {
-                return Ok(Err(IntroduceTypedParametersFailed::AutoOpenStructLayer {
-                    param_type_well_defined,
-                    defined_params,
-                    opened_before_fail,
-                    failed,
-                }));
-            }
+        let published = if shared_have.is_some() {
+            super::helper::published_parameter_list(self, typed_parameters)?
+        } else {
+            typed_parameters.clone()
         };
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&published, verify_state)? {
+                Ok(layers) => layers,
+                Err((opened_before_fail, failed)) => {
+                    return Ok(Err(IntroduceTypedParametersFailed::AutoOpenStructLayer {
+                        param_type_well_defined,
+                        defined_params,
+                        opened_before_fail,
+                        failed,
+                    }));
+                }
+            };
 
         Ok(Ok(IntroduceTypedParametersResult {
             param_type_well_defined,
@@ -195,7 +207,15 @@ impl Runtime {
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<StoreHaveObjAndInferResult> {
         let mut stored = StoreHaveObjAndInferResult::new(Vec::new());
+        let substitution = if shared_have.is_some() {
+            super::helper::published_parameter_substitution(self, typed_parameters)
+        } else {
+            std::collections::HashMap::new()
+        };
         for group in &typed_parameters.groups {
+            let mut group = group.clone();
+            group.param_type =
+                super::helper::publish_parameter_type(self, &group.param_type, &substitution)?;
             for identifier in &group.params {
                 if self
                     .top_exec_env()
@@ -219,8 +239,14 @@ impl Runtime {
                     .definitions
                     .identifiers
                     .insert(identifier.name.clone(), definition);
-                // Env key is plain; type-fact mention qualifies at file root.
-                let element = Obj::Identifier(self.identifier_obj_for_stored_mention(identifier));
+                // Hypothetical binders remain local even when a synthesized
+                // existential reuses a declaration's reserved root identity.
+                // Only the accepted declaration publishes its qualified name.
+                let element = Obj::Identifier(if shared_have.is_some() {
+                    self.identifier_obj_for_stored_mention(identifier)
+                } else {
+                    IdentifierObj::from_bound_name(identifier)
+                });
                 let type_fact = match &group.param_type {
                     ParamType::Obj(param_set) => {
                         let fact_id = self.global_ids.allocate_fact_id();

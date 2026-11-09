@@ -1,21 +1,23 @@
 //! Replay structural guard certificates along the requested coordinate path.
 use super::compile_multivariable_scalar_limit::{distance, vector_set};
 use super::compile_real_set_bounds::{contains_parameter, parameter};
-use super::compile_smooth_partial_derivative::{id, indices, minus, number, plus, times};
+use super::compile_smooth_partial_derivative::{indices, number};
 use super::helper::*;
 use super::source_position::SourcePosition;
 use super::{LeanCompileError, LitexToLeanCompiler};
-use crate::execute::execute_fact_stmt::multivariable::expression::{
-    call_head, depends_on, SmoothCoordinateConstructorProof as C,
-    SmoothCoordinateExpressionProof as E,
+use crate::execute::execute_fact_stmt::multivariable::continuity::{
+    ContinuousExpressionConstructorProof as C, ContinuousExpressionProof as E,
 };
+use crate::execute::execute_fact_stmt::multivariable::expression::{call_head, depends_on};
 use crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof as P;
 use crate::prelude::*;
-use crate::rational_expression::helper::{div_objs, sub_objs};
 use std::collections::HashMap;
 
 fn invalid(stage: &str) -> LeanCompileError {
     LeanCompileError::unsupported(&format!("MultivariableInterior/{stage}"))
+}
+fn id(p: &E) -> Result<u64, LeanCompileError> {
+    Ok(source_subject(&p.value_real)?.fact_id().value())
 }
 fn names(p: &E) -> Result<(String, String, String), LeanCompileError> {
     let i = id(p)?;
@@ -83,35 +85,19 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
         lines: &mut Vec<String>,
     ) -> Result<(String, String, String), LeanCompileError> {
-        let binding = HashMap::from([(parameter, point.clone())]);
-        if !instantiated_object_matches(&p.expression, &p.value_reduction.source, &binding)
-            || !instantiated_object_matches(
-                &p.derivative_expression,
-                &p.derivative_reduction.source,
-                &binding,
-            )
-            || p.value != p.value_reduction.result
-            || p.derivative_value != p.derivative_reduction.result
+        if !instantiated_object_matches(
+            &p.expression,
+            &p.value_reduction.source,
+            &HashMap::from([(parameter, point.clone())]),
+        ) || p.value != p.value_reduction.result
         {
             return Err(invalid("OperandSubstitution"));
         }
-        for (obj, wd) in [
-            (&p.value_reduction.source, &p.value_source_well_defined),
-            (
-                &p.derivative_reduction.source,
-                &p.derivative_source_well_defined,
-            ),
-        ] {
-            ensure_object(obj, wd)?;
-        }
-        for (obj, proof) in [
-            (&p.value, &p.value_real),
-            (&p.derivative_value, &p.derivative_real),
-        ] {
-            if !matches!(source_subject(proof)?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == *obj && f.set == Obj::StandardSet(StandardSet::R))
-            {
-                return Err(invalid("OperandRealSubject"));
-            }
+        ensure_object(&p.value_reduction.source, &p.value_source_well_defined)?;
+        if !matches!(source_subject(&p.value_real)?, Fact::AtomicFact(AtomicFact::InFact(f))
+            if f.element == p.value && f.set == Obj::StandardSet(StandardSet::R))
+        {
+            return Err(invalid("OperandRealSubject"));
         }
         let i = id(p)?;
         lines.push(self.compile_smooth_value_checked(
@@ -129,88 +115,71 @@ impl LitexToLeanCompiler {
             self.compile_function_raw_expression_bound(&p.value, position, &HashMap::new())?;
         let reduction =
             self.compile_multivariable_reduction(&p.value_reduction, position, &HashMap::new())?;
-        let (expected, step) = match &p.constructor {
+        let step = match &p.constructor {
             C::Constant => {
                 if depends_on(&p.expression, parameter) {
                     return Err(invalid("ConstantCapture"));
                 }
                 let source = self.compile_function_raw_expression_bound(
-                    &p.value_reduction.source,
+                    &p.expression,
                     position,
                     &HashMap::new(),
                 )?;
-                (number(0), format!("((congrArg (fun v => Litex.SemanticContinuousAtValue M (fun _ : ℝ => v) 0) (show {source}={value} from {reduction})).mpr (Litex.semanticContinuousConstant {value} 0 h_{i}))"))
+                format!("((congrArg (fun v => Litex.SemanticContinuousAtValue M (fun _ : ℝ => v) 0) (show {source}={value} from {reduction})).mpr (Litex.semanticContinuousConstant {value} 0 h_{i}))")
             }
             C::Coordinate {
                 index,
                 index_member,
-                axis_comparison,
             } => {
-                let Obj::FnObj(call) = &p.expression else {
-                    return Err(invalid("CoordinateSubject"));
-                };
-                if !matches!(call_head(&call.head), Obj::Identifier(IdentifierObj::Plain {id,..}) if id==parameter)
-                    || call.body.len() != 1
-                    || call.body[0].len() != 1
-                    || *call.body[0][0] != *index
+                if !matches!(&p.expression, Obj::FnObj(call) if
+                    matches!(call_head(&call.head), Obj::Identifier(IdentifierObj::Plain {id,..}) if id==parameter)
+                    && call.body.len()==1 && call.body[0].len()==1 && *call.body[0][0]==*index)
                     || depends_on(index, parameter)
-                    || !matches!(source_subject(index_member)?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == *index && f.set == indices(dimension))
+                    || !matches!(source_subject(index_member)?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element==*index && f.set==indices(dimension))
                 {
                     return Err(invalid("CoordinateIndex"));
                 }
-                // The producer records axis one for guard smoothness. Keep that
-                // evidence, but prove continuity along the actual requested axis.
-                let same = match source_subject(axis_comparison)? {
-                    Fact::AtomicFact(AtomicFact::EqualFact(f))
-                        if f.left == *index && f.right == number(1) =>
-                    {
-                        true
-                    }
-                    Fact::AtomicFact(AtomicFact::NotEqualFact(f))
-                        if f.left == *index && f.right == number(1) =>
-                    {
-                        false
-                    }
-                    _ => return Err(invalid("OriginalGuardAxis")),
-                };
                 lines.push(self.compile_smooth_checked(index_member, position)?);
-                lines.push(self.compile_smooth_checked(axis_comparison, position)?);
                 let ix =
                     self.compile_function_raw_expression_bound(index, position, &HashMap::new())?;
                 let hid = source_subject(index_member)?.fact_id().value();
-                (number(if same {1} else {0}), format!("Litex.semanticContinuousOfDerivative {raw} 0 (Litex.matrixIdentityEntry {ix} _smooth_axis) (Litex.semanticDerivativeCoordinatePath _smooth_point _smooth_dimension _smooth_axis {ix} _smooth_natural _smooth_point_vector _smooth_axis_member h_{hid})"))
+                format!("Litex.semanticContinuousOfDerivative {raw} 0 (Litex.matrixIdentityEntry {ix} _smooth_axis) (Litex.semanticDerivativeCoordinatePath _smooth_point _smooth_dimension _smooth_axis {ix} _smooth_natural _smooth_point_vector _smooth_axis_member h_{hid})")
             }
-            C::Neg { argument } => {
-                if !matches!(&p.expression, Obj::ArithmeticOperator(ArithmeticOperator::Neg(f)) if *f.arg == argument.expression)
-                {
-                    return Err(invalid("NegSubject"));
-                }
+            C::Neg { argument } | C::Abs { argument } => {
+                let law = match (&p.constructor, &p.expression) {
+                    (C::Neg { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Neg(q)))
+                        if *q.arg == argument.expression =>
+                    {
+                        "Neg"
+                    }
+                    (C::Abs { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Abs(q)))
+                        if *q.arg == argument.expression =>
+                    {
+                        "Abs"
+                    }
+                    _ => return Err(invalid("UnarySubject")),
+                };
                 let (a, _, ha) = self.compile_guard_continuity(
                     argument, parameter, point, dimension, position, lines,
                 )?;
-                (
-                    Obj::ArithmeticOperator(ArithmeticOperator::Neg(Neg {
-                        arg: Box::new(argument.derivative_expression.clone()),
-                    })),
-                    format!("Litex.semanticContinuousNeg {a} 0 {ha}"),
-                )
+                format!("Litex.semanticContinuous{law} {a} 0 {ha}")
             }
             C::Add { left, right }
             | C::Subtract { left, right }
             | C::Multiply { left, right }
             | C::Divide { left, right, .. } => {
                 let (x, y, law) = match (&p.constructor, &p.expression) {
-                    (C::Add { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Add(f))) => {
-                        (&f.left, &f.right, "Add")
+                    (C::Add { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Add(q))) => {
+                        (&q.left, &q.right, "Add")
                     }
-                    (C::Subtract { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Sub(f))) => {
-                        (&f.left, &f.right, "Sub")
+                    (C::Subtract { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Sub(q))) => {
+                        (&q.left, &q.right, "Sub")
                     }
-                    (C::Multiply { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Mul(f))) => {
-                        (&f.left, &f.right, "Mul")
+                    (C::Multiply { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Mul(q))) => {
+                        (&q.left, &q.right, "Mul")
                     }
-                    (C::Divide { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Div(f))) => {
-                        (&f.left, &f.right, "Div")
+                    (C::Divide { .. }, Obj::ArithmeticOperator(ArithmeticOperator::Div(q))) => {
+                        (&q.left, &q.right, "Div")
                     }
                     _ => return Err(invalid("BinarySubject")),
                 };
@@ -222,26 +191,6 @@ impl LitexToLeanCompiler {
                 let (b, ba, hb) = self.compile_guard_continuity(
                     right, parameter, point, dimension, position, lines,
                 )?;
-                let dl = left.derivative_expression.clone();
-                let dr = right.derivative_expression.clone();
-                let expected = match &p.constructor {
-                    C::Add { .. } => plus(dl, dr),
-                    C::Subtract { .. } => minus(dl, dr),
-                    C::Multiply { .. } => plus(
-                        times(dl, right.expression.clone()),
-                        times(left.expression.clone(), dr),
-                    ),
-                    _ => div_objs(
-                        div_objs(
-                            minus(
-                                times(dl, right.expression.clone()),
-                                times(left.expression.clone(), dr),
-                            ),
-                            right.expression.clone(),
-                        ),
-                        right.expression.clone(),
-                    ),
-                };
                 let mut step = format!("Litex.semanticContinuous{law} {a} {b} 0 {ha} {hb}");
                 if let C::Divide { nonzero, .. } = &p.constructor {
                     ensure_nonzero_subject(&source_subject(nonzero)?, &right.value)?;
@@ -249,7 +198,7 @@ impl LitexToLeanCompiler {
                     let nid = source_subject(nonzero)?.fact_id().value();
                     step.push_str(&format!(" (by rw [{ba}]; exact h_{nid})"));
                 }
-                (expected, step)
+                step
             }
             C::NaturalPower {
                 base,
@@ -260,7 +209,7 @@ impl LitexToLeanCompiler {
                 };
                 if *power.base != base.expression
                     || depends_on(&power.exponent, parameter)
-                    || !matches!(source_subject(exponent_natural)?, Fact::AtomicFact(AtomicFact::InFact(f)) if f.element == *power.exponent && f.set==Obj::StandardSet(StandardSet::N))
+                    || !matches!(source_subject(exponent_natural)?,Fact::AtomicFact(AtomicFact::InFact(f)) if f.element==*power.exponent && f.set==Obj::StandardSet(StandardSet::N))
                 {
                     return Err(invalid("PowerExponent"));
                 }
@@ -275,24 +224,7 @@ impl LitexToLeanCompiler {
                     &HashMap::new(),
                 )?;
                 lines.push(format!("  let _guard_exponent_{i} := Litex.NativeBridge.asNat {exponent} h_{eid}\n  have _guard_exponent_value_{i} : {eraw}=M.number (_guard_exponent_{i} : ℂ) := Litex.NativeBridge.asNat_spec {exponent} h_{eid}"));
-                let index = sub_objs(
-                    Obj::ArithmeticOperator(ArithmeticOperator::Max(Max {
-                        left: power.exponent.clone(),
-                        right: Box::new(number(1)),
-                    })),
-                    number(1),
-                );
-                let expected = times(
-                    times(
-                        *power.exponent.clone(),
-                        Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
-                            base: Box::new(base.expression.clone()),
-                            exponent: Box::new(index),
-                        })),
-                    ),
-                    base.derivative_expression.clone(),
-                );
-                (expected,format!("Litex.semanticContinuousPower {a} 0 {eraw} _guard_exponent_{i} _guard_exponent_value_{i} {ha}"))
+                format!("Litex.semanticContinuousPower {a} 0 {eraw} _guard_exponent_{i} _guard_exponent_value_{i} {ha}")
             }
             C::Elementary {
                 kind,
@@ -306,13 +238,12 @@ impl LitexToLeanCompiler {
                 let (a, aa, ha) = self.compile_guard_continuity(
                     argument, parameter, point, dimension, position, lines,
                 )?;
-                let carrier = Obj::StandardSet(if matches!(kind, K::Ln | K::Sqrt) {
-                    StandardSet::RPos
+                let expected = if *kind == K::Sqrt {
+                    matches!(source_subject(domain)?,Fact::AtomicFact(AtomicFact::LessEqualFact(f)) if f.left==number(0) && f.right==argument.value)
                 } else {
-                    StandardSet::R
-                });
-                if !matches!(source_subject(domain)?,Fact::AtomicFact(AtomicFact::InFact(f)) if f.element==argument.value && f.set==carrier)
-                {
+                    matches!(source_subject(domain)?,Fact::AtomicFact(AtomicFact::InFact(f)) if f.element==argument.value && f.set==Obj::StandardSet(if *kind==K::Ln {StandardSet::RPos} else {StandardSet::R}))
+                };
+                if !expected {
                     return Err(invalid("ElementaryDomain"));
                 }
                 lines.push(self.compile_smooth_checked(domain, position)?);
@@ -324,44 +255,14 @@ impl LitexToLeanCompiler {
                     K::Cos => "Cos",
                     K::Sqrt => "Sqrt",
                 };
-                let positive = if matches!(kind, K::Ln) {
+                let positive = if *kind == K::Ln {
                     format!(" (by rw [{aa}]; exact h_{did})")
                 } else {
                     String::new()
                 };
-                (
-                    kind.derivative(
-                        argument.expression.clone(),
-                        argument.derivative_expression.clone(),
-                    ),
-                    format!("Litex.semanticContinuous{law} {a} 0{positive} {ha}"),
-                )
+                format!("Litex.semanticContinuous{law} {a} 0{positive} {ha}")
             }
         };
-        if expected.ir() != p.derivative_expression.ir() {
-            return Err(invalid("OriginalDerivativeFormula"));
-        }
-        lines.push(self.compile_smooth_value_checked(
-            &p.derivative_real,
-            &p.derivative_source_well_defined,
-            position,
-        )?);
-        let derivative_source = self.compile_function_raw_expression_bound(
-            &p.derivative_reduction.source,
-            position,
-            &HashMap::new(),
-        )?;
-        let derivative_value = self.compile_function_raw_expression_bound(
-            &p.derivative_value,
-            position,
-            &HashMap::new(),
-        )?;
-        let derivative_reduction = self.compile_multivariable_reduction(
-            &p.derivative_reduction,
-            position,
-            &HashMap::new(),
-        )?;
-        lines.push(format!("  have _guard_derivative_eval_{i} : {derivative_source}={derivative_value} := {derivative_reduction}"));
         let at_point = if matches!(p.constructor, C::Constant) {
             format!("exact {reduction}")
         } else {

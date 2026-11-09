@@ -615,6 +615,35 @@ impl LitexToLeanCompiler {
                     format!("(congrArg M.negValue {proof})"),
                 ));
             }
+            if let ArithmeticOperator::Abs(p) = op {
+                let (argument, equality) = self.compile_multivariable_reduction_node(
+                    &p.arg,
+                    steps,
+                    cursor,
+                    position,
+                    bindings,
+                    applied,
+                    depth + 1,
+                )?;
+                let result = Obj::ArithmeticOperator(ArithmeticOperator::Abs(Abs {
+                    arg: Box::new(argument),
+                }));
+                let congruence = format!("(congrArg (Litex.absValue (M := M)) {equality})");
+                if matches!(steps.get(*cursor), Some(Step::ExactRational { source: saved, .. }) if saved == &result)
+                {
+                    let (result, tail) = self.compile_multivariable_reduction_node(
+                        &result,
+                        steps,
+                        cursor,
+                        position,
+                        bindings,
+                        applied,
+                        depth + 1,
+                    )?;
+                    return Ok((result, format!("({congruence}.trans {tail})")));
+                }
+                return Ok((result, congruence));
+            }
         }
         if let Some((kind, argument)) = crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::from_expression(source) {
             use crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction as K;

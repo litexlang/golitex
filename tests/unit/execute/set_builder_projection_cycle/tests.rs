@@ -183,3 +183,26 @@ fn late_carrier_equalities_retain_conditions_without_selecting_or_branches() {
         assert_eq!(sizes(&rt), before, "{code}");
     }
 }
+
+#[test]
+fn builder_carrier_inference_reaches_all_sequence_indices_and_interval_bounds() {
+    for code in [
+        "forall p {q finite_seq(R, 2): q(1) < 1}:\n    p(1) $in R\n    p(2) $in R\n",
+        "forall j {index closed_range(1, 2): index != 1}:\n    j >= 1\n    j <= 2\n",
+        "forall p {q {r finite_seq(R,2): r(1)<1}: q(2)<1}:\n    p(1) $in R\n    p(2) $in R\n",
+    ] {
+        let mut rt = runtime(true);
+        let run = rt.run_litex_code(code).unwrap();
+        assert!(
+            run.success,
+            "{code}\n{}",
+            crate::json_output::emit_run_detailed(&run, &rt, "projection", None)
+        );
+    }
+    let mut rt = runtime(true);
+    assert!(
+        !rt.run_litex_code("forall p {q finite_seq(R, 2): q(1)<1}:\n    p(3) $in R")
+            .unwrap()
+            .success
+    );
+}

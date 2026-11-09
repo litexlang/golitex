@@ -228,8 +228,9 @@ impl Runtime {
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )?;
 
+            let published = super::helper::published_parameter_list(rt, &stmt.param_def)?;
             let auto_opened_struct_layers = match rt.auto_open_struct_layers_for_typed_parameters(
-                &stmt.param_def,
+                &published,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),
             )? {
                 Ok(layers) => layers,

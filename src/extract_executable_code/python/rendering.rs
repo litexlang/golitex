@@ -197,7 +197,9 @@ impl PythonRenderer {
 }
 
 fn python_name(name: &str) -> String {
-    if matches!(name, "math" | "int" | "min" | "max" | "AssertionError") {
+    if name.starts_with("__litex_")
+        || matches!(name, "math" | "int" | "min" | "max" | "AssertionError")
+    {
         format!("__litex_user_{name}")
     } else {
         name.to_string()
@@ -301,4 +303,21 @@ fn is_python_keyword(name: &str) -> bool {
             | "with"
             | "yield"
     )
+}
+
+#[cfg(test)]
+#[test]
+fn generated_python_names_cannot_shadow_runtime_or_escape_aliases() {
+    let names = [
+        "math",
+        "__litex_user_math",
+        "__litex_sign",
+        "__litex_user___litex_sign",
+        "plain",
+    ];
+    let converted: std::collections::HashSet<_> =
+        names.iter().map(|name| python_name(name)).collect();
+    assert_eq!(converted.len(), names.len());
+    assert!(!converted.contains("__litex_sign"));
+    assert_eq!(python_name("plain"), "plain");
 }

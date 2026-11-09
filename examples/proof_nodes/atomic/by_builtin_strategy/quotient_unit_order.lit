@@ -1,0 +1,47 @@
+# Tracer: direct quotient comparison with one, for a positive denominator.
+# Before, this needed an explicit reciprocal comparison:
+# claim:
+#     ? forall x R:
+#         0 < x
+#         x < 1
+#         =>:
+#             1 / x > 1
+#     1 / x > 1 / 1
+# The direct goal failed at search_proof.
+# Now, the numerator/denominator order is checked directly.
+forall x R:
+    x > 1
+    =>:
+        1 / x < 1
+
+forall x R:
+    0 < x
+    x < 1
+    =>:
+        1 / x > 1
+
+forall x R:
+    x >= 1
+    =>:
+        1 / x <= 1
+
+forall x R:
+    0 < x
+    x <= 1
+    =>:
+        1 / x >= 1
+
+forall a,b R:
+    b > 0
+    a < b
+    =>:
+        a / b < 1
+
+forall a,b R:
+    b > 0
+    b <= a
+    =>:
+        1 <= a / b
+
+# Boundary: no zero/negative denominator shortcut; strict order needs a strict bound.
+# Gate: target/release/litex -strict -lang en -f examples/proof_nodes/atomic/by_builtin_strategy/quotient_unit_order.lit

@@ -102,6 +102,9 @@ impl Runtime {
                 if let Some(rule) = self.infer_in_fact_seq_expand(&expanded, verify_state)? {
                     expansions.push(rule);
                 }
+                if let Some(rule) = self.infer_in_fact_matrix_expand(&expanded, verify_state)? {
+                    expansions.push(rule);
+                }
                 transports.push(InferInFactEqualFnSetTransport {
                     membership_fact_id: in_fact.fact_id,
                     carrier_equal: KnownEqualityPathProof::new(path),

@@ -13,6 +13,17 @@ impl SetBuilderMembershipProjectionStep {
     pub fn stored_conclusions(
         &self,
     ) -> impl Iterator<Item = &crate::store_fact_and_infer::StoreInferredFactResult> {
-        self.projections.iter().map(|p| p.stored())
+        self.projections.iter().flat_map(|p| {
+            std::iter::once(p.stored()).chain(
+                if let InferSetBuilderProjectionResult::BaseMembership(base) = p {
+                    base.inferences
+                        .iter()
+                        .flat_map(|r| r.stored_conclusions())
+                        .collect()
+                } else {
+                    Vec::new()
+                },
+            )
+        })
     }
 }

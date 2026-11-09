@@ -52,7 +52,11 @@ fn same_nested_forall(rt: &mut Runtime, source: &ForallFact, goal: &ForallFact) 
         return false;
     }
     let mut subst = HashMap::new();
+    let mut used_targets = std::collections::HashSet::new();
     for ((source, _), (goal, _)) in source_params.iter().zip(&goal_params) {
+        if subst.contains_key(&source.id) || !used_targets.insert(goal.id) {
+            return false;
+        }
         let value: Obj = Obj::Identifier(IdentifierObj::from_bound_name(goal));
         subst.insert(source.id, value);
     }
@@ -90,4 +94,27 @@ fn same_nested_forall(rt: &mut Runtime, source: &ForallFact, goal: &ForallFact) 
         }
     }
     true
+}
+
+#[cfg(test)]
+#[test]
+fn nested_forall_alpha_requires_distinct_target_binders() {
+    use crate::prelude::*;
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    let blocks = crate::tokenize::Tokenizer::new()
+        .tokenize("forall a,b R:\n    a=a", runtime.current_file.clone())
+        .unwrap();
+    let Stmt::Fact(Fact::ForallFact(source)) = runtime.parse(&blocks).unwrap().remove(0) else {
+        panic!("forall source");
+    };
+    assert!(same_nested_forall(&mut runtime, &source, &source));
+    let mut target = source.clone();
+    target.typed_parameters.groups[0].params[1] =
+        target.typed_parameters.groups[0].params[0].clone();
+    assert!(!same_nested_forall(&mut runtime, &source, &target));
 }

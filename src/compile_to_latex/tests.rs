@@ -549,3 +549,54 @@ fn bodyless_theorems_do_not_acquire_a_fabricated_proof_or_end_marker() {
         "{text}"
     );
 }
+
+#[test]
+fn superscript_bases_are_parenthesized_before_another_superscript() {
+    let latex = to_latex_from_source(
+        "exp(1)^2=exp(1)^2\nhave X set = matrix(seq(R),2,2)",
+        OutputLanguage::English,
+    )
+    .unwrap();
+    assert!(
+        latex.contains(r"\left(\mathrm{e}^{1}\right)^{2}"),
+        "{latex}"
+    );
+    assert!(!latex.contains(r"\mathrm{e}^{1}^{2}"), "{latex}");
+    assert!(latex.contains(r"\right)^{2\times 2}"), "{latex}");
+}
+
+#[test]
+fn direct_import_aliases_take_precedence_over_dependency_aliases() {
+    let root = std::env::temp_dir().join(format!(
+        "litex-latex-alias-{}-{}",
+        std::process::id(),
+        std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap()
+            .as_nanos()
+    ));
+    for dir in ["", "a", "b"] {
+        std::fs::create_dir_all(root.join(dir)).unwrap();
+    }
+    for (path, body) in [
+        (
+            "litex.config",
+            "[import]\nA=\"./a\"\nRootB=\"./b\"\n[export]\nmain=\"./main.lit\"\n",
+        ),
+        ("main.lit", "RootB::main::v = RootB::main::v\n"),
+        (
+            "a/litex.config",
+            "[import]\nInternalB=\"../b\"\n[export]\nmain=\"./main.lit\"\n",
+        ),
+        ("a/main.lit", "have a R = 0\n"),
+        ("b/litex.config", "[export]\nmain=\"./main.lit\"\n"),
+        ("b/main.lit", "have v R = 0\n"),
+    ] {
+        std::fs::write(root.join(path), body).unwrap();
+    }
+    let result = to_latex_from_repository(root.to_str().unwrap(), OutputLanguage::English);
+    std::fs::remove_dir_all(&root).unwrap();
+    let text = result.unwrap();
+    assert!(text.contains("RootB"), "{text}");
+    assert!(!text.contains("InternalB"), "{text}");
+}

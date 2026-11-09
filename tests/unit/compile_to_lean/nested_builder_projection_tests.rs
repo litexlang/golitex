@@ -15,6 +15,40 @@ claim:
     x $in R
 "#;
 
+#[test]
+fn projected_carriers_replay_their_nested_inference_evidence() {
+    for source in [
+        "forall p {q finite_seq(R,2): q(1)<1}:\n    p(2) $in R",
+        "forall j {index closed_range(1,2): index!=1}:\n    j>=1\n    j<=2",
+    ] {
+        let (run, compiler) = super::execute(source);
+        compiler
+            .compile_run(&run, "ProjectedCarriers")
+            .unwrap_or_else(|error| panic!("{source}: {error:?}"));
+    }
+    let (mut run, compiler) =
+        super::execute("forall p {q finite_seq(R,2): q(1)<1}:\n    p(2) $in R");
+    let p = super::forall_proof_mut(&mut run.statement_results[0]);
+    let store =
+        Rc::get_mut(&mut p.introduced_params.defined_params.store_and_infer_results[0]).unwrap();
+    let Some(InferResult::AtomicFact(InferAtomicFactResult::InFact(rules))) = &mut store.infer
+    else {
+        panic!("membership");
+    };
+    let InferInFactResult::SetBuilder(builder) = &mut rules[0] else {
+        panic!("builder");
+    };
+    let crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(base) =
+        &mut builder.steps[0].projections[0]
+    else {
+        panic!("base");
+    };
+    base.inferences.clear();
+    assert!(compiler
+        .compile_run(&run, "MissingCarrierInference")
+        .is_err());
+}
+
 fn projection(run: &mut RunLitexCodeResult) -> &mut SetBuilderMembershipProjectionStep {
     let ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(ExecClaimStmtResult::Success(
         p,

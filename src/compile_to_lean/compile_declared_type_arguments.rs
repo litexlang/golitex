@@ -20,8 +20,11 @@ impl LitexToLeanCompiler {
             } = wd.detailed_ref() else {
                 return Err(LeanCompileError::unsupported("HaveEqual/TypeWDConstructor"));
             };
+            let Obj::StructAndFieldAccessObj(StructAndFieldAccessObj::StructObj(formal_carrier)) = wd.obj() else {
+                return Err(LeanCompileError::unsupported("HaveEqual/TypeWDConstructor"));
+            };
             let formed = SourcePosition::new(Some(prefix), SourceOwner::WD(wd), 0);
-            self.compile_struct_arguments(carrier, arguments, &formed)
+            self.compile_struct_arguments(formal_carrier, arguments, &formed)
         })
     }
 
@@ -45,7 +48,7 @@ impl LitexToLeanCompiler {
             &SourcePosition<'_>,
         ) -> Result<Vec<String>, LeanCompileError>,
     ) -> Result<Option<Vec<String>>, LeanCompileError> {
-        position.with_visible_declared_type(object, &mut |proof, group, producer| {
+        position.with_visible_declared_type(object, &self.runtime, &mut |proof, group, producer| {
             position.validate_declaration_context(producer)?;
             let parameters = &proof.statement.param_def;
             let prefix_count = parameters.groups[..group]
@@ -64,10 +67,20 @@ impl LitexToLeanCompiler {
             else {
                 return Err(LeanCompileError::unsupported("HaveEqual/TypeWD"));
             };
-            ensure_object(object, wd)?;
+            let ParamType::Obj(formal) = &parameters.groups[group].param_type else {
+                return Err(LeanCompileError::unsupported("HaveEqual/TypeWD"));
+            };
+            ensure_object(formal, wd)?;
             let terms = compile(wd, &prefix)?;
             let stores = &proof.store_and_infer_result.store_and_infer_results;
             let mut actual = Vec::new();
+            let mut publication = std::collections::HashMap::new();
+            for p in parameters.groups.iter().flat_map(|g| &g.params) {
+                publication.insert(
+                    p.id,
+                    Obj::Identifier(producer.defining_identifier(p, &self.runtime)?),
+                );
+            }
             for (index, (parameter, kind)) in parameters.groups[..group]
                 .iter()
                 .flat_map(|g| g.params.iter().map(move |p| (p, &g.param_type)))
@@ -79,12 +92,7 @@ impl LitexToLeanCompiler {
                     .get(index)
                     .ok_or_else(|| LeanCompileError::unsupported("HaveEqual/TypePrefixStore"))?;
                 let (fact, _) = producer.visible_fact(store.primary_fact_id(), &self.runtime)?;
-                if !parameter_type_fact_matches(
-                    kind,
-                    &source,
-                    fact,
-                    &std::collections::HashMap::new(),
-                ) {
+                if !parameter_type_fact_matches(kind, &source, fact, &publication) {
                     return Err(LeanCompileError::unsupported("HaveEqual/TypePrefixSubject"));
                 }
                 self.validate_store(&store.store, fact)?;

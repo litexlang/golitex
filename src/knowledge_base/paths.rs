@@ -19,7 +19,8 @@ pub const DEFINITIONS_FILE_NAME: &str = "definitions.json";
 // nonemptiness and unguarded constant-image rules. Revision 5 corrected weak
 // function-space membership and Cartesian dimensions. The wire format is
 // unchanged; old products must be checked again under all domain contracts.
-pub const KB_ABI: &str = "10";
+// Revision 11 retains predicate laws and rechecks induction/capture soundness.
+pub const KB_ABI: &str = "11";
 
 pub fn kb_dir(module_root: &Path) -> PathBuf {
     module_root.join(KB_DIR_NAME)

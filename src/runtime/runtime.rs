@@ -199,7 +199,7 @@ impl Runtime {
     /// - `RootExport` → `WithExportFileId`
     /// - `ImportedExport` → `WithModAndExportFileId`
     pub fn atomic_name_for_file_root_symbol(&self, name: PlainName) -> AtomicName {
-        match &self.current_file {
+        match self.file_root_symbol_source() {
             CodeSource::Eval | CodeSource::Repl | CodeSource::Real(_) => AtomicName::Plain { name },
             CodeSource::RootExport { export_file_id, .. } => AtomicName::WithExportFileId {
                 export_file_id: *export_file_id,
@@ -241,7 +241,7 @@ impl Runtime {
     /// otherwise Plain+id (inner binders, or Eval/Repl/Real outermost).
     pub fn identifier_obj_for_plain_free_ref(&self, name: String) -> RuntimeResult<IdentifierObj> {
         let (id, scope_index) = self.resolve_plain_atom_with_scope_index(&name)?;
-        if scope_index == 0 && self.current_file.promotes_outermost_symbols() {
+        if scope_index == 0 && self.file_root_symbol_source().promotes_outermost_symbols() {
             Ok(self.identifier_obj_for_file_root_symbol(name))
         } else {
             Ok(IdentifierObj::plain(id, name))
@@ -251,12 +251,28 @@ impl Runtime {
     /// Qualify only the same file-root binding, never a local binding whose
     /// surface name happens to match a later file-root declaration.
     pub fn identifier_obj_for_stored_mention(&self, bound: &BoundName) -> IdentifierObj {
+        // A declaration's preflight can reuse its reserved parse identity.
+        // Its temporary ParamType definition still owns a local hypothetical
+        // object, including when automatically opening a struct layer.
+        if self
+            .execution_environments_stack
+            .iter()
+            .rev()
+            .find_map(|env| env.definitions.identifiers.get(&bound.name))
+            .is_some_and(|definition| {
+                matches!(definition,
+            crate::exec_env::StoredIdentifierDefinition::ParamType((parameter, _))
+                if parameter.id == bound.id)
+            })
+        {
+            return IdentifierObj::from_bound_name(bound);
+        }
         if self
             .parse_scope_stack
             .first()
             .and_then(|scope| scope.plain.get(&bound.name))
             == Some(&bound.id)
-            && self.current_file.promotes_outermost_symbols()
+            && self.file_root_symbol_source().promotes_outermost_symbols()
         {
             self.identifier_obj_for_file_root_symbol(bound.name.clone())
         } else {
@@ -267,12 +283,27 @@ impl Runtime {
     /// Prop/atomic name free ref: promote only when outermost and promoting.
     pub fn atomic_name_for_plain_prop_ref(&self, name: String) -> AtomicName {
         if self.is_bound_in_file_root_parse_scope(&name)
-            && self.current_file.promotes_outermost_symbols()
+            && self.file_root_symbol_source().promotes_outermost_symbols()
         {
             self.atomic_name_for_file_root_symbol(name)
         } else {
             AtomicName::Plain { name }
         }
+    }
+
+    // Interactive statements keep the loaded file's publication identity while
+    // their source locations remain REPL locations.
+    fn file_root_symbol_source(&self) -> &CodeSource {
+        if matches!(self.current_file, CodeSource::Repl) {
+            if let Some(view) = self
+                .execution_environments_stack
+                .first()
+                .and_then(|env| env.session_view.as_ref())
+            {
+                return &view.code_source;
+            }
+        }
+        &self.current_file
     }
 
     // Allocate a new IdentifierId and occupy `name` in the current scope.

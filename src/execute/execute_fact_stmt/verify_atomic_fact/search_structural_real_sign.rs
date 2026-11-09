@@ -9,6 +9,10 @@ mod tests;
 #[path = "../../../../tests/unit/execute/elementary_composition.rs"]
 mod elementary_composition_tests;
 
+#[cfg(test)]
+#[path = "../../../../tests/unit/execute/quotient_order.rs"]
+mod quotient_order_tests;
+
 impl Runtime {
     // Truth only after enclosing object WD. No verify_fact/rule dispatcher,
     // definition search, state reset, or publication occurs in this traversal.

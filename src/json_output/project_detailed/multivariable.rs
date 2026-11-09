@@ -74,6 +74,36 @@ pub(super) fn strategy(
 ) -> JsonValue {
     use crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof;
     match p {
+        MultivariableStrategyProof::DifferentiableExpression(p) => {
+            return object_for(
+                rt,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("DifferentiableMultivariableExpression")),
+                    ("relation", string(p.expression.relation.predicate_name())),
+                    ("geometry", interior(&p.expression.geometry, rt)),
+                    (
+                        "coordinates",
+                        JsonValue::Array(
+                            p.expression
+                                .coordinates
+                                .iter()
+                                .map(|c| continuous_expression(&c.expression, rt))
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "smooth_domains",
+                        JsonValue::Array(
+                            p.smooth_domains
+                                .iter()
+                                .map(|p| super::verify::project_verify_fact(p, rt))
+                                .collect(),
+                        ),
+                    ),
+                ],
+            );
+        }
         MultivariableStrategyProof::ContinuousExpression(p) => {
             return object_for(
                 rt,
@@ -277,6 +307,10 @@ fn continuous_expression(
             fields.push(("argument", continuous_expression(argument, rt)));
             "negate"
         }
+        C::Abs { argument } => {
+            fields.push(("argument", continuous_expression(argument, rt)));
+            "absolute_value"
+        }
         C::Add { left, right } | C::Subtract { left, right } | C::Multiply { left, right } => {
             fields.push(("left", continuous_expression(left, rt)));
             fields.push(("right", continuous_expression(right, rt)));
@@ -415,7 +449,10 @@ fn interior(
                                         (
                                             "operands",
                                             JsonValue::Array(
-                                                g.operands.iter().map(|p| smooth(p, rt)).collect(),
+                                                g.operands
+                                                    .iter()
+                                                    .map(|p| continuous_expression(p, rt))
+                                                    .collect(),
                                             ),
                                         ),
                                     ],

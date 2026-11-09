@@ -1,0 +1,75 @@
+# Reciprocal and quotient order over the real numbers.
+# All 12 blocks can be checked independently, without imports or trust.
+# Run: target/release/litex -strict -lang en -f examples/real_analysis/quotient_order_basics.lit
+
+# A positive reciprocal is positive.
+forall x R+:
+    1 / x > 0
+
+# Values above one have reciprocals below one.
+forall x R:
+    x > 1
+    =>:
+        1 / x < 1
+
+# Values strictly between zero and one have reciprocals above one.
+forall x R:
+    0 < x
+    x < 1
+    =>:
+        1 / x > 1
+
+# The endpoint version allows x = 1.
+forall x R:
+    x >= 1
+    =>:
+        1 / x <= 1
+
+# Compare a quotient with one by comparing its numerator and denominator.
+forall a,b R+:
+    a < b
+    =>:
+        a / b < 1
+
+forall a,b R+:
+    a > b
+    =>:
+        a / b > 1
+
+# Dividing a positive number by a factor above one makes it smaller.
+forall a,b R:
+    a > 0
+    b > 1
+    =>:
+        a / b < a
+
+# Dividing by a positive factor below one makes it larger.
+forall a,b R+:
+    b < 1
+    =>:
+        a / b > a
+
+# Dividing both sides by a positive number preserves order.
+forall a,b,c R:
+    c > 0
+    a < b
+    =>:
+        a / c < b / c
+
+# Dividing both sides by a negative number reverses order.
+forall a,b,c R:
+    c < 0
+    a < b
+    =>:
+        a / c > b / c
+
+# Reciprocals reverse strict and non-strict order on positive numbers.
+forall x,y R+:
+    x < y
+    =>:
+        1 / y < 1 / x
+
+forall x,y R+:
+    x <= y
+    =>:
+        1 / y <= 1 / x

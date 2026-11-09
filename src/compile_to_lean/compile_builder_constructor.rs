@@ -19,26 +19,18 @@ impl LitexToLeanCompiler {
             return Ok(None);
         };
         if step.projections.iter().any(|p| {
-            matches!(p, crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(s)
-                if std::ptr::eq(&s.store, store))
+            matches!(p, crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(base)
+                if std::ptr::eq(&base.stored.store, store))
         }) && object.ir() == step.builder.param_set.ir() {
             // Base membership publishes the exact bound already formed as a
             // child of this source builder. Replay that original child at its
             // original stage; no new constructor or membership is discovered.
             let builder = Obj::SetFormer(SetFormer::SetBuilder(step.builder.clone()));
-            return position.with_visible_wd(&builder, &mut |wd, declaration| {
-                let DetailedObjWellDefinedProof::ByDef {
-                    obj: Obj::SetFormer(SetFormer::SetBuilder(actual)),
-                    proof: ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(captured)),
-                } = wd.detailed_ref() else {
-                    return Err(LeanCompileError::unsupported("SetBuilder/BoundConstructorFormation"));
-                };
-                if captured.param_set_well_defined.obj().ir() != object.ir() {
-                    return Err(LeanCompileError::unsupported("SetBuilder/BoundConstructorSubject"));
-                }
-                let scope = SourcePosition::new(Some(declaration), SourceOwner::SetBuilder(actual, captured), 0);
-                self.compile_wd(&captured.param_set_well_defined, &scope)
-            });
+            // Reuse the checked builder's own bound, including its exact host
+            // representation. Rebuilding the child in the consumer's scope
+            // loses the original formation stage for nested carrier inference.
+            let constructor = self.compile_object_reference(&builder, position)?;
+            return Ok(Some(format!("({constructor}).val.bound")));
         }
         let Some(crate::store_fact_and_infer::InferSetBuilderProjectionResult::Condition {
             condition_index,
@@ -121,7 +113,7 @@ impl LitexToLeanCompiler {
             let input = "_builder_input";
             let mut arguments = vec![format!("(Litex.semanticObject (Litex.denote {input}) (Litex.isSet {input}))")];
             let base = step.projections.iter().find_map(|p| match p {
-                crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(s) => Some(s), _ => None,
+                crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(base) => Some(&base.stored), _ => None,
             });
             let base_member = if let Some(base) = base {
                 self.cited_fact_reference(base.primary_fact_id(), position)?.1

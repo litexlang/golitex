@@ -165,6 +165,19 @@ impl LitexToLeanCompiler {
                     &formed,
                 )?);
                 offset += 1;
+                if let crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(base) = projection {
+                    let inferences = &base.inferences;
+                    let after = SourcePosition {
+                        parent: Some(&formed),
+                        before: position.before + offset,
+                        ..*position
+                    };
+                    declarations.extend(self.compile_membership_inference_rules(
+                        inferences, &fact, &stored, &after,
+                    )?);
+                    offset += inferences.iter()
+                        .map(|r| r.stored_conclusions().len()).sum::<usize>();
+                }
             }
         }
         Ok(declarations)

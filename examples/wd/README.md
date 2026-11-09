@@ -3,6 +3,9 @@
 Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
+[Refined indexed carriers](refined_indexed_carriers.lit) retain sequence and
+closed-range membership consequences through nested set-builder projections.
+
 [Repeated function arguments](repeated_function_argument.lit) reuse a successful
 argument WD by its recorded ID within one candidate check. Membership and guard
 proofs remain required; failed candidates keep their evidence in a separate scope.

@@ -1,0 +1,19 @@
+# Tracer: induction binds an independent integer while retaining a fixed lower bound.
+# Before: with outer n=0, the step `n+1=0+1` could prove all integers <=1.
+# That false proof is executed and rejected by induction_isolates_outer_facts_and_preserves_the_fixed_lower_bound.
+# Now: the induction parameter is distinct from the outer n, including in `from n`.
+# Boundary: neither ordinary nor strong induction may borrow outer facts about n.
+# Evidence: target/release/litex -strict -f examples/stmt_nodes/by/induction_binding_isolation.lit
+have n Z = 2
+by induc n from n:
+    ? n >= 2
+    n + 1 >= 2
+n = 2
+3 >= 2
+
+thm natural_reflexivity:
+    ? forall k N:
+        k = k
+    by strong_induc k from 0:
+        ? k = k
+        k = k

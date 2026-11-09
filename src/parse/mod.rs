@@ -16,7 +16,8 @@
 //!    ExecEnv here.
 //! 4. Errors, TokenBlock paths and AST SourceLine share CodeSource.
 //!
-//! `by induc n` selects a visible binder; declarations still reject shadowing.
+//! `by induc n` may select a visible name, but isolates its quantified identity;
+//! ordinary declarations still reject shadowing.
 
 mod fact;
 mod fact_prop;

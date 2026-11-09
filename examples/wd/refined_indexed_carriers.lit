@@ -1,0 +1,20 @@
+# Before: projecting a refined sequence's carrier omitted its callable signature.
+# forall p {q finite_seq(R,2): q(1)<1}:
+#     p(2) $in R
+# Now: all valid coordinates use the projected carrier; index 3 is rejected in tests.
+# Evidence: target/release/litex -strict -f examples/wd/refined_indexed_carriers.lit
+forall p {q finite_seq(R,2): q(1)<1}:
+    p(1) $in R
+    p(2) $in R
+forall j {index closed_range(1,2): index!=1}:
+    j >= 1
+    j <= 2
+struct CoordinateRecord:
+    value R
+    auxiliary R
+forall v finite_seq(&CoordinateRecord,2):
+    v(1).value $in R
+forall v seq(&CoordinateRecord):
+    v(3).value $in R
+forall v matrix(&CoordinateRecord,2,2):
+    v(1,2).value $in R

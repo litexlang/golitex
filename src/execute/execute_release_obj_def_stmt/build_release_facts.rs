@@ -15,13 +15,12 @@ use crate::exec_env::StoredIdentifierDefinition;
 use crate::execute::execute_have_fn_by_induc_stmt::flatten_induc_to_case_by_case;
 use crate::execute::execute_have_fn_equal_case_by_case_stmt::set_bound_to_typed;
 use crate::instantiate::quantifier_free_fact_to_fact;
-use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use crate::store_fact_and_infer::StoreFactAndInferResult;
-use std::collections::HashMap;
 use std::rc::Rc;
 
 use super::exec_release_obj_def_stmt::ReleaseObjDefByKind;
+use crate::execute::helper::parameter_substitution_for_surface as surface_subst_for_param_list;
 
 pub(super) enum BuildReleaseFactsFailed {
     NameNotInDefinition,
@@ -126,7 +125,11 @@ fn build_have_in_nonempty(
     let Some(param_type) = param_type_for_name(&stmt.param_def, plain) else {
         return Err(BuildReleaseFactsFailed::NameNotInDefinition);
     };
-    let type_fact = type_fact_for_surface(runtime, surface, param_type, &stmt.line_file);
+    let subst = surface_subst_for_param_list(surface, &stmt.param_def);
+    let param_type = runtime
+        .inst_param_type(param_type, &subst)
+        .map_err(|e| BuildReleaseFactsFailed::Instantiate(e.to_string()))?;
+    let type_fact = type_fact_for_surface(runtime, surface, &param_type, &stmt.line_file);
     Ok(BuiltReleaseFacts {
         kind: ReleaseObjDefByKind::HaveObjInNonemptySetOrParamType {
             type_fact: type_fact.clone(),
@@ -144,11 +147,17 @@ fn build_have_obj_equal(
     let Some((param_type, rhs)) = param_type_and_rhs_for_name(stmt, plain) else {
         return Err(BuildReleaseFactsFailed::NameNotInDefinition);
     };
-    let type_fact = type_fact_for_surface(runtime, surface, param_type, &stmt.line_file);
+    let subst = surface_subst_for_param_list(surface, &stmt.param_def);
+    let param_type = runtime
+        .inst_param_type(param_type, &subst)
+        .map_err(|e| BuildReleaseFactsFailed::Instantiate(e.to_string()))?;
+    let type_fact = type_fact_for_surface(runtime, surface, &param_type, &stmt.line_file);
     let equal = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
         fact_id: runtime.global_ids.allocate_fact_id(),
         left: Obj::Identifier(surface.clone()),
-        right: rhs.clone(),
+        right: runtime
+            .inst_obj(rhs, &subst)
+            .map_err(|e| BuildReleaseFactsFailed::Instantiate(e.to_string()))?,
         line_file: Some(stmt.line_file.clone()),
     }));
     Ok(BuiltReleaseFacts {
@@ -169,7 +178,12 @@ fn build_have_by_exist(
     let Some(param_type) = param_type_for_name(&stmt.param_def, plain) else {
         return Ok(Err(BuildReleaseFactsFailed::NameNotInDefinition));
     };
-    let type_fact = type_fact_for_surface(runtime, surface, param_type, &stmt.line_file);
+    let subst = surface_subst_for_param_list(surface, &stmt.param_def);
+    let param_type = match runtime.inst_param_type(param_type, &subst) {
+        Ok(ty) => ty,
+        Err(e) => return Ok(Err(BuildReleaseFactsFailed::Instantiate(e.to_string()))),
+    };
+    let type_fact = type_fact_for_surface(runtime, surface, &param_type, &stmt.line_file);
     let subst = surface_subst_for_param_list(surface, &stmt.param_def);
     let mut body_facts = Vec::new();
     for qf in &stmt.facts {
@@ -200,7 +214,12 @@ fn build_trust_have(
     let Some(param_type) = param_type_for_name(&stmt.param_def, plain) else {
         return Ok(Err(BuildReleaseFactsFailed::NameNotInDefinition));
     };
-    let type_fact = type_fact_for_surface(runtime, surface, param_type, &stmt.line_file);
+    let subst = surface_subst_for_param_list(surface, &stmt.param_def);
+    let param_type = match runtime.inst_param_type(param_type, &subst) {
+        Ok(ty) => ty,
+        Err(e) => return Ok(Err(BuildReleaseFactsFailed::Instantiate(e.to_string()))),
+    };
+    let type_fact = type_fact_for_surface(runtime, surface, &param_type, &stmt.line_file);
     let subst = surface_subst_for_param_list(surface, &stmt.param_def);
     let mut body_facts = Vec::new();
     for fact in &stmt.facts {
@@ -439,39 +458,6 @@ fn param_type_and_rhs_for_name<'a>(
         }
     }
     None
-}
-
-fn surface_subst_for_param_list(
-    released: &IdentifierObj,
-    param_def: &TypedParameterList,
-) -> HashMap<IdentifierId, Obj> {
-    let released_plain = plain_name(released);
-    let mut subst = HashMap::new();
-    for group in &param_def.groups {
-        for param in &group.params {
-            let surface = if param.name == released_plain {
-                released.clone()
-            } else {
-                match released {
-                    IdentifierObj::Plain { .. } => IdentifierObj::from_bound_name(param),
-                    IdentifierObj::WithExportFileId { export_file_id, .. } => {
-                        IdentifierObj::with_export_file_id(*export_file_id, param.name.clone())
-                    }
-                    IdentifierObj::WithModAndExportFileId {
-                        global_mod_id,
-                        export_file_id,
-                        ..
-                    } => IdentifierObj::with_mod_and_export_file_id(
-                        *global_mod_id,
-                        *export_file_id,
-                        param.name.clone(),
-                    ),
-                }
-            };
-            subst.insert(param.id, Obj::Identifier(surface));
-        }
-    }
-    subst
 }
 
 fn plain_name(name: &IdentifierObj) -> &str {

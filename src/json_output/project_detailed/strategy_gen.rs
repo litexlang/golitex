@@ -31,6 +31,26 @@ pub(super) fn project_atomic_builtin_strategy(
             ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLess(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("QuotientUnitLess")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLessEqual(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("QuotientUnitLessEqual")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientScaleLess(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("QuotientScaleLess")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientScaleLessEqual(p) => object_for(runtime, vec![
+            ("type", string("builtin_strategy")), ("strategy", string("QuotientScaleLessEqual")),
+            ("requirement_facts", JsonValue::Array(p.requirement_facts.iter().map(|f| string(f.readable_string())).collect())),
+            ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
+        ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(p) => super::structural_limit::project(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(p)=>super::multivariable::strategy(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p) => super::pointwise_derivative::project(p,runtime),

@@ -36,7 +36,3 @@ impl Runtime {
         Ok(TypedParameterList { groups })
     }
 }
-
-pub fn typed_param_ids(list: &TypedParameterList) -> Vec<IdentifierId> {
-    list.ordered_param_ids()
-}

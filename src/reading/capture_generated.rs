@@ -21596,6 +21596,26 @@ let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "PositiveReciprocalLess", fields);
 output
 },
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLess(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__quotient_order__QuotientUnitLessProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "QuotientUnitLess", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLessEqual(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__quotient_order__QuotientUnitLessEqualProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "QuotientUnitLessEqual", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientScaleLess(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__quotient_order__QuotientScaleLessProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "QuotientScaleLess", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientScaleLessEqual(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__quotient_order__QuotientScaleLessEqualProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "QuotientScaleLessEqual", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitProof(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "StructuralLimit", fields);
@@ -33184,6 +33204,50 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__quotient_order__QuotientUnitLessProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::quotient_order::QuotientUnitLessProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::quotient_order::QuotientUnitLessProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("QuotientUnitLessProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__quotient_order__QuotientUnitLessEqualProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::quotient_order::QuotientUnitLessEqualProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::quotient_order::QuotientUnitLessEqualProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("QuotientUnitLessEqualProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__quotient_order__QuotientScaleLessProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::quotient_order::QuotientScaleLessProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::quotient_order::QuotientScaleLessProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("QuotientScaleLessProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__quotient_order__QuotientScaleLessEqualProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::quotient_order::QuotientScaleLessEqualProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::quotient_order::QuotientScaleLessEqualProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("QuotientScaleLessEqualProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitProof(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::structural_limit::StructuralLimitProof { function: f0, approach: f1, domain: f2, body: f3, body_equal: f4, body_well_defined: f5, geometry: f6, expression: f7, result_equal: f8 } => {
@@ -33200,6 +33264,11 @@ let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::ContinuousExpression(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__ContinuousMultivariableProof(f0, capture, runtime))];
 let mut output = node("MultivariableStrategyProof", "ContinuousExpression", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::DifferentiableExpression(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__multivariable__strategy__DifferentiableMultivariableProof(f0, capture, runtime))];
+let mut output = node("MultivariableStrategyProof", "DifferentiableExpression", fields);
 output
 },
 crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::CoordinateProjectionDifferentiable(f0) => {
@@ -46133,6 +46202,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__DifferentiableMultivariableProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::DifferentiableMultivariableProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::strategy::DifferentiableMultivariableProof { expression: f0, smooth_domains: f1 } => {
+let fields = vec![("expression", capture_execute__execute_fact_stmt__multivariable__strategy__ContinuousMultivariableProof(f0, capture, runtime)), ("smooth_domains", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("DifferentiableMultivariableProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__CoordinateProjectionDifferentiableProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::CoordinateProjectionDifferentiableProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::CoordinateProjectionDifferentiableProof { relation: f0, function_domain: f1, body: f2, body_equal: f3, body_well_defined: f4, geometry: f5, index: f6, index_member: f7 } => {
@@ -48649,7 +48729,7 @@ pub(super) fn capture_store_fact_and_infer__infer_result__infer_set_builder_proj
 let output = match value {
 crate::store_fact_and_infer::InferSetBuilderProjectionResult::BaseMembership(f0) => {
 let rule_id = Some("infer.InferSetBuilderProjectionResult::BaseMembership");
-let fields = vec![("0", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f0, capture, runtime))];
+let fields = vec![("0", capture_store_fact_and_infer__infer_result__infer_set_builder_base_membership_result__InferSetBuilderBaseMembershipResult(f0, capture, runtime))];
 let mut output = node("InferSetBuilderProjectionResult", "BaseMembership", fields);
 if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "BaseMembership", ""); }
 output
@@ -50304,6 +50384,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_store_fact_and_infer__infer_result__infer_set_builder_base_membership_result__InferSetBuilderBaseMembershipResult(value: &crate::store_fact_and_infer::InferSetBuilderBaseMembershipResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::InferSetBuilderBaseMembershipResult { stored: f0, inferences: f1 } => {
+let fields = vec![("stored", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f0, capture, runtime)), ("inferences", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_in_fact_result__InferInFactResult(item, capture, runtime)).collect()))];
+let mut output = node("InferSetBuilderBaseMembershipResult", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__known_tuple__KnownTemplateSignatureMatchProof(value: &crate::execute::execute_fact_stmt::known_tuple::KnownTemplateSignatureMatchProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::known_tuple::KnownTemplateSignatureMatchProof { function_equal: f0, instance: f1, signature_match: f2 } => {
@@ -50719,7 +50810,7 @@ capture.intern_evidence(output)
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableOpenGuardProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableOpenGuardProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableOpenGuardProof { guard: f0, operands: f1, point_condition: f2, point_proof: f3 } => {
-let fields = vec![("guard", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("operands", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(item, capture, runtime)).collect())), ("point_condition", capture_ast__fact__fact__Fact(f2, capture, runtime)), ("point_proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let fields = vec![("guard", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("operands", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__multivariable__continuity__ContinuousExpressionProof(item, capture, runtime)).collect())), ("point_condition", capture_ast__fact__fact__Fact(f2, capture, runtime)), ("point_proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
 let mut output = node("MultivariableOpenGuardProof", "", fields);
 output
 },
@@ -50997,17 +51088,6 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(value: &crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof { expression: f0, value: f1, value_source_well_defined: f2, value_reduction: f3, value_real: f4, derivative_expression: f5, derivative_value: f6, derivative_source_well_defined: f7, derivative_reduction: f8, derivative_real: f9, constructor: f10 } => {
-let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("value_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("value_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f3, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime)), ("derivative_expression", capture_ast__obj__Obj(f5, capture, runtime)), ("derivative_value", capture_ast__obj__Obj(f6, capture, runtime)), ("derivative_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f7, capture, runtime)), ("derivative_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f8, capture, runtime)), ("derivative_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f9, capture, runtime)), ("constructor", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateConstructorProof(f10, capture, runtime))];
-let mut output = node("SmoothCoordinateExpressionProof", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__continuity__ContinuousExpressionConstructorProof(value: &crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof::Constant => {
@@ -51023,6 +51103,11 @@ output
 crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof::Neg { argument: f0 } => {
 let fields = vec![("argument", capture_execute__execute_fact_stmt__multivariable__continuity__ContinuousExpressionProof(f0, capture, runtime))];
 let mut output = node("ContinuousExpressionConstructorProof", "Neg", fields);
+output
+},
+crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof::Abs { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__multivariable__continuity__ContinuousExpressionProof(f0, capture, runtime))];
+let mut output = node("ContinuousExpressionConstructorProof", "Abs", fields);
 output
 },
 crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof::Add { left: f0, right: f1 } => {
@@ -51053,6 +51138,17 @@ output
 crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof::Elementary { kind: f0, argument: f1, domain: f2 } => {
 let fields = vec![("kind", capture_execute__execute_fact_stmt__pointwise_elementary__ElementaryRealFunction(f0, capture, runtime)), ("argument", capture_execute__execute_fact_stmt__multivariable__continuity__ContinuousExpressionProof(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
 let mut output = node("ContinuousExpressionConstructorProof", "Elementary", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateExpressionProof(value: &crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateExpressionProof { expression: f0, value: f1, value_source_well_defined: f2, value_reduction: f3, value_real: f4, derivative_expression: f5, derivative_value: f6, derivative_source_well_defined: f7, derivative_reduction: f8, derivative_real: f9, constructor: f10 } => {
+let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("value_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("value_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f3, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime)), ("derivative_expression", capture_ast__obj__Obj(f5, capture, runtime)), ("derivative_value", capture_ast__obj__Obj(f6, capture, runtime)), ("derivative_source_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f7, capture, runtime)), ("derivative_reduction", capture_execute__execute_fact_stmt__multivariable__expression__MultivariableReductionProof(f8, capture, runtime)), ("derivative_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f9, capture, runtime)), ("constructor", capture_execute__execute_fact_stmt__multivariable__expression__SmoothCoordinateConstructorProof(f10, capture, runtime))];
+let mut output = node("SmoothCoordinateExpressionProof", "", fields);
 output
 },
 };

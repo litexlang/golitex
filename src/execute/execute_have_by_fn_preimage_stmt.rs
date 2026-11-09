@@ -98,12 +98,7 @@ impl Runtime {
         let (renamed_params, subst, preimage_objs) =
             self.build_fn_preimage_params_and_subst(stmt, &body)?;
 
-        let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
-            &renamed_params,
-            None,
-            crate::execute::execute_fact_stmt::VerifyState::top_level(),
-        )?;
-
+        let mut definition_facts = Vec::new();
         for dom_fact in &body.dom_facts {
             let instantiated = self
                 .inst_quantifier_free_fact(dom_fact, &subst)
@@ -112,6 +107,33 @@ impl Runtime {
                         "have by fn_preimage: failed to instantiate domain fact: {e}"
                     ))
                 })?;
+            definition_facts.push(instantiated);
+        }
+        let application =
+            function_application(&function, preimage_objs.into_iter().map(Box::new).collect())
+                .map_err(RuntimeError::InternalBug)?;
+        definition_facts.push(crate::ast::fact::QuantifierFreeFact::AtomicFact(
+            EqualFact {
+                fact_id: self.global_ids.allocate_fact_id(),
+                left: stmt.range_membership.element.clone(),
+                right: application,
+                line_file: stmt.range_membership.line_file.clone(),
+            }
+            .into(),
+        ));
+        let definition = crate::ast::stmt::HaveObjByExistFactsStmt {
+            param_def: renamed_params.clone(),
+            facts: definition_facts.clone(),
+            line_file: stmt.line_file.clone(),
+        };
+        let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
+            &renamed_params,
+            Some(crate::execute::introduce_typed_parameters::SharedHaveDefinition::HaveObjByExistFacts(
+                std::rc::Rc::new(definition),
+            )),
+            verify_state,
+        )?;
+        for instantiated in definition_facts {
             let as_fact = quantifier_free_fact_to_fact(instantiated);
             let stored = self.store_fact_and_infer(
                 &as_fact,
@@ -119,23 +141,6 @@ impl Runtime {
             )?;
             store_and_infer_result.push(stored);
         }
-
-        // The signature and range membership above already establish callability.
-        // Reuse the canonical constructor, including another argument group for f(t).
-        let application =
-            function_application(&function, preimage_objs.into_iter().map(Box::new).collect())
-                .map_err(RuntimeError::InternalBug)?;
-        let equality = Fact::AtomicFact(AtomicFact::EqualFact(EqualFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            left: stmt.range_membership.element.clone(),
-            right: application,
-            line_file: stmt.range_membership.line_file.clone(),
-        }));
-        let stored = self.store_fact_and_infer(
-            &equality,
-            crate::execute::execute_fact_stmt::VerifyState::top_level(),
-        )?;
-        store_and_infer_result.push(stored);
 
         Ok(ExecHaveByFnPreimageStmtResult::Success(
             ExecHaveByFnPreimageStmtSuccessResult {

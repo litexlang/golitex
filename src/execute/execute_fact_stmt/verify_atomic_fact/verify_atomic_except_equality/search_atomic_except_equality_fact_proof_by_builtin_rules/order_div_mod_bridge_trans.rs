@@ -412,10 +412,11 @@ impl Runtime {
         if numerator_pos_proof.is_failed() {
             return Ok(None);
         }
-        let denominator_gt_one_proof = self.verify_order_gt_one(denominator, verify_state)?;
-        if denominator_gt_one_proof.is_failed() {
+        let Some(denominator_gt_one_proof) =
+            self.strict_order_premise(&one_obj(), denominator, None, verify_state)?
+        else {
             return Ok(None);
-        }
+        };
         Ok(Some(LessFactSearchProofByBuiltinRule::DivByGtOneLessSelf(
             DivByGtOneLessSelfBuiltinRuleProof {
                 numerator_pos_proof,

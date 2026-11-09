@@ -107,7 +107,14 @@ pub(super) fn expression(
             ),
             50,
         ),
-        Obj::MatrixOperator(value) => (matrix(value, modules, lang)?, 50),
+        Obj::MatrixOperator(value) => (
+            matrix(value, modules, lang)?,
+            if matches!(value, MatrixOperator::Minor(_)) {
+                40
+            } else {
+                50
+            },
+        ),
 
         Obj::IntegralOperator(IntegralOperator::Riemann(x)) => (
             format!(
@@ -292,7 +299,11 @@ pub(super) fn expression(
                 }
                 ExpLogOperator::Sqrt(x) => format!(r"\sqrt{{{}}}", o(&x.arg)?),
             },
-            50,
+            if matches!(x, ExpLogOperator::Exp(_)) {
+                40
+            } else {
+                50
+            },
         ),
         Obj::ComplexOperator(x) => (
             match x {
@@ -417,7 +428,14 @@ pub(super) fn expression(
                     }
                 },
             },
-            50,
+            if matches!(
+                x,
+                SetFormer::MatrixSet(_) | SetFormer::SeqSet(_) | SetFormer::FiniteSeqSet(_)
+            ) {
+                40
+            } else {
+                50
+            },
         ),
         Obj::ProductShape(x) => match x {
             ProductShape::Cart(x) => {

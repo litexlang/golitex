@@ -85,8 +85,15 @@ impl Runtime {
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )?;
 
+        let substitution = super::helper::published_parameter_substitution(self, &stmt.param_def);
         for body_fact in &stmt.facts {
-            let as_fact = quantifier_free_fact_to_fact(body_fact.clone());
+            let body_fact = if substitution.is_empty() {
+                body_fact.clone()
+            } else {
+                self.inst_quantifier_free_fact(body_fact, &substitution)
+                    .map_err(|e| RuntimeError::InternalBug(format!("have body publication: {e}")))?
+            };
+            let as_fact = quantifier_free_fact_to_fact(body_fact);
             let stored = self.store_fact_and_infer(
                 &as_fact,
                 crate::execute::execute_fact_stmt::VerifyState::top_level(),

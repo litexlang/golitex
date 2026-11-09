@@ -33,6 +33,14 @@ ordinary real-domain checks. The
 checks `a+b<=2*M` from both `a<=M` and `b<=M`, including negative `M`.
 Detailed evidence retains both bound proofs. These routes have no Lean replay adapter.
 
+[Quotient comparison with one](atomic/by_builtin_strategy/quotient_unit_order.lit)
+compares a real numerator with its positive denominator.
+[Quotient scaling](atomic/by_builtin_strategy/quotient_scale_order.lit)
+compares a quotient with its numerator, using the numerator's sign and the
+positive denominator's position relative to one. Both support strict and
+non-strict order and retain the checked premises. The new strategy routes
+have no Lean replay adapter; the compiler rejects them explicitly.
+
 ## Acceptance
 
 ```bash

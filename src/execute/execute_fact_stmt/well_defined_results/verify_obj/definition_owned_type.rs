@@ -43,19 +43,21 @@ impl Runtime {
                     StoredIdentifierDefinition::LetObj(_)
                     | StoredIdentifierDefinition::HaveByReplacementAxiom(_) => return None,
                 };
-                parameters
+                let carrier = parameters
                     .groups
                     .iter()
                     .find(|group| group.params.iter().any(|p| &p.name == name))
-                    .and_then(|group| obj_type(&group.param_type))
+                    .and_then(|group| obj_type(&group.param_type))?;
+                let substitution = crate::execute::helper::parameter_substitution_for_surface(
+                    identifier,
+                    &parameters,
+                );
+                self.inst_obj(&carrier, &substitution).ok()
             }
             Obj::FnObj(application) => {
                 let head = super::helper::fn_obj_head_as_obj(&application.head);
-                let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) =
-                    self.definition_owned_type(&head)?
-                else {
-                    return None;
-                };
+                let carrier = self.definition_owned_type(&head)?;
+                let signature = self.function_space_signature(&carrier)?;
                 self.applied_fn_set_return_set(application, &signature)
             }
             Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => {

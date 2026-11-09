@@ -1,4 +1,4 @@
-use crate::execute::execute_fact_stmt::multivariable::expression::SmoothCoordinateConstructorProof as C;
+use crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof as C;
 use crate::execute::execute_fact_stmt::multivariable::strategy::{
     MultivariableInteriorProof as P, MultivariableStrategyProof,
 };
@@ -215,10 +215,11 @@ forall p cart(R,R):
                     let C::Elementary { domain, .. } = &mut child.constructor else {
                         panic!("elementary function");
                     };
-                    let AtomicFact::InFact(fact) = &mut super::atomic_proof_mut(domain).fact else {
-                        panic!("domain membership");
-                    };
-                    fact.set = Obj::StandardSet(StandardSet::C);
+                    match &mut super::atomic_proof_mut(domain).fact {
+                        AtomicFact::InFact(fact) => fact.set = Obj::StandardSet(StandardSet::C),
+                        AtomicFact::LessEqualFact(fact) => fact.right = number(9),
+                        _ => panic!("domain condition"),
+                    }
                 }
                 2 => {
                     let AtomicFact::InFact(fact) =
@@ -230,24 +231,21 @@ forall p cart(R,R):
                 }
                 3 => {
                     let AtomicFact::InFact(fact) =
-                        &mut super::atomic_proof_mut(&mut operand.derivative_real).fact
+                        &mut super::atomic_proof_mut(&mut operand.value_real).fact
                     else {
                         panic!("derivative membership");
                     };
                     fact.set = Obj::StandardSet(StandardSet::C);
                 }
                 4 => {
-                    let proof = operand
-                        .derivative_source_well_defined
-                        .as_detailed_mut()
-                        .unwrap();
+                    let proof = operand.value_source_well_defined.as_detailed_mut().unwrap();
                     let obj = match proof {
                         DetailedObjWellDefinedProof::ByDef { obj, .. }
                         | DetailedObjWellDefinedProof::ByKnown { obj, .. } => obj,
                     };
                     *obj = number(9);
                 }
-                _ => operand.derivative_reduction.result = number(9),
+                _ => operand.value_reduction.result = number(9),
             }
             assert!(
                 compiler
@@ -324,7 +322,7 @@ fn multivariable_interior_rejects_changed_domain_guards_order_and_point_proofs()
 }
 
 #[test]
-fn multivariable_interior_retains_original_axis_one_and_operand_certificates() {
+fn multivariable_interior_retains_continuous_operand_certificates() {
     for change in 0..7 {
         let (mut run, c) = super::execute(SOURCES[1]);
         let P::OpenGuards { guards, .. } = geometry(&mut run) else {
@@ -335,16 +333,13 @@ fn multivariable_interior_retains_original_axis_one_and_operand_certificates() {
             0 => operand.expression = number(9),
             1 => operand.value = number(9),
             2 => operand.value_reduction.source = number(9),
-            3 => operand.derivative_expression = number(9),
-            4 => operand.derivative_value = number(9),
+            3 => operand.value_reduction.result = number(9),
+            4 => operand.value_reduction.source = number(9),
             5 => {
-                let C::Coordinate {
-                    axis_comparison, ..
-                } = &mut operand.constructor
-                else {
+                let C::Coordinate { index, .. } = &mut operand.constructor else {
                     panic!("coordinate")
                 };
-                super::equality_proof_mut(axis_comparison).fact.right = number(2);
+                *index = number(2);
             }
             _ => {
                 let C::Coordinate { index_member, .. } = &mut operand.constructor else {
@@ -373,7 +368,7 @@ fn multivariable_interior_keeps_elementary_power_and_division_requirements() {
             };
             let operand = &mut guards[if case == 10 { 1 } else { 0 }].operands[0];
             if change == 2 {
-                operand.derivative_expression = number(9);
+                operand.value_reduction.result = number(9);
             } else {
                 match &mut operand.constructor {
                     C::Elementary {

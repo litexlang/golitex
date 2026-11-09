@@ -114,6 +114,13 @@ theorem semanticEuclideanContinuousNeg {M : Semantics.{u}} [F : FunctionSemantic
   · exact continuousAt_id.neg
   · exact h
 
+theorem semanticEuclideanContinuousAbs {M : Semantics.{u}} [F : FunctionSemantics M]
+    (domain point dimension : M.Value) (raw : M.Value → M.Value)
+    (h : SemanticEuclideanContinuousAtValue M domain point dimension raw) :
+    SemanticEuclideanContinuousAtValue M domain point dimension (fun x => absValue (raw x)) :=
+  semanticEuclideanContinuousUnary domain point dimension raw absValue (fun r : ℝ => |r|)
+    absValue_number continuous_abs.continuousAt h
+
 theorem semanticEuclideanContinuousExp {M : Semantics.{u}} [F : FunctionSemantics M]
     (domain point dimension : M.Value) (raw : M.Value → M.Value)
     (h : SemanticEuclideanContinuousAtValue M domain point dimension raw) :

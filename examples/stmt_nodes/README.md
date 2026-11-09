@@ -9,6 +9,11 @@ checks that each currently wired statement kind can execute end-to-end.
 
 ## Acceptance
 
+[Induction binding isolation](by/induction_binding_isolation.lit) keeps the
+outer lower bound separate from the induction variable.
+[Negated universal witnesses](by/negated_forall_witness_scope.lit) keep the
+quantified name local so a subsequent witness can reuse its spelling.
+
 The [nested-field instantiation tracer](definition/struct_nested_field_instantiation.lit)
 checks direct struct laws with nested callable and value fields, including
 parameterized scalar structures. Substitution and one-layer release keep the

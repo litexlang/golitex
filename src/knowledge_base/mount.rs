@@ -76,6 +76,8 @@ pub struct MountedExport {
     pub name: String,
     pub relative_path: String,
     pub definitions: DefinitionMemory,
+    pub prop_rewrite_properties:
+        HashMap<crate::ast::names::AtomicName, Vec<crate::exec_env::exec_env::PropRewriteProperty>>,
     pub global_ids_at_enter: GlobalIdsSnapshot,
     pub global_ids_at_leave: GlobalIdsSnapshot,
 }
@@ -96,6 +98,8 @@ pub struct ExportKbWrite {
     pub name: String,
     pub relative_path: String,
     pub definitions: DefinitionMemory,
+    pub prop_rewrite_properties:
+        HashMap<crate::ast::names::AtomicName, Vec<crate::exec_env::exec_env::PropRewriteProperty>>,
     pub global_ids_at_enter: GlobalIdsSnapshot,
     pub global_ids_at_leave: GlobalIdsSnapshot,
 }
@@ -130,6 +134,15 @@ pub fn write_module_kb(
             })?;
         }
         write_definition_memory(&path, &export.definitions)?;
+        let property_path = path.with_file_name("prop_rewrites.json");
+        fs::write(
+            &property_path,
+            super::prop_rewrite_codec::encode(&export.prop_rewrite_properties)?,
+        )
+        .map_err(|error| KbCodecError::Io {
+            path: property_path,
+            message: error.to_string(),
+        })?;
         manifest_exports.push(ManifestExportEntry {
             export_file_id: export.export_file_id,
             name: export.name.clone(),
@@ -215,6 +228,15 @@ pub fn try_mount_module(
         let deltas = GlobalIdsDeltas::from_enter_and_now(&entry.global_ids_at_enter, &cursor);
         let plan = RemapPlan::new(deltas, old_mod_id_to_new.clone());
         remap_definition_memory(&mut definitions, &plan).map_err(KbMountMiss::Corrupt)?;
+        let property_path = def_path.with_file_name("prop_rewrites.json");
+        let properties = fs::read_to_string(&property_path).map_err(|error| {
+            KbMountMiss::Corrupt(KbCodecError::Io {
+                path: property_path,
+                message: error.to_string(),
+            })
+        })?;
+        let prop_rewrite_properties =
+            super::prop_rewrite_codec::decode(&properties, &plan).map_err(KbMountMiss::Corrupt)?;
 
         let remapped_enter = entry.global_ids_at_enter.apply_deltas(&plan.deltas);
         let remapped_leave_export = entry.global_ids_at_leave.apply_deltas(&plan.deltas);
@@ -226,6 +248,7 @@ pub fn try_mount_module(
             name: entry.name.clone(),
             relative_path: entry.relative_path.clone(),
             definitions,
+            prop_rewrite_properties,
             global_ids_at_enter: remapped_enter,
             global_ids_at_leave: remapped_leave_export,
         });

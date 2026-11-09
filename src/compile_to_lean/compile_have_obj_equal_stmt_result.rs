@@ -208,12 +208,14 @@ impl LitexToLeanCompiler {
                 position,
             )?);
             let member_fact = self.resolve_fact(stores[index].primary_fact_id(), position)?;
-            if !parameter_type_fact_matches(
-                kind,
-                left,
-                &member_fact,
-                &std::collections::HashMap::new(),
-            ) {
+            let Obj::Identifier(identifier) = left else {
+                return Err(LeanCompileError::unsupported("HaveEqual/StoredIdentifier"));
+            };
+            let published = crate::execute::parameter_substitution_for_surface(
+                identifier,
+                &proof.statement.param_def,
+            );
+            if !parameter_type_fact_matches(kind, left, &member_fact, &published) {
                 return Err(LeanCompileError::new(
                     "HaveEqual/Store",
                     "The stored member does not belong to this declaration.",

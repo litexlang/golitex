@@ -1,6 +1,28 @@
 use crate::prelude::*;
 
 #[test]
+fn symbolic_coordinate_smoothness_and_continuous_open_guards() {
+    let mut rt = runtime();
+    check(
+        &mut rt,
+        include_str!("../../../examples/real_analysis/multivariable_symbolic_coordinates.lit"),
+        true,
+    );
+    check(&mut rt, "forall point finite_seq(R,2):\n    abs(point(1))<1\n    =>:\n        $has_partial_derivative_at(fn(p finite_seq(R,2): abs(p(1))<1) R {p(1)}, point, 2, 1, 1)", true);
+    check(
+        &mut rt,
+        "$is_multi_differentiable_at(fn(p finite_seq(R,2)) R {abs(p(1))}, (0,0), 2)",
+        false,
+    );
+    check(
+        &mut rt,
+        "$has_partial_derivative_at(fn(p finite_seq(R,2): abs(p(1))<1) R {p(1)}, (1,0), 2, 1, 1)",
+        false,
+    );
+    check(&mut rt, "forall k closed_range(1,3):\n    $is_multi_differentiable_at(fn(p finite_seq(R,2)) R {p(k)+1}, (0,0), 2)", false);
+}
+
+#[test]
 fn directional_derivative_explicit_bridges_and_provenance() {
     let mut rt = runtime();
     check(&mut rt, "have fn bowl(x cart_n(R,2)) R=x(1)^2+x(2)^2", true);

@@ -9,6 +9,7 @@ use crate::rational_expression::helper::{add_objs, sub_objs};
 
 pub enum MultivariableStrategyProof {
     ContinuousExpression(ContinuousMultivariableProof),
+    DifferentiableExpression(DifferentiableMultivariableProof),
     CoordinateProjectionDifferentiable(CoordinateProjectionDifferentiableProof),
     ScalarLimit(ScalarLimitStrategyProof),
     VectorLimit(VectorLimitStrategyProof),
@@ -46,6 +47,10 @@ pub struct CoordinateProjectionDifferentiableProof {
     pub geometry: MultivariableInteriorProof,
     pub index: Obj,
     pub index_member: Box<VerifyFactResult>,
+}
+pub struct DifferentiableMultivariableProof {
+    pub expression: ContinuousMultivariableProof,
+    pub smooth_domains: Vec<VerifyFactResult>,
 }
 pub struct ScalarLimitStrategyProof {
     pub stages: SmoothMultivariableStages,
@@ -107,7 +112,7 @@ pub struct SmoothMultivariableStages {
 }
 pub struct MultivariableOpenGuardProof {
     pub guard: AtomicFact,
-    pub operands: Vec<SmoothCoordinateExpressionProof>,
+    pub operands: Vec<super::continuity::ContinuousExpressionProof>,
     pub point_condition: Fact,
     pub point_proof: Box<VerifyFactResult>,
 }
@@ -147,9 +152,9 @@ pub struct MultivariableCoordinateProof {
 impl MultivariableStrategyProof {
     pub fn stages(&self) -> Option<&SmoothMultivariableStages> {
         Some(match self {
-            Self::ContinuousExpression(_) | Self::CoordinateProjectionDifferentiable(_) => {
-                return None
-            }
+            Self::ContinuousExpression(_)
+            | Self::DifferentiableExpression(_)
+            | Self::CoordinateProjectionDifferentiable(_) => return None,
             Self::ScalarLimit(p) => &p.stages,
             Self::VectorLimit(p) => &p.stages,
             Self::ScalarContinuousAt(p) => &p.stages,
@@ -280,12 +285,11 @@ impl Runtime {
             };
             let mut operands = Vec::new();
             for expression in expressions {
-                let Some(proof) = self.prove_smooth_coordinate_expression(
+                let Some(proof) = self.prove_multivariable_continuous_expression(
                     expression,
                     builder.param_binding.id,
                     point,
                     n,
-                    &number(1),
                     state,
                     0,
                     &mut budget,
@@ -400,18 +404,44 @@ impl Runtime {
                     state,
                 )?
             {
-                return Ok(Some(MultivariableStrategyProof::ContinuousExpression(
-                    ContinuousMultivariableProof {
-                        relation: relation.clone(),
-                        function_domain: Box::new(source),
-                        body: body.clone(),
-                        body_equal: KnownEqualityPathProof::new(path),
-                        body_well_defined: Box::new(body_well_defined),
-                        geometry,
-                        coordinates,
-                        conclusion_equalities,
-                    },
-                )));
+                let differentiable = matches!(
+                    relation,
+                    MultivariableAnalysisRelation::ScalarDifferentiableAt(_)
+                );
+                let mut smooth_domains = Vec::new();
+                if differentiable {
+                    let mut smooth = true;
+                    for coordinate in &coordinates {
+                        smooth &= self.prove_expression_smoothness(
+                            &coordinate.expression,
+                            state,
+                            &mut smooth_domains,
+                        )?;
+                    }
+                    if !smooth {
+                        continue;
+                    }
+                }
+                let expression = ContinuousMultivariableProof {
+                    relation: relation.clone(),
+                    function_domain: Box::new(source),
+                    body: body.clone(),
+                    body_equal: KnownEqualityPathProof::new(path),
+                    body_well_defined: Box::new(body_well_defined),
+                    geometry,
+                    coordinates,
+                    conclusion_equalities,
+                };
+                return Ok(Some(if differentiable {
+                    MultivariableStrategyProof::DifferentiableExpression(
+                        DifferentiableMultivariableProof {
+                            expression,
+                            smooth_domains,
+                        },
+                    )
+                } else {
+                    MultivariableStrategyProof::ContinuousExpression(expression)
+                }));
             }
             if matches!(
                 relation,

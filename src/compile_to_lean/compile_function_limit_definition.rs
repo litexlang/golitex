@@ -111,8 +111,12 @@ pub(super) fn signature_domain_matches(domain: &Obj, signature: &FnSet) -> bool 
     if signature.dom_facts.is_empty() {
         domain.ir() == group.param_type.ir()
     } else {
-        matches!(domain, Obj::SetFormer(SetFormer::SetBuilder(b)) if b.param_binding.id == parameter.id
-            && b.param_set.ir() == group.param_type.ir() && b.facts == signature.dom_facts)
+        let expected = Obj::SetFormer(SetFormer::SetBuilder(SetBuilder {
+            param_binding: parameter.clone(),
+            param_set: group.param_type.clone(),
+            facts: signature.dom_facts.clone(),
+        }));
+        crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::compound_objs_alpha_equal(domain, &expected)
     }
 }
 
