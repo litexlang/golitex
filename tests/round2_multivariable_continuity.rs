@@ -96,15 +96,26 @@ fn continuous_expression_composition_preserves_domain_and_wrong_value_rejection(
 }
 
 #[test]
-fn new_continuity_evidence_has_an_explicit_lean_support_boundary() {
+fn scalar_continuity_and_limit_replay_without_derivative_evidence() {
     let mut rt = runtime();
-    let run = check(&mut rt, "have fn norm(p finite_seq(R,2)) R = sqrt(p(1)^2+p(2)^2)\n$is_multi_continuous_at(norm,(0,0),2)", true);
-    let error = litex::compile_to_lean::LitexToLeanCompiler::new(rt)
+    let run = check(&mut rt, "have fn norm(p finite_seq(R,2)) R = sqrt(p(1)^2+p(2)^2)\n$is_multi_continuous_at(norm,(0,0),2)\n$has_multi_limit_at(norm,(0,0),2,0)", true);
+    let output = litex::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "norm_continuity")
-        .expect_err("joint continuity replay requires a dedicated semantic bridge");
+        .expect("joint continuity evidence must replay");
+    assert!(output.contains("semanticEuclideanContinuousSqrt"));
+    assert!(output.contains("scalarContinuityToMultivariableLimit"));
+}
+
+#[test]
+fn symbolic_coordinate_differentiability_has_an_explicit_lean_boundary() {
+    let mut rt = runtime();
+    let run = check(&mut rt, "forall k closed_range(1,2):\n    $is_multi_differentiable_at(fn(p finite_seq(R,2)) R {p(k)},(0,0),2)", true);
+    let error = litex::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run, "projection_differentiable")
+        .expect_err("coordinate differentiability needs its own semantic bridge");
     assert_eq!(error.route, "Atomic/BuiltinStrategy", "{error:?}");
     assert!(
-        error.message.contains("is_multi_continuous_at"),
+        error.message.contains("is_multi_differentiable_at"),
         "{error:?}"
     );
 }

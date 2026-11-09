@@ -61,9 +61,9 @@ pub fn exec_eval_stmt(
         runtime.rewrite_obj_by_known_closed_numeric_equal(&stmt.obj_to_eval);
 
     let mut active_calls = ActiveAlgoCalls::new();
-    // Eval publishes a proof equality, so its arithmetic must use the same
-    // exact evaluator as proof consumers, without approximate fallback.
-    active_calls.proof_mode = true;
+    // This path also supports bounded, exact decimal integers beyond i128.
+    // Algorithm equations are certified below before publishing the result;
+    // the narrower matrix/aggregate proof mode is not the eval contract.
     let evaluated_object = match evaluate_obj(runtime, &rewritten_object, 0, &mut active_calls)? {
         Ok(v) => v,
         Err(failed) => {

@@ -285,6 +285,7 @@ mod compile_function_derivative_definition;
 mod compile_gradient;
 mod compile_hessian;
 mod compile_jacobian;
+mod compile_joint_continuity;
 mod compile_laplacian;
 mod compile_multivariable_continuity;
 mod compile_multivariable_differentiability;

@@ -357,14 +357,29 @@ impl Tokenizer {
             let body = if Self::ends_with_colon(&content.text) {
                 // Continuation lines retain empty placeholders for source
                 // locations. Blank and comment lines do not establish indentation.
-                while *i < lines.len() {
-                    let next = Self::code_prefix_before_hash_comment(&lines[*i].text);
+                let body_start = *i;
+                let mut next_line = body_start;
+                while next_line < lines.len() {
+                    let next = Self::code_prefix_before_hash_comment(&lines[next_line].text);
                     if !next.trim().is_empty() {
                         break;
                     }
-                    *i += 1;
+                    next_line += 1;
                 }
-                if *i >= lines.len() {
+                if next_line > body_start
+                    && (next_line == lines.len()
+                        || Self::indent_level(&lines[next_line].text) <= indent)
+                {
+                    // Trivia cannot supply a body or turn the following sibling
+                    // into one. Diagnose the empty block at its own header.
+                    return Err(RuntimeParseError::new(
+                        "block header requires a nonempty body",
+                        line_no,
+                        source_path.clone(),
+                    )
+                    .into());
+                }
+                if next_line >= lines.len() {
                     return Err(RuntimeParseError::new(
                         "block header missing body",
                         line_no,
@@ -372,15 +387,16 @@ impl Tokenizer {
                     )
                     .into());
                 }
-                let next_indent = Self::indent_level(&lines[*i].text);
+                let next_indent = Self::indent_level(&lines[next_line].text);
                 if next_indent <= indent {
                     return Err(RuntimeParseError::new(
                         "expected indent",
-                        *i + 1,
+                        next_line + 1,
                         source_path.clone(),
                     )
                     .into());
                 }
+                *i = next_line;
                 let body = self.parse_level(lines, i, next_indent, source_path, source)?;
                 if body.is_empty() {
                     return Err(RuntimeParseError::new(

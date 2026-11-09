@@ -3091,3 +3091,18 @@ by the original Main input guard. Public generated pairs match the checked
 frozen output exactly. Generated statements retain explicit M : Litex.Semantics.
 No Core,native,producer,result,AST,Env,Runtime or source-search contract changed
 by this increment.
+
+The joint-continuity expression route replays the native `ContinuousExpression`
+evidence independently of derivatives. For scalar functions on complete finite
+Euclidean domains, it consumes the original function membership, body equality,
+body well-definedness, coordinate bounds, point reductions, and constructor
+proofs for constants, coordinates, arithmetic, natural powers, exponential,
+logarithm, sine, cosine, and square root. Scalar finite-point limits additionally
+consume the checked accumulation and exact target-value equality. The
+[Euclidean norm pair](../../lean/examples/euclidean_norm_continuity/) covers
+continuity and limit zero at the origin, where the norm is not differentiable.
+The [elementary expression pair](../../lean/examples/euclidean_expression_continuity/)
+covers the remaining arithmetic and elementary constructor calls.
+Vector-valued expression replay, guarded-domain joint neighborhoods, and the
+separate symbolic-coordinate differentiability strategy remain unsupported by
+this compiler route; their native verification does not imply Lean replay.

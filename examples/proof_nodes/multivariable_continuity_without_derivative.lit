@@ -14,5 +14,6 @@ $is_multi_continuous_at(projection,(0,0),2)
 $is_multi_differentiable_at(projection,(0,0),2)
 $has_multi_limit_at(projection,(0,0),2,(0,0)(k))
 # Negative tests reject norm's derivative at the origin and a limit value of 1.
-# Lean replay of the new joint continuity certificate remains explicitly unsupported.
+# Scalar continuity and limits have Lean replay; the canonical norm pair lives in lean/examples/euclidean_norm_continuity/.
+# The separate symbolic-coordinate differentiability certificate still has no Lean replay.
 # Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/multivariable_continuity_without_derivative.lit

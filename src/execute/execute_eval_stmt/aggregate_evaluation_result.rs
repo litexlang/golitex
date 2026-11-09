@@ -93,8 +93,9 @@ pub struct AggregateTermEvaluationResult {
 }
 pub enum AggregateTermExpansion {
     Function(AnonFnApplicationBodyProof),
-    // Display eval may run stored algorithms; equality evaluation requires a
-    // mathematical function body instead of treating an algorithm as a theorem.
+    // Explicit eval may execute a finite algorithm trace. Every referenced
+    // equation is certified before publication; automatic proof search keeps
+    // its narrower dispatch and recursion allowance.
     Algorithm { evaluation_index: usize },
 }
 

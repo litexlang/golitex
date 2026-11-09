@@ -201,6 +201,22 @@ fn template_call_from_declared_carrier_replays_instance_and_argument_wd() {
 }
 
 #[test]
+fn function_valued_alias_template_declares_the_called_signature() {
+    let source =
+        "template<T set>:\n    have identity fn(x T) T = fn(x T) T {x}\n\\identity<R>(1) $in R";
+    let (mut run, compiler) = super::execute(source);
+    let declaration = template(&mut run);
+    let binding = declaration.statement.template_def_stmt.defined_bindings()[0];
+    let name = format!("_template_signature_i{}", binding.id.value());
+    let output = compiler.compile_run(&run, "FunctionValuedAlias").unwrap();
+    let definition = output
+        .find(&format!("noncomputable def {name}"))
+        .expect("the referenced signature must be declared for value aliases too");
+    let application = output.find("(Litex.call ").expect("checked call");
+    assert!(definition < application, "signature must precede its use");
+}
+
+#[test]
 fn have_template_publication_requires_its_original_visible_prefix() {
     let (mut run, compiler) = super::execute(SOURCES[0]);
     compiler.compile_run(&run, "baseline").unwrap();

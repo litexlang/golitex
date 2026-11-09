@@ -4321,3 +4321,6 @@ mod sequence_program_tests;
 
 #[path = "../../tests/unit/compile_to_lean/finite_function_range_tests.rs"]
 mod finite_function_range_tests;
+
+#[path = "../../tests/unit/compile_to_lean/joint_continuity_tests.rs"]
+mod joint_continuity_tests;

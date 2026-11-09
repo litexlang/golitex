@@ -56,6 +56,27 @@ fn eval_closed_pow_succeeds_with_nine() {
 }
 
 #[test]
+fn eval_publishes_exact_decimal_values_beyond_i128_without_rounding() {
+    let mut runtime = runtime_with_file_env();
+    assert_eval_number(
+        &mut runtime,
+        "eval 170141183460469231731687303715884105727 * 2",
+        "340282366920938463463374607431768211454",
+    );
+    assert!(!exec_one(
+        &mut runtime,
+        "170141183460469231731687303715884105727 * 2 = 340282366920938463463374607431768211454",
+    )
+    .is_failed());
+    assert!(exec_one(
+        &mut runtime,
+        "170141183460469231731687303715884105727 * 2 = 340282366920938463463374607431768211455",
+    )
+    .is_failed());
+    assert!(exec_one(&mut runtime, "eval 2^(1/3)").is_failed());
+}
+
+#[test]
 fn normalized_decimal_and_guarded_imaginary_regressions() {
     for code in [
         "2.400 = 2.4",

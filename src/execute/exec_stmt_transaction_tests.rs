@@ -641,24 +641,67 @@ fn not_exist_trust_infers_demorgan_forall() {
         "trust not exist must store"
     );
     let facts = &runtime.top_exec_env().facts;
+    let guarded = facts
+        .facts_by_id
+        .values()
+        .find_map(|fact| match fact {
+            crate::ast::fact::Fact::ForallFact(fact) => Some(fact),
+            _ => None,
+        })
+        .expect("not exist inference must store its guarded forall");
+    assert_eq!(guarded.typed_parameters.groups.len(), 1);
+    let group = &guarded.typed_parameters.groups[0];
+    assert_eq!(group.params.len(), 1);
+    assert!(matches!(
+        &group.param_type,
+        crate::ast::param::ParamType::Obj(crate::ast::obj::Obj::StandardSet(
+            crate::ast::obj::StandardSet::R
+        ))
+    ));
+    let bound = crate::ast::obj::Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(
+        &group.params[0],
+    ));
+    let [crate::ast::fact::Fact::AtomicFact(crate::ast::fact::AtomicFact::GreaterFact(guard))] =
+        guarded.dom_facts.as_slice()
+    else {
+        panic!("the original positive guard must remain a premise");
+    };
+    assert_eq!(guard.left, bound);
+    assert!(
+        matches!(&guard.right, crate::ast::obj::Obj::Literal(crate::ast::obj::Literal::Number(n)) if n.normalized_value == "0")
+    );
+    let [crate::ast::fact::ExistOrAndChainAtomicFact::AtomicFact(
+        conclusion @ crate::ast::fact::AtomicFact::NotLessFact(negative),
+    )] = guarded.then_facts.as_slice()
+    else {
+        panic!("only the final conjunct is negated");
+    };
+    assert_eq!(negative.left, bound);
+    assert_eq!(negative.right, guard.right);
+    let key = (
+        conclusion.prop_name(),
+        crate::ast::fact::atomic_fact_has_positive_polarity(conclusion),
+    );
+    assert!(facts.known_forall_conclusions.by_atomic_prop.get(&key).is_some_and(|entries|
+        entries.iter().any(|entry| entry.fact_id == guarded.fact_id
+            && matches!(&entry.location, crate::ast::fact::ForallConclusionLocation::DirectThenFact(p) if p.then_fact_index == 0)
+        )), "the guarded negative conclusion must be indexed by its exact source");
     assert!(
         facts
-            .facts_by_id
+            .known_forall_conclusions
+            .by_or
             .values()
-            .any(|f| matches!(f, crate::ast::fact::Fact::ForallFact(_))),
-        "not exist infer must store De Morgan forall"
-    );
-    assert!(
-        !facts.known_forall_conclusions.by_or.is_empty(),
-        "De Morgan forall or-conclusion must be indexed"
+            .flatten()
+            .all(|entry| entry.fact_id != guarded.fact_id),
+        "the rule must not publish an unguarded disjunction"
     );
     assert!(
         !exec_one(
             &mut runtime,
-            "forall z R:\n    =>:\n        not z > 0 or not z < 0",
+            "forall z R:\n    z > 0\n    =>:\n        not z < 0",
         )
         .is_failed(),
-        "De Morgan forall must prove the disjunction of negations"
+        "the guarded forall must apply after its original premise"
     );
 }
 

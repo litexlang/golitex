@@ -108,10 +108,12 @@ fn array(json: &crate::knowledge_base::JsonValue) -> &[crate::knowledge_base::Js
 
 #[test]
 fn atomic_success_preserves_checked_arguments_local_proof_and_obligations() {
+    use crate::ast::fact::{exist_shaped_fact_to_fact, AtomicFact, Fact, QuantifierFreeFact};
+    use crate::ast::obj::{IdentifierObj, Literal, Obj};
     use crate::execute::execute_witness_stmt::{
         ExecWitnessAtomicFactStmtResult, ExecWitnessStmtResult,
     };
-    use crate::execute::ExecStmtResult;
+    use crate::execute::{ExecDefPropStmtResult, ExecDefinitionStmtResult, ExecStmtResult};
     use crate::knowledge_base::JsonValue;
     for language in [OutputLanguage::English, OutputLanguage::Chinese] {
         let mut rt = runtime_language(language);
@@ -125,6 +127,34 @@ fn atomic_success_preserves_checked_arguments_local_proof_and_obligations() {
         else {
             panic!("atomic success");
         };
+        let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+            ExecDefPropStmtResult::Success(definition),
+        )) = &run.statement_results[0]
+        else {
+            panic!("original predicate definition");
+        };
+        let [Fact::ExistFact(original)] = definition.statement.iff_facts.as_slice() else {
+            panic!("original existential clause");
+        };
+        let projected = s.projected_exist.plain();
+        assert_eq!(projected.typed_parameters.groups.len(), 1);
+        assert_eq!(projected.typed_parameters.groups[0].params.len(), 1);
+        let private = &projected.typed_parameters.groups[0].params[0];
+        let source = &original.typed_parameters.groups[0].params[0];
+        assert_ne!(private.id, source.id);
+        assert_ne!(private.name, source.name);
+        assert!(private.name.starts_with("__"));
+        let private_object = Obj::Identifier(IdentifierObj::from_bound_name(private));
+        let [QuantifierFreeFact::AtomicFact(AtomicFact::EqualFact(body))] =
+            projected.facts.as_slice()
+        else {
+            panic!("projected equality body");
+        };
+        assert_eq!(body.left, private_object);
+        assert_eq!(body.right, s.statement.witnesses[0]);
+        assert!(
+            matches!(&body.right, Obj::Literal(Literal::Number(n)) if n.normalized_value == "2")
+        );
         let json = crate::json_output::project_stmt_detailed(&run.statement_results[1], &rt);
         assert_eq!(
             array(field(&json, "prop_argument_type_checks", language)).len(),
@@ -132,7 +162,7 @@ fn atomic_success_preserves_checked_arguments_local_proof_and_obligations() {
         );
         assert_eq!(
             field(&json, "projected_exist", language).as_str().unwrap(),
-            "exist x R st {x = 2}"
+            exist_shaped_fact_to_fact(&s.projected_exist).readable_string()
         );
         assert!(field(&json, "exist_fact_well_defined", language)
             .as_object()
@@ -161,6 +191,31 @@ fn atomic_success_preserves_checked_arguments_local_proof_and_obligations() {
             .is_ok());
         assert!(!json.stringify().contains("local_env"));
         assert!(!json.stringify().contains("局部环境"));
+        assert!(s
+            .local_env
+            .definitions
+            .identifiers
+            .contains_key(&private.name));
+        assert!(s
+            .local_env
+            .definitions
+            .identifiers
+            .contains_key("local_copy"));
+        assert!(!s
+            .local_env
+            .definitions
+            .identifiers
+            .contains_key(&source.name));
+        for name in [private.name.as_str(), "local_copy"] {
+            assert!(!rt.top_exec_env().definitions.identifiers.contains_key(name));
+        }
+        for equality in &s.witness_equalities {
+            assert!(!rt
+                .top_exec_env()
+                .facts
+                .facts_by_id
+                .contains_key(&equality.primary_fact_id()));
+        }
     }
 }
 

@@ -403,6 +403,9 @@ impl LitexToLeanCompiler {
                     self.compile_builder_membership(fact, &proof.requirement_facts, &proof.proof_of_requirement_facts, position)?
                 }
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(
+                    crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::ContinuousExpression(p),
+                )) => self.compile_joint_continuity(goal, p, definition_wd, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(
                     crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::PartialDerivativeAt(p),
                 )) => self.compile_smooth_partial_derivative(goal, p, definition_wd, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p)) => self.compile_pointwise_derivative(goal,p,position)?,

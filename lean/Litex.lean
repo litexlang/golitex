@@ -47,6 +47,7 @@ import Litex.MultivariableContinuity
 import Litex.MultivariableContinuityLimit
 import Litex.EuclideanComposition
 import Litex.EuclideanScalarAlgebra
+import Litex.EuclideanExpressionContinuity
 import Litex.EuclideanVectorAlgebra
 
 import Litex.SequenceTailOrder

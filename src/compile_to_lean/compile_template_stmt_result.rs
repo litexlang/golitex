@@ -750,6 +750,7 @@ impl LitexToLeanCompiler {
                 | TemplateDefEnum::ObtainObjFromAtomicFact(_)
                 | TemplateDefEnum::HaveObjInNonemptySetStmt(_)
                 | TemplateDefEnum::HaveObjByExistFactsStmt(_)
+                | TemplateDefEnum::HaveObjEqualStmt(_)
         ) {
             for binding in &bindings {
                 let member =

@@ -12738,6 +12738,43 @@ fn smooth_coordinate_search_stages<'a>(
     stages.push(AtomicSearchStage::Verify(&proof.derivative_real));
 }
 
+fn joint_expression_search_stages<'a>(
+    p: &'a crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof as C;
+    stages.push(AtomicSearchStage::WD(&p.value_source_well_defined));
+    stages.push(AtomicSearchStage::Verify(&p.value_real));
+    match &p.constructor {
+        C::Constant => {}
+        C::Coordinate { index_member, .. } => stages.push(AtomicSearchStage::Verify(index_member)),
+        C::Neg { argument } => joint_expression_search_stages(argument, stages),
+        C::Add { left, right }
+        | C::Subtract { left, right }
+        | C::Multiply { left, right }
+        | C::Divide { left, right, .. } => {
+            joint_expression_search_stages(left, stages);
+            joint_expression_search_stages(right, stages);
+            if let C::Divide { nonzero, .. } = &p.constructor {
+                stages.push(AtomicSearchStage::Verify(nonzero));
+            }
+        }
+        C::NaturalPower {
+            base,
+            exponent_natural,
+        } => {
+            stages.push(AtomicSearchStage::Verify(exponent_natural));
+            joint_expression_search_stages(base, stages);
+        }
+        C::Elementary {
+            argument, domain, ..
+        } => {
+            joint_expression_search_stages(argument, stages);
+            stages.push(AtomicSearchStage::Verify(domain));
+        }
+    }
+}
+
 fn multivariable_interior_search_stages<'a>(
     proof: &'a crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof,
     stages: &mut Vec<AtomicSearchStage<'a>>,
@@ -13141,6 +13178,17 @@ fn atomic_searched_stages(
         AtomicExceptEqualityFactSearchedProof::ByTemplateMembership(proof) => {
             stages.push(AtomicSearchStage::Searched(&proof.residual));
         }
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(
+            crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::ContinuousExpression(p),
+        )) => {
+            complete_domain_source_stages(&p.function_domain, &mut stages);
+            multivariable_interior_search_stages(&p.geometry, &mut stages);
+            stages.push(AtomicSearchStage::WD(&p.body_well_defined));
+            for (i,coordinate) in p.coordinates.iter().enumerate() {
+                joint_expression_search_stages(&coordinate.expression,&mut stages);
+                if let Some(conclusion)=p.conclusion_equalities.get(i) {stages.push(AtomicSearchStage::Verify(&conclusion.equality));}
+            }
+        },
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(
             crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::PartialDerivativeAt(p),
         )) => {

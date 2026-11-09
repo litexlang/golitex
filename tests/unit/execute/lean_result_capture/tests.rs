@@ -117,6 +117,29 @@ fn atomic_witness_retains_the_same_local_introduction_stages() {
     else {
         panic!("expected successful prop witness");
     };
+    let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefProp(
+        crate::execute::ExecDefPropStmtResult::Success(definition),
+    )) = &run.statement_results[0]
+    else {
+        panic!("original predicate definition");
+    };
+    let [Fact::ExistFact(original)] = definition.statement.iff_facts.as_slice() else {
+        panic!("original existential clause");
+    };
+    let original_parameter = &original.typed_parameters.groups[0].params[0];
+    let projected = proof.projected_exist.plain();
+    assert_eq!(projected.typed_parameters.groups.len(), 1);
+    assert_eq!(projected.typed_parameters.groups[0].params.len(), 1);
+    let private_parameter = &projected.typed_parameters.groups[0].params[0];
+    assert_ne!(private_parameter.id, original_parameter.id);
+    assert_ne!(private_parameter.name, original_parameter.name);
+    assert!(
+        private_parameter.name.starts_with("__"),
+        "predicate-private binders must remain unavailable to authored proof code"
+    );
+    let private_object = Obj::Identifier(IdentifierObj::from_bound_name(private_parameter));
+    assert_eq!(proof.ambient.witness_type_checks.len(), 1);
+    assert_eq!(proof.introduced_params.param_type_well_defined.len(), 1);
     assert_eq!(
         proof
             .introduced_params
@@ -127,10 +150,41 @@ fn atomic_witness_retains_the_same_local_introduction_stages() {
     );
     assert_eq!(proof.witness_equalities.len(), 1);
     let equality_id = proof.witness_equalities[0].primary_fact_id();
-    assert_eq!(
-        proof.local_env.facts.facts_by_id[&equality_id].readable_string(),
-        "m = 2"
+    let Fact::AtomicFact(AtomicFact::EqualFact(equality)) =
+        &proof.local_env.facts.facts_by_id[&equality_id]
+    else {
+        panic!("actual witness equality");
+    };
+    assert_eq!(equality.left, private_object);
+    assert_eq!(equality.right, proof.statement.witnesses[0]);
+    assert!(
+        matches!(&equality.right, Obj::Literal(Literal::Number(n)) if n.normalized_value == "2")
     );
+    let member_id = proof
+        .introduced_params
+        .defined_params
+        .store_and_infer_results[0]
+        .primary_fact_id();
+    let Fact::AtomicFact(AtomicFact::InFact(member)) =
+        &proof.local_env.facts.facts_by_id[&member_id]
+    else {
+        panic!("private binder type store");
+    };
+    assert_eq!(member.element, private_object);
+    assert_eq!(member.set, Obj::StandardSet(StandardSet::R));
+    assert!(proof.proof_steps.is_empty());
+    assert_eq!(proof.obligations.body_checks.len(), 1);
+    assert!(proof
+        .local_env
+        .definitions
+        .identifiers
+        .contains_key(&private_parameter.name));
+    assert!(!rt
+        .top_exec_env()
+        .definitions
+        .identifiers
+        .contains_key(&private_parameter.name));
+    assert!(!rt.top_exec_env().facts.facts_by_id.contains_key(&member_id));
     assert!(!rt
         .top_exec_env()
         .facts

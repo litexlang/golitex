@@ -341,9 +341,9 @@ where
     )
 }
 
-// Mathematical proof evaluation cannot turn a display-only decimal
-// approximation (or an overflowing exact operation) into an equality witness.
-// Ordinary `eval` keeps its existing display behavior.
+// Automatic matrix/aggregate proof search uses a bounded rational/radical
+// leaf. Ordinary `eval` additionally supports the shared exact decimal leaf
+// (including integers beyond i128); neither path rounds numeric results.
 pub(super) fn evaluate_numeric_source(obj: &Obj, proof_mode: bool) -> Option<Obj> {
     if crate::rational_expression::contains_imaginary_unit(obj) {
         if let Some(value) = crate::rational_expression::exact_complex::exact_complex_value(obj) {
@@ -371,7 +371,7 @@ mod matrix_exact_evaluation_tests {
     }
 
     #[test]
-    fn native_matrix_proof_evaluation_declines_decimal_and_overflow_fallbacks() {
+    fn native_matrix_proof_evaluation_retains_its_bounded_numeric_leaf() {
         let exponent = Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
             left: Box::new(number("1")),
             right: Box::new(number("3")),

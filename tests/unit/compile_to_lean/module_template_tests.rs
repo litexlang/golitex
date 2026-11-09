@@ -1,5 +1,10 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::execute::{ExecDefTemplateStmtResult, ExecDefTemplateStmtSuccessResult};
+use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{
+    AtomicExceptEqualityFactSearchProofByKnownSpecialProperty,
+    InFactSearchProofByKnownSpecialProperty,
+    TemplateFunctionInDeclaredFnSetProof,
+};
 use crate::prelude::*;
 use crate::run_module::{load_file_for_lean, LoadLeanSourceResult, LoadedLeanSource};
 
@@ -216,38 +221,138 @@ fn qualified_template_formation_retains_argument_wd_and_the_nonzero_guard() {
 
 #[test]
 fn selected_template_functions_cite_their_original_membership_publication() {
-    let (mut loaded, _project_8) = load("module_template_selected_function");
-    let publication = template(&loaded.closure.files[0].run.statement_results[0]).definition_facts
-        [0]
-    .store_and_infer
-    .primary_fact_id();
-    let checked = super::fact_statement_mut(&mut loaded.closure.files[0].run.statement_results[1]);
-    let proof = super::atomic_proof_mut(&mut checked.verify_result);
-    let AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(citation) = &proof.searched_proof
-    else {
-        panic!("original template membership citation")
-    };
-    assert_eq!(citation.detailed_ref().cite.fact_id, publication);
-    let compiler = super::LitexToLeanCompiler::new(loaded.runtime);
-    let output = compiler
-        .compile_module(&loaded.closure, "SelectedTemplateFunction")
-        .unwrap();
-    assert!(output.contains(&format!("source_0.h_{}", publication.value())));
-    assert_eq!(
-        output,
-        compiler
+    for mutation in 0..7 {
+        let (mut loaded, _project) = load("module_template_selected_function");
+        let publication = template(&loaded.closure.files[0].run.statement_results[0])
+            .definition_facts[0]
+            .store_and_infer
+            .primary_fact_id();
+        let checked =
+            super::fact_statement_mut(&mut loaded.closure.files[0].run.statement_results[1]);
+        let proof = super::atomic_proof_mut(&mut checked.verify_result);
+        let AtomicFact::InFact(goal) = &proof.fact else {
+            panic!("membership goal")
+        };
+        let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
+            AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+                InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(selected),
+            ),
+        ) = &proof.searched_proof
+        else {
+            panic!("declared template function signature")
+        };
+        assert_eq!(
+            goal.element,
+            Obj::InstantiatedTemplateObj(selected.instance.clone())
+        );
+        assert!(matches!(&selected.instance.template_name,
+            AtomicName::WithExportFileId { export_file_id: 0, name } if name == "selected_function"));
+        assert_eq!(
+            selected.instance.args,
+            vec![Obj::StandardSet(StandardSet::R); 2]
+        );
+        assert_eq!(
+            *selected.declared_signature.ret_set,
+            Obj::StandardSet(StandardSet::R)
+        );
+        assert!(matches!(
+            selected.signature_match,
+            EqualFactSearchedProof::ByTheyAreTheSame(_)
+        ));
+
+        let compiler = super::LitexToLeanCompiler::new(loaded.runtime);
+        let output = compiler
             .compile_module(&loaded.closure, "SelectedTemplateFunction")
-            .unwrap()
-    );
-    let checked = super::fact_statement_mut(&mut loaded.closure.files[0].run.statement_results[1]);
+            .unwrap();
+        // The selected native proof reads the declared signature directly, but
+        // Lean still obtains the chosen function's membership from this exact
+        // original publication, with the instance's own argument WD.
+        assert!(output.contains(&format!("source_0.h_{}", publication.value())));
+        if mutation == 0 {
+            assert_eq!(
+                output,
+                compiler
+                    .compile_module(&loaded.closure, "SelectedTemplateFunction")
+                    .unwrap()
+            );
+        }
+        match mutation {
+            0 => {
+                selected_function_signature(&mut loaded.closure.files[0].run.statement_results[1])
+                    .instance
+                    .template_name = AtomicName::WithExportFileId {
+                    export_file_id: 99,
+                    name: "selected_function".into(),
+                }
+            }
+            1 => {
+                selected_function_signature(&mut loaded.closure.files[0].run.statement_results[1])
+                    .declared_signature
+                    .ret_set = Box::new(Obj::StandardSet(StandardSet::N))
+            }
+            2 => {
+                selected_function_signature(&mut loaded.closure.files[0].run.statement_results[1])
+                    .instance
+                    .args[0] = Obj::StandardSet(StandardSet::N)
+            }
+            3 | 4 => {
+                let checked = super::fact_statement_mut(
+                    &mut loaded.closure.files[0].run.statement_results[1],
+                );
+                let proof = super::atomic_proof_mut(&mut checked.verify_result);
+                let wd = &mut proof
+                    .well_defined_proof
+                    .as_detailed_mut()
+                    .unwrap()
+                    .well_defined_of_each_parameter[0];
+                let DetailedObjWellDefinedProof::ByDef {
+                    proof: ObjWellDefinedProofByDef::InstantiatedTemplateObj(instance),
+                    ..
+                } = wd.as_detailed_mut().unwrap()
+                else {
+                    panic!("instance formation")
+                };
+                assert_eq!(instance.child_obj_well_defined.len(), 2);
+                assert_eq!(instance.requirement_fact_verified.len(), 2);
+                if mutation == 3 {
+                    instance.child_obj_well_defined.clear();
+                } else {
+                    instance.requirement_fact_verified.clear();
+                }
+            }
+            5 | 6 => {
+                let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+                    ExecDefTemplateStmtResult::Success(declaration),
+                )) = &mut loaded.closure.files[0].run.statement_results[0]
+                else {
+                    panic!("template")
+                };
+                if mutation == 5 {
+                    declaration.definition_facts[0].source_fact_id = FactId::new(u64::MAX);
+                } else {
+                    declaration.definition_facts.clear();
+                }
+            }
+            _ => unreachable!(),
+        }
+        compiler
+            .compile_module(&loaded.closure, "ChangedTemplateEvidence")
+            .expect_err(&format!("tampered template evidence {mutation}"));
+    }
+}
+
+fn selected_function_signature(
+    statement: &mut ExecStmtResult,
+) -> &mut TemplateFunctionInDeclaredFnSetProof {
+    let checked = super::fact_statement_mut(statement);
     let proof = super::atomic_proof_mut(&mut checked.verify_result);
-    let AtomicExceptEqualityFactSearchedProof::ByKnownForallFact(citation) =
-        &mut proof.searched_proof
+    let AtomicExceptEqualityFactSearchedProof::ByKnownSpecialProperty(
+        AtomicExceptEqualityFactSearchProofByKnownSpecialProperty::InFact(
+            InFactSearchProofByKnownSpecialProperty::TemplateFunctionInDeclaredFnSet(selected),
+        ),
+    ) = &mut proof.searched_proof
     else {
-        panic!()
+        panic!("declared template function signature")
     };
-    citation.as_detailed_mut().unwrap().cite.fact_id = FactId::new(u64::MAX);
-    assert!(compiler
-        .compile_module(&loaded.closure, "ChangedTemplateCitation")
-        .is_err());
+    selected
 }
