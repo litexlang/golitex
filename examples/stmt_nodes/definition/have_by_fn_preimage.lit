@@ -14,6 +14,7 @@ source $in R
 shift(2) = shift(source)
 
 # Before: the preimage was stored as a bare parameter and could not be released.
+# release obj def source
 # Now: release retains both its carrier and defining equation.
 release obj def source
 source $in R
