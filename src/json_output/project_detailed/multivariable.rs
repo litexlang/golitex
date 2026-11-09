@@ -72,7 +72,106 @@ pub(super) fn strategy(
     p: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof,
     rt: &Runtime,
 ) -> JsonValue {
-    let p = p.stages();
+    use crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof;
+    match p {
+        MultivariableStrategyProof::ContinuousExpression(p) => {
+            return object_for(
+                rt,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("ContinuousMultivariableExpression")),
+                    ("relation", string(p.relation.predicate_name())),
+                    (
+                        "function_domain",
+                        super::function_domain::project_source(&p.function_domain, rt),
+                    ),
+                    (
+                        "body_equal",
+                        super::searched::project_known_equality_path(&p.body_equal, rt),
+                    ),
+                    (
+                        "body_well_defined",
+                        super::wd::project_obj_wd_proof(&p.body_well_defined, rt),
+                    ),
+                    ("geometry", interior(&p.geometry, rt)),
+                    (
+                        "coordinates",
+                        JsonValue::Array(
+                            p.coordinates
+                                .iter()
+                                .map(|c| {
+                                    object_for(
+                                        rt,
+                                        vec![
+                                            ("row", string(c.row.to_string())),
+                                            ("reduction", reduction(&c.reduction, rt)),
+                                            (
+                                                "continuity",
+                                                continuous_expression(&c.expression, rt),
+                                            ),
+                                        ],
+                                    )
+                                })
+                                .collect(),
+                        ),
+                    ),
+                    (
+                        "conclusions",
+                        JsonValue::Array(
+                            p.conclusion_equalities
+                                .iter()
+                                .map(|e| {
+                                    object_for(
+                                        rt,
+                                        vec![
+                                            (
+                                                "target_reduction",
+                                                reduction(&e.target_reduction, rt),
+                                            ),
+                                            (
+                                                "equality",
+                                                super::verify::project_verify_fact(&e.equality, rt),
+                                            ),
+                                        ],
+                                    )
+                                })
+                                .collect(),
+                        ),
+                    ),
+                ],
+            )
+        }
+        MultivariableStrategyProof::CoordinateProjectionDifferentiable(p) => {
+            return object_for(
+                rt,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("CoordinateProjectionDifferentiable")),
+                    ("relation", string(p.relation.predicate_name())),
+                    (
+                        "function_domain",
+                        super::function_domain::project_source(&p.function_domain, rt),
+                    ),
+                    (
+                        "body_equal",
+                        super::searched::project_known_equality_path(&p.body_equal, rt),
+                    ),
+                    (
+                        "body_well_defined",
+                        super::wd::project_obj_wd_proof(&p.body_well_defined, rt),
+                    ),
+                    ("geometry", interior(&p.geometry, rt)),
+                    ("index", string(p.index.readable_string())),
+                    (
+                        "index_member",
+                        super::verify::project_verify_fact(&p.index_member, rt),
+                    ),
+                ],
+            )
+        }
+        _ => {}
+    }
+    let p = p.stages().expect("smooth strategy");
     let geometry = interior(&p.geometry, rt);
     object_for(
         rt,
@@ -141,6 +240,86 @@ pub(super) fn strategy(
             ),
         ],
     )
+}
+
+fn continuous_expression(
+    p: &crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionProof,
+    rt: &Runtime,
+) -> JsonValue {
+    use crate::execute::execute_fact_stmt::multivariable::continuity::ContinuousExpressionConstructorProof as C;
+    let mut fields = vec![
+        ("expression", string(p.expression.readable_string())),
+        ("value", string(p.value.readable_string())),
+        (
+            "value_well_defined",
+            super::wd::project_obj_wd_proof(&p.value_source_well_defined, rt),
+        ),
+        ("value_reduction", reduction(&p.value_reduction, rt)),
+        (
+            "value_real",
+            super::verify::project_verify_fact(&p.value_real, rt),
+        ),
+    ];
+    let name = match &p.constructor {
+        C::Constant => "constant",
+        C::Coordinate {
+            index,
+            index_member,
+        } => {
+            fields.push(("index", string(index.readable_string())));
+            fields.push((
+                "index_member",
+                super::verify::project_verify_fact(index_member, rt),
+            ));
+            "coordinate"
+        }
+        C::Neg { argument } => {
+            fields.push(("argument", continuous_expression(argument, rt)));
+            "negate"
+        }
+        C::Add { left, right } | C::Subtract { left, right } | C::Multiply { left, right } => {
+            fields.push(("left", continuous_expression(left, rt)));
+            fields.push(("right", continuous_expression(right, rt)));
+            match &p.constructor {
+                C::Add { .. } => "add",
+                C::Subtract { .. } => "subtract",
+                _ => "multiply",
+            }
+        }
+        C::Divide {
+            left,
+            right,
+            nonzero,
+        } => {
+            fields.push(("left", continuous_expression(left, rt)));
+            fields.push(("right", continuous_expression(right, rt)));
+            fields.push(("nonzero", super::verify::project_verify_fact(nonzero, rt)));
+            "divide"
+        }
+        C::NaturalPower {
+            base,
+            exponent_natural,
+        } => {
+            fields.push(("base", continuous_expression(base, rt)));
+            fields.push((
+                "exponent_natural",
+                super::verify::project_verify_fact(exponent_natural, rt),
+            ));
+            "natural_power"
+        }
+        C::Elementary {
+            kind,
+            argument,
+            domain,
+        } => {
+            fields.push(("function", string(kind.name())));
+            fields.push(("argument", continuous_expression(argument, rt)));
+            fields.push(("domain", super::verify::project_verify_fact(domain, rt)));
+            "elementary"
+        }
+    };
+    fields.push(("constructor", string(name)));
+    object_for(rt, fields)
 }
 fn interior(
     p: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof,

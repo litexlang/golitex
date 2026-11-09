@@ -1,0 +1,18 @@
+# The Euclidean norm is continuous at the origin although it is not differentiable there.
+# Before: the continuity strategy requested an axis-one derivative and rejected this norm.
+# have fn norm(p finite_seq(R,2)) R = sqrt(p(1)^2+p(2)^2)
+# $is_multi_continuous_at(norm,(0,0),2)
+# Now: joint continuity follows coordinates, sums, powers and square-root continuity.
+have fn norm(p finite_seq(R,2)) R = sqrt(p(1)^2+p(2)^2)
+$is_multi_continuous_at(norm,(0,0),2)
+$has_multi_limit_at(norm,(0,0),2,0)
+
+# A fixed coordinate remains continuous and differentiable without deciding k = 1.
+have k closed_range(1,2)
+have fn projection(p finite_seq(R,2)) R = p(k)
+$is_multi_continuous_at(projection,(0,0),2)
+$is_multi_differentiable_at(projection,(0,0),2)
+$has_multi_limit_at(projection,(0,0),2,(0,0)(k))
+# Negative tests reject norm's derivative at the origin and a limit value of 1.
+# Lean replay of the new joint continuity certificate remains explicitly unsupported.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/multivariable_continuity_without_derivative.lit

@@ -187,6 +187,22 @@ pub fn compound_objs_alpha_equal(left: &Obj, right: &Obj) -> bool {
 }
 
 fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, IdentifierId>) -> bool {
+    if let Some(name) = left.multivariable_selector_name() {
+        if right.multivariable_selector_name() != Some(name) {
+            return false;
+        }
+        let left_args = left
+            .multivariable_selector_args()
+            .expect("selector arguments");
+        let right_args = right
+            .multivariable_selector_args()
+            .expect("selector arguments");
+        return left_args.len() == right_args.len()
+            && left_args
+                .into_iter()
+                .zip(right_args)
+                .all(|(a, b)| objs_alpha_equal(a, b, map));
+    }
     match (left, right) {
         (Obj::MatrixOperator(a), Obj::MatrixOperator(b)) => {
             std::mem::discriminant(a) == std::mem::discriminant(b)
@@ -857,6 +873,19 @@ fn atomic_facts_alpha_equal(
         return false;
     }
     match (left, right) {
+        (AtomicFact::MultivariableAnalysisFact(l), AtomicFact::MultivariableAnalysisFact(r)) => {
+            if discriminant(&l.relation) != discriminant(&r.relation) {
+                return false;
+            }
+        }
+        (
+            AtomicFact::NotMultivariableAnalysisFact(l),
+            AtomicFact::NotMultivariableAnalysisFact(r),
+        ) => {
+            if discriminant(&l.relation) != discriminant(&r.relation) {
+                return false;
+            }
+        }
         (AtomicFact::RealSetBoundFact(l), AtomicFact::RealSetBoundFact(r)) => {
             if l.direction != r.direction {
                 return false;

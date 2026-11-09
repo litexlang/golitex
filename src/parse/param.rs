@@ -177,7 +177,7 @@ impl Runtime {
             )
             .into());
         }
-        params.push(self.define_plain_atom_as_parse(tb, name)?);
+        let mut names = vec![name];
 
         while tb.peek() == Some(COMMA) {
             // More names in this group: `x, y R`. Group separators are handled
@@ -192,10 +192,13 @@ impl Runtime {
                 )
                 .into());
             }
-            params.push(self.define_plain_atom_as_parse(tb, next)?);
+            names.push(next);
         }
 
         let param_type = self.parse_param_type(tb)?;
+        for name in names {
+            params.push(self.define_plain_atom_as_parse(tb, name)?);
+        }
         Ok(TypedParameterGroup { params, param_type })
     }
 

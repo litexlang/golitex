@@ -13,6 +13,39 @@ fn runtime() -> Runtime {
     )
 }
 
+#[test]
+fn round2_mismatched_tuple_lengths_do_not_publish_a_truncated_prefix() {
+    let mut rt = runtime();
+    let tuple = |values: &[i64]| {
+        Obj::ProductShape(ProductShape::Tuple(Tuple {
+            args: values
+                .iter()
+                .map(|value| {
+                    Box::new(Obj::Literal(Literal::Number(Number::new(
+                        value.to_string(),
+                    ))))
+                })
+                .collect(),
+        }))
+    };
+    for (left, right) in [
+        (tuple(&[1, 2, 3]), tuple(&[4, 5])),
+        (tuple(&[4, 5]), tuple(&[1, 2, 3])),
+    ] {
+        let source = EqualFact {
+            fact_id: rt.global_ids.allocate_fact_id(),
+            left,
+            right,
+            line_file: None,
+        };
+        assert!(rt
+            .infer_equal_fact_tuple_coordinates(&source)
+            .unwrap()
+            .is_none());
+        assert!(rt.top_exec_env().facts.facts_by_id.is_empty());
+    }
+}
+
 fn exec(rt: &mut Runtime, code: &str) -> ExecStmtResult {
     let tokens = crate::tokenize::Tokenizer::new()
         .tokenize(code, rt.current_file.clone())

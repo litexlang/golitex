@@ -4,6 +4,17 @@ use crate::launch_command::{LaunchCommand, OutputLanguage};
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
+#[test]
+fn round2_scalar_literals_never_form_function_coordinates() {
+    let zero = crate::ast::obj::Obj::Literal(crate::ast::obj::Literal::Number(
+        crate::ast::obj::Number::new("0".into()),
+    ));
+    assert!(
+        crate::execute::execute_fact_stmt::finite_function::finite_function_coordinate(&zero, 0)
+            .is_err()
+    );
+}
+
 fn runtime(language: OutputLanguage) -> Runtime {
     Runtime::new_with_result_detail(
         LaunchCommand::Eval {

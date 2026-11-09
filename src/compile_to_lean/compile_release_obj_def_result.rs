@@ -204,6 +204,40 @@ fn original_release_facts<'a>(
     name: &str,
 ) -> Result<Vec<(&'a Fact, FactId)>, LeanCompileError> {
     let wrong = || LeanCompileError::unsupported("ReleaseObj/DefinitionStores");
+    let obtained = match source {
+        ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::ObtainObjFromExistFact(
+            crate::execute::ExecObtainObjFromExistFactStmtResult::Success(p),
+        )) => Some((&p.statement.equal_tos, &p.store_and_infer_result)),
+        ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+            crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(p),
+        )) => Some((&p.statement.equal_tos, &p.store_and_infer_result)),
+        _ => None,
+    };
+    if let Some((names, stores)) = obtained {
+        let ReleaseObjDefByKind::HaveObjByExistFacts {
+            type_fact,
+            body_facts,
+        } = released
+        else {
+            return Err(wrong());
+        };
+        let offset = names
+            .iter()
+            .position(|p| p.id == id && p.name == name)
+            .ok_or_else(wrong)?;
+        let stores = &stores.store_and_infer_results;
+        if stores.len() < names.len() + body_facts.len() {
+            return Err(wrong());
+        }
+        let mut pairs = vec![(type_fact, stores[offset].primary_fact_id())];
+        pairs.extend(
+            body_facts
+                .iter()
+                .zip(&stores[names.len()..])
+                .map(|(fact, store)| (fact, store.primary_fact_id())),
+        );
+        return Ok(pairs);
+    }
     match (source, released) {
         (
             ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::LetObj(

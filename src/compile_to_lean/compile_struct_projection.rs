@@ -1,4 +1,6 @@
-use super::compile_def_struct_stmt_result::{has_dependent_fields, struct_declaration_name, validate_struct};
+use super::compile_def_struct_stmt_result::{
+    has_dependent_fields, struct_declaration_name, validate_struct,
+};
 use super::compile_struct_conditions::field_substitution;
 use super::compile_struct_header::header_substitution;
 use super::helper::{ensure_object, instantiated_object_matches};
@@ -130,7 +132,12 @@ impl LitexToLeanCompiler {
             let coordinate = index + 1;
             let receiver = format!("_field_value_{depth}");
             let member = format!("_field_member_{depth}");
-            let name = struct_declaration_name("struct", declaration, declaration_index + 1, producer.is_local());
+            let name = struct_declaration_name(
+                "struct",
+                declaration,
+                declaration_index + 1,
+                producer.is_local(),
+            );
             let structure = position.declaration_reference(&name, &producer)?;
             let structure = apply_arguments(&structure, &arguments);
             lines.push(format!("let _field_carrier_{depth} := {structure}"));

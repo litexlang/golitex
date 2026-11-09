@@ -24,6 +24,9 @@ pub(crate) fn finite_function_coordinate(function: &Obj, index: usize) -> Result
             .map(|value| value.as_ref().clone())
             .ok_or_else(|| "coordinate is outside the tuple's complete domain".into());
     }
+    if matches!(function, Obj::Literal(_)) {
+        return Err("a scalar literal has no finite-function coordinates".into());
+    }
     let argument = Obj::Literal(Literal::Number(Number {
         normalized_value: (index + 1).to_string(),
     }));

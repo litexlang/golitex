@@ -6,4 +6,5 @@ pub struct InferInFactEqualFnSetTransport {
     pub membership_fact_id: FactId,
     pub carrier_equal: KnownEqualityPathProof,
     pub derived: StoreInferredFactResult,
+    pub expansions: Vec<super::InferInFactResult>,
 }

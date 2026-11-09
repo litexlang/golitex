@@ -11,7 +11,11 @@ fn load_tracer() -> super::module_fixtures::LoadedProject {
 fn module_identifier_original_results_preserve_qualified_variants() {
     for (case, side, expected) in [
         ("module_additive_constant", "left", "WithExportFileId"),
-        ("module_identifier_import", "right", "WithModAndExportFileId"),
+        (
+            "module_identifier_import",
+            "right",
+            "WithModAndExportFileId",
+        ),
     ] {
         let (loaded, _project) = load_example(case);
         let file_index = loaded.closure.target_file;
@@ -27,27 +31,49 @@ fn module_identifier_original_results_preserve_qualified_variants() {
         let VerifyEqualityResult::Success(result) = result.as_ref() else {
             panic!("verified equality");
         };
-        let object = if side == "left" { &result.fact.left } else { &result.fact.right };
+        let object = if side == "left" {
+            &result.fact.left
+        } else {
+            &result.fact.right
+        };
         let variant = match object {
             Obj::Identifier(IdentifierObj::WithExportFileId { .. }) => "WithExportFileId",
-            Obj::Identifier(IdentifierObj::WithModAndExportFileId { .. }) => "WithModAndExportFileId",
+            Obj::Identifier(IdentifierObj::WithModAndExportFileId { .. }) => {
+                "WithModAndExportFileId"
+            }
             _ => panic!("the original source endpoint must retain its qualifier"),
         };
         assert_eq!(variant, expected);
-        let files = loaded.closure.files.iter().map(|file| {
-            JsonValue::object_from(vec![
-                ("name".into(), JsonValue::String(file.source.name())),
-                ("content".into(), JsonValue::String(std::fs::read_to_string(file.source.display_path()).unwrap())),
-            ])
-        }).collect();
+        let files = loaded
+            .closure
+            .files
+            .iter()
+            .map(|file| {
+                JsonValue::object_from(vec![
+                    ("name".into(), JsonValue::String(file.source.name())),
+                    (
+                        "content".into(),
+                        JsonValue::String(
+                            std::fs::read_to_string(file.source.display_path()).unwrap(),
+                        ),
+                    ),
+                ])
+            })
+            .collect();
         let receipt = JsonValue::object_from(vec![
             ("case".into(), JsonValue::String(case.into())),
             ("variant".into(), JsonValue::String(variant.into())),
             ("side".into(), JsonValue::String(side.into())),
             ("file_index".into(), JsonValue::Number(file_index as f64)),
             ("statement_index".into(), JsonValue::Number(0.0)),
-            ("line".into(), JsonValue::Number(result.fact.line_file.as_ref().unwrap().line as f64)),
-            ("fact_id".into(), JsonValue::String(result.fact.fact_id.value().to_string())),
+            (
+                "line".into(),
+                JsonValue::Number(result.fact.line_file.as_ref().unwrap().line as f64),
+            ),
+            (
+                "fact_id".into(),
+                JsonValue::String(result.fact.fact_id.value().to_string()),
+            ),
             ("files".into(), JsonValue::Array(files)),
         ]);
         super::LitexToLeanCompiler::new(loaded.runtime)

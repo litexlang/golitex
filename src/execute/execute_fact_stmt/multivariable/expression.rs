@@ -356,6 +356,9 @@ impl Runtime {
                 }
                 current = apply(&current, args);
             }
+            if current != *source {
+                return self.reduce_multivariable_inner(&current, steps, depth + 1, budget, state);
+            }
             return Ok(Some(current));
         }
         if let Some((kind, arg)) = ElementaryRealFunction::from_expression(source) {

@@ -1,4 +1,5 @@
 //! Real Euclidean multivariable predicates. Actual function signatures remain authoritative.
+pub(crate) mod continuity;
 pub(crate) mod definition;
 pub(crate) mod expression;
 pub(crate) mod helper;

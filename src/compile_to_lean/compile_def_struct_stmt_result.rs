@@ -51,7 +51,10 @@ pub(super) fn validate_struct(
             parameters.groups.iter().any(|group| {
                 !matches!(
                     group.param_type,
-                    ParamType::Set(_) | ParamType::NonemptySet(_) | ParamType::FiniteSet(_) | ParamType::Obj(_)
+                    ParamType::Set(_)
+                        | ParamType::NonemptySet(_)
+                        | ParamType::FiniteSet(_)
+                        | ParamType::Obj(_)
                 )
             })
         })
@@ -171,7 +174,11 @@ impl LitexToLeanCompiler {
         checks.push("exact True.intro".into());
         let context = format!(
             "{}{}",
-            if local { String::new() } else { self.context_header(outer)? },
+            if local {
+                String::new()
+            } else {
+                self.context_header(outer)?
+            },
             if header_binders.is_empty() {
                 String::new()
             } else {
@@ -224,7 +231,8 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let arguments = self.compile_struct_arguments(object, proof, position)?;
-        let (declaration, producer, index) = position.visible_struct(&object.name, &self.runtime)?;
+        let (declaration, producer, index) =
+            position.visible_struct(&object.name, &self.runtime)?;
         let name = struct_declaration_name("struct", declaration, index + 1, producer.is_local());
         let name = position.declaration_reference(&name, &producer)?;
         Ok(if arguments.is_empty() {

@@ -174,16 +174,8 @@ impl Runtime {
     }
 
     fn prop_is_known_transitive(&self, prop: &AtomicName) -> bool {
-        for env in self.execution_environments_stack.iter().rev() {
-            if let Some(props) = env.prop_rewrite_properties.get(prop) {
-                if props
-                    .iter()
-                    .any(|p| matches!(p, PropRewriteProperty::Transitive))
-                {
-                    return true;
-                }
-            }
-        }
-        false
+        self.visible_prop_rewrite_properties(prop)
+            .iter()
+            .any(|p| matches!(p, PropRewriteProperty::Transitive))
     }
 }

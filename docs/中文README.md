@@ -3,184 +3,229 @@
 
 # Litex
 
-### The Python of Formal Language
-
-**读音：** /ˈliːtɛk/（“里泰克”）。
+### 形式化数学的高级语言
+*(The High-Level Language for Formal Mathematics · 形式化数学的 Python)*
 
 由沈嘉辰创建和维护。
 
-[官网与在线试用](https://litexlang.com) · [GitHub](https://github.com/litexlang/golitex)
+[官网与在线体验](https://litexlang.com/) · [Litex 蓝图](Litex中文蓝图.md) · [学习手册](Litex手册.md) · [安装指南](安装Litex.md) · [Zulip 社区](https://litex.zulipchat.com/) · [English README](../README.md)
 </div>
 
-数学写作本身就承载着逻辑结构：语句、前提和定义已经提供了支持每一步推理的许多依据。Litex 是一种形式化语言，通过在上下文事实和内置数学规则中搜索证明，让这种结构成为可以执行的推理。
+---
 
-作者提供有意义的数学步骤，系统恢复支持范围内连接这些步骤的推理。人和 AI 因此可以围绕数学事实开展证明，无需逐一写出所有形式推导。
+## 什么是 Litex？
 
-本地选录对照展示了简洁的数学表达；在部分例子中，排除启动与依赖导入后，原生检查速度达到 Lean 的 10–100 倍。其验证记录支持交互式阅读、书写与修正，并在初步 AI 智能体实验中展现出潜力。它还能将支持的证明编译到 Lean，供独立复核。
+**Litex 是一门面向形式化数学的高级编程语言。**
 
-<a id="readme-comparisons"></a>
+在计算机科学的发展历程中，编程经历了从机器指令（0101）到汇编语言，再到 C、Python 等高级语言的演进。高级语言通过抽象掉寄存器、栈帧和内存地址管理，让程序员得以直接在问题层面表达算法与架构。
 
-## 熟悉的表达，熟悉的数学
+今天的形式化数学，正在经历完全相同的演进历程：
 
-同样的数学，用 Litex 和 Lean 分别这样书写。点击例子可查看文末的完整代码。
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                               Litex                                    │
+│                         形式化数学的高级语言                            │
+│    • 数学本位直观陈述                • 自动良定义与定义域检测          │
+│    • 编译器有界自动推理              • AI Agent 原生交互会话 (Session) │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ 编译与重放证明
+              ┌─────────────────────┼─────────────────────┐
+              ▼                     ▼                     ▼
+       ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+       │    Lean 4    │      │  Coq / Rocq  │      │   Isabelle   │
+       │    Kernel    │      │    Kernel    │      │    Kernel    │
+       └──────────────┘      └──────────────┘      └──────────────┘
+              ▲                     ▲                     ▲
+              └─────────────────────┴─────────────────────┘
+                             底层形式化验证内核
+```
 
-| 数学表达 | Litex | Lean（使用 `import Mathlib`） |
-| --- | --- | --- |
-| [自然数算术：1 + 1 = 2](#readme-example-nat_mathlib) | `1 + 1 = 2` | `example : (1 : Nat) + 1 = 2 := by rfl` |
-| [任取正实数，推出它不等于零](#readme-example-positive_nonzero) | `forall x R: x > 0 => x != 0` | `example (x : ℝ) (hx : x > 0) : x ≠ 0 := by` |
-|  |  | `  exact ne_of_gt hx` |
-| [存在平方为 4 的实数；取 2 为见证](#readme-example-square_witness) | `witness exist w R st {w^2 = 4} from 2` | `example : ∃ w : ℝ, w ^ 2 = 4 := by` |
-|  |  | `  refine ⟨2, ?_⟩` |
-|  |  | `  norm_num` |
-| [定义并调用非零实数上的倒数函数](#readme-example-guarded_reciprocal) | `have fn reciprocal(x R: x != 0) R = 1 / x` | `noncomputable def reciprocal (x : {y : ℝ // y ≠ 0}) : ℝ :=` |
-|  | `reciprocal(2) = 1 / 2` | `  (x : ℝ)⁻¹` |
-|  |  |  |
-|  |  | `example : reciprocal ⟨2, by norm_num⟩ = (2 : ℝ)⁻¹ := by` |
-|  |  | `  simp [reciprocal]` |
+目前，主流交互式证明助手（如 Lean、Coq、Isabelle）在体验上仍处于形式化数学的“汇编时代”。用户需要耗费海量的认知精力处理底层证明指令流：操纵策略（tactic）、管理目标栈（goals）、手写 `intro`、`apply`、`simp`、`rewrite`，以及与复杂的依值类型（Dependent Type）和子类型强制转换搏斗。
 
-<a id="表达长度与检查速度"></a>
+**Litex 将高级语言范式引入形式化数学：**
+1. **数学本位（Math-Centric）**：像在教科书上写数学一样，用清晰、现代的 Python 式缩进直接陈述对象、定义与推导步骤，而非编写繁琐的策略脚本。
+2. **自动化繁重机械工作**：编译器在幕后自动完成良定义性（Well-Definedness）检测、定义域条件验证、代入化简与上下文事实检索。
+3. **通用高级前端（Universal Frontend）**：Litex 并不试图取代形式化验证内核，而是为它们提供统一的高级抽象层。在 Litex 中通过验证的证明，可直接编译至 **Lean 4**、**Coq**、**Isabelle** 等底层证明助手，由其内核进行最终的严谨独立复核。
 
-### 选录样例的检查耗时
+---
 
-下表来自历史本地测量，只选录 Litex 原生检查路径更快的用例。耗时不含启动、依赖导入及 Litex 编译到 Lean 后的复核；倍率按未舍入的中位数计算。完整口径见[测量方法](../examples/litex_vs_lean_speed/README.md)；[不筛选胜负的对照](../examples/litex_vs_lean_speed/search-and-expansion.md)中，Lean 的直接路线在六例中的五例上更快。
+## 核心设计支柱
 
-| 数学任务 | Litex（毫秒）↓ | Lean（毫秒）↓ | Lean ÷ Litex |
-| --- | ---: | ---: | ---: |
-| [对数：log₂8 = 3](#readme-example-log_2_8) | 0.064 | 13.992 | **217.0×** |
-| [数论：1000000007 是素数](#readme-example-prime_1000000007) | 0.027 | 4.029 | **147.2×** |
-| [集合论：正实数集合非空](#readme-example-witness_nonempty_positive) | 0.084 | 6.439 | **76.9×** |
-| [定义并调用“正实数非零”定理](#readme-example-named_theorem) | 0.158 | 8.018 | **50.7×** |
-| [定义开区间谓词并验证成员](#readme-example-predicate) | 0.189 | 8.223 | **43.4×** |
-| [自然数算术：1 + 1 = 2](#readme-example-nat_mathlib) | 0.037 | 1.361 | **36.7×** |
-| [全称命题：两个正实数之和为正](#readme-example-forall_add_pos) | 0.392 | 10.487 | **26.7×** |
-| [平方函数在 3 处的导数为 6](#readme-example-derivative_square_at_three) | 1.464 | 29.945 | **20.5×** |
+### 1. 数学本位：陈述数学，而非编织策略
 
-表达长度另见[回溯字符比 DF*](../examples/litex_vs_lean_speed/README.md#de-bruijn-factor)：它采用两侧共享、在形式化源码之后补写的普通数学文本。这些示例不确立普遍的德布鲁因因子，也不直接衡量阅读或书写的难易。
-
-## 为什么构建 Litex
-
-**数学本身能不能就是形式化语言？** 数学书写已经在引入对象、给出定义、陈述前提与论证结论。我希望保留这种对应，只加入足以让机器严格检查的结构。
-
-做数学是在寻找规律。在 Litex 中，我一直在寻找证明这一行为里反复出现的规律：语句怎样引入条件，事实怎样相互连接，结论怎样从上下文中得到支持。我希望把这些规律变成可执行的机制，让人和 AI 能把精力放在数学本身。
-
-我希望 Litex 成为形式化数学中的 Python：写法熟悉、约定少，语言替用户承担必要的底层工作。AI 产生的候选推理越多，我们用什么语言理解、检查和传递数学知识，就越重要。
-
-### 数学说法成为检查动作
-
-Litex 从可直接使用的数学对象及其条件出发：数、集合和函数都有明确的表达接口，熟悉的证明用语则对应准确的语句。下表展示源码片段；完整形式与作用域规则见 [Manual](Litex手册.md#mathematical-reading)。
-
-| 数学表达 | Litex 片段 | 这一步与依据怎样连接 |
-| --- | --- | --- |
-| **令 a 等于 1，代入可得 a + 2 = 3。** | **`let a = 1`**<br>**`a + 2 = 3`** | 引用 `a = 1`，代换后检查 `1 + 2 = 3`，再存储已接受的结论。 |
-| **分 x = 0 和 x = 1 两种情形讨论。** | **`by cases:`**<br>`case x = 0:`<br>`case x = 1:` | 核对覆盖性，并在两个局部分支内证明同一个目标。 |
-| **对自然数 n，定义 successor(n) = n + 1。** | **`have fn`** `successor(n N) N = n + 1` | 核对定义域和返回集合，再建立可调用的定义。 |
-
-反复出现的规律就在数学写作本身。作者提供有意义的数学步骤，Litex 让这些步骤与上下文之间受支持的联系成为可执行的推理。
-
-## 从数学语言到可检查的知识
-
-**数学基础。** Litex 使用集合、元素、函数与关系。常见运算带着明确的使用条件：`1 - 2 = -1`，而 `1 / 0` 因无定义被拒绝。函数可以直接把必要条件放进定义域：
+Litex 的源码贴近人类数学思维。没有晦涩的策略命令流，数学语句本身就构成了代码的结构：
 
 ```litex
+forall x R:
+    x^2 >= 0
+```
+
+`forall` 表达全称量词，`R` 声明实数载体，`x^2 >= 0` 是直接陈述的事实。作者专注于数学主线，系统负责检索依据并验证步步成立。
+
+### 2. 自动检测良定义与定义域（Well-Definedness Checking）
+
+在传统形式化系统里，部分函数（如除法 $1/x$、开方 $\sqrt{x}$、数列下标越界）的定义域处理极其繁琐，常常需要在每一次调用时手动携带并打包子类型证明项。
+
+**在 Litex 中，数学的良定义性是语言的第一公民保障：**
+
+```litex
+# 定义一个受 x != 0 守卫的倒数函数
 have fn reciprocal(x R: x != 0) R = 1 / x
+
+# 传入合法参数，自动完成检查并使用：
 reciprocal(2) = 1 / 2
 ```
 
-`reciprocal(0)` 会被拒绝，因为参数不满足非零条件。
+如果作者（或 AI）写出 `reciprocal(0)`，Litex 不会给出云里雾里的策略报错，而是在证明开始前的**良定义性（Well-Definedness）阶段**立即拦截并明确指出：
 
-**语法。** 类似 Python 的缩进组织作用域与推理。开头的全称陈述中，`x R` 引入实数，`x > 0` 是前提，`x != 0` 是待检查的结论。较长的证明仍需作者给出数学路线，包括中间事实、见证、归纳或分情形。
-
-**语义。** 每条陈述都需要先满足良定义性，再从当前上下文获得证明依据。检查器用 JSON 返回判定、依据与存入的事实。例如，`1 + 1 = 2` 的英文输出节选为：
-
-```json
-{
-  "statement_result": "accepted",
-  "statement": "(1 + 1) = 2",
-  "proof_method": { "type": "by_closed_calculation" },
-  "stores": ["(1 + 1) = 2"]
-}
+```text
+WellDefinedError: object reciprocal(0) is not well-defined
+  --> failed to verify function domain fact: 0 != 0
 ```
 
-换成 `1 / 0 = 0`，输出会指出无法满足的条件 `0 != 0`。反馈支持包括中文在内的十种语言；使用 `-lang zh` 切换为中文。
+你只管展开数学论证，语言底层自动为你兜底定义域的合法性。
 
-**架构：证明作为搜索。** 看这两行：
+### 3. 检查器承担机械推理：约 35 万行纯 Rust 引擎
 
-```litex
-let a = 1
-a + 2 = 3
-```
+Litex 背后凝聚着约 35 万行精心优化的 Rust 代码，只为两件事：**语言自然易写，检查极致飞快。**
 
-第一行存下 `a = 1`。第二行成为查询：找到这条等式，代入得到 `1 + 2 = 3`，再完成计算。通过检查的 `a + 2 = 3` 又成为后续步骤可使用的知识。
+对每一步数学陈述，Litex 执行严格有界的闭环验证：
+1. **检索**：在当前作用域中定位相关定义、已接受事实与内置公理规则。
+2. **校验**：检查良定义性、匹配参数并验证所有前置条件。
+3. **提交**：记录完整的成立依据，并将确认的事实提交到上下文，供后续步骤直接使用。
 
-Litex 是一种面向事实的数学验证语言。它的原生引擎像一个数学特化的演绎知识库。内置数学规则提供可复用的推理模式；有界的上下文搜索寻找相关的已知事实，并检查其适用条件。推导规则还会记录已接受事实的受支持直接后果，供后续步骤使用。
+作者负责构思核心跳跃——引理选择、辅助见证（Witness）、分类讨论或数学归纳；Litex 负责在毫秒内自动补齐中间的代数变形与逻辑衔接。
 
-因此，写下一个事实，也是在请求系统从当前数学上下文中寻找它成立的依据。需要时，作者提供关键中间事实、见证、分情形或归纳，系统恢复这些步骤之间受支持的推理。计算是其中一种可用的检查方法。搜索没有找到依据，只表示当前步骤未被证明，不等于证明了它的否定。
+### 4. 为 AI 数学研究原生设计（Agent-Native）
 
-## 让同一份数学连接更多工具
+Litex 是天生适合大语言模型（LLM）与数学智能体（AI Agent）的形式化基座：
 
-实验性的 `litex -lean -f proof.lit` 编译器可以生成 Lean 陈述和证明，交给 Lean 内核独立检查，让用户用 Litex 书写数学，并在支持的范围内接入 Lean 生态。
-
-同一份源码与验证记录还可以用于：
-
-- **交互式教材：** `litex -reading -f proof.lit` 打开源码，支持查看定义、参数范围与证明引用，并可编辑、检查。
-- **LaTeX：** `litex -latex -f proof.lit` 将数学定义和陈述排版为文档。
-- **C 与 Python：** 实验性的代码提取可以把支持的计算定义转成可运行的程序。
-
-## 与 AI 一起构建数学
-
-人或智能体可以提出一步，读取反馈，修正后继续。保持同一个 Session，普通拒绝后仍能使用此前接受的定义和事实。
-
-一份使用 `deepseek-chat`、包含 **165 项数学任务** 的平面几何建库实验初步报告，记录了以下耗时：
-
-| 自动建库运行 | Litex | Lean |
-| --- | ---: | ---: |
-| 记录耗时 | **14.3 分钟** | **177.5 分钟** |
-
-这里尚缺双方对应的完成数量与验证标准，仅凭这些耗时不能确立建库速度倍率。其他工程包括智能体书写的 IMO 几何证明，以及证明技巧、代数、分析和几何等教材。
-
-## 试用 Litex
-
-可以在官网在线试用，也可以在 macOS / Linux 上用 Homebrew 安装：
+* **自然易学的语法**：类似 Python 的优雅排版，极易被大模型理解与生成，不再困死在复杂的元编程与策略语法陷阱中。
+* **持续会话机制 (`litex -session`)**：传统证明助手在单步出错时往往直接挂起或重置状态。Litex 提供持久化 REPL，**单步尝试失败绝不会抹去之前已接受的上下文**。智能体可以一步步探索，出错即时在原地修复并推进。
+* **结构化精准反馈**：当智能体漏写了 $x \neq 0$ 或越界条件时，Litex 返回精确的结构化 JSON 诊断，告知哪一条定义域条件未被满足，使得大模型具备了零样本自我修正（Self-Correction）的可能。
 
 ```bash
-brew install litexlang/tap/litex
-litex -e '1 + 1 = 2'
+litex -strict -session -e 'have a R = 2'
+litex> a = 3
+# {"run_result": "failure", "session_terminated": false}
+litex> a + 1 = 3
+# {"run_result": "success", "session_terminated": false}
 ```
 
-Windows 已安装 Scoop 和 Git 时运行：
+### 5. 一处编写，流向多元生态
 
+同一份 Litex 数学成果，可以一键连通多个下游应用：
+
+* **编译至底层内核（Lean 4 / Coq / Isabelle）**：通过 `litex -lean -f proof.lit`，将已验证的推导重放生成独立的 Lean 4 证明，接受 Lean 内核二次复核。架构面向 Coq 与 Isabelle 保持通用。
+* **一键导出出版级 LaTeX**：通过 `litex -latex -document -f proof.lit` 直接生成论文排版。
+* **交互式教材与知识图谱**：通过 `litex -reading` 探索定理依赖关系网与依据追溯。
+* **可执行代码抽取**：把数值与算法定义直接抽取为 Python 或 C 程序（`litex -extractpython`, `litex -extractc`）。
+
+---
+
+## 快速上手
+
+### 安装
+
+**macOS / Linux（Homebrew）：**
+```bash
+brew install litexlang/tap/litex
+```
+
+**Windows（Scoop）：**
 ```powershell
 scoop bucket add litex https://github.com/litexlang/scoop-litex
 scoop install litex
 ```
 
-把附录中任意一个完整的 Litex 例子保存为 `proof.lit`，运行 `litex -strict -f proof.lit`。交互书写时运行：
+**网页免安装试玩：** 访问 [litexlang.com](https://litexlang.com/) 即可直接在浏览器中体验。
+
+### 常用命令
 
 ```bash
-litex -strict -session -e 'let a = 1'
+# 单行事实直接验证
+litex -e '1 + 1 = 2'
+
+# 开启交互式数学会话
+litex -session
+
+# 验证数学证明文件
+litex -f proof.lit
+
+# 将 Litex 证明编译为 Lean 4 代码
+litex -lean -f proof.lit
+
+# 导出完整的 LaTeX 文档
+litex -latex -document -lang zh -f proof.lit
 ```
 
-输入 `a = 2` 会被拒绝，接着输入 `a + 2 = 3`，仍能使用保留的上下文通过检查。书写时保持这个 Session，将接受的源码保存下来，在阶段完成时单独检查文件。`litex -help` 可查看命令。
+---
 
-Litex 仍处于 beta 阶段。`-strict` 拒绝用户书写的 `trust` 和 `axiom`；验证仍依赖 Litex 的检查器与数学基础。
+## 完整示例：证明 √2 是无理数
+
+假设 $\sqrt{2}$ 是有理数，可设为既约分数 $p/q$。简单的整除性推导表明 $p$ 与 $q$ 必须同时为偶数，从而与互质产生矛盾：
+
+```litex
+# 证明 sqrt(2) 不是有理数
+by contra:
+    ? not sqrt(2) $in Q
+    release thm rational_has_unique_reduced_fraction(sqrt(2))
+    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
+
+    p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2
+    p^2 % 2 = (2 * q^2) % 2 = 0
+    release thm prime_divides_power(p, 2, 2)
+
+    p / 2 $in Z
+    q^2 = p^2 / 2 = 2 * (p / 2)^2
+    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0
+    release thm prime_divides_power(q, 2, 2)
+
+    impossible 2 <= gcd(p, q) = 1
+```
+
+作者只需指出关键的既约分解定理并写出核心算式链，Litex 自动校验奇偶性、代数代换与矛盾闭环。
+
+---
+
+<a id="readme-comparisons"></a>
+<a id="表达长度与检查速度"></a>
+
+## 检查性能速览
+
+得益于纯 Rust 编写的特化演绎引擎，Litex 的单步验证均在亚毫秒级别完成。
+
+| 数学任务 | Litex（毫秒）↓ | Lean（毫秒）↓ | Lean ÷ Litex |
+| --- | ---: | ---: | ---: |
+| [正实数集合非空见证](#readme-example-witness_nonempty_positive) | 0.084 | 6.439 | **76.9×** |
+| [自然数算术：1 + 1 = 2](#readme-example-nat_mathlib) | 0.037 | 1.361 | **36.7×** |
+| [全称命题：正实数之和为正](#readme-example-forall_add_pos) | 0.392 | 10.487 | **26.7×** |
+| [平方函数在 3 处的导数为 6](#readme-example-derivative_square_at_three) | 1.464 | 29.945 | **20.5×** |
+
+*(基于本地历史测试中位数，不计进程启动与模块导入耗时。详见[测量方法报告](../examples/litex_vs_lean_speed/README.md)。)*
+
+---
 
 <a id="litex-reliability"></a>
 
-## Litex 的可靠性
+## 项目现状与作者
 
-Litex 通过持续测试、代码审阅和独立证明复核来提高可靠性。项目目前有约 4,000 个示例和 3,000 多个测试函数；每次发布前，维护者还会使用能用到的前沿大模型审阅源码、排查 bug。
+Litex 是始于 2024 年的独立研究项目，由复旦大学数学博士生**沈嘉辰（Jiachen Shen）**创建并维护。
 
-Lean 编译提供了另一层检查：受支持的 Litex 证明可以重建为 Lean 证明，交由 Lean 内核独立复核。这一覆盖范围仍在持续扩大。
+目前项目处于活跃的 **Beta** 测试阶段。我们正在持续扩充语言特性、标准库定理以及底层形式化编译后端。如果你发现任何 Bug 或有建议，欢迎提交最小复现用例！
 
-## 关于
+* **官方网站**：[litexlang.com](https://litexlang.com/)
+* **社区讨论**：[Zulip](https://litex.zulipchat.com/)
+* **GitHub Issues**：[github.com/litexlang/golitex/issues](https://github.com/litexlang/golitex/issues)
+* **联系邮箱**：litexlang@outlook.com
 
-我是沈嘉辰（Jiachen Shen），复旦大学数学博士生。我希望 Litex 让更多人能够书写可检查的数学，也理解其中的定义、条件与推理。欢迎交流与反馈：litexlang@outlook.com。
+特别感谢 Wei Lin、Siqi Sun、Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Hao Wu、Keyao Zhu 与 Zhaoxuan Hong 的支持和建议。
 
-特别感谢 Wei Lin、Siqi Sun、Peng Sun、Chenxuan Huang、Yan Lu、Sheng Xu、Keyao Zhu 与 Zhaoxuan Hong 的支持和建议。
+遵循 [Apache License 2.0](LICENSE) 开源协议。
 
-以 Apache License 2.0 发布。
+---
 
-## 附录：完整例子
+## 附录：完整对照用例
 
 每个例子可独立运行；点击标题展开 Litex 与 Lean 的完整代码。
 

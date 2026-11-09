@@ -773,10 +773,29 @@ fn known_strategy_cannot_resolve_a_future_declaration_from_final_runtime() {
 
 #[test]
 fn local_strategy_replays_without_publishing_its_name_outside_the_claim() {
-    let (run, compiler) = super::execute(LOCAL);
+    let (mut run, compiler) = super::execute(LOCAL);
     super::compile_run(&run, &compiler, "local_strategy").unwrap();
+    let ExecStmtResult::ProofBlock(
+        crate::execute::execute_proof_block_stmt::ExecProofBlockStmtResult::Claim(
+            crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Success(claim),
+        ),
+    ) = &mut run.statement_results[1]
+    else {
+        panic!("claim");
+    };
+    let crate::execute::execute_proof_block_stmt::ExecClaimBodyProof::NonForall(body) =
+        &mut claim.body
+    else {
+        panic!("non-forall claim");
+    };
+    let source_id = declaration(&mut body.proof_steps[0])
+        .statement
+        .forall_fact
+        .fact_id;
     let root = SourcePosition::new(None, SourceOwner::Run(&run), run.statement_results.len());
-    assert!(root.visible_strategy("replay_local_rule").is_err());
+    assert!(root
+        .visible_strategy("replay_local_rule", source_id)
+        .is_err());
 }
 
 #[test]

@@ -156,6 +156,7 @@ impl ProgramExtractor {
             if !is_numeric_param_type(param_type) {
                 continue;
             }
+            self.require_available_name(name, &stmt.line_file)?;
             let value = self.extract_expression(obj, &params, &stmt.line_file)?;
             self.statements
                 .push(ExtractedStatement::Constant(ExtractedConstant {
@@ -169,6 +170,7 @@ impl ProgramExtractor {
     }
 
     fn extract_algo_by_cases(&mut self, stmt: &DefAlgoByCasesStmt) -> RuntimeResult<()> {
+        self.require_available_name(&stmt.name.name, &stmt.line_file)?;
         validate_real_function_signature(
             &stmt.name.name,
             &stmt.fn_set_clause.set_bound_parameters,
@@ -214,6 +216,16 @@ impl ProgramExtractor {
                 default_return: None,
                 line_file: stmt.line_file.clone(),
             }));
+        Ok(())
+    }
+
+    fn require_available_name(&self, name: &str, line_file: &SourceLine) -> RuntimeResult<()> {
+        if self.constants.contains(name) || self.functions.contains(name) {
+            return Err(code_extraction_error(
+                line_file,
+                format!("duplicate extracted name `{name}`: repository extraction uses one flat namespace; choose distinct exported constant and algorithm names"),
+            ));
+        }
         Ok(())
     }
 

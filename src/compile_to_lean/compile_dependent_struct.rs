@@ -138,7 +138,11 @@ impl LitexToLeanCompiler {
         checks.push(body);
         let context = format!(
             "{}{}",
-            if local { String::new() } else { self.context_header(outer)? },
+            if local {
+                String::new()
+            } else {
+                self.context_header(outer)?
+            },
             if header_binders.is_empty() {
                 String::new()
             } else {
@@ -159,10 +163,8 @@ impl LitexToLeanCompiler {
         let structure = struct_declaration_name("struct", proof, index, local);
         let indices_kind = if local { "let" } else { "def" };
         let coordinate_declarations = format!("{indices_kind} {indices_name} : Fin {n} → ℂ :=\n  ![{indices}]\n\n{lemma} {indices_spec} : ∀ i, {indices_name} i = ((i.val + 1 : ℕ) : ℂ) := by\n  intro i\n  fin_cases i <;> norm_num [{indices_name}]");
-        let fields =
-            self.struct_self_application(&fields_name, proof, outer)?;
-        let well_formed =
-            self.struct_self_application(&fields_wd, proof, outer)?;
+        let fields = self.struct_self_application(&fields_name, proof, outer)?;
+        let well_formed = self.struct_self_application(&fields_wd, proof, outer)?;
         let checked = format!("{coordinate_declarations}\n\n{definition} {fields_name}{context} : Litex.DependentFields M {n} :=\n  {raw}\n\n{lemma} {fields_wd}{context} : Litex.DependentFields.WellFormed {fields} := by\n  {}", checks.join("\n").replace('\n', "\n  "));
         let carrier = format!("Litex.dependentCart {fields} {well_formed}");
         let host = format!("Litex.DependentCartObj M {n}");
@@ -186,13 +188,26 @@ impl LitexToLeanCompiler {
         carrier: &StructObj,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
-        let (declaration, producer, index) = position.visible_struct(&carrier.name, &self.runtime)?;
+        let (declaration, producer, index) =
+            position.visible_struct(&carrier.name, &self.runtime)?;
         position.validate_declaration_context(&producer)?;
-        let prefix = (!producer.is_local()).then(|| producer.module_file_number()).flatten()
+        let prefix = (!producer.is_local())
+            .then(|| producer.module_file_number())
+            .flatten()
             .map(|file| format!("source_{file}."))
             .unwrap_or_default();
-        let indices = struct_declaration_name("_struct_indices", declaration, index + 1, producer.is_local());
-        let specification = struct_declaration_name("_struct_indices_spec", declaration, index + 1, producer.is_local());
+        let indices = struct_declaration_name(
+            "_struct_indices",
+            declaration,
+            index + 1,
+            producer.is_local(),
+        );
+        let specification = struct_declaration_name(
+            "_struct_indices_spec",
+            declaration,
+            index + 1,
+            producer.is_local(),
+        );
         Ok(format!("{prefix}{indices} {prefix}{specification}"))
     }
 

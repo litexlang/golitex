@@ -16,7 +16,8 @@ impl LitexToLeanCompiler {
         let proof = proof
             .as_detailed()
             .map_err(|_| LeanCompileError::unsupported("Strategy/Detail"))?;
-        let (declaration, prior) = position.visible_strategy(&proof.strategy_name)?;
+        let (declaration, prior) =
+            position.visible_strategy(&proof.strategy_name, proof.source_fact_id)?;
         let source = &declaration.statement.forall_fact;
         if !matches!(source.then_facts.get(proof.then_index),
             Some(ExistOrAndChainAtomicFact::AtomicFact(fact)) if !matches!(fact, AtomicFact::EqualFact(_)))
@@ -25,11 +26,7 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("Strategy/SelectedClause"));
         }
         let name = format!("strategy_{}", source.fact_id.value());
-        let reference = if matches!(prior.owner, SourceOwner::Run(_)) {
-            self.context_application(&name, &prior)
-        } else {
-            name
-        };
+        let reference = position.declaration_reference(&name, &prior)?;
         self.compile_proved_forall_application(
             &Fact::AtomicFact(goal.clone()),
             source,

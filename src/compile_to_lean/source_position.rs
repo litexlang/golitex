@@ -1205,6 +1205,7 @@ impl<'a> SourcePosition<'a> {
     pub fn visible_strategy(
         &self,
         name: &str,
+        source_fact_id: FactId,
     ) -> Result<(&'a crate::execute::ExecDefStrategyStmtSuccess, Self), LeanCompileError> {
         let mut position = Some(self);
         while let Some(current) = position {
@@ -1232,6 +1233,7 @@ impl<'a> SourcePosition<'a> {
                             ..*current
                         };
                         if proof.statement.name == name
+                            && proof.statement.forall_fact.fact_id == source_fact_id
                             && obeys_active_stage_ceilings(self, &completed)
                         {
                             return Ok((
@@ -1246,6 +1248,23 @@ impl<'a> SourcePosition<'a> {
                 }
             }
             position = current.parent;
+        }
+        if let Some((closure, file, _)) = self.module_context() {
+            for prior in 0..file {
+                let run = &closure.files[prior].run;
+                for (index, statement) in run.statement_results.iter().enumerate() {
+                    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
+                        crate::execute::ExecDefStrategyStmtResult::Success(proof),
+                    )) = statement
+                    {
+                        if proof.statement.name == name
+                            && proof.statement.forall_fact.fact_id == source_fact_id
+                        {
+                            return Ok((proof, Self::module_file(closure, prior, index)));
+                        }
+                    }
+                }
+            }
         }
         Err(LeanCompileError::unsupported(
             "Strategy/DeclarationProducer",
@@ -1351,6 +1370,22 @@ impl<'a> SourcePosition<'a> {
                 }
             }
             scope = current.parent;
+        }
+        if let Some((closure, file, _)) = self.module_context() {
+            for prior in 0..file {
+                for (index, statement) in closure.files[prior]
+                    .run
+                    .statement_results
+                    .iter()
+                    .enumerate()
+                {
+                    if let ExecStmtResult::Register(result) = statement {
+                        if matches(result) {
+                            return Ok((result, Self::module_file(closure, prior, index)));
+                        }
+                    }
+                }
+            }
         }
         Err(LeanCompileError::unsupported("Register/Producer"))
     }
@@ -4790,7 +4825,7 @@ fn nonempty_witness_statement(
     }
 }
 
-fn local_steps(owner: SourceOwner<'_>) -> Option<(&[ExecStmtResult], usize)> {
+pub(super) fn local_steps(owner: SourceOwner<'_>) -> Option<(&[ExecStmtResult], usize)> {
     match owner {
         SourceOwner::Strategy(p) => Some((
             &p.body.proof_steps,
@@ -5495,6 +5530,15 @@ fn membership_inference_groups<'a>(
                 membership_inference_groups(native, &proof.native_rules, groups);
             }
         }
+        if let InferInFactResult::EqualFnSetExpand(proof) = rule {
+            for transport in &proof.transports {
+                if let StoreFactResult::AtomicFact(stored) = &transport.derived.store {
+                    if let AtomicFact::InFact(member) = &stored.fact {
+                        membership_inference_groups(member, &transport.expansions, groups);
+                    }
+                }
+            }
+        }
     }
 }
 
@@ -5598,6 +5642,7 @@ fn atomic_inference_stages(infer: &InferAtomicFactResult) -> Vec<&StoreInferredF
                 InferInFactResult::Template(_)
                 | InferInFactResult::CartCoordinates(_)
                 | InferInFactResult::PowerSet(_)
+                | InferInFactResult::EqualFnSetExpand(_)
                 | InferInFactResult::Range(_)
                 | InferInFactResult::ClosedRange(_)
                 | InferInFactResult::UnionOr(_)
@@ -7406,7 +7451,7 @@ fn fact_reference_in_owner(
     }
 }
 
-fn named_steps(proof: &ExecDefThmStmtSuccess) -> (&[ExecStmtResult], usize) {
+pub(super) fn named_steps(proof: &ExecDefThmStmtSuccess) -> (&[ExecStmtResult], usize) {
     match (&proof.statement.fact, &proof.body) {
         (Fact::ForallFact(fact), ExecDefThmBodyProof::Forall(body)) => (
             &body.proof_steps,
@@ -7416,7 +7461,7 @@ fn named_steps(proof: &ExecDefThmStmtSuccess) -> (&[ExecStmtResult], usize) {
         _ => (&[], 0),
     }
 }
-fn claim_steps(proof: &ExecClaimStmtSuccess) -> (&[ExecStmtResult], usize) {
+pub(super) fn claim_steps(proof: &ExecClaimStmtSuccess) -> (&[ExecStmtResult], usize) {
     match (&proof.statement.fact, &proof.body) {
         (Fact::ForallFact(fact), ExecClaimBodyProof::Forall(body)) => (
             &body.proof_steps,

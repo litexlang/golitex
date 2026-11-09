@@ -15,11 +15,22 @@ impl LitexToLeanCompiler {
         let Fact::AtomicFact(AtomicFact::InFact(member)) = seed else {
             return Err(LeanCompileError::unsupported("PowerSetInference/Seed"));
         };
-        let Obj::SetOperator(SetOperator::PowerSet(power)) = &member.set else {
+        let Obj::SetOperator(SetOperator::PowerSet(power)) = &proof.source_carrier else {
             return Err(LeanCompileError::unsupported(
                 "PowerSetInference/CarrierEvidence",
             ));
         };
+        let same = self.compile_equality_path(
+            &member.set,
+            &proof.source_carrier,
+            &proof.carrier_equal,
+            position,
+        )?;
+        let receiver = self.compile_object_reference(&member.element, position)?;
+        let transported = format!(
+            "(Eq.mp (congrArg (fun _set => M.mem (Litex.denote {receiver}) _set) {same}) {})",
+            compiled.1
+        );
         let captured = &proof.derived;
         let fact = self.resolve_fact(captured.primary_fact_id(), position)?;
         if captured.primary_fact_id() == member.fact_id
@@ -32,7 +43,7 @@ impl LitexToLeanCompiler {
             "((Litex.inPowerSet_iff {} {}).mp {})",
             self.compile_object_reference(&member.element, position)?,
             self.compile_object_reference(&power.set, position)?,
-            compiled.1
+            transported
         );
         let formed = SourcePosition::new(
             Some(position),

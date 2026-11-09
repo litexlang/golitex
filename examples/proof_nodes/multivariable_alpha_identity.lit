@@ -1,0 +1,12 @@
+# Multivariable predicates retain their mathematical meaning under binder renaming.
+# Before: the different predicates below were incorrectly alpha-equal.
+# {p finite_seq(R,2): $has_multi_limit_at(f,p,2,0)} = {q finite_seq(R,2): $has_laplacian_at(f,q,2,0)}
+# The executable negative regression rejects this equation and 0 = 4.
+# Now: renaming the bound point preserves the same predicate and selector.
+have fn f(p finite_seq(R,2)) R = p(1)^2 + p(2)^2
+$has_laplacian_at(f,(0,0),2,4)
+laplacian(f,(0,0),2) = 4
+{p finite_seq(R,2): $has_laplacian_at(f,p,2,4), laplacian(f,p,2) = 4} = {q finite_seq(R,2): $has_laplacian_at(f,q,2,4), laplacian(f,q,2) = 4}
+# Boundary: a different operation or a changed free argument is not a renaming.
+# Evidence: target/release/litex -lang en -strict -f examples/proof_nodes/multivariable_alpha_identity.lit
+# Negative evidence: cargo test --release --test round2_audit multivariable_

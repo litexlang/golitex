@@ -161,6 +161,9 @@ impl Runtime {
                 ));
             }
         };
+        // These binders belong to the predicate definition. The user's proof
+        // body was parsed without them, so keep their runtime names private too.
+        let projected_exist = self.private_predicate_witness_binders(projected_exist)?;
 
         let (ambient, introduced_params, witness_equalities, proof_steps, obligations, local_env) =
             match self.run_witness_exist_with_proof(
@@ -198,6 +201,35 @@ impl Runtime {
                 store_and_infer_result,
             },
         ))
+    }
+
+    fn private_predicate_witness_binders(
+        &mut self,
+        family: ExistShapedFact,
+    ) -> RuntimeResult<ExistShapedFact> {
+        let ExistShapedFact::Exist(mut plain) = family else {
+            return Ok(family);
+        };
+        let mut substitution = HashMap::new();
+        for group in &mut plain.typed_parameters.groups {
+            group.param_type = self
+                .inst_param_type(&group.param_type, &substitution)
+                .map_err(|error| crate::runtime::RuntimeError::InternalBug(error.to_string()))?;
+            for parameter in &mut group.params {
+                let fresh = self.fresh_internal_param();
+                substitution.insert(
+                    parameter.id,
+                    Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(&fresh)),
+                );
+                *parameter = fresh;
+            }
+        }
+        for fact in &mut plain.facts {
+            *fact = self
+                .inst_quantifier_free_fact(fact, &substitution)
+                .map_err(|error| crate::runtime::RuntimeError::InternalBug(error.to_string()))?;
+        }
+        Ok(ExistShapedFact::Exist(plain))
     }
 }
 

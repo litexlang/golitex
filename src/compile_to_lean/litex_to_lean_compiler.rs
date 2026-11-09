@@ -716,6 +716,11 @@ fn atomic_fact_uses_sets(fact: &AtomicFact) -> bool {
 }
 
 fn statement_uses_sets(statement: &ExecStmtResult) -> bool {
+    // The regularity bridge contains an intersection and its empty set even
+    // when the surrounding proof statement has only numeric goals.
+    if statement_uses_regularity(statement) {
+        return true;
+    }
     if let Some(evaluation) = super::compile_eval_stmt_result::eval_statement(statement) {
         return object_uses_sets(&evaluation.source_object);
     }
@@ -1113,63 +1118,102 @@ fn statement_has_set_inference(statement: &ExecStmtResult) -> bool {
 }
 
 fn statement_uses_regularity(statement: &ExecStmtResult) -> bool {
-    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
-        crate::execute::ExecDefTemplateStmtResult::Success(p),
-    )) = statement
-    {
-        return statement_uses_regularity(&p.body);
-    }
-    if super::compile_release_regularity_result::regularity_statement(statement).is_some() {
-        return true;
-    }
-    let steps = match statement {
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
-            crate::execute::ExecDefStrategyStmtResult::Success(p),
-        )) => &p.body.proof_steps,
-        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
-            ExecDefThmStmtResult::Success(p),
-        )) => match &p.body {
-            ExecDefThmBodyProof::Forall(b) => &b.proof_steps,
-            ExecDefThmBodyProof::NonForall(b) => &b.proof_steps,
-        },
-        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(
-            ExecSketchStmtResult::Success(p),
-        )) => &p.proof_steps,
-        ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
-            crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Success(p),
-        )) => p.body.proof_steps(),
-        _ => return false,
-    };
-    steps.iter().any(statement_uses_regularity)
+    super::compile_release_regularity_result::regularity_statement(statement).is_some()
+        || nested_proof_statements(statement)
+            .into_iter()
+            .any(statement_uses_regularity)
 }
 
 fn statement_uses_choice(statement: &ExecStmtResult) -> bool {
-    if let ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
-        crate::execute::ExecDefTemplateStmtResult::Success(p),
-    )) = statement
-    {
-        return statement_uses_choice(&p.body);
+    super::compile_release_choice_result::choice_statement(statement).is_some()
+        || nested_proof_statements(statement)
+            .into_iter()
+            .any(statement_uses_choice)
+}
+
+// Foundation dependencies belong to every original nested proof body, not
+// only named theorems and claim blocks. This walks successful typed results;
+// it does not recover dependencies from generated Lean text.
+fn nested_proof_statements(statement: &ExecStmtResult) -> Vec<&ExecStmtResult> {
+    use crate::execute::execute_by_stmt::{
+        EnumerateAssignmentOutcome, ExecByCasesStmtResult, ExecByContraStmtResult,
+        ExecByExtensionStmtResult, ExecByFnExtensionStmtResult, ExecByStrongInducStmtResult,
+        ExecReleaseAxiomOfChoiceStmtResult, ExecReleaseZornLemmaStmtResult,
+    };
+    if let Some((_, assignments, _)) = super::source_position::enumeration_statement(statement) {
+        return assignments
+            .iter()
+            .flat_map(|assignment| match &assignment.outcome {
+                EnumerateAssignmentOutcome::Proved { proof_steps, .. } => proof_steps.as_slice(),
+                _ => &[],
+            })
+            .collect();
     }
-    if super::compile_release_choice_result::choice_statement(statement).is_some() {
-        return true;
-    }
-    let steps = match statement {
+    let blocks: Vec<&[ExecStmtResult]> = match statement {
+        ExecStmtResult::Definition(ExecDefinitionStmtResult::DefTemplate(
+            crate::execute::ExecDefTemplateStmtResult::Success(p),
+        )) => return vec![p.body.as_ref()],
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefStrategy(
             crate::execute::ExecDefStrategyStmtResult::Success(p),
-        )) => &p.body.proof_steps,
+        )) => vec![&p.body.proof_steps],
         ExecStmtResult::Definition(ExecDefinitionStmtResult::DefThm(
             ExecDefThmStmtResult::Success(p),
         )) => match &p.body {
-            ExecDefThmBodyProof::Forall(b) => &b.proof_steps,
-            ExecDefThmBodyProof::NonForall(b) => &b.proof_steps,
+            ExecDefThmBodyProof::Forall(b) => vec![&b.proof_steps],
+            ExecDefThmBodyProof::NonForall(b) => vec![&b.proof_steps],
         },
         ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Sketch(
             ExecSketchStmtResult::Success(p),
-        )) => &p.proof_steps,
+        )) => vec![&p.proof_steps],
         ExecStmtResult::ProofBlock(ExecProofBlockStmtResult::Claim(
-            crate::execute::execute_proof_block_stmt::ExecClaimStmtResult::Success(p),
-        )) => p.body.proof_steps(),
-        _ => return false,
+            ExecClaimStmtResult::Success(p),
+        )) => vec![p.body.proof_steps()],
+        ExecStmtResult::By(ExecByStmtResult::Contra(ExecByContraStmtResult::Success(p))) => {
+            vec![&p.proof_steps]
+        }
+        ExecStmtResult::By(ExecByStmtResult::Extension(ExecByExtensionStmtResult::Success(p))) => {
+            vec![&p.proof_steps]
+        }
+        ExecStmtResult::By(ExecByStmtResult::FnExtension(
+            ExecByFnExtensionStmtResult::Success(p),
+        )) => vec![&p.proof_steps],
+        ExecStmtResult::By(ExecByStmtResult::Cases(ExecByCasesStmtResult::Success(p))) => p
+            .branches
+            .iter()
+            .map(|branch| branch.proof_steps.as_slice())
+            .collect(),
+        ExecStmtResult::By(ExecByStmtResult::Induc(ExecByInducStmtResult::Success(p))) => {
+            match &p.body {
+                ByInducBodySuccess::Structured { base, step }
+                | ByInducBodySuccess::Unstructured { base, step } => {
+                    vec![&base.proof_steps, &step.proof_steps]
+                }
+            }
+        }
+        ExecStmtResult::By(ExecByStmtResult::StrongInduc(
+            ExecByStrongInducStmtResult::Success(p),
+        )) => match &p.body {
+            ByInducBodySuccess::Structured { base, step }
+            | ByInducBodySuccess::Unstructured { base, step } => {
+                vec![&base.proof_steps, &step.proof_steps]
+            }
+        },
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessAtomicFact(
+            ExecWitnessAtomicFactStmtResult::Success(p),
+        )) => vec![&p.proof_steps],
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessExistFact(
+            ExecWitnessExistFactStmtResult::Success(p),
+        )) => vec![&p.proof_steps],
+        ExecStmtResult::Witness(ExecWitnessStmtResult::WitnessNonemptySet(
+            crate::execute::execute_witness_stmt::ExecWitnessNonemptySetStmtResult::Success(p),
+        )) => vec![&p.proof_steps],
+        ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::AxiomOfChoice(
+            ExecReleaseAxiomOfChoiceStmtResult::Success(p),
+        )) => vec![&p.proof_steps],
+        ExecStmtResult::ReleaseAndExpand(ExecReleaseAndExpandStmtResult::ZornLemma(
+            ExecReleaseZornLemmaStmtResult::Success(p),
+        )) => vec![&p.proof_steps],
+        _ => Vec::new(),
     };
-    steps.iter().any(statement_uses_choice)
+    blocks.into_iter().flatten().collect()
 }

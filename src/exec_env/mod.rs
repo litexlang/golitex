@@ -12,9 +12,9 @@ pub mod special_property;
 
 pub use exec_env::{DefinitionMemory, ExecEnv, StoredDefAlgo, StoredIdentifierDefinition};
 pub use exist_shaped_fact_index_key::{
-    exist_shaped_fact_alpha_match_key, exist_shaped_fact_can_prove_goal,
-    exist_shaped_fact_index_key, exist_shaped_fact_known_lookup_keys, plain_exist_fact,
-    ExistShapedFactIndexKey, ExistShapedFactKind, QuantifierFreeShape,
+    exist_shaped_fact_can_prove_goal, exist_shaped_fact_index_key,
+    exist_shaped_fact_known_lookup_keys, plain_exist_fact, ExistShapedFactIndexKey,
+    ExistShapedFactKind, QuantifierFreeShape,
 };
 pub use known_fact_memory::{
     maybe_index_known_closed_numeric_equal, AtomicExceptEqualityFactMemory, ExistShapedFactMemory,

@@ -490,15 +490,25 @@ impl LitexToLeanCompiler {
                     let (introduced, assumed, owner) = match result.as_ref() {
                         VerifyForallFactResult::Success(
                             VerifyForallFactProof::ByLocalIntroduction(p),
-                        ) => (&p.introduced_params, p.assumed_dom_facts.as_slice(), SourceOwner::Forall(p)),
+                        ) => (
+                            &p.introduced_params,
+                            p.assumed_dom_facts.as_slice(),
+                            SourceOwner::Forall(p),
+                        ),
                         VerifyForallFactResult::Success(
                             VerifyForallFactProof::ByKnownForallFact(p),
-                        ) => (&p.well_defined.detailed_ref().introduced_params,
-                            p.well_defined.detailed_ref().assumed_dom_facts.as_slice(), SourceOwner::KnownForall(p)),
+                        ) => (
+                            &p.well_defined.detailed_ref().introduced_params,
+                            p.well_defined.detailed_ref().assumed_dom_facts.as_slice(),
+                            SourceOwner::KnownForall(p),
+                        ),
                         VerifyForallFactResult::Success(
                             VerifyForallFactProof::ByEmptyParameterDomain(p),
-                        ) => (&p.well_defined.detailed_ref().introduced_params,
-                            p.well_defined.detailed_ref().assumed_dom_facts.as_slice(), SourceOwner::EmptyForall(p)),
+                        ) => (
+                            &p.well_defined.detailed_ref().introduced_params,
+                            p.well_defined.detailed_ref().assumed_dom_facts.as_slice(),
+                            SourceOwner::EmptyForall(p),
+                        ),
                         _ => return Err(LeanCompileError::unsupported("Prop/FoldForallProof")),
                     };
                     let scope = SourcePosition::new(Some(&term_scope), owner, 0);
@@ -532,9 +542,13 @@ impl LitexToLeanCompiler {
                     // infer binders from a delayed proposition construction.
                     definitions.push(format!("have _fold_forall : {proposition} := {term}"));
                     definitions.push(format!("exact (@_fold_forall {})", arguments.join(" ")));
-                    let body = format!("(by\n  {}\n)", definitions.join("\n").replace('\n', "\n  "));
-                    if binders.is_empty() { body }
-                    else { format!("(fun {} => {body})", binders.join(" ")) }
+                    let body =
+                        format!("(by\n  {}\n)", definitions.join("\n").replace('\n', "\n  "));
+                    if binders.is_empty() {
+                        body
+                    } else {
+                        format!("(fun {} => {body})", binders.join(" "))
+                    }
                 } else {
                     term
                 },

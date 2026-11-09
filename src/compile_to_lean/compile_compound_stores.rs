@@ -684,6 +684,62 @@ impl LitexToLeanCompiler {
                 ..*position
             };
             match rule {
+                InferInFactResult::EqualFnSetExpand(proof) => {
+                    let AtomicFact::InFact(source) = atomic else {
+                        unreachable!()
+                    };
+                    let mut transport_before = prior.before;
+                    for transport in &proof.transports {
+                        let at = SourcePosition {
+                            before: transport_before,
+                            ..prior
+                        };
+                        if transport.membership_fact_id != source.fact_id {
+                            return Err(LeanCompileError::unsupported("EqualFnSetExpand/Source"));
+                        }
+                        let store = &transport.derived.store;
+                        let target = self.resolve_fact(store.primary_fact_id(), &at)?;
+                        let Fact::AtomicFact(AtomicFact::InFact(member)) = &target else {
+                            return Err(LeanCompileError::unsupported("EqualFnSetExpand/Target"));
+                        };
+                        if member.element != source.element || member.fact_id == source.fact_id {
+                            return Err(LeanCompileError::unsupported("EqualFnSetExpand/Subject"));
+                        }
+                        self.validate_store(store, &target)?;
+                        let equality = self.compile_equality_path(
+                            &source.set,
+                            &member.set,
+                            &transport.carrier_equal,
+                            &at,
+                        )?;
+                        let receiver = self.compile_object_reference(&source.element, &at)?;
+                        let target_compiled = (
+                            self.fact_proposition(&target, &at)?,
+                            format!("(Eq.mp (congrArg (fun _set => M.mem (Litex.denote {receiver}) _set) {equality}) {})", compiled.1),
+                        );
+                        declarations.push(self.emit_internal_fact(
+                            &target,
+                            &target_compiled,
+                            &at,
+                        )?);
+                        transport_before += 1;
+                        let after = SourcePosition {
+                            before: transport_before,
+                            ..prior
+                        };
+                        declarations.extend(self.compile_membership_inference_rules(
+                            &transport.expansions,
+                            &target,
+                            &target_compiled,
+                            &after,
+                        )?);
+                        transport_before += transport
+                            .expansions
+                            .iter()
+                            .map(|r| r.stored_conclusions().len())
+                            .sum::<usize>();
+                    }
+                }
                 InferInFactResult::PowerSet(p) => {
                     declarations
                         .extend(self.compile_power_set_inference(p, seed, compiled, &prior)?);
@@ -833,6 +889,7 @@ impl LitexToLeanCompiler {
             if matches!(
                 rule,
                 InferInFactResult::Template(_)
+                    | InferInFactResult::EqualFnSetExpand(_)
                     | InferInFactResult::SetBuilder(_)
                     | InferInFactResult::PowerSet(_)
                     | InferInFactResult::Preimage(_)

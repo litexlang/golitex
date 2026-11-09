@@ -1,5 +1,5 @@
 //! Borrow an exact earlier atomic formation; this reader never searches for a new fact.
-use super::source_position::{SourceOwner, SourcePosition};
+use super::source_position::{claim_steps, local_steps, named_steps, SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_by_stmt::{
     ExecByStmtResult, ExecByThmStmtResult, ExecReleaseThmStmtResult,
@@ -120,35 +120,28 @@ impl LitexToLeanCompiler {
                 }
             }
             let header = match current.owner {
-                SourceOwner::Forall(p) => Some((
-                    &p.fact.typed_parameters,
-                    p.assumed_dom_facts.as_slice(),
-                    None,
-                )),
+                SourceOwner::Forall(p) => {
+                    Some((&p.fact.typed_parameters, p.assumed_dom_facts.as_slice()))
+                }
                 SourceOwner::ForallWD(f, p) => Some((
                     &f.typed_parameters,
                     p.detailed_ref().assumed_dom_facts.as_slice(),
-                    None,
                 )),
                 SourceOwner::Named(p) => match (&p.statement.fact, &p.body) {
-                    (Fact::ForallFact(f), ExecDefThmBodyProof::Forall(b)) => Some((
-                        &f.typed_parameters,
-                        b.assumed_dom_facts.as_slice(),
-                        Some(b.proof_steps.as_slice()),
-                    )),
+                    (Fact::ForallFact(f), ExecDefThmBodyProof::Forall(b)) => {
+                        Some((&f.typed_parameters, b.assumed_dom_facts.as_slice()))
+                    }
                     _ => None,
                 },
                 SourceOwner::Claim(p) => match (&p.statement.fact, &p.body) {
-                    (Fact::ForallFact(f), ExecClaimBodyProof::Forall(b)) => Some((
-                        &f.typed_parameters,
-                        b.assumed_dom_facts.as_slice(),
-                        Some(b.proof_steps.as_slice()),
-                    )),
+                    (Fact::ForallFact(f), ExecClaimBodyProof::Forall(b)) => {
+                        Some((&f.typed_parameters, b.assumed_dom_facts.as_slice()))
+                    }
                     _ => None,
                 },
                 _ => None,
             };
-            if let Some((parameters, assumptions, steps)) = header {
+            if let Some((parameters, assumptions)) = header {
                 let head = parameters
                     .groups
                     .iter()
@@ -179,40 +172,24 @@ impl LitexToLeanCompiler {
                     };
                     return callback(&stored.fact, &wd, &prior);
                 }
-                if let Some(steps) = steps {
-                    let head = head + assumptions.len();
-                    for (i, statement) in steps
-                        .iter()
-                        .take(current.before.saturating_sub(head))
-                        .enumerate()
-                        .rev()
-                    {
-                        let prior = SourcePosition {
-                            before: head + i,
-                            ..*current
-                        };
-                        if let Some(value) =
-                            statement_formation(statement, id, actual, &prior, callback)?
-                        {
-                            return Ok(value);
-                        }
-                    }
-                }
             }
             let steps = match current.owner {
                 SourceOwner::Run(run) | SourceOwner::ModuleFile { run, .. } => {
-                    Some(run.statement_results.as_slice())
+                    Some((run.statement_results.as_slice(), 0))
                 }
-                SourceOwner::Derivation(p) => {
-                    super::compile_builtin_sequence_program::program_parts(p)
-                        .map(|(_, steps, _, _)| steps)
-                }
-                _ => None,
+                SourceOwner::Named(p) => Some(named_steps(p)),
+                SourceOwner::Claim(p) => Some(claim_steps(p)),
+                owner => local_steps(owner),
             };
-            if let Some(steps) = steps {
-                for (i, statement) in steps.iter().take(current.before).enumerate().rev() {
+            if let Some((steps, head)) = steps {
+                for (i, statement) in steps
+                    .iter()
+                    .take(current.before.saturating_sub(head))
+                    .enumerate()
+                    .rev()
+                {
                     let prior = SourcePosition {
-                        before: i,
+                        before: head + i,
                         ..*current
                     };
                     if let Some(value) =
@@ -227,6 +204,10 @@ impl LitexToLeanCompiler {
         Err(invalid("OriginalProducerProfile"))
     }
 }
+
+#[cfg(test)]
+#[path = "../../tests/unit/compile_to_lean/round2_cited_formation_tests.rs"]
+mod round2_cited_formation_tests;
 fn verified_formation<T>(
     result: &VerifyFactResult,
     id: FactId,

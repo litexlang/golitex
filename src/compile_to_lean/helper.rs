@@ -1206,6 +1206,32 @@ pub(super) fn captured_identifier_definition_matches(
             )),
         ) => key == name && a.as_ref() == &b.statement,
         (
+            StoredIdentifierDefinition::HaveObjByExistFacts((key, definition)),
+            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::ObtainObjFromExistFact(
+                crate::execute::ExecObtainObjFromExistFactStmtResult::Success(proof),
+            )),
+        ) => {
+            key == name
+                && captured_obtain_definition_matches(
+                    definition,
+                    &proof.statement.equal_tos,
+                    &proof.store_and_infer_result,
+                )
+        }
+        (
+            StoredIdentifierDefinition::HaveObjByExistFacts((key, definition)),
+            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
+                crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(proof),
+            )),
+        ) => {
+            key == name
+                && captured_obtain_definition_matches(
+                    definition,
+                    &proof.statement.equal_tos,
+                    &proof.store_and_infer_result,
+                )
+        }
+        (
             StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((key, a)),
             ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjInNonemptySet(
                 ExecHaveObjInNonemptySetStmtResult::Success(b),
@@ -1247,6 +1273,52 @@ pub(super) fn captured_identifier_definition_matches(
         ) => key == name && a.as_ref() == &b.statement,
         _ => false,
     }
+}
+
+fn captured_obtain_definition_matches(
+    definition: &crate::ast::stmt::HaveObjByExistFactsStmt,
+    names: &[BoundName],
+    stores: &StoreHaveObjAndInferResult,
+) -> bool {
+    let parameters: Vec<_> = definition
+        .param_def
+        .groups
+        .iter()
+        .flat_map(|g| g.params.iter().map(move |p| (p, &g.param_type)))
+        .collect();
+    let stores = &stores.store_and_infer_results;
+    if parameters.len() != names.len() || stores.len() < names.len() + definition.facts.len() {
+        return false;
+    }
+    for (((parameter, kind), name), store) in parameters.iter().zip(names).zip(stores) {
+        if *parameter != name {
+            return false;
+        }
+        let StoreFactResult::AtomicFact(stored) = &store.store else {
+            return false;
+        };
+        let valid = match (kind, &stored.fact) {
+            (ParamType::Obj(carrier), AtomicFact::InFact(member)) => member.set.eq(carrier),
+            (ParamType::Set(_), AtomicFact::IsSetFact(_))
+            | (ParamType::NonemptySet(_), AtomicFact::IsNonemptySetFact(_))
+            | (ParamType::FiniteSet(_), AtomicFact::IsFiniteSetFact(_)) => true,
+            _ => false,
+        };
+        if !valid {
+            return false;
+        }
+    }
+    definition
+        .facts
+        .iter()
+        .zip(&stores[names.len()..])
+        .all(|(expected, actual)| match (expected, &actual.store) {
+            (QuantifierFreeFact::AtomicFact(a), StoreFactResult::AtomicFact(b)) => a == &b.fact,
+            (QuantifierFreeFact::AndFact(a), StoreFactResult::AndFact(b)) => a == &b.fact,
+            (QuantifierFreeFact::ChainFact(a), StoreFactResult::ChainFact(b)) => a == &b.fact,
+            (QuantifierFreeFact::OrFact(a), StoreFactResult::OrFact(b)) => a == &b.fact,
+            _ => false,
+        })
 }
 
 pub(super) fn alias_equality_subject<'a>(

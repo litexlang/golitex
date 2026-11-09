@@ -78,6 +78,7 @@ pub struct NormalSearchProofByKnownStrategy {
 }
 pub struct DetailedSearchProofByKnownStrategy {
     pub strategy_name: PlainName,
+    pub source_fact_id: FactId,
     pub then_index: usize,
     pub forall_parameters_match_what_args: Vec<Obj>,
     pub arg_match_proofs: Vec<ForallConclusionArgMatchProof>,
@@ -125,6 +126,7 @@ impl SearchProofByKnownStrategy {
             OutputDetail::Detailed => {
                 Self::Detailed(Box::new(DetailedSearchProofByKnownStrategy {
                     strategy_name: strategy_name.clone(),
+                    source_fact_id: source.fact_id,
                     then_index,
                     forall_parameters_match_what_args,
                     arg_match_proofs,

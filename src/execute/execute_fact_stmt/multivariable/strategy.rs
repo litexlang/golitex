@@ -8,6 +8,8 @@ use crate::prelude::*;
 use crate::rational_expression::helper::{add_objs, sub_objs};
 
 pub enum MultivariableStrategyProof {
+    ContinuousExpression(ContinuousMultivariableProof),
+    CoordinateProjectionDifferentiable(CoordinateProjectionDifferentiableProof),
     ScalarLimit(ScalarLimitStrategyProof),
     VectorLimit(VectorLimitStrategyProof),
     ScalarContinuousAt(ScalarContinuousAtStrategyProof),
@@ -24,6 +26,26 @@ pub enum MultivariableStrategyProof {
     DivergenceAt(DivergenceAtStrategyProof),
     CurlAt(CurlAtStrategyProof),
     LaplacianAt(LaplacianAtStrategyProof),
+}
+pub struct ContinuousMultivariableProof {
+    pub relation: MultivariableAnalysisRelation,
+    pub function_domain: Box<CompleteFunctionDomainProof>,
+    pub body: AnonymousFn,
+    pub body_equal: KnownEqualityPathProof,
+    pub body_well_defined: Box<ObjWellDefinedProof>,
+    pub geometry: MultivariableInteriorProof,
+    pub coordinates: Vec<super::continuity::ContinuousMultivariableCoordinateProof>,
+    pub conclusion_equalities: Vec<MultivariableReducedEqualityProof>,
+}
+pub struct CoordinateProjectionDifferentiableProof {
+    pub relation: MultivariableAnalysisRelation,
+    pub function_domain: Box<CompleteFunctionDomainProof>,
+    pub body: AnonymousFn,
+    pub body_equal: KnownEqualityPathProof,
+    pub body_well_defined: Box<ObjWellDefinedProof>,
+    pub geometry: MultivariableInteriorProof,
+    pub index: Obj,
+    pub index_member: Box<VerifyFactResult>,
 }
 pub struct ScalarLimitStrategyProof {
     pub stages: SmoothMultivariableStages,
@@ -123,8 +145,11 @@ pub struct MultivariableCoordinateProof {
     pub second: Option<SmoothCoordinateExpressionProof>,
 }
 impl MultivariableStrategyProof {
-    pub fn stages(&self) -> &SmoothMultivariableStages {
-        match self {
+    pub fn stages(&self) -> Option<&SmoothMultivariableStages> {
+        Some(match self {
+            Self::ContinuousExpression(_) | Self::CoordinateProjectionDifferentiable(_) => {
+                return None
+            }
             Self::ScalarLimit(p) => &p.stages,
             Self::VectorLimit(p) => &p.stages,
             Self::ScalarContinuousAt(p) => &p.stages,
@@ -141,7 +166,7 @@ impl MultivariableStrategyProof {
             Self::DivergenceAt(p) => &p.stages,
             Self::CurlAt(p) => &p.stages,
             Self::LaplacianAt(p) => &p.stages,
-        }
+        })
     }
 }
 impl Runtime {
@@ -365,6 +390,56 @@ impl Runtime {
             else {
                 continue;
             };
+            if let Some((coordinates, conclusion_equalities)) = self
+                .prove_continuous_multivariable_body(
+                    relation,
+                    body,
+                    parameters[0].id,
+                    point,
+                    &n,
+                    state,
+                )?
+            {
+                return Ok(Some(MultivariableStrategyProof::ContinuousExpression(
+                    ContinuousMultivariableProof {
+                        relation: relation.clone(),
+                        function_domain: Box::new(source),
+                        body: body.clone(),
+                        body_equal: KnownEqualityPathProof::new(path),
+                        body_well_defined: Box::new(body_well_defined),
+                        geometry,
+                        coordinates,
+                        conclusion_equalities,
+                    },
+                )));
+            }
+            if matches!(
+                relation,
+                MultivariableAnalysisRelation::ScalarDifferentiableAt(_)
+            ) {
+                if let Some(index) =
+                    super::continuity::coordinate_index(&body.equal_to, parameters[0].id)
+                {
+                    let condition = member(self, index.clone(), indices(n.clone()));
+                    let index_member = self.verify_fact(&condition, state)?;
+                    if !index_member.is_failed() {
+                        return Ok(Some(
+                            MultivariableStrategyProof::CoordinateProjectionDifferentiable(
+                                CoordinateProjectionDifferentiableProof {
+                                    relation: relation.clone(),
+                                    function_domain: Box::new(source),
+                                    body: body.clone(),
+                                    body_equal: KnownEqualityPathProof::new(path),
+                                    body_well_defined: Box::new(body_well_defined),
+                                    geometry,
+                                    index: index.clone(),
+                                    index_member: Box::new(index_member),
+                                },
+                            ),
+                        ));
+                    }
+                }
+            }
             let Some((coordinates, conclusion_equalities)) =
                 self.prove_multivariable_body(relation, body, parameters[0].id, point, &n, state)?
             else {

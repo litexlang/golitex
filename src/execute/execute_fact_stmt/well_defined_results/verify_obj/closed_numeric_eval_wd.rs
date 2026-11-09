@@ -18,6 +18,40 @@ use crate::execute::execute_fact_stmt::VerifyState;
 use crate::rational_expression::ClosedNumericExpr;
 use crate::runtime::{Runtime, RuntimeResult};
 
+#[cfg(test)]
+mod round2_tests {
+    use super::*;
+    use crate::launch_command::{LaunchCommand, OutputLanguage};
+
+    #[test]
+    fn round2_closed_eval_restores_the_previous_mode_after_success_and_rejection() {
+        let mut rt = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        });
+        let number = Obj::Literal(Literal::Number(Number::new("1".into())));
+        for previous in [false, true] {
+            rt.eval_closed_numeric_source_wd = previous;
+            assert!(!rt
+                .verify_closed_numeric_source_for_eval(&number, VerifyState::top_level())
+                .unwrap()
+                .is_failed());
+            assert_eq!(rt.eval_closed_numeric_source_wd, previous);
+            let bad = Obj::ArithmeticOperator(ArithmeticOperator::Div(crate::ast::obj::Div {
+                left: Box::new(number.clone()),
+                right: Box::new(Obj::Literal(Literal::Number(Number::new("0".into())))),
+            }));
+            assert!(rt
+                .verify_closed_numeric_source_for_eval(&bad, VerifyState::top_level())
+                .unwrap()
+                .is_failed());
+            assert_eq!(rt.eval_closed_numeric_source_wd, previous);
+        }
+    }
+}
+
 impl Runtime {
     // Called only from `eval` when the source classifies as closed-numeric.
     pub(crate) fn verify_closed_numeric_source_for_eval(
@@ -36,7 +70,9 @@ impl Runtime {
         let previous = self.eval_closed_numeric_source_wd;
         self.eval_closed_numeric_source_wd = true;
         let built = self.verify_obj_well_definedness(obj, verify_state.clone());
-        let result = match built {
+        // Keep every fallible operation inside the closure so even a runtime
+        // error restores the mode before it leaves this function.
+        let result = (|| match built {
             Ok(VerifyObjWellDefinedResult::Success(proof)) => {
                 let gate = self.require_obj_in_standard_set(
                     obj,
@@ -56,7 +92,7 @@ impl Runtime {
                 }
             }
             other => other,
-        };
+        })();
         self.eval_closed_numeric_source_wd = previous;
         result
     }

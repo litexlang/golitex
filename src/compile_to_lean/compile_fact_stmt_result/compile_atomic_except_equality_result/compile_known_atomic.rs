@@ -212,10 +212,8 @@ impl LitexToLeanCompiler {
                 })
                 .collect::<Result<Vec<_>, LeanCompileError>>()
         };
-        let (cited_values, cited_bridges): (Vec<_>, Vec<_>) =
-            values(cited)?.into_iter().unzip();
-        let (goal_values, goal_bridges): (Vec<_>, Vec<_>) =
-            values(goal)?.into_iter().unzip();
+        let (cited_values, cited_bridges): (Vec<_>, Vec<_>) = values(cited)?.into_iter().unzip();
+        let (goal_values, goal_bridges): (Vec<_>, Vec<_>) = values(goal)?.into_iter().unzip();
         let apply = |values: &[String]| format!("({predicate} {})", values.join(" "));
         let mut current = cited_values.clone();
         let mut equality = format!("(Eq.refl {})", apply(&current));
@@ -225,7 +223,8 @@ impl LitexToLeanCompiler {
             // Equality evidence relates the original WD representations. When
             // the predicate uses raw values, cross that boundary explicitly;
             // equal source IR does not make cached host constructors reduce.
-            let endpoint_equality = if cited_bridges[index] == "rfl" && goal_bridges[index] == "rfl" {
+            let endpoint_equality = if cited_bridges[index] == "rfl" && goal_bridges[index] == "rfl"
+            {
                 argument_equality.clone()
             } else {
                 format!(

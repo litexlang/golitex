@@ -326,7 +326,9 @@ fn matrix_power_formula_references_the_core_recursive_definition() {
         .find(|(_, operation)| *operation == "matrixPowerRawValue")
         .unwrap();
     let (run, compiler) = super::execute(source);
-    let output = compiler.compile_run(&run, "matrix_power_core_reference").unwrap();
+    let output = compiler
+        .compile_run(&run, "matrix_power_core_reference")
+        .unwrap();
     assert!(output.contains("Litex.matrixPowerRawValue"));
     assert!(!output.contains("Nat.brecOn"));
     assert!(!output.contains("smartUnfolding false"));

@@ -1,0 +1,7 @@
+# Named witnesses retain their defining properties for explicit release.
+# Before: obtain kept only ParamType, so release could not recover the condition.
+witness exist x R st {x=2} from 2
+obtain chosen from exist x R st {x=2}
+release obj def chosen
+chosen=2
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/definition/obtained_definition_properties.lit

@@ -707,11 +707,12 @@ impl Runtime {
             };
             if tok == FACT_PREFIX {
                 tb.advance()?;
+                let qualified = matches!(tb.peek_at(1), Some(MOD_SIGN) | Some(MOD_FLAT_SIGN));
                 let prop = self.parse_prop_name(tb)?;
                 let prop_str = match &prop {
                     AtomicName::Plain { name } => name.as_str(),
-                    AtomicName::WithExportFileId { .. }
-                    | AtomicName::WithModAndExportFileId { .. } => {
+                    AtomicName::WithExportFileId { name, .. } if !qualified => name.as_str(),
+                    _ => {
                         return Err(RuntimeParseError::new(
                             "mod-qualified infix `$Mod::prop` is not supported; use `$Mod::prop(...)`",
                             tb.line,
@@ -720,7 +721,10 @@ impl Runtime {
                         .into());
                     }
                 };
-                if !is_infix_prop_name(prop_str) {
+                if !is_infix_prop_name(prop_str)
+                    && self.def_prop_visible(&prop).is_none()
+                    && self.def_abstract_prop_visible(&prop).is_none()
+                {
                     return Err(RuntimeParseError::new(
                         format!("`{prop_str}` is not a valid infix prop; use `${prop_str}(...)`"),
                         tb.line,

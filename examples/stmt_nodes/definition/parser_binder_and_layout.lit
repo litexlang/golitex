@@ -1,0 +1,15 @@
+# Arithmetic endpoints and continued headers preserve their ordinary meaning.
+# Before: 1+1...4 grouped the left endpoint as 1+(1...4), and the continuation
+# placeholders were treated as an unindented block body.
+have indices set = 1 + 1 ... 2 * 2
+2 $in indices
+4 $in indices
+forall x R, \\
+    y R:
+    x + y = y + x
+
+prop same_value(x,y set):
+    x = y
+1 $same_value 1
+# Boundary: qualified infix names and self-referential parameter carriers reject.
+# Evidence: target/release/litex -lang en -strict -f examples/stmt_nodes/definition/parser_binder_and_layout.lit

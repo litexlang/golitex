@@ -1,0 +1,15 @@
+# A template value declared in a function space remains callable.
+# Before: this value form was omitted from the template signature reader.
+template<T set>:
+    have identity fn(x T) T = fn(x T) T {x}
+\identity<R>(1) $in R
+struct Boxed:
+    val R
+    tag R
+have boxed &Boxed = (1,0)
+witness exist box &Boxed st {box.val=1, box.tag=0} from boxed
+template<T set>:
+    obtain selected_box from exist box &Boxed st {box.val=1, box.tag=0}
+\selected_box<R>.val = 1
+# Boundary: the declared function remains unary.
+# Evidence: target/release/litex -lang en -strict -f examples/wd/template_value_callable.lit

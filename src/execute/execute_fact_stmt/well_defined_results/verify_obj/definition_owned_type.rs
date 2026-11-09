@@ -69,7 +69,48 @@ impl Runtime {
                     return Some(fn_type(signature));
                 }
                 let definition = self.def_template_visible(&instance.template_name)?.clone();
-                let substitution = self.template_instance_substitution(&definition, instance)?;
+                let mut substitution =
+                    self.template_instance_substitution(&definition, instance)?;
+                let outputs = definition.template_def_stmt.defined_bindings();
+                let index = outputs
+                    .iter()
+                    .position(|p| p.name == instance.template_name.local_name())?;
+                let family = match &definition.template_def_stmt {
+                    TemplateDefEnum::ObtainObjFromExistFact(stmt) => Some(stmt.fact.clone()),
+                    TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
+                        let prop = self.def_prop_visible(&stmt.fact.predicate)?.clone();
+                        let ids = prop.typed_parameters.ordered_param_ids();
+                        if ids.len() != stmt.fact.body.len() {
+                            return None;
+                        }
+                        let params = ids
+                            .into_iter()
+                            .zip(stmt.fact.body.iter().cloned())
+                            .collect();
+                        let family = crate::execute::execute_obtain_obj_from_atomic_fact_stmt::project_sole_positive_exist_clause(&prop.iff_facts).ok()?;
+                        let source = match family {
+                            ExistShapedFact::Exist(p) => Fact::ExistFact(p),
+                            ExistShapedFact::ExistUnique(p) => Fact::ExistUniqueFact(p),
+                            _ => return None,
+                        };
+                        let fact = self.inst_fact(&source, &params).ok()?;
+                        Some(match fact {
+                            Fact::ExistFact(p) => ExistShapedFact::Exist(p),
+                            Fact::ExistUniqueFact(p) => ExistShapedFact::ExistUnique(p),
+                            _ => return None,
+                        })
+                    }
+                    _ => None,
+                };
+                if let Some(family) = family {
+                    let carrier = super::structs::existential_template_carrier(
+                        &family,
+                        index,
+                        &outputs,
+                        &mut substitution,
+                    )?;
+                    return self.inst_obj(&carrier, &substitution).ok();
+                }
                 let parameters = match &definition.template_def_stmt {
                     TemplateDefEnum::HaveObjEqualStmt(stmt) => &stmt.param_def,
                     TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => &stmt.param_def,

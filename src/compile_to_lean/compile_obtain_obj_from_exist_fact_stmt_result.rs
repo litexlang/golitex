@@ -91,15 +91,15 @@ impl LitexToLeanCompiler {
             ));
         }
         let mut output_ids = HashSet::new();
-        let renaming: HashMap<_, _> = parameters
+        let renamed_outputs = outputs
             .iter()
-            .copied()
-            .zip(
-                outputs
-                    .iter()
-                    .map(|name| Obj::Identifier(IdentifierObj::from_bound_name(name))),
-            )
-            .collect();
+            .map(|name| {
+                position
+                    .defining_identifier(name, &self.runtime)
+                    .map(Obj::Identifier)
+            })
+            .collect::<Result<Vec<_>, _>>()?;
+        let renaming: HashMap<_, _> = parameters.iter().copied().zip(renamed_outputs).collect();
         let same_binders = outputs
             .iter()
             .zip(&parameters)

@@ -160,9 +160,7 @@ impl Runtime {
         let (renamed_params, subst) =
             self.build_obtain_renamed_params_and_subst(plain, equal_tos)?;
 
-        let mut store_and_infer_result =
-            self.define_typed_parameters_in_current_env(&renamed_params, None, verify_state)?;
-
+        let mut facts = Vec::new();
         for body_fact in &plain.facts {
             let instantiated = self
                 .inst_quantifier_free_fact(body_fact, &subst)
@@ -171,6 +169,23 @@ impl Runtime {
                         "obtain: failed to instantiate existential body: {e}"
                     ))
                 })?;
+            facts.push(instantiated);
+        }
+        let definition = crate::ast::stmt::HaveObjByExistFactsStmt {
+            param_def: renamed_params.clone(),
+            facts: facts.clone(),
+            line_file: plain.line_file.clone().unwrap_or_else(|| {
+                crate::ast::line_file::SourceLine::new(0, self.current_file.clone())
+            }),
+        };
+        let mut store_and_infer_result = self.define_typed_parameters_in_current_env(
+            &renamed_params,
+            Some(crate::execute::introduce_typed_parameters::SharedHaveDefinition::HaveObjByExistFacts(
+                std::rc::Rc::new(definition),
+            )),
+            verify_state,
+        )?;
+        for instantiated in facts {
             let as_fact = quantifier_free_fact_to_fact(instantiated);
             let stored = self.store_fact_and_infer(&as_fact, verify_state)?;
             store_and_infer_result.push(stored);

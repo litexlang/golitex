@@ -1,0 +1,16 @@
+# Runtime helpers must not capture source names or duplicate nested evaluation.
+# Before: a source constant called math shadowed Python's math module, and
+# nested sign expressions repeated their argument in each generated branch.
+# [-extract]
+have math R = 2
+have circle R = pi
+algo base(x R) R by cases:
+    case x = x: x
+algo nested(litex_sign R) R by cases:
+    case litex_sign = litex_sign: sign(sign(base(litex_sign)))
+# [end of -extract]
+# Generated Python and C both execute nested(-4) = -1 in the backend regression.
+# Python: target/release/litex -extractpython -f examples/stmt_nodes/command/extract_runtime_names.lit
+# C: target/release/litex -extractc -f examples/stmt_nodes/command/extract_runtime_names.lit
+# Boundary: repository extraction still requires distinct exported names.
+# Executable checks: cargo test --release --test output_backends_round2 -- --include-ignored

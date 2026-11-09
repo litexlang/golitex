@@ -178,7 +178,18 @@ impl Runtime {
         &mut self,
         obj: &Obj,
     ) -> Option<(Obj, AtomicExceptEqualityFactKnownProof)> {
-        let prototype = selector_relation(obj, number(0))?;
+        self.known_multivariable_selector_candidates(obj)
+            .into_iter()
+            .next()
+    }
+
+    pub(crate) fn known_multivariable_selector_candidates(
+        &mut self,
+        obj: &Obj,
+    ) -> Vec<(Obj, AtomicExceptEqualityFactKnownProof)> {
+        let Some(prototype) = selector_relation(obj, number(0)) else {
+            return Vec::new();
+        };
         let key = (AtomicName::plain(prototype.predicate_name().into()), true);
         let mut values = Vec::new();
         for env in self.execution_environments_stack.iter().rev() {
@@ -197,8 +208,11 @@ impl Runtime {
                 }
             }
         }
+        let mut candidates = Vec::new();
         for value in values {
-            let relation = selector_relation(obj, value.clone())?;
+            let Some(relation) = selector_relation(obj, value.clone()) else {
+                continue;
+            };
             let fact: AtomicFact = MultivariableAnalysisFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 relation,
@@ -206,10 +220,10 @@ impl Runtime {
             }
             .into();
             if let Some(proof) = self.lookup_known_atomic_premise(fact) {
-                return Some((value, proof));
+                candidates.push((value, proof));
             }
         }
-        None
+        candidates
     }
 }
 fn selector_success(

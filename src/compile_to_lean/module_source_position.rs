@@ -285,6 +285,11 @@ impl<'a> SourcePosition<'a> {
                 return Ok(published(&owner));
             }
         }
+        if let Some(producer) = self.global_obtain_position(parameter.id) {
+            if matches!(producer.owner, SourceOwner::ModuleFile { .. }) {
+                return Ok(published(&producer));
+            }
+        }
         Ok(IdentifierObj::from_bound_name(parameter))
     }
 

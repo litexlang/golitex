@@ -281,8 +281,8 @@ impl Runtime {
                     tb.parse_error(format!("set-builder expects a binder name, got `{name}`"))
                 );
             }
-            let binding = self.define_plain_atom_as_parse(tb, name)?;
             let param_set = parse_obj(self, tb)?;
+            let binding = self.define_plain_atom_as_parse(tb, name)?;
             tb.expect(COLON)?;
             let mut facts = Vec::new();
             loop {

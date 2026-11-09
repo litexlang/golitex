@@ -10,6 +10,33 @@ use crate::runtime::runtime_ids::{IdentifierId, WellDefinednessId};
 use crate::runtime::Runtime;
 
 impl Runtime {
+    pub(crate) fn visible_prop_rewrite_properties(
+        &self,
+        prop: &AtomicName,
+    ) -> Vec<crate::exec_env::exec_env::PropRewriteProperty> {
+        let mut properties = Vec::new();
+        for env in self.execution_environments_stack.iter().rev() {
+            if let Some(found) = env.prop_rewrite_properties.get(prop) {
+                properties.extend(found.iter().cloned());
+            }
+        }
+        let finished = match prop {
+            AtomicName::Plain { .. } => None,
+            AtomicName::WithExportFileId { export_file_id, .. } => {
+                self.finished_export_exec_env(None, *export_file_id)
+            }
+            AtomicName::WithModAndExportFileId {
+                global_mod_id,
+                export_file_id,
+                ..
+            } => self.finished_export_exec_env(Some(*global_mod_id), *export_file_id),
+        };
+        if let Some(found) = finished.and_then(|env| env.prop_rewrite_properties.get(prop)) {
+            properties.extend(found.iter().cloned());
+        }
+        properties
+    }
+
     // Walk the exec-env stack (inner first) for name conflicts under a temp shell.
     pub(in crate::execute) fn identifier_defined_in_stack(&self, name: &str) -> bool {
         self.execution_environments_stack

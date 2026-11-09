@@ -72,11 +72,7 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("Register/ApplicationArity"));
         }
         let name = format!("h_{}", fact.fact_id.value());
-        let mut terms = vec![if declaration.is_local() {
-            name
-        } else {
-            declaration.context_application(&name)
-        }];
+        let mut terms = vec![position.declaration_reference(&name, declaration)?];
         for argument in arguments {
             let term = self.compile_object_reference(argument, position)?;
             terms.push(format!("{term} (Litex.isSet {term})"));

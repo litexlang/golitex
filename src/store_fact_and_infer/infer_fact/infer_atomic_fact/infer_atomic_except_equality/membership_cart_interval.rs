@@ -49,6 +49,11 @@ impl Runtime {
         let Obj::ProductShape(ProductShape::Cart(cart)) = &in_fact.set else {
             return Ok(None);
         };
+        if let Obj::ProductShape(ProductShape::Tuple(tuple)) = &in_fact.element {
+            if tuple.args.len() != cart.args.len() {
+                return Ok(None);
+            }
+        }
         let mut coordinates = Vec::new();
         for (index, factor) in cart.args.iter().enumerate() {
             let Ok(coordinate) =
@@ -246,8 +251,12 @@ impl Runtime {
         end: &Obj,
         end_inclusive: bool,
     ) -> Option<Obj> {
-        let start_n = self.resolve_obj_to_normalized_number(start)?;
-        let end_n = self.resolve_obj_to_normalized_number(end)?;
+        // This inference stores no equality citation. Only closed endpoints
+        // may be evaluated here; aliases remain available to explicit proofs.
+        let start_n = crate::rational_expression::evaluate_obj_to_normalized_decimal_number(start)?
+            .normalized_value;
+        let end_n = crate::rational_expression::evaluate_obj_to_normalized_decimal_number(end)?
+            .normalized_value;
         let start_i = start_n.parse::<i128>().ok()?;
         let end_i = end_n.parse::<i128>().ok()?;
         if end_inclusive {

@@ -55,31 +55,36 @@ fragment using `double`, without a generated `main`. Litex verification
 establishes the source mathematics, not IEEE-754 rounding, overflow, or target
 compiler behavior.
 
+The C `lcm` helper accepts finite integer-valued doubles in
+`[-2^63, 2^63)`. It checks that range before converting, computes magnitudes and
+the Euclidean algorithm with unsigned integers, and forms the result as a
+`double`. Inputs outside that machine range abort instead of invoking undefined
+integer conversion or overflow. The C factorial helper likewise checks its
+integer domain before conversion; results above `170!` are positive infinity.
+These are executable-backend limits, not restrictions on mathematical Litex
+integers. Nested `sign` calls evaluate each argument once through a helper.
+
 ## Naming constraints
 
 Choose distinct names across all files included in one extraction. Repository
 extraction (`-r`) combines exports into one Python or C namespace and keeps
-plain declaration names; it does not add export prefixes or detect collisions.
+plain declaration names; it does not add export prefixes. Duplicate constant or
+algorithm names are rejected before an artifact is returned.
 For example, `have shared R = 1` in one export and `have shared R = 2` in
-another both verify in Litex, but Python overwrites the first value and C
-rejects the duplicate definition. Prefer names such as `first_shared` and
+another both verify in Litex, but extraction reports the duplicate. Use names
+such as `first_shared` and
 `second_shared`, and apply the same convention to `algo` names.
 
-For Python, avoid naming a constant, algorithm or parameter `math`. The
-renderer uses `import math` and references such as `math.pi` and `math.floor`.
-For example, `have math R = 2` followed by `have tau R = pi` emits
-`math = 2.0` followed by `tau = math.pi`, which raises `AttributeError`.
-Use a descriptive name such as `scale` for that constant instead. Also avoid
-shadowing Python builtins used by generated code, such as `int`, `min` and
-`max`.
+Python names colliding with the used `math` module and builtins are emitted
+with a reserved `__litex_user_` prefix. For example, `have math R = 2` emits
+`__litex_user_math = 2.0`, leaving `math.pi` available to subsequent expressions.
+The source lexer reserves `__` names, so user names cannot collide with this
+generated prefix.
 
-C fragments may `#include <stdlib.h>` (and similar) and call helpers such as
-`abort()`. Avoid Litex `have` / `algo` names that collide with those library
-symbols (`abort`, `exit`, `malloc`, …); the backend does not rename or reject
-them.
-
-These naming collisions can still produce an artifact marked successful.
-Check the generated program in the target language before relying on it.
+C names colliding with C99 `math.h`, `stdlib.h`, or generated helper symbols
+are emitted with `litex_user_`. Names already starting with that prefix gain
+one more copy of it, which keeps the mapping distinct. Definitions, parameters,
+and references all use the same mapping. Other valid source names are retained.
 
 ## v1 extractable surface (new kernel)
 

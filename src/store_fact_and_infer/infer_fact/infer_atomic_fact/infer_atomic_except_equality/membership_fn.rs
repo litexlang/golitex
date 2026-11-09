@@ -54,7 +54,7 @@ impl Runtime {
     fn infer_in_fact_equal_fn_set_expand(
         &mut self,
         in_fact: &InFact,
-        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferInFactResult>> {
         if matches!(
             &in_fact.set,
@@ -86,18 +86,27 @@ impl Runtime {
                 continue;
             }
             let fact_id = self.global_ids.allocate_fact_id();
-            let expanded = AtomicFact::InFact(InFact {
+            let expanded = InFact {
                 fact_id,
                 element: in_fact.element.clone(),
                 set: peer,
                 line_file: in_fact.line_file.clone(),
-            });
+            };
             {
-                let stored = self.store_inferred_fact(&Fact::AtomicFact(expanded))?;
+                let stored =
+                    self.store_inferred_fact(&Fact::AtomicFact(expanded.clone().into()))?;
+                let mut expansions = Vec::new();
+                if let Some(rule) = self.infer_in_fact_finite_seq_expand(&expanded, verify_state)? {
+                    expansions.push(rule);
+                }
+                if let Some(rule) = self.infer_in_fact_seq_expand(&expanded, verify_state)? {
+                    expansions.push(rule);
+                }
                 transports.push(InferInFactEqualFnSetTransport {
                     membership_fact_id: in_fact.fact_id,
                     carrier_equal: KnownEqualityPathProof::new(path),
                     derived: stored,
+                    expansions,
                 });
             }
         }

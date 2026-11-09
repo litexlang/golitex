@@ -1,5 +1,25 @@
 # Repository working agreements
 
+## Project identity and skill authoring
+
+Litex is a **high-level language for formal mathematics**, designed to express
+mathematical objects, definitions, statements and proofs close to ordinary
+mathematical writing. It can serve as a frontend to proof systems including
+**Lean, Coq, and Isabelle**. The native checker, proof evidence, backend
+compilers and other outputs support this central language-level purpose.
+
+Start design, implementation, examples, documentation and comparisons from
+this identity. Preserve the intended mathematics across backend translations
+and distinguish language semantics from backend-specific representations.
+Separate architectural direction from implemented backend coverage, generated
+output and successful independent checking.
+
+Every new or revised Litex-related skill must state this identity near its
+entry and apply its specialized workflow in service of it. Follow the shared
+Project identity contract in `golitex-repository-policy`. The
+`assets/litex-agent-pipeline.png` diagram anchors the workflow from mathematical
+input through checked Litex source to multiple downstream outputs.
+
 ## Verification artifact lifecycle
 
 For Litex-to-Lean work, keep the mathematical deliverables as canonical `.lit`

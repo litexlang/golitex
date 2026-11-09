@@ -17,7 +17,8 @@ impl Runtime {
         ))
     }
 
-    // not exist xs st {c1, c2, …} → forall xs: ¬c1 or ¬c2 or …
+    // Retain the ordered WD guards: not exist xs st {c1, ..., cn}
+    // implies forall xs: c1, ..., c(n-1) => not cn.
     // None when no binders, empty body, `or` in a conjunct, or an atom cannot be negated.
     fn not_exist_to_demorgan_forall(
         &mut self,
@@ -68,13 +69,18 @@ impl Runtime {
             forall_groups.push(TypedParameterGroup { params, param_type });
         }
 
+        let mut dom_facts = Vec::new();
         let mut disjuncts: Vec<AndChainAtomicFact> = Vec::new();
-        for body in &plain.facts {
+        for (index, body) in plain.facts.iter().enumerate() {
             let inst = self.inst_quantifier_free_fact(body, &subst).map_err(|e| {
                 crate::runtime::RuntimeError::InternalBug(format!(
                     "not exist demorgan: instantiate body: {e}"
                 ))
             })?;
+            if index + 1 < plain.facts.len() {
+                dom_facts.push(crate::instantiate::quantifier_free_fact_to_fact(inst));
+                continue;
+            }
             let Some(part) = self.demorgan_negate_exist_body_conjunct_to_disjuncts(&inst)? else {
                 return Ok(None);
             };
@@ -103,7 +109,7 @@ impl Runtime {
             typed_parameters: TypedParameterList {
                 groups: forall_groups,
             },
-            dom_facts: Vec::<Fact>::new(),
+            dom_facts,
             then_facts: vec![then_fact],
             line_file: plain.line_file.clone(),
         }))

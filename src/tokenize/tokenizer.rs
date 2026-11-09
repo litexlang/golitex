@@ -355,6 +355,15 @@ impl Tokenizer {
             }
 
             let body = if Self::ends_with_colon(&content.text) {
+                // Continuation lines retain empty placeholders for source
+                // locations. Blank and comment lines do not establish indentation.
+                while *i < lines.len() {
+                    let next = Self::code_prefix_before_hash_comment(&lines[*i].text);
+                    if !next.trim().is_empty() {
+                        break;
+                    }
+                    *i += 1;
+                }
                 if *i >= lines.len() {
                     return Err(RuntimeParseError::new(
                         "block header missing body",

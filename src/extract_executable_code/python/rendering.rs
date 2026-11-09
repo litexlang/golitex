@@ -4,6 +4,7 @@ use crate::runtime::RuntimeResult;
 struct PythonRenderer {
     lines: Vec<String>,
     needs_math: bool,
+    needs_sign: bool,
 }
 
 impl PythonRenderer {
@@ -11,6 +12,7 @@ impl PythonRenderer {
         Self {
             lines: vec![],
             needs_math: false,
+            needs_sign: false,
         }
     }
 
@@ -24,7 +26,8 @@ impl PythonRenderer {
     fn render_constant(&mut self, constant: &ExtractedConstant) -> RuntimeResult<()> {
         validate_python_name(&constant.name, &constant.line_file)?;
         let value = self.render_expression(&constant.value)?;
-        self.lines.push(format!("{} = {}", constant.name, value));
+        self.lines
+            .push(format!("{} = {}", python_name(&constant.name), value));
         Ok(())
     }
 
@@ -38,8 +41,13 @@ impl PythonRenderer {
         }
         self.lines.push(format!(
             "def {}({}):",
-            function.name,
-            function.params.join(", ")
+            python_name(&function.name),
+            function
+                .params
+                .iter()
+                .map(|p| python_name(p))
+                .collect::<Vec<_>>()
+                .join(", ")
         ));
         for (index, case) in function.cases.iter().enumerate() {
             let keyword = if index == 0 { "if" } else { "elif" };
@@ -82,7 +90,7 @@ impl PythonRenderer {
             }
             ExtractedExpressionKind::Name(name) => {
                 validate_python_name(name, &expression.line_file)?;
-                Ok(name.clone())
+                Ok(python_name(name))
             }
             ExtractedExpressionKind::Add(left, right) => {
                 self.render_binary_expression(left, "+", right)
@@ -132,8 +140,9 @@ impl PythonRenderer {
                 Ok(format!("math.log({})", self.render_expression(value)?))
             }
             ExtractedExpressionKind::Sign(value) => {
+                self.needs_sign = true;
                 let value = self.render_expression(value)?;
-                Ok(format!("(1 if {0} > 0 else (-1 if {0} < 0 else 0))", value))
+                Ok(format!("__litex_sign({value})"))
             }
             ExtractedExpressionKind::Factorial(value) => {
                 self.needs_math = true;
@@ -148,7 +157,7 @@ impl PythonRenderer {
                     .iter()
                     .map(|arg| self.render_expression(arg))
                     .collect::<RuntimeResult<Vec<String>>>()?;
-                Ok(format!("{}({})", name, args.join(", ")))
+                Ok(format!("{}({})", python_name(name), args.join(", ")))
             }
         }
     }
@@ -171,12 +180,27 @@ impl PythonRenderer {
         if self.lines.is_empty() {
             return "# No Python-extractable Litex definitions.".to_string();
         }
-        if !self.needs_math {
-            return self.lines.join("\n");
+        let mut lines = Vec::new();
+        if self.needs_math {
+            lines.extend(["import math".to_string(), String::new()]);
         }
-        let mut lines = vec!["import math".to_string(), String::new()];
+        if self.needs_sign {
+            lines.extend([
+                "def __litex_sign(value):\n    return 1 if value > 0 else (-1 if value < 0 else 0)"
+                    .to_string(),
+                String::new(),
+            ]);
+        }
         lines.extend(self.lines);
         lines.join("\n")
+    }
+}
+
+fn python_name(name: &str) -> String {
+    if matches!(name, "math" | "int" | "min" | "max" | "AssertionError") {
+        format!("__litex_user_{name}")
+    } else {
+        name.to_string()
     }
 }
 

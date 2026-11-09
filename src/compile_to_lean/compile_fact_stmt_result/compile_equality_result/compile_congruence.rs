@@ -52,7 +52,9 @@ impl LitexToLeanCompiler {
             if !matches!(source_subject(child)?, Fact::AtomicFact(AtomicFact::EqualFact(eq))
                 if eq.left.ir() == left.obj.ir() && eq.right.ir() == right.obj.ir())
             {
-                return Err(LeanCompileError::unsupported("FieldCongruence/ChildSubject"));
+                return Err(LeanCompileError::unsupported(
+                    "FieldCongruence/ChildSubject",
+                ));
             }
             // Both original field constructors remain mandatory. Equal field
             // names alone do not imply equal coordinates across record types.
@@ -63,7 +65,9 @@ impl LitexToLeanCompiler {
                 return Err(LeanCompileError::unsupported("FieldCongruence/Coordinates"));
             }
             let prior = SourcePosition::new(
-                Some(position), SourceOwner::EqualityRequirements(children), 0,
+                Some(position),
+                SourceOwner::EqualityRequirements(children),
+                0,
             );
             let checked = self.compile_verify(child, &prior)?;
             let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
@@ -88,44 +92,79 @@ impl LitexToLeanCompiler {
             let (declaration, _, _) = position.visible_struct(&left.name, &self.runtime)?;
             let (other, _, _) = position.visible_struct(&right.name, &self.runtime)?;
             if !std::ptr::eq(declaration, other) {
-                return Err(LeanCompileError::unsupported("StructCongruence/Declaration"));
+                return Err(LeanCompileError::unsupported(
+                    "StructCongruence/Declaration",
+                ));
             }
-            let parameters = declaration.statement.param_def_with_dom.as_ref()
-                .map(|(parameters, _)| parameters.groups.iter().flat_map(|g| &g.params).collect::<Vec<_>>())
+            let parameters = declaration
+                .statement
+                .param_def_with_dom
+                .as_ref()
+                .map(|(parameters, _)| {
+                    parameters
+                        .groups
+                        .iter()
+                        .flat_map(|g| &g.params)
+                        .collect::<Vec<_>>()
+                })
                 .unwrap_or_default();
-            if parameters.is_empty() || left.params.len() != parameters.len()
-                || right.params.len() != parameters.len() || children.len() != parameters.len()
+            if parameters.is_empty()
+                || left.params.len() != parameters.len()
+                || right.params.len() != parameters.len()
+                || children.len() != parameters.len()
             {
                 return Err(LeanCompileError::unsupported("StructCongruence/Arity"));
             }
             self.compile_object_reference(&fact.left, position)?;
             self.compile_object_reference(&fact.right, position)?;
             let mut equalities = Vec::new();
-            for (index, ((left, right), child)) in left.params.iter().zip(&right.params).zip(children).enumerate() {
+            for (index, ((left, right), child)) in left
+                .params
+                .iter()
+                .zip(&right.params)
+                .zip(children)
+                .enumerate()
+            {
                 if !matches!(source_subject(child)?, Fact::AtomicFact(AtomicFact::EqualFact(eq))
                     if eq.left.ir() == left.ir() && eq.right.ir() == right.ir())
                 {
-                    return Err(LeanCompileError::unsupported("StructCongruence/ChildSubject"));
+                    return Err(LeanCompileError::unsupported(
+                        "StructCongruence/ChildSubject",
+                    ));
                 }
-                let prior = SourcePosition::new(Some(position), SourceOwner::EqualityRequirements(children), index);
+                let prior = SourcePosition::new(
+                    Some(position),
+                    SourceOwner::EqualityRequirements(children),
+                    index,
+                );
                 let checked = self.compile_verify(child, &prior)?;
                 let formed = SourcePosition::new(Some(&prior), SourceOwner::Verify(child), 2);
-                equalities.push(format!("(show {} = {} from {})",
+                equalities.push(format!(
+                    "(show {} = {} from {})",
                     self.compile_normalization_value(left, &formed)?,
-                    self.compile_normalization_value(right, &formed)?, checked.1));
+                    self.compile_normalization_value(right, &formed)?,
+                    checked.1
+                ));
             }
             // Abstract the declaration's own parameters, not the concrete
             // caller expressions. Parent WD still certifies both applications.
-            let bindings = parameters.iter().enumerate()
+            let bindings = parameters
+                .iter()
+                .enumerate()
                 .map(|(index, parameter)| (parameter.id, format!("_struct_parameter_{index}")))
                 .collect::<std::collections::HashMap<_, _>>();
             let prototype = StructObj {
                 name: left.name.clone(),
-                params: parameters.iter().map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p))).collect(),
+                params: parameters
+                    .iter()
+                    .map(|p| Obj::Identifier(IdentifierObj::from_bound_name(p)))
+                    .collect(),
             };
             let body = self.compile_struct_raw_value(&prototype, position, &bindings)?;
-            let binders = (0..parameters.len()).map(|index| format!("(_struct_parameter_{index} : M.Value)"))
-                .collect::<Vec<_>>().join(" ");
+            let binders = (0..parameters.len())
+                .map(|index| format!("(_struct_parameter_{index} : M.Value)"))
+                .collect::<Vec<_>>()
+                .join(" ");
             return curried_value_congruence(&format!("(fun {binders} => {body})"), &equalities);
         }
         let integer_operation = |closed| {

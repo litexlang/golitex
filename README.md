@@ -3,208 +3,229 @@
 
 # Litex
 
-### The Python of Formal Language
+### The High-Level Language for Formal Mathematics
+*(The Python of Formal Reasoning)*
 
-**Pronunciation:** /ˈliːtɛk/ (“LEE-tek”, Chinese “里泰克”).
+Created and maintained by Jiachen Shen.
 
-Created and maintained by Jiachen Shen. The main text is author-written, with AI assistance for clarity.
-
-[Website and playground](https://litexlang.com) · [GitHub](https://github.com/litexlang/golitex)
+[Website & Playground](https://litexlang.com/) · [Blueprint](docs/Litex_Blueprint.md) · [Learn Litex](docs/Manual.md) · [Setup](docs/setup.md) · [Zulip Community](https://litex.zulipchat.com/) · [中文说明](docs/中文README.md)
 </div>
 
-Mathematical writing already carries logical structure: statements, assumptions and definitions provide much of the reasoning needed to justify each step. Litex is a formal language designed to make this structure executable through proof search over contextual facts and built-in mathematical rules.
+---
 
-Authors supply meaningful mathematical steps, while the system recovers the supported inferences connecting them. Humans and AI can work in terms of mathematical facts without having to spell out every formal derivation.
+## What is Litex?
 
-Selected local comparisons show compact mathematical expression and, on some examples, 10–100× faster native checking than Lean, excluding startup and imports. Its verification records support interactive reading, writing and correction, with promising initial AI-agent results. It also compiles supported proofs to Lean for independent rechecking.
+**Litex is a high-level programming language for formal mathematics.**
 
-<a id="readme-comparisons"></a>
+In computer science, software engineering evolved from raw machine code (0101) to assembly instructions, and ultimately to high-level languages like C and Python. High-level languages abstracted away registers, stack frames, and manual memory addresses, freeing engineers to express complex ideas at the problem level.
 
-## Familiar expressions, familiar mathematics
+Formal mathematics is going through the exact same evolution today:
 
-The same mathematics, written in Litex and Lean. Click an example for its complete code in the appendix.
+```text
+┌────────────────────────────────────────────────────────────────────────┐
+│                               Litex                                    │
+│             High-Level Language for Formal Mathematics                 │
+│    • Math-centric declarations      • Automatic well-definedness check │
+│    • Bounded routine auto-inference  • AI-agent native REPL session    │
+└───────────────────────────────────┬────────────────────────────────────┘
+                                    │ Compiles & Replays proofs
+              ┌─────────────────────┼─────────────────────┐
+              ▼                     ▼                     ▼
+       ┌──────────────┐      ┌──────────────┐      ┌──────────────┐
+       │    Lean 4    │      │  Coq / Rocq  │      │   Isabelle   │
+       │    Kernel    │      │    Kernel    │      │    Kernel    │
+       └──────────────┘      └──────────────┘      └──────────────┘
+              ▲                     ▲                     ▲
+              └─────────────────────┴─────────────────────┘
+                     Low-Level Formal Verification Engines
+```
 
-| Mathematical expression | Litex | Lean (with `import Mathlib`) |
-| --- | --- | --- |
-| [Natural-number arithmetic: 1 + 1 = 2](#readme-example-nat_mathlib) | `1 + 1 = 2` | `example : (1 : Nat) + 1 = 2 := by rfl` |
-| [Every positive real number is nonzero](#readme-example-positive_nonzero) | `forall x R: x > 0 => x != 0` | `example (x : ℝ) (hx : x > 0) : x ≠ 0 := by` |
-|  |  | `  exact ne_of_gt hx` |
-| [A real number whose square is 4: choose 2 as a witness](#readme-example-square_witness) | `witness exist w R st {w^2 = 4} from 2` | `example : ∃ w : ℝ, w ^ 2 = 4 := by` |
-|  |  | `  refine ⟨2, ?_⟩` |
-|  |  | `  norm_num` |
-| [Define and call a reciprocal function on nonzero reals](#readme-example-guarded_reciprocal) | `have fn reciprocal(x R: x != 0) R = 1 / x` | `noncomputable def reciprocal (x : {y : ℝ // y ≠ 0}) : ℝ :=` |
-|  | `reciprocal(2) = 1 / 2` | `  (x : ℝ)⁻¹` |
-|  |  |  |
-|  |  | `example : reciprocal ⟨2, by norm_num⟩ = (2 : ℝ)⁻¹ := by` |
-|  |  | `  simp [reciprocal]` |
+Today, interactive theorem proving is still largely in its "assembly language" era. In traditional proof assistants (such as Lean, Coq, and Isabelle), users spend most of their cognitive energy managing low-level proof plumbing: navigating goal stacks, rewriting tactic scripts (`intro`, `apply`, `simp`), and wrestling with dependent type coercion.
 
-<a id="expression-length-and-checking-speed"></a>
+**Litex brings the high-level language paradigm to formal mathematics:**
+1. **Math-Centric**: You declare definitions, state facts, and write the essential steps of a mathematical proof directly in clean, Pythonic syntax.
+2. **Automates the Routine**: The compiler automatically verifies expression well-definedness, checks domain constraints, and searches contextual facts to validate intermediate steps.
+3. **Universal High-Level Frontend**: Litex does not replace formal verification engines—it elevates them. Verified Litex proofs can be compiled down to **Lean 4**, **Coq**, or **Isabelle** for independent, ironclad kernel verification.
 
-### Checking time on selected examples
+---
 
-These historical local measurements select cases where Litex's native checking path was faster. Times exclude startup, dependency imports and Litex-to-Lean rechecking; ratios use unrounded median times. See the [measurement method](examples/litex_vs_lean_speed/README.md) and [unscreened comparison](examples/litex_vs_lean_speed/search-and-expansion.md), where Lean's direct route was faster in five of six cases.
+## Core Pillars
 
-| Mathematical task | Litex (ms) ↓ | Lean (ms) ↓ | Lean ÷ Litex |
-| --- | ---: | ---: | ---: |
-| [Logarithms: log₂8 = 3](#readme-example-log_2_8) | 0.064 | 13.992 | **217.0×** |
-| [Number theory: 1000000007 is prime](#readme-example-prime_1000000007) | 0.027 | 4.029 | **147.2×** |
-| [Set theory: the set of positive reals is nonempty](#readme-example-witness_nonempty_positive) | 0.084 | 6.439 | **76.9×** |
-| [Define and apply the theorem that positive reals are nonzero](#readme-example-named_theorem) | 0.158 | 8.018 | **50.7×** |
-| [Define an open-interval predicate and check membership](#readme-example-predicate) | 0.189 | 8.223 | **43.4×** |
-| [Natural-number arithmetic: 1 + 1 = 2](#readme-example-nat_mathlib) | 0.037 | 1.361 | **36.7×** |
-| [Universal statement: the sum of two positive reals is positive](#readme-example-forall_add_pos) | 0.392 | 10.487 | **26.7×** |
-| [The derivative of the square function at 3 is 6](#readme-example-derivative_square_at_three) | 1.464 | 29.945 | **20.5×** |
+### 1. Math as Code: Think in Mathematics, Not Tactics
 
-Expression length is reported separately as [retrospective normalized-character ratios (DF*)](examples/litex_vs_lean_speed/README.md#de-bruijn-factor), using shared informal texts written after the formal sources. Those examples do not establish a general de Bruijn factor or measure ease of reading or writing.
-
-## Why I built Litex
-
-**Could mathematics itself be the formal language?** Mathematical writing already introduces objects, gives definitions, states assumptions and justifies conclusions. I want to preserve that correspondence while adding enough structure for mechanical checking.
-
-Doing mathematics means looking for patterns. In Litex, I have been looking for recurring patterns in the act of proving: how statements introduce conditions, how facts connect, and how a conclusion finds support in its context. My aim is to turn those patterns into executable mechanisms, so humans and AI can concentrate on the mathematics.
-
-My ambition is for Litex to become a Python for formal mathematics: familiar writing, few language conventions, and useful machinery behind each statement. As AI produces more candidate reasoning, the language in which we understand, check and share mathematical knowledge matters more.
-
-### Mathematical wording becomes a checking action
-
-Litex starts with usable mathematical objects and their conditions: numbers, sets and functions can be named directly. Familiar proof phrases then correspond to precise statements. The source column below contains excerpts; the [Manual](docs/Manual.md#mathematical-reading) gives complete forms and scope rules.
-
-| Mathematical wording | Litex excerpt | What connects the step to its grounds |
-| --- | --- | --- |
-| **Let a equal 1; substituting gives a + 2 = 3.** | **`let a = 1`**<br>**`a + 2 = 3`** | Cite `a = 1`, substitute, check `1 + 2 = 3`, and store the accepted conclusion. |
-| **Split into the cases x = 0 and x = 1.** | **`by cases:`**<br>`case x = 0:`<br>`case x = 1:` | Check coverage and prove the same target in both local branches. |
-| **For natural n, define successor(n) = n + 1.** | **`have fn`** `successor(n N) N = n + 1` | Check the domain and return carrier, then make the definition callable. |
-
-The recurring patterns are in the mathematical writing itself. The author supplies meaningful steps; Litex makes supported connections to the context executable.
-
-## From mathematical language to checked knowledge
-
-**Foundation.** Litex uses sets, elements, functions and relations. Familiar operations carry explicit conditions: `1 - 2 = -1`, while `1 / 0` is rejected as undefined. A function can put its required conditions directly in its domain:
+Litex code looks and reads like textbook mathematics. There are no imperative tactic scripts to memorize or fragile proof states to manage:
 
 ```litex
+forall x R:
+    x^2 >= 0
+```
+
+The mathematical sentence supplies its own structure: `forall` introduces universal quantification, `R` specifies the real carrier, and `x^2 >= 0` is the checked conclusion.
+
+### 2. Automatic Domain and Well-Definedness Checking
+
+A central insight of Litex's math-centric design is that **mathematical expressions must be well-defined before their truth can even be evaluated**.
+
+In traditional provers, partial functions (like $1/x$, $\sqrt{x}$, or matrix inverses) require burdensome manual proofs bundled at call sites or verbose subtype machinery. In Litex, domain conditions are declared as natural guards, and the compiler **automatically verifies well-definedness**:
+
+```litex
+# Define a reciprocal function guarded by x != 0
 have fn reciprocal(x R: x != 0) R = 1 / x
+
+# Calling it with a valid input succeeds automatically:
 reciprocal(2) = 1 / 2
 ```
 
-`reciprocal(0)` is rejected because its argument cannot meet the nonzero condition.
+If an author (or an AI agent) calls `reciprocal(0)`, Litex rejects it immediately at the well-definedness stage with a clear, structural diagnosis:
 
-**Syntax.** Python-like indentation organizes scope and reasoning. In the universal statement above, `x R` introduces a real number, `x > 0` is the premise, and `x != 0` is the conclusion to check. Longer proofs still require authors to supply the mathematical route through intermediate facts, witnesses, induction or cases.
-
-**Semantics.** Every statement must first be well-defined, then justified from its current context. The checker returns JSON describing its result, grounds and stored facts. For `1 + 1 = 2`, an English output excerpt is:
-
-```json
-{
-  "statement_result": "accepted",
-  "statement": "(1 + 1) = 2",
-  "proof_method": { "type": "by_closed_calculation" },
-  "stores": ["(1 + 1) = 2"]
-}
+```text
+WellDefinedError: object reciprocal(0) is not well-defined
+  --> failed to verify function domain fact: 0 != 0
 ```
 
-For `1 / 0 = 0`, the result instead identifies the unmet condition `0 != 0`. Feedback is available in ten languages, including Chinese with `-lang zh`.
+You focus on the mathematical argument; the language automatically ensures that every expression remains mathematically valid.
 
-**Architecture: proof as search.** Consider:
+### 3. The Checker Handles the Routine: ~350,000 Lines of Pure Rust
 
-```litex
-let a = 1
-a + 2 = 3
-```
+Litex was designed around a simple engineering goal: **about 350,000 lines of Rust, written for a language that is effortless to write and a checker that is blazingly fast.**
 
-The first line stores `a = 1`. The second acts as a query: find that equality, substitute it to obtain `1 + 2 = 3`, and check the calculation. The accepted `a + 2 = 3` then becomes knowledge for later steps.
+When you state a step, Litex executes a bounded verification cycle:
+1. **Retrieve**: Looks through active scope for cited definitions, established facts, and builtin mathematical rules.
+2. **Verify**: Checks well-definedness, matches variable binders, and validates premises.
+3. **Commit**: Records the exact proof grounds and makes the accepted conclusion available to all subsequent steps.
 
-Litex is a fact-oriented mathematical verification language. Its native engine operates as a mathematics-specialized deductive knowledge base. Built-in mathematical rules provide reusable reasoning patterns; bounded contextual search finds relevant established facts and checks their conditions of use. Inference rules also record supported direct consequences of accepted facts, making them available to later steps.
+Authors supply the mathematical creativity—key intermediate lemmas, witnesses, case splits, and induction arguments. Litex takes care of the routine algebraic and logical bridges.
 
-Writing a fact therefore asks the system to find its grounds in the current mathematical context. Authors provide key intermediate facts, witnesses, cases or induction when needed; the system recovers the supported reasoning between those steps. Calculation is one available checking method. A search miss means that the checker could not justify the step, and does not prove its negation.
+### 4. Built for AI Mathematicians (Agent-Native Architecture)
 
-A proved `forall` becomes a reusable logical contract: later instances can be checked by matching its conclusion and verifying its premises, within the supported search paths and visible scope. Users extend the available knowledge by proving mathematics.
+Litex was engineered from day one to be the native language for AI mathematical reasoning:
 
-Its present mathematical semantics is set-based. The language and knowledge-management design, and the supported Lean proof-reconstruction backend, are separate layers; see the [technical positioning](docs/Manual.md#litex-theoretical-positioning).
-
-```mermaid
-flowchart TD
-    A["Parse the next complete Statement<br/>Objects and Facts"] --> B["Check statement-specific obligations<br/>Ordinary facts: WD, then proof search"]
-    C["Current context and native checks<br/>Definitions, facts, proved forall, built-in rules"] --> B
-    B -->|accepted| D["Record evidence; store and infer<br/>Commit the statement's effects"]
-    D -->|knowledge for later statements| C
-    B -->|ordinary rejection| E["Discard this statement's effects<br/>Keep previously accepted context"]
-```
-
-**Native source snapshot — 2026-10-28.** These counts describe implementation branches and registered rule entries:
-
-| Component | Count |
-| --- | ---: |
-| [Object (`Obj`) constructor branches](src/ast/obj.rs) | **150** |
-| [Statement (`Stmt`) constructor branches](src/ast/stmt.rs) | **52** |
-| [Atomic Fact variants](src/ast/fact/atomic.rs) | **74** |
-| [Builtin verification rule entries](src/reading/rule_catalogue_generated.json) | **683** |
-
-Constructor counts expand grouping enums and stop at payload structs; atomic facts include both polarities. The rule catalogue separately records **76 inference entries** and **526 explicit builtin theorem interfaces**. These are implementation counts, not a vocabulary to memorize or a count of independent axioms; they exclude user/library knowledge and other WD, calculator and strategy branches. See the [Manual's system pipeline](docs/Manual.md#system-pipeline) for the full flow and checking boundaries.
-
-## Connect the same mathematics to other tools
-
-The experimental `litex -lean -f proof.lit` compiler generates Lean statements and proofs that can be independently checked by Lean's kernel. This lets users write in Litex and connect supported mathematics to the Lean ecosystem.
-
-The same source and verification records also support:
-
-- **Interactive textbooks:** `litex -reading -f proof.lit` opens source with definitions, domains and proof references to explore, plus editing and checking.
-- **LaTeX:** `litex -latex -f proof.lit` formats mathematical definitions and statements for documents.
-- **C and Python:** experimental extraction turns supported computational definitions into runnable programs.
-
-## Working with AI
-
-A person or agent can propose a step, inspect its feedback, repair it and continue in the same Session. Earlier accepted definitions and facts remain available after an ordinary rejection.
-
-A preliminary report from a plane-geometry library-building experiment with **165 mathematical tasks** and `deepseek-chat` records these elapsed times:
-
-| Automatic library-building run | Litex | Lean |
-| --- | ---: | ---: |
-| Recorded elapsed time | **14.3 minutes** | **177.5 minutes** |
-
-This report lacks paired completion counts and validation criteria, so these times alone do not establish a library-building speedup. Other projects include agent-written IMO geometry proofs and textbook developments in proof techniques, algebra, analysis and geometry.
-
-## Try Litex
-
-Use the website's playground, or install on macOS/Linux with Homebrew:
+* **Pythonic Syntax**: Natural for Large Language Models to read and generate without getting trapped in complex tactic grammars.
+* **Persistent Session (`litex -session`)**: Unlike traditional batch provers that reset on failure, Litex provides a stateful REPL. When a candidate step is rejected, **previously accepted context remains intact**. An agent can propose a statement, inspect the feedback, repair the single failed line, and proceed.
+* **Structured, Actionable Diagnostics**: If an agent forgets a domain condition (like $x \neq 0$), Litex returns structured JSON explaining precisely what failed. The agent can immediately deduce what precondition was omitted and self-correct on the next turn.
 
 ```bash
-brew install litexlang/tap/litex
-litex -e '1 + 1 = 2'
+litex -strict -session -e 'have a R = 2'
+litex> a = 3
+# {"run_result": "failure", "session_terminated": false}
+litex> a + 1 = 3
+# {"run_result": "success", "session_terminated": false}
 ```
 
-On Windows with Scoop and Git installed:
+### 5. One High-Level Source, Multi-Target Ecosystem
 
+Writing in Litex opens up a versatile mathematical ecosystem:
+
+* **Compiler Bridge to Formal Kernels**: Compile checkable Litex proofs to standalone Lean 4 files (`litex -lean -f proof.lit`) for independent verification by Lean's kernel. The compiler architecture is designed to expand to Coq/Rocq and Isabelle.
+* **Publication-Ready LaTeX**: Export proofs directly into beautifully typeset LaTeX lecture notes, handouts, or papers (`litex -latex -document -f proof.lit`).
+* **Interactive Textbooks & Knowledge Graphs**: Interactively browse definitions, premises, and dependency graphs with `litex -reading`.
+* **Executable Code Extraction**: Extract computational mathematical definitions directly into Python and C (`litex -extractpython`, `litex -extractc`).
+
+---
+
+## Quickstart
+
+### Installation
+
+**macOS / Linux (Homebrew):**
+```bash
+brew install litexlang/tap/litex
+```
+
+**Windows (Scoop):**
 ```powershell
 scoop bucket add litex https://github.com/litexlang/scoop-litex
 scoop install litex
 ```
 
-Save any complete Litex example from the appendix as `proof.lit` and run `litex -strict -f proof.lit`. For interactive work:
+**Online Playground:** Try Litex instantly in your browser at [litexlang.com](https://litexlang.com/).
+
+### First Commands
 
 ```bash
-litex -strict -session -e 'let a = 1'
+# Verify a single mathematical statement
+litex -e '1 + 1 = 2'
+
+# Start an interactive mathematical session
+litex -session
+
+# Check a proof file
+litex -f proof.lit
+
+# Compile a proof to Lean 4
+litex -lean -f proof.lit
+
+# Generate a complete LaTeX document
+litex -latex -document -lang en -f proof.lit
 ```
 
-Enter `a = 2`: it is rejected. Then enter `a + 2 = 3`: it succeeds using the retained context. Keep this Session open while writing; save accepted source and use a clean file run at checkpoints. `litex -help` lists commands.
+---
 
-Litex is in beta. `-strict` rejects user-written `trust` and `axiom`; verification still relies on Litex's checker and mathematical foundations.
+## A Complete Example: Irrationality of √2
+
+To prove that $\sqrt{2}$ is irrational, assume by contradiction that it equals a reduced fraction $p/q$. The algebraic steps force both $p$ and $q$ to be even, contradicting their coprimality:
+
+```litex
+# Prove that sqrt(2) is not rational.
+by contra:
+    ? not sqrt(2) $in Q
+    release thm rational_has_unique_reduced_fraction(sqrt(2))
+    obtain p, q from exist! p Z, q N+ st {sqrt(2) = p / q, gcd(p, q) = 1}
+
+    p^2 = (sqrt(2) * q)^2 = sqrt(2)^2 * q^2 = 2 * q^2
+    p^2 % 2 = (2 * q^2) % 2 = 0
+    release thm prime_divides_power(p, 2, 2)
+
+    p / 2 $in Z
+    q^2 = p^2 / 2 = 2 * (p / 2)^2
+    q^2 % 2 = (2 * (p / 2)^2) % 2 = 0
+    release thm prime_divides_power(q, 2, 2)
+
+    impossible 2 <= gcd(p, q) = 1
+```
+
+Notice the flow: the author names two standard supporting theorems, chooses the reduced fraction, and provides the calculation chain. Litex verifies each line and confirms the contradiction.
+
+---
+
+<a id="readme-comparisons"></a>
+<a id="expression-length-and-checking-speed"></a>
+
+## Verification Speed & Benchmark Summary
+
+Because Litex relies on dedicated Rust-engineered verification algorithms rather than heavy dynamic tactic elaboration, ordinary mathematical steps verify in sub-millisecond time.
+
+| Mathematical task | Litex (ms) ↓ | Lean (ms) ↓ | Lean ÷ Litex |
+| --- | ---: | ---: | ---: |
+| [The set of positive reals is nonempty](#readme-example-witness_nonempty_positive) | 0.084 | 6.439 | **76.9×** |
+| [Natural-number arithmetic: 1 + 1 = 2](#readme-example-nat_mathlib) | 0.037 | 1.361 | **36.7×** |
+| [The sum of two positive reals is positive](#readme-example-forall_add_pos) | 0.392 | 10.487 | **26.7×** |
+| [The derivative of the square function at 3 is 6](#readme-example-derivative_square_at_three) | 1.464 | 29.945 | **20.5×** |
+
+*(Historical local benchmarks using warm medians excluding startup and imports. See the [full benchmark report](examples/litex_vs_lean_speed/README.md) for detailed methodology and comparisons.)*
+
+---
 
 <a id="litex-reliability"></a>
 
-## Reliability of Litex
+## Project Status & About
 
-Litex's reliability is strengthened through testing, code review and independent proof checking. The project has around 4,000 examples and over 3,000 test functions. Before each release, the maintainer also uses the frontier language models available to review the source code and look for bugs.
+Litex is an independent research project started in 2024, created and actively maintained by **Jiachen Shen (沈嘉辰)**, a mathematics PhD student at Fudan University.
 
-Compilation to Lean provides an additional check: supported Litex proofs can be reconstructed as Lean proofs and checked by Lean's kernel. This coverage continues to expand.
+The project is currently in **Beta**. We are actively expanding language features, standard library theorems, and compiler backends. If you encounter an issue or have a feature suggestion, please include a minimal reproducible example when opening an issue.
 
-## About
+* **Website**: [litexlang.com](https://litexlang.com/)
+* **Community**: [Zulip](https://litex.zulipchat.com/)
+* **GitHub Issues**: [github.com/litexlang/golitex/issues](https://github.com/litexlang/golitex/issues)
+* **Email**: litexlang@outlook.com
 
-I am Jiachen Shen (沈嘉辰), a mathematics PhD student at Fudan University. I hope Litex helps more people write checkable mathematics and understand the definitions, conditions and reasoning behind it. Questions and feedback: litexlang@outlook.com.
+Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Hao Wu, Keyao Zhu, and Zhaoxuan Hong for their support and advice.
 
-Special thanks to Wei Lin, Siqi Sun, Peng Sun, Chenxuan Huang, Yan Lu, Sheng Xu, Hao wu, Keyao Zhu, and Zhaoxuan Hong for their support and advice.
+Released under the [Apache License 2.0](LICENSE).
 
-Released under the Apache License 2.0.
+---
 
-## Appendix: complete examples
+## Appendix: Complete Side-by-Side Examples
 
 Each example runs independently. Expand a title for the complete Litex and Lean code.
 

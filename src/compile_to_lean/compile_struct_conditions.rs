@@ -1,5 +1,8 @@
-use super::helper::{conjunction_projection, conjunction_proposition, instantiated_fact_matches, parameter_type_fact_matches};
 use super::compile_def_struct_stmt_result::struct_declaration_name;
+use super::helper::{
+    conjunction_projection, conjunction_proposition, instantiated_fact_matches,
+    parameter_type_fact_matches,
+};
 use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::ast::stmt::DefStructStmt;
@@ -145,7 +148,11 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         let context = format!(
             "{}{}",
-            if local { String::new() } else { self.context_header(position)? },
+            if local {
+                String::new()
+            } else {
+                self.context_header(position)?
+            },
             if header_binders.is_empty() {
                 String::new()
             } else {
@@ -222,10 +229,16 @@ impl LitexToLeanCompiler {
         let header =
             SourcePosition::new(Some(position), SourceOwner::StructHeader(proof), usize::MAX);
         let (header_binders, header_intros, _) = self.compile_struct_header(proof, &header)?;
-        let structure =
-            self.struct_self_application(&struct_declaration_name("struct", proof, index, local), proof, position)?;
-        let bridge =
-            self.struct_self_application(&struct_declaration_name("_struct_members", proof, index, local), proof, position)?;
+        let structure = self.struct_self_application(
+            &struct_declaration_name("struct", proof, index, local),
+            proof,
+            position,
+        )?;
+        let bridge = self.struct_self_application(
+            &struct_declaration_name("_struct_members", proof, index, local),
+            proof,
+            position,
+        )?;
         let groups = proof
             .statement
             .param_def_with_dom
@@ -445,7 +458,10 @@ impl LitexToLeanCompiler {
                     if local {
                         format!("h_{}", fact.fact_id().value())
                     } else {
-                        self.context_application(&format!("h_{}", fact.fact_id().value()), &completed)
+                        self.context_application(
+                            &format!("h_{}", fact.fact_id().value()),
+                            &completed,
+                        )
                     },
                 ),
                 &completed,

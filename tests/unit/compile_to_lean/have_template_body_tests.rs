@@ -152,7 +152,7 @@ fn have_template_existence_keeps_its_source_predicate_and_formation() {
 }
 
 #[test]
-fn template_call_from_membership_replays_the_selected_citation_and_argument_wd() {
+fn template_call_from_declared_carrier_replays_instance_and_argument_wd() {
     for mutation in 0..4 {
         let (mut run, compiler) = super::execute(SOURCES[2]);
         compiler.compile_run(&run, "baseline").unwrap();
@@ -170,19 +170,25 @@ fn template_call_from_membership_replays_the_selected_citation_and_argument_wd()
         else {
             panic!("call WD")
         };
-        let Some(FnObjDomainFnSetEvidence::InFunctionSet {
-            fn_set, fact_id, ..
-        }) = &mut call.domain_fn_set
+        let Some(FnObjDomainFnSetEvidence::TemplateDefinition { fn_set, .. }) =
+            &mut call.domain_fn_set
         else {
-            panic!("original membership route")
+            panic!("checked template declaration route")
         };
+        let signature = fn_set.clone();
         assert_eq!(
             call.child_obj_well_defined.len(),
-            1,
-            "membership route has only argument children"
+            2,
+            "template declaration route retains the instance and argument WD"
         );
         match mutation {
-            0 => *fact_id = FactId::new(u64::MAX),
+            0 => {
+                call.domain_fn_set = Some(FnObjDomainFnSetEvidence::InFunctionSet {
+                    fn_set: signature,
+                    fact_id: FactId::new(u64::MAX),
+                    function_equal: KnownEqualityPathProof::new(Vec::new()),
+                })
+            }
             1 => fn_set.ret_set = Box::new(Obj::StandardSet(StandardSet::N)),
             2 => call.child_obj_well_defined.clear(),
             3 => call.requirement_fact_verified.clear(),

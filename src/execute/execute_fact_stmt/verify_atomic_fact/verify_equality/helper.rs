@@ -19,6 +19,18 @@ use crate::exec_env::known_fact_memory::ObjIR;
 // Not covered (intentional): Identifier/Number/StandardSet leaves; SetBuilder /
 // AnonymousFn / FnSet (binders); InstantiatedTemplateObj (legacy also skips).
 pub(crate) fn corresponding_arg_pairs(left: &Obj, right: &Obj) -> Option<Vec<(Obj, Obj)>> {
+    if let Some(name) = left.multivariable_selector_name() {
+        if right.multivariable_selector_name() != Some(name) {
+            return None;
+        }
+        return Some(
+            left.multivariable_selector_args()?
+                .into_iter()
+                .zip(right.multivariable_selector_args()?)
+                .map(|(a, b)| (a.clone(), b.clone()))
+                .collect(),
+        );
+    }
     macro_rules! binary {
         ($l:expr, $r:expr) => {
             Some(vec![

@@ -59,7 +59,7 @@ impl LitexToLeanCompiler {
         let AtomicFact::HasSequenceLimitFact(candidate) = &proof.candidate.fact else {
             return Err(LeanCompileError::unsupported("SequenceLimit/Candidate"));
         };
-        if candidate.sequence.ir() != limit.sequence.ir() || candidate.value.ir() != value.ir() {
+        if candidate.sequence.ir() != limit.sequence.ir() {
             return Err(LeanCompileError::unsupported("SequenceLimit/Candidate"));
         }
         let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(citation) =
@@ -70,13 +70,22 @@ impl LitexToLeanCompiler {
             ));
         };
         let known = self.compile_known_atomic(citation, &proof.candidate.fact, position)?;
-        let real = self.compile_real_membership_certificate(value, position)?;
+        let real = self.compile_real_membership_certificate(&candidate.value, position)?;
         let limit_object = if reversed { &fact.right } else { &fact.left };
         let result = format!(
             "(Litex.sequenceLimitEqCandidate {} {} {real} {known})",
             self.compile_object_reference(limit_object, position)?,
-            self.compile_object_reference(value, position)?
+            self.compile_object_reference(&candidate.value, position)?
         );
+        let comparison = EqualFact {
+            fact_id: fact.fact_id,
+            left: candidate.value.clone(),
+            right: value.clone(),
+            line_file: None,
+        };
+        let equality =
+            self.compile_equality_search(&comparison, &proof.value_equality, position)?;
+        let result = format!("({result}).trans ({equality})");
         Ok(if reversed {
             format!("({result}).symm")
         } else {

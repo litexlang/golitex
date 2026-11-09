@@ -13,6 +13,11 @@ impl Runtime {
             (Obj::ProductShape(ProductShape::Tuple(tuple)), subject) => (subject, tuple, true),
             _ => return Ok(None),
         };
+        if let Obj::ProductShape(ProductShape::Tuple(other)) = subject {
+            if other.args.len() != tuple.args.len() {
+                return Ok(None);
+            }
+        }
         let mut equalities = Vec::new();
         for (index, value) in tuple.args.iter().enumerate() {
             let Ok(coordinate) =

@@ -46,7 +46,7 @@ impl LitexToLeanCompiler {
                     source
                 }
                 ProvedApplicationRef::Strategy(proof) => {
-                    let (declaration, _) = caller.visible_strategy(&proof.strategy_name)?;
+                    let (declaration, _) = caller.visible_strategy(&proof.strategy_name, proof.source_fact_id)?;
                     declaration.statement.forall_fact.clone()
                 }
             };

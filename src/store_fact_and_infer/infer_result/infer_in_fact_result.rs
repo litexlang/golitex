@@ -72,7 +72,14 @@ impl InferInFactResult {
             Self::RealInterval(p) => vec![&p.real_membership, &p.lower_bound, &p.upper_bound],
             Self::OneSideRealInterval(p) => vec![&p.real_membership, &p.bound],
             Self::SignedStandardSetSign(p) => p.derived.iter().collect(),
-            Self::EqualFnSetExpand(p) => p.transports.iter().map(|s| &s.derived).collect(),
+            Self::EqualFnSetExpand(p) => p
+                .transports
+                .iter()
+                .flat_map(|s| {
+                    std::iter::once(&s.derived)
+                        .chain(s.expansions.iter().flat_map(|r| r.stored_conclusions()))
+                })
+                .collect(),
             Self::FnRange(p) => std::iter::once(&p.codomain_membership)
                 .chain(p.preimage_witness.iter())
                 .collect(),

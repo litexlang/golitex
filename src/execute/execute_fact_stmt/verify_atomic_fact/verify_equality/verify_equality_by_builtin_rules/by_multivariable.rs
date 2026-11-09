@@ -53,24 +53,21 @@ impl Runtime {
             if selected.multivariable_selector_name().is_none() {
                 continue;
             }
-            let Some((established, candidate)) =
-                self.known_multivariable_selector_candidate(selected)
-            else {
-                continue;
-            };
-            let comparison = EqualFact {
-                fact_id: self.global_ids.allocate_fact_id(),
-                left: established,
-                right: value.clone(),
-                line_file: None,
-            };
-            if let Some(value_equality) = self.search_equal_fact_proof_directly(&comparison) {
-                return Some(MultivariableEqualityProof::SelectedValue(
-                    MultivariableSelectedValueProof {
-                        candidate,
-                        value_equality: Box::new(value_equality),
-                    },
-                ));
+            for (established, candidate) in self.known_multivariable_selector_candidates(selected) {
+                let comparison = EqualFact {
+                    fact_id: self.global_ids.allocate_fact_id(),
+                    left: established,
+                    right: value.clone(),
+                    line_file: None,
+                };
+                if let Some(value_equality) = self.search_equal_fact_proof_directly(&comparison) {
+                    return Some(MultivariableEqualityProof::SelectedValue(
+                        MultivariableSelectedValueProof {
+                            candidate,
+                            value_equality: Box::new(value_equality),
+                        },
+                    ));
+                }
             }
         }
         let mut relations = Vec::new();
@@ -139,44 +136,40 @@ impl Runtime {
             };
             let selected =
                 crate::execute::execute_fact_stmt::multivariable::expression::call_head(&call.head);
-            let Some((value, _)) = self.known_multivariable_selector_candidate(&selected) else {
-                continue;
-            };
-            for (candidate_value, path) in self
-                .exact_property_object_values(&value)
-                .into_iter()
-                .take(16)
-            {
-                let applied = Obj::FnObj(FnObj {
-                    head: Box::new(FnObjHead::from_obj(candidate_value)),
-                    body: call.body.clone(),
-                });
-                let Some(reduction) = self.reduce_multivariable_expression(&applied, state)? else {
-                    continue;
-                };
-                let equation: Fact = EqualFact {
-                    fact_id: self.global_ids.allocate_fact_id(),
-                    left: reduction.result.clone(),
-                    right: right.clone(),
-                    line_file: None,
+            for (value, candidate) in self.known_multivariable_selector_candidates(&selected) {
+                for (candidate_value, path) in self
+                    .exact_property_object_values(&value)
+                    .into_iter()
+                    .take(16)
+                {
+                    let applied = Obj::FnObj(FnObj {
+                        head: Box::new(FnObjHead::from_obj(candidate_value)),
+                        body: call.body.clone(),
+                    });
+                    let Some(reduction) = self.reduce_multivariable_expression(&applied, state)?
+                    else {
+                        continue;
+                    };
+                    let equation: Fact = EqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: reduction.result.clone(),
+                        right: right.clone(),
+                        line_file: None,
+                    }
+                    .into();
+                    let value_equality = self.verify_builtin_rule_premise(&equation, state)?;
+                    if value_equality.is_failed() {
+                        continue;
+                    }
+                    return Ok(Some(MultivariableEqualityProof::SelectedComponent(
+                        MultivariableSelectedComponentProof {
+                            candidate,
+                            candidate_value_equal: KnownEqualityPathProof::new(path),
+                            reduction,
+                            value_equality: Box::new(value_equality),
+                        },
+                    )));
                 }
-                .into();
-                let value_equality = self.verify_builtin_rule_premise(&equation, state)?;
-                if value_equality.is_failed() {
-                    continue;
-                }
-                let Some((_, candidate)) = self.known_multivariable_selector_candidate(&selected)
-                else {
-                    continue;
-                };
-                return Ok(Some(MultivariableEqualityProof::SelectedComponent(
-                    MultivariableSelectedComponentProof {
-                        candidate,
-                        candidate_value_equal: KnownEqualityPathProof::new(path),
-                        reduction,
-                        value_equality: Box::new(value_equality),
-                    },
-                )));
             }
         }
         Ok(None)

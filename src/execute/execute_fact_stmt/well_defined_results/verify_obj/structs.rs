@@ -20,12 +20,12 @@ use crate::runtime::runtime_ids::IdentifierId;
 use crate::runtime::{Runtime, RuntimeResult};
 use std::collections::HashMap;
 
-fn existential_template_function_signature(
+pub(super) fn existential_template_carrier(
     family: &ExistShapedFact,
     index: usize,
     outputs: &[&crate::ast::names::BoundName],
     substitution: &mut HashMap<IdentifierId, Obj>,
-) -> Option<FnSet> {
+) -> Option<Obj> {
     if matches!(family, ExistShapedFact::NotExist(_)) {
         return None;
     }
@@ -43,9 +43,7 @@ fn existential_template_function_signature(
         substitution.insert(parameter.id, substitution.get(&output.id)?.clone());
     }
     match parameters.get(index)?.1 {
-        ParamType::Obj(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) => {
-            Some(signature.clone())
-        }
+        ParamType::Obj(carrier) => Some(carrier.clone()),
         _ => None,
     }
 }
@@ -556,13 +554,17 @@ impl Runtime {
             // The selected witness supplies its own callable carrier, retaining
             // dependencies on the other outputs of this same template instance.
             TemplateDefEnum::ObtainObjFromExistFact(stmt) => {
-                existential_template_function_signature(&stmt.fact, index, &outputs, &mut subst)?
+                let Obj::FunctionSpace(FunctionSpace::FnSet(signature)) =
+                    existential_template_carrier(&stmt.fact, index, &outputs, &mut subst)?
+                else {
+                    return None;
+                };
+                signature
             }
             TemplateDefEnum::ObtainObjFromAtomicFact(stmt) => {
                 let definition = self.def_prop_visible(&stmt.fact.predicate)?.clone();
                 let family = project_sole_positive_exist_clause(&definition.iff_facts).ok()?;
-                let signature =
-                    existential_template_function_signature(&family, index, &outputs, &mut subst)?;
+                let signature = existential_template_carrier(&family, index, &outputs, &mut subst)?;
                 let param_ids = definition.typed_parameters.ordered_param_ids();
                 if param_ids.len() != stmt.fact.body.len() {
                     return None;
@@ -571,18 +573,32 @@ impl Runtime {
                     .into_iter()
                     .zip(stmt.fact.body.iter().cloned())
                     .collect();
-                match self
-                    .inst_obj(
-                        &Obj::FunctionSpace(FunctionSpace::FnSet(signature)),
-                        &prop_subst,
-                    )
-                    .ok()?
-                {
+                match self.inst_obj(&signature, &prop_subst).ok()? {
                     Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => signature,
                     _ => return None,
                 }
             }
-            _ => return None,
+            other => {
+                let parameters = match other {
+                    TemplateDefEnum::HaveObjEqualStmt(stmt) => &stmt.param_def,
+                    TemplateDefEnum::HaveObjInNonemptySetStmt(stmt) => &stmt.param_def,
+                    TemplateDefEnum::HaveObjByExistFactsStmt(stmt) => &stmt.param_def,
+                    TemplateDefEnum::TrustHaveStmt(stmt) => &stmt.param_def,
+                    _ => return None,
+                };
+                let group = parameters.groups.iter().find(|group| {
+                    group
+                        .params
+                        .iter()
+                        .any(|p| p.name == value.template_name.local_name())
+                })?;
+                let ParamType::Obj(Obj::FunctionSpace(FunctionSpace::FnSet(signature))) =
+                    &group.param_type
+                else {
+                    return None;
+                };
+                signature.clone()
+            }
         };
         match self
             .inst_obj(&Obj::FunctionSpace(FunctionSpace::FnSet(signature)), &subst)

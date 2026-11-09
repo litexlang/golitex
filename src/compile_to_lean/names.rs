@@ -1140,6 +1140,12 @@ impl LitexToLeanCompiler {
                 position.qualified_identifier_scope(identifier, &self.runtime)?;
             if matches!(
                 captured,
+                crate::exec_env::StoredIdentifierDefinition::HaveObjByExistFacts(_)
+            ) {
+                return self.compile_parameter_reference(bound.id, &scope);
+            }
+            if matches!(
+                captured,
                 crate::exec_env::StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType(_)
             ) {
                 let exact = position.context_statements().iter().any(|(owner, _, statement, _)| {
@@ -1315,11 +1321,11 @@ impl LitexToLeanCompiler {
     ) -> Result<String, LeanCompileError> {
         position
             .visible_parameter(id, &self.runtime)
-            .map(|(parameter, _, _, _)| {
+            .and_then(|(parameter, _, _, _)| {
                 let name = format!("_value_i{}", parameter.id.value());
                 match position.global_obtain_position(id) {
-                    Some(producer) => self.context_application(&name, &producer),
-                    None => name,
+                    Some(producer) => position.declaration_reference(&name, &producer),
+                    None => Ok(name),
                 }
             })
             .map_err(|error| {

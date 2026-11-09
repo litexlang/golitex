@@ -1,5 +1,5 @@
 use crate::compile_to_lean::compile_by_stmt_result::compile_classified_negation::quantifier_free_terms;
-use crate::compile_to_lean::helper::{conjunction_proposition, instantiated_fact_matches, instantiated_object_matches, set_kind_predicate};
+use crate::compile_to_lean::helper::{instantiated_fact_matches, instantiated_object_matches, set_kind_predicate};
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::compile_to_lean::{LeanCompileError, LitexToLeanCompiler};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_they_are_the_same::helper::plain_exist_facts_alpha_equal;
@@ -73,7 +73,7 @@ impl LitexToLeanCompiler {
             return Err(LeanCompileError::unsupported("NotExist/InferenceFamily"));
         };
         let target = &stored.fact;
-        if !target.dom_facts.is_empty()
+        if target.dom_facts.len() + 1 != source.facts.len()
             || target.then_facts.len() != 1
             || target.typed_parameters.groups.len() != source.typed_parameters.groups.len()
         {
@@ -147,6 +147,19 @@ impl LitexToLeanCompiler {
                 bindings.insert(parameter.id, denotation);
             }
         }
+        for (index, (old, guard)) in source.facts.iter().zip(&target.dom_facts).enumerate() {
+            if !instantiated_fact_matches(
+                &crate::instantiate::quantifier_free_fact_to_fact(old.clone()),
+                guard,
+                &substitution,
+            ) {
+                return Err(LeanCompileError::unsupported("NotExist/InferenceGuard"));
+            }
+            let name = format!("_guard_{index}");
+            let prop = self.compile_function_raw_predicate(guard, position, &bindings)?;
+            binders.push(format!("({name} : {prop})"));
+            introductions.push(name);
+        }
         let conclusion: Fact = target.then_facts[0].clone().into();
         let terms = quantifier_free_terms(&conclusion)?;
         if terms.len() != expected.len()
@@ -164,39 +177,13 @@ impl LitexToLeanCompiler {
         let fact = Fact::ForallFact(target.clone());
         self.validate_store(&infer.derived.store, &fact)?;
         let conclusion = self.compile_function_raw_predicate(&conclusion, position, &bindings)?;
-        let body = conjunction_proposition(
-            source
-                .facts
-                .iter()
-                .map(|clause| {
-                    self.compile_function_raw_predicate(
-                        &crate::instantiate::quantifier_free_fact_to_fact(clause.clone()),
-                        position,
-                        &old_bindings,
-                    )
-                })
-                .collect::<Result<Vec<_>, _>>()?,
-        )?;
-        let names: Vec<_> = source
-            .facts
-            .iter()
-            .map(|clause| {
-                format!(
-                    "h_{}",
-                    crate::instantiate::quantifier_free_fact_to_fact(clause.clone())
-                        .fact_id()
-                        .value()
-                )
-            })
-            .collect();
+        let last =
+            crate::instantiate::quantifier_free_fact_to_fact(source.facts.last().unwrap().clone());
+        let body = self.compile_function_raw_predicate(&last, position, &old_bindings)?;
         let raw = self.compile_exist_raw_predicate(source, position, &HashMap::new())?;
-        let split = if names.len() == 1 {
-            format!("have {} := _candidate", names[0])
-        } else {
-            format!("rcases _candidate with ⟨{}⟩", names.join(", "))
-        };
-        witnesses.extend(names);
-        let proof = format!("(by\n  classical\n  intro {}\n  have _excluded : ¬ ({raw}) := {}\n  have _no_body : ¬ ({body}) := by\n    intro _candidate\n    {split}\n    apply _excluded\n    exact ⟨{}⟩\n  simpa only [not_and_or, not_or, not_not, and_assoc, or_assoc] using _no_body)", introductions.join(" "),compiled.1,witnesses.join(", "));
+        witnesses.extend((0..target.dom_facts.len()).map(|index| format!("_guard_{index}")));
+        witnesses.push("_candidate".into());
+        let proof = format!("(by\n  classical\n  intro {}\n  have _excluded : ¬ ({raw}) := {}\n  have _no_body : ¬ ({body}) := by\n    intro _candidate\n    apply _excluded\n    exact ⟨{}⟩\n  simpa only [not_and_or, not_or, not_not, and_assoc, or_assoc] using _no_body)", introductions.join(" "),compiled.1,witnesses.join(", "));
         let proposition = format!("∀ {}, {conclusion}", binders.join(" "));
         Ok(vec![self.emit_internal_fact(
             &fact,
@@ -211,7 +198,7 @@ fn negated_atoms(source: &PlainExistFact) -> Result<Option<Vec<AtomicFact>>, Lea
         return Ok(None);
     }
     let mut atoms = Vec::new();
-    for clause in &source.facts {
+    if let Some(clause) = source.facts.last() {
         if matches!(clause, QuantifierFreeFact::OrFact(_)) {
             return Ok(None);
         }

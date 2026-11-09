@@ -8,6 +8,7 @@ pub enum SequenceLimitEqualityProof {
 }
 pub struct SequenceLimitSelectedValueProof {
     pub candidate: AtomicExceptEqualityFactKnownProof,
+    pub value_equality: Box<EqualFactSearchedProof>,
 }
 pub struct SequenceLimitUniquenessProof {
     pub left: AtomicExceptEqualityFactKnownProof,
@@ -21,11 +22,27 @@ impl Runtime {
     ) -> Option<SequenceLimitEqualityProof> {
         for (selected, value) in [(&fact.left, &fact.right), (&fact.right, &fact.left)] {
             if let Obj::LimitOperator(LimitOperator::Sequence(limit)) = selected {
-                let candidate =
-                    self.sequence_limit_candidate(*limit.sequence.clone(), value.clone());
-                if let Some(candidate) = self.lookup_known_atomic_premise(candidate.into()) {
+                for known in self.known_sequence_limit_candidates() {
+                    let candidate =
+                        self.sequence_limit_candidate(*limit.sequence.clone(), known.value.clone());
+                    let Some(candidate) = self.lookup_known_atomic_premise(candidate.into()) else {
+                        continue;
+                    };
+                    let comparison = EqualFact {
+                        fact_id: self.global_ids.allocate_fact_id(),
+                        left: known.value,
+                        right: value.clone(),
+                        line_file: None,
+                    };
+                    let Some(value_equality) = self.search_equal_fact_proof_directly(&comparison)
+                    else {
+                        continue;
+                    };
                     return Some(SequenceLimitEqualityProof::SelectedValue(
-                        SequenceLimitSelectedValueProof { candidate },
+                        SequenceLimitSelectedValueProof {
+                            candidate,
+                            value_equality: Box::new(value_equality),
+                        },
                     ));
                 }
             }

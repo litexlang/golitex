@@ -132,25 +132,14 @@ impl Runtime {
         prop: &AtomicName,
         pred: impl Fn(&PropRewriteProperty) -> bool,
     ) -> bool {
-        for env in self.execution_environments_stack.iter().rev() {
-            if let Some(props) = env.prop_rewrite_properties.get(prop) {
-                if props.iter().any(&pred) {
-                    return true;
-                }
-            }
-        }
-        false
+        self.visible_prop_rewrite_properties(prop).iter().any(pred)
     }
 
     fn symmetric_gathers_for_prop(&self, prop: &AtomicName) -> Vec<Vec<usize>> {
         let mut out = Vec::new();
-        for env in self.execution_environments_stack.iter().rev() {
-            if let Some(props) = env.prop_rewrite_properties.get(prop) {
-                for p in props {
-                    if let PropRewriteProperty::SymmetricArgumentPermutate(gathers) = p {
-                        out.extend(gathers.iter().cloned());
-                    }
-                }
+        for p in self.visible_prop_rewrite_properties(prop) {
+            if let PropRewriteProperty::SymmetricArgumentPermutate(gathers) = p {
+                out.extend(gathers);
             }
         }
         out
@@ -173,11 +162,49 @@ fn reorder_normal_atomic_by_gather(
         }
         seen[i] = true;
     }
-    let new_body: Vec<_> = gather.iter().map(|&i| fact.body[i].clone()).collect();
+    // Registration records conclusion[k] = premise[gather[k]]. Recover the
+    // premise from a requested conclusion with the inverse permutation.
+    let mut new_body = fact.body.clone();
+    for (k, &i) in gather.iter().enumerate() {
+        new_body[i] = fact.body[k].clone();
+    }
     Some(AtomicFact::NormalAtomicFact(NormalAtomicFact {
         fact_id,
         predicate: fact.predicate.clone(),
         body: new_body,
         line_file: fact.line_file.clone(),
     }))
+}
+
+#[cfg(test)]
+mod round2_tests {
+    use super::*;
+
+    #[test]
+    fn round2_cyclic_symmetry_recovers_the_forward_premise() {
+        let fact = NormalAtomicFact {
+            fact_id: FactId::new(1),
+            predicate: AtomicName::plain("cycle".into()),
+            body: [2, 3, 1]
+                .into_iter()
+                .map(|n| Obj::Literal(Literal::Number(Number::new(n.to_string()))))
+                .collect(),
+            line_file: None,
+        };
+        let AtomicFact::NormalAtomicFact(recovered) =
+            reorder_normal_atomic_by_gather(&fact, &[1, 2, 0], FactId::new(2)).unwrap()
+        else {
+            panic!("normal predicate");
+        };
+        assert_eq!(
+            recovered
+                .body
+                .iter()
+                .map(|x| x.readable_string())
+                .collect::<Vec<_>>(),
+            ["1", "2", "3"]
+        );
+        assert!(reorder_normal_atomic_by_gather(&fact, &[0, 0, 2], FactId::new(3)).is_none());
+        assert!(reorder_normal_atomic_by_gather(&fact, &[0, 1, 3], FactId::new(3)).is_none());
+    }
 }

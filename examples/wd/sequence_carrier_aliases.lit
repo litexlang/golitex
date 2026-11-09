@@ -1,0 +1,10 @@
+# Function-space membership follows a checked alias of a sequence carrier.
+# Before: have A set=finite_seq(R,2); have f A; f(1) $in R failed WD.
+have A set = finite_seq(R,2)
+have f A
+f(1) $in R
+have B set = seq(R)
+have g B
+g(1) $in R
+# Boundary: f(0) and f(3) remain outside the finite domain.
+# Evidence: target/release/litex -lang en -strict -f examples/wd/sequence_carrier_aliases.lit

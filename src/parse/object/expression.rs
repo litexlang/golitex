@@ -46,14 +46,14 @@ fn parse_unicode_intersect(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResu
 }
 
 fn parse_unicode_cart(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    let first = parse_add_sub(rt, tb)?;
+    let first = parse_closed_range(rt, tb)?;
     if tb.peek() != Some(UNICODE_CART) {
         return Ok(first);
     }
     let mut factors = vec![first];
     while tb.peek() == Some(UNICODE_CART) {
         tb.advance()?;
-        factors.push(parse_add_sub(rt, tb)?);
+        factors.push(parse_closed_range(rt, tb)?);
     }
     Ok(Obj::ProductShape(ProductShape::Cart(Cart {
         args: factors.into_iter().map(Box::new).collect(),
@@ -86,12 +86,12 @@ fn parse_add_sub(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
 }
 
 fn parse_mul_div_mod(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    let mut left = parse_closed_range(rt, tb)?;
+    let mut left = parse_compose(rt, tb)?;
     loop {
         match tb.peek() {
             Some(MUL) => {
                 tb.advance()?;
-                let right = parse_closed_range(rt, tb)?;
+                let right = parse_compose(rt, tb)?;
                 left = Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul {
                     left: Box::new(left),
                     right: Box::new(right),
@@ -99,7 +99,7 @@ fn parse_mul_div_mod(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
             }
             Some(DIV) => {
                 tb.advance()?;
-                let right = parse_closed_range(rt, tb)?;
+                let right = parse_compose(rt, tb)?;
                 left = Obj::ArithmeticOperator(ArithmeticOperator::Div(Div {
                     left: Box::new(left),
                     right: Box::new(right),
@@ -107,7 +107,7 @@ fn parse_mul_div_mod(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
             }
             Some(MOD_OP) => {
                 tb.advance()?;
-                let right = parse_closed_range(rt, tb)?;
+                let right = parse_compose(rt, tb)?;
                 left = Obj::IntegerOperator(IntegerOperator::Mod(Mod {
                     left: Box::new(left),
                     right: Box::new(right),
@@ -119,7 +119,7 @@ fn parse_mul_div_mod(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj
 }
 
 fn parse_closed_range(rt: &mut Runtime, tb: &mut TokenBlock) -> RuntimeResult<Obj> {
-    let left = parse_compose(rt, tb)?;
+    let left = parse_add_sub(rt, tb)?;
     if tb.peek() == Some(DOT_DOT_DOT) {
         tb.advance()?;
         let right = parse_add_sub(rt, tb)?;

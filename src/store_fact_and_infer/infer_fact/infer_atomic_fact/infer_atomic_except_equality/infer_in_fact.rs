@@ -89,17 +89,26 @@ impl Runtime {
                 InferSetBuilderMembershipProjectionResult { steps },
             ));
         }
-        if let Some(base) = self.resolve_power_set_base_for_membership_projection(&in_fact.set) {
+        if let Some((source_carrier, carrier_equal)) =
+            self.resolve_power_set_base_for_membership_projection(&in_fact.set)
+        {
+            let Obj::SetOperator(SetOperator::PowerSet(power)) = &source_carrier else {
+                unreachable!()
+            };
             let fact_id = self.global_ids.allocate_fact_id();
             let subset = AtomicFact::SubsetFact(crate::ast::fact::SubsetFact {
                 fact_id,
                 left: in_fact.element.clone(),
-                right: base,
+                right: power.set.as_ref().clone(),
                 line_file: in_fact.line_file.clone(),
             });
             let derived = Box::new(self.store_inferred_fact(&Fact::AtomicFact(subset))?);
             rules.push(InferInFactResult::PowerSet(
-                InferPowerSetMembershipProjectionResult { derived },
+                InferPowerSetMembershipProjectionResult {
+                    source_carrier,
+                    carrier_equal,
+                    derived,
+                },
             ));
         }
         rules.extend(self.infer_in_fact_list_set_ops_rules(in_fact, verify_state)?);
@@ -175,15 +184,18 @@ impl Runtime {
         Ok(None)
     }
 
-    fn resolve_power_set_base_for_membership_projection(&self, set: &Obj) -> Option<Obj> {
-        if let Obj::SetOperator(SetOperator::PowerSet(power)) = set {
-            return Some(power.set.as_ref().clone());
+    fn resolve_power_set_base_for_membership_projection(
+        &self,
+        set: &Obj,
+    ) -> Option<(Obj, KnownEqualityPathProof)> {
+        if let Obj::SetOperator(SetOperator::PowerSet(_)) = set {
+            return Some((set.clone(), KnownEqualityPathProof::new(Vec::new())));
         }
-        for (value, _) in
+        for (value, path) in
             self.exact_property_object_values_of_shapes(set, &[EqualToObjShape::PowerSet])
         {
-            if let Obj::SetOperator(SetOperator::PowerSet(power)) = value {
-                return Some(*power.set);
+            if let Obj::SetOperator(SetOperator::PowerSet(_)) = value {
+                return Some((value, KnownEqualityPathProof::new(path)));
             }
         }
         None
