@@ -115,10 +115,24 @@ fn round2_existing_local_induction_enumeration_and_struct_bridges_are_preserved(
 
 #[test]
 fn round2_local_continuity_reuses_its_original_atomic_formation() {
-    let source = include_str!(concat!(
-        env!("CARGO_MANIFEST_DIR"),
-        "/lean/examples/local_continuity_sum/continuity_sum.lit"
-    ));
+    // Keep the regression self-contained. The optional lean/examples corpus is ignored.
+    let source = r#"# The sum of two continuous real functions is continuous at the chosen point.
+thm local_continuity_sum:
+    ? forall f,g,h,k fn(x R) R, p R:
+        $is_continuous_at(f,p)
+        $is_continuous_at(g,p)
+        forall x R:
+            h(x)=f(x)+g(x)
+        forall x R:
+            k(x)=h(x)+h(x)
+        =>:
+            $is_continuous_at(k,p)
+    claim:
+        ? $is_continuous_at(k,p)
+        by thm fn_continuous_at_add(f,g,h,p) => $is_continuous_at(h,p)
+        by thm fn_continuous_at_add(h,h,k,p) => $is_continuous_at(k,p)
+    $is_continuous_at(k,p)
+"#;
     let (run, compiler) = checked(source);
     let lean = compiler.compile_run(&run, "local_continuity_sum").unwrap();
     assert!(lean.to_lowercase().contains("continuous"));

@@ -6,11 +6,40 @@ use crate::run_module::{
     mount_cwd_config, run_file_with_config, run_project, MountCwdConfigOutcome,
 };
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+use std::sync::{Mutex, MutexGuard};
 use std::time::{SystemTime, UNIX_EPOCH};
 
 #[path = "cross_file_identity_tests.rs"]
 mod cross_file_identity_tests;
+
+static CWD_TEST_LOCK: Mutex<()> = Mutex::new(());
+
+struct TestCwd {
+    previous: PathBuf,
+    _lock: MutexGuard<'static, ()>,
+}
+
+impl TestCwd {
+    fn enter(path: &Path) -> Self {
+        // The current directory is shared by every test thread in this process.
+        let lock = CWD_TEST_LOCK
+            .lock()
+            .unwrap_or_else(|error| error.into_inner());
+        let previous = std::env::current_dir().expect("cwd");
+        std::env::set_current_dir(path).expect("chdir");
+        Self {
+            previous,
+            _lock: lock,
+        }
+    }
+}
+
+impl Drop for TestCwd {
+    fn drop(&mut self) {
+        std::env::set_current_dir(&self.previous).expect("restore cwd");
+    }
+}
 
 fn temp_dir(label: &str) -> PathBuf {
     let nanos = SystemTime::now()
@@ -367,8 +396,7 @@ fn run_file_target_soft_fail_is_normal_failure() {
 #[test]
 fn mount_cwd_config_empty_when_missing() {
     let root = temp_dir("cwd_empty");
-    let previous = std::env::current_dir().expect("cwd");
-    std::env::set_current_dir(&root).expect("chdir");
+    let cwd = TestCwd::enter(&root);
 
     let mut runtime = crate::runtime::Runtime::new(LaunchCommand::Eval {
         code: "1 = 1".to_string(),
@@ -380,7 +408,7 @@ fn mount_cwd_config_empty_when_missing() {
     let outcome = mount_cwd_config(&mut runtime).expect("mount");
     assert!(matches!(outcome, MountCwdConfigOutcome::Done));
 
-    std::env::set_current_dir(previous).expect("restore cwd");
+    drop(cwd);
     let _ = fs::remove_dir_all(&root);
 }
 
@@ -393,8 +421,7 @@ fn mount_cwd_config_runs_exports() {
     );
     write(&root.join("main.lit"), "1 = 1\n");
 
-    let previous = std::env::current_dir().expect("cwd");
-    std::env::set_current_dir(&root).expect("chdir");
+    let cwd = TestCwd::enter(&root);
 
     let mut runtime = crate::runtime::Runtime::new(LaunchCommand::Eval {
         code: "1 = 1".to_string(),
@@ -407,7 +434,7 @@ fn mount_cwd_config_runs_exports() {
     assert!(matches!(outcome, MountCwdConfigOutcome::Done));
     assert_eq!(runtime.global_module_manager.root_exports().len(), 1);
 
-    std::env::set_current_dir(previous).expect("restore cwd");
+    drop(cwd);
     let _ = fs::remove_dir_all(&root);
 }
 
@@ -420,8 +447,7 @@ fn mount_cwd_config_soft_fail_is_fail_to_import() {
     );
     write(&root.join("bad.lit"), "1 = 2\n");
 
-    let previous = std::env::current_dir().expect("cwd");
-    std::env::set_current_dir(&root).expect("chdir");
+    let cwd = TestCwd::enter(&root);
 
     let mut runtime = crate::runtime::Runtime::new(LaunchCommand::Eval {
         code: "1 = 1".to_string(),
@@ -436,6 +462,6 @@ fn mount_cwd_config_soft_fail_is_fail_to_import() {
         MountCwdConfigOutcome::SessionError(RunSessionError::FailToImport(_))
     ));
 
-    std::env::set_current_dir(previous).expect("restore cwd");
+    drop(cwd);
     let _ = fs::remove_dir_all(&root);
 }
