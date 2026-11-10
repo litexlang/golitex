@@ -82,6 +82,7 @@ pub fn mount_cwd_config(runtime: &mut Runtime) -> RuntimeResult<MountCwdConfigOu
                         file_result.run.session_error.clone().unwrap_or_else(|| {
                             RunSessionError::FailToImport(ImportFailure::rejected_export(
                                 &file_result,
+                                runtime,
                             ))
                         }),
                     ));

@@ -308,6 +308,13 @@ fn project_induc_definition_success(
                             project_have_store_and_infer(&s.binder_introduction.defined_params, rt),
                         ),
                         (
+                            "auto_opened_struct_layers",
+                            super::verify::project_auto_opened_struct_layers(
+                                &s.binder_introduction.auto_opened_struct_layers,
+                                rt,
+                            ),
+                        ),
+                        (
                             "assumed_dom_facts",
                             JsonValue::Array(
                                 s.binder_introduction

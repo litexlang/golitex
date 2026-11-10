@@ -874,15 +874,14 @@ fn default_errors_summarize_each_rejected_statement_and_missing_condition() {
         field(&statements[3], "statement_result").as_str(),
         Ok("accepted")
     );
-    assert_eq!(
-        statements[1].as_object().unwrap().keys_in_order(),
-        vec!["statement_result", "statement"]
-    );
+    assert_eq!(field(&statements[1], "line"), &JsonValue::Number(2.0));
+    assert_eq!(field(&statements[1], "source").as_str(), Ok("a = 3"));
+    assert_eq!(field(&errors[1], "line"), &JsonValue::Number(3.0));
     let text = json.stringify();
     assert!(!text.contains("\"verification\""), "{text}");
     assert!(!text.contains("\"diagnostic\""), "{text}");
     assert!(
-        text.len() < 2500,
+        text.len() < 5000,
         "feedback unexpectedly large: {}",
         text.len()
     );
@@ -1043,5 +1042,210 @@ fn closed_stdout_keeps_command_exit_status_without_panicking() {
         } else {
             assert!(output.stderr.is_empty(), "{args:?}: {output:?}");
         }
+    }
+}
+
+#[test]
+fn compact_keeps_only_verdict_and_exact_failed_lines() {
+    let dir = FixtureDir::new();
+    let success = dir.run(&["-compact", "-e", "1 = 1\n2 = 2"], None);
+    assert_eq!(success.status.code(), Some(0));
+    let json = JsonValue::parse(std::str::from_utf8(&success.stdout).unwrap()).unwrap();
+    assert_eq!(
+        json,
+        JsonValue::parse(r#"{"run_result":"success"}"#).unwrap()
+    );
+
+    let input = "have a R = 2\nforall x R:\n    x + 0 = x\n    1 / x = 1 / x  # missing guard\na = 3\na = 2\n";
+    fs::write(dir.0.join("example.lit"), input).unwrap();
+    let failure = dir.run(&["-f", "example.lit", "-compact"], None);
+    assert_eq!(failure.status.code(), Some(1), "{failure:?}");
+    let json = JsonValue::parse(std::str::from_utf8(&failure.stdout).unwrap()).unwrap();
+    assert_eq!(
+        json.as_object().unwrap().keys_in_order(),
+        vec!["run_result", "errors"]
+    );
+    let errors = field(&json, "errors").as_array().unwrap();
+    assert_eq!(errors.len(), 2);
+    assert_eq!(field(&errors[0], "file").as_str(), Ok("example.lit"));
+    assert_eq!(field(&errors[0], "line"), &JsonValue::Number(4.0));
+    assert_eq!(
+        field(&errors[0], "source").as_str(),
+        Ok("    1 / x = 1 / x  # missing guard")
+    );
+    assert_eq!(field(&errors[0], "phase").as_str(), Ok("well_defined"));
+    assert_eq!(field(&errors[0], "obligation").as_str(), Ok("x != 0"));
+    assert_eq!(field(&errors[1], "line"), &JsonValue::Number(5.0));
+    assert_eq!(field(&errors[1], "source").as_str(), Ok("a = 3"));
+}
+
+#[test]
+fn normal_steps_expose_scoped_evidence_and_publication() {
+    let dir = FixtureDir::new();
+    let path = "normal_steps.lit";
+    fs::write(
+        dir.0.join(path),
+        include_str!("../../examples/stmt_nodes/proof_block/normal_steps_output.lit"),
+    )
+    .unwrap();
+    let json = batch(&dir.run(&["-strict", "-f", path], None), 0, true);
+    let statements = field(&json, "statement_results").as_array().unwrap();
+    let forall = field(&statements[0], "steps").as_array().unwrap();
+    assert_eq!(
+        field(&forall[0], "kind").as_str(),
+        Ok("introduce_parameter")
+    );
+    assert_eq!(field(&forall[1], "kind").as_str(), Ok("assume"));
+    let quotient = forall
+        .iter()
+        .find(|step| {
+            step.as_object().unwrap().get("line") == Some(&JsonValue::Number(11.0))
+                && field(step, "kind").as_str() == Ok("statement")
+        })
+        .expect("the local quotient conclusion is visible");
+    let quotient_steps = field(quotient, "steps").as_array().unwrap();
+    let guard = quotient_steps
+        .iter()
+        .flat_map(|step| field(step, "steps").as_array().unwrap())
+        .find(|step| field(step, "fact").as_str() == Ok("x != 0"))
+        .expect("the actual denominator condition is visible");
+    let citation = field(field(guard, "proof_method"), "cite");
+    assert_eq!(field(citation, "line"), &JsonValue::Number(8.0));
+
+    let claim = field(&statements[1], "steps").as_array().unwrap();
+    assert_eq!(field(&claim[1], "kind").as_str(), Ok("statement"));
+    assert!(!field(&claim[1], "steps").as_array().unwrap().is_empty());
+    assert_eq!(field(&claim[2], "kind").as_str(), Ok("verify_conclusion"));
+    assert_eq!(field(claim.last().unwrap(), "kind").as_str(), Ok("publish"));
+    let theorem = field(&statements[2], "steps").as_array().unwrap();
+    assert_eq!(field(&theorem[2], "kind").as_str(), Ok("verify_conclusion"));
+    assert_eq!(
+        field(theorem.last().unwrap(), "theorem").as_str(),
+        Ok("reflexive")
+    );
+    let call = field(&statements[3], "steps").as_array().unwrap();
+    assert_eq!(field(&call[0], "kind").as_str(), Ok("resolve_theorem"));
+    assert_eq!(field(call.last().unwrap(), "kind").as_str(), Ok("publish"));
+}
+
+#[test]
+fn normal_failed_claim_shows_the_successful_body_and_failed_goal() {
+    let dir = FixtureDir::new();
+    let code = "claim:\n    ? 1 = 2\n    1 = 1";
+    let json = batch(&dir.run(&["-e", code], None), 1, false);
+    let claim = &field(&json, "statement_results").as_array().unwrap()[0];
+    let steps = field(claim, "steps").as_array().unwrap();
+    assert_eq!(
+        field(&steps[1], "statement_result").as_str(),
+        Ok("accepted")
+    );
+    assert_eq!(field(&steps[1], "source").as_str(), Ok("    1 = 1"));
+    assert_eq!(field(&steps[2], "kind").as_str(), Ok("verify_conclusion"));
+    assert_eq!(field(&steps[2], "result").as_str(), Ok("failure"));
+    assert_eq!(steps.len(), 3);
+    let error = &field(&json, "errors").as_array().unwrap()[0];
+    assert_eq!(field(error, "line"), &JsonValue::Number(2.0));
+    assert_eq!(field(error, "source").as_str(), Ok("    ? 1 = 2"));
+    assert_eq!(field(error, "obligation").as_str(), Ok("1 = 2"));
+}
+
+#[test]
+fn compact_repl_and_import_preserve_the_failed_source() {
+    let dir = FixtureDir::new();
+    let output = dir.run(
+        &["-compact", "-session", "-e", "have a R = 2"],
+        Some("a = 3\na = 2\nexit\n"),
+    );
+    assert_eq!(output.status.code(), Some(0), "{output:?}");
+    let stdout = std::str::from_utf8(&output.stdout).unwrap();
+    let turns = stdout
+        .split_inclusive("\n}\n")
+        .map(|json| JsonValue::parse(json).unwrap())
+        .collect::<Vec<_>>();
+    assert_eq!(turns.len(), 3);
+    assert_eq!(field(&turns[0], "run_result").as_str(), Ok("failure"));
+    assert_eq!(field(&turns[1], "run_result").as_str(), Ok("success"));
+    assert_eq!(field(&turns[2], "run_result").as_str(), Ok("failure"));
+    let errors = field(&turns[2], "errors").as_array().unwrap();
+    assert_eq!(errors.len(), 1);
+    assert_eq!(field(&errors[0], "source").as_str(), Ok("a = 3"));
+    assert_eq!(field(&errors[0], "file").as_str(), Ok("<repl>"));
+
+    fs::write(
+        dir.0.join("litex.config"),
+        "[export]\nbroken = \"./broken.lit\"\n",
+    )
+    .unwrap();
+    fs::write(dir.0.join("broken.lit"), "forall x R:\n    1 / x = 1 / x\n").unwrap();
+    for args in [
+        &["-compact", "-e", "1 = 1"][..],
+        &["-compact", "-r", "."][..],
+        &["-compact"][..],
+    ] {
+        let output = dir.run(args, None);
+        assert_eq!(output.status.code(), Some(1), "{output:?}");
+        let json = JsonValue::parse(std::str::from_utf8(&output.stdout).unwrap()).unwrap();
+        let errors = field(&json, "errors").as_array().unwrap();
+        assert_eq!(errors.len(), 1, "{json:?}");
+        assert!(field(&errors[0], "file")
+            .as_str()
+            .unwrap()
+            .ends_with("broken.lit"));
+        assert_eq!(
+            field(&errors[0], "source").as_str(),
+            Ok("    1 / x = 1 / x")
+        );
+        assert_eq!(field(&errors[0], "line"), &JsonValue::Number(2.0));
+    }
+}
+
+#[test]
+fn normal_steps_keep_completed_case_branches_and_failed_branch_body() {
+    let dir = FixtureDir::new();
+    let code = include_str!(
+        "../../examples/test_statements/negative/by_cases_stmt/completed-branch-before-failure.lit"
+    );
+    let json = batch(&dir.run(&["-strict", "-e", code], None), 1, false);
+    let cases = field(&json, "statement_results")
+        .as_array()
+        .unwrap()
+        .last()
+        .unwrap();
+    let steps = field(cases, "steps").as_array().unwrap();
+    assert_eq!(field(&steps[0], "kind").as_str(), Ok("coverage"));
+    assert_eq!(field(&steps[1], "result").as_str(), Ok("success"));
+    assert_eq!(field(&steps[2], "result").as_str(), Ok("failure"));
+    assert_eq!(steps.len(), 3);
+    let body = field(&steps[2], "steps").as_array().unwrap();
+    assert_eq!(field(&body[1], "source").as_str(), Ok("        3 = 3"));
+    assert_eq!(field(&body[2], "source").as_str(), Ok("        2 = 3"));
+    let errors = field(&json, "errors").as_array().unwrap();
+    assert_eq!(field(&errors[0], "source").as_str(), Ok("        2 = 3"));
+}
+
+#[test]
+fn normal_uses_the_same_steps_for_other_proof_commands() {
+    let dir = FixtureDir::new();
+    let code = include_str!("../../examples/stmt_nodes/proof_block/nonempty_proof_bodies.lit");
+    let json = batch(&dir.run(&["-strict", "-e", code], None), 0, true);
+    let statements = field(&json, "statement_results").as_array().unwrap();
+    for (prefix, expected) in [
+        ("by extension:", "verify_conclusion"),
+        ("by enumerate finite_set:", "assignment"),
+        ("by induc", "branch"),
+        ("by contra:", "contradiction"),
+    ] {
+        let stmt = statements
+            .iter()
+            .find(|stmt| field(stmt, "source").as_str().unwrap().starts_with(prefix))
+            .unwrap();
+        let steps = field(stmt, "steps").as_array().unwrap();
+        assert!(
+            steps
+                .iter()
+                .any(|step| field(step, "kind").as_str() == Ok(expected)),
+            "{stmt:?}"
+        );
+        assert_eq!(field(steps.last().unwrap(), "kind").as_str(), Ok("publish"));
     }
 }

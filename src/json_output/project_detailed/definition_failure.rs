@@ -147,6 +147,9 @@ pub(in crate::json_output) fn project_have_exist_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecHaveObjByExistFactsStmtFailed::AutoOpenStructLayer(failed) => {
+            project_struct_layer_failure(failed, rt)
+        }
         ExecHaveObjByExistFactsStmtFailed::Context(context) => {
             super::verify::project_exist_failed("exist", &context.failed, rt)
         }
@@ -161,6 +164,9 @@ pub(in crate::json_output) fn project_obtain_exist_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecObtainObjFromExistFactStmtFailed::AutoOpenStructLayer(failed) => {
+            project_struct_layer_failure(failed, rt)
+        }
         ExecObtainObjFromExistFactStmtFailed::Context(context) => {
             project_obtain_exist_failure(&context.failure, rt)
         }
@@ -259,6 +265,9 @@ pub(in crate::json_output) fn project_preimage_failure(
     rt: &Runtime,
 ) -> JsonValue {
     match failure {
+        ExecHaveByFnPreimageStmtFailed::AutoOpenStructLayer(failed) => {
+            project_struct_layer_failure(failed, rt)
+        }
         ExecHaveByFnPreimageStmtFailed::NotFnRange(message) => super::helper::failure_message(
             rt,
             "source_shape",

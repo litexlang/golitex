@@ -9,7 +9,7 @@ Normal `infers` order and Detailed rule/field names. Fixed conclusion fields
 and indexed builder/Cartesian children are read from the owning typed results;
 the result-type migration does not introduce a second serialized proof tree.
 
-Normal, Compact and Detailed run projections preserve the complete parsed statement
+Normal and Detailed run projections preserve the complete parsed statement
 text retained by the runner. Names, arguments and selected theorem conclusions
 stay in `statement`; published facts remain in `stores`. A failed expression
 such as `1 / 0 = 0` keeps that source text, with an `errors` entry for `well_defined`
@@ -23,30 +23,83 @@ Extraction artifacts use the same command metadata on success and failure:
 failure; `error` is null on success. Artifact field names follow `-lang` just
 like run envelopes; the English schema applies with `-lang en`.
 
-## Concise run feedback
+## Verification feedback
 
-Default Normal **run** output puts one concise entry per rejected statement in
-`errors`. Rejected `statement_results` entries retain only `statement_result`
-and `statement`; accepted entries retain their usual proof/stores/infers fields.
-Each error contains a zero-based `statement_index`, source `statement`, `phase`
-and the retained diagnostic's category/message/expression/obligation when known.
-Execution-stage context such as arity, cause and failed requirement indexes is
-flattened alongside the summary. Nested proof failures retain their innermost
-`failed_statement` and `source_location`. No full verification tree is included.
-An empty `errors` array means no ordinary input was rejected; hard session
-failures are still reported separately by `session_terminated` and `termination`.
+The verification CLI uses Normal by default. Select Compact with `-compact`
+on `-e`, `-f`, `-r`, and interactive runs. The view changes how results are
+retained and presented. All modes apply the same mathematical checks.
 
-Malformed input retains its original source and one-based location (including
-`column` when known). It is rejected without an executable AST. It ends the
-current submission, while an interactive Session accepts the next submission.
-Tokenization precedes all execution, so a tokenizer rejection executes none
-of the current input. Neither kind of failure publishes a partial declaration.
+### Compact runs
 
-The existing standalone `project_stmt_normal` / `project_stmt_detailed` and
-Detailed run APIs preserve full evidence for tooling. The Normal statement
-shapes described below refer to those standalone APIs; their `why_failed` trees
-are summarized only when building default run feedback. Compact run output
-also includes `errors`; its standalone statement API remains unchanged.
+A successful run returns a single verdict.
+
+```json
+{"run_result":"success"}
+```
+
+A failed run returns the verdict and the errors in execution order.
+
+```json
+{
+  "run_result": "failure",
+  "errors": [
+    {
+      "file": "example.lit",
+      "line": 4,
+      "source": "    1 / x = 1 / x",
+      "phase": "well_defined",
+      "expression": "(1 / x)",
+      "obligation": "x != 0",
+      "message": "Could not prove that the statement is well-defined."
+    }
+  ]
+}
+```
+
+`line` is one-based. `source` is the original physical line, including
+indentation and inline comments. `<eval>` and `<repl>` refer to virtual
+sources. An error with only the containing statement location has
+`location_precision: "statement"`. Errors before a source exists, such as
+file I/O failures, carry the available path and diagnostic. Parse errors
+carry their column when known. Compact skips success JSON projection. The
+standalone Rust `project_stmt_compact` projection still describes one
+statement at a time.
+
+### Normal steps
+
+Normal keeps the run envelope, each statement's verdict and readable
+`proof_method`, and the existing `stores` and `infers` lists. The source
+snapshot supplies `file`, `line`, and original `source`. The `steps`
+array gives the actual execution order and recursively nests the work
+inside each statement or branch.
+
+- `statement` is a source statement or a checked source conclusion and
+  carries `statement_result`.
+- `introduce_parameter`, `assume`, and `bind_witness` show the local proof
+  context. An assumption has no proof-success verdict.
+- `well_defined`, `requirement`, and `verify_conclusion` carry a check
+  result and show its proof grounds where retained.
+- `branch` groups a case's local assumption, body, and closing check.
+- `publish` records the facts made available in the immediate outer scope.
+  A named theorem publication also carries `theorem`.
+
+A `forall` introduced locally shows each premise and conclusion. Reusing a
+known universal result shows the actual citation. A `claim` shows target
+well-definedness, local proof statements, the final goal check and
+publication. A `thm` also registers the theorem name. Its conclusion check
+appears even when the proof body is empty. `steps` are ordered by execution,
+so a closing check can point to a source line earlier than its proof body.
+Local citations resolve against the scope retained with the proof.
+
+On rejection, completed local steps remain visible and a failed node
+identifies the stopping stage. `errors` provides the concise source-located
+diagnostic. A failed block does not publish its conclusion. A parser
+rejection has no executable proof steps and ends the current submission.
+A hard stop uses `session_terminated` and `termination` in Normal.
+
+Normal CLI runs retain the existing evidence required by these steps. The
+projection does not search for new proofs. The Rust Detailed API exposes
+the underlying proof and storage data.
 
 ## Failed-stage diagnostics
 
@@ -135,9 +188,9 @@ the published equality. Unrelated store nodes keep their previous shape.
 
 ```rust
 pub enum OutputDetail {
-    Compact,   // thin: result verdict + statement (+ fail_reason)
-    Normal,    // current default for all emit paths
-    Detailed,  // field-isomorphic IR projection (omit local_env)
+    Compact,   // reduced execution evidence for verdict and diagnostics
+    Normal,    // reduced execution evidence for standalone summaries
+    Detailed,  // full execution evidence used by the Normal CLI and replay
 }
 ```
 
@@ -167,7 +220,7 @@ including when mounted for `-e` or `-f`. Successful import/cache/scope behavior
 and the existing hard-stop contract remain unchanged. Focused contracts live
 in `error_context_tests.rs` and `tests/integration/cli_feedback.rs`.
 
-Default CLI / test emit uses **Normal**. **Compact** and **Detailed** are
+The default CLI feedback view is **Normal**. **Compact** and **Detailed** are
 implemented under `project_compact` / `project_detailed`
 (`project_stmt_*` / `project_run_*` / `emit_run_*`).
 
@@ -347,7 +400,7 @@ Rust evidence for ownership and replay; they are omitted from JSON as before.
 The producer/consumer regression is
 `tests/unit/execute/induction_repairs/tests.rs`.
 
-## Compact statement shape
+## Standalone Compact statement shape
 
 Success — only disposition + source text:
 
@@ -394,7 +447,7 @@ Chinese (`-lang zh`):
 Compact deliberately omits `proof_method`, `stores`, `infers`, and cite details.
 Field order: `statement_result` → `statement` → (`fail_reason` when failed).
 
-## Normal statement shape (frozen)
+## Standalone Normal statement summary
 
 Success:
 
@@ -489,7 +542,7 @@ Rules:
 - `stores` / `infers` / `cite` / `statement` / `goal` use `readable_string`
   (IR with `#id#` wrappers stripped), not raw IR and not `fact_id`.
 - Cite may include `line` when the cited fact has a source line; omit `line` if unknown.
-- Normal skips WD subtrees.
+- Standalone Normal statement summaries omit WD subtrees. Normal run steps show selected mathematical WD checks.
 
 ## Detailed statement shape (frozen contract)
 
@@ -574,7 +627,7 @@ Locked by `cargo test --lib json_output::` (`acceptance_tests` +
 
 1. **Normal success shape / field order**: `statement_result` → `statement` →
    `proof_method` → `stores` → `infers`
-2. **Normal run failure**: rejected entries keep `statement_result` and `statement`;
+2. **Normal run failure**: rejected entries keep source and completed steps;
    `errors` contains concise explanations. Standalone Normal statement projections
    retain `why_failed` and empty `stores`/`infers` for existing tooling.
 3. **Compact success**: only `statement_result` + `statement` (no proof_method/stores/infers)

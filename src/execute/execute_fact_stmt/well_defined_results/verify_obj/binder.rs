@@ -37,12 +37,14 @@ impl Runtime {
             Ok((
                 param_type_well_defined,
                 defined_params,
+                auto_opened_struct_layers,
                 assumed_dom_facts,
                 ret_set_well_defined,
             )) => {
                 let proof = FnSetObjWellDefinedProof {
                     param_type_well_defined,
                     defined_params,
+                    auto_opened_struct_layers,
                     assumed_dom_facts,
                     ret_set_well_defined,
                     local_env,
@@ -80,6 +82,7 @@ impl Runtime {
             Ok((
                 param_type_well_defined,
                 defined_params,
+                auto_opened_struct_layers,
                 assumed_dom_facts,
                 ret_set_well_defined,
                 body_well_defined,
@@ -88,6 +91,7 @@ impl Runtime {
                 let proof = AnonymousFnObjWellDefinedProof {
                     param_type_well_defined,
                     defined_params,
+                    auto_opened_struct_layers,
                     assumed_dom_facts,
                     ret_set_well_defined,
                     body_well_defined,
@@ -124,10 +128,16 @@ impl Runtime {
             rt.verify_set_builder_obj_well_definedness_in_local(value, verify_state.clone())
         })?;
         match inner {
-            Ok((param_set_well_defined, defined_params, assumed_facts)) => {
+            Ok((
+                param_set_well_defined,
+                defined_params,
+                auto_opened_struct_layers,
+                assumed_facts,
+            )) => {
                 let proof = SetBuilderObjWellDefinedProof {
                     param_set_well_defined,
                     defined_params,
+                    auto_opened_struct_layers,
                     assumed_facts,
                     local_env,
                 };
@@ -172,6 +182,7 @@ impl Runtime {
             (
                 Vec<Box<ObjWellDefinedProof>>,
                 StoreHaveObjAndInferResult,
+                Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
                 Vec<AssumeDomFactResult>,
                 Box<ObjWellDefinedProof>,
             ),
@@ -215,6 +226,16 @@ impl Runtime {
         let typed = set_bound_parameters_to_typed_parameter_list(&value.set_bound_parameters);
         let defined_params =
             self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&typed, verify_state)? {
+                Ok(opened) => opened,
+                Err((_opened, failed)) => {
+                    return Ok(Err(FailToVerifyFnSetObjWellDefined::Others(format!(
+                        "cannot open checked struct parameter: {}",
+                        failed.reason
+                    ))))
+                }
+            };
 
         let assumed_dom_facts = match self
             .verify_quantifier_free_facts_well_defined(&value.dom_facts, verify_state.clone())?
@@ -234,6 +255,7 @@ impl Runtime {
             VerifyObjWellDefinedResult::Success(ret_set_well_defined) => Ok(Ok((
                 param_type_well_defined,
                 defined_params,
+                auto_opened_struct_layers,
                 assumed_dom_facts,
                 Box::new(ret_set_well_defined),
             ))),
@@ -261,6 +283,7 @@ impl Runtime {
             (
                 Vec<Box<ObjWellDefinedProof>>,
                 StoreHaveObjAndInferResult,
+                Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
                 Vec<AssumeDomFactResult>,
                 Box<ObjWellDefinedProof>,
                 Box<ObjWellDefinedProof>,
@@ -311,6 +334,16 @@ impl Runtime {
         let typed = set_bound_parameters_to_typed_parameter_list(&value.body.set_bound_parameters);
         let defined_params =
             self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&typed, verify_state)? {
+                Ok(opened) => opened,
+                Err((_opened, failed)) => {
+                    return Ok(Err(FailToVerifyAnonymousFnObjWellDefined::Others(format!(
+                        "cannot open checked struct parameter: {}",
+                        failed.reason
+                    ))))
+                }
+            };
 
         let assumed_dom_facts = match self.verify_quantifier_free_facts_well_defined(
             &value.body.dom_facts,
@@ -403,6 +436,7 @@ impl Runtime {
         Ok(Ok((
             param_type_well_defined,
             defined_params,
+            auto_opened_struct_layers,
             assumed_dom_facts,
             ret_set_well_defined,
             body_well_defined,
@@ -419,6 +453,7 @@ impl Runtime {
             (
                 Box<ObjWellDefinedProof>,
                 StoreHaveObjAndInferResult,
+                Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
                 Vec<AssumeDomFactResult>,
             ),
             FailToVerifySetBuilderObjWellDefined,
@@ -447,6 +482,16 @@ impl Runtime {
         };
         let defined_params =
             self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&typed, verify_state)? {
+                Ok(opened) => opened,
+                Err((_opened, failed)) => {
+                    return Ok(Err(FailToVerifySetBuilderObjWellDefined::Others(format!(
+                        "cannot open checked struct parameter: {}",
+                        failed.reason
+                    ))))
+                }
+            };
 
         let assumed_facts =
             match self.verify_quantifier_free_facts_well_defined(&value.facts, verify_state)? {
@@ -461,7 +506,12 @@ impl Runtime {
                 }
             };
 
-        Ok(Ok((param_set_well_defined, defined_params, assumed_facts)))
+        Ok(Ok((
+            param_set_well_defined,
+            defined_params,
+            auto_opened_struct_layers,
+            assumed_facts,
+        )))
     }
 
     fn verify_set_bound_param_types_well_defined(

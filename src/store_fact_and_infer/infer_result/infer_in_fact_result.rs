@@ -43,7 +43,7 @@ pub enum InferInFactResult {
 
 impl InferInFactResult {
     pub fn stored_conclusions(&self) -> Vec<&StoreInferredFactResult> {
-        match self {
+        let mut stored = match self {
             Self::MatrixExpand(p) => vec![p.derived.as_ref()],
             Self::Template(p) => p
                 .stores
@@ -93,6 +93,24 @@ impl InferInFactResult {
                 .chain(p.fiber_membership.iter())
                 .collect(),
             Self::IndexCart(p) => vec![&p.function_membership, &p.choice_certificate],
+        };
+        stored.extend(
+            self.projected_membership_consequences()
+                .iter()
+                .flat_map(|projection| projection.inferences.iter())
+                .flat_map(|rule| rule.stored_conclusions()),
+        );
+        stored
+    }
+
+    pub fn projected_membership_consequences(&self) -> &[super::ProjectedMembershipConsequences] {
+        match self {
+            Self::IntersectBoth(p) => &p.membership_inferences,
+            Self::SetMinusSplit(p) => &p.membership_inferences,
+            Self::FnRange(p) => &p.membership_inferences,
+            Self::Preimage(p) => &p.membership_inferences,
+            Self::PreimageSet(p) => &p.membership_inferences,
+            _ => &[],
         }
     }
 

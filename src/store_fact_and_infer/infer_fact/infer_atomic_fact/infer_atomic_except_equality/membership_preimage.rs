@@ -58,7 +58,9 @@ impl Runtime {
                 line_file: member.line_file.clone(),
             };
             let mut derived = Vec::new();
-            if let Some(stored) = self.store_new_set_builder_projection(&base.into())? {
+            let mut pending = Vec::new();
+            if let Some(stored) = self.store_new_set_builder_projection(&base.clone().into())? {
+                pending.push(base);
                 derived.push(stored);
             }
             let mut substitution = std::collections::HashMap::new();
@@ -76,9 +78,13 @@ impl Runtime {
                     })?;
                 let fact = crate::instantiate::quantifier_free_fact_to_fact(condition);
                 if let Some(stored) = self.store_new_set_builder_projection(&fact)? {
+                    if let Fact::AtomicFact(AtomicFact::InFact(member)) = &fact {
+                        pending.push(member.clone());
+                    }
                     derived.push(stored);
                 }
             }
+            let membership_inferences = self.infer_queued_membership_projections(pending, state)?;
             let source_equal = KnownEqualityPathProof::new(path);
             return Ok(Some(match root {
                 Obj::FunctionSpace(FunctionSpace::Preimage(_)) => {
@@ -87,6 +93,7 @@ impl Runtime {
                         source_equal,
                         construction,
                         derived,
+                        membership_inferences,
                     })
                 }
                 Obj::FunctionSpace(FunctionSpace::PreimageSet(_)) => {
@@ -95,6 +102,7 @@ impl Runtime {
                         source_equal,
                         construction,
                         derived,
+                        membership_inferences,
                     })
                 }
                 _ => unreachable!("only point/set preimage roots selected"),

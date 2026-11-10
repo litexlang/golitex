@@ -94,7 +94,7 @@ litex -version
 ## Basic Shape
 
 ```text
-litex [-strict] [-session] [-lang <en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi>] <command>
+litex [-strict] [-session] [-compact] [-lang <en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi>] <command>
 ```
 
 With no command, `litex` starts the interactive REPL described above.
@@ -104,6 +104,7 @@ Shared flags outside command operands may appear before or after the command:
 | Flag | Meaning |
 |------|---------|
 | `-strict` | Forbid user `trust`, `trust have`, and `axiom`; allow abstract predicate declarations and named foundation releases. |
+| `-compact` | For verification runs, emit only the overall verdict and source-located failures. |
 | `-session` | After a successful `-e` / `-f` / `-r` run, keep the Runtime open and continue as REPL. |
 | `-lang <tok>` | Output language for JSON verification feedback: `en` (default), `zh`, `zh-hant`, `fr`, `ru`, `es`, `ar`, `ja`, `ko`, or `vi`. Does not change Litex source or verification. |
 
@@ -129,7 +130,7 @@ input; their next item is the path. For example, `-e '-strict'`
 passes `-strict` to the Litex parser and fails as invalid source; it does not
 enable strict mode or start a REPL.
 
-The current whitelist does not include `-compact`, `-detailed`, `-runner`,
+The current whitelist does not include `-detailed`, `-runner`,
 `-before`, `-isolated`, `-factgraph`, or `-defgraph`. Those older command recipes
 are not entrypoints for this build. Rust projection APIs are separate from CLI flags.
 
@@ -276,7 +277,7 @@ status without panicking. Other output I/O errors are reported normally.
 | `path` | `null` for `-e`; requested path for `-f` / `-r` |
 | `detail` | `"normal"` for the default CLI projection |
 | `language` | Selected locale from `-lang`: `"en"`, `"zh"`, `"zh-hant"`, `"fr"`, `"ru"`, `"es"`, `"ar"`, `"ja"`, `"ko"`, or `"vi"` (default `"en"`); non-English output localizes known keys too |
-| `statement_results` | `-e` / target `-f` statements in order; a non-session `-r` summary leaves this array empty, while the final `-r -session` snapshot merges all export files plus REPL turns |
+| `statement_results` | Statements in execution order, with recursive `steps` on proof blocks. `-r` includes its executed export files. A final session snapshot also includes later REPL turns. |
 | `errors` | Concise failures from this submission, in statement order; zero-based `statement_index` refers to `statement_results` |
 | `session_terminated` | Boolean hard-stop indicator; ordinary proof and parse/tokenizer rejection leave it false |
 | `termination` | `null`, or `{ "phase": ..., "message": ... }` for a hard stop |
@@ -289,11 +290,8 @@ statement that causes a hard termination is a failed run and exits `1`.
 For machine consumers, use `-lang en`, require exit `0`, parse the JSON, and
 require `kind == "run"`, `run_result == "success"`,
 `session_terminated == false`, and `termination == null`.
-The current envelope has neither `success` nor `ok`. A non-session `-r`
-computes its overall verdict from its files but does not serialize their
-statement arrays into this summary. Use `-f` on a target file when you need its
-statement explanations; `-r -session` uses the final full-session snapshot
-described above instead.
+Normal uses `run_result` for its verdict. Recursive `steps` expose the
+proof process inside statements such as `forall`, `claim` and `thm`.
 
 `statement` preserves the complete parsed source in readable form, including
 theorem/axiom names, theorem arguments and selected conclusions. Computed or
@@ -301,6 +299,16 @@ published facts belong in `stores`. For `1 / 0 = 0`, the failed statement stays
 `1 / 0 = 0`; its `errors` entry has `phase: well_defined` and a message saying that
 well-definedness could not be proved. This is a proof failure, not an assertion
 that every unproved expression is mathematically undefined.
+
+### Compact verification feedback
+
+Use `litex -compact -f example.lit` for a verdict-only success document
+(`{"run_result":"success"}`). A failed run adds `errors`, with each error's
+file, one-based line, original source line and failure reason when available.
+Errors without an exact inner location say which statement they locate.
+Compact also applies to individual REPL submissions and final session
+snapshots. The verification exit codes are the same as in Normal. See the
+[output contract](../src/json_output/README.md#compact-runs).
 
 ### Custom indexes and visualizations
 
@@ -319,10 +327,8 @@ visualizations without a separate graph output format.
 Normal JSON does not contain every verification child or FactId citation, so
 it cannot guarantee reconstruction of the complete dependency graph. The Rust
 Detailed projection exposes more typed proof evidence; it is an API, not a CLI
-flag. The non-session `-r` Normal summary has an empty `statement_results`
-array; use `-f` for the statement output of each target file. Only the final
-`-r -session` snapshot expands all export files and later REPL turns. A failed file's successful
-statement entries do not mean the file was published as a completed export.
+flag. In a failed file, an accepted statement entry describes that
+statement's own outcome. Export publication is a separate file-level result.
 
 ### Chinese output
 

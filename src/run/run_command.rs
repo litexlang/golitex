@@ -2,13 +2,26 @@ use super::output::write_stdout;
 use super::run_command_outcome::{HelpResult, RunCommandOutcome, VersionResult};
 use super::{run_compile_to_latex, run_eval, run_extract_executable_code, run_repl};
 use crate::launch_command::LaunchCommand;
-use crate::run_module::{run_file_with_config, run_project};
+use crate::result_detail::OutputDetail;
+use crate::run_module::{run_file_with_config_observed, run_project_observed};
 use crate::runtime::RuntimeResult;
 use crate::LITEX;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
+    run_command_with_feedback(command, false)
+}
+
+pub fn run_command_with_feedback(
+    command: LaunchCommand,
+    compact: bool,
+) -> RuntimeResult<RunCommandOutcome> {
+    let mut evidence = if compact {
+        OutputDetail::Compact
+    } else {
+        OutputDetail::Detailed
+    };
     match command {
         LaunchCommand::Help { .. } => {
             let entries = print_help_message()?;
@@ -19,19 +32,21 @@ pub fn run_command(command: LaunchCommand) -> RuntimeResult<RunCommandOutcome> {
             Ok(RunCommandOutcome::Version(VersionResult::new(VERSION)))
         }
         command @ LaunchCommand::Repl { .. } => {
-            run_repl::run_repl(command)?;
-            Ok(RunCommandOutcome::RunRepl)
+            match run_repl::run_repl_with_evidence(command, evidence)? {
+                Some(failure) => Ok(RunCommandOutcome::RunReplStartupFailure(failure)),
+                None => Ok(RunCommandOutcome::RunRepl),
+            }
         }
         command @ LaunchCommand::Eval { .. } => {
-            let result = run_eval::run_eval(command)?;
+            let result = run_eval::run_eval_with_evidence(command, evidence)?;
             Ok(RunCommandOutcome::RunEval(result))
         }
         command @ LaunchCommand::File { .. } => {
-            let result = run_file_with_config(command)?;
+            let result = run_file_with_config_observed(command, &mut evidence)?;
             Ok(RunCommandOutcome::RunFile(result))
         }
         command @ LaunchCommand::Repository { .. } => {
-            let result = run_project(command)?;
+            let result = run_project_observed(command, &mut evidence)?;
             Ok(RunCommandOutcome::RunRepo(result))
         }
         command @ LaunchCommand::ExtractExecutableCode { .. } => {
@@ -81,6 +96,7 @@ fn print_help_message() -> RuntimeResult<Vec<String>> {
         "-reading opens an interactive local textbook reader; -json exports its data and -export writes an embeddable static site. Preview accepts -no-browser and -port <0..65535>.".to_string(),
         "-reading -latex shows compiler-generated mathematical text with original Litex source and actual proof grounds on demand; it also applies to reading JSON, exports and uploads.".to_string(),
         "-lean -f emits Lean source by replaying supported successful verification results; standalone files only.".to_string(),
+        "-compact prints only the verification verdict and source-located errors.".to_string(),
         "-session keeps the Runtime env open and continues as REPL after -e/-f/-r.".to_string(),
         "-strict forbids `trust` / `trust have` / user `axiom`; abstract predicate declarations and named foundation releases are allowed.".to_string(),
         "-lang en|zh|zh-hant|fr|ru|es|ar|ja|ko|vi selects JSON output language (default en; English language names also accepted).".to_string(),

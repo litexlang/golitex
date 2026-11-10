@@ -180,20 +180,21 @@ fn positive_natural_lower_bound_keeps_direction_carrier_and_original_citation() 
 }
 
 #[test]
-fn sequence_program_monotone_bounded_replays_original_source_completeness() {
+fn sequence_program_monotone_bounded_requires_projected_membership_replay() {
     let (run, compiler) = super::execute(SOURCES[0]);
-    let lean = compiler
+    let error = compiler
         .compile_run(&run, "monotone_bounded_completeness")
-        .expect("the Native-checked completeness program retains its original scoped evidence");
-    assert!(!lean.contains("sorry") && !lean.contains("admit"));
+        .expect_err("native projected memberships need staged Lean replay");
+    assert_eq!(error.route, "Inference/ProjectedMembershipConsequences");
 }
 
 #[test]
-fn sequence_program_atomic_conclusion_replays_post_derivation_formation() {
+fn sequence_program_atomic_conclusion_requires_projected_membership_replay() {
     let (run, compiler) = super::execute(SOURCES[2]);
-    compiler
+    let error = compiler
         .compile_run(&run, "cauchy_bounded_post_derivation_formation")
-        .expect("atomic conclusion WD can cite the recorded program application");
+        .expect_err("native projected memberships need staged Lean replay");
+    assert_eq!(error.route, "Inference/ProjectedMembershipConsequences");
 }
 
 #[test]

@@ -7588,8 +7588,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_have_obj_by_exist_facts_stmt__ExecHaveObjByExistFactsStmtSuccessResult(value: &crate::execute::ExecHaveObjByExistFactsStmtSuccessResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecHaveObjByExistFactsStmtSuccessResult { statement: f0, verify_exist: f1, store_and_infer_result: f2 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveObjByExistFactsStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("verify_exist", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__VerifyPlainExistFactSuccess(f1, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f2, capture, runtime))];
+crate::execute::ExecHaveObjByExistFactsStmtSuccessResult { statement: f0, verify_exist: f1, store_and_infer_result: f2, auto_opened_struct_layers: f3 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveObjByExistFactsStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("verify_exist", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__VerifyPlainExistFactSuccess(f1, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f2, capture, runtime)), ("auto_opened_struct_layers", match (f3).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null })];
 let mut output = node("ExecHaveObjByExistFactsStmtSuccessResult", "", fields);
 output
 },
@@ -7599,6 +7599,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_have_obj_by_exist_facts_stmt__ExecHaveObjByExistFactsStmtFailed(value: &crate::execute::ExecHaveObjByExistFactsStmtFailed, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::ExecHaveObjByExistFactsStmtFailed::AutoOpenStructLayer(f0) => {
+let fields = vec![("0", capture_execute__release_one_struct_layer__FailToReleaseOneStructLayer(f0, capture, runtime))];
+let mut output = node("ExecHaveObjByExistFactsStmtFailed", "AutoOpenStructLayer", fields);
+output
+},
 crate::execute::ExecHaveObjByExistFactsStmtFailed::Exist(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__VerifyExistShapedFactFailed(f0, capture, runtime))];
 let mut output = node("ExecHaveObjByExistFactsStmtFailed", "Exist", fields);
@@ -7615,8 +7620,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_obtain_obj_from_exist_fact_stmt__ExecObtainObjFromExistFactStmtSuccessResult(value: &crate::execute::ExecObtainObjFromExistFactStmtSuccessResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecObtainObjFromExistFactStmtSuccessResult { statement: f0, verify_exist: f1, store_and_infer_result: f2 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__ObtainObjFromExistFact(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("verify_exist", capture_execute__execute_obtain_obj_from_exist_fact_stmt__ObtainExistVerifySuccess(f1, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f2, capture, runtime))];
+crate::execute::ExecObtainObjFromExistFactStmtSuccessResult { statement: f0, verify_exist: f1, store_and_infer_result: f2, auto_opened_struct_layers: f3 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__ObtainObjFromExistFact(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("verify_exist", capture_execute__execute_obtain_obj_from_exist_fact_stmt__ObtainExistVerifySuccess(f1, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f2, capture, runtime)), ("auto_opened_struct_layers", match (f3).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null })];
 let mut output = node("ExecObtainObjFromExistFactStmtSuccessResult", "", fields);
 output
 },
@@ -7626,6 +7631,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_obtain_obj_from_exist_fact_stmt__ExecObtainObjFromExistFactStmtFailed(value: &crate::execute::ExecObtainObjFromExistFactStmtFailed, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::ExecObtainObjFromExistFactStmtFailed::AutoOpenStructLayer(f0) => {
+let fields = vec![("0", capture_execute__release_one_struct_layer__FailToReleaseOneStructLayer(f0, capture, runtime))];
+let mut output = node("ExecObtainObjFromExistFactStmtFailed", "AutoOpenStructLayer", fields);
+output
+},
 crate::execute::ExecObtainObjFromExistFactStmtFailed::ArityMismatch { expected: f0, got: f1 } => {
 let fields = vec![("expected", JsonValue::String((f0).to_string())), ("got", JsonValue::String((f1).to_string()))];
 let mut output = node("ExecObtainObjFromExistFactStmtFailed", "ArityMismatch", fields);
@@ -7657,8 +7667,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_obtain_obj_from_atomic_fact_stmt__ExecObtainObjFromAtomicFactStmtSuccessResult(value: &crate::execute::ExecObtainObjFromAtomicFactStmtSuccessResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecObtainObjFromAtomicFactStmtSuccessResult { statement: f0, verify_atomic: f1, projected_exist: f2, store_and_infer_result: f3 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__ObtainObjFromAtomicFact(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("verify_atomic", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("projected_exist", capture_ast__fact__exist_fact__ExistShapedFact(f2, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f3, capture, runtime))];
+crate::execute::ExecObtainObjFromAtomicFactStmtSuccessResult { statement: f0, verify_atomic: f1, projected_exist: f2, store_and_infer_result: f3, auto_opened_struct_layers: f4 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__ObtainObjFromAtomicFact(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("verify_atomic", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("projected_exist", capture_ast__fact__exist_fact__ExistShapedFact(f2, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f3, capture, runtime)), ("auto_opened_struct_layers", match (f4).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null })];
 let mut output = node("ExecObtainObjFromAtomicFactStmtSuccessResult", "", fields);
 output
 },
@@ -7724,8 +7734,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_have_by_fn_preimage_stmt__ExecHaveByFnPreimageStmtSuccessResult(value: &crate::execute::ExecHaveByFnPreimageStmtSuccessResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::ExecHaveByFnPreimageStmtSuccessResult { statement: f0, signature_selection: f1, source_membership: f2, preimage_parameters: f3, store_and_infer_result: f4 } => {
-let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveByPreimageStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("signature_selection", capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(f1, capture, runtime)), ("source_membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("preimage_parameters", capture_ast__param__TypedParameterList(f3, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f4, capture, runtime))];
+crate::execute::ExecHaveByFnPreimageStmtSuccessResult { statement: f0, signature_selection: f1, source_membership: f2, preimage_parameters: f3, store_and_infer_result: f4, auto_opened_struct_layers: f5 } => {
+let fields = vec![("statement", { capture.source_snapshot_depth += 1; let value = capture_ast__stmt__HaveByPreimageStmt(f0, capture, runtime); capture.source_snapshot_depth -= 1; value }), ("signature_selection", capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(f1, capture, runtime)), ("source_membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("preimage_parameters", capture_ast__param__TypedParameterList(f3, capture, runtime)), ("store_and_infer_result", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f4, capture, runtime)), ("auto_opened_struct_layers", match (f5).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null })];
 let mut output = node("ExecHaveByFnPreimageStmtSuccessResult", "", fields);
 output
 },
@@ -7735,6 +7745,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_have_by_fn_preimage_stmt__ExecHaveByFnPreimageStmtFailed(value: &crate::execute::ExecHaveByFnPreimageStmtFailed, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::ExecHaveByFnPreimageStmtFailed::AutoOpenStructLayer(f0) => {
+let fields = vec![("0", capture_execute__release_one_struct_layer__FailToReleaseOneStructLayer(f0, capture, runtime))];
+let mut output = node("ExecHaveByFnPreimageStmtFailed", "AutoOpenStructLayer", fields);
+output
+},
 crate::execute::ExecHaveByFnPreimageStmtFailed::NotFnRange(f0) => {
 let fields = vec![("0", JsonValue::String((f0).to_string()))];
 let mut output = node("ExecHaveByFnPreimageStmtFailed", "NotFnRange", fields);
@@ -7929,8 +7944,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_have_fn_equal_case_by_case_stmt__IntroduceFnSetClauseBindersResult(value: &crate::execute::IntroduceFnSetClauseBindersResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::IntroduceFnSetClauseBindersResult { defined_params: f0, assumed_dom_facts: f1 } => {
-let fields = vec![("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f0, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(item, capture, runtime)).collect()))];
+crate::execute::IntroduceFnSetClauseBindersResult { defined_params: f0, auto_opened_struct_layers: f1, assumed_dom_facts: f2 } => {
+let fields = vec![("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f0, capture, runtime)), ("auto_opened_struct_layers", match (f1).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null }), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(item, capture, runtime)).collect()))];
 let mut output = node("IntroduceFnSetClauseBindersResult", "", fields);
 output
 },
@@ -15512,8 +15527,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_def_struct_stmt__exec_def_struct_stmt__StructFieldWellDefinedAndIntroduced(value: &crate::execute::execute_def_struct_stmt::StructFieldWellDefinedAndIntroduced, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_def_struct_stmt::StructFieldWellDefinedAndIntroduced { well_defined: f0, defined: f1 } => {
-let fields = vec![("well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("defined", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime))];
+crate::execute::execute_def_struct_stmt::StructFieldWellDefinedAndIntroduced { well_defined: f0, defined: f1, auto_opened_struct_layers: f2 } => {
+let fields = vec![("well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("defined", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("auto_opened_struct_layers", match (f2).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null })];
 let mut output = node("StructFieldWellDefinedAndIntroduced", "", fields);
 output
 },
@@ -23649,6 +23664,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_exist_shaped_fact__well_defined_result__ExistShapedWellDefinedLocalFailed(value: &crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedWellDefinedLocalFailed, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedWellDefinedLocalFailed::AutoOpenStructLayer { introduced_params: f0, opened_before_fail: f1, failed: f2 } => {
+let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("opened_before_fail", JsonValue::Array((f1).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect())), ("failed", capture_execute__release_one_struct_layer__FailToReleaseOneStructLayer(f2, capture, runtime))];
+let mut output = node("ExistShapedWellDefinedLocalFailed", "AutoOpenStructLayer", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedWellDefinedLocalFailed::Parameters(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_param_type__VerifyAndDefineWdParametersFailed(f0, capture, runtime))];
 let mut output = node("ExistShapedWellDefinedLocalFailed", "Parameters", fields);
@@ -23707,6 +23727,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_forall_fact_with_iff__well_defined_result__ForallIffWellDefinedLocalFailed(value: &crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallIffWellDefinedLocalFailed, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallIffWellDefinedLocalFailed::AutoOpenStructLayer { introduced_params: f0, opened_before_fail: f1, failed: f2 } => {
+let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("opened_before_fail", JsonValue::Array((f1).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect())), ("failed", capture_execute__release_one_struct_layer__FailToReleaseOneStructLayer(f2, capture, runtime))];
+let mut output = node("ForallIffWellDefinedLocalFailed", "AutoOpenStructLayer", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallIffWellDefinedLocalFailed::Parameters(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_param_type__VerifyAndDefineWdParametersFailed(f0, capture, runtime))];
 let mut output = node("ForallIffWellDefinedLocalFailed", "Parameters", fields);
@@ -23733,6 +23758,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_not_forall_fact__well_defined_result__NotForallWellDefinedLocalFailed(value: &crate::execute::execute_fact_stmt::verify_not_forall_fact::NotForallWellDefinedLocalFailed, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_not_forall_fact::NotForallWellDefinedLocalFailed::AutoOpenStructLayer { introduced_params: f0, opened_before_fail: f1, failed: f2 } => {
+let fields = vec![("introduced_params", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("opened_before_fail", JsonValue::Array((f1).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect())), ("failed", capture_execute__release_one_struct_layer__FailToReleaseOneStructLayer(f2, capture, runtime))];
+let mut output = node("NotForallWellDefinedLocalFailed", "AutoOpenStructLayer", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_not_forall_fact::NotForallWellDefinedLocalFailed::Parameters(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__well_defined_results__verify_param_type__VerifyAndDefineWdParametersFailed(f0, capture, runtime))];
 let mut output = node("NotForallWellDefinedLocalFailed", "Parameters", fields);
@@ -24665,8 +24695,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_preimage_result__InferInFactPreimageResult(value: &crate::store_fact_and_infer::InferInFactPreimageResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferInFactPreimageResult { source_fact_id: f0, source_equal: f1, construction: f2, derived: f3 } => {
-let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("source_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("construction", capture_store_fact_and_infer__infer_result__infer_preimage_construction_result__InferPreimageConstructionResult(f2, capture, runtime)), ("derived", JsonValue::Array((f3).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+crate::store_fact_and_infer::InferInFactPreimageResult { source_fact_id: f0, source_equal: f1, construction: f2, derived: f3, membership_inferences: f4 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("source_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("construction", capture_store_fact_and_infer__infer_result__infer_preimage_construction_result__InferPreimageConstructionResult(f2, capture, runtime)), ("derived", JsonValue::Array((f3).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect())), ("membership_inferences", JsonValue::Array((f4).iter().map(|item| capture_store_fact_and_infer__infer_result__projected_membership_consequences__ProjectedMembershipConsequences(item, capture, runtime)).collect()))];
 let mut output = node("InferInFactPreimageResult", "", fields);
 output
 },
@@ -24676,8 +24706,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_preimage_set_result__InferInFactPreimageSetResult(value: &crate::store_fact_and_infer::InferInFactPreimageSetResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferInFactPreimageSetResult { source_fact_id: f0, source_equal: f1, construction: f2, derived: f3 } => {
-let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("source_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("construction", capture_store_fact_and_infer__infer_result__infer_preimage_construction_result__InferPreimageConstructionResult(f2, capture, runtime)), ("derived", JsonValue::Array((f3).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect()))];
+crate::store_fact_and_infer::InferInFactPreimageSetResult { source_fact_id: f0, source_equal: f1, construction: f2, derived: f3, membership_inferences: f4 } => {
+let fields = vec![("source_fact_id", capture.fact_reference(f0, runtime)), ("source_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("construction", capture_store_fact_and_infer__infer_result__infer_preimage_construction_result__InferPreimageConstructionResult(f2, capture, runtime)), ("derived", JsonValue::Array((f3).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime)).collect())), ("membership_inferences", JsonValue::Array((f4).iter().map(|item| capture_store_fact_and_infer__infer_result__projected_membership_consequences__ProjectedMembershipConsequences(item, capture, runtime)).collect()))];
 let mut output = node("InferInFactPreimageSetResult", "", fields);
 output
 },
@@ -24731,8 +24761,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_intersect_both_result__InferInFactIntersectBothResult(value: &crate::store_fact_and_infer::InferInFactIntersectBothResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferInFactIntersectBothResult { left_membership: f0, right_membership: f1 } => {
-let fields = vec![("left_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f0, capture, runtime)), ("right_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime))];
+crate::store_fact_and_infer::InferInFactIntersectBothResult { left_membership: f0, right_membership: f1, membership_inferences: f2 } => {
+let fields = vec![("left_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f0, capture, runtime)), ("right_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime)), ("membership_inferences", JsonValue::Array((f2).iter().map(|item| capture_store_fact_and_infer__infer_result__projected_membership_consequences__ProjectedMembershipConsequences(item, capture, runtime)).collect()))];
 let mut output = node("InferInFactIntersectBothResult", "", fields);
 output
 },
@@ -24742,8 +24772,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_set_minus_split_result__InferInFactSetMinusSplitResult(value: &crate::store_fact_and_infer::InferInFactSetMinusSplitResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferInFactSetMinusSplitResult { base_membership: f0, excluded_membership: f1, singleton_inequality: f2 } => {
-let fields = vec![("base_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f0, capture, runtime)), ("excluded_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime)), ("singleton_inequality", match (f2).as_ref() { Some(item) => capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime), None => JsonValue::Null })];
+crate::store_fact_and_infer::InferInFactSetMinusSplitResult { base_membership: f0, excluded_membership: f1, singleton_inequality: f2, membership_inferences: f3 } => {
+let fields = vec![("base_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f0, capture, runtime)), ("excluded_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime)), ("singleton_inequality", match (f2).as_ref() { Some(item) => capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime), None => JsonValue::Null }), ("membership_inferences", JsonValue::Array((f3).iter().map(|item| capture_store_fact_and_infer__infer_result__projected_membership_consequences__ProjectedMembershipConsequences(item, capture, runtime)).collect()))];
 let mut output = node("InferInFactSetMinusSplitResult", "", fields);
 output
 },
@@ -24830,8 +24860,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_in_fact_fn_range_result__InferInFactFnRangeResult(value: &crate::store_fact_and_infer::InferInFactFnRangeResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::store_fact_and_infer::InferInFactFnRangeResult { signature_selection: f0, codomain_membership: f1, preimage_witness: f2 } => {
-let fields = vec![("signature_selection", capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(f0, capture, runtime)), ("codomain_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime)), ("preimage_witness", match (f2).as_ref() { Some(item) => capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime), None => JsonValue::Null })];
+crate::store_fact_and_infer::InferInFactFnRangeResult { signature_selection: f0, codomain_membership: f1, preimage_witness: f2, membership_inferences: f3 } => {
+let fields = vec![("signature_selection", capture_execute__execute_fact_stmt__function_signature_selection__FunctionSignatureSelection(f0, capture, runtime)), ("codomain_membership", capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(f1, capture, runtime)), ("preimage_witness", match (f2).as_ref() { Some(item) => capture_store_fact_and_infer__store_fact_and_infer_result__store_inferred_fact_result__StoreInferredFactResult(item, capture, runtime), None => JsonValue::Null }), ("membership_inferences", JsonValue::Array((f3).iter().map(|item| capture_store_fact_and_infer__infer_result__projected_membership_consequences__ProjectedMembershipConsequences(item, capture, runtime)).collect()))];
 let mut output = node("InferInFactFnRangeResult", "", fields);
 output
 },
@@ -38030,6 +38060,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_store_fact_and_infer__infer_result__projected_membership_consequences__ProjectedMembershipConsequences(value: &crate::store_fact_and_infer::ProjectedMembershipConsequences, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::store_fact_and_infer::ProjectedMembershipConsequences { membership: f0, inferences: f1 } => {
+let fields = vec![("membership", capture_ast__fact__atomic__InFact(f0, capture, runtime)), ("inferences", JsonValue::Array((f1).iter().map(|item| capture_store_fact_and_infer__infer_result__infer_in_fact_result__InferInFactResult(item, capture, runtime)).collect()))];
+let mut output = node("ProjectedMembershipConsequences", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_store_fact_and_infer__infer_result__infer_cart_coordinate_result__InferCartCoordinateResult(value: &crate::store_fact_and_infer::InferCartCoordinateResult, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::store_fact_and_infer::InferCartCoordinateResult { coordinate_index: f0, membership: f1 } => {
@@ -48384,10 +48425,10 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__SetBuilderObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetBuilderObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetBuilderObjWellDefinedProof { param_set_well_defined: f0, defined_params: f1, assumed_facts: f2, local_env: f3 } => {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::SetBuilderObjWellDefinedProof { param_set_well_defined: f0, defined_params: f1, auto_opened_struct_layers: f2, assumed_facts: f3, local_env: f4 } => {
 let saved_scope = capture.enter_scope();
-capture.index_environment(f3, runtime);
-let fields = vec![("param_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
+capture.index_environment(f4, runtime);
+let fields = vec![("param_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("auto_opened_struct_layers", match (f2).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null }), ("assumed_facts", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f4, runtime))];
 let mut output = node("SetBuilderObjWellDefinedProof", "", fields);
 capture.leave_scope(saved_scope);
 output
@@ -48486,10 +48527,10 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__FnSetObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnSetObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnSetObjWellDefinedProof { param_type_well_defined: f0, defined_params: f1, assumed_dom_facts: f2, ret_set_well_defined: f3, local_env: f4 } => {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FnSetObjWellDefinedProof { param_type_well_defined: f0, defined_params: f1, auto_opened_struct_layers: f2, assumed_dom_facts: f3, ret_set_well_defined: f4, local_env: f5 } => {
 let saved_scope = capture.enter_scope();
-capture.index_environment(f4, runtime);
-let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f3, capture, runtime)), ("local_env", capture.environment(f4, runtime))];
+capture.index_environment(f5, runtime);
+let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("auto_opened_struct_layers", match (f2).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null }), ("assumed_dom_facts", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f4, capture, runtime)), ("local_env", capture.environment(f5, runtime))];
 let mut output = node("FnSetObjWellDefinedProof", "", fields);
 capture.leave_scope(saved_scope);
 output
@@ -48500,10 +48541,10 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnObjWellDefinedProof(value: &crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnObjWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnObjWellDefinedProof { param_type_well_defined: f0, defined_params: f1, assumed_dom_facts: f2, ret_set_well_defined: f3, body_well_defined: f4, body_in_ret_set: f5, local_env: f6 } => {
+crate::execute::execute_fact_stmt::well_defined_results::verify_obj::AnonymousFnObjWellDefinedProof { param_type_well_defined: f0, defined_params: f1, auto_opened_struct_layers: f2, assumed_dom_facts: f3, ret_set_well_defined: f4, body_well_defined: f5, body_in_ret_set: f6, local_env: f7 } => {
 let saved_scope = capture.enter_scope();
-capture.index_environment(f6, runtime);
-let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("assumed_dom_facts", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f3, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f4, capture, runtime)), ("body_in_ret_set", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnBodyInReturnSetProof(f5, capture, runtime)), ("local_env", capture.environment(f6, runtime))];
+capture.index_environment(f7, runtime);
+let fields = vec![("param_type_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("defined_params", capture_execute__execute_have_obj_in_nonempty_set_stmt__StoreHaveObjAndInferResult(f1, capture, runtime)), ("auto_opened_struct_layers", match (f2).as_ref() { Some(item) => JsonValue::Array((item).iter().map(|item| capture_execute__release_one_struct_layer__ReleaseOneStructLayerProof(item, capture, runtime)).collect()), None => JsonValue::Null }), ("assumed_dom_facts", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_forall_fact__result__AssumeDomFactResult(item, capture, runtime)).collect())), ("ret_set_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f4, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f5, capture, runtime)), ("body_in_ret_set", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof_by_def__AnonymousFnBodyInReturnSetProof(f6, capture, runtime)), ("local_env", capture.environment(f7, runtime))];
 let mut output = node("AnonymousFnObjWellDefinedProof", "", fields);
 capture.leave_scope(saved_scope);
 output

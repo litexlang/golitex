@@ -124,33 +124,39 @@ impl Runtime {
     fn infer_in_fact_intersect(
         &mut self,
         in_fact: &InFact,
-        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::Intersect(intersect)) = &in_fact.set else {
             return Ok(None);
         };
         let lf = in_fact.line_file.clone();
+        let mut pending = Vec::new();
         let mut derived: Vec<StoreInferredFactResult> = Vec::with_capacity(2);
         let left_id = self.global_ids.allocate_fact_id();
-        derived.push(
-            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(self.store_and_queue_membership_projection(
+            &Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: left_id,
                 element: in_fact.element.clone(),
                 set: intersect.left.as_ref().clone(),
                 line_file: lf.clone(),
-            })))?,
-        );
+            })),
+            &mut pending,
+        )?);
         let right_id = self.global_ids.allocate_fact_id();
-        derived.push(
-            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(self.store_and_queue_membership_projection(
+            &Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: right_id,
                 element: in_fact.element.clone(),
                 set: intersect.right.as_ref().clone(),
                 line_file: lf,
-            })))?,
-        );
+            })),
+            &mut pending,
+        )?);
+        let membership_inferences =
+            self.infer_queued_membership_projections(pending, verify_state)?;
         Ok(Some(InferInFactResult::IntersectBoth(
             InferInFactIntersectBothResult {
+                membership_inferences,
                 left_membership: derived.remove(0),
                 right_membership: derived.remove(0),
             },
@@ -160,23 +166,25 @@ impl Runtime {
     fn infer_in_fact_set_minus(
         &mut self,
         in_fact: &InFact,
-        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::SetOperator(SetOperator::SetMinus(sm)) = &in_fact.set else {
             return Ok(None);
         };
         let lf = in_fact.line_file.clone();
+        let mut pending = Vec::new();
         let right_set = sm.right.as_ref().clone();
         let mut derived: Vec<StoreInferredFactResult> = Vec::new();
         let in_left_id = self.global_ids.allocate_fact_id();
-        derived.push(
-            self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::InFact(InFact {
+        derived.push(self.store_and_queue_membership_projection(
+            &Fact::AtomicFact(AtomicFact::InFact(InFact {
                 fact_id: in_left_id,
                 element: in_fact.element.clone(),
                 set: sm.left.as_ref().clone(),
                 line_file: lf.clone(),
-            })))?,
-        );
+            })),
+            &mut pending,
+        )?);
         let not_in_id = self.global_ids.allocate_fact_id();
         derived.push(
             self.store_inferred_fact(&Fact::AtomicFact(AtomicFact::NotInFact(NotInFact {
@@ -199,8 +207,11 @@ impl Runtime {
                 ))?);
             }
         }
+        let membership_inferences =
+            self.infer_queued_membership_projections(pending, verify_state)?;
         Ok(Some(InferInFactResult::SetMinusSplit(
             InferInFactSetMinusSplitResult {
+                membership_inferences,
                 base_membership: derived.remove(0),
                 excluded_membership: derived.remove(0),
                 singleton_inequality: derived.pop(),

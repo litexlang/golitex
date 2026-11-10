@@ -12,8 +12,9 @@
 // Litex github repository: https://github.com/litexlang/golitex
 // Litex Zulip community: https://litex.zulipchat.com/join/c4e7foogy6paz2sghjnbujov/
 
+use litex::launch_command::parse_launch_with_feedback;
 use litex::launch_command::LaunchCommand;
-use litex::run::{parse_launch_command, run_command};
+use litex::run::run_command::run_command_with_feedback;
 use litex::runtime::RuntimeError;
 use litex::LITEX;
 use std::io::Write;
@@ -56,20 +57,20 @@ fn run_launch() {
         Ok(None) => {}
         Err(error) => report_error(None, &error),
     }
-    let command = match parse_launch_command(&args) {
+    let (command, compact) = match parse_launch_with_feedback(&args) {
         Ok(command) => command,
         Err(error) => report_error(None, &error),
     };
-    match run_command(command.clone()) {
+    match run_command_with_feedback(command.clone(), compact) {
         Ok(outcome) => {
             if let Err(error) = litex::run::output::write_command_outcome(&outcome) {
-                report_error(Some(&command), &error);
+                report_run_error(&command, &error, compact);
             }
             if outcome.process_failed() {
                 process::exit(1);
             }
         }
-        Err(error) => report_error(Some(&command), &error),
+        Err(error) => report_run_error(&command, &error, compact),
     }
 }
 
@@ -82,4 +83,20 @@ fn report_error(command: Option<&LaunchCommand>, error: &RuntimeError) -> ! {
         _ => 1,
     };
     process::exit(code);
+}
+
+fn report_run_error(command: &LaunchCommand, error: &RuntimeError, compact: bool) -> ! {
+    if compact {
+        let json = litex::json_output::emit_compact_command_error(command, error);
+        if let Err(output_error) = litex::run::output::write_stdout(format_args!("{json}\n")) {
+            let _ = writeln!(std::io::stderr().lock(), "{output_error}");
+        }
+        let code = if matches!(error, RuntimeError::InvalidArguments(_)) {
+            2
+        } else {
+            1
+        };
+        process::exit(code);
+    }
+    report_error(Some(command), error)
 }

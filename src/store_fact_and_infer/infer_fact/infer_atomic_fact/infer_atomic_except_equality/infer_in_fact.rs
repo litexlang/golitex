@@ -136,7 +136,8 @@ impl Runtime {
     // through equality can project that same membership (or cycle through a
     // second carrier). Skip repeated storage; a later explicit membership
     // statement can project newly available carrier conditions.
-    // This guard belongs to this projection rule, not to truth search/store.
+    // This guard is shared by positive membership projections that can revisit
+    // the same carrier, without changing the truth search or store contract.
     pub(super) fn store_new_set_builder_projection(
         &mut self,
         projected: &Fact,
@@ -213,3 +214,42 @@ impl Runtime {
 #[cfg(test)]
 #[path = "../../../../../tests/unit/execute/set_builder_projection_cycle/tests.rs"]
 mod set_builder_projection_cycle_tests;
+
+impl Runtime {
+    /// Keep the existing fresh-projection guard. Repeated source facts still
+    /// retain their normal store result, but do not reopen a projection cycle.
+    pub(in crate::store_fact_and_infer) fn store_and_queue_membership_projection(
+        &mut self,
+        fact: &Fact,
+        pending: &mut Vec<InFact>,
+    ) -> RuntimeResult<crate::store_fact_and_infer::StoreInferredFactResult> {
+        if let Some(stored) = self.store_new_set_builder_projection(fact)? {
+            if let Fact::AtomicFact(AtomicFact::InFact(member)) = fact {
+                pending.push(member.clone());
+            }
+            Ok(stored)
+        } else {
+            self.store_inferred_fact(fact)
+        }
+    }
+
+    pub(in crate::store_fact_and_infer) fn infer_queued_membership_projections(
+        &mut self,
+        pending: Vec<InFact>,
+        state: crate::execute::execute_fact_stmt::VerifyState,
+    ) -> RuntimeResult<Vec<crate::store_fact_and_infer::ProjectedMembershipConsequences>> {
+        let mut results = Vec::new();
+        for membership in pending {
+            let inferences = self.infer_in_fact(&membership, state)?;
+            if !inferences.is_empty() {
+                results.push(
+                    crate::store_fact_and_infer::ProjectedMembershipConsequences {
+                        membership,
+                        inferences,
+                    },
+                );
+            }
+        }
+        Ok(results)
+    }
+}

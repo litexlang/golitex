@@ -176,6 +176,18 @@ impl LaunchCommand {
 }
 
 pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
+    let (command, compact) = parse_launch_with_feedback(args)?;
+    if compact {
+        return Err(RuntimeError::InvalidArguments(
+            "use parse_launch_with_feedback for `-compact`".into(),
+        ));
+    }
+    Ok(command)
+}
+
+/// Parse verification feedback separately from the mathematical launch command.
+pub fn parse_launch_with_feedback(args: &[String]) -> RuntimeResult<(LaunchCommand, bool)> {
+    let mut compact = false;
     let mut session = false;
     let mut strict = false;
     let mut language = OutputLanguage::English;
@@ -198,6 +210,14 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
                 rest.push(code.clone());
                 i += 1;
             }
+        } else if arg == "-compact" {
+            if compact {
+                return Err(RuntimeError::InvalidArguments(
+                    "`-compact` may appear only once".into(),
+                ));
+            }
+            compact = true;
+            i += 1;
         } else if arg == "-lean" {
             if lean {
                 return Err(RuntimeError::InvalidArguments(
@@ -243,6 +263,32 @@ pub fn parse_launch_command(args: &[String]) -> RuntimeResult<LaunchCommand> {
         }
     }
 
+    let command = parse_launch_parts(rest, session, strict, language, lean, latex, document)?;
+    if compact
+        && !matches!(
+            command,
+            LaunchCommand::Repl { .. }
+                | LaunchCommand::Eval { .. }
+                | LaunchCommand::File { .. }
+                | LaunchCommand::Repository { .. }
+        )
+    {
+        return Err(RuntimeError::InvalidArguments(
+            "`-compact` is only for verification runs".into(),
+        ));
+    }
+    Ok((command, compact))
+}
+
+fn parse_launch_parts(
+    rest: Vec<String>,
+    session: bool,
+    strict: bool,
+    language: OutputLanguage,
+    lean: bool,
+    latex: bool,
+    document: bool,
+) -> RuntimeResult<LaunchCommand> {
     if lean {
         if session || latex || document {
             return Err(RuntimeError::InvalidArguments(

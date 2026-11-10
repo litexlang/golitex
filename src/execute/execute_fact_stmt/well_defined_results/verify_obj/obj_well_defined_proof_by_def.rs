@@ -936,6 +936,7 @@ impl ListSetObjWellDefinedProof {
 pub struct SetBuilderObjWellDefinedProof {
     pub param_set_well_defined: Box<ObjWellDefinedProof>,
     pub defined_params: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
     pub assumed_facts: Vec<AssumeDomFactResult>,
     pub local_env: Box<ExecEnv>,
 }
@@ -943,6 +944,7 @@ pub struct SetBuilderObjWellDefinedProof {
 pub struct FnSetObjWellDefinedProof {
     pub param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub defined_params: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
     pub assumed_dom_facts: Vec<AssumeDomFactResult>,
     pub ret_set_well_defined: Box<ObjWellDefinedProof>,
     pub local_env: Box<ExecEnv>,
@@ -951,6 +953,7 @@ pub struct FnSetObjWellDefinedProof {
 pub struct AnonymousFnObjWellDefinedProof {
     pub param_type_well_defined: Vec<Box<ObjWellDefinedProof>>,
     pub defined_params: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
     pub assumed_dom_facts: Vec<AssumeDomFactResult>,
     pub ret_set_well_defined: Box<ObjWellDefinedProof>,
     pub body_well_defined: Box<ObjWellDefinedProof>,

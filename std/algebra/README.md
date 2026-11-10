@@ -131,17 +131,36 @@ equality reasoning. This package adds no native objects or reserved theorem
 names and contains no `trust`, `axiom` or `abstract_prop` declarations.
 No Lean replay was performed for this module.
 
-Conjugation here is the existing expression `G.mul(G.mul(a,x),G.inv(a))`;
-no additional operation is introduced. The product law preserves order, and
-the commutation and abelian characterizations retain their exact premises.
+The conjugation laws use the expression `G.mul(G.mul(a,x),G.inv(a))`.
+The product law preserves order, and the commutation and abelian
+characterizations retain their exact premises.
 The [conjugation examples](../../examples/algebra/conjugation_laws/README.md)
 include a noncommutative Heisenberg witness. The
 [elementary group examples](../../examples/algebra/group_elementary_laws/README.md)
 include the additive group of the two-element Field, whose nonidentity element
-is self-inverse. The source now has 47 theorems in 54 statements; final
-checks pass: 24 for conjugation and 18 for elementary identities, including
-11 and six final-statement refusals respectively, plus actual and generic
-callers in both installed layouts.
+is self-inverse. The conjugation and elementary identity batches passed 24 and
+18 focused checks, including 11 and six final-statement refusals respectively
+and actual and generic callers in both installed layouts.
+
+## Left group actions
+
+`is_left_group_action(A,G,X,act)` checks the identity and multiplication laws
+for a complete function from `A × X` to `X`. The left multiplication action
+uses the existing `G.mul`. The callable template `\group_conjugate<A,G>` takes
+`(g,x)` to `G.mul(G.mul(g,x),G.inv(g))` on the same carrier. The template
+`\left_translate_subset<A,G>` takes `(g,S)` to the image of `S` under left
+multiplication by `g`, including when `S` is empty.
+
+Use the `Algebra::group::` prefix to call the three action theorems
+`left_multiplication_is_action`, `conjugation_is_action` and
+`left_translation_on_subsets_is_action`. The subset translation identity and
+composition theorems expose the set equalities directly.
+`subset_left_translation_preimage` and `subset_left_translation_member`
+give the two directions of the membership test `G.mul(G.inv(g),y) $in S`.
+
+The strict source check passes all 64 statements in `group.lit`. An independent
+strict caller imports `algebra` and applies the three action theorems and
+subset translation composition to an arbitrary group.
 
 ## Examples and scope
 

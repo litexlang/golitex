@@ -678,6 +678,14 @@ impl LitexToLeanCompiler {
         };
         let mut declarations = Vec::new();
         let mut completed = position.before;
+        if rules
+            .iter()
+            .any(|rule| !rule.projected_membership_consequences().is_empty())
+        {
+            return Err(LeanCompileError::unsupported(
+                "Inference/ProjectedMembershipConsequences",
+            ));
+        }
         for rule in rules {
             let prior = SourcePosition {
                 before: completed,

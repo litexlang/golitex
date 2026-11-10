@@ -41,6 +41,11 @@ pub struct NotForallWellDefinedLocalFailure {
 }
 
 pub enum NotForallWellDefinedLocalFailed {
+    AutoOpenStructLayer {
+        introduced_params: IntroduceTypedParametersResult,
+        opened_before_fail: Vec<crate::execute::ReleaseOneStructLayerProof>,
+        failed: crate::execute::FailToReleaseOneStructLayer,
+    },
     Parameters(VerifyAndDefineWdParametersFailed),
     Premise {
         introduced_params: IntroduceTypedParametersResult,

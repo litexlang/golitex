@@ -33,6 +33,11 @@ pub struct ExistShapedWellDefinedLocalFailure {
 }
 
 pub enum ExistShapedWellDefinedLocalFailed {
+    AutoOpenStructLayer {
+        introduced_params: IntroduceTypedParametersResult,
+        opened_before_fail: Vec<crate::execute::ReleaseOneStructLayerProof>,
+        failed: crate::execute::FailToReleaseOneStructLayer,
+    },
     Parameters(VerifyAndDefineWdParametersFailed),
     Body {
         introduced_params: IntroduceTypedParametersResult,

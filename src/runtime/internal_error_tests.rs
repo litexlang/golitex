@@ -39,9 +39,22 @@ fn internal_error_merge_collision_returns_explicit_litex_bug() {
 
     let run = RunLitexCodeResult::new(vec![], Some(RunSessionError::Runtime(error.clone())));
     assert!(run.process_failed());
+    let compact = project_run_compact(&run, &first, "eval", None);
+    let compact_fields = compact.as_object().unwrap();
+    assert_eq!(
+        compact_fields.get("run_result").unwrap().as_str().unwrap(),
+        "failure"
+    );
+    let errors = compact_fields.get("errors").unwrap().as_array().unwrap();
+    assert_eq!(errors.len(), 1);
+    let diagnostic = errors[0].as_object().unwrap();
+    assert_eq!(
+        diagnostic.get("message").unwrap().as_str().unwrap(),
+        error.to_string()
+    );
+
     for json in [
         project_run_normal(&run, &first, "eval", None),
-        project_run_compact(&run, &first, "eval", None),
         project_run_detailed(&run, &first, "eval", None),
     ] {
         let fields = json.as_object().unwrap();

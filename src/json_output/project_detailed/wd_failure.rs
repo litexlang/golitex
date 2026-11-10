@@ -39,7 +39,9 @@ pub(super) fn project_fact_wd_failure(
             crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::FailToVerifyForallFactWithIffWellDefinedResult::Local(local) => {
                 use crate::execute::execute_fact_stmt::verify_forall_fact_with_iff::ForallIffWellDefinedLocalFailed;
                 match &local.failure {
-                    ForallIffWellDefinedLocalFailed::Parameters(failed) => project_parameter_wd_failure(&failed.failed, rt, "param type well-definedness failed"),
+                    ForallIffWellDefinedLocalFailed::AutoOpenStructLayer { failed, .. } =>
+                    super::definition_failure::project_struct_layer_failure(failed, rt),
+                ForallIffWellDefinedLocalFailed::Parameters(failed) => project_parameter_wd_failure(&failed.failed, rt, "param type well-definedness failed"),
                     ForallIffWellDefinedLocalFailed::Premise { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
                     ForallIffWellDefinedLocalFailed::LeftSide { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
                     ForallIffWellDefinedLocalFailed::RightSide { failed_index, failed_iff, .. } => node(rt, "failed_iff", Some(*failed_index), project_fact_wd_failure(failed_iff, rt)),
@@ -54,7 +56,9 @@ pub(super) fn project_fact_wd_failure(
             crate::execute::execute_fact_stmt::verify_not_forall_fact::FailToVerifyNotForallFactWellDefinedResult::Local(local) => {
                 use crate::execute::execute_fact_stmt::verify_not_forall_fact::NotForallWellDefinedLocalFailed;
                 match &local.failure {
-                    NotForallWellDefinedLocalFailed::Parameters(failed) => project_parameter_wd_failure(&failed.failed, rt, "param type well-definedness failed"),
+                    NotForallWellDefinedLocalFailed::AutoOpenStructLayer { failed, .. } =>
+                    super::definition_failure::project_struct_layer_failure(failed, rt),
+                NotForallWellDefinedLocalFailed::Parameters(failed) => project_parameter_wd_failure(&failed.failed, rt, "param type well-definedness failed"),
                     NotForallWellDefinedLocalFailed::Premise { failed_index, failed_dom, .. } => node(rt, "failed_dom", Some(*failed_index), project_fact_wd_failure(failed_dom, rt)),
                     NotForallWellDefinedLocalFailed::Conclusion { failed_index, failed_then, .. } => node(rt, "failed_then", Some(*failed_index), project_fact_wd_failure(failed_then, rt)),
                 }
@@ -76,6 +80,9 @@ pub(super) fn project_exist_wd_failure(
         FailToVerifyExistShapedFactWellDefinedResult::Local(local) => {
             use crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedWellDefinedLocalFailed;
             match &local.failure {
+                ExistShapedWellDefinedLocalFailed::AutoOpenStructLayer { failed, .. } => {
+                    super::definition_failure::project_struct_layer_failure(failed, rt)
+                }
                 ExistShapedWellDefinedLocalFailed::Parameters(failed) => {
                     project_parameter_wd_failure(
                         &failed.failed,

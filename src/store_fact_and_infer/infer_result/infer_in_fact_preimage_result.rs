@@ -8,4 +8,5 @@ pub struct InferInFactPreimageResult {
     pub source_equal: KnownEqualityPathProof,
     pub construction: InferPreimageConstructionResult,
     pub derived: Vec<StoreInferredFactResult>,
+    pub membership_inferences: Vec<super::ProjectedMembershipConsequences>,
 }

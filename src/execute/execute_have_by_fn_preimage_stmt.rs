@@ -26,6 +26,7 @@ use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{IdentifierId, Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecHaveByFnPreimageStmtFailed {
+    AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     NotFnRange(String),
     NoFnSetBody(String),
     ArityMismatch { expected: usize, got: usize },
@@ -38,6 +39,7 @@ pub struct ExecHaveByFnPreimageStmtSuccessResult {
     pub source_membership: VerifyFactResult,
     pub preimage_parameters: TypedParameterList,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
 }
 
 pub enum ExecHaveByFnPreimageStmtResult {
@@ -142,6 +144,17 @@ impl Runtime {
             store_and_infer_result.push(stored);
         }
 
+        let published = super::helper::published_parameter_list(self, &renamed_params)?;
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&published, verify_state)? {
+                Ok(opened) => opened,
+                Err((_, failed)) => {
+                    return Ok(ExecHaveByFnPreimageStmtResult::Failed(
+                        ExecHaveByFnPreimageStmtFailed::AutoOpenStructLayer(failed),
+                    ))
+                }
+            };
+
         Ok(ExecHaveByFnPreimageStmtResult::Success(
             ExecHaveByFnPreimageStmtSuccessResult {
                 statement: stmt.clone(),
@@ -149,6 +162,7 @@ impl Runtime {
                 source_membership,
                 preimage_parameters: renamed_params,
                 store_and_infer_result,
+                auto_opened_struct_layers,
             },
         ))
     }

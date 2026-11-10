@@ -3,12 +3,9 @@
 //! Accepted: `statement_result` + `statement` only.
 //! Failure: same + `fail_reason` with `phase` and optional `goal`.
 
-use super::helper::{
-    object, output_language, run_result_value, session_termination_value, statement_result_value,
-    string,
-};
+use super::helper::{object, output_language, run_result_value, statement_result_value, string};
 use super::json_keys::localize_key;
-use super::project_normal::{project_run_statements_normal, project_stmt_normal, OutputDetail};
+use super::project_normal::project_stmt_normal;
 use crate::execute::ExecStmtResult;
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::OutputLanguage;
@@ -22,49 +19,47 @@ pub fn project_stmt_compact(result: &ExecStmtResult, runtime: &Runtime) -> JsonV
     thin_to_compact(lang, &project_stmt_normal(result, runtime))
 }
 
-/// Build the Compact run envelope while Runtime still holds cited facts.
+/// Build Compact feedback without projecting any successful statement.
 pub fn project_run_compact(
     run: &RunLitexCodeResult,
     runtime: &Runtime,
-    target: &str,
+    _target: &str,
+    path: Option<&Path>,
+) -> JsonValue {
+    project_compact_runs(run, &[run], runtime, path)
+}
+
+pub(super) fn project_compact_runs(
+    envelope: &RunLitexCodeResult,
+    runs: &[&RunLitexCodeResult],
+    runtime: &Runtime,
     path: Option<&Path>,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let normal = project_run_statements_normal(run, runtime);
-    let (_, errors) = super::feedback::summarize_statements(normal.clone(), lang);
-    let statement_results = normal
-        .iter()
-        .map(|stmt| thin_to_compact(lang, stmt))
-        .collect();
-    let path_value = match path {
-        Some(p) => string(p.display().to_string()),
-        None => JsonValue::Null,
-    };
-    let termination = match &run.session_error {
-        None => JsonValue::Null,
-        Some(err) => session_termination_value(err, lang),
-    };
-    object(
-        lang,
-        vec![
-            ("kind", string("run")),
-            ("run_result", run_result_value(run.success)),
-            ("target", string(target)),
-            ("path", path_value),
-            ("detail", string(OutputDetail::Compact.as_str())),
-            (
-                "language",
-                string(runtime.launch_command.output_language().as_str()),
-            ),
-            ("statement_results", JsonValue::Array(statement_results)),
-            ("errors", JsonValue::Array(errors)),
-            (
-                "session_terminated",
-                JsonValue::Bool(run.session_error.is_some()),
-            ),
-            ("termination", termination),
-        ],
-    )
+    let mut success = envelope.success;
+    let mut errors = Vec::new();
+    for run in runs {
+        if !run.success {
+            success = false;
+            errors.extend(super::feedback::source_errors(run, runtime));
+        }
+    }
+    if let Some(error) = &envelope.session_error {
+        for diagnostic in super::feedback::session_errors(error, path, lang) {
+            if !errors.contains(&diagnostic) {
+                errors.push(diagnostic);
+            }
+        }
+    }
+    verdict(success, errors, lang)
+}
+
+pub(super) fn verdict(success: bool, errors: Vec<JsonValue>, lang: OutputLanguage) -> JsonValue {
+    let mut fields = vec![("run_result", run_result_value(success))];
+    if !success {
+        fields.push(("errors", JsonValue::Array(errors)));
+    }
+    object(lang, fields)
 }
 
 fn thin_to_compact(lang: OutputLanguage, normal_stmt: &JsonValue) -> JsonValue {

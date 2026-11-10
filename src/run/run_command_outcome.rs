@@ -14,6 +14,7 @@ pub enum RunCommandOutcome {
     CompileToLean(CompileToLeanResult),
     /// Interactive REPL: prints each step; no accumulated payload.
     RunRepl,
+    RunReplStartupFailure(RunLitexCodeResult),
     Help(HelpResult),
     Version(VersionResult),
 }
@@ -46,6 +47,8 @@ pub struct RunLitexCodeResult {
     /// Parsed source rendered before execution, aligned with statement_results.
     /// Empty for manually assembled result trees without source context.
     pub statement_texts: Vec<String>,
+    /// Physical source retained for line-oriented feedback.
+    pub source: Option<super::run_source::RunSource>,
     /// Indices into `statement_results` of soft-Failed stmts.
     /// `None` when there is no soft Failed (JSON: null). `ExecStmtResult` is not
     /// Clone yet, so Rust stores indices; JSON can expand them to objects.
@@ -162,6 +165,7 @@ impl RunLitexCodeResult {
             success,
             statement_results,
             statement_texts: Vec::new(),
+            source: None,
             failed_statement_results,
             input_error: None,
             session_error,
@@ -180,8 +184,13 @@ impl RunLitexCodeResult {
         target: &str,
         path: Option<&std::path::Path>,
     ) {
-        self.normal_json = Some(crate::json_output::emit_run_normal(
-            self, runtime, target, path,
+        self.normal_json = Some(crate::json_output::emit::emit_run_feedback(
+            self,
+            &[],
+            &[],
+            runtime,
+            target,
+            path,
         ));
     }
 
@@ -195,8 +204,13 @@ impl RunLitexCodeResult {
         target: &str,
         path: Option<&std::path::Path>,
     ) {
-        self.normal_json = Some(crate::json_output::emit_run_normal_with_turns(
-            self, turns, runtime, target, path,
+        self.normal_json = Some(crate::json_output::emit::emit_run_feedback(
+            self,
+            &[],
+            turns,
+            runtime,
+            target,
+            path,
         ));
     }
 
@@ -211,6 +225,15 @@ impl RunLitexCodeResult {
     ) {
         self.success = false;
         self.session_error = Some(error);
+        if runtime.result_detail() == crate::result_detail::OutputDetail::Compact {
+            self.normal_json = Some(crate::json_output::emit::append_compact_session_error(
+                self.normal_json.as_deref(),
+                self.session_error.as_ref().unwrap(),
+                path,
+                runtime,
+            ));
+            return;
+        }
         if let Some(crate::knowledge_base::JsonValue::Object(mut fields)) = self
             .normal_json
             .as_deref()
@@ -253,14 +276,16 @@ impl RunFileResult {
     }
 
     /// A rejected prerequisite prevents mounting the requested project context.
-    pub(crate) fn mount_error(&self) -> RunSessionError {
+    pub(crate) fn mount_error(&self, runtime: &crate::runtime::Runtime) -> RunSessionError {
         if let Some(error) = &self.run.session_error {
             return error.clone();
         }
         if let Some(input) = &self.run.input_error {
             return RunSessionError::Runtime(RuntimeError::ParseError(input.error.clone()));
         }
-        RunSessionError::FailToImport(crate::prelude::ImportFailure::rejected_export(self))
+        RunSessionError::FailToImport(crate::prelude::ImportFailure::rejected_export(
+            self, runtime,
+        ))
     }
 }
 
@@ -285,6 +310,7 @@ impl RunRepoResult {
             success,
             statement_results: Vec::new(),
             statement_texts: Vec::new(),
+            source: None,
             failed_statement_results: None,
             input_error: None,
             session_error,
@@ -341,6 +367,7 @@ impl RunCommandOutcome {
             Self::ExtractExecutableCode(r) => r.process_failed(),
             Self::CompileToLatex(r) => r.process_failed(),
             Self::CompileToLean(r) => r.process_failed(),
+            Self::RunReplStartupFailure(result) => result.process_failed(),
             Self::RunRepl | Self::Help(_) | Self::Version(_) => false,
         }
     }
@@ -352,6 +379,7 @@ impl RunCommandOutcome {
             Self::RunRepo(r) => r.run.normal_json.as_deref(),
             Self::ExtractExecutableCode(r) => Some(r.json.as_str()),
             Self::CompileToLatex(r) => Some(r.json.as_str()),
+            Self::RunReplStartupFailure(result) => result.normal_json.as_deref(),
             Self::CompileToLean(_) | Self::RunRepl | Self::Help(_) | Self::Version(_) => None,
         }
     }

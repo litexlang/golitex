@@ -1,0 +1,21 @@
+# Tracer: Normal shows scoped proof steps.
+# Before: forall emitted "Verified as a forall fact (details omitted in Normal)".
+# Now: Normal lists the parameter, premise, conclusions and their proof grounds.
+# Only the forall/claim conclusion or named theorem is published outside its scope.
+# Check: target/release/litex -lang en -strict -f examples/stmt_nodes/proof_block/normal_steps_output.lit
+
+forall x R:
+    x != 0
+    =>:
+        x + 0 = x
+        1 / x = 1 / x
+
+claim:
+    ? exist x R st {x = 0}
+    witness exist x R st {x = 0} from 0
+
+thm reflexive:
+    ? forall x R:
+        x = x
+
+by thm reflexive(2) => 2 = 2

@@ -4,4 +4,5 @@ pub struct InferInFactSetMinusSplitResult {
     pub base_membership: StoreInferredFactResult,
     pub excluded_membership: StoreInferredFactResult,
     pub singleton_inequality: Option<StoreInferredFactResult>,
+    pub membership_inferences: Vec<super::ProjectedMembershipConsequences>,
 }

@@ -826,3 +826,160 @@ fn refined_and_stored_prefix_function_carriers_preserve_later_application_layers
         );
     }
 }
+
+#[test]
+fn derived_memberships_expand_their_existing_carrier_conditions() {
+    for source in sources() {
+        for code in [
+            r#"forall x intersect({t R: t>0},{t R: t<1}):
+    x>0
+    x<1
+"#,
+            r#"forall x set_minus({t R: t>0},{0}):
+    x>0
+"#,
+            r#"have fn f(u {t R: t>0}) R=u
+forall x preimage(f,1):
+    x>0
+"#,
+            r#"have fn f(u {t R: t>0}) R=u
+forall x preimage_set(f,{1,2}):
+    x>0
+"#,
+            r#"have fn g(v finite_seq(R,2)) R=v(1)
+forall x preimage(g,1):
+    x(1) $in R
+"#,
+            r#"have fn h(u R) finite_seq(R,2)=(u,u)
+forall z fn_range(h):
+    z(1) $in R
+"#,
+            r#"forall A,B set,x A:
+    A={t B: t=t}
+    B={t A: t=t}
+    =>:
+        x $in A
+        x $in B
+"#,
+        ] {
+            assert_success(source.clone(), code);
+        }
+    }
+}
+
+#[test]
+fn projected_memberships_preserve_branches_and_statement_scope() {
+    for source in sources() {
+        let mut rt = runtime(source);
+        let failed = rt
+            .run_litex_code(
+                r#"forall x union({t R: t>0},{t R: t<0}):
+    x>0
+"#,
+            )
+            .unwrap();
+        assert!(!failed.success && failed.session_error.is_none());
+        assert!(
+            rt.run_litex_code(
+                r#"forall x intersect({t R: t>0},{t R: t<1}):
+    x>0
+    x<1
+"#
+            )
+            .unwrap()
+            .success
+        );
+        let failed = rt.run_litex_code("forall x R:\n    x>0").unwrap();
+        assert!(!failed.success && failed.session_error.is_none());
+        assert!(!rt.run_litex_code("1=0").unwrap().success);
+        assert!(rt.run_litex_code("2+1=3").unwrap().success);
+    }
+}
+
+#[test]
+fn struct_typed_function_binders_publish_their_existing_field_conditions() {
+    for source in sources() {
+        assert_success(
+            source,
+            r#"struct PosPair:
+    a R
+    b R
+    <=>:
+        a>0
+have fn inv_a(p &PosPair) R=1/p.a
+have f fn(p &PosPair) R
+let selected={p &PosPair: 1/p.a>0}
+struct Nested:
+    pair &PosPair
+    marker R
+    <=>:
+        1/pair.a>0
+have fn piecewise_inv(p &PosPair) R by cases:
+    case p.a>0: 1/p.a
+"#,
+        );
+    }
+}
+
+#[test]
+fn struct_witness_introductions_publish_their_existing_field_conditions() {
+    let code = r#"struct PositiveRecord:
+    a R
+    b R
+    <=>:
+        a>0
+have fn record_id(p &PositiveRecord) &PositiveRecord=p
+claim:
+    ? forall p &PositiveRecord:
+        p=p
+    have chosen &PositiveRecord:
+        chosen=p
+    1/chosen.a=1/chosen.a
+    witness exist other &PositiveRecord st {other=p} from p
+    obtain obtained from exist other &PositiveRecord st {other=p}
+    1/obtained.a=1/obtained.a
+    witness exist checked &PositiveRecord st {1/checked.a=1/checked.a} from p
+    record_id(p) $in fn_range(record_id)
+    have by fn_preimage: pre from record_id(p) $in fn_range(record_id)
+    1/pre.a=1/pre.a
+"#;
+    for source in sources() {
+        assert_success(source, code);
+    }
+}
+
+#[test]
+fn struct_parameter_opening_does_not_invent_or_leak_field_conditions() {
+    for source in sources() {
+        let mut rt = runtime(source);
+        assert!(
+            rt.run_litex_code(
+                r#"struct PositivePair:
+    a R
+    b R
+    <=>:
+        a>0
+have fn good(p &PositivePair) R=1/p.a
+struct PlainPair:
+    a R
+    b R
+"#
+            )
+            .unwrap()
+            .success
+        );
+        let failed = rt
+            .run_litex_code("have fn bad(p &PlainPair) R=1/p.a")
+            .unwrap();
+        assert!(!failed.success && failed.session_error.is_none());
+        assert!(!rt.run_litex_code("1=0").unwrap().success);
+        assert!(
+            rt.run_litex_code(
+                r#"have anchor R=2
+anchor+1=3"#
+            )
+            .unwrap()
+            .success
+        );
+    }
+}

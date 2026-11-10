@@ -1,4 +1,5 @@
 use super::run_command_outcome::{RunInputError, RunLitexCodeResult, RunSessionError};
+use super::run_source::RunSource;
 use super::source_observer::SourceObserver;
 use crate::execute::ExecStmtResult;
 use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
@@ -32,6 +33,7 @@ impl Runtime {
                 };
                 let mut result = RunLitexCodeResult::new(Vec::new(), None);
                 result.success = false;
+                result.source = Some(RunSource::new(code, self.current_file.clone(), &[]));
                 result.input_error = Some(RunInputError::new(code.trim_end().to_string(), error));
                 observer.completed(self, &result);
                 return Ok(result);
@@ -80,6 +82,13 @@ impl Runtime {
             result.success = false;
         }
         result.input_error = input_error;
+        if !result.success || self.result_detail() != crate::result_detail::OutputDetail::Compact {
+            result.source = Some(RunSource::new(
+                code,
+                self.current_file.clone(),
+                &token_blocks,
+            ));
+        }
         observer.completed(self, &result);
         Ok(result)
     }

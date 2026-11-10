@@ -832,10 +832,26 @@ conjugation without assuming commutativity.
 Right identity uniqueness follows by evaluating at the existing identity;
 left cancellation proves an idempotent is the identity. Inverse uniqueness
 and the inverse law give `a*a=one` iff `inv(a)=a`. The additive group of the
-checked two-element Field supplies a nonidentity self-inverse element. No new
-Group field or operation is introduced. The conjugation and elementary batches
+checked two-element Field supplies a nonidentity self-inverse element. These
+proofs use the existing Group fields. The conjugation and elementary batches
 pass 24 and 18 focused checks respectively, including final-statement refusals
 and actual/generic callers in both installed layouts.
+
+## Left group actions
+
+A left action on a fixed set is an ordinary function `act fn(g A, x X) X`.
+Its identity and multiplication laws are the conditions of
+`is_left_group_action(A,G,X,act)`. This lets a proof use the same group and
+carrier for several actions. Left multiplication is `G.mul`. The callable
+`\group_conjugate<A,G>` uses the existing conjugation formula; its composition
+law follows from associativity and the inverse-of-product law.
+
+`\left_translate_subset<A,G>(g,S)` is the range of the restricted left
+multiplication function on `S`, an actual subset of `A`. The inverse
+translation gives the membership criterion `G.mul(G.inv(g),y) $in S`.
+That criterion reduces composition of the two images to multiplication of the
+inverse elements in reverse order. Both action laws apply to every subset,
+including the empty set.
 
 
 ## Unital ring foundations

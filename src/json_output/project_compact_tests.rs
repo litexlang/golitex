@@ -5,7 +5,6 @@ use crate::execute::ExecStmtResult;
 use crate::json_output::project_stmt_normal;
 use crate::knowledge_base::JsonValue;
 use crate::launch_command::{LaunchCommand, OutputLanguage};
-use crate::run::run_command_outcome::RunLitexCodeResult;
 use crate::runtime::Runtime;
 use crate::tokenize::Tokenizer;
 
@@ -140,25 +139,10 @@ fn compact_thinner_than_normal_success() {
 }
 
 #[test]
-fn compact_run_envelope_detail() {
+fn compact_run_success_is_only_the_localized_verdict() {
     let mut rt = runtime_zh();
-    let stmt = exec_one(&mut rt, "1 = 1");
-    let run = RunLitexCodeResult {
-        success: true,
-        statement_results: vec![stmt],
-        statement_texts: Vec::new(),
-        failed_statement_results: None,
-        input_error: None,
-        session_error: None,
-        normal_json: None,
-    };
+    let run = rt.run_litex_code("1 = 1").unwrap();
     let json = project_run_compact(&run, &rt, "eval", None);
-    assert_eq!(obj_field(&json, "详细度").as_str().ok(), Some("compact"));
-    assert_eq!(obj_field(&json, "语言").as_str().ok(), Some("zh"));
-    let stmts = obj_field(&json, "语句结果").as_array().unwrap();
-    assert_eq!(stmts.len(), 1);
-    assert_eq!(
-        stmts[0].as_object().unwrap().keys_in_order(),
-        vec!["语句判定", "语句"]
-    );
+    assert_eq!(json.as_object().unwrap().keys_in_order(), vec!["运行结果"]);
+    assert_eq!(obj_field(&json, "运行结果").as_str(), Ok("success"));
 }

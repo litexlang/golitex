@@ -9,13 +9,25 @@ use std::io::{self, IsTerminal};
 
 /// Interactive REPL: mount cwd `litex.config` when present (else empty), then loop.
 pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
-    let mut runtime = Runtime::new(command);
+    run_repl_with_evidence(command, crate::result_detail::OutputDetail::Normal).map(drop)
+}
+
+pub(super) fn run_repl_with_evidence(
+    command: LaunchCommand,
+    evidence: crate::result_detail::OutputDetail,
+) -> RuntimeResult<Option<RunLitexCodeResult>> {
+    let mut runtime = Runtime::new_with_result_detail(command, evidence);
     // Drop placeholder Repl env so mount can open export files.
     runtime.abort_source();
 
     match mount_cwd_config(&mut runtime)? {
         MountCwdConfigOutcome::Done => {}
         MountCwdConfigOutcome::SessionError(session_error) => {
+            if evidence == crate::result_detail::OutputDetail::Compact {
+                let mut run = RunLitexCodeResult::new(Vec::new(), Some(session_error));
+                run.attach_normal_json(&runtime, "repl", None);
+                return Ok(Some(run));
+            }
             return Err(mount_session_error_to_runtime_error(session_error));
         }
     }
@@ -24,7 +36,7 @@ pub fn run_repl(command: LaunchCommand) -> RuntimeResult<()> {
     let mut turns = Vec::new();
     let result = run_repl_loop(&mut runtime, &mut turns);
     runtime.abort_source();
-    result
+    result.map(|()| None)
 }
 
 /// Continue a REPL in an already-open file/eval Runtime env (used by `-session`).
@@ -54,7 +66,14 @@ pub fn run_repl_loop(
 
         write_stdout(format_args!(
             "{}\n",
-            crate::json_output::emit_run_normal(&code_result, runtime, "repl", None)
+            crate::json_output::emit::emit_run_feedback(
+                &code_result,
+                &[],
+                &[],
+                runtime,
+                "repl",
+                None
+            )
         ))?;
         turns.push(code_result);
     }

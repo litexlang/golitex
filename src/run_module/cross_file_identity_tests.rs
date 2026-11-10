@@ -502,7 +502,7 @@ fn repository_extraction_resolves_exported_names_without_parameter_capture() {
     write(&root.join("first.lit"), "have value R=2\n");
     write(
         &root.join("second.lit"),
-        "algo add_constant(value R) R by cases:\n    case value=value: value+first::value\n",
+        "release obj def first::value\nalgo add_constant(value R) R by cases:\n    case value=0: value+first::value\n    case value!=0: value+first::value\n",
     );
     let path = root.to_str().unwrap();
     let python = crate::extract_executable_code::to_python_from_repository(path).unwrap();

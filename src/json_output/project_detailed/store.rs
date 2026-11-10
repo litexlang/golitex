@@ -74,6 +74,45 @@ pub(super) fn project_store_and_infer(
         return object_for(runtime, entries);
     };
     if let InferResult::AtomicFact(InferAtomicFactResult::InFact(rules)) = infer {
+        let projections: Vec<_> = rules
+            .iter()
+            .flat_map(|rule| rule.projected_membership_consequences())
+            .map(|projection| {
+                object_for(
+                    runtime,
+                    vec![
+                        (
+                            "source_fact_id",
+                            string(projection.membership.fact_id.to_string()),
+                        ),
+                        (
+                            "source_membership",
+                            string(
+                                Fact::AtomicFact(AtomicFact::InFact(projection.membership.clone()))
+                                    .readable_string(),
+                            ),
+                        ),
+                        (
+                            "inferred_fact_ids",
+                            JsonValue::Array(
+                                projection
+                                    .inferences
+                                    .iter()
+                                    .flat_map(|rule| rule.stored_fact_ids())
+                                    .map(|id| fact_id_entry(runtime, id))
+                                    .collect(),
+                            ),
+                        ),
+                    ],
+                )
+            })
+            .collect();
+        if !projections.is_empty() {
+            entries.push((
+                "projected_membership_consequences",
+                JsonValue::Array(projections),
+            ));
+        }
         let matrices: Vec<_> = rules
             .iter()
             .filter_map(|rule| {

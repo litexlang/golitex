@@ -64,10 +64,14 @@ fn symbolic_coordinate_is_jointly_continuous_and_differentiable() {
     );
     let json = litex::json_output::project_run_detailed(&differentiable, &rt, "projection", None)
         .stringify();
-    assert!(
-        json.contains("CoordinateProjectionDifferentiable"),
-        "{json}"
-    );
+    for evidence in [
+        "DifferentiableMultivariableExpression",
+        r#""constructor":"coordinate""#,
+        r#""index":"k""#,
+        r#""index_member""#,
+    ] {
+        assert!(json.contains(evidence), "Missing {evidence}: {json}");
+    }
     // The still-symbolic coordinate value is exact. Reducing an arbitrary
     // coordinate of a homogeneous literal tuple is a separate equality route.
     check(

@@ -183,7 +183,7 @@ pub fn run_import_module_observed(
             }
         };
         let failed = !file_result.run.success;
-        let mut session_error = file_result.mount_error();
+        let mut session_error = file_result.mount_error(runtime);
         if let RunSessionError::FailToImport(failure) = &mut session_error {
             failure.prepend(&key);
         }

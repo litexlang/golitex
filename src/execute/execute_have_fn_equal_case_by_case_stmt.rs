@@ -64,6 +64,7 @@ pub struct HaveFnCaseReturnCheckSuccess {
 /// separate replay store are introduced by retaining these return values.
 pub struct IntroduceFnSetClauseBindersResult {
     pub defined_params: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
     pub assumed_dom_facts: Vec<StoreFactAndInferResult>,
 }
 
@@ -385,6 +386,14 @@ impl Runtime {
         let typed = set_bound_to_typed(&clause.set_bound_parameters);
         let defined_params =
             self.define_typed_parameters_in_current_env(&typed, None, verify_state)?;
+        let auto_opened_struct_layers = self
+            .auto_open_struct_layers_for_typed_parameters(&typed, verify_state)?
+            .map_err(|(_, failed)| {
+                RuntimeError::Unsupported(format!(
+                    "cannot open struct function parameter: {}",
+                    failed.reason
+                ))
+            })?;
         let mut assumed_dom_facts = Vec::new();
         for dom in &clause.dom_facts {
             assumed_dom_facts.push(
@@ -396,6 +405,7 @@ impl Runtime {
         }
         Ok(IntroduceFnSetClauseBindersResult {
             defined_params,
+            auto_opened_struct_layers,
             assumed_dom_facts,
         })
     }

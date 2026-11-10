@@ -10,7 +10,6 @@ use super::helper::{
 };
 use super::project_stmt_catalog::project_non_fact_stmt;
 use crate::ast::fact::{AtomicFact, Fact};
-use crate::display_and_ir::readable_string_from_ir_text;
 use crate::execute::{ExecFactStmtResult, ExecStmtResult};
 
 use crate::execute::execute_fact_stmt::verify_and_fact::{
@@ -56,10 +55,11 @@ pub fn project_stmt_normal(result: &ExecStmtResult, runtime: &Runtime) -> JsonVa
     }
 }
 
-pub(super) fn project_run_statements_normal(
+fn project_run_statements_normal(
     run: &RunLitexCodeResult,
     runtime: &Runtime,
-) -> Vec<JsonValue> {
+    offset: usize,
+) -> (Vec<JsonValue>, Vec<JsonValue>) {
     let lang = output_language(runtime);
     let mut statements: Vec<JsonValue> = run
         .statement_results
@@ -67,7 +67,15 @@ pub(super) fn project_run_statements_normal(
         .enumerate()
         .map(|(index, stmt)| {
             with_source_statement(
-                project_stmt_normal(stmt, runtime),
+                super::project_normal_steps::project_statement(
+                    stmt,
+                    runtime,
+                    run.source.as_ref(),
+                    run.source
+                        .as_ref()
+                        .and_then(|source| source.statements.get(index).copied()),
+                    &[],
+                ),
                 run.statement_texts.get(index),
                 lang,
             )
@@ -76,7 +84,22 @@ pub(super) fn project_run_statements_normal(
     if let Some(input) = &run.input_error {
         statements.push(super::feedback::input_failure(input, lang));
     }
-    statements
+    let (statements, mut errors) = super::feedback::summarize_statements(statements, lang, offset);
+    if !errors.is_empty() {
+        for (error, source_error) in errors
+            .iter_mut()
+            .zip(super::feedback::source_errors(run, runtime))
+        {
+            if let (JsonValue::Object(fields), JsonValue::Object(source_fields)) =
+                (error, source_error)
+            {
+                for (key, value) in source_fields.iter() {
+                    fields.insert(key.clone(), value.clone());
+                }
+            }
+        }
+    }
+    (statements, errors)
 }
 
 /// Build the Normal run envelope while Runtime still holds cited facts.
@@ -97,11 +120,8 @@ pub fn project_run_normal_with_turns(
     target: &str,
     path: Option<&Path>,
 ) -> JsonValue {
-    let mut statements = project_run_statements_normal(run, runtime);
-    for turn in turns {
-        statements.extend(project_run_statements_normal(turn, runtime));
-    }
-    project_run_normal_envelope(run, statements, !turns.is_empty(), runtime, target, path)
+    let runs = std::iter::once(run).chain(turns).collect::<Vec<_>>();
+    project_normal_runs(run, &runs, !turns.is_empty(), runtime, target, path)
 }
 
 /// Repository batch (all export files) plus later REPL turns as one Normal
@@ -115,26 +135,31 @@ pub fn project_run_normal_with_files_and_turns(
     target: &str,
     path: Option<&Path>,
 ) -> JsonValue {
-    let mut statements = Vec::new();
-    for file in files {
-        statements.extend(project_run_statements_normal(&file.run, runtime));
-    }
-    for turn in turns {
-        statements.extend(project_run_statements_normal(turn, runtime));
-    }
-    project_run_normal_envelope(run, statements, !turns.is_empty(), runtime, target, path)
+    let runs = files
+        .iter()
+        .map(|file| &file.run)
+        .chain(turns)
+        .collect::<Vec<_>>();
+    project_normal_runs(run, &runs, !turns.is_empty(), runtime, target, path)
 }
 
-fn project_run_normal_envelope(
+fn project_normal_runs(
     run: &RunLitexCodeResult,
-    statements: Vec<JsonValue>,
+    runs: &[&RunLitexCodeResult],
     merged_repl_turns: bool,
     runtime: &Runtime,
     target: &str,
     path: Option<&Path>,
 ) -> JsonValue {
     let lang = output_language(runtime);
-    let (statement_results, errors) = super::feedback::summarize_statements(statements, lang);
+    let mut statement_results = Vec::new();
+    let mut errors = Vec::new();
+    for source_run in runs {
+        let (statements, source_errors) =
+            project_run_statements_normal(source_run, runtime, statement_results.len());
+        statement_results.extend(statements);
+        errors.extend(source_errors);
+    }
     let path_value = match path {
         Some(p) => string(p.display().to_string()),
         None => JsonValue::Null,
@@ -212,39 +237,41 @@ fn project_fact_stmt(fact: &ExecFactStmtResult, runtime: &Runtime) -> JsonValue 
 }
 
 pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
+    verify_goal_fact(verify).readable_string()
+}
+
+pub(super) fn verify_goal_fact(verify: &VerifyFactResult) -> Fact {
     match verify {
         VerifyFactResult::AtomicExceptEquality(r) => match r.as_ref() {
-            VerifyAtomicExceptEqualityFactResult::Success(s) => s.fact.readable_string(),
+            VerifyAtomicExceptEqualityFactResult::Success(s) => s.fact.clone().into(),
             VerifyAtomicExceptEqualityFactResult::Failed(
                 VerifyAtomicExceptEqualityFactFailed::FailToSearchProof { fact, .. },
-            ) => fact.readable_string(),
+            ) => fact.clone().into(),
             VerifyAtomicExceptEqualityFactResult::Failed(
                 VerifyAtomicExceptEqualityFactFailed::FailToVerifyWellDefined(failed),
-            ) => failed.fact().readable_string(),
+            ) => failed.fact().clone().into(),
         },
         VerifyFactResult::Equality(r) => match r.as_ref() {
-            VerifyEqualityResult::Success(s) => {
-                AtomicFact::EqualFact(s.fact.clone()).readable_string()
-            }
+            VerifyEqualityResult::Success(s) => AtomicFact::EqualFact(s.fact.clone()).into(),
             VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof {
                 fact, ..
-            }) => AtomicFact::EqualFact(fact.clone()).readable_string(),
+            }) => AtomicFact::EqualFact(fact.clone()).into(),
             VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToVerifyWellDefined(failed)) => {
-                AtomicFact::EqualFact(failed.fact.clone()).readable_string()
+                AtomicFact::EqualFact(failed.fact.clone()).into()
             }
         },
         VerifyFactResult::AndFact(r) => match r.as_ref() {
-            VerifyAndFactResult::Success(s) => Fact::AndFact(s.fact.clone()).readable_string(),
+            VerifyAndFactResult::Success(s) => Fact::AndFact(s.fact.clone()),
             VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToSearchProof {
                 fact, ..
             })
             | VerifyAndFactResult::Failed(VerifyAndFactFailed::FailToVerifyWellDefined {
                 fact,
                 ..
-            }) => Fact::AndFact(fact.clone()).readable_string(),
+            }) => Fact::AndFact(fact.clone()),
         },
         VerifyFactResult::ChainFact(r) => match r.as_ref() {
-            VerifyChainFactResult::Success(s) => Fact::ChainFact(s.fact.clone()).readable_string(),
+            VerifyChainFactResult::Success(s) => Fact::ChainFact(s.fact.clone()),
             VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToSearchProof {
                 fact,
                 ..
@@ -252,56 +279,50 @@ pub(super) fn verify_goal_display(verify: &VerifyFactResult) -> String {
             | VerifyChainFactResult::Failed(VerifyChainFactFailed::FailToVerifyWellDefined {
                 fact,
                 ..
-            }) => Fact::ChainFact(fact.clone()).readable_string(),
+            }) => Fact::ChainFact(fact.clone()),
         },
         VerifyFactResult::OrFact(r) => match r.as_ref() {
-            VerifyOrFactResult::Success(s) => Fact::OrFact(s.fact.clone()).readable_string(),
+            VerifyOrFactResult::Success(s) => Fact::OrFact(s.fact.clone()),
             VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToSearchProof { fact, .. }) => {
-                Fact::OrFact(fact.clone()).readable_string()
+                Fact::OrFact(fact.clone())
             }
             VerifyOrFactResult::Failed(VerifyOrFactFailed::FailToVerifyWellDefined(failed)) => {
-                Fact::OrFact(failed.fact.clone()).readable_string()
+                Fact::OrFact(failed.fact.clone())
             }
         },
-        VerifyFactResult::ExistShapedFact(r) => exist_shaped_goal_display(r),
+        VerifyFactResult::ExistShapedFact(r) => exist_shaped_goal_fact(r),
         VerifyFactResult::ForallFact(r) => match r.as_ref() {
-            VerifyForallFactResult::Success(s) => {
-                Fact::ForallFact(s.fact().clone()).readable_string()
-            }
+            VerifyForallFactResult::Success(s) => Fact::ForallFact(s.fact().clone()),
             VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToSearchProof {
                 fact,
                 ..
-            }) => Fact::ForallFact(fact.clone()).readable_string(),
+            }) => Fact::ForallFact(fact.clone()),
             VerifyForallFactResult::Failed(VerifyForallFactFailed::FailToVerifyWellDefined(
                 failed,
-            )) => Fact::ForallFact(failed.fact().clone()).readable_string(),
+            )) => Fact::ForallFact(failed.fact().clone()),
         },
         VerifyFactResult::ForallFactWithIff(r) => match r.as_ref() {
-            VerifyForallFactWithIffResult::Success(s) => {
-                Fact::ForallFactWithIff(s.fact.clone()).readable_string()
-            }
+            VerifyForallFactWithIffResult::Success(s) => Fact::ForallFactWithIff(s.fact.clone()),
             VerifyForallFactWithIffResult::Failed(
                 VerifyForallFactWithIffFailed::FailThenImpliesIff { fact, .. },
             )
             | VerifyForallFactWithIffResult::Failed(
                 VerifyForallFactWithIffFailed::FailIffImpliesThen { fact, .. },
-            ) => Fact::ForallFactWithIff(fact.clone()).readable_string(),
+            ) => Fact::ForallFactWithIff(fact.clone()),
         },
         VerifyFactResult::NotForall(r) => match r.as_ref() {
-            VerifyNotForallFactResult::Success(s) => {
-                Fact::NotForall(s.fact.clone()).readable_string()
-            }
+            VerifyNotForallFactResult::Success(s) => Fact::NotForall(s.fact.clone()),
             VerifyNotForallFactResult::Failed(VerifyNotForallFactFailed::UnsupportedNegation {
                 fact,
             })
             | VerifyNotForallFactResult::Failed(
                 VerifyNotForallFactFailed::FailToProveDerivedExist { fact, .. },
-            ) => Fact::NotForall(fact.clone()).readable_string(),
+            ) => Fact::NotForall(fact.clone()),
         },
     }
 }
 
-fn exist_shaped_goal_display(r: &VerifyExistShapedFactResult) -> String {
+fn exist_shaped_goal_fact(r: &VerifyExistShapedFactResult) -> Fact {
     let fact = match r {
         VerifyExistShapedFactResult::PlainExistFact(VerifyPlainExistFactResult::Success(s)) => {
             &s.fact
@@ -329,10 +350,10 @@ fn exist_shaped_goal_display(r: &VerifyExistShapedFactResult) -> String {
             VerifyExistShapedFactFailed::FailToVerifyWellDefined(failed),
         )) => failed.fact(),
     };
-    readable_string_from_ir_text(fact.ir().as_str())
+    crate::ast::fact::exist_shaped_fact_to_fact(fact)
 }
 
-fn build_proof_method(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
+pub(super) fn build_proof_method(verify: &VerifyFactResult, runtime: &Runtime) -> JsonValue {
     match verify {
         VerifyFactResult::AtomicExceptEquality(r) => match r.as_ref() {
             VerifyAtomicExceptEqualityFactResult::Success(s) => {

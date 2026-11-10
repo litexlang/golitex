@@ -129,3 +129,72 @@ pub fn emit_run_detailed(
 ) -> String {
     project_run_detailed(run, runtime, target, path).stringify_pretty()
 }
+
+/// Select the verification view for the current runner; Detailed remains an
+/// explicit consumer of retained evidence.
+pub(crate) fn emit_run_feedback(
+    run: &RunLitexCodeResult,
+    files: &[RunFileResult],
+    turns: &[RunLitexCodeResult],
+    runtime: &Runtime,
+    target: &str,
+    path: Option<&std::path::Path>,
+) -> String {
+    use crate::result_detail::OutputDetail;
+    if runtime.result_detail() == OutputDetail::Compact {
+        let runs = std::iter::once(run)
+            .chain(files.iter().map(|file| &file.run))
+            .chain(turns)
+            .collect::<Vec<_>>();
+        return super::project_compact::project_compact_runs(run, &runs, runtime, path)
+            .stringify_pretty();
+    }
+    if files.is_empty() {
+        emit_run_normal_with_turns(run, turns, runtime, target, path)
+    } else {
+        emit_run_normal_with_files_and_turns(run, files, turns, runtime, target, path)
+    }
+}
+
+pub fn emit_compact_command_error(
+    command: &crate::launch_command::LaunchCommand,
+    error: &crate::runtime::RuntimeError,
+) -> String {
+    use crate::launch_command::LaunchCommand;
+    let path = match command {
+        LaunchCommand::File { path, .. } | LaunchCommand::Repository { path, .. } => {
+            Some(path.as_path())
+        }
+        _ => None,
+    };
+    let lang = command.output_language();
+    super::project_compact::verdict(
+        false,
+        vec![super::feedback::runtime_error(error, path, lang)],
+        lang,
+    )
+    .stringify_pretty()
+}
+
+pub(crate) fn append_compact_session_error(
+    previous: Option<&str>,
+    error: &crate::run::RunSessionError,
+    path: Option<&std::path::Path>,
+    runtime: &Runtime,
+) -> String {
+    use crate::knowledge_base::JsonValue;
+    let lang = super::helper::output_language(runtime);
+    let mut errors = previous
+        .and_then(|json| JsonValue::parse(json).ok())
+        .and_then(|json| {
+            json.as_object()
+                .ok()?
+                .get(&super::json_keys::localize_key("errors", lang))?
+                .as_array()
+                .ok()
+                .map(<[JsonValue]>::to_vec)
+        })
+        .unwrap_or_default();
+    errors.extend(super::feedback::session_errors(error, path, lang));
+    super::project_compact::verdict(false, errors, lang).stringify_pretty()
+}

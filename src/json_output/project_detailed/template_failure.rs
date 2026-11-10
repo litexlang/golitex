@@ -6,9 +6,9 @@ use super::wd_failure::project_fact_wd_failure;
 use crate::execute::execute_def_template_stmt::ExecDefTemplateStmtFailed;
 use crate::execute::{
     ExecHaveByReplacementAxiomStmtFailed, ExecHaveFnByForallExistUniqueStmtFailed,
-    ExecHaveFnEqualStmtFailed, ExecHaveObjByExistFactsStmtFailed, ExecHaveObjEqualStmtFailed,
-    ExecHaveObjInNonemptySetStmtFailed, ExecObtainObjFromAtomicFactStmtFailed,
-    ExecObtainObjFromExistFactStmtFailed, ExecTrustHaveStmtFailed, FailToReleaseOneStructLayer,
+    ExecHaveFnEqualStmtFailed, ExecHaveObjEqualStmtFailed, ExecHaveObjInNonemptySetStmtFailed,
+    ExecObtainObjFromAtomicFactStmtFailed, ExecObtainObjFromExistFactStmtFailed,
+    ExecTrustHaveStmtFailed, FailToReleaseOneStructLayer,
 };
 use crate::json_output::helper::{object_for, string};
 use crate::knowledge_base::JsonValue;
@@ -59,16 +59,10 @@ pub(in crate::json_output) fn project_template_failure(
         ExecDefTemplateStmtFailed::BodyHaveObjEqual(f) => {
             ("body_have_equal", project_have_equal_failure(f, runtime))
         }
-        ExecDefTemplateStmtFailed::BodyHaveObjByExistFacts(f) => {
-            let exist = match f {
-                ExecHaveObjByExistFactsStmtFailed::Exist(exist) => exist,
-                ExecHaveObjByExistFactsStmtFailed::Context(context) => &context.failed,
-            };
-            (
-                "body_have_by_exist",
-                project_exist_failed("exist", exist, runtime),
-            )
-        }
+        ExecDefTemplateStmtFailed::BodyHaveObjByExistFacts(f) => (
+            "body_have_by_exist",
+            super::definition_failure::project_have_exist_failure(f, runtime),
+        ),
         ExecDefTemplateStmtFailed::BodyHaveByReplacementAxiom(f) => (
             "body_have_by_replacement",
             project_replacement_failure(f, runtime),
@@ -247,6 +241,10 @@ fn project_obtain_exist_failure(
     runtime: &Runtime,
 ) -> JsonValue {
     let (phase, failure) = match f {
+        ExecObtainObjFromExistFactStmtFailed::AutoOpenStructLayer(failed) => (
+            "auto_open_struct_layer",
+            super::definition_failure::project_struct_layer_failure(failed, runtime),
+        ),
         ExecObtainObjFromExistFactStmtFailed::Context(context) => {
             return project_obtain_exist_failure(&context.failure, runtime)
         }

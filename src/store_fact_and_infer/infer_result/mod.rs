@@ -231,3 +231,6 @@ pub use infer_surjective_definition_result::*;
 pub use infer_surjective_fact_result::*;
 pub use infer_weak_integer_lower_bound_in_n_result::*;
 pub use set_builder_membership_projection_step::*;
+
+mod projected_membership_consequences;
+pub use projected_membership_consequences::*;

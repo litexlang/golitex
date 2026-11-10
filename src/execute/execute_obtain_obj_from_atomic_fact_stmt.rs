@@ -71,6 +71,7 @@ pub struct ExecObtainObjFromAtomicFactStmtSuccessResult {
     pub verify_atomic: VerifyFactResult,
     pub projected_exist: ExistShapedFact,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
 }
 
 pub enum ExecObtainObjFromAtomicFactStmtResult {
@@ -210,14 +211,17 @@ impl Runtime {
             &stmt.equal_tos,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )? {
-            Ok(store_and_infer_result) => Ok(ExecObtainObjFromAtomicFactStmtResult::Success(
-                ExecObtainObjFromAtomicFactStmtSuccessResult {
-                    statement: stmt.clone(),
-                    verify_atomic,
-                    projected_exist,
-                    store_and_infer_result,
-                },
-            )),
+            Ok((store_and_infer_result, auto_opened_struct_layers)) => {
+                Ok(ExecObtainObjFromAtomicFactStmtResult::Success(
+                    ExecObtainObjFromAtomicFactStmtSuccessResult {
+                        statement: stmt.clone(),
+                        verify_atomic,
+                        projected_exist,
+                        store_and_infer_result,
+                        auto_opened_struct_layers,
+                    },
+                ))
+            }
             Err(failed) => Ok(ExecObtainObjFromAtomicFactStmtResult::Failed(
                 ExecObtainObjFromAtomicFactStmtFailed::SourceVerified(Box::new(
                     ExecObtainObjFromAtomicFactVerifiedFailure {

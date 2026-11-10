@@ -25,7 +25,7 @@ fn example_small_positive_integer_requires_both_certificates() {
     for key in ["PositiveIntegerInNPos", "integer_proof", "positive_proof"] {
         assert!(detailed.contains(key));
     }
-    assert!(normal.contains("Universal"));
+    assert!(normal.contains("\"forall_introduction\""), "{normal}");
     for code in [
         "forall k Z:\n    k $in N+",
         "forall k R:\n    k > 0\n    =>:\n        k $in N+",

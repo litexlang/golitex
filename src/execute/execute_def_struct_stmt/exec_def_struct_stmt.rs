@@ -116,6 +116,7 @@ pub struct ExecDefStructFieldScopeSuccessResult {
 pub struct StructFieldWellDefinedAndIntroduced {
     pub well_defined: ObjWellDefinedProof,
     pub defined: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
 }
 
 // Each condition is checked before it is assumed for subsequent conditions.
@@ -304,9 +305,18 @@ impl Runtime {
             let field_params = field_typed_parameters(std::slice::from_ref(field));
             let defined =
                 self.define_typed_parameters_in_current_env(&field_params, None, verify_state)?;
+            let auto_opened_struct_layers = self
+                .auto_open_struct_layers_for_typed_parameters(&field_params, verify_state)?
+                .map_err(|(_, failed)| {
+                    crate::runtime::RuntimeError::Unsupported(format!(
+                        "cannot open nested struct field: {}",
+                        failed.reason
+                    ))
+                })?;
             introduced_fields.push(StructFieldWellDefinedAndIntroduced {
                 well_defined,
                 defined,
+                auto_opened_struct_layers,
             });
         }
 

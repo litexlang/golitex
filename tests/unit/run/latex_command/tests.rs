@@ -117,16 +117,22 @@ fn latex_power_bases_group_limit_integral_curl_and_factorial() {
         ("integral(f,0,1)^2=0", r"\left(\int_"),
         ("factorial(3)^2=0", r"\left(\left(3\right)!\right)^{2}"),
     ] {
-        let latex =
-            crate::compile_to_latex::to_latex_from_source(source, OutputLanguage::English).unwrap();
+        let latex = crate::compile_to_latex::to_latex_from_source(
+            &format!("have a seq(R)\nhave f fn(t R) R\n{source}"),
+            OutputLanguage::English,
+        )
+        .unwrap();
         assert!(latex.contains(fragment), "{source}\n{latex}");
     }
     for (source, fragment) in [
         ("integral(fn(t R) R {integral(f,0,t)},0,1)=0", r"\xi_{1}"),
         ("sum(1,2,fn(t Z) R {sum(1,t,f)})=0", r"\iota_{1}"),
     ] {
-        let latex =
-            crate::compile_to_latex::to_latex_from_source(source, OutputLanguage::English).unwrap();
+        let latex = crate::compile_to_latex::to_latex_from_source(
+            &format!("have a seq(R)\nhave f fn(t R) R\n{source}"),
+            OutputLanguage::English,
+        )
+        .unwrap();
         assert!(latex.contains(fragment), "{source}\n{latex}");
     }
 }

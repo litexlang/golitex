@@ -481,6 +481,13 @@ fn project_def_struct(result: &ExecDefStructStmtResult, runtime: &Runtime) -> Js
                                             "local_definition",
                                             project_have_store_and_infer(&proof.defined, runtime),
                                         ),
+                                        (
+                                            "auto_opened_struct_layers",
+                                            super::verify::project_auto_opened_struct_layers(
+                                                &proof.auto_opened_struct_layers,
+                                                runtime,
+                                            ),
+                                        ),
                                     ],
                                 )
                             })
@@ -635,6 +642,13 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                         "store_and_infer",
                         project_have_store_and_infer(&s.store_and_infer_result, runtime),
                     ),
+                    (
+                        "auto_opened_struct_layers",
+                        super::verify::project_auto_opened_struct_layers(
+                            &s.auto_opened_struct_layers,
+                            runtime,
+                        ),
+                    ),
                 ],
             ),
             ExecHaveObjByExistFactsStmtResult::Failed(failed) => object_for(
@@ -660,6 +674,13 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                         "store_and_infer",
                         project_have_store_and_infer(&s.store_and_infer_result, runtime),
                     ),
+                    (
+                        "auto_opened_struct_layers",
+                        super::verify::project_auto_opened_struct_layers(
+                            &s.auto_opened_struct_layers,
+                            runtime,
+                        ),
+                    ),
                 ],
             ),
             ExecObtainObjFromExistFactStmtResult::Failed(failed) => object_for(
@@ -684,6 +705,13 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     (
                         "store_and_infer",
                         project_have_store_and_infer(&s.store_and_infer_result, runtime),
+                    ),
+                    (
+                        "auto_opened_struct_layers",
+                        super::verify::project_auto_opened_struct_layers(
+                            &s.auto_opened_struct_layers,
+                            runtime,
+                        ),
                     ),
                 ],
             ),
@@ -721,6 +749,13 @@ fn project_define_obj(def: &ExecDefineObjStmtResult, runtime: &Runtime) -> JsonV
                     (
                         "store_and_infer",
                         project_have_store_and_infer(&s.store_and_infer_result, runtime),
+                    ),
+                    (
+                        "auto_opened_struct_layers",
+                        super::verify::project_auto_opened_struct_layers(
+                            &s.auto_opened_struct_layers,
+                            runtime,
+                        ),
                     ),
                 ],
             ),

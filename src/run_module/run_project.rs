@@ -106,7 +106,7 @@ pub fn run_project_observed(
         ) {
             Ok(file_result) => {
                 let failed = !file_result.run.success;
-                let session_error = file_result.mount_error();
+                let session_error = file_result.mount_error(&runtime);
                 file_results.push(file_result);
                 if failed {
                     return Ok(finish_repo(
@@ -173,19 +173,21 @@ fn finish_repo(
     session_turns: Option<&[RunLitexCodeResult]>,
 ) -> RunRepoResult {
     let mut result = RunRepoResult::new(root.clone(), files, session_error);
-    let json = match session_turns {
-        Some(turns) => crate::json_output::emit_run_normal_with_files_and_turns(
-            &result.run,
-            &result.files,
-            turns,
-            runtime,
-            "repo",
-            Some(root.as_path()),
-        ),
-        None => {
-            crate::json_output::emit_run_normal(&result.run, runtime, "repo", Some(root.as_path()))
-        }
+    let files = if session_turns.is_some()
+        || runtime.result_detail() != crate::result_detail::OutputDetail::Normal
+    {
+        result.files.as_slice()
+    } else {
+        &[]
     };
+    let json = crate::json_output::emit::emit_run_feedback(
+        &result.run,
+        files,
+        session_turns.unwrap_or(&[]),
+        runtime,
+        "repo",
+        Some(root.as_path()),
+    );
     result.run.normal_json = Some(json);
     result
 }

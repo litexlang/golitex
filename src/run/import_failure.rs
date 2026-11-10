@@ -7,6 +7,7 @@ pub struct ImportFailure {
     pub path: PathBuf,
     pub cause: ImportFailureCause,
     pub import_chain: Vec<PathBuf>,
+    pub(crate) rejected_feedback: Vec<crate::knowledge_base::JsonValue>,
 }
 
 #[derive(Clone, Debug)]
@@ -23,10 +24,14 @@ impl ImportFailure {
             import_chain: vec![path.clone()],
             path,
             cause,
+            rejected_feedback: Vec::new(),
         }
     }
 
-    pub fn rejected_export(file: &crate::run::run_command_outcome::RunFileResult) -> Self {
+    pub(crate) fn rejected_export(
+        file: &crate::run::run_command_outcome::RunFileResult,
+        runtime: &crate::runtime::Runtime,
+    ) -> Self {
         let statements = file
             .run
             .statement_results
@@ -35,10 +40,15 @@ impl ImportFailure {
             .filter(|(_, result)| result.is_failed())
             .filter_map(|(index, _)| file.run.statement_texts.get(index).cloned())
             .collect();
-        Self::new(
+        let mut failure = Self::new(
             file.path.clone(),
             ImportFailureCause::RejectedExport { statements },
-        )
+        );
+        if runtime.result_detail() == crate::result_detail::OutputDetail::Compact {
+            failure.rejected_feedback =
+                crate::json_output::feedback::source_errors(&file.run, runtime);
+        }
+        failure
     }
 
     pub fn prepend(&mut self, parent: &Path) {

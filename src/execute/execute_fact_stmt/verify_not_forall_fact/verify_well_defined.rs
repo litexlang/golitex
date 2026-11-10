@@ -62,12 +62,24 @@ impl Runtime {
             NotForallWellDefinedLocalFailed,
         >,
     > {
-        let introduced_params = match self
+        let mut introduced_params = match self
             .verify_and_define_wd_parameters(&fact.typed_parameters, verify_state.clone())?
         {
             Ok(introduced) => introduced,
             Err(failed) => {
                 return Ok(Err(NotForallWellDefinedLocalFailed::Parameters(failed)));
+            }
+        };
+        introduced_params.auto_opened_struct_layers = match self
+            .auto_open_struct_layers_for_typed_parameters(&fact.typed_parameters, verify_state)?
+        {
+            Ok(layers) => layers,
+            Err((opened_before_fail, failed)) => {
+                return Ok(Err(NotForallWellDefinedLocalFailed::AutoOpenStructLayer {
+                    introduced_params,
+                    opened_before_fail,
+                    failed,
+                }));
             }
         };
 

@@ -254,3 +254,26 @@ fn negative_numerator_cannot_become_a_positive_quotient_source_proof() {
         "source_failed"
     );
 }
+
+#[test]
+fn struct_parameter_laws_fail_closed_without_replay_producer() {
+    let source = "struct PositivePair:\n    a R\n    b R\n    <=>:\n        a>0\nhave fn reciprocal(p &PositivePair) R=1/p.a\n";
+    let (result, compiler) = checked(source);
+    let error = compiler
+        .compile_run(&result, "struct_parameter_boundary")
+        .unwrap_err();
+    assert_eq!(error.route, "FactId/Producer", "{error}");
+}
+
+#[test]
+fn projected_membership_consequences_fail_closed_without_replay_support() {
+    let source = "forall x intersect({t R: t>0},{t R: t<1}):\n    x>0\n";
+    let (result, compiler) = checked(source);
+    let error = compiler
+        .compile_run(&result, "projected_membership_boundary")
+        .unwrap_err();
+    assert_eq!(
+        error.route, "Inference/ProjectedMembershipConsequences",
+        "{error}"
+    );
+}

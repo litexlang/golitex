@@ -1015,9 +1015,17 @@ fn acceptance_public_run_json_never_emits_a_generic_success_key() {
             .expect("ordinary rejection must not terminate the run");
         assert!(!run.success);
         assert!(run.session_error.is_none());
+        let compact = project_run_compact(&run, &runtime, "eval", None);
+        assert_no_generic_success_key(&compact);
+        assert_eq!(
+            compact.as_object().unwrap().keys_in_order(),
+            vec![
+                localize_key("run_result", language),
+                localize_key("errors", language)
+            ]
+        );
         for json in [
             project_run_normal(&run, &runtime, "eval", None),
-            project_run_compact(&run, &runtime, "eval", None),
             project_run_detailed(&run, &runtime, "eval", None),
         ] {
             assert_no_generic_success_key(&json);
@@ -1162,6 +1170,7 @@ fn acceptance_run_envelope_language() {
         success: true,
         statement_results: vec![stmt],
         statement_texts: Vec::new(),
+        source: None,
         failed_statement_results: None,
         input_error: None,
         session_error: None,

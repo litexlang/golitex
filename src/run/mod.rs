@@ -9,6 +9,7 @@ pub mod run_extract_executable_code;
 pub mod run_litex_code;
 pub mod run_reading;
 pub mod run_repl;
+pub mod run_source;
 pub mod source_observer;
 
 #[cfg(test)]

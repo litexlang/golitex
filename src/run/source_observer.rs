@@ -32,3 +32,10 @@ pub trait SourceObserver {
 }
 
 impl SourceObserver for () {}
+
+// Select the existing evidence producer mode for a verification launch.
+impl SourceObserver for crate::result_detail::OutputDetail {
+    fn result_detail(&self) -> crate::result_detail::OutputDetail {
+        *self
+    }
+}

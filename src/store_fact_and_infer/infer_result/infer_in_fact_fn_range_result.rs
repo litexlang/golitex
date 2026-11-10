@@ -5,4 +5,5 @@ pub struct InferInFactFnRangeResult {
     pub signature_selection: FunctionSignatureSelection,
     pub codomain_membership: StoreInferredFactResult,
     pub preimage_witness: Option<StoreInferredFactResult>,
+    pub membership_inferences: Vec<super::ProjectedMembershipConsequences>,
 }

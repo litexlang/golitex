@@ -8,12 +8,13 @@
 pub mod emit;
 pub mod explain;
 mod failure_kind;
-mod feedback;
+pub(crate) mod feedback;
 pub mod helper;
 pub mod json_keys;
 pub mod project_compact;
 pub mod project_detailed;
 pub mod project_normal;
+mod project_normal_steps;
 mod project_stmt_catalog;
 mod source;
 
@@ -39,8 +40,8 @@ mod scoped_case_evidence_tests;
 mod template_failure_tests;
 
 pub use emit::{
-    emit_command_error, emit_run_compact, emit_run_detailed, emit_run_normal,
-    emit_run_normal_with_files_and_turns, emit_run_normal_with_turns,
+    emit_command_error, emit_compact_command_error, emit_run_compact, emit_run_detailed,
+    emit_run_normal, emit_run_normal_with_files_and_turns, emit_run_normal_with_turns,
 };
 pub use project_compact::{project_run_compact, project_stmt_compact};
 pub use project_detailed::{project_run_detailed, project_stmt_detailed};

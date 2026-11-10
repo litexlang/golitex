@@ -761,34 +761,7 @@ pub(super) fn project_introduced_params(
             ),
             (
                 "auto_opened_struct_layers",
-                JsonValue::Array(
-                    introduced
-                        .auto_opened_struct_layers
-                        .iter()
-                        .flatten()
-                        .map(|opened| {
-                            object_for(
-                                runtime,
-                                vec![
-                                    ("obj", string(opened.obj.readable_string())),
-                                    ("struct_obj", string(opened.struct_obj.readable_string())),
-                                    (
-                                        "store_and_infer",
-                                        JsonValue::Array(
-                                            opened
-                                                .store_and_infer
-                                                .iter()
-                                                .map(|stored| {
-                                                    project_store_and_infer(stored, runtime)
-                                                })
-                                                .collect(),
-                                        ),
-                                    ),
-                                ],
-                            )
-                        })
-                        .collect(),
-                ),
+                project_auto_opened_struct_layers(&introduced.auto_opened_struct_layers, runtime),
             ),
         ],
     )
@@ -954,4 +927,35 @@ fn project_not_forall(result: &VerifyNotForallFactResult, runtime: &Runtime) -> 
             ],
         ),
     }
+}
+
+pub(super) fn project_auto_opened_struct_layers(
+    layers: &Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
+    runtime: &Runtime,
+) -> JsonValue {
+    JsonValue::Array(
+        layers
+            .iter()
+            .flatten()
+            .map(|opened| {
+                object_for(
+                    runtime,
+                    vec![
+                        ("obj", string(opened.obj.readable_string())),
+                        ("struct_obj", string(opened.struct_obj.readable_string())),
+                        (
+                            "store_and_infer",
+                            JsonValue::Array(
+                                opened
+                                    .store_and_infer
+                                    .iter()
+                                    .map(|stored| project_store_and_infer(stored, runtime))
+                                    .collect(),
+                            ),
+                        ),
+                    ],
+                )
+            })
+            .collect(),
+    )
 }

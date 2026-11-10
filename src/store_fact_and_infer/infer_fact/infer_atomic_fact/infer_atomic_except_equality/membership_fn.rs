@@ -127,7 +127,7 @@ impl Runtime {
     fn infer_in_fact_fn_range(
         &mut self,
         in_fact: &InFact,
-        _verify_state: crate::execute::execute_fact_stmt::VerifyState,
+        verify_state: crate::execute::execute_fact_stmt::VerifyState,
     ) -> RuntimeResult<Option<InferInFactResult>> {
         let Obj::FunctionSpace(FunctionSpace::FnRange(fn_range)) = &in_fact.set else {
             return Ok(None);
@@ -139,6 +139,7 @@ impl Runtime {
         };
         let body = signature_selection.signature();
         let mut derived: Vec<StoreInferredFactResult> = Vec::new();
+        let mut pending = Vec::new();
         let codomain_id = self.global_ids.allocate_fact_id();
         let codomain = AtomicFact::InFact(InFact {
             fact_id: codomain_id,
@@ -146,7 +147,8 @@ impl Runtime {
             set: body.ret_set.as_ref().clone(),
             line_file: in_fact.line_file.clone(),
         });
-        let stored = self.store_inferred_fact(&Fact::AtomicFact(codomain))?;
+        let stored =
+            self.store_and_queue_membership_projection(&Fact::AtomicFact(codomain), &mut pending)?;
         derived.push(stored);
 
         if !application_is_displayed_preimage(&in_fact.element, fn_range.function.as_ref()) {
@@ -159,8 +161,11 @@ impl Runtime {
                 }
             }
         }
+        let membership_inferences =
+            self.infer_queued_membership_projections(pending, verify_state)?;
         Ok(Some(InferInFactResult::FnRange(InferInFactFnRangeResult {
             signature_selection,
+            membership_inferences,
             codomain_membership: derived.remove(0),
             preimage_witness: derived.pop(),
         })))

@@ -149,6 +149,7 @@ fn detailed_run_envelope_detail_and_language() {
         success: true,
         statement_results: vec![stmt],
         statement_texts: Vec::new(),
+        source: None,
         failed_statement_results: None,
         input_error: None,
         session_error: None,

@@ -133,9 +133,9 @@ task-owned scratch module with the exact preceding imports/exports and an
 empty target, then submit the target's statements in order. Keep that scratch
 configuration outside the canonical module and leave its export order intact.
 
-The current CLI has no `-before`, `-runner`, or `-compact`; do not copy those
-historical recipes or introduce a literal `try:` wrapper. The current runtime
-already handles each statement's commit/discard boundary.
+Use `-compact` when only the verdict and errors are needed. The current CLI
+has no `-before` or `-runner`. Submit each proof attempt directly because the
+runtime handles its statement-level commit and discard boundary.
 
 ## Restart deliberately and restore the prefix
 

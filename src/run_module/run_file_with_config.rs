@@ -256,7 +256,7 @@ pub fn run_file_with_config_observed(
                     return Ok(fail_to_import_result(
                         &runtime,
                         path,
-                        file_result.mount_error(),
+                        file_result.mount_error(&runtime),
                     ));
                 }
                 if is_target {

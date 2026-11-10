@@ -17,6 +17,7 @@ use crate::runtime::{Runtime, RuntimeError, RuntimeResult};
 use std::rc::Rc;
 
 pub enum ExecHaveObjByExistFactsStmtFailed {
+    AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     Exist(VerifyExistShapedFactFailed),
     Context(Box<ExecHaveObjByExistFactsFailure>),
 }
@@ -32,6 +33,7 @@ pub struct ExecHaveObjByExistFactsStmtSuccessResult {
     pub statement: HaveObjByExistFactsStmt,
     pub verify_exist: VerifyPlainExistFactSuccess,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
 }
 
 pub enum ExecHaveObjByExistFactsStmtResult {
@@ -101,11 +103,23 @@ impl Runtime {
             store_and_infer_result.push(stored);
         }
 
+        let published = super::helper::published_parameter_list(self, &stmt.param_def)?;
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&published, verify_state)? {
+                Ok(opened) => opened,
+                Err((_, failed)) => {
+                    return Ok(ExecHaveObjByExistFactsStmtResult::Failed(
+                        ExecHaveObjByExistFactsStmtFailed::AutoOpenStructLayer(failed),
+                    ))
+                }
+            };
+
         Ok(ExecHaveObjByExistFactsStmtResult::Success(
             ExecHaveObjByExistFactsStmtSuccessResult {
                 statement: stmt.clone(),
                 verify_exist,
                 store_and_infer_result,
+                auto_opened_struct_layers,
             },
         ))
     }

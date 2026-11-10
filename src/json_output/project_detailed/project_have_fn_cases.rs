@@ -142,6 +142,13 @@ fn project_binder_introduction(
                 project_have_store_and_infer(&result.defined_params, runtime),
             ),
             (
+                "auto_opened_struct_layers",
+                super::verify::project_auto_opened_struct_layers(
+                    &result.auto_opened_struct_layers,
+                    runtime,
+                ),
+            ),
+            (
                 "assumed_dom_facts",
                 JsonValue::Array(
                     result

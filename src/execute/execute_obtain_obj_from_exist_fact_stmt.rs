@@ -34,6 +34,7 @@ use crate::instantiate::quantifier_free_fact_to_fact;
 use crate::runtime::{IdentifierId, Runtime, RuntimeError, RuntimeResult};
 
 pub enum ExecObtainObjFromExistFactStmtFailed {
+    AutoOpenStructLayer(crate::execute::FailToReleaseOneStructLayer),
     ArityMismatch { expected: usize, got: usize },
     NotExistSource,
     Exist(VerifyExistShapedFactFailed),
@@ -63,6 +64,7 @@ pub struct ExecObtainObjFromExistFactStmtSuccessResult {
     pub statement: ObtainObjFromExistFact,
     pub verify_exist: ObtainExistVerifySuccess,
     pub store_and_infer_result: StoreHaveObjAndInferResult,
+    pub auto_opened_struct_layers: Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
 }
 
 pub enum ExecObtainObjFromExistFactStmtResult {
@@ -113,13 +115,16 @@ impl Runtime {
             &stmt.equal_tos,
             crate::execute::execute_fact_stmt::VerifyState::top_level(),
         )? {
-            Ok(store_and_infer_result) => Ok(ExecObtainObjFromExistFactStmtResult::Success(
-                ExecObtainObjFromExistFactStmtSuccessResult {
-                    statement: stmt.clone(),
-                    verify_exist,
-                    store_and_infer_result,
-                },
-            )),
+            Ok((store_and_infer_result, auto_opened_struct_layers)) => {
+                Ok(ExecObtainObjFromExistFactStmtResult::Success(
+                    ExecObtainObjFromExistFactStmtSuccessResult {
+                        statement: stmt.clone(),
+                        verify_exist,
+                        store_and_infer_result,
+                        auto_opened_struct_layers,
+                    },
+                ))
+            }
             Err(failure) => Ok(ExecObtainObjFromExistFactStmtResult::Failed(
                 ExecObtainObjFromExistFactStmtFailed::SourceVerified(Box::new(
                     ExecObtainObjFromExistFactVerifiedFailure {
@@ -141,8 +146,15 @@ impl Runtime {
         family: &ExistShapedFact,
         equal_tos: &[BoundName],
         verify_state: crate::execute::execute_fact_stmt::VerifyState,
-    ) -> RuntimeResult<Result<StoreHaveObjAndInferResult, ExecObtainObjFromExistFactStmtFailed>>
-    {
+    ) -> RuntimeResult<
+        Result<
+            (
+                StoreHaveObjAndInferResult,
+                Option<Vec<crate::execute::ReleaseOneStructLayerProof>>,
+            ),
+            ExecObtainObjFromExistFactStmtFailed,
+        >,
+    > {
         if matches!(family, ExistShapedFact::NotExist(_)) {
             return Ok(Err(ExecObtainObjFromExistFactStmtFailed::NotExistSource));
         }
@@ -197,7 +209,17 @@ impl Runtime {
             store_and_infer_result.push(stored);
         }
 
-        Ok(Ok(store_and_infer_result))
+        let published = super::helper::published_parameter_list(self, &renamed_params)?;
+        let auto_opened_struct_layers =
+            match self.auto_open_struct_layers_for_typed_parameters(&published, verify_state)? {
+                Ok(opened) => opened,
+                Err((_, failed)) => {
+                    return Ok(Err(
+                        ExecObtainObjFromExistFactStmtFailed::AutoOpenStructLayer(failed),
+                    ))
+                }
+            };
+        Ok(Ok((store_and_infer_result, auto_opened_struct_layers)))
     }
 
     fn unwrap_obtain_exist_verify(

@@ -7,13 +7,20 @@ use crate::runtime::{CodeSource, Runtime, RuntimeResult};
 /// `-e <code>`: mount cwd `litex.config` when present (else empty), then eval.
 /// With `session`, a successful eval keeps the env open and enters REPL.
 pub fn run_eval(command: LaunchCommand) -> RuntimeResult<RunEvalResult> {
+    run_eval_with_evidence(command, crate::result_detail::OutputDetail::Normal)
+}
+
+pub(super) fn run_eval_with_evidence(
+    command: LaunchCommand,
+    evidence: crate::result_detail::OutputDetail,
+) -> RuntimeResult<RunEvalResult> {
     let LaunchCommand::Eval { code, session, .. } = &command else {
         panic!("run_eval expects LaunchCommand::Eval");
     };
     let code = code.clone();
     let session = *session;
 
-    let mut runtime = Runtime::new(command);
+    let mut runtime = Runtime::new_with_result_detail(command, evidence);
     // Drop placeholder Eval env so mount can open export files.
     runtime.abort_source();
 

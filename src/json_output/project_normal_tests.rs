@@ -141,10 +141,8 @@ fn run_json_preserves_named_declarations_and_complete_theorem_calls() {
                 "Axiom"
             );
         }
-        for projected in [
-            super::project_run_compact(&run, &runtime, "eval", None),
-            super::project_run_detailed(&run, &runtime, "eval", None),
-        ] {
+        {
+            let projected = super::project_run_detailed(&run, &runtime, "eval", None);
             let projected_statements = object_field(&projected, "statement_results")
                 .as_array()
                 .unwrap();
@@ -223,10 +221,8 @@ fn run_json_keeps_source_aligned_through_failures_and_locales() {
                 .unwrap(),
             "(1 / 0) = 0"
         );
-        for projected in [
-            super::project_run_compact(&run, &runtime, "eval", None),
-            super::project_run_detailed(&run, &runtime, "eval", None),
-        ] {
+        {
+            let projected = super::project_run_detailed(&run, &runtime, "eval", None);
             let projected_statements = object_field(&projected, &key("statement_results"))
                 .as_array()
                 .unwrap();

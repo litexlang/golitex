@@ -594,6 +594,10 @@ pub(super) fn project_obj_wd_by_def(
                     project_have_store_and_infer(&p.defined_params, runtime),
                 ),
                 (
+                    "auto_opened_struct_layers",
+                    super::verify::project_auto_opened_struct_layers(&p.auto_opened_struct_layers, runtime),
+                ),
+                (
                     "dom_fact_well_defined",
                     JsonValue::Array(
                         p.assumed_dom_facts
@@ -717,6 +721,10 @@ pub(super) fn project_obj_wd_by_def(
                 (
                     "defined_params",
                     project_have_store_and_infer(&p.defined_params, runtime),
+                ),
+                (
+                    "auto_opened_struct_layers",
+                    super::verify::project_auto_opened_struct_layers(&p.auto_opened_struct_layers, runtime),
                 ),
                 (
                     "dom_fact_well_defined",
@@ -1031,6 +1039,10 @@ pub(super) fn project_obj_wd_by_def(
                     (
                         "defined_params",
                         project_have_store_and_infer(&p.defined_params, runtime),
+                    ),
+                    (
+                        "auto_opened_struct_layers",
+                        super::verify::project_auto_opened_struct_layers(&p.auto_opened_struct_layers, runtime),
                     ),
                     (
                         "assumed_facts",
