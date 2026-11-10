@@ -5,6 +5,8 @@
 //! No `family_intersect({}) = {}`: absolute empty ∩ is the universe class;
 //! Litex keeps empty-index ∩ on `index_intersect({}, X, A) = X`.
 
+use super::helper::is_binary_add_anonymous_fn;
+use super::reduce_rule_helper::apply_fn_one_arg;
 use crate::prelude::*;
 
 // Builtin IndexUnionEmptyIndex: index_union({}, X, A) = {}.
@@ -733,49 +735,6 @@ fn is_number_two(obj: &Obj) -> bool {
 
 fn bound_name_obj(name: &BoundName) -> Obj {
     Obj::Identifier(crate::ast::obj::IdentifierObj::from_bound_name(name))
-}
-
-fn is_binary_add_anonymous_fn(obj: &Obj) -> bool {
-    let Obj::FunctionSpace(FunctionSpace::AnonymousFn(AnonymousFn { equal_to, body })) = obj else {
-        return false;
-    };
-    let mut nparams = 0;
-    for g in &body.set_bound_parameters.groups {
-        nparams += g.params.len();
-    }
-    if nparams != 2 {
-        return false;
-    }
-    matches!(
-        equal_to.as_ref(),
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(_))
-    )
-}
-
-fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {
-    match f {
-        Obj::Identifier(id) => Some(Obj::FnObj(FnObj {
-            head: Box::new(FnObjHead::Identifier(id.clone())),
-            body: vec![vec![Box::new(arg)]],
-        })),
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(anon)) => Some(Obj::FnObj(FnObj {
-            head: Box::new(FnObjHead::AnonymousFnLiteral(Box::new(anon.clone()))),
-            body: vec![vec![Box::new(arg)]],
-        })),
-        Obj::FnObj(existing) => {
-            let mut body = existing.body.clone();
-            if body.is_empty() {
-                body.push(vec![Box::new(arg)]);
-            } else {
-                body[0].push(Box::new(arg));
-            }
-            Some(Obj::FnObj(FnObj {
-                head: existing.head.clone(),
-                body,
-            }))
-        }
-        _ => None,
-    }
 }
 
 #[cfg(test)]

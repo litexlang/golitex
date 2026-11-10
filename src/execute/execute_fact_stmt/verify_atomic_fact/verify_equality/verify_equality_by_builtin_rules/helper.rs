@@ -253,3 +253,41 @@ impl Runtime {
         self.verify_builtin_rule_premise(&reverse, state)
     }
 }
+
+/// Recognize the actual addition operation on its two distinct parameters.
+/// The fold rule may then use zero as its additive identity.
+pub(super) fn is_binary_add_anonymous_fn(object: &Obj) -> bool {
+    let Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) = object else {
+        return false;
+    };
+    if crate::execute::execute_fact_stmt::fold::homogeneous_binary_carrier(&function.body).is_none()
+    {
+        return false;
+    }
+    let parameters: Vec<_> = function
+        .body
+        .set_bound_parameters
+        .groups
+        .iter()
+        .flat_map(|group| &group.params)
+        .collect();
+    let [first, second] = parameters.as_slice() else {
+        return false;
+    };
+    if first.id == second.id {
+        return false;
+    }
+    let Obj::ArithmeticOperator(crate::ast::obj::ArithmeticOperator::Add(sum)) =
+        function.equal_to.as_ref()
+    else {
+        return false;
+    };
+    let (
+        Obj::Identifier(IdentifierObj::Plain { id: left, .. }),
+        Obj::Identifier(IdentifierObj::Plain { id: right, .. }),
+    ) = (sum.left.as_ref(), sum.right.as_ref())
+    else {
+        return false;
+    };
+    (*left == first.id && *right == second.id) || (*left == second.id && *right == first.id)
+}

@@ -4,7 +4,7 @@ use crate::ast::fact::{
     NotEqualFact,
 };
 use crate::ast::obj::{
-    IntegerOperator, Literal, Mod, Number, Obj, StandardSet,
+    IdentifierObj, IntegerOperator, Literal, Mod, Number, Obj, StandardSet,
 };
 use crate::exec_env::exist_shaped_fact_index_key::{
     exist_shaped_fact_can_prove_goal,
@@ -73,10 +73,25 @@ impl Runtime {
         fact: &ExistShapedFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Option<ExistShapedFactSearchedProof>> {
-        if let Some(proof) =
-            self.search_exist_shaped_fact_proof_by_builtin_rule(fact, verify_state.clone())?
-        {
-            return Ok(Some(ExistShapedFactSearchedProof::ByBuiltinRule(proof)));
+        let mut builtin =
+            self.search_exist_shaped_fact_proof_by_builtin_rule(fact, verify_state)?;
+        // Extended compound witnesses must not displace a previously selected
+        // source forall certificate. Existing leaf-witness priority is retained.
+        let compound_witness = match &builtin {
+            Some(ExistShapedFactSearchProofByBuiltinRule::RealLineComparisonWitness(_)) => {
+                real_line_comparison_free_operands(fact)
+                    .is_some_and(|operands| operands.iter().any(is_compound_witness_operand))
+            }
+            Some(ExistShapedFactSearchProofByBuiltinRule::EqualityWitnessFromMembership(_)) => {
+                equality_witness_from_membership_parts(fact)
+                    .is_some_and(|(_, member)| is_compound_witness_operand(&member))
+            }
+            _ => false,
+        };
+        if !compound_witness {
+            if let Some(proof) = builtin.take() {
+                return Ok(Some(ExistShapedFactSearchedProof::ByBuiltinRule(proof)));
+            }
         }
         if let Some(proof) = self
             .search_exist_shaped_fact_proof_by_known_exist_shaped_fact(fact, verify_state.clone())?
@@ -88,7 +103,7 @@ impl Runtime {
         {
             return Ok(Some(ExistShapedFactSearchedProof::ByKnownForallFact(proof)));
         }
-        Ok(None)
+        Ok(builtin.map(ExistShapedFactSearchedProof::ByBuiltinRule))
     }
 
     fn search_exist_shaped_fact_proof_by_builtin_rule(
@@ -620,3 +635,10 @@ impl Runtime {
 #[cfg(test)]
 #[path = "../../../../tests/unit/execute/forall_exist_instantiation/tests.rs"]
 mod forall_exist_instantiation_tests;
+
+fn is_compound_witness_operand(obj: &Obj) -> bool {
+    !matches!(
+        obj,
+        Obj::Identifier(IdentifierObj::Plain { .. }) | Obj::Literal(_) | Obj::StandardSet(_)
+    )
+}

@@ -2,9 +2,10 @@
 //!
 //! One matcher ↔ one dedicated proof struct.
 
+use super::reduce_rule_helper::apply_fn_one_arg;
 use crate::ast::fact::{AtomicFact, EqualFact, Fact, InFact};
 use crate::ast::obj::{
-    Add, ArithmeticOperator, ComplexAbs, ComplexOperator, FnObj, FnObjHead, FunctionSpace,
+    Add, ArithmeticOperator, ComplexAbs, ComplexOperator, FunctionSpace,
     ImaginaryPart, IntegerOperator, Intersect, IteratedOperator, ListSet, Literal, Mod, Mul,
     Number, Obj, Product, ProductOfFiniteSet, RealPart, SetFormer, SetMinus, SetOperator, StandardSet, Sum,
     SumOfFiniteSet, Union,
@@ -335,10 +336,9 @@ impl Runtime {
         if list.is_empty() {
             return Ok(None);
         }
-        let leaves = collect_left_assoc_add_leaves(fold_side);
-        if leaves.len() != list.len() {
+        let Some(leaves) = collect_left_assoc_add_leaves(fold_side, list.len()) else {
             return Ok(None);
-        }
+        };
         let mut proofs = Vec::with_capacity(list.len());
         for (elem, leaf) in list.iter().zip(leaves.iter()) {
             let Some(applied) = apply_fn_one_arg(sum.func.as_ref(), elem.as_ref().clone()) else {
@@ -376,10 +376,9 @@ impl Runtime {
         if list.is_empty() {
             return Ok(None);
         }
-        let leaves = collect_left_assoc_mul_leaves(fold_side);
-        if leaves.len() != list.len() {
+        let Some(leaves) = collect_left_assoc_mul_leaves(fold_side, list.len()) else {
             return Ok(None);
-        }
+        };
         let mut proofs = Vec::with_capacity(list.len());
         for (elem, leaf) in list.iter().zip(leaves.iter()) {
             let Some(applied) = apply_fn_one_arg(product.func.as_ref(), elem.as_ref().clone())
@@ -522,28 +521,6 @@ fn end_is_predecessor_plus_one(full_end: &Obj, pre_end: &Obj) -> bool {
             }
             _ => false,
         },
-    }
-}
-
-fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {
-    match f {
-        Obj::Identifier(id) => Some(Obj::FnObj(FnObj {
-            head: Box::new(FnObjHead::Identifier(id.clone())),
-            body: vec![vec![Box::new(arg)]],
-        })),
-        Obj::FnObj(existing) => {
-            let mut body = existing.body.clone();
-            body.push(vec![Box::new(arg)]);
-            Some(Obj::FnObj(FnObj {
-                head: existing.head.clone(),
-                body,
-            }))
-        }
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => Some(Obj::FnObj(FnObj {
-            head: Box::new(FnObjHead::AnonymousFnLiteral(Box::new(af.clone()))),
-            body: vec![vec![Box::new(arg)]],
-        })),
-        _ => None,
     }
 }
 
@@ -692,26 +669,36 @@ fn mod_nested_divisible_absorption_multiplier<'a>(left: &'a Obj, right: &Obj) ->
     }
 }
 
-fn collect_left_assoc_add_leaves(obj: &Obj) -> Vec<Obj> {
-    match obj {
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) => {
-            let mut leaves = collect_left_assoc_add_leaves(left.as_ref());
-            leaves.push(right.as_ref().clone());
-            leaves
-        }
-        other => vec![other.clone()],
+// Peel the displayed aggregate's outer spine only. A summand or factor may
+// itself use the same arithmetic constructor and must remain one term.
+fn collect_left_assoc_add_leaves(obj: &Obj, count: usize) -> Option<Vec<Obj>> {
+    let mut terms = Vec::with_capacity(count);
+    let mut left = obj;
+    for _ in 1..count {
+        let Obj::ArithmeticOperator(ArithmeticOperator::Add(sum)) = left else {
+            return None;
+        };
+        terms.push(sum.right.as_ref().clone());
+        left = sum.left.as_ref();
     }
+    terms.push(left.clone());
+    terms.reverse();
+    Some(terms)
 }
 
-fn collect_left_assoc_mul_leaves(obj: &Obj) -> Vec<Obj> {
-    match obj {
-        Obj::ArithmeticOperator(ArithmeticOperator::Mul(Mul { left, right })) => {
-            let mut leaves = collect_left_assoc_mul_leaves(left.as_ref());
-            leaves.push(right.as_ref().clone());
-            leaves
-        }
-        other => vec![other.clone()],
+fn collect_left_assoc_mul_leaves(obj: &Obj, count: usize) -> Option<Vec<Obj>> {
+    let mut terms = Vec::with_capacity(count);
+    let mut left = obj;
+    for _ in 1..count {
+        let Obj::ArithmeticOperator(ArithmeticOperator::Mul(product)) = left else {
+            return None;
+        };
+        terms.push(product.right.as_ref().clone());
+        left = product.left.as_ref();
     }
+    terms.push(left.clone());
+    terms.reverse();
+    Some(terms)
 }
 
 #[cfg(test)]

@@ -606,3 +606,40 @@ fn eval_tuple_coordinate_evidence_and_unknown_values_stay_checked() {
         assert_eq!(rt.top_exec_env().facts.facts_by_id.len(), count);
     }
 }
+
+#[test]
+fn closed_eval_enforces_partial_operator_domains_before_evaluation() {
+    let mut runtime = Runtime::new(LaunchCommand::Eval {
+        code: String::new(),
+        session: false,
+        strict: true,
+        language: OutputLanguage::English,
+    });
+    for source in [
+        "eval 0^(-1)",
+        "eval log(-1,-1)",
+        "eval log(1,2)",
+        "eval log(2,0)",
+        "eval gcd(0,0)",
+        "eval (1/(2-2))",
+    ] {
+        assert!(
+            matches!(
+                exec_one(&mut runtime, source),
+                ExecStmtResult::Command(ExecCommandStmtResult::Eval(ExecEvalStmtResult::Failed(
+                    ExecEvalStmtFailed::WellDefined(_)
+                )))
+            ),
+            "{source}"
+        );
+        assert!(!runtime.eval_closed_numeric_source_wd);
+    }
+    for (source, expected) in [
+        ("eval log(2,8)", "3"),
+        ("eval gcd(0,5)", "5"),
+        ("eval sqrt(4)", "2"),
+    ] {
+        assert_eval_number(&mut runtime, source, expected);
+        assert!(!runtime.eval_closed_numeric_source_wd);
+    }
+}

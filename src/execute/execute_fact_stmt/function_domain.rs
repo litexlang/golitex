@@ -1031,18 +1031,25 @@ impl Runtime {
                 EqualToObjShape::FnSet,
                 EqualToObjShape::SeqSet,
                 EqualToObjShape::FiniteSeqSet,
+                EqualToObjShape::SetBuilder,
                 EqualToObjShape::Other,
             ],
         );
         for (carrier, _) in peers {
-            let signature = match &carrier {
+            // A checked result in a refined function carrier is callable on
+            // the base signature. Keep the original refined carrier as evidence.
+            let mut callable = &carrier;
+            while let Obj::SetFormer(SetFormer::SetBuilder(builder)) = callable {
+                callable = &builder.param_set;
+            }
+            let signature = match callable {
                 Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) => {
                     Some(function.body.clone())
                 }
                 Obj::ProductShape(ProductShape::Cart(cart)) => {
                     Some(self.cart_function_signature(cart))
                 }
-                _ => self.function_space_signature(&carrier),
+                _ => self.function_space_signature(callable),
             };
             if let Some(signature) = signature {
                 return Some((signature, carrier));

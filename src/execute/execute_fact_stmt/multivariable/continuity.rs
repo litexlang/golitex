@@ -272,6 +272,7 @@ impl Runtime {
                 | R::ScalarContinuousAt(_)
                 | R::VectorContinuousAt(_)
                 | R::ScalarDifferentiableAt(_)
+                | R::TotalDifferentiableAt(_)
         ) {
             return Ok(None);
         }

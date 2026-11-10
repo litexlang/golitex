@@ -330,3 +330,19 @@ fn pointwise_derivative_tests_min_max_carriers_and_safe_natural_difference() {
         true,
     );
 }
+
+#[test]
+fn inline_derivative_reuses_checked_refined_return_formation() {
+    let mut rt = runtime();
+    check(
+        &mut rt,
+        "$is_differentiable_at(fn(x R) {t R: t >= 0} {x^2},1)",
+        true,
+    );
+    check(
+        &mut rt,
+        "$has_derivative_at(fn(x R) {t R: t >= 0} {x^2},1,2)",
+        true,
+    );
+    check(&mut rt, "$is_differentiable_at(fn(x R) R {1/x},0)", false);
+}

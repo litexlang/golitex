@@ -5,6 +5,7 @@ use crate::ast::fact::{
     LessFact, NotEqualFact,
 };
 use crate::ast::line_file::SourceLine;
+use crate::ast::names::BoundName;
 use crate::ast::obj::{
     AnonymousFn, ArithmeticOperator, ComplexOperator, ExpLogOperator, FnObj, FnObjHead,
     IdentifierObj, IntegerOperator, Literal, Obj, StandardSet, TrigOperator,
@@ -14,8 +15,9 @@ use crate::ast::stmt::{
     DefAlgoByCasesStmt, DefineObjStmt, DefinitionStmt, HaveFnEqualCaseByCaseStmt, HaveFnEqualStmt,
     HaveObjEqualStmt, Stmt,
 };
+use crate::runtime::{CodeSource, IdentifierId};
 use crate::runtime::{RuntimeError, RuntimeResult};
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 pub(super) struct ExtractedProgram {
     pub(super) statements: Vec<ExtractedStatement>,
@@ -92,16 +94,16 @@ pub(super) enum ExtractedExpressionKind {
 
 pub(super) struct ProgramExtractor {
     statements: Vec<ExtractedStatement>,
-    constants: HashSet<String>,
-    functions: HashSet<String>,
+    constants: HashMap<String, String>,
+    functions: HashMap<String, String>,
 }
 
 impl ProgramExtractor {
     pub(super) fn new() -> Self {
         Self {
             statements: vec![],
-            constants: HashSet::new(),
-            functions: HashSet::new(),
+            constants: HashMap::new(),
+            functions: HashMap::new(),
         }
     }
 
@@ -145,8 +147,9 @@ impl ProgramExtractor {
             ));
         }
 
-        let params = HashSet::new();
-        for ((name, param_type), obj) in names_with_types.iter().zip(stmt.objs_equal_to.iter()) {
+        let params = HashMap::new();
+        for ((binding, param_type), obj) in names_with_types.iter().zip(stmt.objs_equal_to.iter()) {
+            let name = &binding.name;
             if matches!(param_type, ParamType::Obj(obj) if obj_has_complex_syntax(obj)) {
                 return Err(code_extraction_error(
                     &stmt.line_file,
@@ -164,7 +167,8 @@ impl ProgramExtractor {
                     value,
                     line_file: stmt.line_file.clone(),
                 }));
-            self.constants.insert(name.clone());
+            self.constants
+                .insert(declaration_key(binding, &stmt.line_file), name.clone());
         }
         Ok(())
     }
@@ -179,7 +183,36 @@ impl ProgramExtractor {
             &stmt.line_file,
         )?;
 
-        let params = collect_set_bound_param_names(&stmt.fn_set_clause.set_bound_parameters);
+        let bindings: Vec<_> = stmt
+            .fn_set_clause
+            .set_bound_parameters
+            .groups
+            .iter()
+            .flat_map(|group| &group.params)
+            .collect();
+        let globals: HashSet<_> = self
+            .constants
+            .values()
+            .chain(self.functions.values())
+            .chain(std::iter::once(&stmt.name.name))
+            .cloned()
+            .collect();
+        let mut reserved = globals.clone();
+        reserved.extend(bindings.iter().map(|binding| binding.name.clone()));
+        let mut params = Vec::new();
+        let mut params_in_scope = HashMap::new();
+        for binding in bindings {
+            let mut name = binding.name.clone();
+            if globals.contains(&name) {
+                name.push_str("_arg");
+                while reserved.contains(&name) {
+                    name.push('_');
+                }
+            }
+            reserved.insert(name.clone());
+            params_in_scope.insert(binding.id, name.clone());
+            params.push(name);
+        }
         if stmt.cases.is_empty() {
             return Err(code_extraction_error(
                 &stmt.line_file,
@@ -199,8 +232,10 @@ impl ProgramExtractor {
             ));
         }
 
-        let params_in_scope = params.iter().cloned().collect::<HashSet<String>>();
-        self.functions.insert(stmt.name.name.clone());
+        self.functions.insert(
+            declaration_key(&stmt.name, &stmt.line_file),
+            stmt.name.name.clone(),
+        );
         let mut cases = vec![];
         for (case, value) in stmt.cases.iter().zip(stmt.equal_tos.iter()) {
             cases.push(ExtractedCase {
@@ -220,7 +255,12 @@ impl ProgramExtractor {
     }
 
     fn require_available_name(&self, name: &str, line_file: &SourceLine) -> RuntimeResult<()> {
-        if self.constants.contains(name) || self.functions.contains(name) {
+        if self
+            .constants
+            .values()
+            .chain(self.functions.values())
+            .any(|existing| existing == name)
+        {
             return Err(code_extraction_error(
                 line_file,
                 format!("duplicate extracted name `{name}`: repository extraction uses one flat namespace; choose distinct exported constant and algorithm names"),
@@ -232,7 +272,7 @@ impl ProgramExtractor {
     fn extract_case_condition(
         &self,
         case: &AndChainAtomicFact,
-        params: &HashSet<String>,
+        params: &HashMap<IdentifierId, String>,
         line_file: &SourceLine,
     ) -> RuntimeResult<ExtractedCondition> {
         match case {
@@ -249,7 +289,7 @@ impl ProgramExtractor {
     fn extract_condition(
         &self,
         fact: &AtomicFact,
-        params: &HashSet<String>,
+        params: &HashMap<IdentifierId, String>,
         fallback_line: &SourceLine,
     ) -> RuntimeResult<ExtractedCondition> {
         let (left, operator, right, line_file) = match fact {
@@ -339,7 +379,7 @@ impl ProgramExtractor {
     fn extract_expression(
         &self,
         obj: &Obj,
-        params: &HashSet<String>,
+        params: &HashMap<IdentifierId, String>,
         line_file: &SourceLine,
     ) -> RuntimeResult<ExtractedExpression> {
         let kind = match obj {
@@ -514,7 +554,7 @@ impl ProgramExtractor {
         &self,
         left: &Obj,
         right: &Obj,
-        params: &HashSet<String>,
+        params: &HashMap<IdentifierId, String>,
         line_file: &SourceLine,
         constructor: fn(
             Box<ExtractedExpression>,
@@ -530,24 +570,18 @@ impl ProgramExtractor {
     fn extract_identifier(
         &self,
         identifier: &IdentifierObj,
-        params: &HashSet<String>,
+        params: &HashMap<IdentifierId, String>,
         line_file: &SourceLine,
     ) -> RuntimeResult<ExtractedExpressionKind> {
-        let name = match identifier {
-            IdentifierObj::Plain { name, .. } => name.as_str(),
-            _ => {
-                return Err(code_extraction_error(
-                    line_file,
-                    format!(
-                        "code extractor v1 cannot translate qualified name `{}`",
-                        identifier.display_string()
-                    ),
-                ));
+        if let IdentifierObj::Plain { id, .. } = identifier {
+            if let Some(name) = params.get(id) {
+                return Ok(ExtractedExpressionKind::Name(name.clone()));
             }
-        };
-        if params.contains(name) || self.constants.contains(name) {
-            return Ok(ExtractedExpressionKind::Name(name.to_string()));
         }
+        if let Some(name) = self.constants.get(&identifier.ir_string()) {
+            return Ok(ExtractedExpressionKind::Name(name.clone()));
+        }
+        let name = identifier.display_string();
         Err(code_extraction_error(
             line_file,
             format!(
@@ -560,7 +594,7 @@ impl ProgramExtractor {
     fn extract_function_call(
         &self,
         function: &FnObj,
-        params: &HashSet<String>,
+        params: &HashMap<IdentifierId, String>,
         line_file: &SourceLine,
     ) -> RuntimeResult<ExtractedExpressionKind> {
         if function.body.len() != 1 {
@@ -572,27 +606,21 @@ impl ProgramExtractor {
                 ),
             ));
         }
-        let name = match function.head.as_ref() {
-            FnObjHead::Identifier(IdentifierObj::Plain { name, .. }) => name.as_str(),
-            _ => {
-                return Err(code_extraction_error(
-                    line_file,
-                    format!(
-                        "code extractor v1 supports calls only to named extracted functions; got `{}`",
-                        Obj::FnObj(function.clone()).readable_string()
-                    ),
-                ));
-            }
+        let FnObjHead::Identifier(identifier) = function.head.as_ref() else {
+            return Err(code_extraction_error(
+                line_file,
+                "code extractor v1 supports calls only to named extracted functions",
+            ));
         };
-        if !self.functions.contains(name) {
+        let Some(name) = self.functions.get(&identifier.ir_string()) else {
             return Err(code_extraction_error(
                 line_file,
                 format!(
                     "code extractor v1 cannot call `{}` because it has not been extracted earlier",
-                    name
+                    identifier.display_string()
                 ),
             ));
-        }
+        };
         let args = function.body[0]
             .iter()
             .map(|arg| self.extract_expression(arg.as_ref(), params, line_file))
@@ -760,21 +788,11 @@ fn is_numeric_set_obj(obj: &Obj) -> bool {
     )
 }
 
-fn collect_typed_param_names_with_types(list: &TypedParameterList) -> Vec<(String, ParamType)> {
+fn collect_typed_param_names_with_types(list: &TypedParameterList) -> Vec<(BoundName, ParamType)> {
     let mut out = Vec::new();
     for group in &list.groups {
         for param in &group.params {
-            out.push((param.name.clone(), group.param_type.clone()));
-        }
-    }
-    out
-}
-
-fn collect_set_bound_param_names(list: &SetBoundParameterList) -> Vec<String> {
-    let mut out = Vec::new();
-    for group in &list.groups {
-        for param in &group.params {
-            out.push(param.name.clone());
+            out.push((param.clone(), group.param_type.clone()));
         }
     }
     out
@@ -791,71 +809,184 @@ fn contains_unqualified_function_call(rendered: &str, name: &str) -> bool {
 }
 
 fn anonymous_fn_has_complex_syntax(anon: &AnonymousFn) -> bool {
-    obj_has_complex_syntax(anon.equal_to.as_ref())
-        || anon
-            .body
-            .set_bound_parameters
-            .groups
-            .iter()
-            .any(|g| obj_has_complex_syntax(g.param_type.as_ref()))
-        || obj_has_complex_syntax(anon.body.ret_set.as_ref())
+    fn_set_has_complex_syntax(&anon.body) || obj_has_complex_syntax(&anon.equal_to)
 }
 
 fn fact_has_complex_syntax(fact: &Fact) -> bool {
-    fact.readable_string().contains('i') && obj_text_suggests_complex(&fact.readable_string())
+    use crate::ast::fact::Fact::*;
+    match fact {
+        AtomicFact(fact) => crate::ast::fact::atomic_fact_args_ref(fact)
+            .into_iter()
+            .any(obj_has_complex_syntax),
+        AndFact(fact) => fact.facts.iter().any(|fact| {
+            crate::ast::fact::atomic_fact_args_ref(fact)
+                .into_iter()
+                .any(obj_has_complex_syntax)
+        }),
+        ChainFact(fact) => fact.objs.iter().any(obj_has_complex_syntax),
+        OrFact(fact) => fact.facts.iter().any(|branch| match branch {
+            AndChainAtomicFact::AtomicFact(fact) => {
+                fact_has_complex_syntax(&Fact::AtomicFact(fact.clone()))
+            }
+            AndChainAtomicFact::AndFact(fact) => {
+                fact_has_complex_syntax(&Fact::AndFact(fact.clone()))
+            }
+            AndChainAtomicFact::ChainFact(fact) => {
+                fact_has_complex_syntax(&Fact::ChainFact(fact.clone()))
+            }
+        }),
+        ExistFact(fact) | ExistUniqueFact(fact) | NotExistFact(fact) => {
+            typed_parameters_have_complex_syntax(&fact.typed_parameters)
+                || fact.facts.iter().any(qf_has_complex_syntax)
+        }
+        ForallFact(fact) => forall_has_complex_syntax(fact),
+        ForallFactWithIff(fact) => {
+            forall_has_complex_syntax(&fact.forall_fact)
+                || fact
+                    .iff_facts
+                    .iter()
+                    .any(|fact| fact_has_complex_syntax(&fact.clone().into()))
+        }
+        NotForall(fact) => {
+            typed_parameters_have_complex_syntax(&fact.typed_parameters)
+                || fact
+                    .dom_facts
+                    .iter()
+                    .chain(&fact.then_facts)
+                    .any(qf_has_complex_syntax)
+        }
+    }
 }
 
-fn obj_text_suggests_complex(text: &str) -> bool {
-    text.contains("C_abs")
-        || text.contains("re(")
-        || text.contains("img(")
-        || text.contains(" $in C")
-        || text.contains("C*")
+fn qf_has_complex_syntax(fact: &crate::ast::fact::QuantifierFreeFact) -> bool {
+    fact_has_complex_syntax(&crate::instantiate::quantifier_free_fact_to_fact(
+        fact.clone(),
+    ))
+}
+
+fn forall_has_complex_syntax(fact: &crate::ast::fact::ForallFact) -> bool {
+    typed_parameters_have_complex_syntax(&fact.typed_parameters)
+        || fact.dom_facts.iter().any(fact_has_complex_syntax)
+        || fact
+            .then_facts
+            .iter()
+            .any(|fact| fact_has_complex_syntax(&fact.clone().into()))
+}
+
+fn typed_parameters_have_complex_syntax(parameters: &TypedParameterList) -> bool {
+    parameters.groups.iter().any(|group| {
+        matches!(&group.param_type,
+        ParamType::Obj(obj) if obj_has_complex_syntax(obj))
+    })
+}
+
+fn fn_set_has_complex_syntax(signature: &crate::ast::obj::FnSet) -> bool {
+    signature
+        .set_bound_parameters
+        .groups
+        .iter()
+        .any(|group| obj_has_complex_syntax(&group.param_type))
+        || signature.dom_facts.iter().any(qf_has_complex_syntax)
+        || obj_has_complex_syntax(&signature.ret_set)
 }
 
 fn obj_has_complex_syntax(obj: &Obj) -> bool {
+    use crate::ast::obj::{FunctionSpace, SetFormer, StructAndFieldAccessObj};
     match obj {
-        Obj::Literal(Literal::ImaginaryUnit(_)) => true,
-        Obj::StandardSet(StandardSet::C | StandardSet::CStar) => true,
-        Obj::ComplexOperator(_) => true,
-        Obj::ArithmeticOperator(ArithmeticOperator::Add(v)) => {
-            obj_has_complex_syntax(&v.left) || obj_has_complex_syntax(&v.right)
+        Obj::Literal(Literal::ImaginaryUnit(_))
+        | Obj::StandardSet(StandardSet::C | StandardSet::CStar)
+        | Obj::ComplexOperator(_) => true,
+        Obj::Identifier(_) | Obj::Literal(_) | Obj::StandardSet(_) => false,
+        Obj::FunctionSpace(FunctionSpace::FnSet(signature)) => fn_set_has_complex_syntax(signature),
+        Obj::FunctionSpace(FunctionSpace::AnonymousFn(function)) =>
+            fn_set_has_complex_syntax(&function.body) || obj_has_complex_syntax(&function.equal_to),
+        Obj::SetFormer(SetFormer::SetBuilder(builder)) =>
+            obj_has_complex_syntax(&builder.param_set) || builder.facts.iter().any(qf_has_complex_syntax),
+        Obj::InstantiatedTemplateObj(instance) => instance.args.iter().any(obj_has_complex_syntax),
+        Obj::FnObj(function) => {
+            let head = match function.head.as_ref() {
+                FnObjHead::Identifier(identifier) => Obj::Identifier(identifier.clone()),
+                FnObjHead::AnonymousFnLiteral(function) => Obj::FunctionSpace(
+                    FunctionSpace::AnonymousFn(function.as_ref().clone())),
+                FnObjHead::FieldAccess(field) => Obj::StructAndFieldAccessObj(
+                    StructAndFieldAccessObj::FieldAccess(field.clone())),
+                FnObjHead::InstantiatedTemplateObj(instance) => Obj::InstantiatedTemplateObj(instance.clone()),
+                FnObjHead::Object(obj) => obj.as_ref().clone(),
+            };
+            obj_has_complex_syntax(&head) || function.body.iter().flatten()
+                .any(|arg| obj_has_complex_syntax(arg))
         }
-        Obj::ArithmeticOperator(ArithmeticOperator::Sub(v)) => {
-            obj_has_complex_syntax(&v.left) || obj_has_complex_syntax(&v.right)
+        Obj::MatrixOperator(_) | Obj::BoundOperator(_) | Obj::IntegralOperator(_)
+        | Obj::DerivativeOperator(_) | Obj::ArithmeticOperator(_) | Obj::IntegerOperator(_)
+        | Obj::TrigOperator(_) | Obj::HyperbolicOperator(_) | Obj::LimitOperator(_)
+        | Obj::ExpLogOperator(_) | Obj::SetOperator(_) | Obj::SetFormer(_)
+        | Obj::ProductShape(_) | Obj::FunctionSpace(_) | Obj::IteratedOperator(_)
+        | Obj::FiniteSetStat(_) | Obj::StructAndFieldAccessObj(_) => {
+            crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::helper::corresponding_arg_pairs(obj, obj)
+                .unwrap_or_default().into_iter().any(|(child, _)| obj_has_complex_syntax(&child))
         }
-        Obj::ArithmeticOperator(ArithmeticOperator::Mul(v)) => {
-            obj_has_complex_syntax(&v.left) || obj_has_complex_syntax(&v.right)
+    }
+}
+
+/// Keep publication identity in the lookup key while retaining the public
+/// extracted spelling in the flat target-language namespace.
+fn declaration_key(binding: &BoundName, source: &SourceLine) -> String {
+    let identifier = match &source.origin {
+        CodeSource::RootExport { export_file_id, .. } => {
+            IdentifierObj::with_export_file_id(*export_file_id, binding.name.clone())
         }
-        Obj::ArithmeticOperator(ArithmeticOperator::Div(v)) => {
-            obj_has_complex_syntax(&v.left) || obj_has_complex_syntax(&v.right)
+        CodeSource::ImportedExport {
+            global_mod_id,
+            export_file_id,
+            ..
+        } => IdentifierObj::with_mod_and_export_file_id(
+            *global_mod_id,
+            *export_file_id,
+            binding.name.clone(),
+        ),
+        CodeSource::Eval | CodeSource::Repl | CodeSource::Real(_) => {
+            IdentifierObj::from_bound_name(binding)
         }
-        Obj::ArithmeticOperator(ArithmeticOperator::Pow(v)) => {
-            obj_has_complex_syntax(&v.base) || obj_has_complex_syntax(&v.exponent)
+    };
+    identifier.ir_string()
+}
+
+#[cfg(test)]
+mod syntax_tests {
+    use super::*;
+    use crate::prelude::*;
+
+    #[test]
+    fn complex_detection_traverses_fact_operands_and_elementary_operators() {
+        let mut runtime = Runtime::new(LaunchCommand::Eval {
+            code: String::new(),
+            session: false,
+            strict: true,
+            language: OutputLanguage::English,
+        });
+        for source in [
+            "i=i",
+            "re(i)=0",
+            "C_abs(i)>=0",
+            "exp(i)=exp(i)",
+            "sin(i)=sin(i)",
+        ] {
+            let tokens = crate::tokenize::Tokenizer::new()
+                .tokenize(source, runtime.current_file.clone())
+                .unwrap();
+            let Stmt::Fact(fact) = runtime.parse(&tokens).unwrap().remove(0) else {
+                panic!("fact")
+            };
+            assert!(fact_has_complex_syntax(&fact), "{source}");
         }
-        Obj::ArithmeticOperator(ArithmeticOperator::Neg(v)) => obj_has_complex_syntax(&v.arg),
-        Obj::ArithmeticOperator(ArithmeticOperator::Abs(v)) => obj_has_complex_syntax(&v.arg),
-        Obj::ArithmeticOperator(ArithmeticOperator::Floor(v)) => obj_has_complex_syntax(&v.arg),
-        Obj::ArithmeticOperator(ArithmeticOperator::Ceil(v)) => obj_has_complex_syntax(&v.arg),
-        Obj::ArithmeticOperator(ArithmeticOperator::Sign(v)) => obj_has_complex_syntax(&v.arg),
-        Obj::ArithmeticOperator(ArithmeticOperator::Min(v)) => {
-            obj_has_complex_syntax(&v.left) || obj_has_complex_syntax(&v.right)
+        for source in ["1=1", "exp(1)=exp(1)", "sin(0)=sin(0)"] {
+            let tokens = crate::tokenize::Tokenizer::new()
+                .tokenize(source, runtime.current_file.clone())
+                .unwrap();
+            let Stmt::Fact(fact) = runtime.parse(&tokens).unwrap().remove(0) else {
+                panic!("fact")
+            };
+            assert!(!fact_has_complex_syntax(&fact), "{source}");
         }
-        Obj::ArithmeticOperator(ArithmeticOperator::Max(v)) => {
-            obj_has_complex_syntax(&v.left) || obj_has_complex_syntax(&v.right)
-        }
-        Obj::FnObj(f) => {
-            f.body
-                .iter()
-                .flatten()
-                .any(|arg| obj_has_complex_syntax(arg.as_ref()))
-                || match f.head.as_ref() {
-                    FnObjHead::AnonymousFnLiteral(anon) => {
-                        anonymous_fn_has_complex_syntax(anon.as_ref())
-                    }
-                    _ => false,
-                }
-        }
-        _ => false,
     }
 }

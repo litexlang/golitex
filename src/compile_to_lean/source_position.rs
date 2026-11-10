@@ -13232,7 +13232,9 @@ fn atomic_searched_stages(
             let p = &proof.expression;
             complete_domain_source_stages(&p.function_domain, &mut stages);
             multivariable_interior_search_stages(&p.geometry, &mut stages);
-            stages.push(AtomicSearchStage::WD(&p.body_well_defined));
+            if let crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof::IndependentlyChecked(wd) = &p.body_well_defined {
+                stages.push(AtomicSearchStage::WD(wd));
+            }
             for coordinate in &p.coordinates {
                 joint_expression_search_stages(&coordinate.expression, &mut stages);
             }
@@ -13243,7 +13245,9 @@ fn atomic_searched_stages(
         )) => {
             complete_domain_source_stages(&p.function_domain, &mut stages);
             multivariable_interior_search_stages(&p.geometry, &mut stages);
-            stages.push(AtomicSearchStage::WD(&p.body_well_defined));
+            if let crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof::IndependentlyChecked(wd) = &p.body_well_defined {
+                stages.push(AtomicSearchStage::WD(wd));
+            }
             for (i,coordinate) in p.coordinates.iter().enumerate() {
                 joint_expression_search_stages(&coordinate.expression,&mut stages);
                 if let Some(conclusion)=p.conclusion_equalities.get(i) {stages.push(AtomicSearchStage::Verify(&conclusion.equality));}
@@ -13255,7 +13259,9 @@ fn atomic_searched_stages(
             let p = &p.stages;
             complete_domain_source_stages(&p.function_domain, &mut stages);
             multivariable_interior_search_stages(&p.geometry, &mut stages);
-            stages.push(AtomicSearchStage::WD(&p.body_well_defined));
+            if let crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof::IndependentlyChecked(wd) = &p.body_well_defined {
+                stages.push(AtomicSearchStage::WD(wd));
+            }
             for coordinate in &p.coordinates {
                 smooth_coordinate_search_stages(&coordinate.first, &mut stages);
                 if let Some(second) = &coordinate.second { smooth_coordinate_search_stages(second, &mut stages); }
@@ -13266,7 +13272,9 @@ fn atomic_searched_stages(
             complete_domain_source_stages(&p.domain.source,&mut stages);
             stages.push(AtomicSearchStage::Verify(&p.domain.input_real));
             stages.push(AtomicSearchStage::Verify(&p.domain.output_real));
-            stages.push(AtomicSearchStage::WD(&p.body_well_defined));
+            if let crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof::IndependentlyChecked(wd) = &p.body_well_defined {
+                stages.push(AtomicSearchStage::WD(wd));
+            }
             derivative_interior_search_stages(&p.interior,&mut stages);
             derivative_expression_search_stages(&p.expression,&mut stages);
             if let crate::execute::execute_fact_stmt::pointwise_derivative::DerivativeConclusionProof::Candidate(proof)=&p.conclusion{

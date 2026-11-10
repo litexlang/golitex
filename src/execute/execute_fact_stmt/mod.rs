@@ -5,6 +5,7 @@
 pub(crate) mod antiderivative;
 mod exec_fact_stmt;
 pub(crate) mod finite_function;
+pub(crate) mod fold;
 pub(crate) mod function_composition;
 pub(crate) mod function_derivative;
 pub(crate) mod function_domain;

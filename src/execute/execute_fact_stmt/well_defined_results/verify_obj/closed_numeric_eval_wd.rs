@@ -176,12 +176,9 @@ impl Runtime {
                     .closed_numeric_nonzero_divisor_requirement(v.right.as_ref(), verify_state)?;
                 Ok(self.with_requirements(proof, vec![req]))
             }
-            Obj::ArithmeticOperator(ArithmeticOperator::Pow(v)) => self
-                .verify_binary_obj_well_definedness_by_def(
-                    v.base.as_ref(),
-                    v.exponent.as_ref(),
-                    verify_state,
-                ),
+            Obj::ArithmeticOperator(ArithmeticOperator::Pow(v)) => {
+                self.verify_pow_obj_well_definedness_by_def(v, verify_state)
+            }
             Obj::IntegerOperator(IntegerOperator::Mod(v)) => {
                 let proof = self.verify_binary_obj_well_definedness_by_def(
                     v.left.as_ref(),
@@ -202,12 +199,9 @@ impl Runtime {
                     .closed_numeric_nonzero_divisor_requirement(v.right.as_ref(), verify_state)?;
                 Ok(self.with_requirements(proof, vec![req]))
             }
-            Obj::IntegerOperator(IntegerOperator::Gcd(v)) => self
-                .verify_binary_obj_well_definedness_by_def(
-                    v.left.as_ref(),
-                    v.right.as_ref(),
-                    verify_state,
-                ),
+            Obj::IntegerOperator(IntegerOperator::Gcd(v)) => {
+                self.verify_gcd_obj_well_definedness_by_def(v, verify_state)
+            }
             Obj::IntegerOperator(IntegerOperator::Lcm(v)) => self
                 .verify_binary_obj_well_definedness_by_def(
                     v.left.as_ref(),
@@ -226,19 +220,18 @@ impl Runtime {
                     self.closed_numeric_nonnegative_sqrt_requirement(v.arg.as_ref(), verify_state)?;
                 Ok(self.with_requirements(proof, vec![req]))
             }
-            Obj::ExpLogOperator(ExpLogOperator::Log(v)) => self
-                .verify_binary_obj_well_definedness_by_def(
-                    v.base.as_ref(),
-                    v.arg.as_ref(),
-                    verify_state,
-                ),
+            Obj::ExpLogOperator(ExpLogOperator::Log(v)) => {
+                self.verify_log_obj_well_definedness_by_def(v, verify_state)
+            }
             Obj::ExpLogOperator(ExpLogOperator::Exp(v)) => {
                 self.verify_unary_obj_well_definedness_by_def(v.arg.as_ref(), verify_state)
             }
             Obj::ExpLogOperator(ExpLogOperator::Ln(v)) => {
-                self.verify_unary_obj_well_definedness_by_def(v.arg.as_ref(), verify_state)
+                self.verify_ln_obj_well_definedness_by_def(v, verify_state)
             }
-            _ => Ok(ObjWellDefinedByDefCommonStages::leaf(self.result_detail())),
+            _ => Err(crate::runtime::RuntimeError::InternalBug(
+                "closed-numeric classification has no matching WD constructor".into(),
+            )),
         }
     }
 

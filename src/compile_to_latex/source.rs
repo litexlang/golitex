@@ -92,6 +92,10 @@ fn prepare_modules(runtime: &mut Runtime, root: &Path) -> RuntimeResult<LitexCon
         &mut active,
         &mut done,
     )?;
+    runtime
+        .global_module_manager
+        .validate_alias_targets(&config)
+        .map_err(RuntimeError::Unsupported)?;
     Ok(config)
 }
 

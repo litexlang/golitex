@@ -165,18 +165,10 @@ fn plain_id(obj: &Obj) -> Option<IdentifierId> {
     }
 }
 
-// Soft miss if the free side can mention the witness. Numbers and other plain
-// identifiers are allowed; richer shapes are rejected (conservative).
+// The witness can occur inside any constructor. Use the shared binder-aware
+// traversal so independent composite values and qualified names remain usable.
 fn obj_mentions_id(obj: &Obj, id: IdentifierId) -> bool {
-    match obj {
-        Obj::Identifier(IdentifierObj::Plain { id: plain, .. }) => *plain == id,
-        Obj::Literal(Literal::Number(_))
-        | Obj::StandardSet(_)
-        | Obj::Literal(Literal::Pi(_))
-        | Obj::Literal(Literal::EulerNumber(_))
-        | Obj::Literal(Literal::ImaginaryUnit(_)) => false,
-        _ => true,
-    }
+    obj_depends_on_ids(obj, &[id])
 }
 
 // True when `obj` free-mentions any of the given binder ids.

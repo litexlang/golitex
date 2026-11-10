@@ -1,6 +1,8 @@
 //! Bounded smooth-expression calculus, outside selector WD.
 //! Smooth constructors supply full differentiability; partials alone never do.
-use super::super::function_domain::{function_domains_alpha_equal, CompleteFunctionDomainProof};
+use super::super::function_domain::{
+    function_domains_alpha_equal, CheckedFunctionBodyProof, CompleteFunctionDomainProof,
+};
 use super::super::well_defined_results::verify_obj::*;
 use super::expression::*;
 use super::helper::*;
@@ -33,7 +35,7 @@ pub struct ContinuousMultivariableProof {
     pub function_domain: Box<CompleteFunctionDomainProof>,
     pub body: AnonymousFn,
     pub body_equal: KnownEqualityPathProof,
-    pub body_well_defined: Box<ObjWellDefinedProof>,
+    pub body_well_defined: CheckedFunctionBodyProof,
     pub geometry: MultivariableInteriorProof,
     pub coordinates: Vec<super::continuity::ContinuousMultivariableCoordinateProof>,
     pub conclusion_equalities: Vec<MultivariableReducedEqualityProof>,
@@ -43,7 +45,7 @@ pub struct CoordinateProjectionDifferentiableProof {
     pub function_domain: Box<CompleteFunctionDomainProof>,
     pub body: AnonymousFn,
     pub body_equal: KnownEqualityPathProof,
-    pub body_well_defined: Box<ObjWellDefinedProof>,
+    pub body_well_defined: CheckedFunctionBodyProof,
     pub geometry: MultivariableInteriorProof,
     pub index: Obj,
     pub index_member: Box<VerifyFactResult>,
@@ -105,7 +107,7 @@ pub struct SmoothMultivariableStages {
     pub function_domain: Box<CompleteFunctionDomainProof>,
     pub body: AnonymousFn,
     pub body_equal: KnownEqualityPathProof,
-    pub body_well_defined: Box<ObjWellDefinedProof>,
+    pub body_well_defined: CheckedFunctionBodyProof,
     pub geometry: MultivariableInteriorProof,
     pub coordinates: Vec<MultivariableCoordinateProof>,
     pub conclusion_equalities: Vec<MultivariableReducedEqualityProof>,
@@ -389,10 +391,18 @@ impl Runtime {
             if parameters.len() != 1 {
                 continue;
             }
-            let VerifyObjWellDefinedResult::Success(body_well_defined) =
-                self.verify_obj_well_definedness(&literal, state)?
-            else {
-                continue;
+            let body_well_defined = match self.verify_obj_well_definedness(&literal, state)? {
+                VerifyObjWellDefinedResult::Success(proof) => {
+                    CheckedFunctionBodyProof::IndependentlyChecked(Box::new(proof))
+                }
+                VerifyObjWellDefinedResult::Failed { .. } => {
+                    let Some(proof) =
+                        self.checked_function_body_well_definedness(function, &literal, state)?
+                    else {
+                        continue;
+                    };
+                    proof
+                }
             };
             if let Some((coordinates, conclusion_equalities)) = self
                 .prove_continuous_multivariable_body(
@@ -407,6 +417,7 @@ impl Runtime {
                 let differentiable = matches!(
                     relation,
                     MultivariableAnalysisRelation::ScalarDifferentiableAt(_)
+                        | MultivariableAnalysisRelation::TotalDifferentiableAt(_)
                 );
                 let mut smooth_domains = Vec::new();
                 if differentiable {
@@ -427,7 +438,7 @@ impl Runtime {
                     function_domain: Box::new(source),
                     body: body.clone(),
                     body_equal: KnownEqualityPathProof::new(path),
-                    body_well_defined: Box::new(body_well_defined),
+                    body_well_defined,
                     geometry,
                     coordinates,
                     conclusion_equalities,
@@ -460,7 +471,7 @@ impl Runtime {
                                     function_domain: Box::new(source),
                                     body: body.clone(),
                                     body_equal: KnownEqualityPathProof::new(path),
-                                    body_well_defined: Box::new(body_well_defined),
+                                    body_well_defined,
                                     geometry,
                                     index: index.clone(),
                                     index_member: Box::new(index_member),
@@ -480,7 +491,7 @@ impl Runtime {
                 function_domain: Box::new(source),
                 body: body.clone(),
                 body_equal: KnownEqualityPathProof::new(path),
-                body_well_defined: Box::new(body_well_defined),
+                body_well_defined,
                 geometry,
                 coordinates,
                 conclusion_equalities,

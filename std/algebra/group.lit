@@ -644,3 +644,131 @@ thm self_inverse_implies_square_identity:
             G.mul(a,a)=G.one
     G.mul(a,G.inv(a))=G.one
     G.mul(a,a)=G.mul(a,G.inv(a))=G.one
+
+# Left actions on points and on subsets.
+
+prop is_left_group_action(A nonempty_set, G &Group<A>, X set, act fn(g A, x X) X):
+    forall x X:
+        act(G.one, x) = x
+    forall g, h A, x X:
+        act(G.mul(g, h), x) = act(g, act(h, x))
+
+template<A nonempty_set, G &Group<A>>:
+    have fn group_conjugate(g, x A) A = G.mul(G.mul(g, x), G.inv(g))
+
+template<A nonempty_set, G &Group<A>>:
+    have fn left_translate_subset(g A, S power_set(A)) power_set(A) = fn_range(fn(x S) A {G.mul(g,x)})
+
+thm left_multiplication_is_action:
+    ? forall A nonempty_set, G &Group<A>:
+        $is_left_group_action(A, G, A, G.mul)
+    by def $is_left_group_action(A, G, A, G.mul)
+
+thm conjugation_is_action:
+    ? forall A nonempty_set, G &Group<A>:
+        $is_left_group_action(A, G, A, \group_conjugate<A,G>)
+    release thm inverse_identity(A,G)
+    claim:
+        ? forall x A:
+            \group_conjugate<A,G>(G.one, x) = x
+        G.mul(G.one,x) = x
+        G.mul(x,G.one) = x
+        \group_conjugate<A,G>(G.one,x) = G.mul(G.mul(G.one,x),G.inv(G.one)) = G.mul(x,G.one) = x
+    claim:
+        ? forall g, h, x A:
+            \group_conjugate<A,G>(G.mul(g,h),x) = \group_conjugate<A,G>(g,\group_conjugate<A,G>(h,x))
+        release thm inverse_product(A,G,g,h)
+        G.mul(G.mul(g,h),x) = G.mul(g,G.mul(h,x))
+        \group_conjugate<A,G>(h,x) = G.mul(G.mul(h,x),G.inv(h))
+        G.mul(G.mul(g,G.mul(h,x)),G.inv(h)) = G.mul(g,G.mul(G.mul(h,x),G.inv(h)))
+        \group_conjugate<A,G>(G.mul(g,h),x) = G.mul(G.mul(G.mul(g,h),x),G.inv(G.mul(g,h))) = G.mul(G.mul(g,G.mul(h,x)),G.mul(G.inv(h),G.inv(g))) = G.mul(G.mul(G.mul(g,G.mul(h,x)),G.inv(h)),G.inv(g)) = G.mul(G.mul(g,G.mul(G.mul(h,x),G.inv(h))),G.inv(g)) = G.mul(G.mul(g,\group_conjugate<A,G>(h,x)),G.inv(g)) = \group_conjugate<A,G>(g,\group_conjugate<A,G>(h,x))
+    by def $is_left_group_action(A, G, A, \group_conjugate<A,G>)
+
+thm subset_left_translation_identity:
+    ? forall A nonempty_set, G &Group<A>, S power_set(A):
+        \left_translate_subset<A,G>(G.one,S) = S
+    \left_translate_subset<A,G>(G.one,S) = fn_range(fn(t S) A {G.mul(G.one,t)})
+    by extension:
+        ? fn_range(fn(t S) A {G.mul(G.one,t)}) = S
+        claim:
+            ? forall y fn_range(fn(t S) A {G.mul(G.one,t)}):
+                y $in S
+            have by fn_preimage: x from y $in fn_range(fn(t S) A {G.mul(G.one,t)})
+            y = fn(t S) A {G.mul(G.one,t)}(x) = G.mul(G.one,x) = x
+        claim:
+            ? forall x S:
+                x $in fn_range(fn(t S) A {G.mul(G.one,t)})
+            fn(t S) A {G.mul(G.one,t)}(x) = G.mul(G.one,x) = x
+            fn(t S) A {G.mul(G.one,t)}(x) $in fn_range(fn(t S) A {G.mul(G.one,t)})
+
+thm subset_left_translation_preimage:
+    ? forall A nonempty_set, G &Group<A>, g, y A, S power_set(A):
+        y $in \left_translate_subset<A,G>(g,S)
+        =>:
+            G.mul(G.inv(g),y) $in S
+    \left_translate_subset<A,G>(g,S) = fn_range(fn(t S) A {G.mul(g,t)})
+    \left_translate_subset<A,G>(g,S) $subset fn_range(fn(t S) A {G.mul(g,t)})
+    y $in fn_range(fn(t S) A {G.mul(g,t)})
+    have by fn_preimage: x from y $in fn_range(fn(t S) A {G.mul(g,t)})
+    y = fn(t S) A {G.mul(g,t)}(x) = G.mul(g,x)
+    G.mul(G.inv(g),g) = G.one
+    G.mul(G.inv(g),y) = G.mul(G.inv(g),G.mul(g,x)) = G.mul(G.mul(G.inv(g),g),x) = G.mul(G.one,x) = x
+
+thm subset_left_translation_member:
+    ? forall A nonempty_set, G &Group<A>, g, y A, S power_set(A):
+        G.mul(G.inv(g),y) $in S
+        =>:
+            y $in \left_translate_subset<A,G>(g,S)
+    G.mul(g,G.inv(g)) = G.one
+    G.mul(g,G.mul(G.inv(g),y)) = G.mul(G.mul(g,G.inv(g)),y) = G.mul(G.one,y) = y
+    fn(t S) A {G.mul(g,t)}(G.mul(G.inv(g),y)) = G.mul(g,G.mul(G.inv(g),y)) = y
+    fn(t S) A {G.mul(g,t)}(G.mul(G.inv(g),y)) $in fn_range(fn(t S) A {G.mul(g,t)})
+    y $in fn_range(fn(t S) A {G.mul(g,t)})
+    \left_translate_subset<A,G>(g,S) = fn_range(fn(t S) A {G.mul(g,t)})
+    fn_range(fn(t S) A {G.mul(g,t)}) $subset \left_translate_subset<A,G>(g,S)
+
+thm subset_left_translation_composition:
+    ? forall A nonempty_set, G &Group<A>, g, h A, S power_set(A):
+        \left_translate_subset<A,G>(G.mul(g,h),S) = \left_translate_subset<A,G>(g,\left_translate_subset<A,G>(h,S))
+    release thm inverse_product(A,G,g,h)
+    claim:
+        ? forall y A:
+            G.mul(G.inv(G.mul(g,h)),y) = G.mul(G.inv(h),G.mul(G.inv(g),y))
+        G.mul(G.inv(G.mul(g,h)),y) = G.mul(G.mul(G.inv(h),G.inv(g)),y) = G.mul(G.inv(h),G.mul(G.inv(g),y))
+    \left_translate_subset<A,G>(G.mul(g,h),S) $in power_set(A)
+    \left_translate_subset<A,G>(G.mul(g,h),S) $subset A
+    \left_translate_subset<A,G>(g,\left_translate_subset<A,G>(h,S)) $in power_set(A)
+    \left_translate_subset<A,G>(g,\left_translate_subset<A,G>(h,S)) $subset A
+    by extension:
+        ? \left_translate_subset<A,G>(G.mul(g,h),S) = \left_translate_subset<A,G>(g,\left_translate_subset<A,G>(h,S))
+        claim:
+            ? forall y \left_translate_subset<A,G>(G.mul(g,h),S):
+                y $in \left_translate_subset<A,G>(g,\left_translate_subset<A,G>(h,S))
+            y $in A
+            release thm subset_left_translation_preimage(A,G,G.mul(g,h),y,S)
+            G.mul(G.inv(G.mul(g,h)),y) = G.mul(G.inv(h),G.mul(G.inv(g),y))
+            G.mul(G.inv(h),G.mul(G.inv(g),y)) $in S
+            release thm subset_left_translation_member(A,G,h,G.mul(G.inv(g),y),S)
+            release thm subset_left_translation_member(A,G,g,y,\left_translate_subset<A,G>(h,S))
+        claim:
+            ? forall y \left_translate_subset<A,G>(g,\left_translate_subset<A,G>(h,S)):
+                y $in \left_translate_subset<A,G>(G.mul(g,h),S)
+            y $in A
+            release thm subset_left_translation_preimage(A,G,g,y,\left_translate_subset<A,G>(h,S))
+            release thm subset_left_translation_preimage(A,G,h,G.mul(G.inv(g),y),S)
+            G.mul(G.inv(G.mul(g,h)),y) = G.mul(G.inv(h),G.mul(G.inv(g),y))
+            G.mul(G.inv(G.mul(g,h)),y) $in S
+            release thm subset_left_translation_member(A,G,G.mul(g,h),y,S)
+
+thm left_translation_on_subsets_is_action:
+    ? forall A nonempty_set, G &Group<A>:
+        $is_left_group_action(A,G,power_set(A),\left_translate_subset<A,G>)
+    claim:
+        ? forall S power_set(A):
+            \left_translate_subset<A,G>(G.one,S) = S
+        release thm subset_left_translation_identity(A,G,S)
+    claim:
+        ? forall g,h A, S power_set(A):
+            \left_translate_subset<A,G>(G.mul(g,h),S) = \left_translate_subset<A,G>(g,\left_translate_subset<A,G>(h,S))
+        release thm subset_left_translation_composition(A,G,g,h,S)
+    by def $is_left_group_action(A,G,power_set(A),\left_translate_subset<A,G>)

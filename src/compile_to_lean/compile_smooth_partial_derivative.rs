@@ -601,10 +601,11 @@ impl LitexToLeanCompiler {
             }
         }
         let body_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(p.body.clone()));
-        ensure_object(&body_obj, &p.body_well_defined)?;
-        let body = self.compile_wd(
+        let body = self.compile_checked_function_body(
+            &r.function,
+            &body_obj,
             &p.body_well_defined,
-            &position.atomic_search_wd_prior(&p.body_well_defined)?,
+            position,
         )?;
         let equal = self.compile_equality_path(&r.function, &body_obj, &p.body_equal, position)?;
         lines.push(format!("  let _smooth_literal := {body}\n  have _smooth_body_eq : Litex.Same {f} _smooth_literal := {equal}"));

@@ -161,3 +161,8 @@ pub(super) fn reduce_function_at(
         Ok(Some(Obj::FnObj(call)))
     }
 }
+
+/// Apply one further argument group, preserving every existing curried prefix.
+pub(super) fn apply_fn_one_arg(function: &Obj, argument: Obj) -> Option<Obj> {
+    reduce_application(function, vec![argument])
+}

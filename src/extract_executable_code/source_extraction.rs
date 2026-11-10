@@ -109,6 +109,11 @@ pub fn extract_code_from_repository(
         }
     }
 
+    runtime
+        .global_module_manager
+        .validate_alias_targets(&root_config)
+        .map_err(RuntimeError::Unsupported)?;
+
     for (export_file_id, export) in root_config.exports.iter().enumerate() {
         extract_export_file_into(
             &mut runtime,

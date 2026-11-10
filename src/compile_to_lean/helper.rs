@@ -1232,6 +1232,26 @@ pub(super) fn captured_identifier_definition_matches(
                 )
         }
         (
+            StoredIdentifierDefinition::HaveObjByExistFacts((key, definition)),
+            ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveByFnPreimage(
+                crate::execute::ExecHaveByFnPreimageStmtResult::Success(proof),
+            )),
+        ) => {
+            let names: Vec<_> = proof
+                .preimage_parameters
+                .groups
+                .iter()
+                .flat_map(|group| group.params.iter().cloned())
+                .collect();
+            key == name
+                && definition.param_def == proof.preimage_parameters
+                && captured_obtain_definition_matches(
+                    definition,
+                    &names,
+                    &proof.store_and_infer_result,
+                )
+        }
+        (
             StoredIdentifierDefinition::HaveObjInNonemptySetOrParamType((key, a)),
             ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveObjInNonemptySet(
                 ExecHaveObjInNonemptySetStmtResult::Success(b),

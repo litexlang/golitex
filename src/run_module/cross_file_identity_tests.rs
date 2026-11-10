@@ -424,3 +424,92 @@ fn qualified_algo_eval_never_falls_back_to_a_local_same_name() {
     );
     fs::remove_dir_all(root).unwrap();
 }
+
+#[test]
+fn cached_strategies_and_dependency_maps_survive_removed_unrelated_imports() {
+    let root = temp_dir("strategy_dependency_closure");
+    for module in ["unrelated", "library"] {
+        write(
+            &root.join(format!("{module}/litex.config")),
+            "[export]\nmain=\"./main.lit\"\n",
+        );
+    }
+    write(&root.join("unrelated/main.lit"), "have marker R=7\n");
+    write(&root.join("library/main.lit"), "prop zero(x R):\n    x=0\nstrategy use_zero:\n    ? forall x R:\n        x=0\n        =>:\n            $zero(x)\n    by def $zero(x)\n");
+    write(
+        &root.join("litex.config"),
+        "[import]\nUnrelated=\"./unrelated\"\nLib=\"./library\"\n[export]\nmain=\"./main.lit\"\n",
+    );
+    write(&root.join("main.lit"), "$Lib::main::zero(0)\n");
+    let cold = project_with_cache(&root);
+    assert!(cold.run.success, "{:?}", cold.run.session_error);
+    let manifest =
+        fs::read_to_string(root.join("library/__litex_knowledge_base__/manifest.json")).unwrap();
+    assert!(!manifest.contains("unrelated"), "{manifest}");
+    write(
+        &root.join("litex.config"),
+        "[import]\nLib=\"./library\"\n[export]\nmain=\"./main.lit\"\n",
+    );
+    let warm = project_with_cache(&root);
+    assert!(warm.run.success, "{:?}", warm.run.session_error);
+    assert_eq!(
+        warm.files.len(),
+        1,
+        "the strategy-bearing module must actually hit its cache"
+    );
+    assert!(project(&root).run.success);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn registered_property_in_later_export_survives_cold_and_warm_import() {
+    let root = temp_dir("later_property_export");
+    write(
+        &root.join("litex.config"),
+        "[import]\nLib=\"./library\"\n[export]\nmain=\"./main.lit\"\n",
+    );
+    write(
+        &root.join("library/litex.config"),
+        "[export]\nrel=\"./rel.lit\"\nlaws=\"./laws.lit\"\n",
+    );
+    write(
+        &root.join("library/rel.lit"),
+        "prop eqv(x,y set):\n    x=y\n",
+    );
+    write(
+        &root.join("library/laws.lit"),
+        "register reflexive:\n    ? forall x set:\n        $rel::eqv(x,x)\n",
+    );
+    write(
+        &root.join("main.lit"),
+        "forall x set:\n    $Lib::rel::eqv(x,x)\n",
+    );
+    let cold = project_with_cache(&root);
+    assert!(cold.run.success, "{:?}", cold.run.session_error);
+    let warm = project_with_cache(&root);
+    assert!(warm.run.success, "{:?}", warm.run.session_error);
+    assert_eq!(warm.files.len(), 1);
+    fs::remove_dir_all(root).unwrap();
+}
+
+#[test]
+fn repository_extraction_resolves_exported_names_without_parameter_capture() {
+    let root = temp_dir("extraction_identity");
+    write(
+        &root.join("litex.config"),
+        "[export]\nfirst=\"./first.lit\"\nsecond=\"./second.lit\"\n",
+    );
+    write(&root.join("first.lit"), "have value R=2\n");
+    write(
+        &root.join("second.lit"),
+        "algo add_constant(value R) R by cases:\n    case value=value: value+first::value\n",
+    );
+    let path = root.to_str().unwrap();
+    let python = crate::extract_executable_code::to_python_from_repository(path).unwrap();
+    assert!(python.contains("value_arg"), "{python}");
+    assert!(python.contains("(value_arg + value)"), "{python}");
+    let c = crate::extract_executable_code::to_c_from_repository(path).unwrap();
+    assert!(c.contains("value_arg"), "{c}");
+    assert!(c.contains("(value_arg + value)"), "{c}");
+    fs::remove_dir_all(root).unwrap();
+}

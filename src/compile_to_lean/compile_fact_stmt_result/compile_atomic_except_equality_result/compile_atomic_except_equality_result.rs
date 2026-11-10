@@ -409,6 +409,12 @@ impl LitexToLeanCompiler {
                     crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::PartialDerivativeAt(p),
                 )) => self.compile_smooth_partial_derivative(goal, p, definition_wd, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p)) => self.compile_pointwise_derivative(goal,p,position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (
+                    AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLess(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLessEqual(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientScaleLess(_)
+                    | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientScaleLessEqual(_)
+                )) => self.compile_quotient_order(goal, strategy, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(_) => {
                     return Err(LeanCompileError::new("Atomic/BuiltinStrategy", &format!("Unsupported selected strategy for `{}`.", goal.readable_string())))
                 }

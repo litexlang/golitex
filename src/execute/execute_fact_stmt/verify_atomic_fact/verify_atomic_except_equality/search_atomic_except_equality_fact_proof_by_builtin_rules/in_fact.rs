@@ -853,7 +853,11 @@ impl Runtime {
                     _ => unreachable!(),
                 };
                 if let Some(signature) = self.resolve_callable_fn_set(operation) {
-                    if let Obj::StandardSet(codomain) = signature.ret_set.as_ref() {
+                    if let Some(Obj::StandardSet(codomain)) =
+                        crate::execute::execute_fact_stmt::fold::homogeneous_binary_carrier(
+                            &signature,
+                        )
+                    {
                         if standard_set_is_subset_eq(codomain, set) {
                             return Ok(Some(InFactSearchProofByBuiltinRule::FoldScalarCodomain(
                                 FoldScalarCodomainBuiltinRuleProof {

@@ -2,11 +2,15 @@
 
 use super::axiom_codec::{load_axiom, store_axiom};
 use super::def_abstract_prop_codec::{load_def_abstract_prop, store_def_abstract_prop};
+use super::def_prop_codec::{
+    decode_forall_fact, decode_line_file, encode_forall_fact, encode_line_file,
+};
 use super::def_prop_codec::{load_def_prop, store_def_prop, KbCodecError};
 use super::def_struct_codec::{load_def_struct, store_def_struct};
 use super::def_thm_codec::{load_def_thm, store_def_thm};
 use super::json_mini::JsonValue;
 use super::stored_identifier_codec::{load_stored_identifier, store_stored_identifier};
+use crate::ast::stmt::DefStrategyStmt;
 use crate::exec_env::exec_env::DefinitionMemory;
 use std::fs;
 use std::path::Path;
@@ -85,6 +89,21 @@ fn encode_definition_memory(defs: &DefinitionMemory) -> Result<JsonValue, KbCode
         for_store.prove_process.clear();
         theorems.push(JsonValue::parse(&store_def_thm(&for_store)?)?);
     }
+    let mut strategies = Vec::new();
+    let mut strategy_keys: Vec<_> = defs.strategy_definitions.keys().collect();
+    strategy_keys.sort();
+    for name in strategy_keys {
+        let strategy = &defs.strategy_definitions[name];
+        strategies.push(JsonValue::object_from(vec![
+            ("kind".into(), JsonValue::String("def_strategy".into())),
+            ("name".into(), JsonValue::String(strategy.name.clone())),
+            (
+                "forall_fact".into(),
+                encode_forall_fact(&strategy.forall_fact)?,
+            ),
+            ("line_file".into(), encode_line_file(&strategy.line_file)?),
+        ]));
+    }
     let mut axioms = Vec::new();
     let mut ax_keys: Vec<_> = defs.axiom_definitions.keys().cloned().collect();
     ax_keys.sort();
@@ -102,6 +121,7 @@ fn encode_definition_memory(defs: &DefinitionMemory) -> Result<JsonValue, KbCode
         ),
         ("structure_definitions".into(), JsonValue::Array(structures)),
         ("theorem_definitions".into(), JsonValue::Array(theorems)),
+        ("strategy_definitions".into(), JsonValue::Array(strategies)),
         ("axiom_definitions".into(), JsonValue::Array(axioms)),
     ]))
 }
@@ -150,6 +170,23 @@ fn decode_definition_memory(value: &JsonValue) -> Result<DefinitionMemory, KbCod
         let stmt = load_def_thm(&item.stringify())?;
         defs.theorem_definitions.insert(stmt.name.clone(), stmt);
     }
+    // Older successful cache products could not contain strategies at all.
+    if let Some(strategies) = map.get("strategy_definitions") {
+        for item in strategies.as_array()? {
+            let row = item.as_object()?;
+            if JsonValue::get(row, "kind")?.as_str()? != "def_strategy" {
+                return Err(KbCodecError::Shape("expected def_strategy".into()));
+            }
+            let strategy = DefStrategyStmt {
+                name: JsonValue::get(row, "name")?.as_str()?.into(),
+                forall_fact: decode_forall_fact(JsonValue::get(row, "forall_fact")?)?,
+                prove_process: Vec::new(),
+                line_file: decode_line_file(JsonValue::get(row, "line_file")?)?,
+            };
+            defs.strategy_definitions
+                .insert(strategy.name.clone(), strategy);
+        }
+    }
     for item in JsonValue::get(map, "axiom_definitions")?.as_array()? {
         let stmt = load_axiom(&item.stringify())?;
         defs.axiom_definitions.insert(stmt.name.clone(), stmt);
@@ -175,11 +212,6 @@ fn reject_unsupported_maps(defs: &DefinitionMemory) -> Result<(), KbCodecError> 
     if !defs.template_definitions.is_empty() {
         return Err(KbCodecError::Unsupported(
             "template_definitions not in kb definition_memory MVP".into(),
-        ));
-    }
-    if !defs.strategy_definitions.is_empty() {
-        return Err(KbCodecError::Unsupported(
-            "strategy_definitions not in kb definition_memory MVP".into(),
         ));
     }
     Ok(())

@@ -341,10 +341,11 @@ impl LitexToLeanCompiler {
         lines.push(self.compile_smooth_checked(point_member, position)?);
         lines.push(format!("  have _joint_full_domain : _joint_domain=Litex.realVectorSetValue _joint_dimension := ({domain_eq}).symm.trans ({equality})\n  have _joint_point_domain : M.mem _joint_point _joint_domain := _joint_full_domain.symm ▸ _joint_point_vector"));
         let body_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(p.body.clone()));
-        ensure_object(&body_obj, &p.body_well_defined)?;
-        let body = self.compile_wd(
+        let body = self.compile_checked_function_body(
+            function,
+            &body_obj,
             &p.body_well_defined,
-            &position.atomic_search_wd_prior(&p.body_well_defined)?,
+            position,
         )?;
         let equal = self.compile_equality_path(function, &body_obj, &p.body_equal, position)?;
         lines.push(format!("  let _joint_literal := {body}\n  have _joint_body_eq : Litex.Same {f} _joint_literal := {equal}"));

@@ -2,7 +2,7 @@
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/pointwise_analysis/derivative.rs"]
 mod pointwise_derivative_tests;
-use super::function_domain::function_domains_alpha_equal;
+use super::function_domain::{function_domains_alpha_equal, CheckedFunctionBodyProof};
 use super::function_limit::RealFunctionLimitDomainProof;
 use super::helper::multiply_derivative_terms;
 use super::pointwise_continuity::PointwiseContinuityExpressionProof;
@@ -19,7 +19,7 @@ pub struct PointwiseDerivativeProof {
     pub domain: Box<RealFunctionLimitDomainProof>,
     pub body: AnonymousFn,
     pub body_equal: KnownEqualityPathProof,
-    pub body_well_defined: Box<ObjWellDefinedProof>,
+    pub body_well_defined: CheckedFunctionBodyProof,
     pub interior: PointInteriorProof,
     pub expression: DerivativeExpressionProof,
     pub conclusion: DerivativeConclusionProof,
@@ -168,10 +168,18 @@ impl Runtime {
             if params.len() != 1 {
                 continue;
             }
-            let VerifyObjWellDefinedResult::Success(body_well_defined) =
-                self.verify_obj_well_definedness(&literal, state)?
-            else {
-                continue;
+            let body_well_defined = match self.verify_obj_well_definedness(&literal, state)? {
+                VerifyObjWellDefinedResult::Success(proof) => {
+                    CheckedFunctionBodyProof::IndependentlyChecked(Box::new(proof))
+                }
+                VerifyObjWellDefinedResult::Failed { .. } => {
+                    let Some(proof) =
+                        self.checked_function_body_well_definedness(function, &literal, state)?
+                    else {
+                        continue;
+                    };
+                    proof
+                }
             };
             let Some(interior) =
                 self.prove_point_interior(&domain.domain, point, state, 0, &mut budget)?
@@ -212,7 +220,7 @@ impl Runtime {
                 domain: Box::new(domain),
                 body: body.clone(),
                 body_equal: KnownEqualityPathProof::new(path),
-                body_well_defined: Box::new(body_well_defined),
+                body_well_defined,
                 interior,
                 expression,
                 conclusion,

@@ -28,7 +28,7 @@ pub(super) fn project(p: &PointwiseDerivativeProof, rt: &Runtime) -> JsonValue {
             ),
             (
                 "body_well_defined",
-                super::wd::project_obj_wd_proof(&p.body_well_defined, rt),
+                super::function_domain::project_checked_body(&p.body_well_defined, rt),
             ),
             ("interior", interior(&p.interior, rt)),
             ("expression", expression(&p.expression, rt)),

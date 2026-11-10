@@ -16,6 +16,7 @@ use crate::ast::param::{
     ParamType, SetBoundParameterGroup, SetBoundParameterList, TypedParameterGroup,
     TypedParameterList,
 };
+use crate::execute::execute_fact_stmt::fold::homogeneous_binary_carrier;
 use crate::execute::execute_fact_stmt::function_signature_selection::FunctionSignatureSelection;
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
@@ -27,13 +28,13 @@ pub(super) struct ScalarAggregateWellDefinedStages {
 }
 
 pub(super) struct FoldSignatureSelections {
-    pub operation: Option<FunctionSignatureSelection>,
-    pub iterand: Option<FunctionSignatureSelection>,
+    pub operation: FunctionSignatureSelection,
+    pub iterand: FunctionSignatureSelection,
 }
 
 pub(super) struct FoldWellDefinedStages {
     pub common: ObjWellDefinedByDefCommonStages,
-    pub signatures: FoldSignatureSelections,
+    pub signatures: Result<FoldSignatureSelections, String>,
 }
 
 impl Runtime {
@@ -123,15 +124,24 @@ impl Runtime {
                 reason,
             }),
             Ok(mut proof) => {
+                let signatures = match stages.signatures {
+                    Ok(signatures) => signatures,
+                    Err(message) => {
+                        return Ok(VerifyObjWellDefinedResult::Failed {
+                            obj: obj.clone(),
+                            reason: super::fail_to_verify_obj_well_defined_others(message),
+                        })
+                    }
+                };
                 if let Some(by_def) = proof.by_def_mut() {
                     match by_def {
                         ObjWellDefinedProofByDef::IteratedOperator(P::Reduce(p)) => {
-                            p.operation_signature_selection = stages.signatures.operation;
-                            p.iterand_signature_selection = stages.signatures.iterand;
+                            p.operation_signature_selection = Some(signatures.operation);
+                            p.iterand_signature_selection = Some(signatures.iterand);
                         }
                         ObjWellDefinedProofByDef::IteratedOperator(P::FiniteSetReduce(p)) => {
-                            p.operation_signature_selection = stages.signatures.operation;
-                            p.iterand_signature_selection = stages.signatures.iterand;
+                            p.operation_signature_selection = Some(signatures.operation);
+                            p.iterand_signature_selection = Some(signatures.iterand);
                         }
                         _ => unreachable!("matching fold proof"),
                     }
@@ -239,7 +249,8 @@ impl Runtime {
             verify_state.clone(),
             &mut reqs,
         )?;
-        if let Some(selection) = &signatures.iterand {
+        if let Ok(selections) = &signatures {
+            let selection = &selections.iterand;
             let signature = selection.signature();
             if set_bound_parameter_count(&signature.set_bound_parameters) == 1 {
                 let carrier = &signature.set_bound_parameters.groups[0].param_type;
@@ -311,18 +322,18 @@ impl Runtime {
             &mut reqs,
         )?;
         // Enumeration-independent reduction requires both operation laws.
-        if let Some(selection) = &signatures.operation {
-            if let Some(carrier) = homogeneous_binary_carrier(selection.signature()) {
-                reqs.extend(self.unordered_fold_laws(
-                    value.op.as_ref(),
-                    &carrier,
-                    verify_state.clone(),
-                )?);
-            }
+        if let Ok(selections) = &signatures {
+            let carrier = selections.operation.signature().ret_set.as_ref();
+            reqs.extend(self.unordered_fold_laws(
+                value.op.as_ref(),
+                carrier,
+                verify_state.clone(),
+            )?);
         }
         // A finite fold applies f at every set element, so its declared domain
         // and predicates must cover the set (e.g. {1} is not covered by {2}).
-        if let Some(selection) = &signatures.iterand {
+        if let Ok(selections) = &signatures {
+            let selection = &selections.iterand;
             let signature = selection.signature();
             if set_bound_parameter_count(&signature.set_bound_parameters) == 1 {
                 for group in &signature.set_bound_parameters.groups {
@@ -909,47 +920,28 @@ impl Runtime {
         operation_name: &str,
         verify_state: VerifyState,
         reqs: &mut Vec<VerifyFactResult>,
-    ) -> RuntimeResult<FoldSignatureSelections> {
-        let mut selected = FoldSignatureSelections {
-            operation: self.resolve_callable_fn_set_selection(operation),
-            iterand: None,
+    ) -> RuntimeResult<Result<FoldSignatureSelections, String>> {
+        let Some(operation_selection) = self.resolve_callable_fn_set_selection(operation) else {
+            return Ok(Err(format!(
+                "{operation_name}: operation has no checked function signature"
+            )));
         };
-        let Some(op_set) = selected.operation.as_ref().map(|s| s.signature()) else {
-            reqs.push(self.require_callable_as_expected_binary_homogeneous(
-                operation,
-                operation_name,
-                verify_state,
-            )?);
-            return Ok(selected);
+        let Some(carrier) = homogeneous_binary_carrier(operation_selection.signature()) else {
+            return Ok(Err(format!("{operation_name}: operation must have an unconditional homogeneous binary signature")));
         };
-        let Some(carrier) = homogeneous_binary_carrier(op_set) else {
-            reqs.push(self.require_callable_as_expected_binary_homogeneous(
-                operation,
-                operation_name,
-                verify_state,
-            )?);
-            return Ok(selected);
+        let carrier = carrier.clone();
+        let Some(iterand_selection) = self.resolve_callable_fn_set_selection(function) else {
+            return Ok(Err(format!(
+                "{operation_name}: iterand has no checked function signature"
+            )));
         };
-        selected.iterand = self.resolve_callable_fn_set_selection(function);
-        let Some(iterand_set) = selected.iterand.as_ref().map(|s| s.signature()) else {
-            reqs.push(self.require_callable_as_expected_unary(
-                function,
-                &carrier,
-                operation_name,
-                verify_state,
-            )?);
-            return Ok(selected);
-        };
-        if set_bound_parameter_count(&iterand_set.set_bound_parameters) != 1
-            || iterand_set.ret_set.ir() != carrier.ir()
+        let iterand = iterand_selection.signature();
+        if set_bound_parameter_count(&iterand.set_bound_parameters) != 1
+            || iterand.ret_set.ir() != carrier.ir()
         {
-            reqs.push(self.require_callable_as_expected_unary(
-                function,
-                &carrier,
-                operation_name,
-                verify_state.clone(),
-            )?);
-            return Ok(selected);
+            return Ok(Err(format!(
+                "{operation_name}: iterand must be unary and return the operation carrier"
+            )));
         }
         let seed_in = AtomicFact::InFact(InFact {
             fact_id: self.global_ids.allocate_fact_id(),
@@ -960,12 +952,12 @@ impl Runtime {
         reqs.push(self.verify_required_atomic_fact(
             seed_in,
             verify_state,
-            format!(
-                "{operation_name}: seed {} is not verified to belong to the operation carrier",
-                seed.ir()
-            ),
+            format!("{operation_name}: seed must belong to the operation carrier"),
         )?);
-        Ok(selected)
+        Ok(Ok(FoldSignatureSelections {
+            operation: operation_selection,
+            iterand: iterand_selection,
+        }))
     }
 
     // Soft shape miss: require `function $in fn(__p Dom) C` (fails when not that signature).
@@ -989,30 +981,6 @@ impl Runtime {
             format!(
                 "{operation}: expected a unary scalar-valued function; got {}",
                 function.ir()
-            ),
-        )
-    }
-
-    fn require_callable_as_expected_binary_homogeneous(
-        &mut self,
-        operation: &Obj,
-        operation_name: &str,
-        verify_state: VerifyState,
-    ) -> RuntimeResult<VerifyFactResult> {
-        let carrier = Obj::StandardSet(StandardSet::C);
-        let expected = self.fresh_binary_homogeneous_fn_set(carrier);
-        let membership = AtomicFact::InFact(InFact {
-            fact_id: self.global_ids.allocate_fact_id(),
-            element: operation.clone(),
-            set: Obj::FunctionSpace(FunctionSpace::FnSet(expected)),
-            line_file: None,
-        });
-        self.verify_required_atomic_fact(
-            membership,
-            verify_state,
-            format!(
-                "{operation_name}: operation {} must have signature fn(x, y T) T",
-                operation.ir()
             ),
         )
     }
@@ -1046,45 +1014,10 @@ impl Runtime {
             ret_set: Box::new(ret),
         }
     }
-
-    fn fresh_binary_homogeneous_fn_set(&mut self, carrier: Obj) -> FnSet {
-        let left = self.fresh_internal_param();
-        let right = self.fresh_internal_param();
-        FnSet {
-            set_bound_parameters: SetBoundParameterList {
-                groups: vec![SetBoundParameterGroup {
-                    params: vec![left, right],
-                    param_type: Box::new(carrier.clone()),
-                }],
-            },
-            dom_facts: vec![],
-            ret_set: Box::new(carrier),
-        }
-    }
 }
 
 #[derive(Clone, Copy)]
 enum AggregateIndexDomain<'a> {
     Range(&'a Obj, &'a Obj),
     FiniteSet(&'a Obj),
-}
-
-fn homogeneous_binary_carrier(fn_set: &FnSet) -> Option<Obj> {
-    if set_bound_parameter_count(&fn_set.set_bound_parameters) != 2 || !fn_set.dom_facts.is_empty()
-    {
-        return None;
-    }
-    let mut carriers = Vec::new();
-    for group in &fn_set.set_bound_parameters.groups {
-        for _ in &group.params {
-            carriers.push(group.param_type.as_ref().clone());
-        }
-    }
-    let [left, right] = carriers.as_slice() else {
-        return None;
-    };
-    if left.ir() != right.ir() || left.ir() != fn_set.ret_set.ir() {
-        return None;
-    }
-    Some(left.clone())
 }

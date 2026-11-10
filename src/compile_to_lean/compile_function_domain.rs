@@ -10,6 +10,28 @@ use crate::prelude::*;
 use std::collections::HashMap;
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_checked_function_body(
+        &self,
+        subject: &Obj,
+        body: &Obj,
+        proof: &crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        use crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof;
+        match proof {
+            CheckedFunctionBodyProof::AtomicSubject => {
+                if subject != body {
+                    return Err(LeanCompileError::unsupported("CheckedFunctionBody/Subject"));
+                }
+                self.compile_object_reference(subject, position)
+            }
+            CheckedFunctionBodyProof::IndependentlyChecked(wd) => {
+                ensure_object(body, wd)?;
+                self.compile_wd(wd, &position.atomic_search_wd_prior(wd)?)
+            }
+        }
+    }
+
     /// The declarations retain the original fact IDs so pointwise call WD can
     /// cite the inclusions that the executor published inside fn_extension.
     pub(super) fn compile_function_domain_match(

@@ -677,7 +677,13 @@ impl Runtime {
         tb.expect(FROM)?;
         let left = parse_obj(self, tb)?;
         tb.expect(EQUAL)?;
-        let right = parse_obj(self, tb)?;
+        // The repeated base expression has the same outer scope as `from`.
+        // Restore the induction binder before parsing its proof body, including
+        // when parsing the base expression reports an ordinary error.
+        let induction_scope = self.parse_scope_stack.pop().expect("induction parse scope");
+        let right = parse_obj(self, tb);
+        self.parse_scope_stack.push(induction_scope);
+        let right = right?;
         tb.expect_colon_end_of_header()?;
         let Obj::Identifier(id) = &left else {
             return Err(tb.parse_error(format!(

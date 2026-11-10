@@ -69,6 +69,15 @@ pub fn remap_definition_memory(
     for stmt in defs.theorem_definitions.values_mut() {
         remap_def_thm(stmt, plan)?;
     }
+    for stmt in defs.strategy_definitions.values_mut() {
+        if !stmt.prove_process.is_empty() {
+            return Err(KbCodecError::Unsupported(
+                "remap strategy with non-empty proof".into(),
+            ));
+        }
+        remap_source(&mut stmt.line_file.origin, plan)?;
+        remap_forall_fact(&mut stmt.forall_fact, plan)?;
+    }
     for stmt in defs.axiom_definitions.values_mut() {
         remap_axiom(stmt, plan)?;
     }
@@ -368,6 +377,34 @@ fn remap_forall_fact(forall: &mut ForallFact, plan: &RemapPlan) -> Result<(), Kb
 
 fn remap_atomic_fact(atomic: &mut AtomicFact, plan: &RemapPlan) -> Result<(), KbCodecError> {
     match atomic {
+        AtomicFact::NormalAtomicFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
+            f.fact_id = remap_fact_id(f.fact_id, plan);
+            if let crate::ast::names::AtomicName::WithModAndExportFileId { global_mod_id, .. } =
+                &mut f.predicate
+            {
+                *global_mod_id = remap_mod_id(*global_mod_id, plan)?;
+            }
+            for obj in &mut f.body {
+                remap_obj(obj, plan)?;
+            }
+        }
+        AtomicFact::NotNormalAtomicFact(f) => {
+            if let Some(line) = &mut f.line_file {
+                remap_source(&mut line.origin, plan)?;
+            }
+            f.fact_id = remap_fact_id(f.fact_id, plan);
+            if let crate::ast::names::AtomicName::WithModAndExportFileId { global_mod_id, .. } =
+                &mut f.predicate
+            {
+                *global_mod_id = remap_mod_id(*global_mod_id, plan)?;
+            }
+            for obj in &mut f.body {
+                remap_obj(obj, plan)?;
+            }
+        }
         AtomicFact::GreaterFact(f) => {
             if let Some(line) = &mut f.line_file {
                 remap_source(&mut line.origin, plan)?;

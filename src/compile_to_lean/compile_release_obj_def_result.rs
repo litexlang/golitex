@@ -207,10 +207,26 @@ fn original_release_facts<'a>(
     let obtained = match source {
         ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::ObtainObjFromExistFact(
             crate::execute::ExecObtainObjFromExistFactStmtResult::Success(p),
-        )) => Some((&p.statement.equal_tos, &p.store_and_infer_result)),
+        )) => Some((
+            p.statement.equal_tos.iter().collect::<Vec<_>>(),
+            &p.store_and_infer_result,
+        )),
         ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::ObtainObjFromAtomicFact(
             crate::execute::ExecObtainObjFromAtomicFactStmtResult::Success(p),
-        )) => Some((&p.statement.equal_tos, &p.store_and_infer_result)),
+        )) => Some((
+            p.statement.equal_tos.iter().collect::<Vec<_>>(),
+            &p.store_and_infer_result,
+        )),
+        ExecDefinitionStmtResult::DefineObj(ExecDefineObjStmtResult::HaveByFnPreimage(
+            crate::execute::ExecHaveByFnPreimageStmtResult::Success(p),
+        )) => Some((
+            p.preimage_parameters
+                .groups
+                .iter()
+                .flat_map(|group| &group.params)
+                .collect::<Vec<_>>(),
+            &p.store_and_infer_result,
+        )),
         _ => None,
     };
     if let Some((names, stores)) = obtained {

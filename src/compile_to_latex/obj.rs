@@ -29,14 +29,14 @@ pub(super) fn expression(
                 format!(r"\lim_{{\xi\to {}}} {}(\xi)", o(&x.point)?, h(&x.function)?),
                 &[o(&x.dimension)?],
             ),
-            50,
+            30,
         ),
         Obj::LimitOperator(LimitOperator::MultivariableVector(x)) => (
             super::helper::dimensioned(
                 format!(r"\lim_{{\xi\to {}}} {}(\xi)", o(&x.point)?, h(&x.function)?),
                 &[o(&x.input_dimension)?, o(&x.output_dimension)?],
             ),
-            50,
+            30,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Partial(x)) => (
             super::helper::dimensioned(
@@ -98,7 +98,7 @@ pub(super) fn expression(
                 h(&x.function)?,
                 parens(&o(&x.point)?)
             ),
-            50,
+            30,
         ),
         Obj::DerivativeOperator(DerivativeOperator::Laplacian(x)) => (
             super::helper::dimensioned(
@@ -116,15 +116,16 @@ pub(super) fn expression(
             },
         ),
 
-        Obj::IntegralOperator(IntegralOperator::Riemann(x)) => (
-            format!(
-                r"\int_{{{}}}^{{{}}} {}(\xi)\,\mathrm{{d}}\xi",
-                o(&x.lower)?,
-                o(&x.upper)?,
-                h(&x.function)?
-            ),
-            50,
-        ),
+        Obj::IntegralOperator(IntegralOperator::Riemann(x)) => {
+            let function = h(&x.function)?;
+            let lower = o(&x.lower)?;
+            let upper = o(&x.upper)?;
+            let bound = fresh_rendered_index(r"\xi", &[&function, &lower, &upper]);
+            (
+                format!(r"\int_{{{lower}}}^{{{upper}}} {function}({bound})\,\mathrm{{d}}{bound}"),
+                30,
+            )
+        }
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => (
             format!("{}^{{\\prime}}{}", h(&x.function)?, parens(&o(&x.point)?)),
             50,
@@ -185,6 +186,8 @@ pub(super) fn expression(
             },
             if matches!(x, IntegerOperator::Mod(_)) {
                 20
+            } else if matches!(x, IntegerOperator::Factorial(_)) {
+                40
             } else {
                 50
             },
@@ -240,7 +243,7 @@ pub(super) fn expression(
                     function,
                     application
                 ),
-                50,
+                30,
             )
         }
         Obj::LimitOperator(LimitOperator::Sequence(x)) => {
@@ -251,7 +254,7 @@ pub(super) fn expression(
             }
             let bound = ident(&bound);
             let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
-            (format!(r"\lim_{{{}\to\infty}} {}", bound, application), 50)
+            (format!(r"\lim_{{{}\to\infty}} {}", bound, application), 30)
         }
         Obj::LimitOperator(LimitOperator::SequenceLiminf(x)) => {
             let source = x.sequence.readable_string();
@@ -263,7 +266,7 @@ pub(super) fn expression(
             let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
             (
                 format!(r"\liminf_{{{}\to\infty}} {}", bound, application),
-                50,
+                30,
             )
         }
         Obj::LimitOperator(LimitOperator::SequenceLimsup(x)) => {
@@ -276,7 +279,7 @@ pub(super) fn expression(
             let application = format!("{}{}", h(&x.sequence)?, call_parens(&bound));
             (
                 format!(r"\limsup_{{{}\to\infty}} {}", bound, application),
-                50,
+                30,
             )
         }
         Obj::HyperbolicOperator(x) => (
@@ -508,24 +511,31 @@ pub(super) fn expression(
         }
         Obj::IteratedOperator(x) => (
             match x {
-                // Greek generated indices cannot collide with ASCII Litex identifiers.
-                IteratedOperator::Sum(x) => format!(
-                    r"\sum_{{\iota={}}}^{{{}}} {}(\iota)",
-                    o(&x.start)?,
-                    o(&x.end)?,
-                    h(&x.func)?
-                ),
-                IteratedOperator::Product(x) => format!(
-                    r"\prod_{{\iota={}}}^{{{}}} {}(\iota)",
-                    o(&x.start)?,
-                    o(&x.end)?,
-                    h(&x.func)?
-                ),
+                IteratedOperator::Sum(x) => {
+                    let function = h(&x.func)?;
+                    let start = o(&x.start)?;
+                    let end = o(&x.end)?;
+                    let bound = fresh_rendered_index(r"\iota", &[&function, &start, &end]);
+                    format!(r"\sum_{{{bound}={start}}}^{{{end}}} {function}({bound})")
+                }
+                IteratedOperator::Product(x) => {
+                    let function = h(&x.func)?;
+                    let start = o(&x.start)?;
+                    let end = o(&x.end)?;
+                    let bound = fresh_rendered_index(r"\iota", &[&function, &start, &end]);
+                    format!(r"\prod_{{{bound}={start}}}^{{{end}}} {function}({bound})")
+                }
                 IteratedOperator::SumOfFiniteSet(x) => {
-                    format!(r"\sum_{{\iota\in {}}} {}(\iota)", o(&x.set)?, h(&x.func)?)
+                    let function = h(&x.func)?;
+                    let set = o(&x.set)?;
+                    let bound = fresh_rendered_index(r"\iota", &[&function, &set]);
+                    format!(r"\sum_{{{bound}\in {set}}} {function}({bound})")
                 }
                 IteratedOperator::ProductOfFiniteSet(x) => {
-                    format!(r"\prod_{{\iota\in {}}} {}(\iota)", o(&x.set)?, h(&x.func)?)
+                    let function = h(&x.func)?;
+                    let set = o(&x.set)?;
+                    let bound = fresh_rendered_index(r"\iota", &[&function, &set]);
+                    format!(r"\prod_{{{bound}\in {set}}} {function}({bound})")
                 }
                 IteratedOperator::Reduce(x) => operator(
                     "reduce",
@@ -724,4 +734,14 @@ fn standard_set(value: &StandardSet) -> String {
     } else {
         format!(r"\mathbb{{{letter}}}_{{{suffix}}}")
     }
+}
+
+fn fresh_rendered_index(stem: &str, children: &[&str]) -> String {
+    let mut candidate = stem.to_owned();
+    let mut suffix = 0;
+    while children.iter().any(|child| child.contains(&candidate)) {
+        suffix += 1;
+        candidate = format!("{stem}_{{{suffix}}}");
+    }
+    candidate
 }

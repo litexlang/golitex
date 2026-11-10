@@ -668,7 +668,9 @@ impl Runtime {
         };
         if let Some(operation) = operation {
             let signature = self.resolve_callable_fn_set(operation)?;
-            let carrier = *signature.ret_set.clone();
+            let carrier =
+                crate::execute::execute_fact_stmt::fold::homogeneous_binary_carrier(&signature)?
+                    .clone();
             let carrier_match = self.lookup_exact_property_obj_equality(&carrier, &fact.set)?;
             let operation_signature =
                 if matches!(operation, Obj::FunctionSpace(FunctionSpace::AnonymousFn(_))) {

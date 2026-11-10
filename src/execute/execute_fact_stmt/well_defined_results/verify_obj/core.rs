@@ -746,7 +746,17 @@ impl Runtime {
             let subst = set_bound_params_to_arg_map(&space.set_bound_parameters, &args);
             let next_ret = self.inst_obj(space.ret_set.as_ref(), &subst).ok()?;
             if layer_index < last {
-                space = self.returned_function_signature(&next_ret)?.0;
+                space = match self.returned_function_signature(&next_ret) {
+                    Some((signature, _)) => signature,
+                    None => {
+                        let mut prefix = value.clone();
+                        prefix.body.truncate(layer_index + 1);
+                        self.collect_in_function_set_candidates(&Obj::FnObj(prefix))
+                            .into_iter()
+                            .next()?
+                            .0
+                    }
+                };
             } else {
                 return Some(next_ret);
             }

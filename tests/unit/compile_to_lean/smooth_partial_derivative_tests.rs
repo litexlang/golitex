@@ -203,6 +203,7 @@ forall p cart(R,R):
             } = proof(&mut run)
                 .stages
                 .body_well_defined
+                .independent_mut()
                 .as_detailed_mut()
                 .unwrap()
             else {
@@ -313,6 +314,7 @@ fn smooth_partial_function_parameters_require_original_parameter_call_wd() {
         } = proof(&mut run)
             .stages
             .body_well_defined
+            .independent_mut()
             .as_detailed_mut()
             .unwrap()
         else {
@@ -434,6 +436,7 @@ fn smooth_partial_grouped_calls_require_the_complete_original_call_wd() {
         } = proof(&mut run)
             .stages
             .body_well_defined
+            .independent_mut()
             .as_detailed_mut()
             .unwrap()
         else {
@@ -928,7 +931,7 @@ fn smooth_partial_beta_rejects_missing_original_call_formation() {
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::FunctionSpaceObjWellDefinedProofByDef;
     for mutation in 0..3 {
         let (mut run, compiler) = super::execute(BETA_PRODUCT);
-        let body = &mut proof(&mut run).stages.body_well_defined;
+        let body = proof(&mut run).stages.body_well_defined.independent_mut();
         let DetailedObjWellDefinedProof::ByDef {
             proof:
                 ObjWellDefinedProofByDef::FunctionSpace(
@@ -1005,6 +1008,7 @@ forall p cart(R,R):
         } = proof(&mut run)
             .stages
             .body_well_defined
+            .independent_mut()
             .as_detailed_mut()
             .unwrap()
         else {
@@ -1191,6 +1195,7 @@ forall p cart(R,R):
         } = proof(&mut run)
             .stages
             .body_well_defined
+            .independent_mut()
             .as_detailed_mut()
             .unwrap()
         else {
@@ -1341,5 +1346,19 @@ forall k,l Z, p cart(R,R):
         compiler
             .compile_run(&run, "bad_integer_period")
             .expect_err("retain exact coefficient, value, ordered integer subjects and carriers");
+    }
+}
+
+trait IndependentlyCheckedBodyForTest {
+    fn independent_mut(&mut self) -> &mut ObjWellDefinedProof;
+}
+impl IndependentlyCheckedBodyForTest
+    for crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof
+{
+    fn independent_mut(&mut self) -> &mut ObjWellDefinedProof {
+        match self {
+            Self::IndependentlyChecked(wd) => wd,
+            Self::AtomicSubject => panic!("this fixture retains independent body formation"),
+        }
     }
 }

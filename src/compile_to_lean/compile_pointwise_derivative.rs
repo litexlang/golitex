@@ -636,7 +636,6 @@ impl LitexToLeanCompiler {
             return Err(invalid("Arity"));
         };
         let body_obj = Obj::FunctionSpace(FunctionSpace::AnonymousFn(p.body.clone()));
-        ensure_object(&body_obj, &p.body_well_defined)?;
         let mut lines = Vec::new();
         for checked in [&p.domain.input_real, &p.domain.output_real] {
             let (ty, term) =
@@ -647,9 +646,11 @@ impl LitexToLeanCompiler {
             ));
         }
         self.compile_real_function_domain(function, &p.domain, position)?;
-        let body = self.compile_wd(
+        let body = self.compile_checked_function_body(
+            function,
+            &body_obj,
             &p.body_well_defined,
-            &position.atomic_search_wd_prior(&p.body_well_defined)?,
+            position,
         )?;
         lines.push(format!("  let _derivative_literal := {body}"));
         let path = self.compile_equality_path(function, &body_obj, &p.body_equal, position)?;

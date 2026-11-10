@@ -2,12 +2,14 @@
 //!
 //! One matcher ↔ one dedicated proof struct.
 
+use super::helper::is_binary_add_anonymous_fn;
+use super::reduce_rule_helper::apply_fn_one_arg;
 use crate::ast::fact::{
     AtomicFact, EqualFact, Fact, LessFact, SubsetFact,
 };
 use crate::ast::obj::{
-    Add, AnonymousFn, ArithmeticOperator, ClosedRange, ExpLogOperator, FiniteSetReduce,
-    FiniteSetSize, FiniteSetStat, FnObj, FnObjHead, FunctionSpace, Intersect, IteratedOperator,
+    Add, ArithmeticOperator, ClosedRange, ExpLogOperator, FiniteSetReduce,
+    FiniteSetSize, FiniteSetStat, FunctionSpace, Intersect, IteratedOperator,
     ListSet, Literal, Log, Number, Obj, Pow, Product, Reduce,
     SetFormer, SetMinus, SetOperator, Sub, Sum, SumOfFiniteSet, Union,
 };
@@ -468,28 +470,6 @@ fn zero_obj() -> Obj {
     }))
 }
 
-fn apply_fn_one_arg(f: &Obj, arg: Obj) -> Option<Obj> {
-    match f {
-        Obj::Identifier(id) => Some(Obj::FnObj(FnObj {
-            head: Box::new(FnObjHead::Identifier(id.clone())),
-            body: vec![vec![Box::new(arg)]],
-        })),
-        Obj::FnObj(existing) => {
-            let mut body = existing.body.clone();
-            body.push(vec![Box::new(arg)]);
-            Some(Obj::FnObj(FnObj {
-                head: existing.head.clone(),
-                body,
-            }))
-        }
-        Obj::FunctionSpace(FunctionSpace::AnonymousFn(af)) => Some(Obj::FnObj(FnObj {
-            head: Box::new(FnObjHead::AnonymousFnLiteral(Box::new(af.clone()))),
-            body: vec![vec![Box::new(arg)]],
-        })),
-        _ => None,
-    }
-}
-
 fn finite_set_size_set_minus_shape(size_side: &Obj, sub_side: &Obj) -> bool {
     let Some(set_minus_set) = match_finite_set_size(size_side) else {
         return false;
@@ -560,39 +540,6 @@ fn closed_range_singleton_list_set_shape(range_side: &Obj, list_side: &Obj) -> b
         return false;
     };
     list.len() == 1 && list[0].ir() == start.ir()
-}
-
-fn is_binary_add_anonymous_fn(obj: &Obj) -> bool {
-    let Obj::FunctionSpace(FunctionSpace::AnonymousFn(AnonymousFn { body, equal_to })) = obj else {
-        return false;
-    };
-    let mut params = Vec::new();
-    for group in &body.set_bound_parameters.groups {
-        for p in &group.params {
-            params.push(p.clone());
-        }
-    }
-    if params.len() != 2 {
-        return false;
-    }
-    let Obj::ArithmeticOperator(ArithmeticOperator::Add(Add { left, right })) = equal_to.as_ref()
-    else {
-        return false;
-    };
-    let (Some(lid), Some(rid)) = (
-        identifier_plain_id(left.as_ref()),
-        identifier_plain_id(right.as_ref()),
-    ) else {
-        return false;
-    };
-    (lid == params[0].id && rid == params[1].id) || (lid == params[1].id && rid == params[0].id)
-}
-
-fn identifier_plain_id(obj: &Obj) -> Option<crate::runtime::runtime_ids::IdentifierId> {
-    match obj {
-        Obj::Identifier(crate::ast::obj::IdentifierObj::Plain { id, .. }) => Some(*id),
-        _ => None,
-    }
 }
 
 fn funcs_match_for_aggregate(left: &Obj, right: &Obj) -> bool {

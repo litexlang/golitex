@@ -20,21 +20,41 @@ impl Runtime {
                 properties.extend(found.iter().cloned());
             }
         }
-        let finished = match prop {
-            AtomicName::Plain { .. } => None,
-            AtomicName::WithExportFileId { export_file_id, .. } => {
-                self.finished_export_exec_env(None, *export_file_id)
+        for env in self.visible_finished_export_environments() {
+            if let Some(found) = env.prop_rewrite_properties.get(prop) {
+                properties.extend(found.iter().cloned());
             }
-            AtomicName::WithModAndExportFileId {
-                global_mod_id,
-                export_file_id,
-                ..
-            } => self.finished_export_exec_env(Some(*global_mod_id), *export_file_id),
-        };
-        if let Some(found) = finished.and_then(|env| env.prop_rewrite_properties.get(prop)) {
-            properties.extend(found.iter().cloned());
         }
         properties
+    }
+
+    /// Completed exports visible from the current module and its direct imports.
+    /// A dependency mounted for another module does not enter this scope.
+    pub(crate) fn visible_finished_export_environments(&self) -> Vec<&ExecEnv> {
+        let modules = &self.global_module_manager;
+        let mut result = Vec::new();
+        let current = match modules.current_mod_id() {
+            Some(id) => &modules.imports()[id].export_files_and_their_env[..],
+            None => modules.root_exports(),
+        };
+        result.extend(current.iter().map(|export| export.exec_env.as_ref()));
+        if let Ok(config) = modules.current_litex_config() {
+            for import in &config.imports {
+                let path = import
+                    .path
+                    .canonicalize()
+                    .unwrap_or_else(|_| import.path.clone());
+                if let Some(id) = modules.path_to_mod_id().get(&path) {
+                    result.extend(
+                        modules.imports()[*id]
+                            .export_files_and_their_env
+                            .iter()
+                            .map(|export| export.exec_env.as_ref()),
+                    );
+                }
+            }
+        }
+        result
     }
 
     // Walk the exec-env stack (inner first) for name conflicts under a temp shell.

@@ -56,16 +56,9 @@ impl Runtime {
                 out.push((name.clone(), stmt.clone()));
             }
         }
-        for export in self.global_module_manager.root_exports() {
-            for (name, stmt) in &export.exec_env.definitions.strategy_definitions {
+        for env in self.visible_finished_export_environments() {
+            for (name, stmt) in &env.definitions.strategy_definitions {
                 out.push((name.clone(), stmt.clone()));
-            }
-        }
-        for module in self.global_module_manager.imports() {
-            for export in &module.export_files_and_their_env {
-                for (name, stmt) in &export.exec_env.definitions.strategy_definitions {
-                    out.push((name.clone(), stmt.clone()));
-                }
             }
         }
         out

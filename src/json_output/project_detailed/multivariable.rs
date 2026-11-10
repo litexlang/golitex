@@ -121,7 +121,7 @@ pub(super) fn strategy(
                     ),
                     (
                         "body_well_defined",
-                        super::wd::project_obj_wd_proof(&p.body_well_defined, rt),
+                        super::function_domain::project_checked_body(&p.body_well_defined, rt),
                     ),
                     ("geometry", interior(&p.geometry, rt)),
                     (
@@ -188,7 +188,7 @@ pub(super) fn strategy(
                     ),
                     (
                         "body_well_defined",
-                        super::wd::project_obj_wd_proof(&p.body_well_defined, rt),
+                        super::function_domain::project_checked_body(&p.body_well_defined, rt),
                     ),
                     ("geometry", interior(&p.geometry, rt)),
                     ("index", string(p.index.readable_string())),
@@ -219,7 +219,7 @@ pub(super) fn strategy(
             ),
             (
                 "body_well_defined",
-                super::wd::project_obj_wd_proof(&p.body_well_defined, rt),
+                super::function_domain::project_checked_body(&p.body_well_defined, rt),
             ),
             ("geometry", geometry),
             (

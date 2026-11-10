@@ -10,7 +10,9 @@ use crate::ast::fact::{
     GreaterFact, InFact, LessEqualFact, LessFact, NotEqualFact, NotGreaterEqualFact,
     NotGreaterFact, NotInFact, NotLessEqualFact, NotLessFact, QuantifierFreeFact,
 };
+use crate::ast::fact::{NormalAtomicFact, NotNormalAtomicFact};
 use crate::ast::line_file::SourceLine;
+use crate::ast::names::AtomicName;
 use crate::ast::names::BoundName;
 use crate::ast::obj::{
     Add, AnonymousFn, ArithmeticOperator, Div, FnSet, FunctionSpace, IdentifierObj, Literal, Mul,
@@ -362,6 +364,20 @@ pub(crate) fn decode_fact(value: &JsonValue) -> Result<Fact, KbCodecError> {
 
 pub(crate) fn encode_atomic_fact(atomic: &AtomicFact) -> Result<JsonValue, KbCodecError> {
     match atomic {
+        AtomicFact::NormalAtomicFact(f) => encode_normal_atomic_fact(
+            "NormalAtomicFact",
+            f.fact_id,
+            &f.predicate,
+            &f.body,
+            &f.line_file,
+        ),
+        AtomicFact::NotNormalAtomicFact(f) => encode_normal_atomic_fact(
+            "NotNormalAtomicFact",
+            f.fact_id,
+            &f.predicate,
+            &f.body,
+            &f.line_file,
+        ),
         AtomicFact::GreaterFact(f) => {
             encode_binary_compare("GreaterFact", f.fact_id, &f.left, &f.right, &f.line_file)
         }
@@ -452,6 +468,31 @@ pub(crate) fn decode_atomic_fact(value: &JsonValue) -> Result<AtomicFact, KbCode
     let map = value.as_object()?;
     let tag = JsonValue::get(map, "tag")?.as_str()?;
     match tag {
+        "NormalAtomicFact" | "NotNormalAtomicFact" => {
+            let fact_id = FactId::new(JsonValue::get(map, "fact_id")?.as_u64()?);
+            let predicate = decode_atomic_name(JsonValue::get(map, "predicate")?)?;
+            let body = JsonValue::get(map, "body")?
+                .as_array()?
+                .iter()
+                .map(decode_obj)
+                .collect::<Result<Vec<_>, _>>()?;
+            let line_file = decode_optional_line_file(JsonValue::get(map, "line_file")?)?;
+            Ok(if tag == "NormalAtomicFact" {
+                AtomicFact::NormalAtomicFact(NormalAtomicFact {
+                    fact_id,
+                    predicate,
+                    body,
+                    line_file,
+                })
+            } else {
+                AtomicFact::NotNormalAtomicFact(NotNormalAtomicFact {
+                    fact_id,
+                    predicate,
+                    body,
+                    line_file,
+                })
+            })
+        }
         "GreaterFact"
         | "LessFact"
         | "GreaterEqualFact"
@@ -1009,5 +1050,66 @@ pub(crate) fn decode_forall_fact(value: &JsonValue) -> Result<ForallFact, KbCode
         dom_facts: dom,
         then_facts,
         line_file: decode_optional_line_file(JsonValue::get(map, "line_file")?)?,
+    })
+}
+
+fn encode_normal_atomic_fact(
+    tag: &str,
+    fact_id: FactId,
+    predicate: &AtomicName,
+    body: &[Obj],
+    line_file: &Option<SourceLine>,
+) -> Result<JsonValue, KbCodecError> {
+    Ok(JsonValue::object_from(vec![
+        ("tag".into(), JsonValue::String(tag.into())),
+        ("fact_id".into(), JsonValue::Number(fact_id.value() as f64)),
+        ("predicate".into(), encode_atomic_name(predicate)?),
+        (
+            "body".into(),
+            JsonValue::Array(body.iter().map(encode_obj).collect::<Result<Vec<_>, _>>()?),
+        ),
+        ("line_file".into(), encode_optional_line_file(line_file)?),
+    ]))
+}
+
+fn encode_atomic_name(name: &AtomicName) -> Result<JsonValue, KbCodecError> {
+    let identifier = match name {
+        AtomicName::Plain { name } => IdentifierObj::plain(IdentifierId::new(0), name.clone()),
+        AtomicName::WithExportFileId {
+            export_file_id,
+            name,
+        } => IdentifierObj::with_export_file_id(*export_file_id, name.clone()),
+        AtomicName::WithModAndExportFileId {
+            global_mod_id,
+            export_file_id,
+            name,
+        } => IdentifierObj::with_mod_and_export_file_id(
+            *global_mod_id,
+            *export_file_id,
+            name.clone(),
+        ),
+    };
+    encode_identifier_obj(&identifier)
+}
+
+fn decode_atomic_name(value: &JsonValue) -> Result<AtomicName, KbCodecError> {
+    Ok(match decode_identifier_obj(value)? {
+        IdentifierObj::Plain { name, .. } => AtomicName::Plain { name },
+        IdentifierObj::WithExportFileId {
+            export_file_id,
+            name,
+        } => AtomicName::WithExportFileId {
+            export_file_id,
+            name,
+        },
+        IdentifierObj::WithModAndExportFileId {
+            global_mod_id,
+            export_file_id,
+            name,
+        } => AtomicName::WithModAndExportFileId {
+            global_mod_id,
+            export_file_id,
+            name,
+        },
     })
 }

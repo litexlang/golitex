@@ -463,3 +463,11 @@ fn induction_lower_bound_acceptance_example() {
         &[true, true],
     );
 }
+
+#[test]
+fn structured_induction_base_reuses_the_outer_lower_bound_scope() {
+    for keyword in ["induc", "strong_induc"] {
+        let code = format!("have n Z = 2\nby {keyword} n from n:\n    ? n >= 2\n    ? from n = n:\n        2 >= 2\n    ? {keyword}:\n        n + 1 >= 2\nn = 2\n");
+        check(&code, &[true, true, true]);
+    }
+}

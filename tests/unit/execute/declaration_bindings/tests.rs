@@ -795,3 +795,34 @@ fn run_examples_round3_repair_tracers() {
         assert_success(CodeSource::Eval, &source);
     }
 }
+
+#[test]
+fn existential_witness_dependencies_follow_the_complete_object_tree() {
+    for source in sources() {
+        let mut rt = runtime(source);
+        let accepted = rt.run_litex_code("exist x R st {x > -1}\nexist x R st {x = 1+1}\nhave a R = 1\nexist x R st {x = a}\nhave fn value(t R) R = t\nexist x R st {x > value(0)}\n").unwrap();
+        assert!(
+            accepted.success,
+            "{}",
+            crate::json_output::emit_run_detailed(&accepted, &rt, "existential dependencies", None)
+        );
+        for invalid in ["exist x R st {x = x+1}", "exist x R st {x > x}"] {
+            assert!(!rt.run_litex_code(invalid).unwrap().success, "{invalid}");
+        }
+        assert!(rt.run_litex_code("a = 1").unwrap().success);
+    }
+}
+
+#[test]
+fn refined_and_stored_prefix_function_carriers_preserve_later_application_layers() {
+    for source in sources() {
+        assert_success(
+            source.clone(),
+            "forall f fn(x R) {u fn(t R) R: u(0)=0}:\n    f(1)(0)=f(1)(0)\n",
+        );
+        assert_success(
+            source,
+            "forall S set,f fn(x R) S:\n    f(1) $in fn(t R) R\n    =>:\n        f(1)(2) $in R\n",
+        );
+    }
+}

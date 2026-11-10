@@ -297,15 +297,9 @@ impl Runtime {
 
         let mut copy_a = Vec::with_capacity(n);
         let mut copy_b = Vec::with_capacity(n);
-        for (i, binder) in flat.iter().enumerate() {
-            copy_a.push(BoundName::new(
-                self.global_ids.allocate_identifier_id(),
-                format!("{}_a{i}", binder.name),
-            ));
-            copy_b.push(BoundName::new(
-                self.global_ids.allocate_identifier_id(),
-                format!("{}_b{i}", binder.name),
-            ));
+        for _ in &flat {
+            copy_a.push(self.fresh_internal_param());
+            copy_b.push(self.fresh_internal_param());
         }
 
         let mut map_a = HashMap::new();

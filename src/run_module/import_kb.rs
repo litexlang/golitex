@@ -104,12 +104,31 @@ pub fn write_kb_after_cold_import(
     let Ok(fingerprint) = fingerprint_module_recursive(module_dir, config, std_root) else {
         return;
     };
+    let modules = &runtime.global_module_manager;
+    let mut dependency_paths = std::collections::HashMap::new();
+    let mut pending = vec![mod_id];
+    while let Some(id) = pending.pop() {
+        let module = &modules.imports()[id];
+        if dependency_paths.insert(module.path.clone(), id).is_some() {
+            continue;
+        }
+        for import in &module.litex_config.imports {
+            let path = import
+                .path
+                .canonicalize()
+                .unwrap_or_else(|_| import.path.clone());
+            let Some(dependency) = modules.path_to_mod_id().get(&path) else {
+                return;
+            };
+            pending.push(*dependency);
+        }
+    }
     let recorded = &runtime.global_module_manager.imports()[mod_id].export_files_and_their_env;
     let _ = write_import_cache_after_cold(
         module_dir,
         &fingerprint,
         mod_id,
-        runtime.global_module_manager.path_to_mod_id(),
+        &dependency_paths,
         recorded,
     );
 }
