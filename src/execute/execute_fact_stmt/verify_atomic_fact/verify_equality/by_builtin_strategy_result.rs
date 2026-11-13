@@ -5,6 +5,12 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 // Calculation builtins). Each variant owns its checked premises; scoped
 // pointwise steps also retain their parameter introduction and environment.
 pub enum EqualitySearchProofByBuiltinStrategy {
+    RiemannIntegralValue(
+        super::verify_equality_by_builtin_rules::by_riemann_integral::RiemannIntegralValueStrategyProof,
+    ),
+    DerivativeValue(
+        super::verify_equality_by_builtin_rules::by_derivative::DerivativeValueStrategyProof,
+    ),
     FunctionApplicationCongruence(
         super::search_equal_fact_by_composed_structure::FunctionApplicationCongruenceProof,
     ),

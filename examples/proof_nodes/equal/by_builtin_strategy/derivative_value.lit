@@ -1,0 +1,23 @@
+# Before: after proving differentiability, a direct derivative value equation
+# still failed at search_proof until a separate derivative candidate was stated.
+# have fn square(x R) R=x*x
+# $diff_at(square,3)
+# deriv(square,3)=6
+# Now: the equation carries its own checked structural derivative candidate.
+# Boundary: selector WD still consumes differentiability; incorrect values reject.
+# Check: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_strategy/derivative_value.lit
+
+have fn square(x R) R=x*x
+$diff_at(square,3)
+deriv(square,3)=6
+6=deriv(square,3)
+
+forall f,g,h,t fn(x R) R,x0 R:
+    $diff_at(g,x0)
+    $diff_at(f,g(x0))
+    $diff_at(h,x0)
+    $diff_at(t,x0)
+    t(x0)!=0
+    =>:
+        $diff_at(fn(x R:t(x)!=0) R {f(g(x))+h(x)/t(x)*90},x0)
+        deriv(fn(x R:t(x)!=0) R {f(g(x))+h(x)/t(x)*90},x0)=deriv(f,g(x0))*deriv(g,x0)+(deriv(h,x0)*t(x0)-h(x0)*deriv(t,x0))/(t(x0)^2)*90

@@ -56,6 +56,16 @@ impl Runtime {
         fact: &EqualFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_riemann_integral_value_strategy(fact, ctx)? {
+            return Ok(Some(
+                EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(proof),
+            ));
+        }
+        if let Some(proof) = self.search_derivative_value_strategy(fact, ctx)? {
+            return Ok(Some(EqualitySearchProofByBuiltinStrategy::DerivativeValue(
+                proof,
+            )));
+        }
         if let Some(proof) = self.search_equal_fact_by_cos_zero_integer_offset(fact, ctx)? {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(proof),

@@ -40,6 +40,18 @@ impl Runtime {
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(proof),
             ));
         }
+        if let Some(proof) = self.search_riemann_integrability_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RiemannIntegrability(proof),
+            ));
+        }
+        if let Some(proof) = self.search_structural_riemann_integral_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralRiemannIntegral(
+                    proof,
+                ),
+            ));
+        }
         if let Some(proof) = self.search_structural_limit_strategy(fact, ctx)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(proof),

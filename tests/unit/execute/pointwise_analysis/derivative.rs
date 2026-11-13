@@ -354,14 +354,17 @@ fn derivative_formula_normalization_composes_bounded_rational_evidence() {
     );
     let mut rt = runtime();
     let run = check(&mut rt, source, true);
-    let json = crate::json_output::project_run_detailed(&run, &rt, "derivative_formula", None)
-        .stringify();
+    let json =
+        crate::json_output::project_run_detailed(&run, &rt, "derivative_formula", None).stringify();
     assert!(json.contains("RationalWithNonzeroPremises"));
 
     for rejected in [
         source.replace("/(t(x0)^2)*90", "/(t(x0)^2)*91"),
         source.replace("        t(x0)!=0\n", ""),
-        source.replace("$is_differentiable_at(f,g(x0))", "$is_differentiable_at(f,x0)"),
+        source.replace(
+            "$is_differentiable_at(f,g(x0))",
+            "$is_differentiable_at(f,x0)",
+        ),
     ] {
         check(&mut runtime(), &rejected, false);
     }
@@ -380,4 +383,45 @@ fn derivative_formula_normalization_keeps_the_general_search_ceiling() {
         .verify_fact(&goal, VerifyState::new(VerifyStateLevel::Strategy))
         .unwrap()
         .is_failed());
+}
+
+#[test]
+fn derivative_value_equations_build_their_own_candidates() {
+    let source = include_str!(
+        "../../../../examples/proof_nodes/equal/by_builtin_strategy/derivative_value.lit"
+    );
+    let mut rt = runtime();
+    let run = check(&mut rt, source, true);
+    let json =
+        crate::json_output::project_run_detailed(&run, &rt, "derivative_value", None).stringify();
+    assert!(json.contains("DerivativeValue"));
+    assert!(json.contains("PointwiseDerivative"));
+    assert!(json.contains("RationalWithNonzeroPremises"));
+    assert!(rt.known_derivative_candidates().is_empty());
+
+    for source in [
+        "have fn square(x R) R=x*x\nderiv(square,3)=6",
+        "have fn square(x R) R=x*x\n$diff_at(square,3)\nderiv(square,3)=7",
+        "have fn square(x R) R=x*x\n$diff_at(square,3)\n7=deriv(square,3)",
+        "have fn reciprocal(x R*) R=1/x\n$diff_at(reciprocal,0)\nderiv(reciprocal,0)=0",
+    ] {
+        check(&mut runtime(), source, false);
+    }
+}
+
+#[test]
+fn derivative_closed_power_exponents_are_normalized() {
+    check(
+        &mut runtime(),
+        include_str!(
+            "../../../../examples/proof_nodes/equal/by_builtin_rule/closed_exponent_polynomial_normalization.lit"
+        ),
+        true,
+    );
+    for source in [
+        "forall x R:\n    x^(2+1)=x^2",
+        "have fn affine_power(x R) R=(3*x+1)^5\nforall a R:\n    $diff_at(affine_power,a)\n    deriv(affine_power,a)=16*(3*a+1)^4",
+    ] {
+        check(&mut runtime(), source, false);
+    }
 }

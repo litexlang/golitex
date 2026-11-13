@@ -12834,6 +12834,55 @@ fn multivariable_interior_search_stages<'a>(
     }
 }
 
+fn riemann_expression_search_stages<'a>(
+    proof: &'a crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannExpressionProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::structural_riemann_integral::{
+        RiemannConstructorProof as C, RiemannLeafProof,
+    };
+    match &proof.constructor {
+        C::Constant { value_real } => stages.push(AtomicSearchStage::Verify(value_real)),
+        C::Variable => {}
+        C::NaturalPower { exponent_natural } => {
+            stages.push(AtomicSearchStage::Verify(exponent_natural))
+        }
+        C::Neg { argument } => riemann_expression_search_stages(argument, stages),
+        C::Add { left, right } | C::Sub { left, right } => {
+            riemann_expression_search_stages(left, stages);
+            riemann_expression_search_stages(right, stages);
+        }
+        C::Scale {
+            scalar_real,
+            argument,
+            ..
+        } => {
+            stages.push(AtomicSearchStage::Verify(scalar_real));
+            riemann_expression_search_stages(argument, stages);
+        }
+        C::Divide {
+            argument,
+            denominator_real,
+            denominator_nonzero,
+        } => {
+            stages.push(AtomicSearchStage::Verify(denominator_real));
+            stages.push(AtomicSearchStage::Verify(denominator_nonzero));
+            riemann_expression_search_stages(argument, stages);
+        }
+        C::Application { leaf, .. } => match leaf {
+            RiemannLeafProof::Candidate(_) => {}
+            RiemannLeafProof::Selected {
+                integrability,
+                value_well_defined,
+            } => {
+                stages.push(AtomicSearchStage::Verify(integrability));
+                stages.push(AtomicSearchStage::WD(value_well_defined));
+            }
+        },
+    }
+    stages.push(AtomicSearchStage::Verify(&proof.integral_real));
+}
+
 fn derivative_expression_search_stages<'a>(
     proof: &'a crate::execute::execute_fact_stmt::pointwise_derivative::DerivativeExpressionProof,
     stages: &mut Vec<AtomicSearchStage<'a>>,
@@ -13001,6 +13050,12 @@ fn equality_searched_stages(proof: &EqualFactSearchedProof) -> Vec<AtomicSearchS
         EqualitySearchProofByObjectDefinition, by_template::result::EqualitySearchProofByTemplateObjectDefinition,
     };
     match proof {
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::DerivativeValue(p),
+        ) => stages.push(AtomicSearchStage::Verify(&p.candidate)),
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(p),
+        ) => stages.push(AtomicSearchStage::Verify(&p.candidate)),
         EqualFactSearchedProof::ByObjectDefinition(
             EqualitySearchProofByObjectDefinition::ByTemplate(
                 EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualCaseByCaseApplication(p),
@@ -13267,6 +13322,19 @@ fn atomic_searched_stages(
                 if let Some(second) = &coordinate.second { smooth_coordinate_search_stages(second, &mut stages); }
             }
             stages.extend(p.conclusion_equalities.iter().map(|p| AtomicSearchStage::Verify(&p.equality)));
+        },
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralRiemannIntegral(p)) => {
+            complete_domain_source_stages(&p.domain.source, &mut stages);
+            stages.push(AtomicSearchStage::Verify(&p.domain.input_real));
+            stages.push(AtomicSearchStage::Verify(&p.domain.output_real));
+            stages.extend(p.interval_requirements.iter().map(AtomicSearchStage::Verify));
+            if let crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof::IndependentlyChecked(wd) = &p.body_well_defined {
+                stages.push(AtomicSearchStage::WD(wd));
+            }
+            riemann_expression_search_stages(&p.expression, &mut stages);
+            if let crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConclusionProof::Candidate(proof) = &p.conclusion {
+                stages.push(AtomicSearchStage::Verify(proof));
+            }
         },
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p))=>{
             complete_domain_source_stages(&p.domain.source,&mut stages);

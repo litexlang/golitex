@@ -297,13 +297,19 @@ fn collect_monomials_in_pow(
         }
     }
 
-    let (exponent_ok, exponent_value) = if let Obj::Literal(Literal::Number(num)) = &*pow.exponent {
-        if number_string_is_literal_integer_without_dot(&num.normalized_value)
-            && !num.normalized_value.starts_with('-')
-        {
-            if let Ok(n) = num.normalized_value.parse::<i64>() {
-                if n >= 0 {
-                    (true, Some(n))
+    // Closed exponents have the same polynomial meaning as their exact values.
+    // Example: x^(max(2,1)-1) = x; symbolic exponents remain opaque below.
+    let (exponent_ok, exponent_value) =
+        if let Some(num) = evaluate_obj_to_normalized_decimal_number(&pow.exponent) {
+            if number_string_is_literal_integer_without_dot(&num.normalized_value)
+                && !num.normalized_value.starts_with('-')
+            {
+                if let Ok(n) = num.normalized_value.parse::<i64>() {
+                    if n >= 0 {
+                        (true, Some(n))
+                    } else {
+                        (false, None)
+                    }
                 } else {
                     (false, None)
                 }
@@ -312,10 +318,7 @@ fn collect_monomials_in_pow(
             }
         } else {
             (false, None)
-        }
-    } else {
-        (false, None)
-    };
+        };
 
     if !exponent_ok {
         return default_pow_fallback(pow);

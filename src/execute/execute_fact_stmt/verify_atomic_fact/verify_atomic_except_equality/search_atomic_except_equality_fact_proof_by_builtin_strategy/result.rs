@@ -17,6 +17,12 @@ pub enum AtomicExceptEqualityFactSearchProofByBuiltinStrategy {
     QuotientScaleLess(super::quotient_order::QuotientScaleLessProof),
     QuotientScaleLessEqual(super::quotient_order::QuotientScaleLessEqualProof),
     StructuralLimit(crate::execute::execute_fact_stmt::structural_limit::StructuralLimitProof),
+    StructuralRiemannIntegral(
+        crate::execute::execute_fact_stmt::structural_riemann_integral::StructuralRiemannIntegralProof,
+    ),
+    RiemannIntegrability(
+        crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrabilityProof,
+    ),
     MultivariableAnalysis(
         crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof,
     ),

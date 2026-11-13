@@ -172,7 +172,11 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {
             validate_arithmetic_expression(&x.base)?;
-            validate_arithmetic_expression(&x.exponent)?;
+            // The numeric observer replays the original closed exponent's WD,
+            // including min/max, before using its exact integer value.
+            if closed_integer(&x.exponent).is_none() {
+                validate_arithmetic_expression(&x.exponent)?;
+            }
             // The selected normalization retains a symbolic power as an
             // opaque monomial. Its original WD still has to supply the exact
             // supported exponent domain to the numeric observer.

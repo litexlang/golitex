@@ -38,10 +38,6 @@ impl Runtime {
         positive: bool,
         line_file: &SourceLine,
     ) -> RuntimeResult<Option<AtomicFact>> {
-        let name = crate::parse::builtin_aliases::canonical_builtin_name(
-            name,
-            crate::parse::builtin_aliases::BuiltinAliasKind::Predicate,
-        );
         let Some(arity) = real_analysis_fact_arity(name) else {
             return Ok(None);
         };

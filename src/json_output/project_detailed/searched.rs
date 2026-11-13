@@ -526,6 +526,26 @@ fn project_equality_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     let (name, requirements, proofs) = match proof {
+        EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("RiemannIntegralValue")),
+                    ("candidate", project_verify_fact(&p.candidate, runtime)),
+                ],
+            );
+        }
+        EqualitySearchProofByBuiltinStrategy::DerivativeValue(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("DerivativeValue")),
+                    ("candidate", project_verify_fact(&p.candidate, runtime)),
+                ],
+            );
+        }
         EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(p) => (
             "FunctionApplicationCongruence",
             &p.requirement_facts,

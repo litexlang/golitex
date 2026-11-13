@@ -34,7 +34,9 @@ fn builtin_short_names_parse_to_the_existing_positive_and_negative_facts() {
         if kind != BuiltinAliasKind::Predicate {
             continue;
         }
-        let count = crate::parse::real_analysis_fact_arity(long).unwrap();
+        let count = crate::parse::real_analysis_fact_arity(long)
+            .or_else(|| crate::builtin_theorem::builtin_certificate_arity(long))
+            .unwrap();
         let args = vec!["1"; count].join(",");
         for sign in ["", "not "] {
             assert_eq!(
@@ -185,8 +187,14 @@ fn builtin_short_names_keep_arity_wd_and_failure_recovery() {
         "eval pderiv(square,3,2)",
         "$diff_at(square)",
         "$has_deriv_at(square,3)",
+        "$has_integ(square,0,1)",
+        "$integrable(square,0)",
+        "$darboux_bounds(square,0,1)",
+        "$antideriv_on(square,broken)",
         "release thm deriv_add(square)",
         "release thm integ_add(square)",
+        "release thm integ_pow(square,0,1)",
+        "release thm darboux_fold(square)",
         "deriv(square,3)=6",
         "0*integ(square,0,1)=0",
         "$has_deriv_at(square,3,7)",
@@ -256,6 +264,82 @@ fn builtin_short_names_tracer_keeps_canonical_json() {
             detailed.contains(name),
             "missing canonical detailed output {name}"
         );
+    }
+}
+
+#[test]
+fn riemann_short_names_reuse_certificate_facts_and_negative_boundaries() {
+    let mut rt = runtime();
+    let source = include_str!("../../../examples/stmt_nodes/release_and_expand/builtin_thm/darboux_enclosure_from_definition.lit")
+        .replace("darboux_enclosure_from_definition", "darboux_fold");
+    assert!(rt.run_litex_code(&source).unwrap().success);
+    for statement in [
+        "$darboux_bounds(two,0,1,1,p,lo,hi)",
+        "$is_darboux_enclosure(two,0,1,1,p,lo,hi)",
+        "release thm darboux_unfold(two,0,1,1,p,lo,hi)",
+    ] {
+        assert!(rt.run_litex_code(statement).unwrap().success, "{statement}");
+    }
+    for statement in [
+        "not $darboux_bounds(two,0,1,1,p,lo,hi)",
+        "$darboux_bounds(two,0,1,0,p,lo,hi)",
+    ] {
+        assert!(
+            !rt.run_litex_code(statement).unwrap().success,
+            "{statement}"
+        );
+        assert!(rt.run_litex_code("two(0)=2").unwrap().success);
+    }
+
+    let mut rt = runtime();
+    let source = include_str!("../../../examples/stmt_nodes/release_and_expand/builtin_thm/antiderivative_from_definition.lit");
+    assert!(rt.run_litex_code(source).unwrap().success);
+    for statement in [
+        "$antideriv_on(square,twice,R)",
+        "$is_antiderivative_on(square,twice,R)",
+    ] {
+        let run = rt.run_litex_code(statement).unwrap();
+        assert!(run.success, "{statement}");
+        let normal = crate::json_output::emit_run_normal(&run, &rt, "antideriv", None);
+        assert!(normal.contains("$is_antiderivative_on("));
+    }
+    assert!(
+        !rt.run_litex_code("not $antideriv_on(square,twice,R)")
+            .unwrap()
+            .success
+    );
+    assert!(rt.run_litex_code("square(3)=9").unwrap().success);
+}
+
+#[test]
+fn riemann_short_names_tracer_keeps_canonical_output_and_mixed_reuse() {
+    let mut rt = runtime();
+    let source = include_str!("../../../examples/wd/riemann_short_names.lit");
+    let run = rt.run_litex_code(source).unwrap();
+    assert!(
+        run.success,
+        "{}",
+        crate::json_output::emit_run_compact(&run, &rt, "riemann_short_names", None)
+    );
+    let normal = crate::json_output::emit_run_normal(&run, &rt, "riemann_short_names", None);
+    for canonical in [
+        "$has_riemann_integral(",
+        "$is_riemann_integrable(",
+        "$is_darboux_enclosure(",
+        "$is_antiderivative_on(",
+    ] {
+        assert!(normal.contains(canonical), "{canonical}");
+    }
+    for statement in [
+        "$has_integ(square,0,1,7)",
+        "$integrable(fn(x R)R{1/x},0,1)",
+        "release thm integ_unique(square,0,1,1/3,7)",
+    ] {
+        assert!(
+            !rt.run_litex_code(statement).unwrap().success,
+            "{statement}"
+        );
+        assert!(rt.run_litex_code("integ(square,0,1)=1/3").unwrap().success);
     }
 }
 

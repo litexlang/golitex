@@ -23,6 +23,53 @@ claim:
         .expect("the existing guarded rational certificate must remain replayable");
     assert!(lean.contains("semanticDerivative"));
 }
+
+const DIRECT_VALUE: &str = "have fn square(x R) R=x*x\n$diff_at(square,3)\nderiv(square,3)=6\n";
+
+#[test]
+fn automatic_derivative_value_equality_replays_its_checked_candidate() {
+    let (run, compiler) = super::execute(DIRECT_VALUE);
+    let lean = compiler
+        .compile_run(&run, "direct_derivative_value")
+        .expect("direct derivative equality has a checked candidate");
+    assert!(lean.contains("derivativeEqCandidate"));
+}
+
+#[test]
+fn automatic_derivative_value_equality_rejects_a_changed_candidate() {
+    let (mut run, compiler) = super::execute(DIRECT_VALUE);
+    let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
+        &mut run.statement_results[2]
+    else {
+        panic!("derivative equality statement");
+    };
+    let equality = super::equality_proof_mut(&mut statement.verify_result);
+    let EqualFactSearchedProof::ByBuiltinStrategy(
+        EqualitySearchProofByBuiltinStrategy::DerivativeValue(proof),
+    ) = &mut equality.searched_proof
+    else {
+        panic!("direct derivative value strategy");
+    };
+    let candidate = super::atomic_proof_mut(&mut proof.candidate);
+    let AtomicFact::HasDerivativeAtFact(candidate) = &mut candidate.fact else {
+        panic!("derivative candidate");
+    };
+    candidate.value = Obj::Literal(Literal::Number(Number::new("7".into())));
+    compiler
+        .compile_run(&run, "changed_direct_derivative_value")
+        .expect_err("the candidate must match the original equality value");
+}
+
+#[test]
+fn automatic_derivative_closed_power_index_compiles() {
+    let source = include_str!(
+        "../../../examples/proof_nodes/equal/by_builtin_rule/closed_exponent_polynomial_normalization.lit"
+    );
+    let (run, compiler) = super::execute(source);
+    compiler
+        .compile_run(&run, "closed_derivative_power_index")
+        .expect("exact closed exponents retain their original checked expressions");
+}
 fn proof(run: &mut RunLitexCodeResult) -> &mut PointwiseDerivativeProof {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
         &mut run.statement_results[1]

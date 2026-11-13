@@ -41,6 +41,26 @@ pub(crate) const BUILTIN_ALIASES: &[(&str, &str, BuiltinAliasKind)] = &[
         BuiltinAliasKind::Predicate,
     ),
     (
+        "has_integ",
+        "has_riemann_integral",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "integrable",
+        "is_riemann_integrable",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "darboux_bounds",
+        "is_darboux_enclosure",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
+        "antideriv_on",
+        "is_antiderivative_on",
+        BuiltinAliasKind::Predicate,
+    ),
+    (
         "deriv_add",
         "fn_derivative_at_add",
         BuiltinAliasKind::Theorem,
@@ -99,6 +119,106 @@ pub(crate) const BUILTIN_ALIASES: &[(&str, &str, BuiltinAliasKind)] = &[
     (
         "integ_parts",
         "riemann_integral_by_parts",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_fold",
+        "riemann_integral_from_definition",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_unfold",
+        "riemann_integral_to_definition",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_exists",
+        "riemann_integral_exists",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_integrable",
+        "riemann_integrable_from_candidate",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_select",
+        "riemann_integral_selected",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_unique",
+        "riemann_integral_unique",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_zero",
+        "riemann_integral_zero",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_const",
+        "riemann_integral_constant",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_pow",
+        "riemann_integral_power",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_rev",
+        "riemann_integral_reverse",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_split",
+        "riemann_integral_split",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_congr",
+        "riemann_integral_extensional",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_mono",
+        "riemann_integral_compare",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_bound",
+        "riemann_integral_bound",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "cont_integrable",
+        "riemann_integrable_continuous",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_eval",
+        "riemann_integral_newton_leibniz",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_step",
+        "riemann_integral_step",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "integ_subst",
+        "riemann_integral_substitution",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "darboux_fold",
+        "darboux_enclosure_from_definition",
+        BuiltinAliasKind::Theorem,
+    ),
+    (
+        "darboux_unfold",
+        "darboux_enclosure_to_definition",
         BuiltinAliasKind::Theorem,
     ),
 ];

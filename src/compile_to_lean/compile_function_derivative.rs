@@ -160,6 +160,55 @@ impl LitexToLeanCompiler {
 }
 
 impl LitexToLeanCompiler {
+    pub(super) fn compile_derivative_value_strategy(
+        &self,
+        fact: &EqualFact,
+        proof: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_derivative::DerivativeValueStrategyProof,
+        position: &SourcePosition<'_>,
+    ) -> Result<String, LeanCompileError> {
+        let Fact::AtomicFact(AtomicFact::HasDerivativeAtFact(candidate)) =
+            source_subject(&proof.candidate)?
+        else {
+            return Err(invalid("ValueCandidate"));
+        };
+        let mut selected = None;
+        for (object, value, reversed) in [
+            (&fact.left, &fact.right, false),
+            (&fact.right, &fact.left, true),
+        ] {
+            let Obj::DerivativeOperator(DerivativeOperator::AtPoint(derivative)) = object else {
+                continue;
+            };
+            if derivative.function.ir() == candidate.function.ir()
+                && derivative.point.ir() == candidate.point.ir()
+                && value.ir() == candidate.value.ir()
+            {
+                selected = Some((object, reversed));
+                break;
+            }
+        }
+        let Some((selected, reversed)) = selected else {
+            return Err(invalid("ValueCandidateSubject"));
+        };
+        let prior = position.search_verify_prior(&proof.candidate)?;
+        let (_, candidate_proof) = self.compile_verify(&proof.candidate, &prior)?;
+        let value = self.compile_object_reference(&candidate.value, position)?;
+        let real = format!(
+            "(Litex.derivativeCandidateInR {} {} {value} {candidate_proof})",
+            self.compile_object_reference(&candidate.function, position)?,
+            self.compile_object_reference(&candidate.point, position)?,
+        );
+        let term = format!(
+            "(Litex.derivativeEqCandidate {} {value} {real} {candidate_proof})",
+            self.compile_object_reference(selected, position)?,
+        );
+        Ok(if reversed {
+            format!("({term}).symm")
+        } else {
+            term
+        })
+    }
+
     pub(super) fn compile_derivative_equality(
         &self,
         fact: &EqualFact,

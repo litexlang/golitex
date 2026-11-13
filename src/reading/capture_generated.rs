@@ -21002,6 +21002,16 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_builtin_strategy_result__EqualitySearchProofByBuiltinStrategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_riemann_integral__RiemannIntegralValueStrategyProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinStrategy", "RiemannIntegralValue", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::DerivativeValue(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_derivative__DerivativeValueStrategyProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinStrategy", "DerivativeValue", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__search_equal_fact_by_composed_structure__FunctionApplicationCongruenceProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinStrategy", "FunctionApplicationCongruence", fields);
@@ -21634,6 +21644,16 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitProof(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "StructuralLimit", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralRiemannIntegral(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__structural_riemann_integral__StructuralRiemannIntegralProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "StructuralRiemannIntegral", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RiemannIntegrability(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrabilityProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "RiemannIntegrability", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(f0) => {
@@ -29185,6 +29205,28 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_riemann_integral__RiemannIntegralValueStrategyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_riemann_integral::RiemannIntegralValueStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_riemann_integral::RiemannIntegralValueStrategyProof { candidate: f0 } => {
+let fields = vec![("candidate", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("RiemannIntegralValueStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_derivative__DerivativeValueStrategyProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_derivative::DerivativeValueStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_derivative::DerivativeValueStrategyProof { candidate: f0 } => {
+let fields = vec![("candidate", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("DerivativeValueStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__search_equal_fact_by_composed_structure__FunctionApplicationCongruenceProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_by_composed_structure::FunctionApplicationCongruenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_by_composed_structure::FunctionApplicationCongruenceProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
@@ -33283,6 +33325,31 @@ let output = match value {
 crate::execute::execute_fact_stmt::structural_limit::StructuralLimitProof { function: f0, approach: f1, domain: f2, body: f3, body_equal: f4, body_well_defined: f5, geometry: f6, expression: f7, result_equal: f8 } => {
 let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("approach", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitApproach(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("body", capture_ast__obj__AnonymousFn(f3, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f4, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__function_domain__CheckedFunctionBodyProof(f5, capture, runtime)), ("geometry", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitGeometryProof(f6, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f7, capture, runtime)), ("result_equal", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f8, capture, runtime))];
 let mut output = node("StructuralLimitProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__structural_riemann_integral__StructuralRiemannIntegralProof(value: &crate::execute::execute_fact_stmt::structural_riemann_integral::StructuralRiemannIntegralProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_riemann_integral::StructuralRiemannIntegralProof { function: f0, lower: f1, upper: f2, domain: f3, interval_requirements: f4, body: f5, body_equal: f6, body_well_defined: f7, expression: f8, conclusion: f9 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("lower", capture_ast__obj__Obj(f1, capture, runtime)), ("upper", capture_ast__obj__Obj(f2, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("interval_requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("body", capture_ast__obj__AnonymousFn(f5, capture, runtime)), ("body_equal", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f6, capture, runtime)), ("body_well_defined", capture_execute__execute_fact_stmt__function_domain__CheckedFunctionBodyProof(f7, capture, runtime)), ("expression", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f8, capture, runtime)), ("conclusion", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannConclusionProof(f9, capture, runtime))];
+let mut output = node("StructuralRiemannIntegralProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrabilityProof(value: &crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrabilityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrabilityProof { function: f0, lower: f1, upper: f2, domain: f3, interval_requirements: f4, source: f5, interval_stores: f6, introduced_point: f7, continuity_premises: f8, expression: f9, local_env: f10 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f10, runtime);
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("lower", capture_ast__obj__Obj(f1, capture, runtime)), ("upper", capture_ast__obj__Obj(f2, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("interval_requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("source", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrabilitySource(f5, capture, runtime)), ("interval_stores", JsonValue::Array((f6).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(item, capture, runtime)).collect())), ("introduced_point", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f7, capture, runtime)), ("continuity_premises", JsonValue::Array((f8).iter().map(|item| capture_execute__execute_fact_stmt__riemann_integrability__RiemannContinuityPremise(item, capture, runtime)).collect())), ("expression", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f9, capture, runtime)), ("local_env", capture.environment(f10, runtime))];
+let mut output = node("RiemannIntegrabilityProof", "", fields);
+capture.leave_scope(saved_scope);
 output
 },
 };
@@ -46232,6 +46299,71 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(value: &crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannExpressionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannExpressionProof { expression: f0, integral: f1, constructor: f2, integral_real: f3 } => {
+let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("integral", capture_ast__obj__Obj(f1, capture, runtime)), ("constructor", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannConstructorProof(f2, capture, runtime)), ("integral_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime))];
+let mut output = node("RiemannExpressionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannConclusionProof(value: &crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConclusionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConclusionProof::Candidate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("RiemannConclusionProof", "Candidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConclusionProof::Integrable => {
+let fields = vec![];
+let mut output = node("RiemannConclusionProof", "Integrable", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrabilitySource(value: &crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrabilitySource, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrabilitySource::Defined { body: f0, equality: f1, well_defined: f2 } => {
+let fields = vec![("body", capture_ast__obj__AnonymousFn(f0, capture, runtime)), ("equality", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__result__KnownEqualityPathProof(f1, capture, runtime)), ("well_defined", capture_execute__execute_fact_stmt__function_domain__CheckedFunctionBodyProof(f2, capture, runtime))];
+let mut output = node("RiemannIntegrabilitySource", "Defined", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrabilitySource::Applied { parameter: f0 } => {
+let fields = vec![("parameter", capture.bound_name(f0, runtime))];
+let mut output = node("RiemannIntegrabilitySource", "Applied", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__riemann_integrability__RiemannContinuityPremise(value: &crate::execute::execute_fact_stmt::riemann_integrability::RiemannContinuityPremise, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannContinuityPremise { fact: f0, interval_continuity: f1, point_membership: f2, store: f3 } => {
+let fields = vec![("fact", capture_ast__fact__atomic__AtomicFact(f0, capture, runtime)), ("interval_continuity", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("point_membership", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("store", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f3, capture, runtime))];
+let mut output = node("RiemannContinuityPremise", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(value: &crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableExpressionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableExpressionProof { expression: f0, value: f1, value_real: f2, constructor: f3 } => {
+let fields = vec![("expression", capture_ast__obj__Obj(f0, capture, runtime)), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("constructor", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableConstructorProof(f3, capture, runtime))];
+let mut output = node("RiemannIntegrableExpressionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__ContinuousMultivariableProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::ContinuousMultivariableProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::ContinuousMultivariableProof { relation: f0, function_domain: f1, body: f2, body_equal: f3, body_well_defined: f4, geometry: f5, coordinates: f6, conclusion_equalities: f7 } => {
@@ -49781,6 +49913,118 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannConstructorProof(value: &crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Constant { value_real: f0 } => {
+let fields = vec![("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "Constant", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Variable => {
+let fields = vec![];
+let mut output = node("RiemannConstructorProof", "Variable", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::NaturalPower { exponent_natural: f0 } => {
+let fields = vec![("exponent_natural", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "NaturalPower", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Neg { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f0, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "Neg", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Add { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f1, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Sub { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f1, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "Sub", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Scale { scalar: f0, scalar_real: f1, argument: f2 } => {
+let fields = vec![("scalar", capture_ast__obj__Obj(f0, capture, runtime)), ("scalar_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("argument", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f2, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "Scale", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Divide { argument: f0, denominator_real: f1, denominator_nonzero: f2 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f0, capture, runtime)), ("denominator_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("denominator_nonzero", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "Divide", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Application { function: f0, leaf: f1 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("leaf", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannLeafProof(f1, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "Application", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableConstructorProof(value: &crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Constant => {
+let fields = vec![];
+let mut output = node("RiemannIntegrableConstructorProof", "Constant", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Variable => {
+let fields = vec![];
+let mut output = node("RiemannIntegrableConstructorProof", "Variable", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Neg { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f0, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "Neg", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Abs { argument: f0 } => {
+let fields = vec![("argument", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f0, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "Abs", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Add { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f1, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Sub { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f1, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "Sub", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Mul { left: f0, right: f1 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f1, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "Mul", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::NaturalPower { base: f0, exponent_natural: f1 } => {
+let fields = vec![("base", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f0, capture, runtime)), ("exponent_natural", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "NaturalPower", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Quotient { numerator: f0, denominator_continuity: f1, denominator_nonzero: f2 } => {
+let fields = vec![("numerator", capture_execute__execute_fact_stmt__riemann_integrability__RiemannIntegrableExpressionProof(f0, capture, runtime)), ("denominator_continuity", capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityExpressionProof(f1, capture, runtime)), ("denominator_nonzero", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "Quotient", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Application { function: f0, integrability: f1 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("integrability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "Application", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integrability::RiemannIntegrableConstructorProof::Continuous(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__pointwise_continuity__PointwiseContinuityExpressionProof(f0, capture, runtime))];
+let mut output = node("RiemannIntegrableConstructorProof", "Continuous", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__strategy__MultivariableInteriorProof(value: &crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableInteriorProof::ExactFiniteFunctionSpace { source: f0, target: f1, signature_equal: f2, point_member: f3 } => {
@@ -50842,6 +51086,22 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::RealArithmeticConstructorTerminalProof { fact: f0, searched_proof: f1 } => {
 let fields = vec![("fact", capture_ast__fact__atomic__InFact(f0, capture, runtime)), ("searched_proof", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactSearchedProof(f1, capture, runtime))];
 let mut output = node("RealArithmeticConstructorTerminalProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannLeafProof(value: &crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannLeafProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannLeafProof::Candidate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
+let mut output = node("RiemannLeafProof", "Candidate", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannLeafProof::Selected { integrability: f0, value_well_defined: f1 } => {
+let fields = vec![("integrability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("value_well_defined", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime))];
+let mut output = node("RiemannLeafProof", "Selected", fields);
 output
 },
 };

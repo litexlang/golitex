@@ -458,6 +458,12 @@ and `set_prod(S,f)`. Theorem calls accept names such as `deriv_add` and
 parameters and proof requirements. Stored expressions use the long spelling.
 See the [complete short-name table](Manual.md#builtin-short-names-preview).
 
+Integral candidates use `$has_integ(f,a,b,I)`, existence uses
+`$integrable(f,a,b)`, and the selected value is `integ(f,a,b)`. Integral
+theorems include `integ_pow`, `integ_const`, `integ_split`, `integ_subst`,
+`integ_parts` and `integ_eval`. Certificates use `$darboux_bounds(...)`,
+and antiderivative relations use `$antideriv_on(F,f,S)`.
+
 | Supported spelling | Recommended for new ordinary examples |
 | --- | --- |
 | Bare `by thm name(args)` | `release thm name(args)` for an unselected call. |

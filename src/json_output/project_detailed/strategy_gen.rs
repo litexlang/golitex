@@ -52,6 +52,8 @@ pub(super) fn project_atomic_builtin_strategy(
             ("proof_of_requirement_facts", project_verify_facts(&p.proof_of_requirement_facts, runtime)),
         ]),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(p) => super::structural_limit::project(p, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralRiemannIntegral(p) => super::riemann_integral::structural(p, runtime),
+        AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RiemannIntegrability(p) => super::riemann_integrability::project(p, runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(p)=>super::multivariable::strategy(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p) => super::pointwise_derivative::project(p,runtime),
         AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseContinuity(p) => super::pointwise_continuity::project_pointwise_continuity(p,runtime),

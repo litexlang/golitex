@@ -189,7 +189,8 @@ fn riemann_integral_native_existence_does_not_guess_a_value() {
     );
     assert!(rt.known_riemann_integral_candidates().is_empty());
     check(&mut rt, "integral(square,0,1)=integral(square,0,1)", true);
-    check(&mut rt, "integral(square,0,1)=1/3", false);
+    // The separate value strategy computes this polynomial after existence.
+    check(&mut rt, "integral(square,0,1)=1/3", true);
     check(
         &mut rt,
         "release thm riemann_integral_selected(square,0,1)",
@@ -199,6 +200,161 @@ fn riemann_integral_native_existence_does_not_guess_a_value() {
         &mut rt,
         "$has_riemann_integral(square,0,1,integral(square,0,1))",
         true,
+    );
+}
+
+#[test]
+fn riemann_integral_structural_polynomial_candidates_and_values() {
+    let mut rt = runtime();
+    check(&mut rt, "have fn p(x R) R=3*x^2+2*x+1", true);
+    check(&mut rt, "integ(p,0,1)=3", false);
+    let integrability = check(&mut rt, "$is_riemann_integrable(p,0,1)", true);
+    let json =
+        crate::json_output::project_run_detailed(&integrability, &rt, "riemann", None).stringify();
+    assert!(json.contains("RiemannIntegrability"));
+    assert!(json.contains("interval_requirements"));
+    assert!(rt.known_riemann_integral_candidates().is_empty());
+    let value = check(&mut rt, "integ(p,0,1)=3", true);
+    let json = crate::json_output::project_run_detailed(&value, &rt, "riemann", None).stringify();
+    assert!(json.contains("RiemannIntegralValue"));
+    assert!(json.contains("NaturalPower"));
+    check(&mut rt, "3=integ(p,0,1)", true);
+    check(&mut rt, "$has_riemann_integral(p,1,0,-3)", true);
+    check(&mut rt, "integ(p,1,0)=-3", true);
+    check(&mut rt, "$has_riemann_integral(p,2,2,0)", true);
+    check(&mut rt, "integ(p,2,2)=0", true);
+    check(&mut rt, "integ(p,0,1)=4", false);
+    check(&mut rt, "1+1=2", true);
+}
+
+#[test]
+fn riemann_integral_structural_known_candidates_and_selected_leaves() {
+    let mut rt = runtime();
+    check(&mut rt, "forall f,g fn(x R) R,a,b,I,J R:\n    $has_riemann_integral(f,a,b,I)\n    $has_riemann_integral(g,a,b,J)\n    =>:\n        $has_riemann_integral(fn(x R) R {3*f(x)-g(x)/2+7},a,b,3*I-J/2+7*(b-a))", true);
+    check(&mut rt, "forall f,g fn(x R) R,a,b R:\n    $is_riemann_integrable(f,a,b)\n    $is_riemann_integrable(g,a,b)\n    =>:\n        $is_riemann_integrable(fn(x R) R {3*f(x)-g(x)/2+7},a,b)\n        integ(fn(x R) R {3*f(x)-g(x)/2+7},a,b)=3*integ(f,a,b)-integ(g,a,b)/2+7*(b-a)", true);
+}
+
+#[test]
+fn riemann_integral_structural_scalar_arithmetic_and_closed_domains() {
+    let mut rt = runtime();
+    check(&mut rt, "have fn p(x '[0,1]) R=-(x^2)*3+x/2", true);
+    check(&mut rt, "$has_riemann_integral(p,0,1,-3/4)", true);
+    check(&mut rt, "integ(p,0,1)=-3/4", true);
+    check(&mut rt, "$is_riemann_integrable(p,0,2)", false);
+    check(
+        &mut rt,
+        "forall a,b,c R:\n    $has_riemann_integral(fn(x R) R {c},a,b,c*(b-a))",
+        true,
+    );
+    check(
+        &mut rt,
+        "forall c R*:\n    $has_riemann_integral(fn(x R) R {x/c},0,1,(1/2)/c)",
+        true,
+    );
+}
+
+#[test]
+fn riemann_integral_structural_missing_leaves_products_and_substitution_reject() {
+    let mut rt = runtime();
+    check(&mut rt, "have anchor R=7", true);
+    check(
+        &mut rt,
+        "forall f fn(x R) R:\n    $is_riemann_integrable(fn(x R) R {f(x)+1},0,1)",
+        false,
+    );
+    check(&mut rt, "forall f,g fn(x R) R:\n    $is_riemann_integrable(f,0,1)\n    $is_riemann_integrable(g,0,1)\n    =>:\n        $has_riemann_integral(fn(x R) R {f(x)*g(x)},0,1,integ(f,0,1)*integ(g,0,1))", false);
+    check(&mut rt, "forall f fn(x R) R:\n    $is_riemann_integrable(f,0,1)\n    =>:\n        $is_riemann_integrable(fn(x R) R {f(2*x)},0,1)", false);
+    check(&mut rt, "have fn singular(x R*) R=1/x", true);
+    check(&mut rt, "$is_riemann_integrable(singular,0,1)", false);
+    check(&mut rt, "$has_riemann_integral(singular,0,0,0)", false);
+    check(&mut rt, "anchor+1=8", true);
+}
+
+#[test]
+fn riemann_integral_structural_lean_has_explicit_support_boundary() {
+    let mut rt = runtime();
+    let run = check(
+        &mut rt,
+        "$is_riemann_integrable(fn(x R) R {sin(x)},0,1)",
+        true,
+    );
+    let err = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run, "integrability")
+        .expect_err("integrability replay has an explicit boundary");
+    assert_eq!(err.route, "RiemannIntegral/IntegrabilityStrategy");
+
+    let mut rt = runtime();
+    let run = check(
+        &mut rt,
+        "$has_riemann_integral(fn(x R) R {x^2},0,1,1/3)",
+        true,
+    );
+    let err = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run, "structural_integral")
+        .expect_err("structural integration replay has an explicit boundary");
+    assert_eq!(err.route, "RiemannIntegral/StructuralStrategy");
+
+    let mut rt = runtime();
+    let run = check(&mut rt, "forall f fn(x R) R:\n    f=fn(x R) R {x^2}\n    $is_riemann_integrable(f,0,1)\n    =>:\n        integ(f,0,1)=1/3", true);
+    let err = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+        .compile_run(&run, "integral_value")
+        .expect_err("value integration replay has an explicit boundary");
+    assert_eq!(err.route, "RiemannIntegral/ValueStrategy");
+}
+
+#[test]
+fn riemann_integrability_closure_does_not_need_integral_values() {
+    let mut rt = runtime();
+    let run = check(&mut rt, "forall f,g fn(x R) R:\n    $is_riemann_integrable(f,0,1)\n    $is_riemann_integrable(g,0,1)\n    =>:\n        $is_riemann_integrable(fn(x R) R {f(x)*g(x)+abs(f(x))^2},0,1)", true);
+    let json = crate::json_output::project_run_detailed(&run, &rt, "riemann", None).stringify();
+    assert!(json.contains("RiemannIntegrability"));
+    assert!(json.contains("Mul"));
+    assert!(!json.contains("StructuralRiemannIntegral"));
+    check(
+        &mut rt,
+        "$is_riemann_integrable(fn(x R) R {sin(x^2)+exp(x)*cos(x)},0,1)",
+        true,
+    );
+    check(
+        &mut rt,
+        "$is_riemann_integrable(fn(x R) R {1/(x^2+1)},0,1)",
+        true,
+    );
+    check(&mut rt, "claim:\n    ? '[1,2] $subset R*\n    forall x '[1,2]:\n        x>0\n        x $in R*\n    by def '[1,2] $subset R*", true);
+    check(
+        &mut rt,
+        "$is_riemann_integrable(fn(x R*) R {1/x},1,2)",
+        true,
+    );
+    check(
+        &mut rt,
+        "$is_riemann_integrable(fn(x R*) R {1/x},0,1)",
+        false,
+    );
+}
+
+#[test]
+fn riemann_integrability_uses_supplied_continuity_and_preserves_nonzero_boundary() {
+    let mut rt = runtime();
+    check(&mut rt, "forall f fn(x R) R:\n    forall x '[0,1]:\n        $cont_at(f,x)\n    =>:\n        $is_riemann_integrable(f,0,1)", true);
+    check(&mut rt, "forall f fn(x R) R,g fn(x R) R*:\n    $is_riemann_integrable(f,0,1)\n    forall x '[0,1]:\n        $cont_at(g,x)\n    =>:\n        $is_riemann_integrable(fn(x R) R {f(x)/g(x)},0,1)", true);
+    check(&mut rt, "forall g fn(x R) R*:\n    $is_riemann_integrable(g,0,1)\n    =>:\n        $is_riemann_integrable(fn(x R) R {1/g(x)},0,1)", false);
+    check(&mut rt, "forall f fn(x R) R:\n    forall x '[0,1]:\n        $cont_at(f,x)\n    =>:\n        $is_riemann_integrable(f,0,2)", false);
+    check(&mut rt, "1+1=2", true);
+}
+
+#[test]
+fn riemann_integral_value_normalizes_scalar_denominators() {
+    let mut rt = runtime();
+    check(
+        &mut rt,
+        "forall c R*:\n    $has_riemann_integral(fn(x R) R {x/c},0,1,1/(2*c))",
+        true,
+    );
+    check(
+        &mut rt,
+        "forall c R*:\n    $has_riemann_integral(fn(x R) R {x/c},0,1,1/c)",
+        false,
     );
 }
 #[test]

@@ -1,0 +1,302 @@
+# Twenty textbook-style calculus examples: first derivatives, chain rules,
+# guarded domains, source propositions/theorems, antiderivatives and Jacobians.
+# Check: target/release/litex -strict -lang en -f examples/calculus/textbook_derivatives_and_chain_rule.lit
+
+# ==============================================================================
+# Part I: Elementary & Composite Chain-Rule Calculations (Examples 1–10)
+# ==============================================================================
+
+# 1. Power of an affine function: ((3x + 1)^5)' = 15(3x + 1)^4
+have fn chain_polynomial(x R) R = (3 * x + 1)^5
+forall a R:
+    $diff_at(chain_polynomial, a)
+    deriv(chain_polynomial, a) = 15 * (3 * a + 1)^4
+
+
+# 2. Sine of a square: (sin(x^2))' = 2x cos(x^2)
+have fn chain_sine(x R) R = sin(x^2)
+forall a R:
+    $diff_at(chain_sine, a)
+    deriv(chain_sine, a) = 2 * a * cos(a^2)
+
+
+# 3. Exponential of a sine: (exp(sin(x)))' = exp(sin(x)) cos(x)
+have fn chain_exponential(x R) R = exp(sin(x))
+forall a R:
+    $diff_at(chain_exponential, a)
+    deriv(chain_exponential, a) = exp(sin(a)) * cos(a)
+
+
+# 4. Three-layer elementary composition: (sin(exp(x^2)))' = 2x exp(x^2) cos(exp(x^2))
+have fn chain_three_layers(x R) R = sin(exp(x^2))
+forall a R:
+    $diff_at(chain_three_layers, a)
+    deriv(chain_three_layers, a) = 2 * a * exp(a^2) * cos(exp(a^2))
+
+
+# 5. Logarithm of a positive polynomial: (ln(1 + x^2))' = 2x / (1 + x^2)
+have fn chain_logarithm(x R) R = ln(1 + x^2)
+forall a R:
+    $diff_at(chain_logarithm, a)
+    deriv(chain_logarithm, a) = 2 * a / (1 + a^2)
+
+
+# 6. Square root of a positive polynomial: (sqrt(1 + x^2))' = x / sqrt(1 + x^2)
+have fn chain_square_root(x R) R = sqrt(1 + x^2)
+forall a R:
+    $diff_at(chain_square_root, a)
+    deriv(chain_square_root, a) = a / sqrt(1 + a^2)
+
+
+# 7. Product and chain rules: (x^2 exp(3x))' = exp(3x)(2x + 3x^2)
+have fn chain_product(x R) R = x^2 * exp(3 * x)
+forall a R:
+    $diff_at(chain_product, a)
+    deriv(chain_product, a) = exp(3 * a) * (2 * a + 3 * a^2)
+
+
+# 8. Quotient and chain rules: (sin(x) / (1 + x^2))' = ((1 + x^2)cos(x) - 2x sin(x)) / (1 + x^2)^2
+have fn chain_quotient(x R) R = sin(x) / (1 + x^2)
+forall a R:
+    $diff_at(chain_quotient, a)
+    deriv(chain_quotient, a) = ((1 + a^2) * cos(a) - 2 * a * sin(a)) / (1 + a^2)^2
+
+
+# 9. Stationary points as a proposition: ((x^2 - 1)^2)' = 4x(x^2 - 1) vanishes at 1 and -1
+prop stationary_at(f fn(x R) R, a R):
+    $has_deriv_at(f, a, 0)
+
+have fn chain_stationary(x R) R = (x^2 - 1)^2
+forall a R:
+    $diff_at(chain_stationary, a)
+    deriv(chain_stationary, a) = 4 * a * (a^2 - 1)
+
+by def $stationary_at(chain_stationary, 1)
+by def $stationary_at(chain_stationary, -1)
+
+
+# 10. Abstract three-function chain rule: (f(g(h(x))))'(a) = f'(g(h(a))) g'(h(a)) h'(a)
+forall f, g, h fn(x R) R, a R:
+    $diff_at(h, a)
+    $diff_at(g, h(a))
+    $diff_at(f, g(h(a)))
+    =>:
+        $diff_at(fn(x R) R {f(g(h(x)))}, a)
+        deriv(fn(x R) R {f(g(h(x)))}, a) = deriv(f, g(h(a))) * deriv(g, h(a)) * deriv(h, a)
+
+
+# ==============================================================================
+# Part II: Guarded Domains, Calculus Laws, ODE/Geometry Props & Multivariable (11–20)
+# ==============================================================================
+
+# 11. Damped oscillation and initial slope evaluation at 0
+have fn damped_wave(x R) R = exp(2 * x) * cos(3 * x)
+forall a R:
+    $diff_at(damped_wave, a)
+    deriv(damped_wave, a) = 2 * exp(2 * a) * cos(3 * a) - 3 * exp(2 * a) * sin(3 * a)
+
+$diff_at(damped_wave, 0)
+exp(2 * 0) = exp(0) = 1
+cos(3 * 0) = cos(0) = 1
+sin(3 * 0) = sin(0) = 0
+deriv(damped_wave, 0) = 2 * exp(2 * 0) * cos(3 * 0) - 3 * exp(2 * 0) * sin(3 * 0) = 2 * 1 * 1 - 3 * 1 * 0 = 2
+
+
+# 12. Abstract chain + quotient rule on a guarded domain {x R: h(x) != 0}
+forall f, g, h fn(x R) R, x0 R:
+    $diff_at(g, x0)
+    $diff_at(f, g(x0))
+    $diff_at(h, x0)
+    h(x0) != 0
+    =>:
+        $diff_at(fn(x R: h(x) != 0) R {f(g(x)) / h(x)}, x0)
+        deriv(fn(x R: h(x) != 0) R {f(g(x)) / h(x)}, x0) = (deriv(f, g(x0)) * deriv(g, x0) * h(x0) - f(g(x0)) * deriv(h, x0)) / (h(x0)^2)
+
+
+# 13. Abstract logarithmic and radical chain rules with interior slack 0 < f(x0)
+forall f fn(x R) R, x0 R:
+    $diff_at(f, x0)
+    0 < f(x0)
+    =>:
+        $diff_at(fn(x R: 0 < f(x)) R {ln(f(x))}, x0)
+        deriv(fn(x R: 0 < f(x)) R {ln(f(x))}, x0) = deriv(f, x0) / f(x0)
+        0 <= f(x0)
+        sqrt(f(x0)) != 0
+        $diff_at(fn(x R: 0 <= f(x)) R {sqrt(f(x))}, x0)
+        deriv(fn(x R: 0 <= f(x)) R {sqrt(f(x))}, x0) = deriv(f, x0) / (2 * sqrt(f(x0)))
+
+
+# 14. Variable-exponent logarithmic differentiation exp(v(x) * ln(u(x))) and x^x at 1
+forall u, v fn(x R) R, x0 R:
+    $diff_at(u, x0)
+    $diff_at(v, x0)
+    0 < u(x0)
+    =>:
+        $diff_at(fn(x R: 0 < u(x)) R {exp(v(x) * ln(u(x)))}, x0)
+        deriv(fn(x R: 0 < u(x)) R {exp(v(x) * ln(u(x)))}, x0) = exp(v(x0) * ln(u(x0))) * (deriv(v, x0) * ln(u(x0)) + v(x0) * deriv(u, x0) / u(x0))
+
+have fn exp_x_ln_x(x R+) R = exp(x * ln(x))
+$diff_at(exp_x_ln_x, 1)
+ln(1) = 0
+exp(1 * ln(1)) = exp(1 * 0) = exp(0) = 1
+deriv(exp_x_ln_x, 1) = exp(1 * ln(1)) * (1 * ln(1) + 1 * (1 / 1)) = 1 * (0 + 1) = 1
+
+
+# 15. Inverse function derivative theorem: g(f(x)) = x => g'(f(x0)) = 1 / f'(x0)
+thm inverse_function_derivative:
+    ? forall f, g fn(x R) R, x0 R:
+        forall x R:
+            g(f(x)) = x
+        $diff_at(f, x0)
+        $diff_at(g, f(x0))
+        deriv(f, x0) != 0
+        =>:
+            deriv(g, f(x0)) = 1 / deriv(f, x0)
+    have fn id_fn(x R) R = x
+    forall x R:
+        id_fn(x) = x
+        g(f(x)) = x
+        id_fn(x) = g(f(x))
+    release thm fn_derivative_at_real_interior(x0)
+    release thm fn_derivative_at_selected(f, x0)
+    release thm fn_derivative_at_selected(g, f(x0))
+    release thm deriv_chain(f, g, id_fn, x0, deriv(f, x0), deriv(g, f(x0)))
+    $has_deriv_at(id_fn, x0, 1)
+    deriv(g, f(x0)) * deriv(f, x0) = 1
+    deriv(g, f(x0)) = 1 / deriv(f, x0)
+
+
+# 16. Parity of derivatives: an even function f(-x) = f(x) has an odd derivative
+thm even_function_odd_derivative:
+    ? forall f fn(x R) R, x0 R:
+        forall x R:
+            f(-x) = f(x)
+        $diff_at(f, x0)
+        $diff_at(f, -x0)
+        =>:
+            deriv(f, x0) = -deriv(f, -x0)
+    have fn neg_fn(x R) R = -x
+    forall x R:
+        neg_fn(x) = -x
+        f(neg_fn(x)) = f(-x)
+        f(-x) = f(x)
+        f(x) = f(neg_fn(x))
+    neg_fn(x0) = -x0
+    $diff_at(f, neg_fn(x0))
+    release thm fn_derivative_at_real_interior(x0)
+    $has_deriv_at(neg_fn, x0, -1)
+    release thm fn_derivative_at_selected(f, neg_fn(x0))
+    release thm deriv_chain(neg_fn, f, f, x0, -1, deriv(f, neg_fn(x0)))
+    release thm fn_derivative_at_selected(f, x0)
+    deriv(f, x0) = deriv(f, neg_fn(x0)) * (-1) = deriv(f, -x0) * (-1) = -deriv(f, -x0)
+
+
+# 17. Critical-point proposition preserved under outer composition f(g(x))
+prop is_critical_point(f fn(x R) R, x0 R):
+    $diff_at(f, x0)
+    deriv(f, x0) = 0
+
+thm critical_point_preserved_by_composition:
+    ? forall f, g fn(x R) R, x0 R:
+        $is_critical_point(g, x0)
+        $diff_at(f, g(x0))
+        =>:
+            $is_critical_point(fn(x R) R {f(g(x))}, x0)
+    by def $is_critical_point(g, x0)
+    $diff_at(fn(x R) R {f(g(x))}, x0)
+    deriv(fn(x R) R {f(g(x))}, x0) = deriv(f, g(x0)) * deriv(g, x0) = deriv(f, g(x0)) * 0 = 0
+    by def $is_critical_point(fn(x R) R {f(g(x))}, x0)
+
+
+# 18. Tangent-line proposition checked on the Gaussian bell curve exp(-x^2) at x = 1
+prop is_tangent_line_at(f, line fn(x R) R, a R):
+    $diff_at(f, a)
+    forall x R:
+        line(x) = f(a) + deriv(f, a) * (x - a)
+
+have fn bell_curve(x R) R = exp(-x^2)
+have fn bell_tangent_at_one(x R) R = exp(-1) - 2 * exp(-1) * (x - 1)
+forall a R:
+    $diff_at(bell_curve, a)
+    deriv(bell_curve, a) = -2 * a * exp(-a^2)
+
+$diff_at(bell_curve, 1)
+exp(-1^2) = exp(-1)
+bell_curve(1) = exp(-1^2) = exp(-1)
+deriv(bell_curve, 1) = -2 * 1 * exp(-1^2) = -2 * 1 * exp(-1) = -2 * exp(-1)
+forall x R:
+    deriv(bell_curve, 1) * (x - 1) = (-2 * exp(-1)) * (x - 1)
+    bell_curve(1) + deriv(bell_curve, 1) * (x - 1) = exp(-1) + (-2 * exp(-1)) * (x - 1) = exp(-1) - 2 * exp(-1) * (x - 1)
+    bell_tangent_at_one(x) = exp(-1) - 2 * exp(-1) * (x - 1)
+    bell_tangent_at_one(x) = bell_curve(1) + deriv(bell_curve, 1) * (x - 1)
+
+by def $is_tangent_line_at(bell_curve, bell_tangent_at_one, 1)
+
+
+# 19. Conservative 1D motion ODE prop and mechanical energy conservation (1/2 v^2 + V(q))' = 0
+prop is_conservative_motion_at(q, v, V fn(x R) R, t R):
+    $diff_at(q, t)
+    deriv(q, t) = v(t)
+    $diff_at(v, t)
+    $diff_at(V, q(t))
+    deriv(v, t) = -deriv(V, q(t))
+
+thm mechanical_energy_rate_zero:
+    ? forall q, v, V fn(x R) R, t R:
+        $is_conservative_motion_at(q, v, V, t)
+        =>:
+            $has_deriv_at(fn(s R) R {(1 / 2) * v(s) * v(s) + V(q(s))}, t, 0)
+    $diff_at(q, t)
+    $diff_at(v, t)
+    $diff_at(V, q(t))
+    deriv(q, t) = v(t)
+    deriv(v, t) = -deriv(V, q(t))
+    $diff_at(fn(s R) R {(1 / 2) * v(s) * v(s) + V(q(s))}, t)
+    deriv(fn(s R) R {(1 / 2) * v(s) * v(s) + V(q(s))}, t) = (1 / 2) * (deriv(v, t) * v(t) + v(t) * deriv(v, t)) + deriv(V, q(t)) * deriv(q, t)
+    deriv(v, t) * v(t) = (-deriv(V, q(t))) * v(t)
+    v(t) * deriv(v, t) = v(t) * (-deriv(V, q(t)))
+    deriv(V, q(t)) * deriv(q, t) = deriv(V, q(t)) * v(t)
+    (1 / 2) * (deriv(v, t) * v(t) + v(t) * deriv(v, t)) = (1 / 2) * ((-deriv(V, q(t))) * v(t) + v(t) * (-deriv(V, q(t))))
+    (1 / 2) * (deriv(v, t) * v(t) + v(t) * deriv(v, t)) + deriv(V, q(t)) * deriv(q, t) = (1 / 2) * ((-deriv(V, q(t))) * v(t) + v(t) * (-deriv(V, q(t)))) + deriv(V, q(t)) * v(t) = 0
+    deriv(fn(s R) R {(1 / 2) * v(s) * v(s) + V(q(s))}, t) = 0
+    $has_deriv_at(fn(s R) R {(1 / 2) * v(s) * v(s) + V(q(s))}, t, 0)
+
+
+# 20. Antiderivative chain rule, multivariable composite gradient, and Jacobian chain rule
+have fn prim_sin(x R) R = sin(x)
+have fn prim_cos(x R) R = cos(x)
+have fn inner_sq(x R) R = x * x
+have fn inner_twice(x R) R = 2 * x
+have fn comp_sin_sq(x R) R = sin(x * x)
+have fn comp_integrand(x R) R = cos(x * x) * (2 * x)
+
+forall x R:
+    $has_deriv_at(prim_sin, x, prim_cos(x))
+    $has_deriv_at(inner_sq, x, inner_twice(x))
+    inner_sq(x) = x * x
+    inner_twice(x) = 2 * x
+    prim_sin(inner_sq(x)) = sin(x * x)
+    comp_sin_sq(x) = sin(x * x)
+    comp_sin_sq(x) = prim_sin(inner_sq(x))
+    prim_cos(inner_sq(x)) = cos(x * x)
+    comp_integrand(x) = cos(x * x) * (2 * x)
+    prim_cos(inner_sq(x)) * inner_twice(x) = cos(x * x) * (2 * x)
+    comp_integrand(x) = prim_cos(inner_sq(x)) * inner_twice(x)
+
+release thm antiderivative_from_definition(prim_sin, prim_cos, R)
+release thm antiderivative_compose(prim_sin, prim_cos, inner_sq, inner_twice, comp_sin_sq, comp_integrand, R, R)
+$is_antiderivative_on(comp_sin_sq, comp_integrand, R)
+
+have fn radial_potential(p cart_n(R, 2)) R = exp(p(1) * p(1) + p(2) * p(2))
+$has_partial_derivative_at(radial_potential, (1, 2), 2, 1, 2 * exp(5))
+pderiv(radial_potential, (1, 2), 2, 1) = 2 * exp(5)
+$has_gradient_at(radial_potential, (1, 2), 2, (2 * exp(5), 4 * exp(5)))
+grad_at(radial_potential, (1, 2), 2)(2) = 4 * exp(5)
+
+thm multivariable_chain_rule_example:
+    ? forall F fn(x cart_n(R, 2)) cart_n(R, 3), G fn(y cart_n(R, 3)) cart_n(R, 2), p cart_n(R, 2), JF matrix(R, 3, 2), JG matrix(R, 2, 3):
+        $has_total_derivative_at(F, p, 2, 3, JF)
+        $has_total_derivative_at(G, F(p), 3, 2, JG)
+        =>:
+            $has_total_derivative_at(fn(x cart_n(R, 2)) cart_n(R, 2) {G(F(x))}, p, 2, 2, matrix_mul(JG, JF, 2, 3, 2))
+    release thm total_derivative_at_compose(F, G, fn(x cart_n(R, 2)) cart_n(R, 2) {G(F(x))}, p, 2, 3, 2, JF, JG)

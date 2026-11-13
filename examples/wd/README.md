@@ -9,6 +9,10 @@ the same proof-consuming selectors. Parser regressions check exact AST
 identity, argument counts, reserved bindings, failure recovery and canonical
 JSON/Lean output.
 
+[Integral short names](riemann_short_names.lit) checks integral candidates,
+integrability, value selection, Darboux folding/unfolding and antiderivative
+relations. The short and canonical certificate spellings share stored facts.
+
 [Refined indexed carriers](refined_indexed_carriers.lit) retain sequence and
 closed-range membership consequences through nested set-builder projections.
 

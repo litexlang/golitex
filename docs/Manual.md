@@ -663,6 +663,10 @@ Both spellings can be used together in one proof.
 | `cont_left` | `is_continuous_left` |
 | `cont_right` | `is_continuous_right` |
 | `unif_cont` | `is_uniformly_continuous` |
+| `has_integ` | `has_riemann_integral` |
+| `integrable` | `is_riemann_integrable` |
+| `darboux_bounds` | `is_darboux_enclosure` |
+| `antideriv_on` | `is_antiderivative_on` |
 
 | Theorem short name | Canonical name |
 | --- | --- |
@@ -679,6 +683,26 @@ Both spellings can be used together in one proof.
 | `integ_sub` | `riemann_integral_subtract` |
 | `integ_scale` | `riemann_integral_scale` |
 | `integ_parts` | `riemann_integral_by_parts` |
+| `integ_fold` | `riemann_integral_from_definition` |
+| `integ_unfold` | `riemann_integral_to_definition` |
+| `integ_exists` | `riemann_integral_exists` |
+| `integ_integrable` | `riemann_integrable_from_candidate` |
+| `integ_select` | `riemann_integral_selected` |
+| `integ_unique` | `riemann_integral_unique` |
+| `integ_zero` | `riemann_integral_zero` |
+| `integ_const` | `riemann_integral_constant` |
+| `integ_pow` | `riemann_integral_power` |
+| `integ_rev` | `riemann_integral_reverse` |
+| `integ_split` | `riemann_integral_split` |
+| `integ_congr` | `riemann_integral_extensional` |
+| `integ_mono` | `riemann_integral_compare` |
+| `integ_bound` | `riemann_integral_bound` |
+| `cont_integrable` | `riemann_integrable_continuous` |
+| `integ_eval` | `riemann_integral_newton_leibniz` |
+| `integ_step` | `riemann_integral_step` |
+| `integ_subst` | `riemann_integral_substitution` |
+| `darboux_fold` | `darboux_enclosure_from_definition` |
+| `darboux_unfold` | `darboux_enclosure_to_definition` |
 
 For example, a proved derivative candidate permits either selector spelling.
 
@@ -696,6 +720,26 @@ retain their separate contracts.
 
 The [runnable mixed-spelling example](../examples/wd/builtin_short_names.lit)
 also covers finite aggregates and explicit integral theorem selection.
+
+For integral predicates, `$has_integ(f,a,b,I)` specifies a candidate value,
+`$integrable(f,a,b)` states existence, and `integ(f,a,b)` selects the value.
+The `fold` and `unfold` theorem suffixes introduce a predicate from its
+defining clauses and recover those clauses, respectively. `integ_congr`
+transports an integral across pointwise-equal functions, `integ_mono` uses
+pointwise order, and `integ_eval` applies the existing Newton–Leibniz rule
+with a supplied antiderivative. Their complete premises and argument order
+are those of the canonical theorems.
+
+```litex
+have fn square(x R) R=x^2
+release thm integ_pow(square,0,1,2)
+$has_integ(square,0,1,1/3)
+$integrable(square,0,1)
+integ(square,0,1)=1/3
+```
+
+The [integral alias example](../examples/wd/riemann_short_names.lit) also
+checks Darboux certificates and antiderivative relations in both spellings.
 
 ### Unicode mathematical input aliases (preview)
 
