@@ -3,6 +3,12 @@
 Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
+[Builtin short names](builtin_short_names.lit) mixes canonical and short
+derivative, continuity, finite-aggregate and integral spellings. All forms use
+the same proof-consuming selectors. Parser regressions check exact AST
+identity, argument counts, reserved bindings, failure recovery and canonical
+JSON/Lean output.
+
 [Refined indexed carriers](refined_indexed_carriers.lit) retain sequence and
 closed-range membership consequences through nested set-builder projections.
 

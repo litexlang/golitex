@@ -346,3 +346,38 @@ fn inline_derivative_reuses_checked_refined_return_formation() {
     );
     check(&mut rt, "$is_differentiable_at(fn(x R) R {1/x},0)", false);
 }
+
+#[test]
+fn derivative_formula_normalization_composes_bounded_rational_evidence() {
+    let source = include_str!(
+        "../../../../examples/proof_nodes/atomic/by_builtin_strategy/derivative_formula_rational_normalization.lit"
+    );
+    let mut rt = runtime();
+    let run = check(&mut rt, source, true);
+    let json = crate::json_output::project_run_detailed(&run, &rt, "derivative_formula", None)
+        .stringify();
+    assert!(json.contains("RationalWithNonzeroPremises"));
+
+    for rejected in [
+        source.replace("/(t(x0)^2)*90", "/(t(x0)^2)*91"),
+        source.replace("        t(x0)!=0\n", ""),
+        source.replace("$is_differentiable_at(f,g(x0))", "$is_differentiable_at(f,x0)"),
+    ] {
+        check(&mut runtime(), &rejected, false);
+    }
+}
+
+#[test]
+fn derivative_formula_normalization_keeps_the_general_search_ceiling() {
+    let mut rt = runtime();
+    check(&mut rt, "have a,b R\nhave d R*\nd!=0", true);
+    let goal: Fact = parse_atomic(&mut rt, "a/d+b/d=(a+b)/d").into();
+    assert!(rt
+        .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+        .unwrap()
+        .is_failed());
+    assert!(!rt
+        .verify_fact(&goal, VerifyState::new(VerifyStateLevel::Strategy))
+        .unwrap()
+        .is_failed());
+}

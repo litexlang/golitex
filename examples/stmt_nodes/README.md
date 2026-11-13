@@ -14,6 +14,10 @@ outer lower bound separate from the induction variable.
 [Negated universal witnesses](by/negated_forall_witness_scope.lit) keep the
 quantified name local so a subsequent witness can reuse its spelling.
 
+[Singleton bindings](fact/singleton_bindings.lit) fix numeric and function
+values through `have` and `forall`. It includes functions depending on earlier
+parameters, a guarded function, and a theorem call supplying every binder.
+
 The [nested-field instantiation tracer](definition/struct_nested_field_instantiation.lit)
 checks direct struct laws with nested callable and value fields, including
 parameterized scalar structures. Substitution and one-layer release keep the

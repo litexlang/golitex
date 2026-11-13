@@ -457,7 +457,11 @@ impl Runtime {
                 });
         }
         if tb.peek() != Some(MOD_SIGN) {
-            return Ok(AtomicName::Plain { name: first });
+            let name = crate::parse::builtin_aliases::canonical_builtin_name(
+                &first,
+                crate::parse::builtin_aliases::BuiltinAliasKind::Theorem,
+            );
+            return Ok(AtomicName::Plain { name: name.to_string() });
         }
         let mut parts = vec![first];
         while tb.peek() == Some(MOD_SIGN) {

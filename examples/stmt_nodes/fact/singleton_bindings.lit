@@ -1,0 +1,37 @@
+# A singleton carrier fixes the value of its bound member.
+have one {1}
+one + 1 = 2
+
+# Functions are values and can be members of singleton carriers.
+have successor {fn(t R) R {t + 1}}
+successor(4) = 5
+
+forall x {3}, y {5}, z R:
+    x + y + z = 8 + z
+
+# The outer braces contain one function. The inner braces contain its body.
+forall f {fn(t R) R {t + 1}}, x R:
+    f(x) = x + 1
+
+# Later singleton domains may depend on earlier universal parameters.
+forall a R, f {fn(t R) R {t + a}}, x R:
+    f(x) = x + a
+
+# A partial expression belongs to a function with the corresponding guard.
+forall f {fn(t R: t != 0) R {1 / t}}, x R:
+    x != 0
+    =>:
+        f(x) = 1 / x
+
+# Every universal binder remains a positional theorem parameter.
+thm successor_application:
+    ? forall f {fn(t R) R {t + 1}}, x R:
+        f(x) = x + 1
+
+by thm successor_application(successor, 4) => successor(4) = 4 + 1
+
+# A let alias also supplies its defining equality.
+let alias = 1
+alias = one
+
+# Verify with target/release/litex -lang en -strict -f examples/stmt_nodes/fact/singleton_bindings.lit

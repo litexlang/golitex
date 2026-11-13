@@ -1,0 +1,19 @@
+# Before: the derivative tree succeeded, but the compact candidate below failed
+# at proof_body/proof_search because its final equality needed guarded rational
+# normalization under the derivative strategy's inherited search ceiling.
+# $has_derivative_at(fn(x R:t(x)!=0) R {f(g(x))+h(x)/t(x)*90},x0,derivative(f,g(x0))*derivative(g,x0)+(derivative(h,x0)*t(x0)-h(x0)*derivative(t,x0))/(t(x0)^2)*90)
+# Now: formula normalization retains the original WD and nonzero certificates.
+# Boundary: missing denominator evidence and incorrect derivative values reject.
+# Check: target/release/litex -lang en -strict -f examples/proof_nodes/atomic/by_builtin_strategy/derivative_formula_rational_normalization.lit
+
+claim:
+    ? forall f,g,h,t fn(x R) R,x0 R:
+        $is_differentiable_at(g,x0)
+        $is_differentiable_at(f,g(x0))
+        $is_differentiable_at(h,x0)
+        $is_differentiable_at(t,x0)
+        t(x0)!=0
+        =>:
+            $has_derivative_at(fn(x R:t(x)!=0) R {f(g(x))+h(x)/t(x)*90},x0,derivative(f,g(x0))*derivative(g,x0)+(derivative(h,x0)*t(x0)-h(x0)*derivative(t,x0))/(t(x0)^2)*90)
+    $has_derivative_at(fn(x R:t(x)!=0) R {f(g(x))+h(x)/t(x)*90},x0,derivative(f,g(x0))*derivative(g,x0)+(derivative(h,x0)*t(x0)-h(x0)*derivative(t,x0))/(t(x0)^2)*90)
+    derivative(fn(x R:t(x)!=0) R {f(g(x))+h(x)/t(x)*90},x0)=derivative(f,g(x0))*derivative(g,x0)+(derivative(h,x0)*t(x0)-h(x0)*derivative(t,x0))/(t(x0)^2)*90

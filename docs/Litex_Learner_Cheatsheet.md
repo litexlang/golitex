@@ -55,6 +55,7 @@ actual objects and facts.
 | Later code needs | Form | What it contributes |
 | --- | --- | --- |
 | An arbitrary member | `have x S` | A name and membership; requires nonemptiness. |
+| A fixed value through a singleton | `have x {value}` | Membership in `{value}` and the inferred equality `x = value`. |
 | A value with a declared carrier | `have x S = value` | Checks `value $in S`; records membership and equality. |
 | A name for an expression | `let name = value` | An equality alias, not mutable assignment. |
 | A callable value | `have fn f(x S) T = body` | A function with its domain, output carrier, and equation. |
@@ -74,6 +75,33 @@ by def $is_above_two(3)
 Declaring `prop` alone proves no instances. `abstract_prop` supplies only a
 signature. If the next line needs `f(x)`, define a callable function rather
 than encoding that value as a predicate. See [R02](Manual.md#r02-choose-the-language-form-by-mathematical-role).
+
+### Fix values with singleton carriers
+
+A singleton `{value}` has one member, so binding a name to it determines the
+name's value. A singleton can contain a function as well as a number.
+
+```litex
+have one {1}
+one + 1 = 2
+
+forall x {3}, y {5}, z R:
+    x + y + z = 8 + z
+
+forall f {fn(t R) R {t + 1}}, x R:
+    f(x) = x + 1
+```
+
+In the function header, the outer braces form a singleton set and the inner
+braces contain the function body. Singleton membership gives
+`f = fn(t R) R {t + 1}`, so application uses that body's equation.
+Every `forall` name remains a positional parameter when calling a named
+theorem. Later domains can use earlier parameters.
+
+`have x {1}` and `let x = 1` both supply `x = 1`. The `have` form also records
+singleton membership. The [Manual](Manual.md#fixed-values-and-functions-in-universal-headers)
+and [runnable example](../examples/stmt_nodes/fact/singleton_bindings.lit)
+include dependent functions, guarded functions, and theorem calls.
 
 ## Write facts and hypotheses
 
@@ -422,6 +450,13 @@ See the [finite Riemann integral contracts](Manual.md#finite-real-riemann-integr
 
 
 ## Supported syntax and recommended writing
+
+Builtin short forms include `deriv(f,x)`, `$diff_at(f,x)`,
+`$has_deriv_at(f,x,d)`, `$cont_at(f,x)`, `integ(f,a,b)`, `set_sum(S,f)`
+and `set_prod(S,f)`. Theorem calls accept names such as `deriv_add` and
+`integ_add`. Short and long forms parse to the same builtin and use the same
+parameters and proof requirements. Stored expressions use the long spelling.
+See the [complete short-name table](Manual.md#builtin-short-names-preview).
 
 | Supported spelling | Recommended for new ordinary examples |
 | --- | --- |

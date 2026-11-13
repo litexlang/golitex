@@ -8,6 +8,21 @@ have fn auto_square(x R) R=x^2
 $has_derivative_at(auto_square,3,6)
 derivative(auto_square,3)=6
 "#;
+
+#[test]
+fn automatic_derivative_replays_structural_rational_normalization() {
+    let source = r#"have fn reciprocal(x R*) R=1/x
+claim:
+    ? forall p R*:
+        $has_derivative_at(reciprocal,p,-1/(p^2))
+    $has_derivative_at(reciprocal,p,-1/(p^2))
+"#;
+    let (run, compiler) = super::execute(source);
+    let lean = compiler
+        .compile_run(&run, "structural_derivative_rational_normalization")
+        .expect("the existing guarded rational certificate must remain replayable");
+    assert!(lean.contains("semanticDerivative"));
+}
 fn proof(run: &mut RunLitexCodeResult) -> &mut PointwiseDerivativeProof {
     let ExecStmtResult::Fact(ExecFactStmtResult::Success(statement)) =
         &mut run.statement_results[1]

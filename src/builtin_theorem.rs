@@ -544,6 +544,10 @@ pub enum BuiltinTheoremId {
 
 impl BuiltinTheoremId {
     pub fn from_name(name: &str) -> Option<Self> {
+        let name = crate::parse::builtin_aliases::canonical_builtin_name(
+            name,
+            crate::parse::builtin_aliases::BuiltinAliasKind::Theorem,
+        );
         Some(match name {
             "scalar_differential_along_line" => Self::ScalarDifferentialAlongLine,
             "differentiable_gradient_along_line" => Self::DifferentiableGradientAlongLine,
@@ -2171,6 +2175,12 @@ impl BuiltinTheoremId {
 }
 
 pub fn is_reserved_builtin_name(name: &str) -> bool {
+    if crate::parse::builtin_aliases::BUILTIN_ALIASES
+        .iter()
+        .any(|(short, _, _)| *short == name)
+    {
+        return true;
+    }
     if matches!(
         name,
         crate::parse::keywords::IS_MATRIX_INV | crate::parse::keywords::MATRIX_INVERSIBLE

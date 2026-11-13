@@ -638,6 +638,65 @@ selected native-matrix certificates, including their endpoint comparisons and
 original premises; this does not imply support for every matrix expression or
 proof route. Existing explicit BT names and arities remain available.
 
+### Builtin short names (preview)
+
+The following short spellings normalize during parsing to the existing builtin
+objects, predicates and theorem calls. Each pair has the same argument order,
+domains and proof requirements. Stored expressions and semantic JSON fields
+use the long spelling, while source excerpts retain the text the author wrote.
+Both spellings can be used together in one proof.
+
+| Object short spelling | Canonical spelling |
+| --- | --- |
+| `deriv(f,x)` | `derivative(f,x)` |
+| `pderiv(f,p,n,k)` | `partial_derivative(f,p,n,k)` |
+| `grad_at(f,p,n)` | `gradient_at(f,p,n)` |
+| `set_sum(S,f)` | `finite_set_sum(S,f)` |
+| `set_prod(S,f)` | `finite_set_product(S,f)` |
+| `integ(f,a,b)` | `integral(f,a,b)` |
+
+| Predicate short name | Canonical name |
+| --- | --- |
+| `diff_at` | `is_differentiable_at` |
+| `has_deriv_at` | `has_derivative_at` |
+| `cont_at` | `is_continuous_at` |
+| `cont_left` | `is_continuous_left` |
+| `cont_right` | `is_continuous_right` |
+| `unif_cont` | `is_uniformly_continuous` |
+
+| Theorem short name | Canonical name |
+| --- | --- |
+| `deriv_add` | `fn_derivative_at_add` |
+| `deriv_sub` | `fn_derivative_at_subtract` |
+| `deriv_mul` | `fn_derivative_at_multiply` |
+| `deriv_div` | `fn_derivative_at_divide` |
+| `deriv_chain` | `fn_derivative_at_compose` |
+| `deriv_pow` | `fn_derivative_at_power` |
+| `diff_cont` | `fn_differentiable_at_continuous` |
+| `fn_lim_add` | `fn_limit_at_add` |
+| `seq_cauchy_convergent` | `sequence_cauchy_convergent` |
+| `integ_add` | `riemann_integral_add` |
+| `integ_sub` | `riemann_integral_subtract` |
+| `integ_scale` | `riemann_integral_scale` |
+| `integ_parts` | `riemann_integral_by_parts` |
+
+For example, a proved derivative candidate permits either selector spelling.
+
+```litex
+have fn square(x R) R=x^2
+$has_deriv_at(square,3,6)
+deriv(square,3)=derivative(square,3)=6
+```
+
+Short names are reserved in declarations, just like their long forms. Alias
+recognition uses the relevant object, predicate or bare-theorem position.
+Qualified names follow module resolution. `integ` has exactly the existing
+three-argument real Riemann integral contract. `lim(a)` and `fn_lim(f,x0)`
+retain their separate contracts.
+
+The [runnable mixed-spelling example](../examples/wd/builtin_short_names.lit)
+also covers finite aggregates and explicit integral theorem selection.
+
 ### Unicode mathematical input aliases (preview)
 
 Litex accepts the following Unicode mathematical input. Simple aliases are
@@ -924,6 +983,48 @@ x = 2
 ```
 
 The last line is an `error` because the bound `x` no longer exists.
+
+#### Fixed values and functions in universal headers
+
+A singleton domain `{value}` fixes a universal parameter to its sole member.
+Fixed values and arbitrary parameters can share one header.
+
+```litex
+forall x {3}, y {5}, z R:
+    x + y + z = 8 + z
+```
+
+The bindings provide `x $in {3}` and `y $in {5}`. Singleton membership
+inference supplies `x = 3` and `y = 5` in the local scope before checking the
+conclusion. The parameter `z` ranges over all real numbers.
+
+A function is also a value. Put an anonymous function inside a singleton to
+specify the exact function used by a universal statement.
+
+```litex
+forall f {fn(t R) R {t + 1}}, x R:
+    f(x) = x + 1
+```
+
+The outer braces form a set containing one function. The inner braces contain
+that function's body. The binding gives `f $in {fn(t R) R {t + 1}}`, which
+supplies `f = fn(t R) R {t + 1}`. Applying the function substitutes `x` for `t`
+in the body. Its input domain, return carrier, and body still receive the
+ordinary anonymous-function checks.
+
+Headers are processed from left to right, so a later singleton may use an
+earlier parameter. Here each real `a` determines the function used by `f`.
+
+```litex
+forall a R, f {fn(t R) R {t + a}}, x R:
+    f(x) = x + a
+```
+
+Every bound name remains a universal parameter. A named theorem with header
+`forall f {fn(t R) R {t + 1}}, x R:` takes two positional arguments, including
+the chosen function. All these names stay local to their universal scope.
+The [singleton binding example](../examples/stmt_nodes/fact/singleton_bindings.lit)
+also demonstrates a theorem call and a guarded reciprocal function.
 
 #### Shared assumptions and inline universals
 
@@ -2076,6 +2177,10 @@ let identity = fn(x R) R {x}
 identity(4) = 4
 ```
 
+The [singleton-member form](#naming-a-value-through-its-singleton)
+`have name {value}` also makes `name = value` available, and records membership
+in the singleton carrier.
+
 **Source:** [implementation](../src/execute/execute_let_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
@@ -2130,7 +2235,7 @@ larger constructors, name the outer mathematical object instead.
 
 **Execution and result.** Check the carrier/nonempty obligations, introduce the names, store their membership or parameter-type facts, and run ordinary inference. Direct struct-typed symbol bindings open one outer struct layer.
 
-**Nearest boundary.** The declaration does not choose a specific numerical value. Nonempty selection is different from universal binding, which does not require a nonempty domain.
+**Nearest boundary.** The carrier must be proved nonempty. A singleton carrier fixes its sole member as the value. For a carrier with several members, the selected value remains unspecified. Universal binding permits empty domains.
 
 **Checked example.**
 
@@ -2141,6 +2246,30 @@ have x R*
 x != 0
 1 / x $in R
 ```
+
+#### Naming a value through its singleton
+
+Use `have x {value}` to name the sole member of a singleton. Litex checks the
+carrier, introduces `x $in {value}`, and infers `x = value`. This works for
+numbers and for function values.
+
+```litex
+have x {1}
+x = 1
+x + 1 = 2
+
+have successor {fn(t R) R {t + 1}}
+successor(4) = 5
+```
+
+For this numeric example, `have x {1}` and `let x = 1` both supply the equality
+`x = 1`. The `have` form additionally records `x $in {1}` and uses the ordinary
+nonempty-carrier check. The `let` form directly records an expression alias.
+Use `have x S = value` when the declaration should also check membership in a
+specified carrier `S`.
+
+The same singleton-domain notation fixes values inside
+[`forall` headers](#fixed-values-and-functions-in-universal-headers).
 
 **Source:** [implementation](../src/execute/execute_have_obj_in_nonempty_set_stmt.rs).
 
@@ -6379,6 +6508,10 @@ fn(x R) R = fn(t R) R
 fn(x R) R {x + 1}(2) = 3
 fn(x R: x != 0) R {1 / x}(2) = 1 / 2
 ```
+
+To bind a name to one such function, use `have f {fn(t R) R {t + 1}}`.
+The same singleton domain works in a
+[`forall` header](#fixed-values-and-functions-in-universal-headers).
 
 **Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs).
 
