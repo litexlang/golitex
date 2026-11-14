@@ -1,6 +1,6 @@
 //! Formula-only display layout; conversion never executes or instantiates ASTs.
 use super::fact::{conclusions, fact, parameters};
-use super::obj::obj;
+use super::obj::{derivative_at, obj, riemann_integral};
 use crate::module_manager::GlobalModuleManager;
 use crate::prelude::*;
 
@@ -27,6 +27,23 @@ pub(crate) fn fact_to_display_latex(
     language: OutputLanguage,
 ) -> RuntimeResult<String> {
     match value {
+        Fact::AtomicFact(AtomicFact::HasDerivativeAtFact(candidate)) => {
+            let derivative =
+                derivative_at(&candidate.function, &candidate.point, modules, language)?;
+            let value = obj(&candidate.value, modules, language)?;
+            Ok(format!("{derivative} = {value}"))
+        }
+        Fact::AtomicFact(AtomicFact::HasRiemannIntegralFact(candidate)) => {
+            let integral = riemann_integral(
+                &candidate.function,
+                &candidate.lower,
+                &candidate.upper,
+                modules,
+                language,
+            )?;
+            let value = obj(&candidate.value, modules, language)?;
+            Ok(format!("{integral} = {value}"))
+        }
         Fact::AtomicFact(atomic) => {
             comparison(atomic, modules, language).unwrap_or_else(|| fact(value, modules, language))
         }

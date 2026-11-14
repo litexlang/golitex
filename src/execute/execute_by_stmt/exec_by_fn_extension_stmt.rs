@@ -133,7 +133,7 @@ pub fn exec_by_fn_extension_stmt(
     ))
 }
 
-fn build_pointwise_forall(
+pub(in crate::execute) fn build_pointwise_forall(
     runtime: &mut Runtime,
     left: &Obj,
     right: &Obj,

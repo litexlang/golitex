@@ -8,6 +8,7 @@ mod binder;
 mod closed_numeric_eval_wd;
 mod core;
 mod definition_owned_type;
+mod dispatch_obj_well_definedness;
 mod entry;
 pub(crate) mod fail_to_verify_obj_well_defined;
 mod fn_obj_domain_check_result;

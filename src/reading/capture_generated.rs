@@ -2182,6 +2182,7 @@ crate::ast::fact::ChainFact { fact_id: f0, objs: f1, prop_names: f2, line_file: 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("objs", JsonValue::Array((f1).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("prop_names", JsonValue::Array((f2).iter().map(|item| capture.atomic_name(item, runtime)).collect())), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("ChainFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::ChainFact(value.clone()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5294,6 +5295,7 @@ crate::ast::fact::IsMatrixInvFact { fact_id: f0, matrix: f1, inverse: f2, order:
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("inverse", capture_ast__obj__Obj(f2, capture, runtime)), ("order", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("IsMatrixInvFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5309,6 +5311,7 @@ crate::ast::fact::NotIsMatrixInvFact { fact_id: f0, matrix: f1, inverse: f2, ord
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("inverse", capture_ast__obj__Obj(f2, capture, runtime)), ("order", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotIsMatrixInvFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5324,6 +5327,7 @@ crate::ast::fact::MatrixInversibleFact { fact_id: f0, matrix: f1, order: f2, lin
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("order", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("MatrixInversibleFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5339,6 +5343,7 @@ crate::ast::fact::NotMatrixInversibleFact { fact_id: f0, matrix: f1, order: f2, 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("matrix", capture_ast__obj__Obj(f1, capture, runtime)), ("order", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotMatrixInversibleFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5354,6 +5359,7 @@ crate::ast::fact::MultivariableAnalysisFact { fact_id: f0, relation: f1, line_fi
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("relation", capture_ast__fact__atomic__MultivariableAnalysisRelation(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("MultivariableAnalysisFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5369,6 +5375,7 @@ crate::ast::fact::NotMultivariableAnalysisFact { fact_id: f0, relation: f1, line
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("relation", capture_ast__fact__atomic__MultivariableAnalysisRelation(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotMultivariableAnalysisFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5384,6 +5391,7 @@ crate::ast::fact::HasRiemannIntegralFact { fact_id: f0, function: f1, lower: f2,
 let saved_location = f5.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("lower", capture_ast__obj__Obj(f2, capture, runtime)), ("upper", capture_ast__obj__Obj(f3, capture, runtime)), ("value", capture_ast__obj__Obj(f4, capture, runtime)), ("line_file", match (f5).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("HasRiemannIntegralFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5399,6 +5407,7 @@ crate::ast::fact::NotHasRiemannIntegralFact { fact_id: f0, function: f1, lower: 
 let saved_location = f5.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("lower", capture_ast__obj__Obj(f2, capture, runtime)), ("upper", capture_ast__obj__Obj(f3, capture, runtime)), ("value", capture_ast__obj__Obj(f4, capture, runtime)), ("line_file", match (f5).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotHasRiemannIntegralFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5414,6 +5423,7 @@ crate::ast::fact::FunctionRiemannIntegrableFact { fact_id: f0, function: f1, low
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("lower", capture_ast__obj__Obj(f2, capture, runtime)), ("upper", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("FunctionRiemannIntegrableFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5429,6 +5439,7 @@ crate::ast::fact::NotFunctionRiemannIntegrableFact { fact_id: f0, function: f1, 
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("lower", capture_ast__obj__Obj(f2, capture, runtime)), ("upper", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotFunctionRiemannIntegrableFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5444,6 +5455,7 @@ crate::ast::fact::HasDerivativeAtFact { fact_id: f0, function: f1, point: f2, va
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("point", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("HasDerivativeAtFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5459,6 +5471,7 @@ crate::ast::fact::NotHasDerivativeAtFact { fact_id: f0, function: f1, point: f2,
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("point", capture_ast__obj__Obj(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotHasDerivativeAtFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5474,6 +5487,7 @@ crate::ast::fact::FunctionDifferentiableAtFact { fact_id: f0, function: f1, poin
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("point", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("FunctionDifferentiableAtFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5489,6 +5503,7 @@ crate::ast::fact::NotFunctionDifferentiableAtFact { fact_id: f0, function: f1, p
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("point", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotFunctionDifferentiableAtFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5504,6 +5519,7 @@ crate::ast::fact::RealSetBoundFact { fact_id: f0, set: f1, bound: f2, direction:
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("bound", capture_ast__obj__Obj(f2, capture, runtime)), ("direction", capture_ast__fact__atomic__RealBoundDirection(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("RealSetBoundFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5519,6 +5535,7 @@ crate::ast::fact::NotRealSetBoundFact { fact_id: f0, set: f1, bound: f2, directi
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("bound", capture_ast__obj__Obj(f2, capture, runtime)), ("direction", capture_ast__fact__atomic__RealBoundDirection(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotRealSetBoundFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5534,6 +5551,7 @@ crate::ast::fact::RealSetBoundedFact { fact_id: f0, set: f1, boundedness: f2, li
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("boundedness", capture_ast__fact__atomic__RealBoundedness(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("RealSetBoundedFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5549,6 +5567,7 @@ crate::ast::fact::NotRealSetBoundedFact { fact_id: f0, set: f1, boundedness: f2,
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("boundedness", capture_ast__fact__atomic__RealBoundedness(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotRealSetBoundedFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5564,6 +5583,7 @@ crate::ast::fact::SequenceAnalysisFact { fact_id: f0, sequence: f1, property: f2
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("sequence", capture_ast__obj__Obj(f1, capture, runtime)), ("property", capture_ast__fact__atomic__SequenceAnalysisProperty(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("SequenceAnalysisFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5579,6 +5599,7 @@ crate::ast::fact::NotSequenceAnalysisFact { fact_id: f0, sequence: f1, property:
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("sequence", capture_ast__obj__Obj(f1, capture, runtime)), ("property", capture_ast__fact__atomic__SequenceAnalysisProperty(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotSequenceAnalysisFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5594,6 +5615,7 @@ crate::ast::fact::RealAccumulationFact { fact_id: f0, domain: f1, point: f2, sid
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("point", capture_ast__obj__Obj(f2, capture, runtime)), ("side", capture_ast__fact__atomic__RealApproachSide(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("RealAccumulationFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5609,6 +5631,7 @@ crate::ast::fact::NotRealAccumulationFact { fact_id: f0, domain: f1, point: f2, 
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("point", capture_ast__obj__Obj(f2, capture, runtime)), ("side", capture_ast__fact__atomic__RealApproachSide(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotRealAccumulationFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5624,6 +5647,7 @@ crate::ast::fact::FunctionContinuousAtFact { fact_id: f0, function: f1, point: f
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("point", capture_ast__obj__Obj(f2, capture, runtime)), ("side", capture_ast__fact__atomic__RealApproachSide(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("FunctionContinuousAtFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5639,6 +5663,7 @@ crate::ast::fact::NotFunctionContinuousAtFact { fact_id: f0, function: f1, point
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("point", capture_ast__obj__Obj(f2, capture, runtime)), ("side", capture_ast__fact__atomic__RealApproachSide(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotFunctionContinuousAtFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5654,6 +5679,7 @@ crate::ast::fact::FunctionContinuousFact { fact_id: f0, function: f1, property: 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("property", capture_ast__fact__atomic__FunctionContinuityProperty(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("FunctionContinuousFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5669,6 +5695,7 @@ crate::ast::fact::NotFunctionContinuousFact { fact_id: f0, function: f1, propert
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("property", capture_ast__fact__atomic__FunctionContinuityProperty(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotFunctionContinuousFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5684,6 +5711,7 @@ crate::ast::fact::FunctionLipschitzFact { fact_id: f0, function: f1, constant: f
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("constant", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("FunctionLipschitzFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5699,6 +5727,7 @@ crate::ast::fact::NotFunctionLipschitzFact { fact_id: f0, function: f1, constant
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("constant", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotFunctionLipschitzFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5714,6 +5743,7 @@ crate::ast::fact::HasFunctionLimitFact { fact_id: f0, function: f1, approach: f2
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("approach", capture_ast__obj__LimitApproach(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("HasFunctionLimitFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5729,6 +5759,7 @@ crate::ast::fact::NotHasFunctionLimitFact { fact_id: f0, function: f1, approach:
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("function", capture_ast__obj__Obj(f1, capture, runtime)), ("approach", capture_ast__obj__LimitApproach(f2, capture, runtime)), ("value", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotHasFunctionLimitFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5744,6 +5775,7 @@ crate::ast::fact::HasSequenceLimitFact { fact_id: f0, sequence: f1, value: f2, l
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("sequence", capture_ast__obj__Obj(f1, capture, runtime)), ("value", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("HasSequenceLimitFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5759,6 +5791,7 @@ crate::ast::fact::HasSequenceLimsupFact { fact_id: f0, sequence: f1, value: f2, 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("sequence", capture_ast__obj__Obj(f1, capture, runtime)), ("value", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("HasSequenceLimsupFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5774,6 +5807,7 @@ crate::ast::fact::HasSequenceLiminfFact { fact_id: f0, sequence: f1, value: f2, 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("sequence", capture_ast__obj__Obj(f1, capture, runtime)), ("value", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("HasSequenceLiminfFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5789,6 +5823,7 @@ crate::ast::fact::NotHasSequenceLimitFact { fact_id: f0, sequence: f1, value: f2
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("sequence", capture_ast__obj__Obj(f1, capture, runtime)), ("value", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotHasSequenceLimitFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5804,6 +5839,7 @@ crate::ast::fact::NotHasSequenceLimsupFact { fact_id: f0, sequence: f1, value: f
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("sequence", capture_ast__obj__Obj(f1, capture, runtime)), ("value", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotHasSequenceLimsupFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5819,6 +5855,7 @@ crate::ast::fact::NotHasSequenceLiminfFact { fact_id: f0, sequence: f1, value: f
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("sequence", capture_ast__obj__Obj(f1, capture, runtime)), ("value", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotHasSequenceLiminfFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5834,6 +5871,7 @@ crate::ast::fact::NormalAtomicFact { fact_id: f0, predicate: f1, body: f2, line_
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("predicate", capture.atomic_name(f1, runtime)), ("body", JsonValue::Array((f2).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NormalAtomicFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5849,6 +5887,7 @@ crate::ast::fact::EqualFact { fact_id: f0, left: f1, right: f2, line_file: f3 } 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("EqualFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5864,6 +5903,7 @@ crate::ast::fact::LessFact { fact_id: f0, left: f1, right: f2, line_file: f3 } =
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("LessFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5879,6 +5919,7 @@ crate::ast::fact::GreaterFact { fact_id: f0, left: f1, right: f2, line_file: f3 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("GreaterFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5894,6 +5935,7 @@ crate::ast::fact::LessEqualFact { fact_id: f0, left: f1, right: f2, line_file: f
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("LessEqualFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5909,6 +5951,7 @@ crate::ast::fact::GreaterEqualFact { fact_id: f0, left: f1, right: f2, line_file
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("GreaterEqualFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5924,6 +5967,7 @@ crate::ast::fact::IsSetFact { fact_id: f0, set: f1, line_file: f2 } => {
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("IsSetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5939,6 +5983,7 @@ crate::ast::fact::IsNonemptySetFact { fact_id: f0, set: f1, line_file: f2 } => {
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("IsNonemptySetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5954,6 +5999,7 @@ crate::ast::fact::IsFiniteSetFact { fact_id: f0, set: f1, line_file: f2 } => {
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("IsFiniteSetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5969,6 +6015,7 @@ crate::ast::fact::InFact { fact_id: f0, element: f1, set: f2, line_file: f3 } =>
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("element", capture_ast__obj__Obj(f1, capture, runtime)), ("set", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("InFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5984,6 +6031,7 @@ crate::ast::fact::SubsetFact { fact_id: f0, left: f1, right: f2, line_file: f3 }
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("SubsetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -5999,6 +6047,7 @@ crate::ast::fact::SupersetFact { fact_id: f0, left: f1, right: f2, line_file: f3
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("SupersetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6014,6 +6063,7 @@ crate::ast::fact::ProperSubsetFact { fact_id: f0, left: f1, right: f2, line_file
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("ProperSubsetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6029,6 +6079,7 @@ crate::ast::fact::ProperSupersetFact { fact_id: f0, left: f1, right: f2, line_fi
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("ProperSupersetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6044,6 +6095,7 @@ crate::ast::fact::PrimeFact { fact_id: f0, value: f1, line_file: f2 } => {
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("PrimeFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6059,6 +6111,7 @@ crate::ast::fact::CoprimeFact { fact_id: f0, left: f1, right: f2, line_file: f3 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("CoprimeFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6074,6 +6127,7 @@ crate::ast::fact::DvdFact { fact_id: f0, left: f1, right: f2, line_file: f3 } =>
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("DvdFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6089,6 +6143,7 @@ crate::ast::fact::InjectiveFact { fact_id: f0, domain: f1, codomain: f2, functio
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("codomain", capture_ast__obj__Obj(f2, capture, runtime)), ("function", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("InjectiveFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6104,6 +6159,7 @@ crate::ast::fact::SurjectiveFact { fact_id: f0, domain: f1, codomain: f2, functi
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("codomain", capture_ast__obj__Obj(f2, capture, runtime)), ("function", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("SurjectiveFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6119,6 +6175,7 @@ crate::ast::fact::CommRingFact { fact_id: f0, carrier: f1, add: f2, mul: f3, neg
 let saved_location = f7.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("carrier", capture_ast__obj__Obj(f1, capture, runtime)), ("add", capture_ast__obj__Obj(f2, capture, runtime)), ("mul", capture_ast__obj__Obj(f3, capture, runtime)), ("neg", capture_ast__obj__Obj(f4, capture, runtime)), ("zero", capture_ast__obj__Obj(f5, capture, runtime)), ("one", capture_ast__obj__Obj(f6, capture, runtime)), ("line_file", match (f7).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("CommRingFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6134,6 +6191,7 @@ crate::ast::fact::NotCommRingFact { fact_id: f0, carrier: f1, add: f2, mul: f3, 
 let saved_location = f7.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("carrier", capture_ast__obj__Obj(f1, capture, runtime)), ("add", capture_ast__obj__Obj(f2, capture, runtime)), ("mul", capture_ast__obj__Obj(f3, capture, runtime)), ("neg", capture_ast__obj__Obj(f4, capture, runtime)), ("zero", capture_ast__obj__Obj(f5, capture, runtime)), ("one", capture_ast__obj__Obj(f6, capture, runtime)), ("line_file", match (f7).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotCommRingFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6149,6 +6207,7 @@ crate::ast::fact::BijectiveFact { fact_id: f0, domain: f1, codomain: f2, functio
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("codomain", capture_ast__obj__Obj(f2, capture, runtime)), ("function", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("BijectiveFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6164,6 +6223,7 @@ crate::ast::fact::IsChoiceFunctionForFact { fact_id: f0, index: f1, set: f2, fam
 let saved_location = f5.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("index", capture_ast__obj__Obj(f1, capture, runtime)), ("set", capture_ast__obj__Obj(f2, capture, runtime)), ("family", capture_ast__obj__Obj(f3, capture, runtime)), ("choice", capture_ast__obj__Obj(f4, capture, runtime)), ("line_file", match (f5).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("IsChoiceFunctionForFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6179,6 +6239,7 @@ crate::ast::fact::NotNormalAtomicFact { fact_id: f0, predicate: f1, body: f2, li
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("predicate", capture.atomic_name(f1, runtime)), ("body", JsonValue::Array((f2).iter().map(|item| capture_ast__obj__Obj(item, capture, runtime)).collect())), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotNormalAtomicFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6194,6 +6255,7 @@ crate::ast::fact::NotEqualFact { fact_id: f0, left: f1, right: f2, line_file: f3
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotEqualFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6209,6 +6271,7 @@ crate::ast::fact::NotLessFact { fact_id: f0, left: f1, right: f2, line_file: f3 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotLessFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6224,6 +6287,7 @@ crate::ast::fact::NotGreaterFact { fact_id: f0, left: f1, right: f2, line_file: 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotGreaterFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6239,6 +6303,7 @@ crate::ast::fact::NotLessEqualFact { fact_id: f0, left: f1, right: f2, line_file
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotLessEqualFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6254,6 +6319,7 @@ crate::ast::fact::NotGreaterEqualFact { fact_id: f0, left: f1, right: f2, line_f
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotGreaterEqualFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6269,6 +6335,7 @@ crate::ast::fact::NotIsSetFact { fact_id: f0, set: f1, line_file: f2 } => {
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotIsSetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6284,6 +6351,7 @@ crate::ast::fact::NotIsNonemptySetFact { fact_id: f0, set: f1, line_file: f2 } =
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotIsNonemptySetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6299,6 +6367,7 @@ crate::ast::fact::NotIsFiniteSetFact { fact_id: f0, set: f1, line_file: f2 } => 
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("set", capture_ast__obj__Obj(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotIsFiniteSetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6314,6 +6383,7 @@ crate::ast::fact::NotInFact { fact_id: f0, element: f1, set: f2, line_file: f3 }
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("element", capture_ast__obj__Obj(f1, capture, runtime)), ("set", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotInFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6329,6 +6399,7 @@ crate::ast::fact::NotSubsetFact { fact_id: f0, left: f1, right: f2, line_file: f
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotSubsetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6344,6 +6415,7 @@ crate::ast::fact::NotSupersetFact { fact_id: f0, left: f1, right: f2, line_file:
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotSupersetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6359,6 +6431,7 @@ crate::ast::fact::NotProperSubsetFact { fact_id: f0, left: f1, right: f2, line_f
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotProperSubsetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6374,6 +6447,7 @@ crate::ast::fact::NotProperSupersetFact { fact_id: f0, left: f1, right: f2, line
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotProperSupersetFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6389,6 +6463,7 @@ crate::ast::fact::NotPrimeFact { fact_id: f0, value: f1, line_file: f2 } => {
 let saved_location = f2.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("line_file", match (f2).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotPrimeFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6404,6 +6479,7 @@ crate::ast::fact::NotCoprimeFact { fact_id: f0, left: f1, right: f2, line_file: 
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotCoprimeFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6419,6 +6495,7 @@ crate::ast::fact::NotDvdFact { fact_id: f0, left: f1, right: f2, line_file: f3 }
 let saved_location = f3.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("left", capture_ast__obj__Obj(f1, capture, runtime)), ("right", capture_ast__obj__Obj(f2, capture, runtime)), ("line_file", match (f3).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotDvdFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6434,6 +6511,7 @@ crate::ast::fact::NotInjectiveFact { fact_id: f0, domain: f1, codomain: f2, func
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("codomain", capture_ast__obj__Obj(f2, capture, runtime)), ("function", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotInjectiveFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6449,6 +6527,7 @@ crate::ast::fact::NotSurjectiveFact { fact_id: f0, domain: f1, codomain: f2, fun
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("codomain", capture_ast__obj__Obj(f2, capture, runtime)), ("function", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotSurjectiveFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6464,6 +6543,7 @@ crate::ast::fact::NotBijectiveFact { fact_id: f0, domain: f1, codomain: f2, func
 let saved_location = f4.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("domain", capture_ast__obj__Obj(f1, capture, runtime)), ("codomain", capture_ast__obj__Obj(f2, capture, runtime)), ("function", capture_ast__obj__Obj(f3, capture, runtime)), ("line_file", match (f4).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotBijectiveFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -6479,6 +6559,7 @@ crate::ast::fact::NotIsChoiceFunctionForFact { fact_id: f0, index: f1, set: f2, 
 let saved_location = f5.as_ref().map(|line| capture.enter_location(line));
 let fields = vec![("fact_id", super::helper::object(vec![("kind", JsonValue::String("fact_identity".into())), ("fact_id", JsonValue::String(f0.to_string()))])), ("index", capture_ast__obj__Obj(f1, capture, runtime)), ("set", capture_ast__obj__Obj(f2, capture, runtime)), ("family", capture_ast__obj__Obj(f3, capture, runtime)), ("choice", capture_ast__obj__Obj(f4, capture, runtime)), ("line_file", match (f5).as_ref() { Some(item) => capture.source_line(item, runtime), None => JsonValue::Null })];
 let mut output = node("NotIsChoiceFunctionForFact", "", fields);
+capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));
 if let Some(location) = saved_location { capture.leave_location(location); }
 output
 },
@@ -21002,6 +21083,16 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_builtin_strategy_result__EqualitySearchProofByBuiltinStrategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::MatrixStructuralEquality(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixStructuralEqualityProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinStrategy", "MatrixStructuralEquality", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::MatrixEntryReduction(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryReductionProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinStrategy", "MatrixEntryReduction", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__verify_equality_by_builtin_rules__by_riemann_integral__RiemannIntegralValueStrategyProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinStrategy", "RiemannIntegralValue", fields);
@@ -29199,6 +29290,28 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_template::EqualitySearchProofByTemplateObjectDefinition::HaveFnByInducApplication(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_object_definition__by_template__by_have_fn_by_induc_application__ByUnfoldInstantiatedTemplateHaveFnByInducApplicationObjectDefinitionProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByTemplateObjectDefinition", "HaveFnByInducApplication", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixStructuralEqualityProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixStructuralEqualityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixStructuralEqualityProof { right_domain: f0, domain_match: f1, pointwise: f2 } => {
+let fields = vec![("right_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f0, capture, runtime)), ("domain_match", capture_execute__execute_fact_stmt__function_domain__FunctionDomainMatchProof(f1, capture, runtime)), ("pointwise", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("MatrixStructuralEqualityProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryReductionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryReductionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryReductionProof { left: f0, right: f1, scalar_equality: f2 } => {
+let fields = vec![("left", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f0, capture, runtime)), ("right", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f1, capture, runtime)), ("scalar_equality", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("MatrixEntryReductionProof", "", fields);
 output
 },
 };
@@ -41089,6 +41202,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationProof { source_wd: f0, value: f1, step: f2 } => {
+let fields = vec![("source_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("value", capture_ast__obj__Obj(f1, capture, runtime)), ("step", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationStep(f2, capture, runtime))];
+let mut output = node("MatrixEntryNormalizationProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingAtomProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingAtomProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingAtomProof { object: f0, membership_fact: f1, membership: f2 } => {
@@ -49227,6 +49351,42 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationStep(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationStep, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationStep::Unchanged => {
+let fields = vec![];
+let mut output = node("MatrixEntryNormalizationStep", "Unchanged", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationStep::NativeCall(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNativeCallProof(f0, capture, runtime))];
+let mut output = node("MatrixEntryNormalizationStep", "NativeCall", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationStep::Add(f0, f1) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f0, capture, runtime)), ("1", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f1, capture, runtime))];
+let mut output = node("MatrixEntryNormalizationStep", "Add", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationStep::Subtract(f0, f1) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f0, capture, runtime)), ("1", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f1, capture, runtime))];
+let mut output = node("MatrixEntryNormalizationStep", "Subtract", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationStep::Multiply(f0, f1) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f0, capture, runtime)), ("1", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f1, capture, runtime))];
+let mut output = node("MatrixEntryNormalizationStep", "Multiply", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNormalizationStep::Conjugate(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f0, capture, runtime))];
+let mut output = node("MatrixEntryNormalizationStep", "Conjugate", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__ring__rewrite__RingPolynomialEqualityProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingPolynomialEqualityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::ring::rewrite::RingPolynomialEqualityProof { left: f0, right: f1, left_expression: f2, right_expression: f3, left_certificate: f4, right_certificate: f5 } => {
@@ -50511,6 +50671,11 @@ let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)),
 let mut output = node("RiemannIntegralSelectionProof", "Existence", fields);
 output
 },
+crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Integrability(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("RiemannIntegralSelectionProof", "Integrability", fields);
+output
+},
 };
 capture.intern_evidence(output)
 }
@@ -50930,6 +51095,17 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::by_fn_application::by_parent_checked_beta::ParentEqualitySide::Right => {
 let fields = vec![];
 let mut output = node("ParentEqualitySide", "Right", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNativeCallProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNativeCallProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixEntryNativeCallProof { callable: f0, body: f1, continuation: f2 } => {
+let fields = vec![("callable", capture_execute__execute_fact_stmt__native_matrix__MatrixCallableProof(f0, capture, runtime)), ("body", capture_ast__obj__Obj(f1, capture, runtime)), ("continuation", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixEntryNormalizationProof(f2, capture, runtime))];
+let mut output = node("MatrixEntryNativeCallProof", "", fields);
 output
 },
 };

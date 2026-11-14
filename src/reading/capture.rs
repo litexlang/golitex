@@ -10,6 +10,8 @@ use super::capture_generated::{
 };
 use super::helper::{digest, object, strings, text};
 
+#[path = "calculus_presentation.rs"]
+mod calculus_presentation;
 #[path = "fact_capture.rs"]
 mod fact_capture;
 #[path = "inference_capture.rs"]
@@ -38,6 +40,7 @@ pub(super) struct Capture {
     pub subject_depth: usize,
     pub source_snapshot_depth: usize,
     evidence_nodes: Vec<JsonValue>,
+    calculus_descendants: Vec<Option<bool>>,
     evidence_index: BTreeMap<String, String>,
     statement_rules: BTreeSet<String>,
     inferences: Vec<JsonValue>,
@@ -93,6 +96,7 @@ impl Capture {
             current_statement: String::new(),
             source_snapshot_depth: 0,
             evidence_nodes: Vec::new(),
+            calculus_descendants: Vec::new(),
             evidence_index: BTreeMap::new(),
             statement_rules: BTreeSet::new(),
             inferences: Vec::new(),
@@ -251,6 +255,7 @@ impl Capture {
             let id = format!("evidence{}", self.evidence_nodes.len());
             self.evidence_nodes
                 .push(object(vec![("id", text(&id)), ("node", value)]));
+            self.calculus_descendants.push(None);
             self.evidence_index.insert(key, id.clone());
             id
         };

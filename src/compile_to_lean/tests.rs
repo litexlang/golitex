@@ -4214,6 +4214,9 @@ mod native_matrix_property_tests;
 #[path = "../../tests/unit/compile_to_lean/native_matrix_determinant_formula_tests.rs"]
 mod native_matrix_determinant_formula_tests;
 
+#[path = "../../tests/unit/compile_to_lean/native_matrix_structural_tests.rs"]
+mod native_matrix_structural_tests;
+
 #[path = "../../tests/unit/compile_to_lean/continuity_limit_bridge_tests.rs"]
 mod continuity_limit_bridge_tests;
 

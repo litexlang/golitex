@@ -5,6 +5,8 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 // Calculation builtins). Each variant owns its checked premises; scoped
 // pointwise steps also retain their parameter introduction and environment.
 pub enum EqualitySearchProofByBuiltinStrategy {
+    MatrixStructuralEquality(super::matrix_entry_normalization_proof::MatrixStructuralEqualityProof),
+    MatrixEntryReduction(super::matrix_entry_normalization_proof::MatrixEntryReductionProof),
     RiemannIntegralValue(
         super::verify_equality_by_builtin_rules::by_riemann_integral::RiemannIntegralValueStrategyProof,
     ),

@@ -178,6 +178,9 @@ pub(super) fn object_wd(p: &RiemannIntegralWellDefinedProof, rt: &Runtime) -> Js
                 ("proof", project_verify_fact(proof, rt)),
             ],
         ),
+        RiemannIntegralSelectionProof::Integrability(proof) => {
+            object_for(rt, vec![("integrability", project_verify_fact(proof, rt))])
+        }
     };
     object_for(
         rt,
@@ -220,10 +223,41 @@ pub(super) fn object_wd(p: &RiemannIntegralWellDefinedProof, rt: &Runtime) -> Js
     )
 }
 pub(super) fn object_failure(p: &RiemannIntegralWellDefinedFailure, rt: &Runtime) -> JsonValue {
-    let stage=match &p.stage {
-        RiemannIntegralFailureStage::Domain=>object_for(rt,vec![("stage",string("domain")),("message",string("Requires a complete unary real function."))]),
-        RiemannIntegralFailureStage::Requirement{requirement,result}=>object_for(rt,vec![("stage",string("interval_domain")),("requirement",string(requirement.readable_string())),("proof",project_verify_fact(result,rt))]),
-        RiemannIntegralFailureStage::Selection(result)=>object_for(rt,vec![("stage",string("proved_integrability")),("message",string("Prove a finite Riemann integral candidate or integrability first; WD does not integrate the body.")),("requirement",project_verify_fact(result,rt))]),
+    let stage = match &p.stage {
+        RiemannIntegralFailureStage::Domain => object_for(
+            rt,
+            vec![
+                ("stage", string("domain")),
+                (
+                    "message",
+                    string("Requires a complete unary real function."),
+                ),
+            ],
+        ),
+        RiemannIntegralFailureStage::Requirement {
+            requirement,
+            result,
+        } => object_for(
+            rt,
+            vec![
+                ("stage", string("interval_domain")),
+                ("requirement", string(requirement.readable_string())),
+                ("proof", project_verify_fact(result, rt)),
+            ],
+        ),
+        RiemannIntegralFailureStage::Selection(result) => object_for(
+            rt,
+            vec![
+                ("stage", string("proved_integrability")),
+                (
+                    "message",
+                    string(
+                        "Could not prove finite Riemann integrability on the requested interval.",
+                    ),
+                ),
+                ("requirement", project_verify_fact(result, rt)),
+            ],
+        ),
     };
     object_for(
         rt,

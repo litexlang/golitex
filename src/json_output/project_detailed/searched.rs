@@ -630,6 +630,45 @@ fn project_equality_builtin_strategy(
                 ],
             );
         }
+        EqualitySearchProofByBuiltinStrategy::MatrixStructuralEquality(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("MatrixStructuralEquality")),
+                    (
+                        "right_domain",
+                        super::function_domain::project_source(&p.right_domain, runtime),
+                    ),
+                    (
+                        "domain_match",
+                        super::function_domain::project_function_domain(&p.domain_match, runtime),
+                    ),
+                    ("pointwise", project_verify_fact(&p.pointwise, runtime)),
+                ],
+            );
+        }
+        EqualitySearchProofByBuiltinStrategy::MatrixEntryReduction(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("MatrixEntryReduction")),
+                    (
+                        "left",
+                        super::matrix_structural::normalization(&p.left, runtime),
+                    ),
+                    (
+                        "right",
+                        super::matrix_structural::normalization(&p.right, runtime),
+                    ),
+                    (
+                        "scalar_equality",
+                        project_verify_fact(&p.scalar_equality, runtime),
+                    ),
+                ],
+            );
+        }
         EqualitySearchProofByBuiltinStrategy::ModCongruence(p) => (
             "ModCongruence",
             &p.requirement_facts,

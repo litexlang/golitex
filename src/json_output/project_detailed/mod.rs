@@ -18,6 +18,7 @@ mod helper;
 mod induction;
 mod known_special_property;
 mod known_tuple;
+mod matrix_structural;
 mod multivariable;
 mod native_matrix;
 mod or_builtin_gen;

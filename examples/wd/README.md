@@ -13,6 +13,12 @@ JSON/Lean output.
 integrability, value selection, Darboux folding/unfolding and antiderivative
 relations. The short and canonical certificate spellings share stored facts.
 
+[Automatic integral integrability](riemann_integral_automatic_integrability.lit)
+checks polynomial integral values with numeric, symbolic and mixed endpoints.
+The selector requests its integrability proof through shared verification at
+the inherited search level and retains the returned evidence. Continuous
+functions and supplied interval-wide integrability also support symbolic use.
+
 [Refined indexed carriers](refined_indexed_carriers.lit) retain sequence and
 closed-range membership consequences through nested set-builder projections.
 

@@ -1,3 +1,4 @@
+mod dispatch_stmt;
 mod env_stack_lookup;
 mod exec_stmt;
 mod exec_stmt_result;

@@ -12,6 +12,68 @@ forall f fn(x R) R, a, b, I R:
         integral(f, a, b) = I
 "#;
 
+const AUTOMATIC_INTEGRABILITY_SOURCE: &str = r#"forall f fn(x R) R:
+    forall a,b R:
+        $is_riemann_integrable(f,a,b)
+    =>:
+        integ(f,0,1)=integ(f,0,1)
+"#;
+
+#[test]
+fn riemann_integral_automatic_integrability_replays_known_forall() {
+    let (run, compiler) = super::execute(AUTOMATIC_INTEGRABILITY_SOURCE);
+    let output = compiler
+        .compile_run(&run, "automatic_integrability")
+        .expect("shared integrability evidence from a known forall replays");
+    assert!(output.contains("Litex.RiemannIntegralObj.mk"));
+    assert_eq!(
+        output,
+        compiler
+            .compile_run(&run, "automatic_integrability")
+            .unwrap()
+    );
+}
+
+#[test]
+fn riemann_integral_automatic_integrability_rejects_changed_subject() {
+    use crate::execute::execute_fact_stmt::riemann_integral::{
+        IntegralOperatorWellDefinedProof, RiemannIntegralSelectionProof,
+    };
+    for mutation in 0..3 {
+        let (mut run, compiler) = super::execute(AUTOMATIC_INTEGRABILITY_SOURCE);
+        let all = super::forall_proof_mut(&mut run.statement_results[0]);
+        let equal = super::equality_proof_mut(&mut all.proved_then_facts[0].verify_result);
+        let ObjWellDefinedProofByDef::IntegralOperator(IntegralOperatorWellDefinedProof::Riemann(
+            integral,
+        )) = equal
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left
+            .by_def_mut()
+            .expect("integral definition proof")
+        else {
+            panic!("integral definition")
+        };
+        let RiemannIntegralSelectionProof::Integrability(proof) = &mut integral.selection else {
+            panic!("shared integrability verification")
+        };
+        let atomic = super::atomic_proof_mut(proof);
+        let AtomicFact::FunctionRiemannIntegrableFact(fact) = &mut atomic.fact else {
+            panic!("integrability subject")
+        };
+        let wrong = Obj::StandardSet(StandardSet::R);
+        match mutation {
+            0 => fact.function = wrong,
+            1 => fact.lower = wrong,
+            _ => fact.upper = wrong,
+        }
+        compiler
+            .compile_run(&run, "changed_integrability")
+            .expect_err("integrability must prove the exact function and interval");
+    }
+}
+
 #[test]
 fn closed_subtraction_bound_keeps_its_citation_and_exact_certificate() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{

@@ -234,7 +234,7 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::PythagoreanIdentity(_)) => self.compile_trig_identity(fact, false, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TanQuotientDefinition(_)) => self.compile_trig_identity(fact, true, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::ComplexReconstruction)) => self.compile_complex_reconstruction(fact, position)?,
-            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Conjugation(p)) => self.compile_conjugate_identity(fact, p, position)?,
+            EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::Conjugation(p)) => self.compile_conjugate_identity(fact, p, false, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::TrigComplexIdentity(crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_trig_complex_identities::TrigComplexIdentityProof::ComplexModulusProduct)) => self.compile_complex_modulus_product(fact,position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::ReduceEmpty(p)) => self.compile_reduce_empty(fact, &p.proof_of_requirement_facts, position)?,
             EqualFactSearchedProof::ByBuiltinRule(EqualitySearchProofByBuiltinRule::FiniteSetReduceEmpty(_)) => self.compile_finite_fold_empty(fact, position)?,
@@ -627,6 +627,12 @@ impl LitexToLeanCompiler {
             EqualFactSearchedProof::ByBuiltinStrategy(
                 EqualitySearchProofByBuiltinStrategy::FiniteSetProductPointwiseEquality(proof),
             ) => self.compile_finite_product_pointwise(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::MatrixStructuralEquality(proof),
+            ) => self.compile_matrix_structural_equality(fact, proof, position)?,
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::MatrixEntryReduction(proof),
+            ) => self.compile_matrix_entry_reduction(fact, proof, position)?,
             EqualFactSearchedProof::ByBuiltinStrategy(
                 EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(proof),
             ) => self.compile_cos_integer_offset(fact, proof, position)?,

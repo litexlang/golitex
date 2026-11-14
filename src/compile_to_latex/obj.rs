@@ -116,20 +116,13 @@ pub(super) fn expression(
             },
         ),
 
-        Obj::IntegralOperator(IntegralOperator::Riemann(x)) => {
-            let function = h(&x.function)?;
-            let lower = o(&x.lower)?;
-            let upper = o(&x.upper)?;
-            let bound = fresh_rendered_index(r"\xi", &[&function, &lower, &upper]);
-            (
-                format!(r"\int_{{{lower}}}^{{{upper}}} {function}({bound})\,\mathrm{{d}}{bound}"),
-                30,
-            )
-        }
-        Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => (
-            format!("{}^{{\\prime}}{}", h(&x.function)?, parens(&o(&x.point)?)),
-            50,
+        Obj::IntegralOperator(IntegralOperator::Riemann(x)) => (
+            riemann_integral(&x.function, &x.lower, &x.upper, modules, lang)?,
+            30,
         ),
+        Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => {
+            (derivative_at(&x.function, &x.point, modules, lang)?, 50)
+        }
         Obj::BoundOperator(BoundOperator::Supremum(x)) => {
             (format!(r"\sup {}", parens(&o(&x.set)?)), 50)
         }
@@ -591,6 +584,35 @@ pub(super) fn expression(
 
 // Named and already-applied functions read naturally as f(x). Composite
 // function operands retain a group, including any existing scripts.
+pub(super) fn derivative_at(
+    function: &Obj,
+    point: &Obj,
+    modules: &GlobalModuleManager,
+    language: OutputLanguage,
+) -> RuntimeResult<String> {
+    Ok(format!(
+        "{}^{{\\prime}}{}",
+        function_operand(function, modules, language)?,
+        parens(&obj(point, modules, language)?)
+    ))
+}
+
+pub(super) fn riemann_integral(
+    function: &Obj,
+    lower: &Obj,
+    upper: &Obj,
+    modules: &GlobalModuleManager,
+    language: OutputLanguage,
+) -> RuntimeResult<String> {
+    let function = function_operand(function, modules, language)?;
+    let lower = obj(lower, modules, language)?;
+    let upper = obj(upper, modules, language)?;
+    let bound = fresh_rendered_index(r"\xi", &[&function, &lower, &upper]);
+    Ok(format!(
+        r"\int_{{{lower}}}^{{{upper}}} {function}({bound})\,\mathrm{{d}}{bound}"
+    ))
+}
+
 fn function_operand(
     value: &Obj,
     modules: &GlobalModuleManager,

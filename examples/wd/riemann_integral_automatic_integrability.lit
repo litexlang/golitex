@@ -1,0 +1,34 @@
+# Tracer: automatic integrability during integral well-definedness.
+# Before, the following direct equation failed at well-definedness:
+# have fn polynomial(x R) R=3*x^2+2*x+1
+# integ(polynomial,0,1)=3
+# An explicit $is_riemann_integrable(polynomial,0,1) was required first.
+#
+# Now, each selector checks integrability through ordinary verification.
+# Boundary: unsupported integrability, invalid domains and wrong values reject.
+# Evidence: target/release/litex -strict -lang en -f examples/wd/riemann_integral_automatic_integrability.lit
+
+have fn polynomial(x R) R=3*x^2+2*x+1
+integ(polynomial,0,1)=3
+integ(polynomial,0,1)+1=4
+
+forall a,b R:
+    integ(polynomial,a,b)=b^3+b^2+b-a^3-a^2-a
+
+forall a R:
+    integ(polynomial,a,3)=39-a^3-a^2-a
+
+forall b R:
+    integ(polynomial,1,b)=b^3+b^2+b-3
+
+integ(polynomial,1,0)=-3
+integ(polynomial,2,2)=0
+0*integ(polynomial,0,2)=0
+
+integ(fn(x R) R {sin(x)},0,1) $in R
+
+forall f fn(x R) R:
+    forall a,b R:
+        $is_riemann_integrable(f,a,b)
+    =>:
+        integ(f,0,1) $in R

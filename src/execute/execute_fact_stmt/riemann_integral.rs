@@ -30,6 +30,7 @@ pub enum RiemannIntegralSelectionProof {
         fact: Fact,
         proof: Box<VerifyFactResult>,
     },
+    Integrability(Box<VerifyFactResult>),
 }
 pub enum IntegralOperatorWellDefinedFailure {
     Riemann(RiemannIntegralWellDefinedFailure),
@@ -112,18 +113,32 @@ impl Runtime {
                     *integral.lower.clone(),
                     *integral.upper.clone(),
                 );
-                // The selector may consume stored existence, never construct an integral.
                 let proof =
                     self.verify_fact(&fact, state.capped_at(VerifyStateLevel::BuiltinRule))?;
-                if proof.is_failed() {
-                    return Ok(failure(
-                        obj,
-                        RiemannIntegralFailureStage::Selection(Box::new(proof)),
-                    ));
-                }
-                RiemannIntegralSelectionProof::Existence {
-                    fact,
-                    proof: Box::new(proof),
+                if !proof.is_failed() {
+                    RiemannIntegralSelectionProof::Existence {
+                        fact,
+                        proof: Box::new(proof),
+                    }
+                } else {
+                    // Reuse ordinary integrability verification at the caller's
+                    // ceiling. For example, integ(fn(x R) R {x^2},0,1)
+                    // consumes the existing bounded integrability strategy.
+                    let integrability: Fact = self
+                        .riemann_integrable(
+                            *integral.function.clone(),
+                            *integral.lower.clone(),
+                            *integral.upper.clone(),
+                        )
+                        .into();
+                    let proof = self.verify_fact(&integrability, state)?;
+                    if proof.is_failed() {
+                        return Ok(failure(
+                            obj,
+                            RiemannIntegralFailureStage::Selection(Box::new(proof)),
+                        ));
+                    }
+                    RiemannIntegralSelectionProof::Integrability(Box::new(proof))
                 }
             }
         };

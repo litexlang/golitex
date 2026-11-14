@@ -260,6 +260,20 @@ impl LitexToLeanCompiler {
                 }
                 self.compile_verify(proof, position)?.1
             }
+            RiemannIntegralSelectionProof::Integrability(proof) => {
+                let Fact::AtomicFact(AtomicFact::FunctionRiemannIntegrableFact(fact)) =
+                    source_subject(proof)?
+                else {
+                    return Err(invalid("WDIntegrability"));
+                };
+                if fact.function.ir() != args[0].ir()
+                    || fact.lower.ir() != args[1].ir()
+                    || fact.upper.ir() != args[2].ir()
+                {
+                    return Err(invalid("WDIntegrabilitySubject"));
+                }
+                self.compile_verify(proof, position)?.1
+            }
         };
         let ids = proof
             .requirements

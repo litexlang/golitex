@@ -6676,11 +6676,14 @@ For a checked complete unary domain `fn(x S) T`, both inverse-image forms are su
 
 ### Finite real Riemann integrals (preview)
 
-`integral(f,a,b)` selects a finite real Riemann integral after a proof of
+`integral(f,a,b)` selects a finite real Riemann integral using a proof of
 `$has_riemann_integral(f,a,b,I)` or `$is_riemann_integrable(f,a,b)`. The latter
-means that some real candidate exists; it permits symbolic use without
-identifying a numerical value. WD consumes that evidence and does not search
-for an antiderivative or guess an integral.
+means that some real candidate exists and permits symbolic use. WD first
+reuses stored candidate or existence evidence. Otherwise it asks the shared
+verifier to prove integrability at the caller's permitted search level and
+retains that proof. Existing polynomial and continuous-expression strategies
+can discharge this obligation. Computing the selected value uses separate
+integral rules.
 
 The actual complete unary real function domain must cover the closed interval
 between the endpoints. Equal endpoints require the function to be defined
@@ -6692,13 +6695,13 @@ singularities and unbounded functions.
 
 ```litex
 have fn square(x R) R=x^2
-release thm riemann_integral_power(square,0,1,2)
 integral(square,0,1)=1/3
 integral(square,0,1)+2=7/3
 ```
 
-Without the candidate/existence proof, even `0*integral(square,0,1)=0`
-fails WD. A guarded function may require an explicit interval-in-domain proof;
+An arbitrary real function still requires provable integrability, including
+inside `0*integral(f,0,1)`. A guarded function may require an explicit
+interval-in-domain proof;
 see [actual-domain examples](../examples/real_analysis/riemann_integral_domains.lit).
 
 These reserved explicit theorem calls check every premise before publishing
@@ -6739,8 +6742,10 @@ of one sampled sum sequence alone does not establish integrability.
 See the [primary example](../examples/real_analysis/riemann_integral.lit),
 [explicit theorem examples](../examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_power.lit),
 and [implementation](../src/execute/execute_fact_stmt/riemann_integral.rs).
-LaTeX output renders the selected integral; Lean compilation of these new
-integral objects and proof routes is currently unsupported and rejects them.
+LaTeX output renders the selected integral. Lean replay supports the existing
+candidate and existence routes and checked integrability obtained from known
+facts. Automatic integrability and structural integral-value strategies retain
+explicit unsupported replay boundaries.
 
 
 ### O82. Sums over integer ranges

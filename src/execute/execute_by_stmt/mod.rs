@@ -32,6 +32,7 @@ pub use exec_by_contra_stmt::exec_by_contra_stmt;
 pub use exec_by_def_stmt::exec_by_def_stmt;
 pub use exec_by_enumerate_finite_set_stmt::exec_by_enumerate_finite_set_stmt;
 pub use exec_by_extension_stmt::exec_by_extension_stmt;
+pub(in crate::execute) use exec_by_fn_extension_stmt::build_pointwise_forall;
 pub use exec_by_fn_extension_stmt::exec_by_fn_extension_stmt;
 pub use exec_by_for_stmt::exec_by_for_stmt;
 pub use exec_by_induc_stmt::{exec_by_induc_stmt, exec_by_strong_induc_stmt};

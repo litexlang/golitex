@@ -42,6 +42,7 @@ impl LitexToLeanCompiler {
         &self,
         fact: &EqualFact,
         proof: &ConjugationEqualityProof,
+        projected_operands: bool,
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         use ConjugationEqualityProof as P;
@@ -74,11 +75,18 @@ impl LitexToLeanCompiler {
                     if matches!(complex_argument(cx),Some(("Conjugate",_,a)) if a.ir()==x.ir())
                         && matches!(complex_argument(cy),Some(("Conjugate",_,a)) if a.ir()==y.ir())
                     {
-                        return self.compile_complex_native_identity(
-                            fact,
-                            &format!("simp only [{law}]"),
-                            position,
-                        );
+                        // The two observations can project the same operand
+                        // through different checked constructors. After the
+                        // selected star law, descend only through the binary
+                        // operator and star to align those operands.
+                        let tactic = if projected_operands {
+                            format!(
+                                "first | (simp only [{law}]; done) | (simp only [{law}]; congr 2)"
+                            )
+                        } else {
+                            format!("simp only [{law}]")
+                        };
+                        return self.compile_complex_native_identity(fact, &tactic, position);
                     }
                 }
             }

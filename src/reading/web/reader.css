@@ -235,6 +235,13 @@
 .lr-proof-rule-title { margin-left:8px; color:var(--reading-muted); font-size:12px; }
 .lr-proof-rule-message { margin:6px 0; white-space:pre-wrap; overflow-wrap:anywhere; }
 .lr-proof-rule-result { margin-top:9px; }
+.lr-proof-evidence .lr-calculus-formula { max-width:100%; overflow-x:auto; padding:3px 0; }
+.lr-proof-step>summary .lr-calculus-formula { display:inline-block; vertical-align:middle; }
+.lr-calculus-proof .lr-proof-grounds { margin-top:12px; }
+.lr-calculus-steps { margin:12px 0; }
+.lr-calculus-steps>summary { color:var(--reading-accent); cursor:pointer; }
+.lr-calculus-steps ul { margin:6px 0; padding-inline-start:20px; }
+.lr-calculus-step>strong { font-size:12px; }
 .lr-forall-application,.lr-known-application,.lr-strategy-application { margin-top:0; padding-top:0; border-top:0; }
 .lr-proof-definition-source { margin:6px 0; }
 .lr-definition-expansion+.lr-definition-expansion { margin-top:10px; padding-top:10px; border-top:1px solid var(--reading-line); }

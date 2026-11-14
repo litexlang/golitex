@@ -1923,7 +1923,7 @@
       if(["DvdFact","NotDvdFact","ForallFactWithIff","NotForallFact","IsSetFact","NotIsSetFact","IsNonemptySetFact","NotIsNonemptySetFact","IsFiniteSetFact","NotIsFiniteSetFact"].includes(subject?.type)){const text=quantifiedText(subject,sourceId);if(text)return text;}
       return existentialText(fact)||(node&&quantifiedText(node,sourceId))||mathText(fact?.text||"",sourceId);
     }
-    function factFormula(fact){return element("div","lr-formula",factDisplayText(fact));}
+    function factFormula(fact){return calculusFormula(proofSubject(fact),factLocation(fact).sourceId)||element("div","lr-formula",factDisplayText(fact));}
     function displayLatexIdentifiers(value,sourceId=state.source){
       // Generated identifiers are escaped inside mathit; keep the surrounding
       // LaTeX structure intact, including scopes and every mathematical clause.
@@ -1944,6 +1944,11 @@
       const aligned=/^\\begin\{aligned\}&([\s\S]*)\\end\{aligned\}$/.exec(value);
       if(aligned&&!aligned[1].includes("\\begin{")&&aligned[1].split("\\\\&").length===2){value=aligned[1].replace("\\\\&","\\ ");display=false;node.classList.add("lr-latex-inline");}
       try{global.katex.render(value,node,{displayMode:display,throwOnError:true,trust:false,strict:"ignore",maxExpand:500,maxSize:50,output:"htmlAndMathml"});return node;}catch(_){return null;}
+    }
+    function calculusFormula(subject,sourceId){
+      const math=latexFormula(proofResult(subject).calculus_latex,false,sourceId);
+      if(math)math.classList.add("lr-calculus-formula");
+      return math;
     }
     function renderPredicateLatex(model,sourceId,target=detailPane){
       const data=model.latex,domains=array(data?.parameters),clauses=array(data?.facts);
@@ -3105,10 +3110,11 @@
       target.append(section);return true;
     }
     function appendProofRequirement(target,fact,requirement,evidence,depth,renderProof=appendProofBody){
-      const text=quantifiedText(requirement,factLocation(fact).sourceId)||proofRelation(evidence);if(!text){target.append(element("p","lr-empty-note",editText("此条件及其证明记录未完整导出。","This condition and its proof record were not fully exported.")));return;}
-      if(!evidence||resolveEvidence(evidence).kind==="unavailable"){target.append(formula(text,factLocation(fact).sourceId),element("p","lr-empty-note",editText("此条件的证明记录未完整导出。","The proof record for this condition was not fully exported.")));return;}
-      const step=element("details","lr-proof-step"),summary=element("summary");summary.append(formula(text,factLocation(fact).sourceId));step.append(summary);let rendered=false;
-      step.addEventListener("toggle",()=>{if(step.open&&!rendered){rendered=true;const expected=retainedFactId(requirement),actual=retainedFactId(proofResult(evidence).fields?.fact);if(!expected||expected!==actual)step.append(element("p","lr-empty-note",editText("没有可与此条件准确对应的证明记录。","No proof record can be matched exactly to this condition.")));else renderProof(step,{...fact,id:null,role:"verified",evidence},evidence,false,depth+1);positionOverlays();}});target.append(step);
+      const sourceId=factLocation(fact).sourceId,text=quantifiedText(requirement,sourceId)||proofRelation(evidence),math=calculusFormula(requirement,sourceId)||(text&&formula(text,sourceId));
+      if(!math){target.append(element("p","lr-empty-note",editText("此条件及其证明记录未完整导出。","This condition and its proof record were not fully exported.")));return;}
+      if(!evidence||resolveEvidence(evidence).kind==="unavailable"){target.append(math,element("p","lr-empty-note",editText("此条件的证明记录未完整导出。","The proof record for this condition was not fully exported.")));return;}
+      const step=element("details","lr-proof-step"),summary=element("summary");summary.append(math);step.append(summary);let rendered=false;
+      step.addEventListener("toggle",()=>{if(step.open&&!rendered){rendered=true;const expected=retainedFactId(requirement),actual=retainedFactId(proofResult(evidence).fields?.fact);if(!expected||expected!==actual)step.append(element("p","lr-empty-note",editText("没有可与此条件准确对应的证明记录。","No proof record can be matched exactly to this condition.")));else renderProof(step,{...fact,id:null,role:"verified",evidence},evidence,false,depth+1,false);positionOverlays();}});target.append(step);
     }
     function failedDefinitionDetails(statement){
       if(statement?.status!=="rejected"||String(statement.statement_kind||"").split(".").at(-1)!=="ByDefStmt")return null;
@@ -6325,7 +6331,7 @@
       }
       return null;
     }
-    function proofGrounds(evidence){
+    function proofGrounds(evidence,additionalChecks=null){
       const cited=new Set(),seen=new Set();
       function visit(value){
         const node=resolveEvidence(value);if(!node||typeof node!=="object"||seen.has(node))return;seen.add(node);
@@ -6334,7 +6340,7 @@
         for(const [key,child] of Object.entries(node)){
           // Parameter domains and formation are genuine dependencies, retained
           // separately below rather than mixed with the mathematical premises.
-          if(["well_defined_proof","well_defined","application_well_defined","body_application_well_defined","param_type_requirements"].includes(key))continue;
+          if(["well_defined_proof","well_defined","application_well_defined","body_application_well_defined","param_type_requirements"].includes(key)||additionalChecks?.has(key))continue;
           if(Array.isArray(child))child.forEach(visit);else if(child&&typeof child==="object")visit(child);
         }
       }
@@ -6345,7 +6351,7 @@
       if(main.length){const premises=element("div","lr-proof-grounds");premises.append(element("h4","lr-proof-section-title",editText("上下文","Context")));main.forEach(id=>premises.append(factButton(id,null,fact)));target.append(premises);}
       return appendProofApplication(target,fact,evidence)||main.length;
     }
-    function appendProofApplication(target,fact,evidence){
+    function appendProofApplication(target,fact,evidence,showResult=true){
       // Only the current result's wrapper chain owns its application. Searching
       // premise trees or earlier cited statements would misattribute their rules.
       const frames=proofFrames(evidence),direct=frames.find(node=>typeof node.rule_id==="string"),membership=frames.find(node=>node.type==="StructuralMembershipProof"),reason=membership&&resolveEvidence(membership.fields?.reason);
@@ -6366,8 +6372,105 @@
         const numerator=resolveEvidence(resolveEvidence(structural.fields?.numerator).fields?.element),denominator=resolveEvidence(resolveEvidence(structural.fields?.denominator).fields?.element);
         if(numerator.text&&denominator.text)application.append(element("p","lr-proof-substitution",editText("本句取 ","Here take ")+"a = "+mathText(numerator.text,factLocation(fact).sourceId)+", b = "+mathText(denominator.text,factLocation(fact).sourceId)));
       }
-      if(proofResult(evidence).type!=="VerifyEqualitySuccess")appendProofResult(application,fact,evidence);
+      if(showResult&&proofResult(evidence).type!=="VerifyEqualitySuccess")appendProofResult(application,fact,evidence);
       target.append(application);return true;
+    }
+    const calculusChecks=new Set(["domain","body_well_defined","interior","interval_requirements","value_real","derivative_real","integral_real","scalar_real","denominator_real","denominator_nonzero","exponent_natural","differentiability","integrability","value_well_defined"]);
+    function calculusProof(evidence){
+      const result=proofResult(evidence),goal=proofResult(result.fields?.fact),frames=proofFrames(evidence);
+      const candidates={
+        DerivativeValue:["Derivative",false],DerivativeSelectedValue:["Derivative",true],
+        RiemannIntegralValue:["RiemannIntegral",false],RiemannIntegralSelectedValue:["RiemannIntegral",true]
+      };
+      const route=frames.find(node=>node.type==="EqualitySearchProofByBuiltinRule"||node.type==="EqualitySearchProofByBuiltinStrategy");
+      const choice=route&&candidates[route.variant];
+      if(result.type==="VerifyEqualitySuccess"&&goal.type==="EqualFact"&&choice){
+        const [kind,known]=choice,derivative=kind==="Derivative",payload=resolveEvidence(route.fields?.["0"]),candidate=payload.fields?.candidate,query=proofResult(candidate),subject=proofResult(query.fields?.fact),args=subject.fields||{};
+        if(route.type!==(known?"EqualitySearchProofByBuiltinRule":"EqualitySearchProofByBuiltinStrategy")||
+          payload.type!==kind+(known?"SelectedValueProof":"ValueStrategyProof")||
+          query.type!==(known?"AtomicExceptEqualityFactKnownProof":"VerifyAtomicExceptEqualityFactSuccess")||
+          subject.type!==(derivative?"HasDerivativeAtFact":"HasRiemannIntegralFact"))return null;
+        const operands=derivative?["function","point"]:["function","lower","upper"];
+        const match=[[goal.fields?.left,goal.fields?.right],[goal.fields?.right,goal.fields?.left]].find(([left,right])=>{
+          const object=resolveEvidence(left),family=resolveEvidence(object.fields?.["0"]),selector=resolveEvidence(family.fields?.["0"]);
+          return object.type==="Obj"&&family.type===(derivative?"DerivativeOperator":"IntegralOperator")&&selector.type===(derivative?"DerivativeAt":"RiemannIntegral")&&
+            operands.every(key=>sameRecordedObject(selector.fields?.[key],args[key]))&&(known||sameRecordedObject(right,args.value));
+        });
+        if(!match)return null;
+        if(known){
+          const lookup=proofFrames(candidate).find(node=>node.type==="AtomicExceptEqualityFactSearchProofByKnownAtomicFact"),reference=resolveEvidence(lookup?.fields?.cite_fact_id);
+          if(reference.kind!=="fact_reference"||!facts.has(reference.fact_id)||!payload.fields.value_equality)return null;
+          return {goal,cite:reference.fact_id,comparison:payload.fields.value_equality,compared:[args.value,match[1]]};
+        }
+        const calculation=calculusProof(candidate);
+        return calculation?.detail?{...calculation,goal,candidate}:null;
+      }
+      if(result.type!=="VerifyAtomicExceptEqualityFactSuccess")return null;
+      const strategy=frames.find(node=>node.type==="AtomicExceptEqualityFactSearchProofByBuiltinStrategy");
+      const derivative=strategy?.variant==="PointwiseDerivative",integral=strategy?.variant==="StructuralRiemannIntegral";
+      if(!derivative&&!integral)return null;
+      const detail=resolveEvidence(strategy.fields?.["0"]),keys=derivative?["function","point"]:["function","lower","upper"];
+      const expected=derivative?"HasDerivativeAtFact":"HasRiemannIntegralFact",existence=derivative?"FunctionDifferentiableAtFact":"FunctionRiemannIntegrableFact";
+      if(![expected,existence].includes(goal.type)||detail.type!==(derivative?"PointwiseDerivativeProof":"StructuralRiemannIntegralProof")||
+        !keys.every(key=>sameRecordedObject(goal.fields?.[key],detail.fields?.[key])))return null;
+      return {goal,detail,kind:derivative?"derivative":"integral"};
+    }
+    function appendCalculusProof(target,fact,evidence){
+      const application=calculusProof(evidence);if(!application)return false;
+      const {candidate,cite,comparison,compared,detail,kind}=application,sourceId=factLocation(fact).sourceId;
+      const section=element("section","lr-calculus-proof");target.append(section);
+      appendProofApplication(section,fact,evidence,false);
+      if(cite){
+        const references=element("section","lr-proof-grounds");
+        references.append(element("h4","lr-proof-section-title",editText("引用已知的值","Cited value")),factButton(cite,null,fact));section.append(references);
+        if(proofRecord(comparison).variant!=="ByTheyAreTheSame"){
+          const check=element("details","lr-proof-step");check.append(element("summary",null,editText("核对候选值","Compare the candidate with the stated value")));
+          const [left,right]=compared.map(value=>resolveEvidence(value).text);
+          if(left&&right)check.append(formula(left+" = "+right,sourceId));
+          if(proofRecord(comparison).variant==="ByClosedCalculation")check.append(element("p","lr-proof-summary",editText("两边经精确计算得到相同的值。","Exact calculation gives the same value on both sides.")));
+          appendProofReferences(check,{...fact,id:null},comparison,new Set([cite]));section.append(check);
+        }
+        return true;
+      }
+      const strategy=candidate||evidence;
+      if(candidate)appendProofApplication(section,fact,strategy,false);
+      const referenceIds=proofGrounds(detail,calculusChecks).filter(id=>id!==fact.id);
+      if(referenceIds.length){
+        const references=element("section","lr-proof-grounds");references.append(element("h4","lr-proof-section-title",editText("使用的事实","Facts used")));
+        for(const id of referenceIds)references.append(factButton(id,null,fact));
+        section.append(references);
+      }
+      const labels=kind==="derivative"?{
+        Constant:["常数求导","Constant rule"],Variable:["恒等函数求导","Derivative of the identity"],Neg:["负号法则","Negation rule"],
+        Add:["和的求导法则","Sum rule"],Sub:["差的求导法则","Difference rule"],Mul:["乘积法则","Product rule"],Div:["商法则","Quotient rule"],
+        NaturalPower:["自然数幂求导","Power rule"],Compose:["链式法则","Chain rule"],Elementary:["初等函数求导","Elementary derivative"]
+      }:{
+        Constant:["常数积分","Integral of a constant"],Variable:["一次幂积分","Integral of the identity"],NaturalPower:["自然数幂积分","Power rule for integration"],
+        Neg:["负号提出积分号","Factor out a negative sign"],Add:["和的积分","Integral of a sum"],Sub:["差的积分","Integral of a difference"],
+        Scale:["常数因子提出积分号","Factor out a constant"],Divide:["除以非零常数","Divide by a nonzero constant"],Application:["被积子函数的积分","Integral of a component function"]
+      };
+      const rootExpression=resolveEvidence(detail.fields?.expression),rootRule=resolveEvidence(rootExpression.fields?.constructor);
+      const steps=element("details","lr-calculus-steps"),label=labels[rootRule.variant];
+      steps.append(element("summary",null,editText("计算步骤","Calculation steps")+(label?" · "+editText(...label):"")));section.append(steps);
+      let rendered=false;
+      steps.addEventListener("toggle",()=>{
+        if(!steps.open||rendered)return;rendered=true;
+        const seen=new Set();
+        function calculation(value){
+          const expression=resolveEvidence(value),constructor=resolveEvidence(expression.fields?.constructor),name=labels[constructor.variant];
+          if(!name||seen.has(expression))return null;seen.add(expression);
+          const item=element("li","lr-calculus-step");item.dataset.constructor=constructor.variant;
+          const input=resolveEvidence(expression.fields?.expression),output=resolveEvidence(expression.fields?.[kind==="derivative"?"derivative":"integral"]);
+          item.append(element("strong",null,editText(...name)));
+          if(input.text&&output.text)item.append(formula(mathText(input.text,sourceId)+" ↦ "+mathText(output.text,sourceId),sourceId));
+          const children=["left","right","argument","base"].map(key=>calculation(constructor.fields?.[key])).filter(Boolean);
+          if(children.length){const list=element("ul");list.append(...children);item.append(list);}
+          return item;
+        }
+        const item=calculation(rootExpression);if(item){const list=element("ul");list.append(item);steps.append(list);}
+        positionOverlays();
+      });
+      return true;
     }
     function appendAtomicWellDefinedness(target,fact,evidence,depth,adjacentIndex=null,theoremPart=null){
       const result=proofResult(evidence);
@@ -6433,6 +6536,19 @@
           for(const [key,child] of Object.entries(node.fields||{})){if(!["obj","fact","requirement"].includes(key))visit(child);}
         }
         visit(proof);
+        const calculus=calculusProof(evidence);
+        if(calculus?.candidate)visit(proofResult(calculus.candidate).fields?.well_defined_proof);
+        if(calculus?.detail){
+          for(const key of ["domain","body_well_defined","interior","interval_requirements"])visit(calculus.detail.fields?.[key]);
+          const seenExpressions=new Set();
+          function visitCalculusChecks(value){
+            const expression=resolveEvidence(value);if(!expression.type||seenExpressions.has(expression))return;seenExpressions.add(expression);
+            const constructor=resolveEvidence(expression.fields?.constructor);
+            for(const key of calculusChecks){if(expression.fields?.[key])visit(expression.fields[key]);if(constructor.fields?.[key])visit(constructor.fields[key]);}
+            for(const key of ["left","right","argument","base"])visitCalculusChecks(constructor.fields?.[key]);
+          }
+          visitCalculusChecks(calculus.detail.fields?.expression);
+        }
         if(formation?.compoundFailure)appendCompoundFormationFailure(tail,formation.compoundFailure,factLocation(fact).sourceId);
         const membershipDomain=functionMembershipDomain(fact,evidence);if(membershipDomain?.paired){visit(membershipDomain.match.fields.function_wd);visit(membershipDomain.match.fields.target_wd);}
         if(formation?.note)tail.append(element("p","lr-proof-summary",formation.note));
@@ -6456,7 +6572,11 @@
         if(unavailable)tail.append(element("p","lr-empty-note",editText("此处未完整导出表达式有定义的证明。","The well-definedness proof was not fully exported here.")));positionOverlays();
       };if(theoremFragment)render();else tail.addEventListener("toggle",render);
     }
-    function appendProofBody(target,fact,evidence=fact.evidence,steps=true,depth=0){
+    function appendProofBody(target,fact,evidence=fact.evidence,steps=true,depth=0,showFormula=true){
+      if(showFormula){
+        const math=calculusFormula(proofSubject({...fact,evidence}),factLocation(fact).sourceId);
+        if(math)target.append(math);
+      }
       appendProofMain(target,fact,evidence,steps,depth);
       appendAtomicWellDefinedness(target,fact,evidence,depth);
     }
@@ -6565,6 +6685,7 @@
       if(appendFunctionMembershipProof(target,fact,evidence,depth))return;
       if(appendMatrixMembershipProof(target,fact,evidence,depth))return;
       if(appendFunctionPropertyProof(target,fact,evidence,depth))return;
+      if(appendCalculusProof(target,fact,evidence))return;
       if(appendRingRewrite(target,fact,evidence,depth)||appendRegisteredRewrite(target,fact,evidence,depth)||appendTransitivityApplication(target,fact,evidence,depth)||appendUniversalApplication(target,fact,evidence,record,depth)||appendKnownApplication(target,fact,evidence,record,depth)||appendObjectDefinitionApplication(target,fact,evidence,depth)||appendSpecialPropertyApplication(target,fact,evidence,depth)||appendEqualityTransport(target,fact,evidence,depth)||appendBuiltinRewrite(target,fact,evidence,depth))return;
       if(record.type==="ExecByCasesStmtSuccess"){
         const part=element("section","lr-cases-proof");target.append(part);
@@ -6604,8 +6725,8 @@
         array(record.fields.adjacent).forEach((part,index)=>{
           const step=element("details","lr-proof-step"),summary=element("summary",null,editText("第 "+(index+1)+" 步","Step "+(index+1)));step.append(summary);
           const relation=proofRelation(part);
-          if(relation)summary.append(formula(relation,fact.source_id));
-          appendProofBody(step,fact,part,false,depth+1);target.append(step);
+          if(relation)summary.append(calculusFormula(proofResult(part).fields?.fact,fact.source_id)||formula(relation,fact.source_id));
+          appendProofBody(step,fact,part,false,depth+1,false);target.append(step);
         });return;
       }
       // Defining conditions own their individual proof dependencies. Bound
@@ -6652,9 +6773,10 @@
       if(whole?.complete&&equalityProofParts(fact)?.wholeForall){const objects=array(whole.goal.fields.objs);target.append(formula(resolveEvidence(objects[index]).text+" = "+resolveEvidence(objects[index+1]).text,factLocation(fact).sourceId));appendProofContext(target,fact);appendWholeChainForall(target,fact,whole.record,0,index);appendAtomicWellDefinedness(target,fact,fact.evidence,0,index);return;}
       const evidence=equalityStepEvidence(fact,index),failure=equalityStepFailure(fact,index),relation=proofRelation(evidence||failure?.evidence);
       if(!relation||!evidence&&!failure){target.append(element("p","lr-empty-note",editText("此处没有可单独展示的相邻等式证明。","No separate proof of this adjacent equality is available here.")));return;}
-      target.append(formula(relation,factLocation(fact).sourceId));appendProofContext(target,fact);
+      const sourceId=factLocation(fact).sourceId;
+      target.append(calculusFormula(proofResult(evidence||failure?.evidence).fields?.fact,sourceId)||formula(relation,sourceId));appendProofContext(target,fact);
       if(equalityProofParts(fact)?.failedIndex!==undefined)target.append(element("p","lr-chain-incomplete",editText("整条链尚未成立；这里只展示所选相邻等式的实际检查结果。","The complete chain is not established; this is the actual check of the selected adjacent equality.")));
-      if(!failure){appendProofBody(target,fact,evidence,false);return;}
+      if(!failure){appendProofBody(target,fact,evidence,false,0,false);return;}
       const report=element("section","lr-chain-step-failure");target.append(report);
       report.append(element("p","lr-failure-summary",failure.formation?editText("这个表达式所需的条件尚未建立。","A condition required by this expression has not been established."):editText("当前证明尚未建立这个等式。","The current proof has not established this equality.")));
       report.append(element("p","lr-empty-note",t("notFalse")));
@@ -6694,13 +6816,13 @@
       if(chainStep!==null)closeExplanation();
       const title=chainStep!==null?editText("这个等式为何成立","Why this equality holds"):ids.every(id=>facts.get(id)?.role==="hypothesis")?editText("本段的假设","Local hypothesis"):editText("这一步怎样得到","How this step follows");
       openSourcePreview(owner,title,body=>{
-        for(const id of ids){const fact=facts.get(id);if(!fact)continue;const part=element("div","lr-proof-part");part.dataset.fact=id;if(chainStep!==null)appendEqualityStep(part,fact,chainStep);else{if(ids.length>1)part.append(factFormula(fact));appendProofBody(part,fact);}body.append(part);}
+        for(const id of ids){const fact=facts.get(id);if(!fact)continue;const part=element("div","lr-proof-part");part.dataset.fact=id;if(chainStep!==null)appendEqualityStep(part,fact,chainStep);else{if(ids.length>1)part.append(factFormula(fact));appendProofBody(part,fact,fact.evidence,true,0,ids.length===1);}body.append(part);}
       },{factPreview:true,select:ids.length===1?()=>selectFact(ids[0],chainStep):null,selection:ids.length===1?factSelection(ids[0],chainStep):null});
       highlightProofPremises(owner,ids.map(id=>chainStep!==null?equalityStepEvidence(facts.get(id),chainStep):facts.get(id)?.evidence));
       if(ids.length===1)highlightLogicalScope(facts.get(ids[0])?.scope_id);
     }
     function highlightProofPremises(owner,evidences){
-      const premises=new Set(evidences.flatMap(proofGrounds).map(id=>facts.get(id)).filter(Boolean).map(factLocation).filter(at=>at.sourceId===state.source&&at.line).map(at=>at.line));
+      const premises=new Set(evidences.flatMap(evidence=>proofGrounds(evidence)).map(id=>facts.get(id)).filter(Boolean).map(factLocation).filter(at=>at.sourceId===state.source&&at.line).map(at=>at.line));
       codePane.querySelectorAll(".lr-code-row,[data-latex-statement]").forEach(row=>row.classList.toggle("lr-proof-premise",premises.has(Number(row.dataset.line))&&row!==(owner.closest(".lr-code-row")||owner)));
     }
     function positionProof(){
@@ -6820,8 +6942,17 @@
       proofPopover.persistent=persistent;proofPopover.mathStatementId=statement.id;
       const body=proofPopover.node.querySelector(".lr-proof-evidence"),tools=element("div","lr-math-reading-tools");
       appendMathSymbols(tools,statement,data.statement);appendMathSteps(tools,data);appendMathContexts(tools,statement,data.statement);
-      if(tools.childElementCount)body.prepend(tools);
-      appendMathSource(body,statement);
+      if(body.querySelector(".lr-calculus-formula")){
+        // Keep the proof's ordering and its last disclosure intact.
+        const utilities=element("div","lr-math-utilities");
+        if(tools.childElementCount)utilities.append(tools);
+        appendMathSource(utilities,statement);
+        const tail=body.querySelector(".lr-atomic-wd"),parent=tail?.parentNode||body;
+        if(utilities.childElementCount){if(tail)parent.insertBefore(utilities,tail);else parent.append(utilities);}
+      }else{
+        if(tools.childElementCount)body.prepend(tools);
+        appendMathSource(body,statement);
+      }
       if(owner.dataset.latexStatement)owner.setAttribute("aria-expanded","true");
       const pin=proofPopover.node.querySelector(".lr-proof-pin");if(pin)pin.textContent=persistent?editText("查看语句详情","Statement details"):editText("固定","Keep open");positionProof();
     }
