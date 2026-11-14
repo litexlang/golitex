@@ -4,9 +4,6 @@ use super::function_domain::{function_domains_alpha_equal, CheckedFunctionBodyPr
 use super::function_limit::RealFunctionLimitDomainProof;
 use super::riemann_integral::helper::{eq, member, num, real};
 use super::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
-use super::verify_atomic_fact::verify_equality::result::{
-    equal_fact_result_from_success, VerifyEqualityFailed,
-};
 use crate::prelude::*;
 use crate::rational_expression::helper::{add_objs, div_objs, mul_objs, sub_objs};
 use std::collections::HashSet;
@@ -37,6 +34,10 @@ pub struct RiemannExpressionProof {
 }
 
 pub enum RiemannConstructorProof {
+    Polynomial {
+        equality: Box<VerifyFactResult>,
+        normalized: Box<RiemannExpressionProof>,
+    },
     Constant {
         value_real: Box<VerifyFactResult>,
     },
@@ -103,7 +104,7 @@ pub(super) fn function_head(head: &FnObjHead) -> Obj {
     }
 }
 
-fn power_integral(lower: &Obj, upper: &Obj, exponent: Obj) -> Obj {
+pub(crate) fn power_integral(lower: &Obj, upper: &Obj, exponent: Obj) -> Obj {
     let next = add_objs(exponent, num("1"));
     let upper_power = Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
         base: Box::new(upper.clone()),
@@ -167,7 +168,7 @@ impl Runtime {
             else {
                 continue;
             };
-            let Some(expression) = self.prove_riemann_expression(
+            let direct = self.prove_riemann_expression(
                 &body.equal_to,
                 params[0].id,
                 lower,
@@ -175,42 +176,75 @@ impl Runtime {
                 state,
                 0,
                 &mut budget,
-            )?
-            else {
-                continue;
+            )?;
+            let expression = if let Some(expression) = direct {
+                expression
+            } else {
+                let Some(normalized) = super::polynomial_integral::normalized_polynomial(
+                    &body.equal_to,
+                    params[0].id,
+                    &mut budget,
+                ) else {
+                    continue;
+                };
+                let identities = super::polynomial_integral::normalization_equalities(
+                    &body.equal_to,
+                    &normalized,
+                )
+                .into_iter()
+                .map(|(source, target)| eq(self, source, target).into())
+                .collect();
+                let identity = super::function_limit::function_limit_forall(
+                    self,
+                    params[0].clone(),
+                    domain.domain.clone(),
+                    vec![],
+                    identities,
+                );
+                let Fact::ForallFact(identity) = identity else {
+                    unreachable!("polynomial identity")
+                };
+                let Some(equality) = self.verify_polynomial_identity(&identity, state)? else {
+                    continue;
+                };
+                let Some(normalized) = self.prove_riemann_expression(
+                    &normalized,
+                    params[0].id,
+                    lower,
+                    upper,
+                    state,
+                    0,
+                    &mut budget,
+                )?
+                else {
+                    continue;
+                };
+                let real: Fact = member(self, normalized.integral.clone(), real()).into();
+                let integral_real = self.verify_fact(&real, state)?;
+                if integral_real.is_failed() {
+                    continue;
+                }
+                RiemannExpressionProof {
+                    expression: *body.equal_to.clone(),
+                    integral: normalized.integral.clone(),
+                    integral_real: Box::new(integral_real),
+                    constructor: RiemannConstructorProof::Polynomial {
+                        equality: Box::new(equality),
+                        normalized: Box::new(normalized),
+                    },
+                }
             };
             let conclusion = match value {
                 Some(value) => {
-                    let comparison: Fact =
-                        eq(self, expression.integral.clone(), value.clone()).into();
-                    let proof = self.verify_fact(&comparison, state)?;
-                    let proof = match proof {
-                        VerifyFactResult::Equality(result) => match *result {
-                            VerifyEqualityResult::Failed(
-                                VerifyEqualityFailed::FailToSearchProof {
-                                    fact,
-                                    well_defined_proof,
-                                },
-                            ) => {
-                                // Normalize the constructed formula with the same checked
-                                // denominator premises used by the derivative strategy.
-                                let Some(normalization) = self
-                                    .search_equal_fact_by_rational_with_nonzero_premises(
-                                        &fact, state,
-                                    )?
-                                else {
-                                    continue;
-                                };
-                                equal_fact_result_from_success(&fact, well_defined_proof,
-                                    EqualFactSearchedProof::ByBuiltinStrategy(EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(normalization)))
-                            }
-                            result => VerifyFactResult::Equality(Box::new(result)),
-                        },
-                        proof => proof,
+                    let AtomicFact::EqualFact(comparison) =
+                        eq(self, expression.integral.clone(), value.clone())
+                    else {
+                        unreachable!("integral value equality")
                     };
-                    if proof.is_failed() {
+                    let Some(proof) = self.verify_integral_formula_equality(&comparison, state)?
+                    else {
                         continue;
-                    }
+                    };
                     RiemannConclusionProof::Candidate(Box::new(proof))
                 }
                 None => RiemannConclusionProof::Integrable,

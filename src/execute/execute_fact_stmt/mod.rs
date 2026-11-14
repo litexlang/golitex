@@ -22,6 +22,7 @@ mod negate_quantifier_free_conjunction;
 pub(crate) mod pointwise_continuity;
 pub(crate) mod pointwise_derivative;
 pub(crate) mod pointwise_elementary;
+mod polynomial_integral;
 pub(crate) mod real_analysis;
 pub(crate) mod real_bounds;
 mod result;

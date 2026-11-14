@@ -546,6 +546,16 @@ fn project_equality_builtin_strategy(
                 ],
             );
         }
+        EqualitySearchProofByBuiltinStrategy::LimitValue(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("LimitValue")),
+                    ("candidate", project_verify_fact(&p.candidate, runtime)),
+                ],
+            );
+        }
         EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(p) => (
             "FunctionApplicationCongruence",
             &p.requirement_facts,
@@ -1391,6 +1401,9 @@ pub(super) fn project_exist_searched(
 ) -> JsonValue {
     match searched {
         ExistShapedFactSearchedProof::ByBuiltinRule(r) => project_exist_builtin_rule(r, runtime),
+        ExistShapedFactSearchedProof::ByBuiltinStrategy(
+            crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinStrategy::StructuralLimit(proof),
+        ) => super::structural_limit::project(proof, runtime),
         ExistShapedFactSearchedProof::ByKnownExistShapedFact(p) => {
             let mut entries = vec![
                 ("type", string("by_known_exist")),

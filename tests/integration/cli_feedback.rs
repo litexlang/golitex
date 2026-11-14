@@ -1249,3 +1249,46 @@ fn normal_uses_the_same_steps_for_other_proof_commands() {
         assert_eq!(field(steps.last().unwrap(), "kind").as_str(), Ok("publish"));
     }
 }
+
+#[test]
+fn exact_decimal_budget_has_a_distinct_cli_diagnostic() {
+    let dir = FixtureDir::new();
+    let over_budget_value = format!("1{}", "0".repeat(100));
+    for source in [
+        "eval 10^100".to_string(),
+        format!("10^100 = {over_budget_value}"),
+        "eval factorial(70)".to_string(),
+        "eval 10^50 * 10^50".to_string(),
+        "eval (10^99)^2".to_string(),
+        "10^100 < 0".to_string(),
+    ] {
+        let json = batch(&dir.run(&["-lang", "en", "-e", &source], None), 1, false);
+        let errors = field(&json, "errors").as_array().unwrap();
+        assert_eq!(errors.len(), 1, "{source}: {json:?}");
+        assert_eq!(
+            field(&errors[0], "category").as_str(),
+            Ok("exact_decimal_budget"),
+            "{source}"
+        );
+        assert!(field(&errors[0], "message")
+            .as_str()
+            .unwrap()
+            .contains("100-digit"));
+    }
+    for source in ["eval 10^99", "eval factorial(69)", "10^100 = 10^100"] {
+        batch(&dir.run(&["-lang", "en", "-e", source], None), 0, true);
+    }
+    for (source, category) in [
+        ("1 + 1 = 3", "proof_search"),
+        ("eval log(2,3)", "evaluation"),
+        ("quot(-7,-3) = 3", "well_defined"),
+    ] {
+        let json = batch(&dir.run(&["-lang", "en", "-e", source], None), 1, false);
+        let errors = field(&json, "errors").as_array().unwrap();
+        assert_eq!(
+            field(&errors[0], "category").as_str(),
+            Ok(category),
+            "{source}"
+        );
+    }
+}

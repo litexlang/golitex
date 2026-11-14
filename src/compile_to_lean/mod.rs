@@ -108,6 +108,7 @@ mod compile_obtain_constructor;
 mod compile_obtain_obj_from_atomic_fact_stmt_result;
 mod compile_obtain_obj_from_exist_fact_stmt_result;
 mod compile_order_bound_inferences;
+mod compile_polynomial_integral;
 mod compile_positive_power_inference;
 mod compile_prime_inferences;
 mod compile_prop_clause_instance;

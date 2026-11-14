@@ -1,0 +1,25 @@
+# Polynomial definite integrals, including products and shifted powers.
+# Earlier, the shifted square stopped at native proof search.
+# integ(fn(x R) R {(x+1)^2},0,1)=7/3
+# The checked route now retains a pointwise polynomial identity and its integral.
+# Check: target/release/litex -strict -lang en -f tests/fixtures/compile_to_lean/polynomial_integrals.lit
+# Compile: target/release/litex -strict -lean -f tests/fixtures/compile_to_lean/polynomial_integrals.lit
+
+integ(fn(x R) R {(x+1)^2},0,1)=7/3
+
+forall a,b R:
+    integ(fn(x R) R {(a*x+b)^2},0,1)=a^2/3+a*b+b^2
+
+integ(fn(x R) R {(x+1)*(x-1)},0,2)=2/3
+
+integ(fn(x R) R {(2*x+1)^3},0,1)=10
+
+integ(fn(x R) R {(x+1)^2},1,0)=-7/3
+
+integ(fn(x R) R {(x+1)^2},3,3)=0
+
+forall a,b R:
+    integ(fn(x R) R {(x+1)^2},a,b)=((b+1)^3-(a+1)^3)/3
+
+forall n N,a,b R:
+    $has_riemann_integral(fn(x R) R {x^n},a,b,(b^(n+1)-a^(n+1))/(n+1))

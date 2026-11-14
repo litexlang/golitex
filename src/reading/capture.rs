@@ -380,10 +380,9 @@ impl Capture {
         ])
     }
 
-    pub fn source_line(&mut self, line: &SourceLine, _runtime: &Runtime) -> JsonValue {
-        let source_id = self.source_id(&line.origin);
+    pub fn source_line(&mut self, line: &SourceLine, runtime: &Runtime) -> JsonValue {
         object(vec![
-            ("source_id", text(&source_id)),
+            ("source_id", self.code_source(&line.origin, runtime)),
             ("line", JsonValue::Number(line.line as f64)),
         ])
     }

@@ -9522,6 +9522,57 @@ fn visit_owner<T>(
                 return Ok(Some(value));
             }
             if let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::IntegralOperator(
+                    crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(p),
+                ), ..
+            } = proof.detailed_ref() {
+                let mut stages = vec![
+                    AtomicSearchStage::WD(&p.function_wd),
+                    AtomicSearchStage::WD(&p.lower_wd),
+                    AtomicSearchStage::WD(&p.upper_wd),
+                ];
+                for requirement in &p.requirements {
+                    if let crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::Verified(checked) = &requirement.result {
+                        stages.push(AtomicSearchStage::Verify(checked));
+                    }
+                }
+                stages.push(AtomicSearchStage::Verify(&p.integrability));
+                for (index, stage) in stages.iter().take(position.before).enumerate().rev() {
+                    let prior = SourcePosition { before: index, ..*position };
+                    let found = match stage {
+                        AtomicSearchStage::WD(child) => visit_complete_wd(child, &prior, wd, verify)?,
+                        AtomicSearchStage::Verify(child) => visit_complete_verify(child, &prior, wd, verify)?,
+                        _ => unreachable!("integral formation stages"),
+                    };
+                    if found.is_some() {
+                        return Ok(found);
+                    }
+                }
+            }
+            if let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::DerivativeOperator(
+                    crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p),
+                ), ..
+            } = proof.detailed_ref() {
+                let stages = [
+                    AtomicSearchStage::WD(&p.function_wd),
+                    AtomicSearchStage::WD(&p.point_wd),
+                    AtomicSearchStage::Verify(&p.point_in_domain),
+                    AtomicSearchStage::Verify(&p.differentiability),
+                ];
+                for (index, stage) in stages.iter().take(position.before).enumerate().rev() {
+                    let prior = SourcePosition { before: index, ..*position };
+                    let found = match stage {
+                        AtomicSearchStage::WD(child) => visit_complete_wd(child, &prior, wd, verify)?,
+                        AtomicSearchStage::Verify(child) => visit_complete_verify(child, &prior, wd, verify)?,
+                        _ => unreachable!("derivative formation stages"),
+                    };
+                    if found.is_some() {
+                        return Ok(found);
+                    }
+                }
+            }
+            if let DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::SetFormer(SetFormer::SetBuilder(set)),
                 proof:
                     ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(
@@ -12842,6 +12893,13 @@ fn riemann_expression_search_stages<'a>(
         RiemannConstructorProof as C, RiemannLeafProof,
     };
     match &proof.constructor {
+        C::Polynomial {
+            equality,
+            normalized,
+        } => {
+            stages.push(AtomicSearchStage::Verify(equality));
+            riemann_expression_search_stages(normalized, stages);
+        }
         C::Constant { value_real } => stages.push(AtomicSearchStage::Verify(value_real)),
         C::Variable => {}
         C::NaturalPower { exponent_natural } => {
@@ -13987,6 +14045,30 @@ fn projected_wd_child<'a>(
 ) -> Option<(&'a ObjWellDefinedProof, String)> {
     if matches(proof) {
         return Some((proof, term));
+    }
+    if let DetailedObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::IntegralOperator(
+            crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(p),
+        ), ..
+    } = proof.detailed_ref() {
+        for (child, field) in [(&p.function_wd, "function"), (&p.lower_wd, "lower"), (&p.upper_wd, "upper")] {
+            if let Some(found) = projected_wd_child(child, format!("({term}).val.{field}"), matches) {
+                return Some(found);
+            }
+        }
+        return None;
+    }
+    if let DetailedObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::DerivativeOperator(
+            crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p),
+        ), ..
+    } = proof.detailed_ref() {
+        for (child, field) in [(&p.function_wd, "function"), (&p.point_wd, "point")] {
+            if let Some(found) = projected_wd_child(child, format!("({term}).val.{field}"), matches) {
+                return Some(found);
+            }
+        }
+        return None;
     }
     if let Some(stages) = multivariable_limit_wd_stages(proof) {
         let fields: &[&str] = match proof.obj() {

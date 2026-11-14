@@ -1,5 +1,5 @@
-# Expected normal rejection; no candidate may be invented.
-have fn c(x R) R=3
-release thm fn_limit_pos_inf_real_accumulation()
-release thm fn_limit_pos_inf_constant(c,3)
-lim_neg_inf(c)=3
+# A positive-infinity limit does not determine the negative-infinity limit.
+forall c fn(x R) R:
+    $has_limit_pos_inf(c,3)
+    =>:
+        lim_neg_inf(c)=3

@@ -179,7 +179,6 @@ fn real_power_wd_retains_actual_domain_requirements() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::VerifyAtomicExceptEqualityFactResult;
     use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
         ArithmeticOperatorObjWellDefinedProofByDef, ObjWellDefinedProofByDef,
-        VerifyObjWellDefinedResult,
     };
     use crate::execute::execute_fact_stmt::VerifyFactResult;
     for (prefix, expected) in [
@@ -383,4 +382,41 @@ fn real_power_wd_preserves_maintained_tracer() {
         include_str!("../../../../examples/wd/pow_real_domains.lit"),
         true,
     );
+}
+
+#[test]
+fn eval_exact_decimal_budget_and_large_unit_exponents() {
+    for (source, expected) in [
+        ("eval 1^(10^20)", "1"),
+        ("eval 0^(10^20)", "0"),
+        ("eval (-1)^(10^20 + 1)", "(-1)"),
+        (
+            "eval (10^20 - 1)^5",
+            "9999999999999999999500000000000000000009999999999999999999900000000000000000000499999999999999999999",
+        ),
+    ] {
+        let mut rt = runtime(OutputLanguage::English);
+        let result = rt.run_litex_code(source).unwrap();
+        assert!(result.success, "{source}");
+        let normal = emit_run_normal(&result, &rt, "eval", None);
+        assert!(
+            normal.contains(&format!("\"evaluated_object\": \"{expected}\"")),
+            "{source}: {normal}"
+        );
+    }
+
+    for source in [
+        "eval 2^(10^20)",
+        "eval factorial(10^20)",
+        "eval gcd(10^100, 5)",
+    ] {
+        let mut rt = runtime(OutputLanguage::English);
+        let result = rt.run_litex_code(source).unwrap();
+        assert!(!result.success, "unexpectedly succeeded: {source}");
+        let normal = emit_run_normal(&result, &rt, "eval", None);
+        assert!(
+            normal.contains("100 digits"),
+            "{source} did not report exact decimal budget: {normal}"
+        );
+    }
 }

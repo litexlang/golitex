@@ -6,7 +6,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_
     TemplateFunctionInDeclaredFnSetProof,
 };
 use crate::prelude::*;
-use crate::run_module::{load_file_for_lean, LoadLeanSourceResult, LoadedLeanSource};
 
 fn load(name: &str) -> super::module_fixtures::LoadedProject {
     super::module_fixtures::load(name)

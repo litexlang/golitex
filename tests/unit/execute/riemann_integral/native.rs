@@ -1,6 +1,31 @@
 use crate::prelude::*;
 
 #[test]
+fn polynomial_integral_strategy_preserves_domains_and_values() {
+    let mut rt = runtime();
+    let source = concat!(
+        include_str!("../../../fixtures/compile_to_lean/polynomial_integrals.lit"),
+        "\n",
+        include_str!("../../../fixtures/compile_to_lean/polynomial_integral_coefficients.lit"),
+    );
+    let run = check(&mut rt, source, true);
+    let json = crate::json_output::project_run_detailed(&run, &rt, "polynomial_integrals", None)
+        .stringify();
+    assert!(json.contains("PolynomialNormalization"));
+    assert!(json.contains("pointwise_equality"));
+    assert!(json.contains("normalized_integral"));
+    for source in [
+        "integ(fn(x R) R {(x+1)^2},0,1)=8/3",
+        "integ(fn(x R) R {0*(1/x)},0,1)=0",
+        "integ(fn(x R) R {(x^2-1)/(x-1)},0,2)=4",
+        "integ(fn(x R) R {(x+1)^2},0,1)=0",
+        "integ(fn(x R) R {(x+1)^33},0,1)=0",
+    ] {
+        check(&mut runtime(), source, false);
+    }
+}
+
+#[test]
 fn riemann_integral_native_valid_functions_need_integrability_proofs() {
     for source in [
         "have fn rational_flag(x R) R by cases:\n    case x $in Q: 1\n    case not x $in Q: 0\n",
@@ -158,7 +183,7 @@ fn riemann_integral_native_candidate_selection_and_provenance() {
     let run = check(&mut rt, "integral(square,0,1)=1/3", true);
     let json = crate::json_output::project_run_detailed(&run, &rt, "riemann", None).stringify();
     assert!(json.contains("IntegralOperator"));
-    assert!(json.contains("selection"));
+    assert!(json.contains("integrability"));
     assert!(json.contains("RiemannIntegralSelectedValue"));
     check(&mut rt, "integral(square,0,1)+2=7/3", true);
     check(&mut rt, "$has_riemann_integral(square,0,1,1/2)", false);
@@ -208,7 +233,7 @@ fn riemann_integral_structural_polynomial_candidates_and_values() {
     let integrability = check(&mut rt, "$is_riemann_integrable(p,0,1)", true);
     let json =
         crate::json_output::project_run_detailed(&integrability, &rt, "riemann", None).stringify();
-    assert!(json.contains("RiemannIntegrability"));
+    assert!(json.contains("StructuralRiemannIntegral"));
     assert!(json.contains("interval_requirements"));
     assert!(rt.known_riemann_integral_candidates().is_empty());
     let value = check(&mut rt, "integ(p,0,1)=3", true);
@@ -251,7 +276,7 @@ fn riemann_integral_automatic_integrability_retains_shared_proof() {
     let run = check(&mut rt, "integ(p,0,1)=3", true);
     let json = crate::json_output::project_run_detailed(&run, &rt, "riemann", None).stringify();
     assert!(json.contains("\"integrability\""));
-    assert!(json.contains("RiemannIntegrability"));
+    assert!(json.contains("StructuralRiemannIntegral"));
     assert!(json.contains("RiemannIntegralValue"));
     assert!(rt.known_riemann_integral_candidates().is_empty());
     check(&mut rt, "integ(p,0,1)+1=4", true);
@@ -281,6 +306,11 @@ fn riemann_integral_automatic_integrability_preserves_search_permissions() {
     }
     assert!(!rt
         .verify_obj_well_definedness(&goal.left, VerifyState::new(VerifyStateLevel::Strategy))
+        .unwrap()
+        .is_failed());
+    check(&mut rt, "$is_riemann_integrable(p,0,1)", true);
+    assert!(!rt
+        .verify_obj_well_definedness(&goal.left, VerifyState::new(VerifyStateLevel::BuiltinRule))
         .unwrap()
         .is_failed());
 }
@@ -350,20 +380,16 @@ fn riemann_integral_structural_missing_leaves_products_and_substitution_reject()
 }
 
 #[test]
-fn riemann_integral_structural_lean_has_explicit_support_boundary() {
+fn riemann_integral_structural_lean_preserves_nonpolynomial_boundary() {
     let mut rt = runtime();
     let run = check(
         &mut rt,
         "have fn square(x R) R=x^2\ninteg(square,0,1)=integ(square,0,1)",
         true,
     );
-    let err = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+    crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "automatic_integrability")
-        .expect_err("automatic integrability retains its strategy replay boundary");
-    assert_eq!(
-        err.route, "RiemannIntegral/IntegrabilityStrategy",
-        "{err:?}"
-    );
+        .expect("explicit polynomial integrability replays its integral certificate");
 
     let mut rt = runtime();
     let run = check(
@@ -382,17 +408,15 @@ fn riemann_integral_structural_lean_has_explicit_support_boundary() {
         "$has_riemann_integral(fn(x R) R {x^2},0,1,1/3)",
         true,
     );
-    let err = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+    crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "structural_integral")
-        .expect_err("structural integration replay has an explicit boundary");
-    assert_eq!(err.route, "RiemannIntegral/StructuralStrategy");
+        .expect("explicit polynomial integration compiles");
 
     let mut rt = runtime();
     let run = check(&mut rt, "forall f fn(x R) R:\n    f=fn(x R) R {x^2}\n    $is_riemann_integrable(f,0,1)\n    =>:\n        integ(f,0,1)=1/3", true);
-    let err = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+    crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "integral_value")
-        .expect_err("value integration replay has an explicit boundary");
-    assert_eq!(err.route, "RiemannIntegral/ValueStrategy");
+        .expect("a recorded polynomial body supports value replay");
 }
 
 #[test]

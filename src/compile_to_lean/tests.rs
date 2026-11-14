@@ -3805,6 +3805,8 @@ mod function_derivative_tests;
 mod automatic_derivative_tests;
 #[path = "../../tests/unit/compile_to_lean/multivariable_scalar_limit_tests.rs"]
 mod multivariable_scalar_limit_tests;
+#[path = "../../tests/unit/compile_to_lean/polynomial_integral_tests.rs"]
+mod polynomial_integral_tests;
 
 #[path = "../../tests/unit/compile_to_lean/multivariable_vector_limit_tests.rs"]
 mod multivariable_vector_limit_tests;

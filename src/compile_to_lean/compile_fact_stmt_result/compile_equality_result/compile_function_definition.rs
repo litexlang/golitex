@@ -1111,18 +1111,14 @@ impl LitexToLeanCompiler {
                 | MatrixOperator::Diagonal(_)
                 | MatrixOperator::ZeroMatrix(_)
                 | MatrixOperator::IdentityMatrix(_)
-                | MatrixOperator::Trace(_)
                 | MatrixOperator::Determinant(_)
                 | MatrixOperator::Adjugate(_)
                 | MatrixOperator::Inverse(_)
                 | MatrixOperator::Power(_)
                 | MatrixOperator::Rank(_)
-                | MatrixOperator::FrobeniusNorm(_)
                 | MatrixOperator::Apply(_)
                 | MatrixOperator::Minor(_)
-                | MatrixOperator::Cofactor(_)
-                | MatrixOperator::InnerProduct(_)
-                | MatrixOperator::EuclideanNorm(_),
+                | MatrixOperator::Cofactor(_),
             ) => {
                 let (operation, children) = arithmetic_constructor_pairs(object, object)
                     .ok_or_else(|| {

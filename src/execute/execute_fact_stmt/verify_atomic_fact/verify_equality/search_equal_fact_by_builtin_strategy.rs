@@ -22,6 +22,11 @@ impl Runtime {
                 proof,
             )));
         }
+        if let Some(proof) = self.search_limit_value_strategy(fact, ctx)? {
+            return Ok(Some(EqualitySearchProofByBuiltinStrategy::LimitValue(
+                proof,
+            )));
+        }
         if let Some(proof) = self.search_equal_fact_by_cos_zero_integer_offset(fact, ctx)? {
             return Ok(Some(
                 EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(proof),

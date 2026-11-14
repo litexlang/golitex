@@ -255,6 +255,33 @@ impl LitexToLeanCompiler {
                 let base = self.compile_structural_positive(base, position)?;
                 Ok(format!("(by\n  let _sign_power := {power}\n  have _sign_exponent_real : Litex.In _sign_power.val.exponent (Litex.R (M := M)) :=\n    {}\n  have _sign_base : Litex.Lt (Litex.number (M := M) 0) _sign_power.val.base :=\n    {}\n  exact Litex.powStructuralPositiveOfPositive _sign_power _sign_base\n)", exponent.replace('\n', "\n    "), base.replace('\n', "\n    ")))
             }
+            StructuralRealSignReason::PositiveEvenPower { base, exponent } => {
+                let Obj::ArithmeticOperator(ArithmeticOperator::Pow(p)) = &proof.element else {
+                    return Err(invalid("EvenPower"));
+                };
+                let n = closed_integer(exponent)
+                    .filter(|n| *n > 0 && *n % 2 == 0)
+                    .ok_or_else(|| invalid("PositiveEvenExponent"))?;
+                let real = match &base.reason {
+                    StructuralRealSignReason::Known { real, .. }
+                    | StructuralRealSignReason::WeakAndNonzero { real, .. } => real,
+                    _ => return Err(invalid("EvenBaseReal")),
+                };
+                if p.base.ir() != base.element.ir()
+                    || p.base.ir() != real.element.ir()
+                    || real.set != StandardSet::R
+                    || p.exponent.ir() != exponent.ir()
+                {
+                    return Err(invalid("EvenSubject"));
+                }
+                let observed = self.compile_numeric_observation(exponent, position)?;
+                let exponent_object = self.compile_object_reference(exponent, position)?;
+                let equal = format!("(Litex.NativeBridge.sameOfDenoteNumber {exponent_object} (Litex.number (M := M) (({n} : ℕ) : ℂ)) {} (({n} : ℕ) : ℂ) {} (Litex.NativeBridge.denoteNumber (M := M) (({n} : ℕ) : ℂ)) (by norm_num))", observed.0, observed.1);
+                let object = self.compile_object_reference(&proof.element, position)?;
+                let real = self.compile_structural(real, position)?;
+                let nonzero = self.compile_structural_nonzero(base, position)?;
+                Ok(format!("(Litex.powStructuralPositiveOfEven {object} ({real}) ({n} : ℕ) {equal} (by norm_num) (by norm_num) ({nonzero}))"))
+            }
             _ => Err(invalid("SelectedReason")),
         }
     }

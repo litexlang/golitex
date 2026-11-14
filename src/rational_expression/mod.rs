@@ -12,10 +12,13 @@ pub(crate) mod helper;
 pub(crate) mod integer_factorization;
 mod monomial;
 mod monomial_collection;
+pub(crate) use monomial_collection::collect_monomials_in_obj;
 mod normalization;
+pub(crate) use normalization::AlgebraicNormalizationMode;
 pub(crate) mod pi_multiple;
 
 pub use closed_numeric_expr::{is_closed_numeric_expr, ClosedNumericExpr};
+pub(crate) use decimal_arithmetic::closed_decimal_budget_exceeded;
 pub use decimal_arithmetic::{
     evaluate_obj_to_normalized_decimal_number, gcd_decimal_str_and_normalize,
     log_integer_power_decimal_str, normalized_decimal_str_is_integer,

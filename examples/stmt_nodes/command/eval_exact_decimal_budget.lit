@@ -1,0 +1,11 @@
+# Exact decimal evaluation accepts the 100-digit boundary.
+# Run: target/release/litex -lang en -strict -f examples/stmt_nodes/command/eval_exact_decimal_budget.lit
+# The following rejected input previously reported only "Exact evaluation failed."
+# eval 10^100
+# It now reports category exact_decimal_budget and the 100-digit ceiling.
+# Executable rejection: examples/negative/closed_exact_elementary_calculation/exact_decimal_digit_budget.lit
+
+eval 10^99
+eval 10^49 * 10^50
+eval factorial(69)
+10^100 = 10^100

@@ -13,6 +13,7 @@ pub enum EqualitySearchProofByBuiltinStrategy {
     DerivativeValue(
         super::verify_equality_by_builtin_rules::by_derivative::DerivativeValueStrategyProof,
     ),
+    LimitValue(crate::execute::execute_fact_stmt::structural_limit::LimitValueStrategyProof),
     FunctionApplicationCongruence(
         super::search_equal_fact_by_composed_structure::FunctionApplicationCongruenceProof,
     ),

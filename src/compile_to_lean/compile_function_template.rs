@@ -1289,13 +1289,6 @@ impl LitexToLeanCompiler {
                 }
                 Ok(head)
             }
-            _ => Err(LeanCompileError::new(
-                "Function/BodyObject",
-                &format!(
-                    "No raw denotation for `{}` in the selected source context.",
-                    object.readable_string()
-                ),
-            )),
         }
     }
 

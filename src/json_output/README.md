@@ -113,11 +113,17 @@ The output-only `FailureKind` distinguishes `well_defined`, `proof_search`,
 `storage`, `domain`, `definition_construction`, `struct_expansion`,
 `definition_proof_unavailable`, `name_not_found`, `evaluation`,
 `algorithm_dispatch`, `depth_limit`, `cyclic_evaluation`, `aggregate_budget`,
-and `aggregate_range`. Execution's stage-specific failure enums remain
+`aggregate_range`, and `exact_decimal_budget`. Execution's stage-specific failure enums remain
 the evidence owners; this summary does not replace them or classify prose.
 The existing `phase` identifies where execution stopped, while `category`
 identifies the failure purpose. For example, a forall's `search_proof` stage
 may contain a `well_defined` failure in its conclusion.
+
+`eval 10^100` reports `exact_decimal_budget` because its exact decimal result
+exceeds the 100-digit ceiling. A failed atomic goal whose closed numeric operand
+hits the same ceiling receives that category from the shared bounded evaluator.
+Ordinary unsupported evaluations and proof misses retain their own categories.
+Successful proofs, including `10^100 = 10^100`, retain their normal output.
 
 For `forall x R => 1 / x = 1 / x`, the summary is `well_defined`, expression
 `(1 / x)`, obligation `x != 0`. Failure to prove that obligation remains inside

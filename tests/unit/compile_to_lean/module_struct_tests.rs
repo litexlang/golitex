@@ -1,7 +1,6 @@
 use crate::compile_to_lean::source_position::{SourceOwner, SourcePosition};
 use crate::execute::{ExecDefStructStmtResult, ExecDefStructStmtSuccessResult};
 use crate::prelude::*;
-use crate::run_module::{load_file_for_lean, LoadLeanSourceResult, LoadedLeanSource};
 
 fn load(name: &str) -> super::module_fixtures::LoadedProject {
     super::module_fixtures::load(name)

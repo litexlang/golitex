@@ -438,14 +438,13 @@ fn try_parse_keyword_primary(
     tb: &mut TokenBlock,
     token: &str,
 ) -> RuntimeResult<Option<Obj>> {
-    let token = if matches!(tb.peek_at(1), Some(MOD_SIGN | MOD_FLAT_SIGN)) {
-        token
-    } else {
-        crate::parse::builtin_aliases::canonical_builtin_name(
-            token,
-            crate::parse::builtin_aliases::BuiltinAliasKind::Object,
-        )
-    };
+    if matches!(tb.peek_at(1), Some(MOD_SIGN | MOD_FLAT_SIGN)) {
+        return Ok(None);
+    }
+    let token = crate::parse::builtin_aliases::canonical_builtin_name(
+        token,
+        crate::parse::builtin_aliases::BuiltinAliasKind::Object,
+    );
     if let Some(arity) = Obj::multivariable_selector_arity(token) {
         tb.advance()?;
         let args = parse_obj_list_paren(rt, tb)?;

@@ -29,12 +29,15 @@ fn calculus_substitution_whole_image_and_failed_candidate_are_checked() {
     run(&mut rt, SQUARE_SETUP, true);
     run(&mut rt,"have fn one(x R) R=1\nrelease thm riemann_integral_zero(one,1)\nsquare(-1)=1\nsquare(1)=1\nsquare(0)=0\nnot square(0) $in '[1,1]",true);
     // Both endpoints lie in [1,1], but the middle of the path does not.
+    let before = rt.known_riemann_integral_candidates().len();
     run(
         &mut rt,
         "release thm riemann_integral_substitution(one,square,twice,twice,'[1,1],-1,1,0)",
         false,
     );
-    let failed = run(&mut rt, "integral(twice,-1,1)=0", false);
+    assert_eq!(rt.known_riemann_integral_candidates().len(), before);
+    run(&mut rt, "have unknown_h fn(x R) R", true);
+    let failed = run(&mut rt, "integral(unknown_h,-1,1)=0", false);
     assert!(
         crate::json_output::project_run_normal(&failed, &rt, "substitution", None)
             .stringify()

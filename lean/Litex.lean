@@ -61,6 +61,7 @@ import Litex.AntiderivativeAlgebra
 import Litex.MatrixDifferentialProjections
 import Litex.RiemannTransport
 import Litex.RiemannConstant
+import Litex.RiemannPolynomial
 import Litex.RiemannComparison
 import Litex.RiemannBound
 import Litex.ScalarDifferentialProjections

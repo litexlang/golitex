@@ -1,0 +1,12 @@
+# Definite polynomial integrals with real nonzero coefficient denominators.
+# The same strategy retains polynomial identities and every denominator condition.
+
+integ(fn(x R) R {(x+1)^2/2},0,1)=7/6
+
+forall c R*:
+    integ(fn(x R) R {(x+1)^2/c},0,1)=7/(3*c)
+
+integ(fn(x R) R {(x/2+1)^2},0,2)=14/3
+
+forall c R*:
+    integ(fn(x R) R {(x/c+1)^2},0,1)=1/(3*c^2)+1/c+1

@@ -1,6 +1,10 @@
+use crate::execute::execute_fact_stmt::verify_atomic_fact::{
+    VerifyAtomicExceptEqualityFactFailed, VerifyEqualityFailed,
+};
 use crate::prelude::*;
 
-/// Presentation categories derived from typed failed stages, never from prose.
+/// Presentation categories derived from typed failed stages and bounded numeric
+/// observations, never from prose.
 /// A missing proof is a soft rejection, not a RuntimeError or a disproof.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub(super) enum FailureKind {
@@ -24,6 +28,7 @@ pub(super) enum FailureKind {
     CyclicEvaluation,
     AggregateBudget,
     AggregateRange,
+    ExactDecimalBudget,
 }
 
 impl FailureKind {
@@ -49,6 +54,7 @@ impl FailureKind {
             Self::CyclicEvaluation => "cyclic_evaluation",
             Self::AggregateBudget => "aggregate_budget",
             Self::AggregateRange => "aggregate_range",
+            Self::ExactDecimalBudget => "exact_decimal_budget",
         }
     }
 
@@ -122,10 +128,31 @@ impl FailureKind {
                 ) => Self::for_verification(failed_adjacent),
                 VerifyChainFactResult::Success(_) => unreachable!("diagnostics require a failure"),
             },
-            VerifyFactResult::Equality(_)
-            | VerifyFactResult::AtomicExceptEquality(_)
-            | VerifyFactResult::OrFact(_)
-            | VerifyFactResult::ExistShapedFact(_) => Self::ProofSearch,
+            VerifyFactResult::Equality(r) => match r.as_ref() {
+                VerifyEqualityResult::Failed(VerifyEqualityFailed::FailToSearchProof {
+                    fact,
+                    ..
+                }) => Self::for_calculation(&[&fact.left, &fact.right]),
+                _ => Self::ProofSearch,
+            },
+            VerifyFactResult::AtomicExceptEquality(r) => match r.as_ref() {
+                VerifyAtomicExceptEqualityFactResult::Failed(
+                    VerifyAtomicExceptEqualityFactFailed::FailToSearchProof { fact, .. },
+                ) => Self::for_calculation(&crate::ast::fact::atomic_fact_args_ref(fact)),
+                _ => Self::ProofSearch,
+            },
+            VerifyFactResult::OrFact(_) | VerifyFactResult::ExistShapedFact(_) => Self::ProofSearch,
+        }
+    }
+
+    fn for_calculation(objects: &[&Obj]) -> Self {
+        if objects
+            .iter()
+            .any(|object| crate::rational_expression::closed_decimal_budget_exceeded(object))
+        {
+            Self::ExactDecimalBudget
+        } else {
+            Self::ProofSearch
         }
     }
 

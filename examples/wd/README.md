@@ -15,8 +15,9 @@ relations. The short and canonical certificate spellings share stored facts.
 
 [Automatic integral integrability](riemann_integral_automatic_integrability.lit)
 checks polynomial integral values with numeric, symbolic and mixed endpoints.
-The selector requests its integrability proof through shared verification at
-the inherited search level and retains the returned evidence. Continuous
+Integral WD requests its integrability proof through shared verification at
+the inherited search level and retains the returned evidence. Existing
+candidate, existential and integrability facts use the same query. Continuous
 functions and supplied interval-wide integrability also support symbolic use.
 
 [Refined indexed carriers](refined_indexed_carriers.lit) retain sequence and

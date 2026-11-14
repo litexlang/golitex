@@ -1,4 +1,4 @@
-//! Integral WD exposes checked interval coverage and consumed selection evidence.
+//! Integral WD exposes checked interval coverage and integrability evidence.
 use super::verify::project_verify_fact;
 use crate::execute::execute_fact_stmt::riemann_integral::*;
 use crate::execute::execute_fact_stmt::structural_riemann_integral::*;
@@ -54,6 +54,17 @@ pub(super) fn structural(p: &StructuralRiemannIntegralProof, rt: &Runtime) -> Js
 fn expression(p: &RiemannExpressionProof, rt: &Runtime) -> JsonValue {
     use RiemannConstructorProof as C;
     let constructor = match &p.constructor {
+        C::Polynomial {
+            equality,
+            normalized,
+        } => object_for(
+            rt,
+            vec![
+                ("rule", string("PolynomialNormalization")),
+                ("pointwise_equality", project_verify_fact(equality, rt)),
+                ("normalized_integral", expression(normalized, rt)),
+            ],
+        ),
         C::Constant { value_real } => object_for(
             rt,
             vec![
@@ -167,21 +178,6 @@ fn expression(p: &RiemannExpressionProof, rt: &Runtime) -> JsonValue {
 }
 
 pub(super) fn object_wd(p: &RiemannIntegralWellDefinedProof, rt: &Runtime) -> JsonValue {
-    let selection = match &p.selection {
-        RiemannIntegralSelectionProof::Candidate(c) => {
-            super::searched::project_known_premise(c, rt)
-        }
-        RiemannIntegralSelectionProof::Existence { fact, proof } => object_for(
-            rt,
-            vec![
-                ("existence", string(fact.readable_string())),
-                ("proof", project_verify_fact(proof, rt)),
-            ],
-        ),
-        RiemannIntegralSelectionProof::Integrability(proof) => {
-            object_for(rt, vec![("integrability", project_verify_fact(proof, rt))])
-        }
-    };
     object_for(
         rt,
         vec![
@@ -218,7 +214,7 @@ pub(super) fn object_wd(p: &RiemannIntegralWellDefinedProof, rt: &Runtime) -> Js
                         .collect(),
                 ),
             ),
-            ("selection", selection),
+            ("integrability", project_verify_fact(&p.integrability, rt)),
         ],
     )
 }

@@ -6676,14 +6676,14 @@ For a checked complete unary domain `fn(x S) T`, both inverse-image forms are su
 
 ### Finite real Riemann integrals (preview)
 
-`integral(f,a,b)` selects a finite real Riemann integral using a proof of
-`$has_riemann_integral(f,a,b,I)` or `$is_riemann_integrable(f,a,b)`. The latter
-means that some real candidate exists and permits symbolic use. WD first
-reuses stored candidate or existence evidence. Otherwise it asks the shared
-verifier to prove integrability at the caller's permitted search level and
-retains that proof. Existing polynomial and continuous-expression strategies
-can discharge this obligation. Computing the selected value uses separate
-integral rules.
+`integral(f,a,b)` is the finite real oriented Riemann integral. Its domain
+requires `$is_riemann_integrable(f,a,b)` alongside the function and interval
+conditions below. WD asks the shared verifier to prove these conditions at
+the caller's permitted search level and retains the resulting evidence.
+Existing facts, candidate inferences, definition expansion and polynomial or
+continuous-expression strategies are handled by that verifier.
+`$has_riemann_integral(f,a,b,I)` states a particular integral value. Computing
+that value uses the integral equality rules.
 
 The actual complete unary real function domain must cover the closed interval
 between the endpoints. Equal endpoints require the function to be defined

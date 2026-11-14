@@ -1,6 +1,6 @@
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::DetailedObjWellDefinedProof;
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::{
-    FunctionSpaceObjWellDefinedProofByDef, ObjWellDefinedProofByDef, VerifyObjWellDefinedResult,
+    FunctionSpaceObjWellDefinedProofByDef, ObjWellDefinedProofByDef,
 };
 use crate::execute::execute_have_fn_equal_stmt::ExecHaveFnEqualStmtResult;
 use crate::execute::{ExecDefinitionStmtResult, ExecStmtResult};

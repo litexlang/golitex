@@ -5284,6 +5284,11 @@ let fields = vec![];
 let mut output = node("ExecEvalStmtFailed", "AggregateRangeOverflow", fields);
 output
 },
+crate::execute::ExecEvalStmtFailed::ExactDecimalBudgetExceeded => {
+let fields = vec![];
+let mut output = node("ExecEvalStmtFailed", "ExactDecimalBudgetExceeded", fields);
+output
+},
 };
 capture.intern_evidence(output)
 }
@@ -21103,6 +21108,11 @@ let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__
 let mut output = node("EqualitySearchProofByBuiltinStrategy", "DerivativeValue", fields);
 output
 },
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::LimitValue(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__structural_limit__LimitValueStrategyProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinStrategy", "LimitValue", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__search_equal_fact_by_composed_structure__FunctionApplicationCongruenceProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinStrategy", "FunctionApplicationCongruence", fields);
@@ -22705,6 +22715,11 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof::ByBuiltinRule(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedFactSearchProofByBuiltinRule(f0, capture, runtime))];
 let mut output = node("ExistShapedFactSearchedProof", "ByBuiltinRule", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof::ByBuiltinStrategy(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedFactSearchProofByBuiltinStrategy(f0, capture, runtime))];
+let mut output = node("ExistShapedFactSearchedProof", "ByBuiltinStrategy", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchedProof::ByKnownExistShapedFact(f0) => {
@@ -29340,6 +29355,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__structural_limit__LimitValueStrategyProof(value: &crate::execute::execute_fact_stmt::structural_limit::LimitValueStrategyProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::structural_limit::LimitValueStrategyProof { candidate: f0 } => {
+let fields = vec![("candidate", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("LimitValueStrategyProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__search_equal_fact_by_composed_structure__FunctionApplicationCongruenceProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_by_composed_structure::FunctionApplicationCongruenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::search_equal_fact_by_composed_structure::FunctionApplicationCongruenceProof { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
@@ -35622,6 +35648,17 @@ let fields = vec![("0", capture_execute__execute_fact_stmt__verify_exist_shaped_
 let mut output = node("ExistShapedFactSearchProofByBuiltinRule", "RealDensityMidpoint", fields);
 if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
 if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_exist_shaped_fact__result__ExistShapedFactSearchProofByBuiltinStrategy(value: &crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinStrategy::StructuralLimit(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitProof(f0, capture, runtime))];
+let mut output = node("ExistShapedFactSearchProofByBuiltinStrategy", "StructuralLimit", fields);
 output
 },
 };
@@ -47845,8 +47882,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralWellDefinedProof(value: &crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof { function_wd: f0, lower_wd: f1, upper_wd: f2, domain: f3, requirements: f4, selection: f5 } => {
-let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("lower_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("upper_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("selection", capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralSelectionProof(f5, capture, runtime))];
+crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof { function_wd: f0, lower_wd: f1, upper_wd: f2, domain: f3, requirements: f4, integrability: f5 } => {
+let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("lower_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("upper_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("integrability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f5, capture, runtime))];
 let mut output = node("RiemannIntegralWellDefinedProof", "", fields);
 output
 },
@@ -47955,8 +47992,8 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeAtWellDefinedProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
-crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof { function_wd: f0, point_wd: f1, domain: f2, point_in_domain: f3, convergence: f4 } => {
-let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("point_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("point_in_domain", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime)), ("convergence", capture_execute__execute_fact_stmt__function_derivative__DerivativeConvergenceProof(f4, capture, runtime))];
+crate::execute::execute_fact_stmt::function_derivative::DerivativeAtWellDefinedProof { function_wd: f0, point_wd: f1, domain: f2, point_in_domain: f3, differentiability: f4 } => {
+let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("point_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f2, capture, runtime)), ("point_in_domain", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f3, capture, runtime)), ("differentiability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime))];
 let mut output = node("DerivativeAtWellDefinedProof", "", fields);
 output
 },
@@ -50075,6 +50112,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannConstructorProof(value: &crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Polynomial { equality: f0, normalized: f1 } => {
+let fields = vec![("equality", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("normalized", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f1, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "Polynomial", fields);
+output
+},
 crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Constant { value_real: f0 } => {
 let fields = vec![("value_real", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
 let mut output = node("RiemannConstructorProof", "Constant", fields);
@@ -50659,48 +50701,11 @@ output
 capture.intern_evidence(output)
 }
 
-pub(super) fn capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralSelectionProof(value: &crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Candidate(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
-let mut output = node("RiemannIntegralSelectionProof", "Candidate", fields);
-output
-},
-crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Existence { fact: f0, proof: f1 } => {
-let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
-let mut output = node("RiemannIntegralSelectionProof", "Existence", fields);
-output
-},
-crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralSelectionProof::Integrability(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
-let mut output = node("RiemannIntegralSelectionProof", "Integrability", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
 pub(super) fn capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorWellDefinedStages(value: &crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::multivariable::selector::MultivariableSelectorWellDefinedStages { argument_well_defined: f0, function_domain: f1, domains: f2, selection: f3 } => {
 let fields = vec![("argument_well_defined", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("function_domain", capture_execute__execute_fact_stmt__function_domain__CompleteFunctionDomainProof(f1, capture, runtime)), ("domains", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("selection", capture_execute__execute_fact_stmt__multivariable__selector__MultivariableSelectorSelectionProof(f3, capture, runtime))];
 let mut output = node("MultivariableSelectorWellDefinedStages", "", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__function_derivative__DerivativeConvergenceProof(value: &crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof::Candidate(f0) => {
-let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime))];
-let mut output = node("DerivativeConvergenceProof", "Candidate", fields);
-output
-},
-crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof::Existence { fact: f0, proof: f1 } => {
-let fields = vec![("fact", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
-let mut output = node("DerivativeConvergenceProof", "Existence", fields);
 output
 },
 };

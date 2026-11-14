@@ -83,7 +83,7 @@ fn sequence_limit_tests_requires_proof_and_keeps_context() {
     check(&mut rt, "0*lim(a)=0", false);
     check(&mut rt, "a(2)=1/2", true);
     check(&mut rt, "have fn c(k N+) R = 3", true);
-    check(&mut rt, "lim(c)=3", false);
+    check(&mut rt, "lim(c)=3", true);
     check(&mut rt, "release thm seq_limit_constant(c,3)", true);
     check(&mut rt, "lim(c)=3", true);
     check(&mut rt, "lim(c)+2=5", true);
@@ -241,6 +241,7 @@ fn sequence_limit_tests_reject_missing_limit_and_tail_premises() {
         "have fn a(k N+) R=0\nrelease thm seq_limit_neg(a,0)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_shift(a,0,1)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_exists(a,0)",
+        "have fn a(k N+) R=0\nrelease thm seq_limit_selected(a)",
     ] {
         check(&mut runtime(), code, true);
     }
@@ -249,7 +250,7 @@ fn sequence_limit_tests_reject_missing_limit_and_tail_premises() {
     // arbitrary sequence does not acquire a limit merely from its signature.
     for code in [
         "forall a seq(R):\n    $has_seq_limit(a,0)",
-        "have fn a(k N+) R=0\nrelease thm seq_limit_selected(a)",
+        "have a seq(R)\nrelease thm seq_limit_selected(a)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_constant(a,0)\nrelease thm seq_limit_tail(a,0,0)",
         "have fn a(k N+) R=0\nrelease thm seq_limit_constant(a,0)\nrelease thm seq_limit_scale(a,0,i)",
         "have fn a(k N+) R=1\nrelease thm seq_limit_constant(a,1)\nrelease thm seq_limit_power(a,1,-1)",

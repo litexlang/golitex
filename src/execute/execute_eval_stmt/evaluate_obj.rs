@@ -1,6 +1,6 @@
 use super::dispatch_algo::evaluate_fn_obj_with_algo;
 use super::evaluate_closed_numeric::evaluate_closed_numeric_obj;
-use super::helper::{ActiveAlgoCalls, MAX_EVAL_DEPTH};
+use super::helper::{numeric_evaluation_failure, ActiveAlgoCalls, MAX_EVAL_DEPTH};
 use super::result::ExecEvalStmtFailed;
 use crate::ast::obj::{
     Abs, Add, ArithmeticOperator, Ceil, Div, Floor, Max, Min, Mul, Neg, Obj, Pow, Sign, Sub,
@@ -30,7 +30,7 @@ pub fn evaluate_obj(
         return Ok(
             match evaluate_numeric_source(obj, active_calls.proof_mode) {
                 Some(v) => Ok(v),
-                None => Err(ExecEvalStmtFailed::EvaluationFailed),
+                None => Err(numeric_evaluation_failure(obj)),
             },
         );
     }
@@ -78,7 +78,7 @@ pub fn evaluate_obj(
             ));
             Ok(
                 evaluate_numeric_source(&expression, active_calls.proof_mode)
-                    .ok_or(ExecEvalStmtFailed::EvaluationFailed),
+                    .ok_or_else(|| numeric_evaluation_failure(&expression)),
             )
         }
         Obj::ComplexOperator(crate::ast::obj::ComplexOperator::Conjugate(value)) => {
@@ -200,7 +200,15 @@ pub fn evaluate_obj(
                 evaluate_fn_obj_with_algo(runtime, fn_obj, depth, active_calls)
             }
         }
-        _ => Ok(Err(ExecEvalStmtFailed::UnsupportedExpression)),
+        _ => {
+            if !active_calls.proof_mode
+                && crate::rational_expression::closed_decimal_budget_exceeded(obj)
+            {
+                Ok(Err(ExecEvalStmtFailed::ExactDecimalBudgetExceeded))
+            } else {
+                Ok(Err(ExecEvalStmtFailed::UnsupportedExpression))
+            }
+        }
     }
 }
 
@@ -313,7 +321,7 @@ where
     Ok(
         match evaluate_numeric_source(&combined, active_calls.proof_mode) {
             Some(v) => Ok(v),
-            None => Err(ExecEvalStmtFailed::EvaluationFailed),
+            None => Err(numeric_evaluation_failure(&combined)),
         },
     )
 }
@@ -336,7 +344,7 @@ where
     Ok(
         match evaluate_numeric_source(&combined, active_calls.proof_mode) {
             Some(v) => Ok(v),
-            None => Err(ExecEvalStmtFailed::EvaluationFailed),
+            None => Err(numeric_evaluation_failure(&combined)),
         },
     )
 }

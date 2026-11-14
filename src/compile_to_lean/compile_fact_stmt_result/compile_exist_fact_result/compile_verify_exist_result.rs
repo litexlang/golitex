@@ -69,6 +69,9 @@ impl LitexToLeanCompiler {
             ExistShapedFactSearchedProof::ByBuiltinRule(builtin) => {
                 self.compile_exist_builtin_result(fact, builtin, position)?
             }
+            ExistShapedFactSearchedProof::ByBuiltinStrategy(_) => {
+                return Err(LeanCompileError::unsupported("Exist/StructuralLimit"));
+            }
             ExistShapedFactSearchedProof::ByKnownForallFact(known) => self
                 .compile_exist_known_forall(
                     &proof.fact,

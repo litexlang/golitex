@@ -1,6 +1,5 @@
 use crate::compile_to_lean::compile_matrix_transform_laws::{validate_matrix_transform_law, MatrixTransformLaw};
 use crate::execute::execute_by_stmt::{ExecReleaseThmStmtResult, ExecReleaseThmStmtSuccess};
-use crate::execute::execute_def_thm_stmt::ExecDefThmForallProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::verify_equality_by_builtin_rules::by_native_matrix_laws::{MatrixLawApplicationProof, MatrixLawOrientation, NativeMatrixLawProof};
 use crate::execute::execute_fact_stmt::well_defined_results::verify_obj::MatrixOperatorObjWellDefinedProofByDef;
 use crate::execute::ExecReleaseAndExpandStmtResult;

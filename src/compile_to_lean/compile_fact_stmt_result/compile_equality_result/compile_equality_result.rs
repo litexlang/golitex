@@ -581,8 +581,11 @@ impl LitexToLeanCompiler {
                 EqualitySearchProofByBuiltinStrategy::DerivativeValue(proof),
             ) => self.compile_derivative_value_strategy(fact, proof, position)?,
             EqualFactSearchedProof::ByBuiltinStrategy(
-                EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(_),
-            ) => return Err(LeanCompileError::unsupported("RiemannIntegral/ValueStrategy")),
+                EqualitySearchProofByBuiltinStrategy::LimitValue(_),
+            ) => return Err(LeanCompileError::unsupported("Equality/LimitValue")),
+            EqualFactSearchedProof::ByBuiltinStrategy(
+                EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(proof),
+            ) => self.compile_integral_value_strategy(fact, proof, position)?,
             EqualFactSearchedProof::ByBuiltinStrategy(
                 EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(proof),
             ) => self.compile_arithmetic_congruence_strategy(

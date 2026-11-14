@@ -84,11 +84,16 @@ impl VerifyNotExistFactResult {
     }
 }
 
-// Search order: builtin → known_exist → known_forall.
+// Search order: builtin → known_exist → known_forall → bounded strategy.
 pub enum ExistShapedFactSearchedProof {
     ByBuiltinRule(ExistShapedFactSearchProofByBuiltinRule),
+    ByBuiltinStrategy(ExistShapedFactSearchProofByBuiltinStrategy),
     ByKnownExistShapedFact(ExistShapedFactSearchProofByKnownExistShapedFact),
     ByKnownForallFact(SearchProofByKnownForallFact),
+}
+
+pub enum ExistShapedFactSearchProofByBuiltinStrategy {
+    StructuralLimit(crate::execute::execute_fact_stmt::structural_limit::StructuralLimitProof),
 }
 
 // One exist-builtin rule ↔ one dedicated evidence struct.

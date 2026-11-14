@@ -5,11 +5,8 @@ use crate::ast::stmt::Stmt;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{
     AtomicExceptEqualityFactSearchedProof, VerifyAtomicExceptEqualityFactResult,
 };
-use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{
-    in_fact::InFactSearchProofByBuiltinRule, AtomicExceptEqualityFactSearchProofByBuiltinRule,
-};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_known_special_property::{
-    AtomicExceptEqualityFactSearchProofByKnownSpecialProperty, InFactSearchProofByKnownSpecialProperty,
+    InFactSearchProofByKnownSpecialProperty,
 };
 use crate::execute::execute_fact_stmt::{VerifyFactResult, VerifyStateLevel};
 use crate::launch_command::{LaunchCommand, OutputLanguage};

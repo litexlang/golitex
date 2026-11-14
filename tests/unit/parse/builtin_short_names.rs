@@ -174,9 +174,11 @@ fn builtin_short_names_execute_uniform_continuity_and_multivariable_objects() {
 fn builtin_short_names_keep_arity_wd_and_failure_recovery() {
     let mut rt = runtime();
     assert!(
-        rt.run_litex_code("have fn square(x R)R=x^2\nhave fn broken(x R)R=x\n")
-            .unwrap()
-            .success
+        rt.run_litex_code(
+            "have fn square(x R)R=x^2\nhave fn broken(x R)R=x\nhave unknown_fn fn(x R)R\n"
+        )
+        .unwrap()
+        .success
     );
     for code in [
         "eval deriv(square)",
@@ -195,8 +197,8 @@ fn builtin_short_names_keep_arity_wd_and_failure_recovery() {
         "release thm integ_add(square)",
         "release thm integ_pow(square,0,1)",
         "release thm darboux_fold(square)",
-        "deriv(square,3)=6",
-        "0*integ(square,0,1)=0",
+        "deriv(unknown_fn,3)=6",
+        "0*integ(unknown_fn,0,1)=0",
         "$has_deriv_at(square,3,7)",
         "$diff_at(fn(x R)R{abs(x)},0)",
         "release thm deriv_add(square,square,broken,3,6,6)",
@@ -404,4 +406,34 @@ fn parsed(source: &str) -> Vec<Stmt> {
         .tokenize(source, rt.current_file.clone())
         .unwrap();
     rt.parse(&blocks).unwrap()
+}
+
+#[test]
+fn module_qualified_builtin_keyword_prefixes_parse_as_module_identifiers() {
+    let mut rt = runtime();
+    for prefix in [
+        "derivative",
+        "deriv",
+        "integral",
+        "integ",
+        "partial_derivative",
+        "pderiv",
+        "e",
+        "i",
+        "abs",
+        "sqrt",
+    ] {
+        rt.push_parse_scope();
+        let blocks = crate::tokenize::Tokenizer::new()
+            .tokenize(&format!("eval {prefix}::item"), rt.current_file.clone())
+            .unwrap();
+        // Module lookup fails cleanly on unknown module `prefix` rather than
+        // misparsing `prefix` as a keyword operator expecting `(` or literal.
+        let err = rt.parse(&blocks).unwrap_err().to_string();
+        assert!(
+            err.contains("module") || err.contains("undefined") || err.contains("unknown"),
+            "{prefix}: unexpected error `{err}`"
+        );
+        rt.pop_parse_scope();
+    }
 }

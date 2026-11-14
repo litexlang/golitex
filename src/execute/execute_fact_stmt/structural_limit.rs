@@ -1,11 +1,12 @@
 //! Bounded arithmetic limit checking over an already checked function body.
 //! Example: a -> A and b -> B prove (k |-> a(k)+b(k)) -> A+B.
-//! This engine is a truth-search strategy; selectors never invoke it from WD.
+//! Shared fact verification uses this evidence for limit values and existence.
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/pointwise_analysis/structural_limit.rs"]
 mod structural_limit_tests;
 use super::function_domain::{function_domains_alpha_equal, CheckedFunctionBodyProof};
 use super::function_limit::RealFunctionLimitDomainProof;
+use super::verify_atomic_fact::verify_atomic_except_equality::result::atomic_except_equality_fact_result_from_success;
 use super::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use super::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof;
 use crate::prelude::*;
@@ -22,6 +23,10 @@ pub struct StructuralLimitProof {
     pub geometry: StructuralLimitGeometryProof,
     pub expression: StructuralLimitExpressionProof,
     pub result_equal: Box<VerifyFactResult>,
+}
+
+pub struct LimitValueStrategyProof {
+    pub candidate: Box<VerifyFactResult>,
 }
 
 #[derive(Clone)]
@@ -113,6 +118,110 @@ impl Runtime {
             ),
             _ => return Ok(None),
         };
+        self.prove_structural_limit(function, approach, Some(target), state)
+    }
+
+    // A structurally computed real limit witnesses convergence. The exact
+    // single-binder shape excludes extra conditions, uniqueness and negation.
+    pub(crate) fn search_structural_limit_existence_strategy(
+        &mut self,
+        goal: &ExistShapedFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<StructuralLimitProof>> {
+        let ExistShapedFact::Exist(existence) = goal else {
+            return Ok(None);
+        };
+        let [group] = existence.typed_parameters.groups.as_slice() else {
+            return Ok(None);
+        };
+        let [parameter] = group.params.as_slice() else {
+            return Ok(None);
+        };
+        if !matches!(
+            &group.param_type,
+            ParamType::Obj(Obj::StandardSet(StandardSet::R))
+        ) {
+            return Ok(None);
+        }
+        let [QuantifierFreeFact::AtomicFact(candidate)] = existence.facts.as_slice() else {
+            return Ok(None);
+        };
+        let (function, value, approach) = match candidate {
+            AtomicFact::HasSequenceLimitFact(f) => {
+                (&f.sequence, &f.value, StructuralLimitApproach::Sequence)
+            }
+            AtomicFact::HasFunctionLimitFact(f) => (
+                &f.function,
+                &f.value,
+                StructuralLimitApproach::Function(f.approach.clone()),
+            ),
+            _ => return Ok(None),
+        };
+        if !is_limit_parameter(value, parameter.id)
+            || depends_on_limit_parameter(function, parameter.id)
+        {
+            return Ok(None);
+        }
+        if let StructuralLimitApproach::Function(approach) = &approach {
+            if approach
+                .point()
+                .is_some_and(|point| depends_on_limit_parameter(point, parameter.id))
+            {
+                return Ok(None);
+            }
+        }
+        self.prove_structural_limit(function, approach, None, state)
+    }
+
+    // Like derivative/integral value strategies, only an equality endpoint
+    // selects this route. Its candidate retains the shared structural proof.
+    pub(crate) fn search_limit_value_strategy(
+        &mut self,
+        goal: &EqualFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<LimitValueStrategyProof>> {
+        for (selected, value) in [(&goal.left, &goal.right), (&goal.right, &goal.left)] {
+            let candidate: AtomicFact = match selected {
+                Obj::LimitOperator(LimitOperator::Function(limit)) => self
+                    .function_limit_candidate(
+                        *limit.function.clone(),
+                        limit.approach.clone(),
+                        value.clone(),
+                    )
+                    .into(),
+                Obj::LimitOperator(LimitOperator::Sequence(limit)) => self
+                    .sequence_limit_candidate(*limit.sequence.clone(), value.clone())
+                    .into(),
+                _ => continue,
+            };
+            let well_defined = match self.verify_atomic_fact_well_definedness(&candidate, state)? {
+                VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
+                VerifyAtomicFactWellDefinedResult::Failed(_) => continue,
+            };
+            let Some(proof) = self.search_structural_limit_strategy(&candidate, state)? else {
+                continue;
+            };
+            let candidate = atomic_except_equality_fact_result_from_success(
+                &candidate,
+                well_defined,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
+                    AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(proof),
+                ),
+            );
+            return Ok(Some(LimitValueStrategyProof {
+                candidate: Box::new(candidate),
+            }));
+        }
+        Ok(None)
+    }
+
+    fn prove_structural_limit(
+        &mut self,
+        function: &Obj,
+        approach: StructuralLimitApproach,
+        target: Option<&Obj>,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<StructuralLimitProof>> {
         let Some(domain) = self.checked_real_function_limit_domain(function, state)? else {
             return Ok(None);
         };
@@ -168,7 +277,7 @@ impl Runtime {
             let equal: Fact = EqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 left: expression.limit.clone(),
-                right: target.clone(),
+                right: target.unwrap_or(&expression.limit).clone(),
                 line_file: None,
             }
             .into();
