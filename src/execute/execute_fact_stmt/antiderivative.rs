@@ -28,6 +28,9 @@ pub(crate) fn domain_requirements(
     args: &[Obj],
     state: VerifyState,
 ) -> RuntimeResult<Option<Vec<Fact>>> {
+    if args.len() != 3 {
+        return Ok(None);
+    }
     let region = args[2].clone();
     let mut req = vec![subset(rt, region.clone(), real()).into()];
     // Equality on a region transfers classical derivatives only at interior

@@ -70,6 +70,40 @@ file scope. Do not weaken the mathematics or add unproved assumptions to hide
 the limitation. This scope restriction overrides generic skill advice that
 delegates local Rust repairs when the active task is std construction.
 
+## Kernel framework lock (Tier 1 / Tier 2 / Tier 3)
+
+Litex separates pure framework orchestration from growing mathematical/compiler
+branches across three tiers enforced at Git commit and CI by
+`.github/scripts/framework_guard.py` and `.github/framework_lock.json`:
+
+- **Tier 1 — Frozen Backbone (SHA-256 locked, 27 files):** pure framework
+  structs, scope/transaction stacks, top-level parser entry (`src/parse/parse.rs`),
+  knowledge-base persistence/mount backbone (`src/knowledge_base/`,
+  `src/run_module/import_kb.rs`), statement transaction boundary
+  (`src/execute/exec_stmt.rs`), verification pipeline skeleton
+  (`exec_fact_stmt.rs`, `verify.rs`, `verify_state.rs`, `verify_obj/entry.rs`,
+  `verify_atomic_fact.rs`, `verify_well_defined.rs`, `verify_equal_fact.rs`,
+  `search_equal_fact_proof.rs`, `verify_atomic_except_equality.rs`,
+  `search_atomic_except_equality_fact_proof.rs`), and fact storage/inference
+  pipeline (`store_fact_and_infer.rs`, `store_fact.rs`, `infer_fact.rs`).
+  Normal feature, calculus-strategy, or compiler work must **never** edit Tier 1
+  files. Any modification requires explicit maintainer approval, running
+  `python3 .github/scripts/framework_guard.py --update-lock`, and committing with
+  `ALLOW_FRAMEWORK_UNLOCK=1` (or interactive confirmation in
+  `tools/commit_with_impact.sh`).
+- **Tier 2 — Enum & Append-Only Dispatch Registries (21 files):** AST and
+  proof-result enums plus pure routing tables (`src/parse/builtin_aliases.rs`,
+  `src/execute/dispatch_stmt.rs`, `dispatch_obj_well_definedness.rs`,
+  `dispatch_predicate_domain_wd.rs`, `search_equal_fact_by_builtin_strategy.rs`,
+  builtin rule/strategy/theorem dispatchers, and KB enum codecs). Tier 2 files
+  must never mutate environment stacks or transaction state, and normally grow
+  only by appending new enum variants or match arms; non-append-only edits raise
+  a commit-time warning gate (`ALLOW_TIER2_EDIT=1` or interactive confirmation).
+- **Tier 3 — Feature & Domain Leaves:** all concrete statement implementations,
+  domain WD modules, calculus/algebra rules and strategies, and read-only
+  backend compilers (`src/compile_to_*`, `src/json_output/`, `src/reading/`,
+  `src/extract_executable_code/`).
+
 ## Comparison and experiment READMEs
 
 Write READMEs for comparisons, benchmarks, experiments and their supporting

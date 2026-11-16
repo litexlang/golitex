@@ -386,13 +386,9 @@ impl LitexToLeanCompiler {
             let projection_source = if reductions.is_some() {
                 let raw_source =
                     self.compile_function_raw_predicate(seed, position, &HashMap::new())?;
-                lines.push(format!(
-                    "have _integral_source_candidate : {raw_source} := {}",
-                    compiled.1
-                ));
-                "_integral_source_candidate"
+                format!("(show {raw_source} from {})", compiled.1)
             } else {
-                &compiled.1
+                compiled.1.clone()
             };
             for (i, fact) in facts[..6].iter().enumerate() {
                 let ty = if i == 3 {

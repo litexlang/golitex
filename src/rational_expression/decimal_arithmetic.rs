@@ -22,28 +22,96 @@ use crate::rational_expression::helper::{
 //   examples/.../calculation_closed_decimal_complex_nested.lit
 //   e.g. `sqrt(4) * log(2, 8) + floor(2.5)!`, `((-7) % 3)^log(2, 4) + sqrt(0.36)`.
 pub fn evaluate_obj_to_normalized_decimal_number(obj: &Obj) -> Option<Number> {
-    // Shared exact-decimal digit budget with integer powers / factorial: any
-    // closed calculation result (including mul chains of in-budget powers) that
-    // would exceed it declines instead of storing unbounded digit strings.
-    // Example: `10^99` is allowed; `10^99 * 10^99` soft-fails.
-    let number = evaluate_decimal_tree(obj).or_else(|| {
-        let exact = super::exact_rational::EvalRational::from_obj(obj)?;
-        let (numerator, denominator) = exact.parts();
-        safe_div(&numerator.to_string(), &denominator.to_string()).map(Number::new)
-    })?;
-    if normalized_decimal_string_exceeds_exact_digit_budget(&number.normalized_value) {
-        None
-    } else {
-        Some(number)
+    evaluate_decimal_number(obj).ok()
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum DecimalEvaluationError {
+    Unsupported,
+    DigitBudgetExceeded,
+}
+
+/// Diagnose a closed expression using the same bounded evaluator as calculation.
+pub(crate) fn closed_decimal_budget_exceeded(obj: &Obj) -> bool {
+    has_closed_numeric_syntax(obj)
+        && matches!(
+            evaluate_decimal_number(obj),
+            Err(DecimalEvaluationError::DigitBudgetExceeded)
+        )
+}
+
+fn has_closed_numeric_syntax(obj: &Obj) -> bool {
+    match obj {
+        Obj::Literal(Literal::Number(_)) => true,
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Div(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {
+            has_closed_numeric_syntax(&x.base) && has_closed_numeric_syntax(&x.exponent)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Min(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Max(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Neg(x)) => has_closed_numeric_syntax(&x.arg),
+        Obj::ArithmeticOperator(ArithmeticOperator::Abs(x)) => has_closed_numeric_syntax(&x.arg),
+        Obj::ArithmeticOperator(ArithmeticOperator::Floor(x)) => has_closed_numeric_syntax(&x.arg),
+        Obj::ArithmeticOperator(ArithmeticOperator::Ceil(x)) => has_closed_numeric_syntax(&x.arg),
+        Obj::ArithmeticOperator(ArithmeticOperator::Sign(x)) => has_closed_numeric_syntax(&x.arg),
+        Obj::IntegerOperator(IntegerOperator::Mod(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Quot(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Gcd(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Lcm(x)) => {
+            has_closed_numeric_syntax(&x.left) && has_closed_numeric_syntax(&x.right)
+        }
+        Obj::IntegerOperator(IntegerOperator::Factorial(x)) => has_closed_numeric_syntax(&x.arg),
+        Obj::ExpLogOperator(ExpLogOperator::Sqrt(x)) => has_closed_numeric_syntax(&x.arg),
+        Obj::ExpLogOperator(ExpLogOperator::Log(x)) => {
+            has_closed_numeric_syntax(&x.base) && has_closed_numeric_syntax(&x.arg)
+        }
+        _ => false,
     }
 }
 
-fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
+fn evaluate_decimal_number(obj: &Obj) -> Result<Number, DecimalEvaluationError> {
+    // Preserve the terminating-rational fallback and its original priority.
+    let number = evaluate_decimal_tree(obj).or_else(|failure| {
+        let exact = super::exact_rational::EvalRational::from_obj(obj).ok_or(failure)?;
+        let (numerator, denominator) = exact.parts();
+        safe_div(&numerator.to_string(), &denominator.to_string())
+            .map(Number::new)
+            .ok_or(failure)
+    })?;
+    if normalized_decimal_string_exceeds_exact_digit_budget(&number.normalized_value) {
+        Err(DecimalEvaluationError::DigitBudgetExceeded)
+    } else {
+        Ok(number)
+    }
+}
+
+fn evaluate_decimal_tree(obj: &Obj) -> Result<Number, DecimalEvaluationError> {
     match obj {
-        Obj::Literal(Literal::Number(number)) => Some(Number::new(number.normalized_value.clone())),
+        Obj::Literal(Literal::Number(number)) => Ok(Number::new(number.normalized_value.clone())),
         Obj::ArithmeticOperator(ArithmeticOperator::Add(add)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&add.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&add.right)?;
+            let left = evaluate_decimal_number(&add.left)?;
+            let right = evaluate_decimal_number(&add.right)?;
             let a = &left.normalized_value;
             let b = &right.normalized_value;
             let sum = if normalized_decimal_str_is_non_negative(a)
@@ -53,11 +121,11 @@ fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
             } else {
                 add_signed_decimal_str(a, b)
             };
-            Some(Number::new(sum))
+            Ok(Number::new(sum))
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Sub(sub)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&sub.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&sub.right)?;
+            let left = evaluate_decimal_number(&sub.left)?;
+            let right = evaluate_decimal_number(&sub.right)?;
             let a = &left.normalized_value;
             let b = &right.normalized_value;
             let difference = if normalized_decimal_str_is_non_negative(a)
@@ -67,107 +135,113 @@ fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
             } else {
                 sub_signed_decimal_str(a, b)
             };
-            Some(Number::new(difference))
+            Ok(Number::new(difference))
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Neg(neg)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&neg.arg)?;
-            Some(Number::new(sub_signed_decimal_str(
+            let argument = evaluate_decimal_number(&neg.arg)?;
+            Ok(Number::new(sub_signed_decimal_str(
                 "0",
                 &argument.normalized_value,
             )))
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Mul(mul)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&mul.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&mul.right)?;
-            Some(Number::new(mul_signed_decimal_str(
+            let left = evaluate_decimal_number(&mul.left)?;
+            let right = evaluate_decimal_number(&mul.right)?;
+            Ok(Number::new(mul_signed_decimal_str(
                 &left.normalized_value,
                 &right.normalized_value,
             )))
         }
         Obj::IntegerOperator(IntegerOperator::Mod(mod_obj)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&mod_obj.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&mod_obj.right)?;
+            let left = evaluate_decimal_number(&mod_obj.left)?;
+            let right = evaluate_decimal_number(&mod_obj.right)?;
             if !normalized_decimal_str_is_integer(&left.normalized_value)
                 || !normalized_decimal_str_is_integer(&right.normalized_value)
                 || normalize_decimal_number_string(&right.normalized_value) == "0"
             {
-                return None;
+                return Err(DecimalEvaluationError::Unsupported);
             }
-            Some(Number::new(mod_decimal_str_and_normalize(
+            Ok(Number::new(mod_decimal_str_and_normalize(
                 &left.normalized_value,
                 &right.normalized_value,
             )))
         }
         Obj::IntegerOperator(IntegerOperator::Quot(quot)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&quot.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&quot.right)?;
+            let left = evaluate_decimal_number(&quot.left)?;
+            let right = evaluate_decimal_number(&quot.right)?;
             if !normalized_decimal_str_is_integer(&left.normalized_value)
                 || !normalized_decimal_str_is_non_negative_integer(&right.normalized_value)
                 || normalize_decimal_number_string(&right.normalized_value) == "0"
             {
-                return None;
+                return Err(DecimalEvaluationError::Unsupported);
             }
-            Some(Number::new(quot_decimal_str_and_normalize(
+            Ok(Number::new(quot_decimal_str_and_normalize(
                 &left.normalized_value,
                 &right.normalized_value,
             )))
         }
         Obj::IntegerOperator(IntegerOperator::Gcd(gcd)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&gcd.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&gcd.right)?;
+            let left = evaluate_decimal_number(&gcd.left)?;
+            let right = evaluate_decimal_number(&gcd.right)?;
             gcd_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
                 .map(Number::new)
+                .ok_or(DecimalEvaluationError::Unsupported)
         }
         Obj::IntegerOperator(IntegerOperator::Lcm(lcm)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&lcm.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&lcm.right)?;
-            lcm_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
+            let left = evaluate_decimal_number(&lcm.left)?;
+            let right = evaluate_decimal_number(&lcm.right)?;
+            lcm_decimal_with_diagnostics(&left.normalized_value, &right.normalized_value)
                 .map(Number::new)
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Floor(floor)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&floor.arg)?;
-            Some(Number::new(floor_decimal_str(&argument.normalized_value)))
+            let argument = evaluate_decimal_number(&floor.arg)?;
+            Ok(Number::new(floor_decimal_str(&argument.normalized_value)))
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Ceil(ceil)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&ceil.arg)?;
-            Some(Number::new(ceil_decimal_str(&argument.normalized_value)))
+            let argument = evaluate_decimal_number(&ceil.arg)?;
+            Ok(Number::new(ceil_decimal_str(&argument.normalized_value)))
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Min(min)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&min.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&min.right)?;
-            Some(evaluated_min_or_max_value(&left, &right, false))
+            let left = evaluate_decimal_number(&min.left)?;
+            let right = evaluate_decimal_number(&min.right)?;
+            Ok(evaluated_min_or_max_value(&left, &right, false))
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Max(max)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&max.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&max.right)?;
-            Some(evaluated_min_or_max_value(&left, &right, true))
+            let left = evaluate_decimal_number(&max.left)?;
+            let right = evaluate_decimal_number(&max.right)?;
+            Ok(evaluated_min_or_max_value(&left, &right, true))
         }
         Obj::ExpLogOperator(ExpLogOperator::Exp(exp)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&exp.arg)?;
+            let argument = evaluate_decimal_number(&exp.arg)?;
             if argument.normalized_value != "0" {
-                return None;
+                return Err(DecimalEvaluationError::Unsupported);
             }
-            Some(Number::new("1".to_string()))
+            Ok(Number::new("1".to_string()))
         }
         Obj::ExpLogOperator(ExpLogOperator::Ln(ln)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&ln.arg)?;
+            let argument = evaluate_decimal_number(&ln.arg)?;
             if argument.normalized_value != "1" {
-                return None;
+                return Err(DecimalEvaluationError::Unsupported);
             }
-            Some(Number::new("0".to_string()))
+            Ok(Number::new("0".to_string()))
         }
         Obj::ExpLogOperator(ExpLogOperator::Sqrt(sqrt)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&sqrt.arg)?;
-            sqrt_decimal_str_and_normalize(&argument.normalized_value).map(Number::new)
+            let argument = evaluate_decimal_number(&sqrt.arg)?;
+            sqrt_decimal_str_and_normalize(&argument.normalized_value)
+                .map(Number::new)
+                .ok_or(DecimalEvaluationError::Unsupported)
         }
         Obj::ExpLogOperator(ExpLogOperator::Log(log)) => {
-            let base = evaluate_obj_to_normalized_decimal_number(&log.base)?;
-            let argument = evaluate_obj_to_normalized_decimal_number(&log.arg)?;
-            log_integer_power_decimal_str(&base.normalized_value, &argument.normalized_value)
-                .map(Number::new)
+            let base = evaluate_decimal_number(&log.base)?;
+            let argument = evaluate_decimal_number(&log.arg)?;
+            log_integer_power_decimal_with_diagnostics(
+                &base.normalized_value,
+                &argument.normalized_value,
+            )
+            .map(Number::new)
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Sign(sign)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&sign.arg)?;
+            let argument = evaluate_decimal_number(&sign.arg)?;
             let value = if argument.normalized_value == "0" {
                 "0"
             } else if argument.normalized_value.starts_with('-') {
@@ -175,62 +249,66 @@ fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
             } else {
                 "1"
             };
-            Some(Number::new(value.to_string()))
+            Ok(Number::new(value.to_string()))
         }
         Obj::IntegerOperator(IntegerOperator::Factorial(factorial)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&factorial.arg)?;
+            let argument = evaluate_decimal_number(&factorial.arg)?;
             factorial_decimal_str_and_normalize(&argument.normalized_value).map(Number::new)
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Pow(pow_obj)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&pow_obj.base)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&pow_obj.exponent)?;
+            let left = evaluate_decimal_number(&pow_obj.base)?;
+            let right = evaluate_decimal_number(&pow_obj.exponent)?;
             pow_decimal_str_and_normalize(&left.normalized_value, &right.normalized_value)
                 .map(Number::new)
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Div(div)) => {
-            let left = evaluate_obj_to_normalized_decimal_number(&div.left)?;
-            let right = evaluate_obj_to_normalized_decimal_number(&div.right)?;
-            safe_div(&left.normalized_value, &right.normalized_value).map(Number::new)
+            let left = evaluate_decimal_number(&div.left)?;
+            let right = evaluate_decimal_number(&div.right)?;
+            safe_div(&left.normalized_value, &right.normalized_value)
+                .map(Number::new)
+                .ok_or(DecimalEvaluationError::Unsupported)
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Abs(abs)) => {
-            let argument = evaluate_obj_to_normalized_decimal_number(&abs.arg)?;
+            let argument = evaluate_decimal_number(&abs.arg)?;
             if let Some(rest) = argument.normalized_value.trim().strip_prefix('-') {
-                Some(Number::new(rest.trim().to_string()))
+                Ok(Number::new(rest.trim().to_string()))
             } else {
-                Some(argument)
+                Ok(argument)
             }
         }
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(finite_set_size)) => {
             match &*finite_set_size.set {
                 Obj::SetFormer(SetFormer::ListSet(list_set)) => {
-                    Some(Number::new(list_set.list.len().to_string()))
+                    Ok(Number::new(list_set.list.len().to_string()))
                 }
                 Obj::SetFormer(SetFormer::ClosedRange(cr)) => {
-                    let start = evaluate_obj_to_normalized_decimal_number(&cr.start)?;
-                    let end = evaluate_obj_to_normalized_decimal_number(&cr.end)?;
+                    let start = evaluate_decimal_number(&cr.start)?;
+                    let end = evaluate_decimal_number(&cr.end)?;
                     count_closed_range_integer_endpoints(&start, &end)
+                        .ok_or(DecimalEvaluationError::Unsupported)
                 }
                 Obj::SetFormer(SetFormer::Range(r)) => {
-                    let start = evaluate_obj_to_normalized_decimal_number(&r.start)?;
-                    let end = evaluate_obj_to_normalized_decimal_number(&r.end)?;
+                    let start = evaluate_decimal_number(&r.start)?;
+                    let end = evaluate_decimal_number(&r.end)?;
                     count_half_open_range_integer_endpoints(&start, &end)
+                        .ok_or(DecimalEvaluationError::Unsupported)
                 }
                 Obj::ProductShape(ProductShape::Cart(cart)) => {
                     let mut acc = "1".to_string();
                     for arg in cart.args.iter() {
-                        let factor = evaluate_obj_to_normalized_decimal_number(
-                            &Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(FiniteSetSize {
+                        let factor = evaluate_decimal_number(&Obj::FiniteSetStat(
+                            FiniteSetStat::FiniteSetSize(FiniteSetSize {
                                 set: Box::new((**arg).clone()),
-                            })),
-                        )?;
+                            }),
+                        ))?;
                         acc = mul_signed_decimal_str(acc.trim(), factor.normalized_value.trim());
                         if normalized_decimal_string_exceeds_exact_digit_budget(&acc) {
-                            return None;
+                            return Err(DecimalEvaluationError::DigitBudgetExceeded);
                         }
                     }
-                    Some(Number::new(acc))
+                    Ok(Number::new(acc))
                 }
-                _ => None,
+                _ => Err(DecimalEvaluationError::Unsupported),
             }
         }
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(extremum)) => {
@@ -239,7 +317,7 @@ fn evaluate_decimal_tree(obj: &Obj) -> Option<Number> {
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(extremum)) => {
             evaluate_nonempty_numeric_list_set(extremum.set.as_ref(), false)
         }
-        _ => None,
+        _ => Err(DecimalEvaluationError::Unsupported),
     }
 }
 
@@ -266,15 +344,21 @@ fn evaluated_min_or_max_value(left: &Number, right: &Number, take_maximum: bool)
     }
 }
 
-fn evaluate_nonempty_numeric_list_set(set: &Obj, take_maximum: bool) -> Option<Number> {
+fn evaluate_nonempty_numeric_list_set(
+    set: &Obj,
+    take_maximum: bool,
+) -> Result<Number, DecimalEvaluationError> {
     let Obj::SetFormer(SetFormer::ListSet(list_set)) = set else {
-        return None;
+        return Err(DecimalEvaluationError::Unsupported);
     };
     let mut evaluated = Vec::new();
     for element in list_set.list.iter() {
-        evaluated.push(evaluate_obj_to_normalized_decimal_number(element)?);
+        evaluated.push(evaluate_decimal_number(element)?);
     }
-    let mut result = evaluated.first()?.clone();
+    let mut result = evaluated
+        .first()
+        .ok_or(DecimalEvaluationError::Unsupported)?
+        .clone();
     for candidate in evaluated.iter().skip(1) {
         let difference = sub_signed_decimal_str(
             candidate.normalized_value.trim(),
@@ -285,7 +369,7 @@ fn evaluate_nonempty_numeric_list_set(set: &Obj, take_maximum: bool) -> Option<N
             result = candidate.clone();
         }
     }
-    Some(result)
+    Ok(result)
 }
 
 fn normalized_decimal_str_is_non_negative(s: &str) -> bool {
@@ -326,49 +410,56 @@ pub fn sqrt_decimal_str_and_normalize(value: &str) -> Option<String> {
 // Nested use: see calculation_closed_decimal_complex_nested.lit
 //   (`sqrt(4) * log(2, 8) + floor(2.5)!`, `a + b * c` after `have c R = log(2, 8)`).
 pub fn log_integer_power_decimal_str(base: &str, arg: &str) -> Option<String> {
+    log_integer_power_decimal_with_diagnostics(base, arg).ok()
+}
+
+fn log_integer_power_decimal_with_diagnostics(
+    base: &str,
+    arg: &str,
+) -> Result<String, DecimalEvaluationError> {
     let base = normalize_decimal_number_string(base);
     let arg = normalize_decimal_number_string(arg);
     if base.starts_with('-') || arg.starts_with('-') || base == "0" || arg == "0" || base == "1" {
-        return None;
+        return Err(DecimalEvaluationError::Unsupported);
     }
     if arg == "1" {
-        return Some("0".to_string());
+        return Ok("0".to_string());
     }
 
     let base_vs_one = compare_nonneg_decimal_str_sign(&base, "1");
     let base_vs_zero = compare_nonneg_decimal_str_sign(&base, "0");
     if base_vs_zero != std::cmp::Ordering::Greater {
-        return None;
+        return Err(DecimalEvaluationError::Unsupported);
     }
 
     let mut acc = "1".to_string();
     for exponent in 0..10_000usize {
         if acc == arg {
-            return Some(exponent.to_string());
+            return Ok(exponent.to_string());
         }
         let next = mul_signed_decimal_str(&acc, &base);
         if normalized_decimal_string_exceeds_pow_budget(&next) {
-            return None;
+            return Err(DecimalEvaluationError::DigitBudgetExceeded);
         }
         if next == arg {
-            return Some((exponent + 1).to_string());
+            return Ok((exponent + 1).to_string());
         }
         match base_vs_one {
             std::cmp::Ordering::Greater => {
                 if compare_nonneg_decimal_str_sign(&next, &arg) == std::cmp::Ordering::Greater {
-                    return None;
+                    return Err(DecimalEvaluationError::Unsupported);
                 }
             }
             std::cmp::Ordering::Less => {
                 if compare_nonneg_decimal_str_sign(&next, &arg) == std::cmp::Ordering::Less {
-                    return None;
+                    return Err(DecimalEvaluationError::Unsupported);
                 }
             }
-            std::cmp::Ordering::Equal => return None,
+            std::cmp::Ordering::Equal => return Err(DecimalEvaluationError::Unsupported),
         }
         acc = next;
     }
-    None
+    Err(DecimalEvaluationError::Unsupported)
 }
 
 fn decimal_str_to_reduced_nonneg_fraction_strings(value: &str) -> Option<(String, String)> {
@@ -505,44 +596,51 @@ pub fn gcd_decimal_str_and_normalize(left: &str, right: &str) -> Option<String> 
     Some(a)
 }
 
-pub fn lcm_decimal_str_and_normalize(left: &str, right: &str) -> Option<String> {
+fn lcm_decimal_with_diagnostics(left: &str, right: &str) -> Result<String, DecimalEvaluationError> {
     let normalized_left = normalize_decimal_number_string(left);
     let normalized_right = normalize_decimal_number_string(right);
     if normalized_left.contains('.') || normalized_right.contains('.') {
-        return None;
+        return Err(DecimalEvaluationError::Unsupported);
     }
     if normalized_left == "0" || normalized_right == "0" {
-        return Some("0".to_string());
+        return Ok("0".to_string());
     }
-    let gcd = gcd_decimal_str_and_normalize(&normalized_left, &normalized_right)?;
-    let quotient = safe_div(&normalized_left, &gcd)?;
+    let gcd = gcd_decimal_str_and_normalize(&normalized_left, &normalized_right)
+        .ok_or(DecimalEvaluationError::Unsupported)?;
+    let quotient = safe_div(&normalized_left, &gcd).ok_or(DecimalEvaluationError::Unsupported)?;
     let product = mul_signed_decimal_str(&quotient, &normalized_right);
     let magnitude = product.strip_prefix('-').unwrap_or(&product).to_string();
     if normalized_decimal_string_exceeds_exact_digit_budget(&magnitude) {
-        return None;
+        return Err(DecimalEvaluationError::DigitBudgetExceeded);
     }
-    Some(magnitude)
+    Ok(magnitude)
 }
 
-pub fn factorial_decimal_str_and_normalize(value: &str) -> Option<String> {
+fn factorial_decimal_str_and_normalize(value: &str) -> Result<String, DecimalEvaluationError> {
     let normalized = normalize_decimal_number_string(value);
-    if normalized.starts_with('-') || normalized.contains('.') {
-        return None;
+    if normalized.is_empty()
+        || normalized.starts_with('-')
+        || normalized.contains('.')
+        || !normalized.bytes().all(|b| b.is_ascii_digit())
+    {
+        return Err(DecimalEvaluationError::Unsupported);
     }
-    let n = normalized.parse::<usize>().ok()?;
+    let n = normalized
+        .parse::<usize>()
+        .map_err(|_| DecimalEvaluationError::DigitBudgetExceeded)?;
     // Same exact-decimal digit budget as integer powers: refuse before the
     // multiply loop when Stirling already exceeds it (e.g. factorial(100000)).
     if estimated_factorial_digit_count(n) > POW_DECIMAL_MAX_NORMALIZED_LENGTH {
-        return None;
+        return Err(DecimalEvaluationError::DigitBudgetExceeded);
     }
     let mut result = "1".to_string();
     for factor in 2..=n {
         result = mul_signed_decimal_str(&result, &factor.to_string());
         if normalized_decimal_string_exceeds_pow_budget(&result) {
-            return None;
+            return Err(DecimalEvaluationError::DigitBudgetExceeded);
         }
     }
-    Some(result)
+    Ok(result)
 }
 
 fn split_sign_and_magnitude(number_string: &str) -> (bool, String) {
@@ -906,33 +1004,38 @@ const EXACT_DECIMAL_MAX_NORMALIZED_LENGTH: usize = 100;
 const POW_DECIMAL_MAX_NORMALIZED_LENGTH: usize = EXACT_DECIMAL_MAX_NORMALIZED_LENGTH;
 
 // Signed integer powers; reciprocals fold only when their decimals terminate.
-pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> Option<String> {
+fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> Result<String, DecimalEvaluationError> {
     let normalized_exp = normalize_decimal_number_string(exp);
     if let Some(magnitude) = normalized_exp.strip_prefix('-') {
         let positive_power = pow_decimal_str_and_normalize(base, magnitude)?;
-        return safe_div("1", &positive_power);
+        return safe_div("1", &positive_power).ok_or(DecimalEvaluationError::Unsupported);
     }
-    let n = parse_nonnegative_integer_exponent_for_pow(exp)?;
-    if n == 0 {
-        return Some("1".to_string());
+    let (exp_int, exp_frac) = parse_decimal_parts(&normalized_exp);
+    if normalized_exp.starts_with('-') || exp_frac.iter().any(|&d| d != 0) {
+        return Err(DecimalEvaluationError::Unsupported);
+    }
+    if exp_int.iter().all(|&d| d == 0) {
+        return Ok("1".to_string());
     }
 
     let normalized_base = normalize_decimal_number_string(base);
     if normalized_base == "0" {
-        return Some("0".to_string());
+        return Ok("0".to_string());
     }
     if normalized_base == "1" {
-        return Some("1".to_string());
+        return Ok("1".to_string());
     }
     if normalized_base == "-1" {
-        return if n % 2 == 0 {
-            Some("1".to_string())
+        return if exp_int.last().copied().unwrap_or(0) % 2 == 0 {
+            Ok("1".to_string())
         } else {
-            Some("-1".to_string())
+            Ok("-1".to_string())
         };
     }
+    let n = parse_nonnegative_integer_exponent_for_pow(&normalized_exp)
+        .ok_or(DecimalEvaluationError::DigitBudgetExceeded)?;
     if pow_decimal_size_budget_exceeded(&normalized_base, n) {
-        return None;
+        return Err(DecimalEvaluationError::DigitBudgetExceeded);
     }
 
     let mut acc = "1".to_string();
@@ -942,18 +1045,18 @@ pub fn pow_decimal_str_and_normalize(base: &str, exp: &str) -> Option<String> {
         if e % 2 == 1 {
             acc = mul_signed_decimal_str(&acc, &b);
             if normalized_decimal_string_exceeds_pow_budget(&acc) {
-                return None;
+                return Err(DecimalEvaluationError::DigitBudgetExceeded);
             }
         }
         e /= 2;
         if e > 0 {
             b = mul_signed_decimal_str(&b, &b);
             if normalized_decimal_string_exceeds_pow_budget(&b) {
-                return None;
+                return Err(DecimalEvaluationError::DigitBudgetExceeded);
             }
         }
     }
-    Some(normalize_decimal_number_string(&acc))
+    Ok(normalize_decimal_number_string(&acc))
 }
 
 fn parse_nonnegative_integer_exponent_for_pow(exp: &str) -> Option<usize> {
@@ -992,14 +1095,28 @@ fn estimated_integer_power_digit_count(base: &str, exponent: usize) -> Option<us
     }
 
     let digits = magnitude.trim_start_matches('0');
-    if digits.is_empty() {
+    if digits.is_empty() || exponent == 0 {
         return Some(1);
     }
+    if exponent == 1 {
+        return Some(digits.len());
+    }
+    if digits.starts_with('1') && digits[1..].bytes().all(|b| b == b'0') {
+        let zeros = digits.len() - 1;
+        return Some(
+            zeros
+                .checked_mul(exponent)
+                .and_then(|z| z.checked_add(1))
+                .unwrap_or(usize::MAX),
+        );
+    }
 
-    let prefix_len = digits.len().min(16);
+    // Use at most 15 leading digits so the f64 mantissa (53 bits) never rounds
+    // up (e.g. 16 nines -> 1e16), ensuring a sound lower-bound pre-filter.
+    let prefix_len = digits.len().min(15);
     let prefix = digits[..prefix_len].parse::<f64>().ok()?;
     let log10_base = prefix.log10() + (digits.len() - prefix_len) as f64;
-    let estimated = (log10_base * exponent as f64).floor() + 1.0;
+    let estimated = (log10_base * exponent as f64 - 1e-12).max(0.0).floor() + 1.0;
     if !estimated.is_finite() || estimated > usize::MAX as f64 {
         return Some(usize::MAX);
     }

@@ -638,6 +638,109 @@ selected native-matrix certificates, including their endpoint comparisons and
 original premises; this does not imply support for every matrix expression or
 proof route. Existing explicit BT names and arities remain available.
 
+### Builtin short names (preview)
+
+The following short spellings normalize during parsing to the existing builtin
+objects, predicates and theorem calls. Each pair has the same argument order,
+domains and proof requirements. Stored expressions and semantic JSON fields
+use the long spelling, while source excerpts retain the text the author wrote.
+Both spellings can be used together in one proof.
+
+| Object short spelling | Canonical spelling |
+| --- | --- |
+| `deriv(f,x)` | `derivative(f,x)` |
+| `pderiv(f,p,n,k)` | `partial_derivative(f,p,n,k)` |
+| `grad_at(f,p,n)` | `gradient_at(f,p,n)` |
+| `set_sum(S,f)` | `finite_set_sum(S,f)` |
+| `set_prod(S,f)` | `finite_set_product(S,f)` |
+| `integ(x,a,b,E)` | `integral(fn(x '[min(a,b),max(a,b)]) R {E},a,b)` |
+
+| Predicate short name | Canonical name |
+| --- | --- |
+| `diff_at` | `is_differentiable_at` |
+| `has_deriv_at` | `has_derivative_at` |
+| `cont_at` | `is_continuous_at` |
+| `cont_left` | `is_continuous_left` |
+| `cont_right` | `is_continuous_right` |
+| `unif_cont` | `is_uniformly_continuous` |
+| `has_integ` | `has_riemann_integral` |
+| `integrable` | `is_riemann_integrable` |
+| `darboux_bounds` | `is_darboux_enclosure` |
+| `antideriv_on` | `is_antiderivative_on` |
+
+| Theorem short name | Canonical name |
+| --- | --- |
+| `deriv_add` | `fn_derivative_at_add` |
+| `deriv_sub` | `fn_derivative_at_subtract` |
+| `deriv_mul` | `fn_derivative_at_multiply` |
+| `deriv_div` | `fn_derivative_at_divide` |
+| `deriv_chain` | `fn_derivative_at_compose` |
+| `deriv_pow` | `fn_derivative_at_power` |
+| `diff_cont` | `fn_differentiable_at_continuous` |
+| `fn_lim_add` | `fn_limit_at_add` |
+| `seq_cauchy_convergent` | `sequence_cauchy_convergent` |
+| `integ_add` | `riemann_integral_add` |
+| `integ_sub` | `riemann_integral_subtract` |
+| `integ_scale` | `riemann_integral_scale` |
+| `integ_parts` | `riemann_integral_by_parts` |
+| `integ_fold` | `riemann_integral_from_definition` |
+| `integ_unfold` | `riemann_integral_to_definition` |
+| `integ_exists` | `riemann_integral_exists` |
+| `integ_integrable` | `riemann_integrable_from_candidate` |
+| `integ_select` | `riemann_integral_selected` |
+| `integ_unique` | `riemann_integral_unique` |
+| `integ_zero` | `riemann_integral_zero` |
+| `integ_const` | `riemann_integral_constant` |
+| `integ_pow` | `riemann_integral_power` |
+| `integ_rev` | `riemann_integral_reverse` |
+| `integ_split` | `riemann_integral_split` |
+| `integ_congr` | `riemann_integral_extensional` |
+| `integ_mono` | `riemann_integral_compare` |
+| `integ_bound` | `riemann_integral_bound` |
+| `cont_integrable` | `riemann_integrable_continuous` |
+| `integ_eval` | `riemann_integral_newton_leibniz` |
+| `integ_step` | `riemann_integral_step` |
+| `integ_subst` | `riemann_integral_substitution` |
+| `darboux_fold` | `darboux_enclosure_from_definition` |
+| `darboux_unfold` | `darboux_enclosure_to_definition` |
+
+For example, a proved derivative candidate permits either selector spelling.
+
+```litex
+have fn square(x R) R=x^2
+$has_deriv_at(square,3,6)
+deriv(square,3)=derivative(square,3)=6
+```
+
+Short names are reserved in declarations, just like their long forms. Alias
+recognition uses the relevant object, predicate or bare-theorem position.
+Qualified names follow module resolution. `integ(x,a,b,E)` takes exactly four arguments. The function interface is
+`integral(f,a,b)`. `lim(a)` and `fn_lim(f,x0)`
+retain their separate contracts.
+
+The [runnable mixed-spelling example](../examples/wd/builtin_short_names.lit)
+also covers finite aggregates and explicit integral theorem selection.
+
+For integral predicates, `$has_integ(f,a,b,I)` specifies a candidate value,
+`$integrable(f,a,b)` states existence, and `integral(f,a,b)` selects the value.
+The `fold` and `unfold` theorem suffixes introduce a predicate from its
+defining clauses and recover those clauses, respectively. `integ_congr`
+transports an integral across pointwise-equal functions, `integ_mono` uses
+pointwise order, and `integ_eval` applies the existing Newton–Leibniz rule
+with a supplied antiderivative. Their complete premises and argument order
+are those of the canonical theorems.
+
+```litex
+have fn square(x R) R=x^2
+release thm integ_pow(square,0,1,2)
+$has_integ(square,0,1,1/3)
+$integrable(square,0,1)
+integral(square,0,1)=1/3
+```
+
+The [integral alias example](../examples/wd/riemann_short_names.lit) also
+checks Darboux certificates and antiderivative relations in both spellings.
+
 ### Unicode mathematical input aliases (preview)
 
 Litex accepts the following Unicode mathematical input. Simple aliases are
@@ -924,6 +1027,48 @@ x = 2
 ```
 
 The last line is an `error` because the bound `x` no longer exists.
+
+#### Fixed values and functions in universal headers
+
+A singleton domain `{value}` fixes a universal parameter to its sole member.
+Fixed values and arbitrary parameters can share one header.
+
+```litex
+forall x {3}, y {5}, z R:
+    x + y + z = 8 + z
+```
+
+The bindings provide `x $in {3}` and `y $in {5}`. Singleton membership
+inference supplies `x = 3` and `y = 5` in the local scope before checking the
+conclusion. The parameter `z` ranges over all real numbers.
+
+A function is also a value. Put an anonymous function inside a singleton to
+specify the exact function used by a universal statement.
+
+```litex
+forall f {fn(t R) R {t + 1}}, x R:
+    f(x) = x + 1
+```
+
+The outer braces form a set containing one function. The inner braces contain
+that function's body. The binding gives `f $in {fn(t R) R {t + 1}}`, which
+supplies `f = fn(t R) R {t + 1}`. Applying the function substitutes `x` for `t`
+in the body. Its input domain, return carrier, and body still receive the
+ordinary anonymous-function checks.
+
+Headers are processed from left to right, so a later singleton may use an
+earlier parameter. Here each real `a` determines the function used by `f`.
+
+```litex
+forall a R, f {fn(t R) R {t + a}}, x R:
+    f(x) = x + a
+```
+
+Every bound name remains a universal parameter. A named theorem with header
+`forall f {fn(t R) R {t + 1}}, x R:` takes two positional arguments, including
+the chosen function. All these names stay local to their universal scope.
+The [singleton binding example](../examples/stmt_nodes/fact/singleton_bindings.lit)
+also demonstrates a theorem call and a guarded reciprocal function.
 
 #### Shared assumptions and inline universals
 
@@ -2076,6 +2221,10 @@ let identity = fn(x R) R {x}
 identity(4) = 4
 ```
 
+The [singleton-member form](#naming-a-value-through-its-singleton)
+`have name {value}` also makes `name = value` available, and records membership
+in the singleton carrier.
+
 **Source:** [implementation](../src/execute/execute_let_stmt.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S02 Bare factual statements](#s02-bare-factual-statements).
@@ -2130,7 +2279,7 @@ larger constructors, name the outer mathematical object instead.
 
 **Execution and result.** Check the carrier/nonempty obligations, introduce the names, store their membership or parameter-type facts, and run ordinary inference. Direct struct-typed symbol bindings open one outer struct layer.
 
-**Nearest boundary.** The declaration does not choose a specific numerical value. Nonempty selection is different from universal binding, which does not require a nonempty domain.
+**Nearest boundary.** The carrier must be proved nonempty. A singleton carrier fixes its sole member as the value. For a carrier with several members, the selected value remains unspecified. Universal binding permits empty domains.
 
 **Checked example.**
 
@@ -2141,6 +2290,30 @@ have x R*
 x != 0
 1 / x $in R
 ```
+
+#### Naming a value through its singleton
+
+Use `have x {value}` to name the sole member of a singleton. Litex checks the
+carrier, introduces `x $in {value}`, and infers `x = value`. This works for
+numbers and for function values.
+
+```litex
+have x {1}
+x = 1
+x + 1 = 2
+
+have successor {fn(t R) R {t + 1}}
+successor(4) = 5
+```
+
+For this numeric example, `have x {1}` and `let x = 1` both supply the equality
+`x = 1`. The `have` form additionally records `x $in {1}` and uses the ordinary
+nonempty-carrier check. The `let` form directly records an expression alias.
+Use `have x S = value` when the declaration should also check membership in a
+specified carrier `S`.
+
+The same singleton-domain notation fixes values inside
+[`forall` headers](#fixed-values-and-functions-in-universal-headers).
 
 **Source:** [implementation](../src/execute/execute_have_obj_in_nonempty_set_stmt.rs).
 
@@ -6380,6 +6553,10 @@ fn(x R) R {x + 1}(2) = 3
 fn(x R: x != 0) R {1 / x}(2) = 1 / 2
 ```
 
+To bind a name to one such function, use `have f {fn(t R) R {t + 1}}`.
+The same singleton domain works in a
+[`forall` header](#fixed-values-and-functions-in-universal-headers).
+
 **Source:** [implementation](../src/execute/execute_fact_stmt/well_defined_results/verify_obj/binder.rs).
 
 **Related entries:** [F01 Membership and nonmembership](#f01-membership-and-nonmembership), [S05 Typed values given by equality](#s05-typed-values-given-by-equality), [S01 Expression-defined functions](#s01-expression-defined-functions), [S46 Function extensionality](#s46-function-extensionality).
@@ -6499,11 +6676,14 @@ For a checked complete unary domain `fn(x S) T`, both inverse-image forms are su
 
 ### Finite real Riemann integrals (preview)
 
-`integral(f,a,b)` selects a finite real Riemann integral after a proof of
-`$has_riemann_integral(f,a,b,I)` or `$is_riemann_integrable(f,a,b)`. The latter
-means that some real candidate exists; it permits symbolic use without
-identifying a numerical value. WD consumes that evidence and does not search
-for an antiderivative or guess an integral.
+`integral(f,a,b)` is the finite real oriented Riemann integral. Its domain
+requires `$is_riemann_integrable(f,a,b)` alongside the function and interval
+conditions below. WD asks the shared verifier to prove these conditions at
+the caller's permitted search level and retains the resulting evidence.
+Existing facts, candidate inferences, definition expansion and polynomial or
+continuous-expression strategies are handled by that verifier.
+`$has_riemann_integral(f,a,b,I)` states a particular integral value. Computing
+that value uses the integral equality rules.
 
 The actual complete unary real function domain must cover the closed interval
 between the endpoints. Equal endpoints require the function to be defined
@@ -6515,14 +6695,68 @@ singularities and unbounded functions.
 
 ```litex
 have fn square(x R) R=x^2
-release thm riemann_integral_power(square,0,1,2)
 integral(square,0,1)=1/3
 integral(square,0,1)+2=7/3
 ```
 
-Without the candidate/existence proof, even `0*integral(square,0,1)=0`
-fails WD. A guarded function may require an explicit interval-in-domain proof;
+An arbitrary real function still requires provable integrability, including
+inside `0*integral(f,0,1)`. A guarded function may require an explicit
+interval-in-domain proof;
 see [actual-domain examples](../examples/real_analysis/riemann_integral_domains.lit).
+
+The expression syntax `integ(x,a,b,E)` binds `x` only in `E`. Endpoints are
+read in the outer scope. Its function domain is the sorted closed interval,
+so the expression must be defined at both endpoints. This form takes four
+arguments. Existing function-valued calls use `integral(f,a,b)`.
+
+An arbitrary real function still requires provable integrability, including
+inside `0*integral(f,0,1)`. A guarded function may require an explicit
+interval-in-domain proof. See [actual-domain examples](../examples/real_analysis/riemann_integral_domains.lit).
+
+#### Improper integrals
+
+The five improper integral operations select finite real values. Each requires
+coverage of its whole integration region, Riemann integrability on every closed
+subinterval of that region, and convergence of the corresponding truncated
+integrals. Finite open-endpoint operations require distinct endpoints.
+
+| Expression syntax | Function interface | Integrability predicate |
+| --- | --- | --- |
+| `integ_oc(x,a,b,E)` | `integral_open_closed(f,a,b)` | `$integrable_oc(f,a,b)` |
+| `integ_co(x,a,b,E)` | `integral_closed_open(f,a,b)` | `$integrable_co(f,a,b)` |
+| `integ_oo(x,a,b,E)` | `integral_open(f,a,b)` | `$integrable_oo(f,a,b)` |
+| `integ_pos_inf(x,a,E)` | `integral_pos_inf(f,a)` | `$integrable_pos_inf(f,a)` |
+| `integ_neg_inf(x,b,E)` | `integral_neg_inf(f,b)` | `$integrable_neg_inf(f,b)` |
+
+For `a<b`, the first three regions are `(a,b]`, `[a,b)` and `(a,b)`.
+The suffix identifies the first and second endpoint. Reversing a finite
+integral swaps `oc` with `co` and changes the sign. The infinite operations
+use `[a,+infinity)` and `(-infinity,b]`, including their finite endpoint.
+
+The open-closed definition takes the limit of
+`integral(f,a+t*(b-a),b)` as `t` tends to zero from above. The closed-open
+version uses `integral(f,a,b+t*(a-b))`. Both use `0<t<1`. With both endpoints
+open, split at `(a+b)/2` and require the two one-sided integrals to converge
+independently. The infinite definitions use `integral(f,a,t)` as `t` tends to positive
+infinity, or `integral(f,t,b)` as `t` tends to negative infinity. For closed
+numeric finite bounds the implementation uses the equivalent direct
+one-sided truncation parameter.
+
+Candidate predicates use `$has_integral_open_closed`,
+`$has_integral_closed_open`, `$has_integral_open`, `$has_integral_pos_inf`
+and `$has_integral_neg_inf`, with the value as their last argument.
+Their short spellings are `$has_integ_oc`, `$has_integ_co`, `$has_integ_oo`,
+`$has_integ_pos_inf` and `$has_integ_neg_inf`.
+
+For each improper canonical name, the suffixes `_from_definition` and
+`_to_definition` connect a candidate to local integrability and truncation
+limits. `_selected` consumes integrability, `_unique` compares two candidates,
+`_add` and `_scale` require the pointwise formula for a supplied result function,
+and `_congr` transports a candidate across pointwise equality on the region.
+The three finite operations also provide `_reverse`. For example,
+`integral_open_closed_reverse(f,a,b,I)` supplies the closed-open candidate
+from `b` to `a` with value `-I`. See the
+[improper integral examples](../examples/calculus/improper_integrals.lit).
 
 These reserved explicit theorem calls check every premise before publishing
 their conclusions. Functions named `h` are supplied result functions: the
@@ -6562,8 +6796,10 @@ of one sampled sum sequence alone does not establish integrability.
 See the [primary example](../examples/real_analysis/riemann_integral.lit),
 [explicit theorem examples](../examples/stmt_nodes/release_and_expand/builtin_thm/riemann_integral_power.lit),
 and [implementation](../src/execute/execute_fact_stmt/riemann_integral.rs).
-LaTeX output renders the selected integral; Lean compilation of these new
-integral objects and proof routes is currently unsupported and rejects them.
+LaTeX output renders the selected integral. Lean replay supports the existing
+candidate and existence routes and checked integrability obtained from known
+facts. Automatic integrability and structural integral-value strategies retain
+explicit unsupported replay boundaries.
 
 
 ### O82. Sums over integer ranges

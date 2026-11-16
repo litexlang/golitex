@@ -24,6 +24,7 @@ functional equations and the existing miniF2F IMO proof variants.
 
 ```text
 examples/
+  calculus/            textbook derivative, chain-rule and Riemann integral examples
   imo/                 collected IMO problems, solutions and verification status
   proof_nodes/          verify / searched_proof tracers
   proof_search/         interactive proof-search explanation and static figures
@@ -82,6 +83,21 @@ Real sequence limit tracers:
 
 The [Riemann integral absolute-bound example](real_analysis/integral_absolute_bound/README.md)
 checks positive and reversed orientations, equal endpoints and exact domains.
+
+Textbook calculus (derivatives, chain rules, and definite Riemann integrals):
+
+- [Collected 30-example calculus showcase](calculus/README.md): 20 derivative and
+  chain-rule examples (`textbook_derivatives_and_chain_rule.lit`, covering
+  elementary and multi-layer chain rules, guarded quotients/logarithms/radicals,
+  variable exponents via `exp(v(x)*ln(u(x)))`, inverse-function and even-function
+  derivative theorems, stationary/critical/tangent/ODE propositions, the
+  antiderivative chain rule, and multivariable gradients and Jacobians) plus 10
+  definite Riemann integral examples (`textbook_riemann_integrals.lit`, covering
+  polynomial signed/zero-width integrals, Simpson's 1/3 exactness on cubics,
+  linearity and automatic integrability closure, Newton-Leibniz with automatic
+  `deriv`, piecewise `abs(x)` splitting, `integ_parts`, substitution with odd
+  cancellation, integral-average and Legendre $L^2$-orthogonality `prop`s, and
+  comparison bounds).
 
 Ordered real series:
 

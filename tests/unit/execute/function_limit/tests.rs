@@ -74,13 +74,20 @@ fn function_limit_tests_distinct_names_and_rendering() {
 #[test]
 fn function_limit_tests_proof_before_selection_and_failure_recovery() {
     let mut rt = runtime();
-    check(&mut rt, "have fn c(x R) R=3", true);
-    for source in ["fn_lim(c,0)=3", "fn_lim(c,0) $in R", "0*fn_lim(c,0)=0"] {
+    check(&mut rt, "have unknown fn(x R) R", true);
+    for source in [
+        "fn_lim(unknown,0)=3",
+        "fn_lim(unknown,0) $in R",
+        "0*fn_lim(unknown,0)=0",
+    ] {
         check(&mut rt, source, false);
     }
+    check(&mut rt, "have fn c(x R) R=3", true);
+    for source in ["fn_lim(c,0)=3", "fn_lim(c,0) $in R", "0*fn_lim(c,0)=0"] {
+        check(&mut rt, source, true);
+    }
     check(&mut rt, "c(2)=3", true);
-    // An explicit existence proof may check its supplied candidate structurally;
-    // the selector-only expressions above must not start that search.
+    // The original explicit existence and candidate routes also remain usable.
     check(&mut rt, "release thm fn_limit_at_exists(c,0,3)", true);
     check(
         &mut rt,
@@ -94,14 +101,11 @@ fn function_limit_tests_proof_before_selection_and_failure_recovery() {
         "fn_lim(c,0)+2=5",
         "fn_lim(c,0) $in R",
         "0*fn_lim(c,0)=0",
+        "fn_lim(c,1)=3",
     ] {
         check(&mut rt, source, true);
     }
-    for source in [
-        "fn_lim(c,0)=4",
-        "fn_lim(c,1)=3",
-        "release thm fn_limit_at_constant(c,0,4)",
-    ] {
+    for source in ["fn_lim(c,0)=4", "release thm fn_limit_at_constant(c,0,4)"] {
         check(&mut rt, source, false);
     }
     check(&mut rt, "fn_lim(c,0)=3", true);
@@ -362,10 +366,10 @@ fn function_limit_tests_native_candidate_and_bt_lean_replay() {
 #[test]
 fn function_limit_tests_cannot_use_later_claim_proof_for_value_wd() {
     let mut rt = runtime();
-    check(&mut rt, "have fn c(x R) R=3", true);
+    check(&mut rt, "have c fn(x R) R", true);
     check(&mut rt,"claim:\n    ? fn_lim(c,0)=3\n    release thm fn_limit_at_real_accumulation(0)\n    release thm fn_limit_at_constant(c,0,3)",false);
     check(&mut rt, "fn_lim(c,0)=3", false);
-    check(&mut rt, "c(0)=3", true);
+    check(&mut rt, "c(0) $in R", true);
 }
 
 #[test]

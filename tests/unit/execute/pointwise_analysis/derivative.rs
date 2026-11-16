@@ -150,17 +150,23 @@ fn pointwise_derivative_tests_nearest_negatives_and_session_survival() {
 #[test]
 fn pointwise_derivative_tests_selection_requires_proof_and_is_not_an_evaluator() {
     let mut rt = runtime();
+    check(&mut rt, "have unknown fn(x R) R", true);
+    check(&mut rt, "derivative(unknown,3)=6", false);
+    check(&mut rt, "0*derivative(unknown,3)=0", false);
+    check(&mut rt, "have fn corner(x R) R=abs(x)", true);
+    check(&mut rt, "derivative(corner,0)=0", false);
+    check(&mut rt, "0*derivative(corner,0)=0", false);
     check(&mut rt, "have fn square(x R) R=x^2", true);
-    check(&mut rt, "derivative(square,3)=6", false);
-    check(&mut rt, "0*derivative(square,3)=0", false);
-    check(&mut rt, "$has_derivative_at(square,3,6)", true);
-    check(&mut rt, "$is_differentiable_at(square,3)", true);
     check(&mut rt, "derivative(square,3)=6", true);
+    check(&mut rt, "deriv(fn(x R) R {x^2},3)=6", true);
+    check(&mut rt, "deriv(fn(x R) R {(3*x+1)^2},2)=42", true);
     check(&mut rt, "derivative(square,3)+2=8", true);
     check(&mut rt, "derivative(square,3)=5", false);
-    check(&mut rt, "derivative(square,4)=8", false);
-    check(&mut rt, "derivative(square,3)=6", true);
+    check(&mut rt, "have fn comp(x R) R=square(3*x+1)", true);
+    check(&mut rt, "$has_deriv_at(square,3*2+1,14)", true);
+    check(&mut rt, "deriv(comp,2)=42", true);
     check(&mut runtime(),"forall f fn(x R) R,p R:\n    $is_differentiable_at(f,p)\n    =>:\n        derivative(f,p) $in R",true);
+    check(&mut runtime(),"forall f fn(x R) R:\n    forall x R:\n        $diff_at(f,x)\n    =>:\n        deriv(f,0) $in R",true);
     check(&mut runtime(),"forall f,g fn(x R) R,p,q,L R:\n    f=g\n    p=q\n    $has_derivative_at(f,p,L)\n    =>:\n        derivative(f,p)=derivative(g,q)",true);
 }
 #[test]
@@ -179,21 +185,34 @@ fn pointwise_derivative_tests_search_ceiling_and_failed_scope() {
     let mut rt = runtime();
     check(&mut rt, "have fn square(x R) R=x*x", true);
     let goal: Fact = parse_atomic(&mut rt, "$has_derivative_at(square,3,6)").into();
+    let EqualFact { left: selector, .. } = match parse_atomic(&mut rt, "derivative(square,3)=6") {
+        AtomicFact::EqualFact(f) => f,
+        _ => panic!("equal"),
+    };
     assert!(rt
         .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
         .unwrap()
         .is_failed());
+    assert!(matches!(
+        rt.verify_obj_well_definedness(&selector, VerifyState::new(VerifyStateLevel::BuiltinRule))
+            .unwrap(),
+        VerifyObjWellDefinedResult::Failed { .. }
+    ));
     check(
         &mut rt,
         "claim:\n    ? 0=1\n    $has_derivative_at(square,3,6)\n    0=1",
         false,
     );
-    check(&mut rt, "derivative(square,3)=6", false);
+    assert!(rt.known_derivative_candidates().is_empty());
     assert!(rt
         .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
         .unwrap()
         .is_failed());
-    check(&mut rt, "$has_derivative_at(square,3,6)", true);
+    assert!(matches!(
+        rt.verify_obj_well_definedness(&selector, VerifyState::new(VerifyStateLevel::Strategy))
+            .unwrap(),
+        VerifyObjWellDefinedResult::Success(_)
+    ));
     check(&mut rt, "derivative(square,3)=6", true);
 }
 #[test]
@@ -304,7 +323,7 @@ fn pointwise_derivative_tests_parser_latex_and_lean_boundary() {
         "DerivativeSelectedValue",
         "function_wd",
         "point_wd",
-        "convergence",
+        "differentiability",
     ] {
         assert!(json.contains(tag), "{tag}");
     }
@@ -345,4 +364,88 @@ fn inline_derivative_reuses_checked_refined_return_formation() {
         true,
     );
     check(&mut rt, "$is_differentiable_at(fn(x R) R {1/x},0)", false);
+}
+
+#[test]
+fn derivative_formula_normalization_composes_bounded_rational_evidence() {
+    let source = include_str!(
+        "../../../../examples/proof_nodes/atomic/by_builtin_strategy/derivative_formula_rational_normalization.lit"
+    );
+    let mut rt = runtime();
+    let run = check(&mut rt, source, true);
+    let json =
+        crate::json_output::project_run_detailed(&run, &rt, "derivative_formula", None).stringify();
+    assert!(json.contains("RationalWithNonzeroPremises"));
+
+    for rejected in [
+        source.replace("/(t(x0)^2)*90", "/(t(x0)^2)*91"),
+        source.replace("        t(x0)!=0\n", ""),
+        source.replace(
+            "$is_differentiable_at(f,g(x0))",
+            "$is_differentiable_at(f,x0)",
+        ),
+    ] {
+        check(&mut runtime(), &rejected, false);
+    }
+}
+
+#[test]
+fn derivative_formula_normalization_keeps_the_general_search_ceiling() {
+    let mut rt = runtime();
+    check(&mut rt, "have a,b R\nhave d R*\nd!=0", true);
+    let goal: Fact = parse_atomic(&mut rt, "a/d+b/d=(a+b)/d").into();
+    assert!(rt
+        .verify_fact(&goal, VerifyState::new(VerifyStateLevel::BuiltinRule))
+        .unwrap()
+        .is_failed());
+    assert!(!rt
+        .verify_fact(&goal, VerifyState::new(VerifyStateLevel::Strategy))
+        .unwrap()
+        .is_failed());
+}
+
+#[test]
+fn derivative_value_equations_build_their_own_candidates() {
+    let source = include_str!(
+        "../../../../examples/proof_nodes/equal/by_builtin_strategy/derivative_value.lit"
+    );
+    let mut rt = runtime();
+    let run = check(&mut rt, source, true);
+    let json =
+        crate::json_output::project_run_detailed(&run, &rt, "derivative_value", None).stringify();
+    assert!(json.contains("DerivativeValue"));
+    assert!(json.contains("PointwiseDerivative"));
+    assert!(json.contains("RationalWithNonzeroPremises"));
+    assert!(rt.known_derivative_candidates().is_empty());
+
+    check(
+        &mut runtime(),
+        "have fn square(x R) R=x*x\nderiv(square,3)=6",
+        true,
+    );
+    for source in [
+        "have unknown fn(x R) R\nderiv(unknown,3)=6",
+        "have fn square(x R) R=x*x\n$diff_at(square,3)\nderiv(square,3)=7",
+        "have fn square(x R) R=x*x\n$diff_at(square,3)\n7=deriv(square,3)",
+        "have fn reciprocal(x R*) R=1/x\n$diff_at(reciprocal,0)\nderiv(reciprocal,0)=0",
+    ] {
+        check(&mut runtime(), source, false);
+    }
+}
+
+#[test]
+fn derivative_closed_power_exponents_are_normalized() {
+    check(
+        &mut runtime(),
+        include_str!(
+            "../../../../examples/proof_nodes/equal/by_builtin_rule/closed_exponent_polynomial_normalization.lit"
+        ),
+        true,
+    );
+    for source in [
+        "forall x R:\n    x^(2+1)=x^2",
+        "have fn affine_power(x R) R=(3*x+1)^5\nforall a R:\n    $diff_at(affine_power,a)\n    deriv(affine_power,a)=16*(3*a+1)^4",
+    ] {
+        check(&mut runtime(), source, false);
+    }
 }

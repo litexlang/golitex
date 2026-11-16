@@ -39,7 +39,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 impl Runtime {
     // Split plain exist / exist! / not exist.
-    // Each: WD (Success|Failed, same shape as atomic) → Builtin → known → known_forall.
+    // WD precedes search; existing routes retain their order before strategies.
     // Example (known): stored `exist x N st {x = 1}` proves the same goal.
     // Example (forall): known `forall a N: exist x N st {x = a}` proves `exist x N st {x = 2}`.
     pub fn verify_exist_shaped_fact(
@@ -67,7 +67,7 @@ impl Runtime {
         ))
     }
 
-    // Builtin → known_exist → known_forall.
+    // Builtin → known_exist → known_forall → bounded strategy.
     fn search_exist_shaped_fact_proof(
         &mut self,
         fact: &ExistShapedFact,
@@ -103,7 +103,19 @@ impl Runtime {
         {
             return Ok(Some(ExistShapedFactSearchedProof::ByKnownForallFact(proof)));
         }
-        Ok(builtin.map(ExistShapedFactSearchedProof::ByBuiltinRule))
+        if let Some(proof) = builtin {
+            return Ok(Some(ExistShapedFactSearchedProof::ByBuiltinRule(proof)));
+        }
+        if let Some(child) =
+            verify_state.for_premises(crate::execute::execute_fact_stmt::VerifyStateLevel::Strategy)
+        {
+            if let Some(proof) = self.search_structural_limit_existence_strategy(fact, child)? {
+                return Ok(Some(ExistShapedFactSearchedProof::ByBuiltinStrategy(
+                    super::ExistShapedFactSearchProofByBuiltinStrategy::StructuralLimit(proof),
+                )));
+            }
+        }
+        Ok(None)
     }
 
     fn search_exist_shaped_fact_proof_by_builtin_rule(

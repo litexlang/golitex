@@ -1,0 +1,29 @@
+# Before, only the long spellings selected these builtin objects and facts:
+# $has_derivative_at(square,3,6)
+# derivative(square,3)=6
+# integral(square,0,1)=1/3
+# finite_set_sum({1,2,3},identity)=6
+# Short spellings were ordinary unresolved names.
+# Now, each short spelling parses to the same builtin and canonical output.
+# Boundary: arities, actual domains and prior selector evidence remain required.
+# Check: target/release/litex -lang en -strict -f examples/wd/builtin_short_names.lit
+
+have fn square(x R) R=x^2
+$has_deriv_at(square,3,6)
+deriv(square,3)=derivative(square,3)=6
+$diff_at(square,3)
+by thm diff_cont(square,3) => $cont_at(square,3)
+$cont_left(square,3)
+$cont_right(square,3)
+
+have fn identity(x R) R=x
+have fn one(x R) R=1
+set_sum({1,2,3},identity)=finite_set_sum({1,2,3},identity)=6
+set_prod({1,2,3},identity)=finite_set_product({1,2,3},identity)=6
+
+release thm riemann_integral_power(square,0,1,2)
+integ(x,0,1,x^2)=integral(square,0,1)=1/3
+release thm riemann_integral_constant(one,0,1,1)
+have fn total(x R) R=x^2+1
+by thm integ_add(square,one,total,0,1,1/3,1) => $has_riemann_integral(total,0,1,1/3+1)
+integral(total,0,1)=4/3

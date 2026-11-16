@@ -1,0 +1,45 @@
+# Native matrix structural equality: checked entries and complete-domain extensionality.
+# Run: target/release/litex -strict -f examples/proof_nodes/equal/by_builtin_strategy/matrix_structural_equality.lit
+# Previously rejected tracer:
+# forall m,n N,A matrix(C,m,n):
+#     transpose(transpose(A,m,n),n,m)=A
+# Boundary: adjoint scaling needs conj(z), with matching full matrix domains.
+
+forall m,n N,A,B matrix(C,m,n):
+    matrix_add(A,B,m,n)=matrix_add(B,A,m,n)
+
+forall m,n N,A,B,D matrix(C,m,n):
+    matrix_add(matrix_add(A,B,m,n),D,m,n)=matrix_add(A,matrix_add(B,D,m,n),m,n)
+
+forall m,n N,A matrix(C,m,n):
+    matrix_add(A,zero_matrix(m,n),m,n)=A
+
+forall m,n N,A matrix(C,m,n):
+    matrix_sub(A,A,m,n)=zero_matrix(m,n)
+
+forall m,n N,A matrix(C,m,n):
+    matrix_scale(1,A,m,n)=A
+
+forall m,n N,A matrix(C,m,n):
+    matrix_scale(0,A,m,n)=zero_matrix(m,n)
+
+forall m,n N,z C,A,B matrix(C,m,n):
+    matrix_scale(z,matrix_add(A,B,m,n),m,n)=matrix_add(matrix_scale(z,A,m,n),matrix_scale(z,B,m,n),m,n)
+
+forall m,n N,A matrix(C,m,n):
+    transpose(transpose(A,m,n),n,m)=A
+
+forall m,n N,A,B matrix(C,m,n):
+    transpose(matrix_add(A,B,m,n),m,n)=matrix_add(transpose(A,m,n),transpose(B,m,n),n,m)
+
+forall m,n N,A matrix(C,m,n):
+    conjugate_transpose(conjugate_transpose(A,m,n),n,m)=A
+
+forall m,n N,A,B matrix(C,m,n):
+    conjugate_transpose(matrix_add(A,B,m,n),m,n)=matrix_add(conjugate_transpose(A,m,n),conjugate_transpose(B,m,n),n,m)
+
+forall m,n N,z C,A matrix(C,m,n):
+    transpose(matrix_scale(z,A,m,n),m,n)=matrix_scale(z,transpose(A,m,n),n,m)
+
+forall m,n N,z C,A matrix(C,m,n):
+    conjugate_transpose(matrix_scale(z,A,m,n),m,n)=matrix_scale(conj(z),conjugate_transpose(A,m,n),n,m)

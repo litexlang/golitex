@@ -1,7 +1,6 @@
-//! Classical finite real derivatives. Selection consumes already proved evidence.
+//! Classical finite real derivatives. Selection requires proved differentiability.
 use super::function_limit::{function_limit_exists, RealFunctionLimitDomainProof};
 use super::real_analysis::analysis_apply;
-use super::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use super::well_defined_results::verify_obj::*;
 use crate::ast::param::{SetBoundParameterGroup, SetBoundParameterList};
 use crate::prelude::*;
@@ -24,14 +23,7 @@ pub struct DerivativeAtWellDefinedProof {
     pub point_wd: Box<ObjWellDefinedProof>,
     pub domain: Box<RealFunctionLimitDomainProof>,
     pub point_in_domain: Box<VerifyFactResult>,
-    pub convergence: DerivativeConvergenceProof,
-}
-pub enum DerivativeConvergenceProof {
-    Candidate(AtomicExceptEqualityFactKnownProof),
-    Existence {
-        fact: Fact,
-        proof: Box<VerifyFactResult>,
-    },
+    pub differentiability: Box<VerifyFactResult>,
 }
 pub enum DerivativeOperatorWellDefinedFailure {
     Partial(crate::execute::execute_fact_stmt::multivariable::selector::PartialDerivativeAtWellDefinedFailure),
@@ -66,6 +58,15 @@ impl Runtime {
             function,
             point,
             value,
+            line_file: None,
+        }
+        .into()
+    }
+    pub(crate) fn function_differentiable(&mut self, function: Obj, point: Obj) -> AtomicFact {
+        FunctionDifferentiableAtFact {
+            fact_id: self.global_ids.allocate_fact_id(),
+            function,
+            point,
             line_file: None,
         }
         .into()
@@ -245,36 +246,16 @@ impl Runtime {
                 DerivativeWellDefinedFailureStage::PointInDomain(Box::new(point_in_domain)),
             ));
         }
-        let mut known = None;
-        for candidate in self.known_derivative_candidates() {
-            let query = self.derivative_candidate(
-                *derivative.function.clone(),
-                *derivative.point.clone(),
-                candidate.value,
-            );
-            if let Some(proof) = self.lookup_known_atomic_premise(query) {
-                known = Some(DerivativeConvergenceProof::Candidate(proof));
-                break;
-            }
+        let requirement: Fact = self
+            .function_differentiable(*derivative.function.clone(), *derivative.point.clone())
+            .into();
+        let differentiability = self.verify_fact(&requirement, state)?;
+        if differentiability.is_failed() {
+            return Ok(failure(
+                obj,
+                DerivativeWellDefinedFailureStage::Convergence(Box::new(differentiability)),
+            ));
         }
-        let convergence = match known {
-            Some(proof) => proof,
-            None => {
-                let fact = self
-                    .derivative_existence(*derivative.function.clone(), *derivative.point.clone());
-                let proof = self.verify_fact(&fact, state)?;
-                if proof.is_failed() {
-                    return Ok(failure(
-                        obj,
-                        DerivativeWellDefinedFailureStage::Convergence(Box::new(proof)),
-                    ));
-                }
-                DerivativeConvergenceProof::Existence {
-                    fact,
-                    proof: Box::new(proof),
-                }
-            }
-        };
         Ok(VerifyObjWellDefinedResult::Success(
             ObjWellDefinedProof::by_def(self.result_detail(), &(obj), None, || {
                 ObjWellDefinedProofByDef::DerivativeOperator(
@@ -283,7 +264,7 @@ impl Runtime {
                         point_wd: Box::new(point_wd),
                         domain: Box::new(domain),
                         point_in_domain: Box::new(point_in_domain),
-                        convergence,
+                        differentiability: Box::new(differentiability),
                     }),
                 )
             }),

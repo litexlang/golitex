@@ -80,12 +80,14 @@ fn antiderivative_parts_explicit_projection_preserves_provenance_and_lean_replay
 fn antiderivative_parts_failed_product_does_not_publish_an_integral() {
     let mut rt = runtime();
     run(&mut rt, PARTS_SETUP, true);
-    run(&mut rt, "have fn bad(x R) R=0", true);
+    run(&mut rt, "have bad fn(x R) R", true);
+    let before = rt.known_riemann_integral_candidates().len();
     run(
         &mut rt,
         "release thm riemann_integral_by_parts(identity,one,ex,ex,bad,ex,0,1,ex(1)-ex(0))",
         false,
     );
+    assert_eq!(rt.known_riemann_integral_candidates().len(), before);
     let rejected = run(&mut rt, "integral(bad,0,1)=0", false);
     let json =
         crate::json_output::project_run_normal(&rejected, &rt, "antiderivative", None).stringify();

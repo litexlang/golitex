@@ -133,6 +133,7 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
             Ok(())
         }
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(_) | DerivativeOperator::Partial(_) | DerivativeOperator::Divergence(_)) => Ok(()),
+        Obj::IntegralOperator(IntegralOperator::Riemann(_)) => Ok(()),
         Obj::BoundOperator(_) | Obj::LimitOperator(LimitOperator::Sequence(_)
             | LimitOperator::SequenceLimsup(_) | LimitOperator::SequenceLiminf(_) | LimitOperator::Function(_) | LimitOperator::MultivariableScalar(_)) => Ok(()),
         Obj::ComplexOperator(_) => Ok(()),
@@ -172,7 +173,18 @@ pub(super) fn validate_arithmetic_expression(object: &Obj) -> Result<(), LeanCom
         }
         Obj::ArithmeticOperator(ArithmeticOperator::Pow(x)) => {
             validate_arithmetic_expression(&x.base)?;
-            validate_arithmetic_expression(&x.exponent)?;
+            // The numeric observer replays the original closed exponent's WD,
+            // including min/max, before using its exact integer value.
+            if closed_integer(&x.exponent).is_none() {
+                if evaluate_obj_to_normalized_decimal_number(&x.exponent)
+                    .is_some_and(|n| !n.normalized_value.contains('.'))
+                {
+                    return Err(LeanCompileError::unsupported(
+                        "Rational/LargeClosedExponent",
+                    ));
+                }
+                validate_arithmetic_expression(&x.exponent)?;
+            }
             // The selected normalization retains a symbolic power as an
             // opaque monomial. Its original WD still has to supply the exact
             // supported exponent domain to the numeric observer.

@@ -457,7 +457,13 @@ impl Runtime {
                 });
         }
         if tb.peek() != Some(MOD_SIGN) {
-            return Ok(AtomicName::Plain { name: first });
+            let name = crate::parse::builtin_aliases::canonical_builtin_name(
+                &first,
+                crate::parse::builtin_aliases::BuiltinAliasKind::Theorem,
+            );
+            return Ok(AtomicName::Plain {
+                name: name.to_string(),
+            });
         }
         let mut parts = vec![first];
         while tb.peek() == Some(MOD_SIGN) {
@@ -743,19 +749,5 @@ fn fact_as_induc_goal(
 }
 
 fn is_negative_atomic(fact: &AtomicFact) -> bool {
-    matches!(
-        fact,
-        AtomicFact::NotNormalAtomicFact(_)
-            | AtomicFact::NotEqualFact(_)
-            | AtomicFact::NotLessFact(_)
-            | AtomicFact::NotGreaterFact(_)
-            | AtomicFact::NotLessEqualFact(_)
-            | AtomicFact::NotGreaterEqualFact(_)
-            | AtomicFact::NotIsSetFact(_)
-            | AtomicFact::NotIsNonemptySetFact(_)
-            | AtomicFact::NotIsFiniteSetFact(_)
-            | AtomicFact::NotInFact(_)
-            | AtomicFact::NotSubsetFact(_)
-            | AtomicFact::NotSupersetFact(_)
-    )
+    !crate::ast::fact::atomic_fact_has_positive_polarity(fact)
 }

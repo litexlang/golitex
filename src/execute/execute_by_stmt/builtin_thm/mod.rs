@@ -29,3 +29,5 @@ pub(crate) mod derive_sequence_extrema_bounded;
 pub(super) mod matrices;
 
 mod multivariable;
+
+pub(crate) mod improper_integrals;

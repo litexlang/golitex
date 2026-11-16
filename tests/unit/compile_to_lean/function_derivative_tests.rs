@@ -1,4 +1,3 @@
-use crate::execute::execute_fact_stmt::function_derivative::DerivativeConvergenceProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactSearchedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainProof;
 use crate::execute::execute_fact_stmt::well_defined_results::FactWellDefinedProof;
@@ -110,10 +109,68 @@ fn derivative_wd_requires_its_original_point_membership() {
         .expect_err("exact domain");
 }
 #[test]
+fn derivative_automatic_differentiability_replays_forall_and_direct_bodies() {
+    use crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof;
+    let forall_source = "forall f fn(x R) R:\n    forall x R:\n        $diff_at(f, x)\n    =>:\n        deriv(f, 0) = deriv(f, 0)\n";
+    let (run, compiler) = super::execute(forall_source);
+    let output = compiler
+        .compile_run(&run, "automatic_differentiability")
+        .expect("shared differentiability evidence from a known forall replays");
+    assert!(output.contains("Litex.DerivativeObj.mk"));
+    assert_eq!(
+        output,
+        compiler
+            .compile_run(&run, "automatic_differentiability")
+            .unwrap()
+    );
+
+    let direct_source = "have fn square(x R) R = x^2\nderiv(square, 3) = 6\nhave fn comp(x R) R = square(3*x + 1)\n$has_deriv_at(square, 3*2 + 1, 14)\nderiv(comp, 2) = 42\n";
+    let (direct_run, direct_compiler) = super::execute(direct_source);
+    let direct_output = direct_compiler
+        .compile_run(&direct_run, "direct_derivative_value")
+        .expect("direct polynomial and composite derivative values replay cleanly");
+    assert!(direct_output.contains("Litex.DerivativeObj.mk"));
+
+    for mutation in 0..2 {
+        let (mut run, compiler) = super::execute(forall_source);
+        let all = super::forall_proof_mut(&mut run.statement_results[0]);
+        let equal = super::equality_proof_mut(&mut all.proved_then_facts[0].verify_result);
+        let ObjWellDefinedProofByDef::DerivativeOperator(
+            DerivativeOperatorWellDefinedProof::AtPoint(derivative),
+        ) = equal
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left
+            .by_def_mut()
+            .expect("derivative definition proof")
+        else {
+            panic!("derivative definition")
+        };
+        let atomic = super::atomic_proof_mut(&mut derivative.differentiability);
+        let AtomicFact::FunctionDifferentiableAtFact(fact) = &mut atomic.fact else {
+            panic!("differentiability subject")
+        };
+        let wrong = Obj::StandardSet(StandardSet::R);
+        match mutation {
+            0 => fact.function = wrong,
+            _ => fact.point = wrong,
+        }
+        compiler
+            .compile_run(&run, "changed_differentiability")
+            .expect_err("differentiability must prove the exact function and point");
+    }
+}
+#[test]
 fn derivative_selection_rejects_a_changed_existence_candidate() {
     use crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof;
+    use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::{
+        AtomicExceptEqualityFactSearchProofByDefinition as Definition,
+        BuiltinPropDefinitionProof as Builtin,
+    };
     let source="forall f fn(x R) R,p R:\n    exist L R st {$has_derivative_at(f,p,L)}\n    =>:\n        derivative(f,p)=derivative(f,p)";
     let (mut run, c) = super::execute(source);
+    assert!(c.compile_run(&run, "valid_derivative_existence").is_ok());
     let p = super::forall_proof_mut(&mut run.statement_results[0]);
     let p = super::equality_proof_mut(&mut p.proved_then_facts[0].verify_result);
     let ObjWellDefinedProof::Detailed(p) =
@@ -129,11 +186,14 @@ fn derivative_selection_rejects_a_changed_existence_candidate() {
     else {
         panic!("selector");
     };
-    let DerivativeConvergenceProof::Existence {
-        fact: Fact::ExistFact(exists),
-        ..
-    } = &mut p.convergence
+    let atomic = super::atomic_proof_mut(&mut p.differentiability);
+    let AtomicExceptEqualityFactSearchedProof::ByDefinition(Definition::BuiltinProp(
+        Builtin::FunctionDifferentiableAt(def_proof),
+    )) = &mut atomic.searched_proof
     else {
+        panic!("differentiability definition");
+    };
+    let Fact::ExistFact(exists) = &mut def_proof.requirement_facts[0] else {
         panic!("existence");
     };
     let QuantifierFreeFact::AtomicFact(AtomicFact::HasDerivativeAtFact(candidate)) =
@@ -148,8 +208,9 @@ fn derivative_selection_rejects_a_changed_existence_candidate() {
 #[test]
 fn derivative_without_existence_cannot_be_constructed_or_hidden_by_zero() {
     for source in [
-        "have fn f(x R) R=x*x\nderivative(f,0)=0",
-        "have fn f(x R) R=x*x\n0*derivative(f,0)=0",
+        "have f fn(x R) R\nderivative(f,0)=0",
+        "have f fn(x R) R\n0*derivative(f,0)=0",
+        "have fn f(x R) R=abs(x)\nderivative(f,0)=0",
         "have fn f(x R) R=abs(x)\n$has_derivative_at(f,0,0)",
         "have fn f(x {0}) R=x*x\n$is_differentiable_at(f,0)",
     ] {

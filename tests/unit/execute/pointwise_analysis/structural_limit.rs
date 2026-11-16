@@ -186,8 +186,6 @@ fn structural_limit_wrong_values_missing_leaves_domains_and_directions() {
         "forall f fn(x R) R,A R:\n    $has_limit_left(f,0,A)\n    =>:\n        $has_limit_right(fn(x R) R {-f(x)},0,-A)",
         "have fn isolated(x {0}) R=1\n$has_limit_at(isolated,0,1)",
         "$has_limit_pos_inf(fn(x R) R {x},0)",
-        "have fn a(k N+) R=0\nlim(a)=0",
-        "have fn f(x R) R=x+1\nfn_lim(f,0)=1",
         "forall f,g fn(x R) R:\n    $is_continuous_left(f,0)\n    =>:\n        $is_continuous_right(fn(x R) R {f(x)},0)",
         "forall f,g fn(x R) R:\n    $is_continuous_left(f,0)\n    $is_continuous_at(g,0)\n    =>:\n        $is_continuous_left(fn(x R) R {g(f(x))},0)",
     ] { check(source,false); }
@@ -259,7 +257,114 @@ fn structural_limit_respects_ceiling_and_failed_scope() {
             .unwrap()
             .success
     );
-    assert!(!rt.run_litex_code("lim(a)=2").unwrap().success);
+    assert!(rt.known_sequence_limit_candidates().is_empty());
+    assert!(rt.run_litex_code("lim(a)=2").unwrap().success);
     assert!(rt.run_litex_code("$has_seq_limit(a,2)").unwrap().success);
     assert!(rt.run_litex_code("lim(a)=2").unwrap().success);
+}
+
+#[test]
+fn structural_limit_selectors_direct_and_explicit_conditions() {
+    for source in [
+        "have fn f(x R) R=x^2\nfn_lim(f,2)=4",
+        "have fn a(k N+) R=0\nlim(a)=0",
+        "have fn f(x R) R=x+1\nfn_lim(f,0)=1",
+        "have fn f(x R) R=x^2\n$has_limit_at(f,2,4)\nfn_lim(f,2)=4",
+        "have fn a(n N+) R=1\nlim(a)=1",
+        "have fn a(n N+) R=1\n$has_seq_limit(a,1)\nlim(a)=1",
+        "have fn f(x R) R=x^2\nfn_lim(f,2) $in R",
+        "have fn a(n N+) R=1\nlim(a) $in R",
+        "have fn f(x R) R=(x+2)^2\n1=fn_lim(f,-1)",
+        "forall c,p R:\n    fn_lim(fn(x R) R {c*x+1},p)=c*p+1",
+        "forall c R:\n    lim(fn(n N+) R {c+2})=c+2",
+        "have fn f(x R) R=x^2\nexist L R st {$has_limit_at(f,2,L)}",
+        "have fn a(n N+) R=3\nexist L R st {$has_seq_limit(a,L)}",
+        include_str!(concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/examples/wd/calculus_automatic_conditions.lit"
+        )),
+    ] {
+        check(source, true);
+    }
+}
+
+#[test]
+fn structural_limit_selectors_reject_wrong_values_and_missing_conditions() {
+    for source in [
+        "have fn f(x R) R=x^2\nfn_lim(f,2)=5",
+        "have fn a(n N+) R=1\nlim(a)=2",
+        "have f fn(x R) R\nfn_lim(f,2)=4",
+        "have a seq(R)\nlim(a)=1",
+        "have f fn(x R) R\n0*fn_lim(f,2)=0",
+        "have a seq(R)\n0*lim(a)=0",
+        "have fn a(n N+) R=n\nlim(a)=0",
+        "have fn a(n N+) R=(-1)^n\nlim(a)=0",
+        "have fn isolated(x {0}) R=1\nfn_lim(isolated,0)=1",
+        "have fn corner(x R) R=abs(x)\nderiv(corner,0)=0",
+        "have fn reciprocal(x R*) R=1/x\nderiv(reciprocal,0)=0",
+        "have fn a(n N+) R=0\nexist L R+ st {$has_seq_limit(a,L)}",
+        "have fn a(n N+) R=n\nexist! L R st {$has_seq_limit(a,L)}",
+        "have fn a(n N+) R=1\nnot exist L R st {$has_seq_limit(a,L)}",
+        "exist L R st {$has_limit_at(fn(x R) R {L+1},0,L)}",
+        "exist L R st {$has_limit_at(fn(x R) R {x+1},L,L)}",
+        "have fn a(n N+) R=1\nexist L R st {$has_seq_limit(a,L), L=2}",
+    ] {
+        check(source, false);
+    }
+}
+
+#[test]
+fn structural_limit_existence_keeps_shared_permissions_and_does_not_publish_candidates() {
+    let targets = [
+        (
+            "have fn f(x R) R=x^2",
+            "exist L R st {$has_limit_at(f,2,L)}",
+        ),
+        ("have fn a(n N+) R=1", "exist L R st {$has_seq_limit(a,L)}"),
+        ("have fn f(x R) R=x^2", "fn_lim(f,2)=4"),
+        ("have fn a(n N+) R=1", "lim(a)=1"),
+    ];
+    for (prefix, source) in targets {
+        for level in [
+            VerifyStateLevel::Direct,
+            VerifyStateLevel::BuiltinRule,
+            VerifyStateLevel::Strategy,
+        ] {
+            let mut rt = runtime();
+            assert!(rt.run_litex_code(prefix).unwrap().success);
+            let tokens = crate::tokenize::Tokenizer::new()
+                .tokenize(source, rt.current_file.clone())
+                .unwrap();
+            let Stmt::Fact(goal) = rt.parse(&tokens).unwrap().remove(0) else {
+                panic!("fact");
+            };
+            let result = rt.verify_fact(&goal, VerifyState::new(level)).unwrap();
+            assert_eq!(
+                !result.is_failed(),
+                level == VerifyStateLevel::Strategy,
+                "{source} {level:?}"
+            );
+            assert!(rt.known_function_limit_candidates().is_empty());
+            assert!(rt.known_sequence_limit_candidates().is_empty());
+        }
+    }
+}
+
+#[test]
+fn structural_limit_existence_records_evidence_and_preserves_lean_boundary() {
+    for source in [
+        "have fn f(x R) R=x^2\nfn_lim(f,2)=4",
+        "have fn a(n N+) R=1\nlim(a)=1",
+    ] {
+        let mut rt = runtime();
+        let run = rt.run_litex_code(source).unwrap();
+        assert!(run.success);
+        let json = crate::json_output::project_run_detailed(&run, &rt, "test", None).stringify();
+        assert!(json.contains("LimitValue"));
+        assert!(json.matches("StructuralLimit").count() >= 2);
+        let error = crate::compile_to_lean::LitexToLeanCompiler::new(rt)
+            .compile_run(&run, "structural_limit_selection")
+            .expect_err("structural limit strategy replay remains unsupported");
+        assert!(format!("{error:?}").contains("Exist/StructuralLimit"));
+    }
 }

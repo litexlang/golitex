@@ -1,5 +1,6 @@
 //! Verification stages for atomic facts.
 
+mod dispatch_predicate_domain_wd;
 pub(crate) mod helper;
 mod known_subset_membership;
 

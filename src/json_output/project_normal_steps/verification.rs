@@ -302,6 +302,9 @@ pub(super) fn verification_steps(
             }
         }
         VerifyFactResult::ExistShapedFact(result) => match exist_search(result) {
+            Some(ExistShapedFactSearchedProof::ByBuiltinStrategy(
+                crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinStrategy::StructuralLimit(proof),
+            )) => check_steps([proof.result_equal.as_ref()], rt, source, scopes),
             Some(ExistShapedFactSearchedProof::ByKnownForallFact(proof)) => {
                 application_steps(proof, rt, source, scopes)
             }
@@ -429,6 +432,14 @@ pub(super) fn method(result: &VerifyFactResult, rt: &Runtime, scopes: &[&ExecEnv
                 let text = rule.rule_name_and_message(rt.launch_command.output_language());
                 return crate::json_output::helper::builtin_rule_with_optional_cite(
                     rt, &text, None,
+                );
+            }
+            Some(ExistShapedFactSearchedProof::ByBuiltinStrategy(_)) => {
+                return described_method(
+                    rt,
+                    "structural_limit",
+                    "Prove convergence with the checked structural limit.",
+                    "用已验证的结构化极限证明收敛性。",
                 );
             }
             _ => {}

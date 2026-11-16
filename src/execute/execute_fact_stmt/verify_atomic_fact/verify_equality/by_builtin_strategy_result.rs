@@ -5,6 +5,16 @@ use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 // Calculation builtins). Each variant owns its checked premises; scoped
 // pointwise steps also retain their parameter introduction and environment.
 pub enum EqualitySearchProofByBuiltinStrategy {
+    ImproperIntegralValue(crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralValueProof),
+    MatrixStructuralEquality(super::matrix_entry_normalization_proof::MatrixStructuralEqualityProof),
+    MatrixEntryReduction(super::matrix_entry_normalization_proof::MatrixEntryReductionProof),
+    RiemannIntegralValue(
+        super::verify_equality_by_builtin_rules::by_riemann_integral::RiemannIntegralValueStrategyProof,
+    ),
+    DerivativeValue(
+        super::verify_equality_by_builtin_rules::by_derivative::DerivativeValueStrategyProof,
+    ),
+    LimitValue(crate::execute::execute_fact_stmt::structural_limit::LimitValueStrategyProof),
     FunctionApplicationCongruence(
         super::search_equal_fact_by_composed_structure::FunctionApplicationCongruenceProof,
     ),

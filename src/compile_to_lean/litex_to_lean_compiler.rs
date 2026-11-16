@@ -225,9 +225,39 @@ impl LitexToLeanCompiler {
                 let mut rendered = declaration.to_owned();
                 // Explicit dependent WD can exceed the default budget already
                 // around 200 KB (for example a complete Darboux definition).
-                // Keep the existing finite, declaration-local resource policy.
-                if declaration.len() > 128 * 1024 {
-                    rendered = format!("set_option maxHeartbeats 1000000 in\n{rendered}");
+                // Integral statements can reference expensive WD constructors even
+                // when the final body is short. Retain the finite local budget.
+                if declaration.len() > 128 * 1024
+                    || declaration.contains("Litex.riemannIntegral")
+                    || declaration.contains("Litex.HasRiemannIntegralValue")
+                {
+                    // One source statement can emit several Lean commands.
+                    // The `in` option must precede each declaration separately.
+                    rendered = rendered
+                        .lines()
+                        .map(|line| {
+                            if [
+                                "theorem ",
+                                "private theorem ",
+                                "noncomputable def ",
+                                "def ",
+                                "private def ",
+                                "abbrev ",
+                                "noncomputable abbrev ",
+                                "instance ",
+                                "opaque ",
+                                "lemma ",
+                            ]
+                            .iter()
+                            .any(|prefix| line.starts_with(prefix))
+                            {
+                                format!("set_option maxHeartbeats 1000000 in\n{line}")
+                            } else {
+                                line.to_owned()
+                            }
+                        })
+                        .collect::<Vec<_>>()
+                        .join("\n");
                 }
                 rendered
             })
@@ -244,7 +274,10 @@ impl LitexToLeanCompiler {
 
 fn object_uses_functions(object: &Obj) -> bool {
     match object {
-        Obj::IteratedOperator(_) => true,
+        Obj::IteratedOperator(_)
+        | Obj::IntegralOperator(_)
+        | Obj::DerivativeOperator(_)
+        | Obj::LimitOperator(_) => true,
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetSize(p)) => object_uses_functions(&p.set),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMax(p)) => object_uses_functions(&p.set),
         Obj::FiniteSetStat(FiniteSetStat::FiniteSetMin(p)) => object_uses_functions(&p.set),

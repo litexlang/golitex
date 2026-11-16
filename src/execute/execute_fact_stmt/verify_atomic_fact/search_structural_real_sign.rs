@@ -169,6 +169,22 @@ impl Runtime {
                             exponent_real: Box::new(exponent_real),
                         },
                     )
+                } else if base.as_ref().is_some_and(|p| p.sign.implies(S::Nonzero))
+                    && !matches!(&*v.exponent, Obj::Literal(Literal::Number(n)) if n.normalized_value.parse::<i64>().is_ok_and(|n| n>0 && n%2==0))
+                    && self
+                        .search_membership_of_checked_object(&v.exponent, &StandardSet::Z, state)
+                        .is_some()
+                {
+                    let exponent_integer = self
+                        .search_membership_of_checked_object(&v.exponent, &StandardSet::Z, state)
+                        .expect("checked integer");
+                    (
+                        S::Nonzero,
+                        P::NonzeroIntegerPower {
+                            base: Box::new(base.expect("nonzero base")),
+                            exponent_integer: Box::new(exponent_integer),
+                        },
+                    )
                 } else {
                     // Any positive even literal power of a real is nonnegative;
                     // a certified nonzero base makes it strictly positive.
@@ -430,6 +446,27 @@ impl Runtime {
                     source: Box::new(source),
                 },
             ));
+        }
+        for (sign, cite) in [
+            (S::Positive, self.known_positive_lower_bound_cite(element)),
+            (S::Negative, self.known_negative_upper_bound_cite(element)),
+        ] {
+            if let Some(cite) = cite {
+                let Fact::AtomicFact(source) = self.fact_by_id_in_stack(cite)?.clone() else {
+                    continue;
+                };
+                let source = self.lookup_known_atomic_premise(source)?;
+                let real =
+                    self.search_membership_of_checked_object(element, &StandardSet::R, state)?;
+                return Some(StructuralRealSignProof::new(
+                    element.clone(),
+                    sign,
+                    P::ResolvedBound {
+                        real: Box::new(real),
+                        source: Box::new(source),
+                    },
+                ));
+            }
         }
         None
     }

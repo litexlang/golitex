@@ -12,6 +12,73 @@ forall f fn(x R) R, a, b, I R:
         integral(f, a, b) = I
 "#;
 
+const AUTOMATIC_INTEGRABILITY_SOURCE: &str = r#"forall f fn(x R) R:
+    forall a,b R:
+        $is_riemann_integrable(f,a,b)
+    =>:
+        integral(f,0,1)=integral(f,0,1)
+"#;
+
+#[test]
+fn riemann_integral_automatic_integrability_replays_known_forall() {
+    let (run, compiler) = super::execute(AUTOMATIC_INTEGRABILITY_SOURCE);
+    let output = compiler
+        .compile_run(&run, "automatic_integrability")
+        .expect("shared integrability evidence from a known forall replays");
+    assert!(output.contains("Litex.RiemannIntegralObj.mk"));
+    assert_eq!(
+        output,
+        compiler
+            .compile_run(&run, "automatic_integrability")
+            .unwrap()
+    );
+}
+
+#[test]
+fn riemann_integral_wd_replays_existing_existential_condition() {
+    let source = "forall f fn(x R) R,a,b R:\n    exist I R st {$has_riemann_integral(f,a,b,I)}\n    =>:\n        integral(f,a,b)=integral(f,a,b)\n";
+    let (run, compiler) = super::execute(source);
+    let output = compiler
+        .compile_run(&run, "integrability_from_existence")
+        .expect("integral WD replays the shared integrability definition proof");
+    assert!(output.contains("Litex.RiemannIntegralObj.mk"));
+}
+
+#[test]
+fn riemann_integral_automatic_integrability_rejects_changed_subject() {
+    use crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof;
+    for mutation in 0..3 {
+        let (mut run, compiler) = super::execute(AUTOMATIC_INTEGRABILITY_SOURCE);
+        let all = super::forall_proof_mut(&mut run.statement_results[0]);
+        let equal = super::equality_proof_mut(&mut all.proved_then_facts[0].verify_result);
+        let ObjWellDefinedProofByDef::IntegralOperator(IntegralOperatorWellDefinedProof::Riemann(
+            integral,
+        )) = equal
+            .well_defined_proof
+            .as_detailed_mut()
+            .unwrap()
+            .left
+            .by_def_mut()
+            .expect("integral definition proof")
+        else {
+            panic!("integral definition")
+        };
+        let atomic = super::atomic_proof_mut(&mut integral.integrability);
+        let AtomicFact::FunctionRiemannIntegrableFact(fact) = &mut atomic.fact else {
+            panic!("integrability subject")
+        };
+        let wrong = Obj::StandardSet(StandardSet::R);
+        match mutation {
+            0 => fact.function = wrong,
+            1 => fact.lower = wrong,
+            _ => fact.upper = wrong,
+        }
+        compiler
+            .compile_run(&run, "changed_integrability")
+            .expect_err("integrability must prove the exact function and interval");
+    }
+}
+
 #[test]
 fn closed_subtraction_bound_keeps_its_citation_and_exact_certificate() {
     use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::{
@@ -397,4 +464,39 @@ fn riemann_selected_equality_requires_original_citation() {
     k.cite_fact_id = FactId::new(u64::MAX);
     c.compile_run(&run, "changed_integral_citation")
         .expect_err("exact cited fact ID");
+}
+
+#[test]
+fn riemann_integral_ring_identity_replays_and_large_closed_exponent_fails_closed() {
+    let ring_source = "forall f fn(x R) R, a, b R:\n    $is_riemann_integrable(f, a, b)\n    =>:\n        integral(f, a, b) + integral(f, a, b) = 2 * integral(f, a, b)\n";
+    let (run, compiler) = super::execute(ring_source);
+    let output = compiler
+        .compile_run(&run, "riemann_ring_identity")
+        .expect("integral selector participates as an opaque scalar in ring identities");
+    assert!(output.contains("Litex.riemannIntegralInReal"));
+
+    let large = "100000000000000000000";
+    let large_exp_source = format!(
+        "forall x R:\n    (x + 1)^({large} * {large} - {large} * {large} + 2) = x^2 + 2*x + 1\n"
+    );
+    let (mut large_run, large_compiler) = super::execute(&large_exp_source);
+    let forall_fact = &super::forall_proof_mut(&mut large_run.statement_results[0]).fact;
+    let ExistOrAndChainAtomicFact::AtomicFact(AtomicFact::EqualFact(eq_fact)) =
+        &forall_fact.then_facts[0]
+    else {
+        panic!("equal conclusion");
+    };
+    let helper_err = crate::compile_to_lean::helper::validate_arithmetic_expression(&eq_fact.left)
+        .expect_err(
+            "validate_arithmetic_expression must reject closed integer exponent overflowing i128",
+        );
+    assert!(
+        helper_err.to_string().contains("LargeClosedExponent"),
+        "unexpected helper error: {helper_err}"
+    );
+    large_compiler
+        .compile_run(&large_run, "large_closed_exponent")
+        .expect_err(
+            "closed exponent overflowing i128 must fail closed instead of emitting mismatched Lean",
+        );
 }

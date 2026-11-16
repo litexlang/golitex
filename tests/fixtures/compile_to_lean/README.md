@@ -1,8 +1,9 @@
-# Minimal compiler CLI fixtures
+# Compiler CLI fixtures
 
-Only the CLI's small file-based inputs live here:
+Maintained file-based compiler inputs live here:
 
 - `identity.lit` and its actual generated `identity.lean` test complete stdout.
+- `polynomial_integrals.lit` and `polynomial_integral_coefficients.lit`, each paired with its actual generated `.lean`, cover finite polynomial integration, symbolic coefficients and oriented endpoints. The focused Rust tests consume this checked source directly.
 - `failed_fact.lit` and `unsupported_constructor.lit` test failure diagnostics.
 
 Core compiler regressions contain their own small source strings. Module

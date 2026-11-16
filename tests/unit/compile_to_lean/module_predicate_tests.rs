@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::run_module::{load_file_for_lean, LoadLeanSourceResult, LoadedLeanSource};
+use crate::run_module::LoadedLeanSource;
 use crate::execute::execute_by_stmt::{ExecByDefStmtResult, ExecByDefStmtSuccess};
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::result::{AtomicExceptEqualityFactSearchProofByDefinition, UserDefinedPropDefinitionProof};
 

@@ -215,6 +215,7 @@ pub struct BuiltinFunctionLipschitzDefinitionProof {
 }
 
 pub enum BuiltinPropDefinitionProof {
+    ImproperIntegral(crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralDefinitionProof),
     IsMatrixInv(crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinIsMatrixInvDefinitionProof),
     MatrixInversible(crate::execute::execute_fact_stmt::matrix_inverse_predicates::BuiltinMatrixInversibleDefinitionProof),
     CommRing(super::super::verify_equality::ring::definition::BuiltinCommRingDefinitionProof),

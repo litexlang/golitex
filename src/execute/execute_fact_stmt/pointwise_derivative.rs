@@ -8,6 +8,9 @@ use super::helper::multiply_derivative_terms;
 use super::pointwise_continuity::PointwiseContinuityExpressionProof;
 use super::pointwise_elementary::ElementaryRealFunction;
 use super::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
+use super::verify_atomic_fact::verify_equality::result::{
+    equal_fact_result_from_success, VerifyEqualityFailed,
+};
 use super::well_defined_results::verify_obj::*;
 use crate::prelude::*;
 use crate::rational_expression::helper::{add_objs, div_objs, mul_objs, sub_objs};
@@ -207,6 +210,38 @@ impl Runtime {
                     }
                     .into();
                     let proof = self.verify_fact(&equal, state)?;
+                    let proof = match proof {
+                        VerifyFactResult::Equality(result) => match *result {
+                            VerifyEqualityResult::Failed(
+                                VerifyEqualityFailed::FailToSearchProof {
+                                    fact,
+                                    well_defined_proof,
+                                },
+                            ) => {
+                                // Formula normalization is a fixed step of this structural
+                                // strategy. Its nonzero leaves retain the inherited ceiling.
+                                // Example: ((a*b-c*d)/b)/b = (a*b-c*d)/b^2.
+                                let Some(normalization) = self
+                                    .search_equal_fact_by_rational_with_nonzero_premises(
+                                        &fact, state,
+                                    )?
+                                else {
+                                    continue;
+                                };
+                                equal_fact_result_from_success(
+                                    &fact,
+                                    well_defined_proof,
+                                    EqualFactSearchedProof::ByBuiltinStrategy(
+                                        EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(
+                                            normalization,
+                                        ),
+                                    ),
+                                )
+                            }
+                            result => VerifyFactResult::Equality(Box::new(result)),
+                        },
+                        proof => proof,
+                    };
                     if proof.is_failed() {
                         continue;
                     }

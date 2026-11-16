@@ -43,6 +43,17 @@ predicate without an invented definition. Inspect a statement on demand;
 hover its keyword for syntax help, or Ctrl/Cmd-click to keep that explanation
 open while editing. Ordinary clicks keep their usual caret behavior.
 
+[`derivatives_and_integrals.lit`](derivatives_and_integrals.lit) compares
+calculating a derivative or integral from a function body with citing a
+previously established value. Hover a line or an equals sign to see the
+typeset formula, the rules and citations used for that step, and the
+collapsed domain checks. The later exercises cover the chain rule, reversing
+the integration bounds, a zero-width interval, and integrating an odd function.
+
+```sh
+target/release/litex -reading -strict -lang zh -f examples/reading/derivatives_and_integrals.lit
+```
+
 [`strategy_body_steps.lit`](strategy_body_steps.lit) follows a strategy through
 a local object, a nested claim, an existential witness, witness extraction and
 proof by definition. Each executed source step retains its own proof and scope;

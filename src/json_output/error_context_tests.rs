@@ -154,6 +154,11 @@ fn eval_failure_categories_are_exhaustive_and_localized() {
                 "evaluation",
             ),
             (
+                ExecEvalStmtFailed::ExactDecimalBudgetExceeded,
+                "exact_decimal_budget_exceeded",
+                "exact_decimal_budget",
+            ),
+            (
                 ExecEvalStmtFailed::AlgoDispatchFailed,
                 "algo_dispatch_failed",
                 "algorithm_dispatch",

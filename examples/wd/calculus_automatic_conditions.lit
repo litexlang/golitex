@@ -1,0 +1,40 @@
+# Automatic calculus conditions through shared verification.
+# Check with target/release/litex -strict -f examples/wd/calculus_automatic_conditions.lit
+#
+# Before, these direct goals failed at well-definedness.
+# have fn square(x R) R=x^2
+# deriv(square,2)=4
+# fn_lim(square,2)=4
+# have fn ones(n N+) R=1
+# lim(ones)=1
+#
+# Each direct goal below uses fresh definitions. The later explicit forms
+# preserve the original authoring route with the same mathematical result.
+# Wrong values, unknown functions and missing accumulation are tested in Rust.
+
+have fn square(x R) R=x^2
+deriv(square,2)=4
+
+have fn limit_square(x R) R=x^2
+fn_lim(limit_square,2)=4
+
+have fn ones(n N+) R=1
+lim(ones)=1
+
+have fn explicit_square(x R) R=x^2
+$diff_at(explicit_square,2)
+deriv(explicit_square,2)=4
+
+have fn explicit_limit_square(x R) R=x^2
+$has_limit_at(explicit_limit_square,2,4)
+fn_lim(explicit_limit_square,2)=4
+
+have fn explicit_ones(n N+) R=1
+$has_seq_limit(explicit_ones,1)
+lim(explicit_ones)=1
+
+forall c,p R:
+    fn_lim(fn(x R) R {c*x+1},p)=c*p+1
+
+forall c R:
+    lim(fn(n N+) R {c+2})=c+2

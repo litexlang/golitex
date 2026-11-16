@@ -742,9 +742,7 @@ thm checked_divergence_builtin_to_definition:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.function_domain = None;
     compiler
         .compile_run(&run, "divergence_missing_definition_domain")
@@ -813,9 +811,7 @@ thm checked_laplacian_builtin_to_definition:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.function_domain = None;
     compiler
         .compile_run(&run, "laplacian_missing_definition_domain")
@@ -897,9 +893,7 @@ thm checked_curl_builtin_to_definition:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.function_domain = None;
     compiler
         .compile_run(&run, "curl_missing_definition_domain")
@@ -1084,9 +1078,7 @@ thm checked_gradient_builtin_to_definition:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.derived.pop();
     compiler
         .compile_run(&run, "gradient_missing_definition_inference")
@@ -1159,9 +1151,7 @@ thm checked_hessian_builtin_to_definition:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.derived.pop();
     compiler
         .compile_run(&run, "hessian_missing_definition_inference")
@@ -1412,9 +1402,7 @@ thm checked_divergence_builtin_unique:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.function_domain = None;
     compiler
         .compile_run(&run, "divergence_missing_domain")
@@ -1482,9 +1470,7 @@ thm checked_curl_builtin_unique:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.function_domain = None;
     compiler
         .compile_run(&run, "curl_missing_domain")
@@ -1552,9 +1538,7 @@ thm checked_laplacian_builtin_unique:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.function_domain = None;
     compiler
         .compile_run(&run, "laplacian_missing_domain")
@@ -1640,9 +1624,7 @@ thm checked_hessian_builtin_unique:
     else {
         panic!()
     };
-    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0] else {
-        panic!()
-    };
+    let InferMultivariableAnalysisFactResult::Definition(capture) = &mut rules[0];
     capture.derived.pop();
     compiler
         .compile_run(&run, "hessian_missing_entries")

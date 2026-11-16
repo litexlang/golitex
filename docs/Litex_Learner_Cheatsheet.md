@@ -55,6 +55,7 @@ actual objects and facts.
 | Later code needs | Form | What it contributes |
 | --- | --- | --- |
 | An arbitrary member | `have x S` | A name and membership; requires nonemptiness. |
+| A fixed value through a singleton | `have x {value}` | Membership in `{value}` and the inferred equality `x = value`. |
 | A value with a declared carrier | `have x S = value` | Checks `value $in S`; records membership and equality. |
 | A name for an expression | `let name = value` | An equality alias, not mutable assignment. |
 | A callable value | `have fn f(x S) T = body` | A function with its domain, output carrier, and equation. |
@@ -74,6 +75,33 @@ by def $is_above_two(3)
 Declaring `prop` alone proves no instances. `abstract_prop` supplies only a
 signature. If the next line needs `f(x)`, define a callable function rather
 than encoding that value as a predicate. See [R02](Manual.md#r02-choose-the-language-form-by-mathematical-role).
+
+### Fix values with singleton carriers
+
+A singleton `{value}` has one member, so binding a name to it determines the
+name's value. A singleton can contain a function as well as a number.
+
+```litex
+have one {1}
+one + 1 = 2
+
+forall x {3}, y {5}, z R:
+    x + y + z = 8 + z
+
+forall f {fn(t R) R {t + 1}}, x R:
+    f(x) = x + 1
+```
+
+In the function header, the outer braces form a singleton set and the inner
+braces contain the function body. Singleton membership gives
+`f = fn(t R) R {t + 1}`, so application uses that body's equation.
+Every `forall` name remains a positional parameter when calling a named
+theorem. Later domains can use earlier parameters.
+
+`have x {1}` and `let x = 1` both supply `x = 1`. The `have` form also records
+singleton membership. The [Manual](Manual.md#fixed-values-and-functions-in-universal-headers)
+and [runnable example](../examples/stmt_nodes/fact/singleton_bindings.lit)
+include dependent functions, guarded functions, and theorem calls.
 
 ## Write facts and hypotheses
 
@@ -406,22 +434,43 @@ and law contracts. Existing builtin concepts need no local redefinition.
 
 ### Finite real integrals
 
-Prove an integral candidate before selecting its value. For example:
+Integral well-definedness can prove integrability automatically through the
+shared verifier. For example:
 
 ```litex
 have fn square(x R) R=x^2
-release thm riemann_integral_power(square,0,1,2)
 integral(square,0,1)=1/3
 ```
 
 `$is_riemann_integrable(f,a,b)` states existence and permits symbolic use.
-It does not determine a numerical result. The actual function domain must
-cover the closed interval between the endpoints; reversed endpoints negate
-the integral. WD never guesses integrability or an antiderivative.
+Its proof may be supplied explicitly or obtained during integral
+well-definedness. Computing a value uses separate integral rules. The actual
+function domain must cover the closed interval between the endpoints.
+Reversed endpoints negate the integral. Automatic verification preserves the
+caller's search limits and requires a successful integrability proof.
 See the [finite Riemann integral contracts](Manual.md#finite-real-riemann-integrals-preview).
 
 
 ## Supported syntax and recommended writing
+
+Builtin short forms include `deriv(f,x)`, `$diff_at(f,x)`,
+`$has_deriv_at(f,x,d)`, `$cont_at(f,x)`, `integral(f,a,b)`, `set_sum(S,f)`
+and `set_prod(S,f)`. Theorem calls accept names such as `deriv_add` and
+`integ_add`. Short and long forms parse to the same builtin and use the same
+parameters and proof requirements. Stored expressions use the long spelling.
+See the [complete short-name table](Manual.md#builtin-short-names-preview).
+
+Use `integ(x,a,b,E)` for an integral expression with a bound variable. Function
+arguments use `integral(f,a,b)`. Open endpoint expression forms are
+`integ_oc`, `integ_co` and `integ_oo`. Infinite forms are
+`integ_pos_inf(x,a,E)` and `integ_neg_inf(x,b,E)`. They require local
+integrability and finite convergence of every relevant truncation limit.
+
+Integral candidates use `$has_integ(f,a,b,I)`, existence uses
+`$integrable(f,a,b)`, and the selected value is `integral(f,a,b)`. Integral
+theorems include `integ_pow`, `integ_const`, `integ_split`, `integ_subst`,
+`integ_parts` and `integ_eval`. Certificates use `$darboux_bounds(...)`,
+and antiderivative relations use `$antideriv_on(F,f,S)`.
 
 | Supported spelling | Recommended for new ordinary examples |
 | --- | --- |

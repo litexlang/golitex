@@ -409,6 +409,11 @@ impl LitexToLeanCompiler {
                     crate::execute::execute_fact_stmt::multivariable::strategy::MultivariableStrategyProof::PartialDerivativeAt(p),
                 )) => self.compile_smooth_partial_derivative(goal, p, definition_wd, position)?,
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p)) => self.compile_pointwise_derivative(goal,p,position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralRiemannIntegral(proof)) =>
+                    self.compile_polynomial_integral(goal, proof, position)?,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RiemannIntegrability(_)) => {
+                    return Err(LeanCompileError::unsupported("RiemannIntegral/IntegrabilityStrategy"));
+                }
                 AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(strategy @ (
                     AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLess(_)
                     | AtomicExceptEqualityFactSearchProofByBuiltinStrategy::QuotientUnitLessEqual(_)

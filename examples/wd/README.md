@@ -3,6 +3,23 @@
 Positive tracers for **already-implemented** Obj / Fact WD.
 Negatives stay in `../wd_negative/`.
 
+[Builtin short names](builtin_short_names.lit) mixes canonical and short
+derivative, continuity, finite-aggregate and integral spellings. All forms use
+the same proof-consuming selectors. Parser regressions check exact AST
+identity, argument counts, reserved bindings, failure recovery and canonical
+JSON/Lean output.
+
+[Integral short names](riemann_short_names.lit) checks integral candidates,
+integrability, value selection, Darboux folding/unfolding and antiderivative
+relations. The short and canonical certificate spellings share stored facts.
+
+[Automatic integral integrability](riemann_integral_automatic_integrability.lit)
+checks polynomial integral values with numeric, symbolic and mixed endpoints.
+Integral WD requests its integrability proof through shared verification at
+the inherited search level and retains the returned evidence. Existing
+candidate, existential and integrability facts use the same query. Continuous
+functions and supplied interval-wide integrability also support symbolic use.
+
 [Refined indexed carriers](refined_indexed_carriers.lit) retain sequence and
 closed-range membership consequences through nested set-builder projections.
 

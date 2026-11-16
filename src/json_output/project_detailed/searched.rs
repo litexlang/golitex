@@ -526,6 +526,50 @@ fn project_equality_builtin_strategy(
     runtime: &Runtime,
 ) -> JsonValue {
     let (name, requirements, proofs) = match proof {
+        EqualitySearchProofByBuiltinStrategy::ImproperIntegralValue(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("ImproperIntegralValue")),
+                    ("requirement", string(p.requirement.readable_string())),
+                    (
+                        "proof",
+                        super::verify::project_verify_fact(&p.proof, runtime),
+                    ),
+                ],
+            )
+        }
+        EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("RiemannIntegralValue")),
+                    ("candidate", project_verify_fact(&p.candidate, runtime)),
+                ],
+            );
+        }
+        EqualitySearchProofByBuiltinStrategy::DerivativeValue(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("DerivativeValue")),
+                    ("candidate", project_verify_fact(&p.candidate, runtime)),
+                ],
+            );
+        }
+        EqualitySearchProofByBuiltinStrategy::LimitValue(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("LimitValue")),
+                    ("candidate", project_verify_fact(&p.candidate, runtime)),
+                ],
+            );
+        }
         EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(p) => (
             "FunctionApplicationCongruence",
             &p.requirement_facts,
@@ -606,6 +650,45 @@ fn project_equality_builtin_strategy(
                     (
                         "pointwise_equality",
                         project_verify_fact(&p.pointwise_equality, runtime),
+                    ),
+                ],
+            );
+        }
+        EqualitySearchProofByBuiltinStrategy::MatrixStructuralEquality(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("MatrixStructuralEquality")),
+                    (
+                        "right_domain",
+                        super::function_domain::project_source(&p.right_domain, runtime),
+                    ),
+                    (
+                        "domain_match",
+                        super::function_domain::project_function_domain(&p.domain_match, runtime),
+                    ),
+                    ("pointwise", project_verify_fact(&p.pointwise, runtime)),
+                ],
+            );
+        }
+        EqualitySearchProofByBuiltinStrategy::MatrixEntryReduction(p) => {
+            return object_for(
+                runtime,
+                vec![
+                    ("type", string("builtin_strategy")),
+                    ("strategy", string("MatrixEntryReduction")),
+                    (
+                        "left",
+                        super::matrix_structural::normalization(&p.left, runtime),
+                    ),
+                    (
+                        "right",
+                        super::matrix_structural::normalization(&p.right, runtime),
+                    ),
+                    (
+                        "scalar_equality",
+                        project_verify_fact(&p.scalar_equality, runtime),
                     ),
                 ],
             );
@@ -1111,6 +1194,11 @@ fn project_user_prop_def(proof: &UserDefinedPropDefinitionProof, runtime: &Runti
 
 fn project_builtin_prop_def(proof: &BuiltinPropDefinitionProof, runtime: &Runtime) -> JsonValue {
     let (kind, requirements, proofs) = match proof {
+        BuiltinPropDefinitionProof::ImproperIntegral(p) => (
+            "ImproperIntegral",
+            &p.requirement_facts,
+            &p.proof_of_requirement_facts,
+        ),
         BuiltinPropDefinitionProof::IsMatrixInv(p) => (
             "IsMatrixInv",
             &p.requirement_facts,
@@ -1332,6 +1420,9 @@ pub(super) fn project_exist_searched(
 ) -> JsonValue {
     match searched {
         ExistShapedFactSearchedProof::ByBuiltinRule(r) => project_exist_builtin_rule(r, runtime),
+        ExistShapedFactSearchedProof::ByBuiltinStrategy(
+            crate::execute::execute_fact_stmt::verify_exist_shaped_fact::ExistShapedFactSearchProofByBuiltinStrategy::StructuralLimit(proof),
+        ) => super::structural_limit::project(proof, runtime),
         ExistShapedFactSearchedProof::ByKnownExistShapedFact(p) => {
             let mut entries = vec![
                 ("type", string("by_known_exist")),

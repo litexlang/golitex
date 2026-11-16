@@ -67,6 +67,13 @@ impl Runtime {
                 )
                 .into())
             }
+            Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Improper(value)) => {
+                let function = self.inst_obj_rec(&value.function, param_to_arg_map)?;
+                let bounds = value
+                    .bounds
+                    .try_map_endpoints(|arg| self.inst_obj_rec(arg, param_to_arg_map))?;
+                Ok(crate::ast::obj::ImproperIntegral::new(function, bounds).into())
+            }
             Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(a)) => {
                 Ok(crate::ast::obj::DerivativeAt::new(
                     self.inst_obj_rec(&a.function, param_to_arg_map)?,

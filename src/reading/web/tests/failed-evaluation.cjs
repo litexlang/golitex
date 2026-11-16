@@ -6,7 +6,7 @@ if(!directory)throw Error('Usage: node failed-evaluation.cjs <fixtures> [reader-
 const code=fs.readFileSync(process.argv[3]||path.join(__dirname,'../reader.js'),'utf8');
 const cases={
  'unsupported-set':'UnsupportedExpression','unsupported-object':'UnsupportedExpression',
- 'power-limit':'EvaluationFailed','unknown-function':'AlgoDispatchFailed',
+ 'power-limit':'ExactDecimalBudgetExceeded','unknown-function':'AlgoDispatchFailed',
  'recursion-limit':'DepthExceeded','aggregate-budget':'AggregateBudgetExceeded',
  'aggregate-nested-budget':'AggregateBudgetExceeded','aggregate-range':'AggregateRangeOverflow',
  'division-wd':'WellDefined','argument-wd':'WellDefined','aggregate-wd':'WellDefined',
@@ -25,6 +25,7 @@ async function inspect(name,locale,editable){
  const b=read(name),s=owner(b),v=mount(b,locale,editable),rows=v.root.querySelectorAll('.lr-code-row').length;
  assert.equal(b.run_result,'failure');assert.equal(s.status,'rejected');
  let card=await v.hover(s.line),part=card?.querySelector('.lr-evaluation-failure');assert(part,name+': missing eval failure explanation');assert.equal(part.dataset.status,'stage-retained',part.textContent);assert.equal(part.dataset.stage,cases[name]);assert.equal(part.dataset.statement,s.id);
+ if(name==='power-limit')assert(part.textContent.includes(locale==='zh'?'100 位数字预算':'100-digit budget'),part.textContent);
  assert(part.textContent.includes(locale==='zh'?'求值未完成':'Evaluation unfinished'));
  assert(!part.textContent.includes('The current proof has not established this conclusion'));assert(!part.textContent.includes('当前证明尚未建立这个结论'));
  assert(!part.querySelector('.lr-evaluation-proof,.lr-proof-substitutions,.lr-theorem-conclusions'),'no invented value, bindings or conclusions');

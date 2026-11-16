@@ -1,4 +1,4 @@
-//! Finite real oriented Riemann integration; selection consumes proved existence.
+//! Finite real oriented Riemann integration with shared domain verification.
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/riemann_integral/native.rs"]
 mod tests;
@@ -6,7 +6,6 @@ use super::function_limit::{
     function_limit_exists, function_limit_forall, RealFunctionLimitDomainProof,
 };
 use super::real_analysis::analysis_apply;
-use super::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use super::well_defined_results::verify_obj::*;
 use crate::prelude::*;
 pub(crate) mod helper;
@@ -14,6 +13,7 @@ use helper::*;
 
 pub enum IntegralOperatorWellDefinedProof {
     Riemann(RiemannIntegralWellDefinedProof),
+    Improper(super::improper_integral::ImproperIntegralWellDefinedProof),
 }
 pub struct RiemannIntegralWellDefinedProof {
     pub function_wd: Box<ObjWellDefinedProof>,
@@ -22,17 +22,11 @@ pub struct RiemannIntegralWellDefinedProof {
     pub domain: Box<RealFunctionLimitDomainProof>,
     pub requirements:
         Vec<super::verify_atomic_fact::well_defined_result::PredicateDomainWellDefinedProof>,
-    pub selection: RiemannIntegralSelectionProof,
-}
-pub enum RiemannIntegralSelectionProof {
-    Candidate(AtomicExceptEqualityFactKnownProof),
-    Existence {
-        fact: Fact,
-        proof: Box<VerifyFactResult>,
-    },
+    pub integrability: Box<VerifyFactResult>,
 }
 pub enum IntegralOperatorWellDefinedFailure {
     Riemann(RiemannIntegralWellDefinedFailure),
+    Improper(super::improper_integral::ImproperIntegralWellDefinedFailure),
 }
 pub struct RiemannIntegralWellDefinedFailure {
     pub obj: Obj,
@@ -91,42 +85,20 @@ impl Runtime {
                 },
             );
         }
-        let mut selection = None;
-        for candidate in self.known_riemann_integral_candidates() {
-            let query = self.riemann_integral_candidate(
+        let requirement: Fact = self
+            .riemann_integrable(
                 *integral.function.clone(),
                 *integral.lower.clone(),
                 *integral.upper.clone(),
-                candidate.value,
-            );
-            if let Some(proof) = self.lookup_known_atomic_premise(query) {
-                selection = Some(RiemannIntegralSelectionProof::Candidate(proof));
-                break;
-            }
+            )
+            .into();
+        let integrability = self.verify_fact(&requirement, state)?;
+        if integrability.is_failed() {
+            return Ok(failure(
+                obj,
+                RiemannIntegralFailureStage::Selection(Box::new(integrability)),
+            ));
         }
-        let selection = match selection {
-            Some(p) => p,
-            None => {
-                let fact = self.riemann_integral_existence(
-                    *integral.function.clone(),
-                    *integral.lower.clone(),
-                    *integral.upper.clone(),
-                );
-                // The selector may consume stored existence, never construct an integral.
-                let proof =
-                    self.verify_fact(&fact, state.capped_at(VerifyStateLevel::BuiltinRule))?;
-                if proof.is_failed() {
-                    return Ok(failure(
-                        obj,
-                        RiemannIntegralFailureStage::Selection(Box::new(proof)),
-                    ));
-                }
-                RiemannIntegralSelectionProof::Existence {
-                    fact,
-                    proof: Box::new(proof),
-                }
-            }
-        };
         let mut children = children.into_iter();
         Ok(VerifyObjWellDefinedResult::Success(
             ObjWellDefinedProof::by_def(self.result_detail(), &(obj), None, || {
@@ -137,7 +109,7 @@ impl Runtime {
                         upper_wd: Box::new(children.next().unwrap()),
                         domain: Box::new(domain),
                         requirements: completed,
-                        selection,
+                        integrability: Box::new(integrability),
                     }),
                 )
             }),
@@ -212,6 +184,9 @@ impl Runtime {
         ]
     }
     pub(crate) fn riemann_enclosure_signature_requirements(&mut self, args: &[Obj]) -> Vec<Fact> {
+        if args.len() != 7 {
+            return Vec::new();
+        }
         let n = args[3].clone();
         let mut requirements =
             vec![member(self, n.clone(), Obj::StandardSet(StandardSet::NPos)).into()];

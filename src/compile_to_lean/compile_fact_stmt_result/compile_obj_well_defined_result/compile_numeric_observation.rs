@@ -464,6 +464,7 @@ impl LitexToLeanCompiler {
                 (Obj::DerivativeOperator(DerivativeOperator::AtPoint(_)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(_)))|
                 (Obj::DerivativeOperator(DerivativeOperator::Partial(_)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Partial(_)))|
                 (Obj::DerivativeOperator(DerivativeOperator::Divergence(_)),ObjWellDefinedProofByDef::DerivativeOperator(crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::Divergence(_)))|
+                (Obj::IntegralOperator(IntegralOperator::Riemann(_)),ObjWellDefinedProofByDef::IntegralOperator(crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(_)))|
                 (Obj::BoundOperator(_),ObjWellDefinedProofByDef::BoundOperator(_))|
                 (Obj::LimitOperator(LimitOperator::Sequence(_) | LimitOperator::SequenceLimsup(_) | LimitOperator::SequenceLiminf(_) | LimitOperator::Function(_) | LimitOperator::MultivariableScalar(_)), ObjWellDefinedProofByDef::LimitOperator(_))) => {
                 // A scalar selector is an opaque normalization atom. Replaying
@@ -474,6 +475,7 @@ impl LitexToLeanCompiler {
                     Obj::DerivativeOperator(DerivativeOperator::AtPoint(_))=>"Litex.derivativeInR",
                     Obj::DerivativeOperator(DerivativeOperator::Partial(_))=>"Litex.partialDerivativeInR",
                     Obj::DerivativeOperator(DerivativeOperator::Divergence(_))=>"Litex.divergenceInR",
+                    Obj::IntegralOperator(IntegralOperator::Riemann(_))=>"Litex.riemannIntegralInReal",
                     Obj::BoundOperator(BoundOperator::Supremum(_))=>"Litex.supremumInR",
                     Obj::BoundOperator(BoundOperator::Infimum(_))=>"Litex.infimumInR",
                     Obj::LimitOperator(LimitOperator::MultivariableScalar(_))=>"Litex.multivariableScalarLimitInR",

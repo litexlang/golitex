@@ -23,6 +23,10 @@ pub(in crate::json_output) fn project_eval_failure(
         ExecEvalStmtFailed::AggregateRangeOverflow => {
             ("aggregate_range_overflow", FailureKind::AggregateRange)
         }
+        ExecEvalStmtFailed::ExactDecimalBudgetExceeded => (
+            "exact_decimal_budget_exceeded",
+            FailureKind::ExactDecimalBudget,
+        ),
         ExecEvalStmtFailed::WellDefined(result) => {
             return super::wd::project_verify_obj_wd(result, runtime)
         }

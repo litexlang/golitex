@@ -29,6 +29,7 @@ pub(in crate::json_output) fn failure_message(
             "Evaluation re-entered the same active algorithm call.",
             "Finite aggregate evaluation exceeded its computation budget.",
             "The aggregate range exceeds the supported integer bounds.",
+            "Exact decimal calculation exceeded the 100-digit budget.",
         ],
         OutputLanguage::Chinese => [
             "未能证明目标。",
@@ -50,6 +51,7 @@ pub(in crate::json_output) fn failure_message(
             "求值重复进入尚未完成的同一算法调用。",
             "有限求和或求积超过计算预算。",
             "求和或求积的范围超出支持的整数边界。",
+            "精确十进制计算超过 100 位数字预算。",
         ],
         OutputLanguage::ChineseTraditional => [
             "未能證明目標。",
@@ -71,6 +73,7 @@ pub(in crate::json_output) fn failure_message(
             "求值重複進入尚未完成的同一演算法呼叫。",
             "有限求和或求積超過計算預算。",
             "求和或求積的範圍超出支援的整數邊界。",
+            "精確十進位計算超過 100 位數字預算。",
         ],
         OutputLanguage::French => [
             "Impossible de prouver l'objectif.",
@@ -92,6 +95,7 @@ pub(in crate::json_output) fn failure_message(
             "L'évaluation a rencontré à nouveau le même appel actif.",
             "L'agrégat fini a dépassé le budget de calcul.",
             "L'intervalle de l'agrégat dépasse les bornes entières prises en charge.",
+            "Le calcul décimal exact dépasse la limite de 100 chiffres.",
         ],
         OutputLanguage::Russian => [
             "Не удалось доказать цель.",
@@ -113,6 +117,7 @@ pub(in crate::json_output) fn failure_message(
             "Повторный вход в тот же активный вызов алгоритма.",
             "Превышен бюджет вычисления конечной суммы или произведения.",
             "Диапазон суммы или произведения выходит за поддерживаемые целочисленные границы.",
+            "Точное десятичное вычисление превысило лимит в 100 цифр.",
         ],
         OutputLanguage::Spanish => [
             "No se pudo demostrar el objetivo.",
@@ -134,6 +139,7 @@ pub(in crate::json_output) fn failure_message(
             "La evaluación volvió a entrar en la misma llamada activa.",
             "El agregado finito superó el presupuesto de cálculo.",
             "El intervalo del agregado supera los límites enteros admitidos.",
+            "El cálculo decimal exacto superó el límite de 100 dígitos.",
         ],
         OutputLanguage::Arabic => [
             "تعذر إثبات الهدف.",
@@ -155,6 +161,7 @@ pub(in crate::json_output) fn failure_message(
             "عاد التقييم إلى الاستدعاء الخوارزمي النشط نفسه.",
             "تجاوز حساب المجموع أو الجداء المحدود ميزانية الحساب.",
             "يتجاوز نطاق المجموع أو الجداء حدود الأعداد الصحيحة المدعومة.",
+            "تجاوز الحساب العشري الدقيق حد 100 رقم.",
         ],
         OutputLanguage::Japanese => [
             "目標を証明できませんでした。",
@@ -176,6 +183,7 @@ pub(in crate::json_output) fn failure_message(
             "評価中の同じアルゴリズム呼び出しに再び入りました。",
             "有限和または有限積の計算量の上限を超えました。",
             "和または積の範囲が対応する整数の範囲を超えています。",
+            "厳密な十進計算が100桁の上限を超えました。",
         ],
         OutputLanguage::Korean => [
             "목표를 증명하지 못했습니다.",
@@ -197,6 +205,7 @@ pub(in crate::json_output) fn failure_message(
             "계산 중인 동일한 알고리즘 호출에 다시 진입했습니다.",
             "유한 합 또는 곱의 계산 한도를 초과했습니다.",
             "합 또는 곱의 범위가 지원되는 정수 범위를 초과했습니다.",
+            "정확한 십진수 계산이 100자리 한도를 초과했습니다.",
         ],
         OutputLanguage::Vietnamese => [
             "Không thể chứng minh mục tiêu.",
@@ -218,6 +227,7 @@ pub(in crate::json_output) fn failure_message(
             "Việc tính giá trị lặp lại cùng một lời gọi thuật toán đang chạy.",
             "Tổng hoặc tích hữu hạn vượt quá ngân sách tính toán.",
             "Phạm vi tổng hoặc tích vượt quá giới hạn số nguyên được hỗ trợ.",
+            "Phép tính thập phân chính xác vượt quá giới hạn 100 chữ số.",
         ],
     };
     let index = match kind {
@@ -241,6 +251,7 @@ pub(in crate::json_output) fn failure_message(
         FailureKind::CyclicEvaluation => 16,
         FailureKind::AggregateBudget => 17,
         FailureKind::AggregateRange => 18,
+        FailureKind::ExactDecimalBudget => 19,
     };
     messages[index]
 }

@@ -1,0 +1,50 @@
+# Tracer: automatic integrability during integral well-definedness.
+# Before, the following direct equation failed at well-definedness:
+# have fn polynomial(x R) R=3*x^2+2*x+1
+# integral(polynomial,0,1)=3
+# An explicit $is_riemann_integrable(polynomial,0,1) was required first.
+#
+# Now, integral WD asks ordinary verification for its integrability condition.
+# Candidate and existence facts use the verifier's inference and definition rules.
+# Boundary: unsupported integrability, invalid domains and wrong values reject.
+# Evidence: target/release/litex -strict -lang en -f examples/wd/riemann_integral_automatic_integrability.lit
+
+have fn polynomial(x R) R=3*x^2+2*x+1
+integral(polynomial,0,1)=3
+integral(polynomial,0,1)+1=4
+
+forall a,b R:
+    integral(polynomial,a,b)=b^3+b^2+b-a^3-a^2-a
+
+forall a R:
+    integral(polynomial,a,3)=39-a^3-a^2-a
+
+forall b R:
+    integral(polynomial,1,b)=b^3+b^2+b-3
+
+integral(polynomial,1,0)=-3
+integral(polynomial,2,2)=0
+0*integral(polynomial,0,2)=0
+
+integral(fn(x R) R {sin(x)},0,1) $in R
+
+forall f fn(x R) R:
+    forall a,b R:
+        $is_riemann_integrable(f,a,b)
+    =>:
+        integral(f,0,1) $in R
+
+forall f fn(x R) R,a,b,I R:
+    $has_riemann_integral(f,a,b,I)
+    =>:
+        integral(f,a,b)=I
+
+forall f fn(x R) R,a,b R:
+    exist I R st {$has_riemann_integral(f,a,b,I)}
+    =>:
+        integral(f,a,b) $in R
+
+forall f fn(x R) R,a,b R:
+    $is_riemann_integrable(f,a,b)
+    =>:
+        integral(f,a,b) $in R

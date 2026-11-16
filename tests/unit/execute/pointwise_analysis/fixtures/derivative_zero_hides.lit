@@ -1,2 +1,2 @@
-have fn unproved(x R) R=x^2
+have unproved fn(x R) R
 0*derivative(unproved,3)=0

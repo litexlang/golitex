@@ -37,6 +37,17 @@ target/release/litex -f <file.lit>
 
 Unicode aliases (e.g. `∀`→`forall`, `∈`→`$in`, `∪`/`∩`/`×` as infix) are accepted at tokenize/parse time; see Manual “Unicode mathematical input aliases”.
 
+`builtin_aliases.rs` owns the fixed short-name table. Object, predicate and
+bare-theorem parsing normalize only their respective alias kinds. Objects and
+facts reuse the existing constructors; theorem calls retain the canonical
+long name in `TheoremCall`. The same table reserves the short spellings and
+lets BT metadata consumers resolve the existing ID. Qualified names retain
+module resolution, and source tokens/spans retain the author's spelling.
+Plain predicate aliases normalize in `atomic_from_prop` before dispatch,
+including the ordinary certificate facts `darboux_bounds` and `antideriv_on`.
+See the [public alias table](../../docs/Manual.md#builtin-short-names-preview)
+and [mixed-spelling tracer](../../examples/wd/builtin_short_names.lit).
+
 ---
 
 ## Statement dispatch

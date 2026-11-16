@@ -543,6 +543,10 @@ class Generator:
             lines.append('capture.subject(value, runtime);')
         if record['name'] == 'AtomicFact':
             lines.append('capture.subject(&value.clone().into(), runtime);')
+        if full.startswith('crate::ast::fact::atomic::') and ('fact_id', 'FactId') in data:
+            lines.append('capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::AtomicFact(value.clone().into()));')
+        if record['name'] == 'ChainFact':
+            lines.append('capture.calculus_formula(&mut output, runtime, || crate::ast::fact::Fact::ChainFact(value.clone()));')
         if is_rule:
             if record['name'] in self.methods:
                 lines.append('if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }')

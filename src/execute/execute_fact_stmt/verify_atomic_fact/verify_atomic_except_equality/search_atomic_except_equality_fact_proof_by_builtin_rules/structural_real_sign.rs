@@ -24,16 +24,17 @@ impl Runtime {
         };
         let base = self.search_membership_of_checked_object(&fact.element, &base, state)?;
         let sign = self.search_structural_real_sign(&fact.element, state)?;
-        // Packing an already known sign into a refined carrier belongs to
-        // the existing RefinedNumericCarrier strategy (and its Lean replay).
-        // This builtin owns composition/strengthening of sign evidence.
-        if matches!(
-            &sign.reason,
-            StructuralRealSignReason::Known { .. }
-                | StructuralRealSignReason::Membership(_)
-                | StructuralRealSignReason::Closed(_)
-                | StructuralRealSignReason::ZeroLiteral
-        ) {
+        // Reuse stored real order and compositional sign evidence at the
+        // inherited ceiling. Intrinsic membership already has a direct route.
+        if (wanted != RealSign::Negative
+            && matches!(&sign.reason, StructuralRealSignReason::Known { .. }))
+            || matches!(
+                &sign.reason,
+                StructuralRealSignReason::Membership(_)
+                    | StructuralRealSignReason::Closed(_)
+                    | StructuralRealSignReason::ZeroLiteral
+            )
+        {
             return None;
         }
         if !sign.sign.implies(wanted) {

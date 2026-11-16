@@ -25,6 +25,11 @@ impl Runtime {
         fact: &AtomicFact,
         ctx: VerifyState,
     ) -> RuntimeResult<Option<AtomicExceptEqualityFactSearchProofByBuiltinStrategy>> {
+        if let Some(proof) = self.search_improper_integral_structure(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ImproperIntegral(proof),
+            ));
+        }
         if let Some(proof) = self.search_multivariable_strategy(fact, ctx)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::MultivariableAnalysis(proof),
@@ -38,6 +43,25 @@ impl Runtime {
         if let Some(proof) = self.search_pointwise_derivative_strategy(fact, ctx)? {
             return Ok(Some(
                 AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(proof),
+            ));
+        }
+        if let AtomicFact::FunctionRiemannIntegrableFact(integrable) = fact {
+            if self.has_explicit_polynomial_integrand(&integrable.function) {
+                if let Some(proof) = self.search_structural_riemann_integral_strategy(fact, ctx)? {
+                    return Ok(Some(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralRiemannIntegral(proof)));
+                }
+            }
+        }
+        if let Some(proof) = self.search_riemann_integrability_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::RiemannIntegrability(proof),
+            ));
+        }
+        if let Some(proof) = self.search_structural_riemann_integral_strategy(fact, ctx)? {
+            return Ok(Some(
+                AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralRiemannIntegral(
+                    proof,
+                ),
             ));
         }
         if let Some(proof) = self.search_structural_limit_strategy(fact, ctx)? {

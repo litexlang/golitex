@@ -1,0 +1,15 @@
+# Before: polynomial normalization treated the closed nonliteral exponent as opaque.
+# forall x R:
+#     x^(max(2,1)-1)=x
+# Now: exact closed exponents use the existing bounded polynomial normalization.
+# Boundary: symbolic exponents and powers beyond the expansion budget stay opaque.
+# Check: target/release/litex -strict -lang en -f examples/proof_nodes/equal/by_builtin_rule/closed_exponent_polynomial_normalization.lit
+
+forall x R:
+    x^(max(2,1)-1)=x
+    (3*x+1)^(2+2)=(3*x+1)^4
+
+have fn affine_power(x R) R=(3*x+1)^5
+forall a R:
+    $diff_at(affine_power,a)
+    deriv(affine_power,a)=15*(3*a+1)^4

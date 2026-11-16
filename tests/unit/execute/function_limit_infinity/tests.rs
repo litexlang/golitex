@@ -28,8 +28,10 @@ fn check(rt: &mut Runtime, source: &str, wanted: bool) {
 fn infinity_proof_consuming_selection_direction_and_recovery() {
     for (side, other) in [("pos_inf", "neg_inf"), ("neg_inf", "pos_inf")] {
         let mut rt = runtime();
+        check(&mut rt, "have unknown fn(x R) R", true);
+        check(&mut rt, &format!("0*lim_{side}(unknown)=0"), false);
         check(&mut rt, "have fn c(x R) R=3", true);
-        check(&mut rt, &format!("0*lim_{side}(c)=0"), false);
+        check(&mut rt, &format!("0*lim_{side}(c)=0"), true);
         check(
             &mut rt,
             &format!("release thm fn_limit_{other}_real_accumulation()"),
@@ -40,7 +42,7 @@ fn infinity_proof_consuming_selection_direction_and_recovery() {
             &format!("release thm fn_limit_{other}_constant(c,3)"),
             true,
         );
-        check(&mut rt, &format!("lim_{side}(c)=3"), false);
+        check(&mut rt, &format!("lim_{side}(c)=3"), true);
         check(
             &mut rt,
             &format!("release thm fn_limit_{side}_real_accumulation()"),
@@ -54,7 +56,7 @@ fn infinity_proof_consuming_selection_direction_and_recovery() {
         check(&mut rt, &format!("lim_{side}(c)=3"), true);
         check(&mut rt, &format!("lim_{side}(c)+2=5"), true);
         check(&mut rt, &format!("lim_{side}(c)=4"), false);
-        check(&mut rt, "fn_lim(c,0)=3", false);
+        check(&mut rt, "fn_lim(c,0)=3", true);
     }
 }
 #[test]
@@ -87,7 +89,7 @@ fn infinity_direction_scope_and_substitution() {
         check(&mut runtime(),&format!("forall f fn(x R) R,L R:\n    $has_limit_{side}(f,L)\n    =>:\n        $has_limit_{other}(f,L)"),false);
         check(&mut runtime(),&format!("forall f,g fn(x R) R,L,M R:\n    f=g\n    L=M\n    $has_limit_{side}(f,L)\n    =>:\n        $has_limit_{side}(g,M)\n        lim_{side}(g)=M"),true);
         let mut rt = runtime();
-        check(&mut rt, "have fn c(x R) R=3", true);
+        check(&mut rt, "have c fn(x R) R", true);
         check(&mut rt,&format!("claim:\n    ? lim_{side}(c)=3\n    release thm fn_limit_{side}_real_accumulation()\n    release thm fn_limit_{side}_constant(c,3)"),false);
         check(&mut rt, &format!("lim_{side}(c)=3"), false);
     }

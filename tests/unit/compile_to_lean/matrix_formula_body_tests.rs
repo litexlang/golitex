@@ -320,6 +320,21 @@ forall A matrix(C,2,2):
 ];
 
 #[test]
+fn scalar_formula_normalization_preserves_raw_denotations() {
+    for (source, raw_operation) in SCALAR_SOURCES {
+        let (run, compiler) = super::execute(source);
+        let output = compiler.compile_run(&run, "scalar_raw_denotation").unwrap();
+        assert!(output.contains(raw_operation), "{raw_operation}");
+    }
+    let (run, compiler) = super::execute(
+        "have fn norm_formula(v cart_n(C,2)) R = euclidean_norm(v,2)\n\
+         forall v cart_n(C,2):\n    norm_formula(v) = euclidean_norm(v,2)\n",
+    );
+    let output = compiler.compile_run(&run, "norm_raw_denotation").unwrap();
+    assert!(output.contains("Litex.finiteAggregateValue"));
+}
+
+#[test]
 fn matrix_power_formula_references_the_core_recursive_definition() {
     let (source, _) = GRAPH_SOURCES
         .iter()

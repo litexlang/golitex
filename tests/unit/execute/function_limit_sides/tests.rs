@@ -31,13 +31,16 @@ fn check(rt: &mut Runtime, source: &str, wanted: bool) {
 fn side_limits_proof_before_selection_and_recovery() {
     for (side, other) in [("left", "right"), ("right", "left")] {
         let mut rt = runtime();
+        check(&mut rt, "have unknown fn(x R) R", true);
+        check(&mut rt, &format!("lim_{side}(unknown,0)=3"), false);
+        check(&mut rt, &format!("0*lim_{side}(unknown,0)=0"), false);
         check(&mut rt, "have fn c(x R) R=3", true);
         for fact in [
             format!("lim_{side}(c,0)=3"),
             format!("lim_{side}(c,0) $in R"),
             format!("0*lim_{side}(c,0)=0"),
         ] {
-            check(&mut rt, &fact, false);
+            check(&mut rt, &fact, true);
         }
         check(
             &mut rt,
@@ -49,7 +52,7 @@ fn side_limits_proof_before_selection_and_recovery() {
             &format!("release thm fn_limit_{other}_constant(c,0,3)"),
             true,
         );
-        check(&mut rt, &format!("lim_{side}(c,0)=3"), false);
+        check(&mut rt, &format!("lim_{side}(c,0)=3"), true);
         check(
             &mut rt,
             &format!("release thm fn_limit_{side}_real_accumulation(0)"),
@@ -64,8 +67,8 @@ fn side_limits_proof_before_selection_and_recovery() {
         check(&mut rt, &format!("lim_{side}(c,0)+2=5"), true);
         check(&mut rt, &format!("0*lim_{side}(c,0)=0"), true);
         check(&mut rt, &format!("lim_{side}(c,0)=4"), false);
-        check(&mut rt, &format!("lim_{side}(c,1)=3"), false);
-        check(&mut rt, "fn_lim(c,0)=3", false);
+        check(&mut rt, &format!("lim_{side}(c,1)=3"), true);
+        check(&mut rt, "fn_lim(c,0)=3", true);
         check(&mut rt, "c(2)=3", true);
     }
 }
@@ -86,10 +89,10 @@ fn side_limits_direction_is_fact_and_object_identity() {
 fn side_limits_cannot_borrow_later_claim_or_failed_scope() {
     for side in ["left", "right"] {
         let mut rt = runtime();
-        check(&mut rt, "have fn c(x R) R=3", true);
+        check(&mut rt, "have c fn(x R) R", true);
         check(&mut rt,&format!("claim:\n    ? lim_{side}(c,0)=3\n    release thm fn_limit_{side}_real_accumulation(0)\n    release thm fn_limit_{side}_constant(c,0,3)"),false);
         check(&mut rt, &format!("lim_{side}(c,0)=3"), false);
-        check(&mut rt, "c(2)=3", true);
+        check(&mut rt, "c(2) $in R", true);
     }
 }
 

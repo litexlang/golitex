@@ -226,6 +226,16 @@ fn objs_alpha_equal(left: &Obj, right: &Obj, map: &HashMap<IdentifierId, Identif
                 && objs_alpha_equal(&l.upper, &r.upper, map)
         }
         (
+            Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Improper(l)),
+            Obj::IntegralOperator(crate::ast::obj::IntegralOperator::Improper(r)),
+        ) => {
+            l.bounds.name() == r.bounds.name()
+                && l.operand_refs()
+                    .into_iter()
+                    .zip(r.operand_refs())
+                    .all(|(a, b)| objs_alpha_equal(a, b, map))
+        }
+        (
             Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(l)),
             Obj::DerivativeOperator(crate::ast::obj::DerivativeOperator::AtPoint(r)),
         ) => {

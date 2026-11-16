@@ -29,6 +29,7 @@ use super::subset::standard_set_is_subset_eq;
 mod discrete_arithmetic_constructor;
 pub mod positive_minimum;
 mod real_arithmetic_constructor;
+pub mod real_segment;
 pub mod scalar_refined_product;
 pub use discrete_arithmetic_constructor::{
     DiscreteArithmeticConstructorClosureBuiltinRuleProof, DiscreteArithmeticConstructorTree,
@@ -40,6 +41,8 @@ pub use real_arithmetic_constructor::{
 
 // Builtin rules for `$in` facts (zero-premise or known-cite routes).
 pub enum InFactSearchProofByBuiltinRule {
+    RealSegmentMembership(real_segment::RealSegmentMembershipProof),
+    IntervalInclusion(IntervalInclusionProof),
     NativeMatrixProperty(crate::execute::execute_fact_stmt::verify_atomic_fact::search_native_matrix_property::NativeMatrixPropertyProof),
     SignedNumericMembership(
         crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::SignedNumericMembershipProof,
@@ -415,7 +418,135 @@ pub struct HomogeneousCartesianSequenceMembershipProof {
     pub carrier_equal: EqualFactSearchedProof,
 }
 
+pub struct IntervalInclusionProof {
+    pub membership: AtomicExceptEqualityFactKnownProof,
+    pub bounds: Vec<VerifyFactResult>,
+}
+
 impl Runtime {
+    pub(crate) fn interval_inclusion_membership(
+        &mut self,
+        fact: &InFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<IntervalInclusionProof>> {
+        fn bounds(obj: &Obj) -> Option<(Option<&Obj>, Option<&Obj>, bool, bool)> {
+            Some(match obj {
+                Obj::SetFormer(SetFormer::IntervalObj(interval)) => match interval {
+                    IntervalObj::LeftClosedRightClosed(v) => {
+                        (Some(&v.start), Some(&v.end), true, true)
+                    }
+                    IntervalObj::LeftClosedRightOpen(v) => {
+                        (Some(&v.start), Some(&v.end), true, false)
+                    }
+                    IntervalObj::LeftOpenRightClosed(v) => {
+                        (Some(&v.start), Some(&v.end), false, true)
+                    }
+                    IntervalObj::LeftOpenRightOpen(v) => {
+                        (Some(&v.start), Some(&v.end), false, false)
+                    }
+                },
+                Obj::SetFormer(SetFormer::OneSideInfinityIntervalObj(interval)) => match interval {
+                    OneSideInfinityIntervalObj::LowerClosed(v) => {
+                        (Some(&v.start), None, true, false)
+                    }
+                    OneSideInfinityIntervalObj::LowerOpen(v) => {
+                        (Some(&v.start), None, false, false)
+                    }
+                    OneSideInfinityIntervalObj::UpperClosed(v) => {
+                        (None, Some(&v.start), false, true)
+                    }
+                    OneSideInfinityIntervalObj::UpperOpen(v) => {
+                        (None, Some(&v.start), false, false)
+                    }
+                },
+                _ => return None,
+            })
+        }
+        let Some((lower, upper, lower_closed, upper_closed)) = bounds(&fact.set) else {
+            return Ok(None);
+        };
+        for source in self.known_memberships_of(&fact.element) {
+            let Some((source_lower, source_upper, source_lower_closed, source_upper_closed)) =
+                bounds(&source.set)
+            else {
+                continue;
+            };
+            let Some(membership) = self.lookup_known_atomic_premise(source.clone().into()) else {
+                continue;
+            };
+            let mut requirements = Vec::new();
+            let mut compatible = true;
+            for (target, source, target_closed, source_closed, lower) in [
+                (lower, source_lower, lower_closed, source_lower_closed, true),
+                (
+                    upper,
+                    source_upper,
+                    upper_closed,
+                    source_upper_closed,
+                    false,
+                ),
+            ] {
+                let Some(target) = target else {
+                    continue;
+                };
+                let Some(source) = source else {
+                    compatible = false;
+                    break;
+                };
+                let (left, right) = if lower {
+                    (target, source)
+                } else {
+                    (source, target)
+                };
+                let fact_id = self.global_ids.allocate_fact_id();
+                let requirement: Fact = if target == source && (target_closed || !source_closed) {
+                    EqualFact {
+                        fact_id,
+                        left: left.clone(),
+                        right: right.clone(),
+                        line_file: None,
+                    }
+                    .into()
+                } else if !target_closed && source_closed {
+                    LessFact {
+                        fact_id,
+                        left: left.clone(),
+                        right: right.clone(),
+                        line_file: None,
+                    }
+                    .into()
+                } else {
+                    LessEqualFact {
+                        fact_id,
+                        left: left.clone(),
+                        right: right.clone(),
+                        line_file: None,
+                    }
+                    .into()
+                };
+                requirements.push(requirement);
+            }
+            if !compatible {
+                continue;
+            }
+            let mut proofs = Vec::new();
+            for requirement in &requirements {
+                let proof = self.verify_fact(requirement, state)?;
+                if proof.is_failed() {
+                    break;
+                }
+                proofs.push(proof);
+            }
+            if proofs.len() == requirements.len() {
+                return Ok(Some(IntervalInclusionProof {
+                    membership,
+                    bounds: proofs,
+                }));
+            }
+        }
+        Ok(None)
+    }
+
     // Builtin InFact search: dispatch by set shape first, then only try rules
     // that can apply to that shape (and element shape when needed).
     // Relative first-hit order among overlapping rules is preserved.
@@ -577,6 +708,16 @@ impl Runtime {
         }?;
         if existing.is_some() {
             return Ok(existing);
+        }
+        if let Some(proof) = self.real_segment_membership(fact, verify_state)? {
+            return Ok(Some(InFactSearchProofByBuiltinRule::RealSegmentMembership(
+                proof,
+            )));
+        }
+        if let Some(proof) = self.interval_inclusion_membership(fact, verify_state)? {
+            return Ok(Some(InFactSearchProofByBuiltinRule::IntervalInclusion(
+                proof,
+            )));
         }
         Ok(self
             .search_signed_numeric_membership(fact, verify_state)
@@ -975,7 +1116,7 @@ impl Runtime {
 
     // Prove `x $in '(a,b)` / `'[a,b]` / mixed from `x $in R` and endpoint bounds.
     // Example: known `x $in R`, `a <= x`, `x < b` prove `x $in '[a, b)`.
-    fn interval_membership_proof(
+    pub(crate) fn interval_membership_proof(
         &mut self,
         fact: &InFact,
         verify_state: VerifyState,
@@ -1052,7 +1193,7 @@ impl Runtime {
 
     // Prove `x $in '[a,)` / `'(a,)` / `'(,b]` / `'(,b)` from `x $in R` and one bound.
     // Example: known `x $in R` and `a <= x` prove `x $in '[a,)`.
-    fn one_side_infinity_interval_membership_proof(
+    pub(crate) fn one_side_infinity_interval_membership_proof(
         &mut self,
         fact: &InFact,
         verify_state: VerifyState,

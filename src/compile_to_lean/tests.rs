@@ -3805,6 +3805,8 @@ mod function_derivative_tests;
 mod automatic_derivative_tests;
 #[path = "../../tests/unit/compile_to_lean/multivariable_scalar_limit_tests.rs"]
 mod multivariable_scalar_limit_tests;
+#[path = "../../tests/unit/compile_to_lean/polynomial_integral_tests.rs"]
+mod polynomial_integral_tests;
 
 #[path = "../../tests/unit/compile_to_lean/multivariable_vector_limit_tests.rs"]
 mod multivariable_vector_limit_tests;
@@ -4213,6 +4215,9 @@ mod native_matrix_property_tests;
 
 #[path = "../../tests/unit/compile_to_lean/native_matrix_determinant_formula_tests.rs"]
 mod native_matrix_determinant_formula_tests;
+
+#[path = "../../tests/unit/compile_to_lean/native_matrix_structural_tests.rs"]
+mod native_matrix_structural_tests;
 
 #[path = "../../tests/unit/compile_to_lean/continuity_limit_bridge_tests.rs"]
 mod continuity_limit_bridge_tests;

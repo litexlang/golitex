@@ -2759,7 +2759,7 @@ EVAL_EQUATION_FORMATION_CASES = {
 }
 EVAL_FAILURE_CASES = {'unsupported-set': ('eval N\n', 'UnsupportedExpression'),
  'unsupported-object': ('have reading_eval_object R\neval reading_eval_object\n', 'UnsupportedExpression'),
- 'power-limit': ('eval 2^100000\n', 'EvaluationFailed'),
+ 'power-limit': ('eval 2^100000\n', 'ExactDecimalBudgetExceeded'),
  'unknown-function': ('have reading_eval_function fn(x R) R\neval reading_eval_function(2)\n',
                       'AlgoDispatchFailed'),
  'recursion-limit': ('algo reading_eval_count(k N) N by induc k from 0:\n'

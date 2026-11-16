@@ -27,6 +27,13 @@ LITEX_CURSOR_LOCAL.md
 .dist
 /private/
 
+# Temporary Litex experiments in the repository root.
+/test_*.lit
+
+# Disposable scratch source and the function-set runner's default report.
+/examples/tmp.lit
+/examples/test_function_sets/results.json
+
 examples/testings/.order
 
 # Root tools are local-only. Public repository automation lives in .github/scripts.

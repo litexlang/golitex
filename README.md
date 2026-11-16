@@ -85,9 +85,9 @@ WellDefinedError: object reciprocal(0) is not well-defined
 
 You focus on the mathematical argument; the language automatically ensures that every expression remains mathematically valid.
 
-### 3. The Checker Handles the Routine: ~350,000 Lines of Pure Rust
+### 3. The Checker Handles the Routine: Over 500,000 Lines of Pure Rust
 
-Litex was designed around a simple engineering goal: **about 350,000 lines of Rust, written for a language that is effortless to write and a checker that is blazingly fast.**
+Litex was designed around a simple engineering goal: **over 500,000 lines of Rust, written for a language that is effortless to write and a checker that is blazingly fast.**
 
 When you state a step, Litex executes a bounded verification cycle:
 1. **Retrieve**: Looks through active scope for cited definitions, established facts, and builtin mathematical rules.

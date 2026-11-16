@@ -1,11 +1,12 @@
 //! Bounded arithmetic limit checking over an already checked function body.
 //! Example: a -> A and b -> B prove (k |-> a(k)+b(k)) -> A+B.
-//! This engine is a truth-search strategy; selectors never invoke it from WD.
+//! Shared fact verification uses this evidence for limit values and existence.
 #[cfg(test)]
 #[path = "../../../tests/unit/execute/pointwise_analysis/structural_limit.rs"]
 mod structural_limit_tests;
 use super::function_domain::{function_domains_alpha_equal, CheckedFunctionBodyProof};
 use super::function_limit::RealFunctionLimitDomainProof;
+use super::verify_atomic_fact::verify_atomic_except_equality::result::atomic_except_equality_fact_result_from_success;
 use super::verify_atomic_fact::verify_atomic_except_equality::result::AtomicExceptEqualityFactKnownProof;
 use super::verify_atomic_fact::well_defined_result::FunctionLimitApproachRealProof;
 use crate::prelude::*;
@@ -24,6 +25,10 @@ pub struct StructuralLimitProof {
     pub result_equal: Box<VerifyFactResult>,
 }
 
+pub struct LimitValueStrategyProof {
+    pub candidate: Box<VerifyFactResult>,
+}
+
 #[derive(Clone)]
 pub enum StructuralLimitApproach {
     Sequence,
@@ -31,6 +36,10 @@ pub enum StructuralLimitApproach {
 }
 
 pub enum StructuralLimitGeometryProof {
+    RealInterval {
+        requirement_facts: Vec<Fact>,
+        proof_of_requirement_facts: Vec<VerifyFactResult>,
+    },
     PositiveNaturalSequence,
     RealLine {
         domain_equal: Box<EqualFactSearchedProof>,
@@ -54,6 +63,24 @@ pub struct StructuralLimitExpressionProof {
 }
 
 pub enum StructuralLimitConstructorProof {
+    Elementary {
+        kind: super::pointwise_elementary::ElementaryRealFunction,
+        argument: Box<StructuralLimitExpressionProof>,
+        domain: Box<VerifyFactResult>,
+    },
+    ReciprocalAffinePower {
+        numerator: Box<StructuralLimitExpressionProof>,
+        slope: Obj,
+        offset: Obj,
+        exponent: Obj,
+        requirements: Vec<VerifyFactResult>,
+    },
+    RiemannIntegral {
+        introduced_parameter: crate::execute::IntroduceTypedParametersResult,
+        integral: Box<super::structural_riemann_integral::StructuralRiemannIntegralProof>,
+        formula_limit: Box<StructuralLimitExpressionProof>,
+        local_env: Box<ExecEnv>,
+    },
     Constant,
     FiniteIdentity,
     Candidate {
@@ -113,6 +140,110 @@ impl Runtime {
             ),
             _ => return Ok(None),
         };
+        self.prove_structural_limit(function, approach, Some(target), state)
+    }
+
+    // A structurally computed real limit witnesses convergence. The exact
+    // single-binder shape excludes extra conditions, uniqueness and negation.
+    pub(crate) fn search_structural_limit_existence_strategy(
+        &mut self,
+        goal: &ExistShapedFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<StructuralLimitProof>> {
+        let ExistShapedFact::Exist(existence) = goal else {
+            return Ok(None);
+        };
+        let [group] = existence.typed_parameters.groups.as_slice() else {
+            return Ok(None);
+        };
+        let [parameter] = group.params.as_slice() else {
+            return Ok(None);
+        };
+        if !matches!(
+            &group.param_type,
+            ParamType::Obj(Obj::StandardSet(StandardSet::R))
+        ) {
+            return Ok(None);
+        }
+        let [QuantifierFreeFact::AtomicFact(candidate)] = existence.facts.as_slice() else {
+            return Ok(None);
+        };
+        let (function, value, approach) = match candidate {
+            AtomicFact::HasSequenceLimitFact(f) => {
+                (&f.sequence, &f.value, StructuralLimitApproach::Sequence)
+            }
+            AtomicFact::HasFunctionLimitFact(f) => (
+                &f.function,
+                &f.value,
+                StructuralLimitApproach::Function(f.approach.clone()),
+            ),
+            _ => return Ok(None),
+        };
+        if !is_limit_parameter(value, parameter.id)
+            || depends_on_limit_parameter(function, parameter.id)
+        {
+            return Ok(None);
+        }
+        if let StructuralLimitApproach::Function(approach) = &approach {
+            if approach
+                .point()
+                .is_some_and(|point| depends_on_limit_parameter(point, parameter.id))
+            {
+                return Ok(None);
+            }
+        }
+        self.prove_structural_limit(function, approach, None, state)
+    }
+
+    // Like derivative/integral value strategies, only an equality endpoint
+    // selects this route. Its candidate retains the shared structural proof.
+    pub(crate) fn search_limit_value_strategy(
+        &mut self,
+        goal: &EqualFact,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<LimitValueStrategyProof>> {
+        for (selected, value) in [(&goal.left, &goal.right), (&goal.right, &goal.left)] {
+            let candidate: AtomicFact = match selected {
+                Obj::LimitOperator(LimitOperator::Function(limit)) => self
+                    .function_limit_candidate(
+                        *limit.function.clone(),
+                        limit.approach.clone(),
+                        value.clone(),
+                    )
+                    .into(),
+                Obj::LimitOperator(LimitOperator::Sequence(limit)) => self
+                    .sequence_limit_candidate(*limit.sequence.clone(), value.clone())
+                    .into(),
+                _ => continue,
+            };
+            let well_defined = match self.verify_atomic_fact_well_definedness(&candidate, state)? {
+                VerifyAtomicFactWellDefinedResult::Success(proof) => proof,
+                VerifyAtomicFactWellDefinedResult::Failed(_) => continue,
+            };
+            let Some(proof) = self.search_structural_limit_strategy(&candidate, state)? else {
+                continue;
+            };
+            let candidate = atomic_except_equality_fact_result_from_success(
+                &candidate,
+                well_defined,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(
+                    AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralLimit(proof),
+                ),
+            );
+            return Ok(Some(LimitValueStrategyProof {
+                candidate: Box::new(candidate),
+            }));
+        }
+        Ok(None)
+    }
+
+    pub(crate) fn prove_structural_limit(
+        &mut self,
+        function: &Obj,
+        approach: StructuralLimitApproach,
+        target: Option<&Obj>,
+        state: VerifyState,
+    ) -> RuntimeResult<Option<StructuralLimitProof>> {
         let Some(domain) = self.checked_real_function_limit_domain(function, state)? else {
             return Ok(None);
         };
@@ -168,7 +299,7 @@ impl Runtime {
             let equal: Fact = EqualFact {
                 fact_id: self.global_ids.allocate_fact_id(),
                 left: expression.limit.clone(),
-                right: target.clone(),
+                right: target.unwrap_or(&expression.limit).clone(),
                 line_file: None,
             }
             .into();
@@ -200,6 +331,24 @@ impl Runtime {
         let StructuralLimitApproach::Function(approach) = approach else {
             return Ok(Some(StructuralLimitGeometryProof::PositiveNaturalSequence));
         };
+        if let Some(requirements) =
+            self.interval_accumulation_requirements(&domain.domain, approach)
+        {
+            let mut proofs = Vec::new();
+            for requirement in &requirements {
+                let proof = self.verify_fact(requirement, state)?;
+                if proof.is_failed() {
+                    break;
+                }
+                proofs.push(proof);
+            }
+            if proofs.len() == requirements.len() {
+                return Ok(Some(StructuralLimitGeometryProof::RealInterval {
+                    requirement_facts: requirements,
+                    proof_of_requirement_facts: proofs,
+                }));
+            }
+        }
         // The existing real-line accumulation BT has no function-dependent
         // premise. Retain its domain equality and exact approach evidence here.
         if let Some(domain_equal) = self
@@ -290,8 +439,152 @@ impl Runtime {
                 return Ok(None);
             };
             (point.clone(), C::FiniteIdentity)
+        } else if let Some((kind, input)) =
+            super::pointwise_elementary::ElementaryRealFunction::from_expression(expression)
+        {
+            let Some(argument) = self.prove_structural_limit_expression(
+                input,
+                parameter,
+                domain,
+                approach,
+                state,
+                depth + 1,
+                remaining,
+            )?
+            else {
+                return Ok(None);
+            };
+            let requirement = self.elementary_real_condition(kind, argument.limit.clone(), false);
+            let condition = self.verify_fact(&requirement, state)?;
+            if condition.is_failed() {
+                return Ok(None);
+            }
+            (
+                kind.apply(argument.limit.clone()),
+                C::Elementary {
+                    kind,
+                    argument: Box::new(argument),
+                    domain: Box::new(condition),
+                },
+            )
         } else {
             match expression {
+                Obj::ArithmeticOperator(ArithmeticOperator::Div(quotient))
+                    if matches!(
+                        approach,
+                        StructuralLimitApproach::Function(
+                            LimitApproach::AtPositiveInfinity | LimitApproach::AtNegativeInfinity
+                        )
+                    ) && depends_on_limit_parameter(&quotient.right, parameter)
+                        && affine_power(&quotient.right, parameter).is_some() =>
+                {
+                    let (slope, offset, exponent) =
+                        affine_power(&quotient.right, parameter).expect("matched affine power");
+                    let Some(numerator) = self.prove_structural_limit_expression(
+                        &quotient.left,
+                        parameter,
+                        domain,
+                        approach,
+                        state,
+                        depth + 1,
+                        remaining,
+                    )?
+                    else {
+                        return Ok(None);
+                    };
+                    let facts = vec![
+                        limit_member(self, slope.clone(), StandardSet::R),
+                        limit_member(self, offset.clone(), StandardSet::R),
+                        limit_member(self, exponent.clone(), StandardSet::NPos),
+                        Fact::AtomicFact(
+                            NotEqualFact {
+                                fact_id: self.global_ids.allocate_fact_id(),
+                                left: slope.clone(),
+                                right: limit_number("0"),
+                                line_file: None,
+                            }
+                            .into(),
+                        ),
+                    ];
+                    let mut requirements = Vec::new();
+                    for fact in facts {
+                        let proof = self.verify_fact(&fact, state)?;
+                        if proof.is_failed() {
+                            return Ok(None);
+                        }
+                        requirements.push(proof);
+                    }
+                    (
+                        limit_number("0"),
+                        C::ReciprocalAffinePower {
+                            numerator: Box::new(numerator),
+                            slope,
+                            offset,
+                            exponent,
+                            requirements,
+                        },
+                    )
+                }
+                Obj::IntegralOperator(IntegralOperator::Riemann(integral)) => {
+                    let source_parameter = domain
+                        .source
+                        .signature
+                        .set_bound_parameters
+                        .groups
+                        .iter()
+                        .flat_map(|g| &g.params)
+                        .find(|p| p.id == parameter)
+                        .cloned();
+                    let Some(source_parameter) = source_parameter else {
+                        return Ok(None);
+                    };
+                    let (result, local_env) = self.run_in_local_env_and_take_env(|rt| {
+                        let parameters = super::function_limit::function_limit_typed(
+                            source_parameter,
+                            domain.domain.clone(),
+                        );
+                        let Ok(introduced_parameter) =
+                            rt.introduce_typed_parameters(&parameters, state)?
+                        else {
+                            return Ok(None);
+                        };
+                        let goal = rt.riemann_integrable(
+                            *integral.function.clone(),
+                            *integral.lower.clone(),
+                            *integral.upper.clone(),
+                        );
+                        let Some(integral_proof) =
+                            rt.search_structural_riemann_integral_strategy(&goal, state)?
+                        else {
+                            return Ok(None);
+                        };
+                        let Some(formula_limit) = rt.prove_structural_limit_expression(
+                            &integral_proof.expression.integral,
+                            parameter,
+                            domain,
+                            approach,
+                            state,
+                            depth + 1,
+                            remaining,
+                        )?
+                        else {
+                            return Ok(None);
+                        };
+                        Ok(Some((introduced_parameter, integral_proof, formula_limit)))
+                    })?;
+                    let Some((introduced_parameter, integral_proof, formula_limit)) = result else {
+                        return Ok(None);
+                    };
+                    (
+                        formula_limit.limit.clone(),
+                        C::RiemannIntegral {
+                            introduced_parameter,
+                            integral: Box::new(integral_proof),
+                            formula_limit: Box::new(formula_limit),
+                            local_env,
+                        },
+                    )
+                }
                 Obj::ArithmeticOperator(ArithmeticOperator::Neg(a)) => {
                     let Some(argument) = self.prove_structural_limit_expression(
                         &a.arg,
@@ -568,6 +861,67 @@ impl Runtime {
     }
 }
 
+impl Runtime {
+    fn interval_accumulation_requirements(
+        &mut self,
+        domain: &Obj,
+        approach: &LimitApproach,
+    ) -> Option<Vec<Fact>> {
+        use super::riemann_integral::helper::{le, lt, member, real};
+        let Obj::SetFormer(set) = domain else {
+            return None;
+        };
+        let (lower, upper) = match set {
+            SetFormer::IntervalObj(interval) => {
+                let bounds = match interval {
+                    IntervalObj::LeftClosedRightClosed(x)
+                    | IntervalObj::LeftClosedRightOpen(x)
+                    | IntervalObj::LeftOpenRightClosed(x)
+                    | IntervalObj::LeftOpenRightOpen(x) => x,
+                };
+                (Some(*bounds.start.clone()), Some(*bounds.end.clone()))
+            }
+            SetFormer::OneSideInfinityIntervalObj(
+                OneSideInfinityIntervalObj::LowerClosed(x)
+                | OneSideInfinityIntervalObj::LowerOpen(x),
+            ) => (Some(*x.start.clone()), None),
+            SetFormer::OneSideInfinityIntervalObj(
+                OneSideInfinityIntervalObj::UpperClosed(x)
+                | OneSideInfinityIntervalObj::UpperOpen(x),
+            ) => (None, Some(*x.start.clone())),
+            _ => return None,
+        };
+        let mut requirements = Vec::new();
+        match approach {
+            LimitApproach::AtPositiveInfinity if upper.is_none() => {}
+            LimitApproach::AtNegativeInfinity if lower.is_none() => {}
+            LimitApproach::AtPositiveInfinity | LimitApproach::AtNegativeInfinity => return None,
+            _ => {
+                let point = approach.point()?.clone();
+                requirements.push(member(self, point.clone(), real()).into());
+                if let Some(lower) = lower.clone() {
+                    requirements.push(if matches!(approach, LimitApproach::FromRight(_)) {
+                        le(self, lower, point.clone()).into()
+                    } else {
+                        lt(self, lower, point.clone()).into()
+                    });
+                }
+                if let Some(upper) = upper.clone() {
+                    requirements.push(if matches!(approach, LimitApproach::FromLeft(_)) {
+                        le(self, point, upper).into()
+                    } else {
+                        lt(self, point, upper).into()
+                    });
+                }
+            }
+        }
+        for endpoint in lower.into_iter().chain(upper) {
+            requirements.push(member(self, endpoint, real()).into());
+        }
+        Some(requirements)
+    }
+}
+
 fn same_limit_input_domain(
     left: &RealFunctionLimitDomainProof,
     right: &RealFunctionLimitDomainProof,
@@ -611,4 +965,58 @@ fn limit_member(rt: &mut Runtime, element: Obj, set: StandardSet) -> Fact {
         line_file: None,
     }
     .into()
+}
+
+fn affine_power(expression: &Obj, parameter: IdentifierId) -> Option<(Obj, Obj, Obj)> {
+    let (base, exponent) = match expression {
+        Obj::ArithmeticOperator(ArithmeticOperator::Pow(power))
+            if !depends_on_limit_parameter(&power.exponent, parameter) =>
+        {
+            (power.base.as_ref(), *power.exponent.clone())
+        }
+        value => (value, limit_number("1")),
+    };
+    let (slope, offset) = affine_coefficients(base, parameter, 0)?;
+    Some((slope, offset, exponent))
+}
+
+fn affine_coefficients(
+    expression: &Obj,
+    parameter: IdentifierId,
+    depth: usize,
+) -> Option<(Obj, Obj)> {
+    if depth > 32 {
+        return None;
+    }
+    if !depends_on_limit_parameter(expression, parameter) {
+        return Some((limit_number("0"), expression.clone()));
+    }
+    if is_limit_parameter(expression, parameter) {
+        return Some((limit_number("1"), limit_number("0")));
+    }
+    let result = match expression {
+        Obj::ArithmeticOperator(ArithmeticOperator::Add(value)) => {
+            let (a, b) = affine_coefficients(&value.left, parameter, depth + 1)?;
+            let (c, d) = affine_coefficients(&value.right, parameter, depth + 1)?;
+            (add_objs(a, c), add_objs(b, d))
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Sub(value)) => {
+            let (a, b) = affine_coefficients(&value.left, parameter, depth + 1)?;
+            let (c, d) = affine_coefficients(&value.right, parameter, depth + 1)?;
+            (sub_objs(a, c), sub_objs(b, d))
+        }
+        Obj::ArithmeticOperator(ArithmeticOperator::Mul(value)) => {
+            let (scalar, base) = if !depends_on_limit_parameter(&value.left, parameter) {
+                (&value.left, &value.right)
+            } else if !depends_on_limit_parameter(&value.right, parameter) {
+                (&value.right, &value.left)
+            } else {
+                return None;
+            };
+            let (a, b) = affine_coefficients(base, parameter, depth + 1)?;
+            (mul_objs(*scalar.clone(), a), mul_objs(*scalar.clone(), b))
+        }
+        _ => return None,
+    };
+    Some(result)
 }

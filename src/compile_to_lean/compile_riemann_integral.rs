@@ -1,11 +1,9 @@
 //! Replay the source's oriented Darboux predicate and proof-consuming integral.
 use super::compile_real_set_bounds::{contains_parameter, parameter};
 use super::helper::*;
-use super::source_position::SourcePosition;
+use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
-use crate::execute::execute_fact_stmt::riemann_integral::{
-    RiemannIntegralSelectionProof, RiemannIntegralWellDefinedProof,
-};
+use crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::{
     FunctionAnalysisPredicateDomainProof, PredicateDomainRequirementProof,
 };
@@ -182,6 +180,23 @@ impl LitexToLeanCompiler {
         position: &SourcePosition<'_>,
     ) -> Result<String, LeanCompileError> {
         let args = [&*object.function, &*object.lower, &*object.upper];
+        let function_scope = SourcePosition::new(
+            Some(position),
+            SourceOwner::ObjectLocal(&proof.function_wd),
+            0,
+        );
+        let lower_scope = SourcePosition::new(
+            Some(&function_scope),
+            SourceOwner::ObjectLocal(&proof.lower_wd),
+            0,
+        );
+        let upper_scope = SourcePosition::new(
+            Some(&lower_scope),
+            SourceOwner::ObjectLocal(&proof.upper_wd),
+            0,
+        );
+        let prior = [position, &function_scope, &lower_scope];
+        let formed = [&function_scope, &lower_scope, &upper_scope];
         let mut bindings = Vec::new();
         for (i, (obj, child)) in args
             .iter()
@@ -191,15 +206,19 @@ impl LitexToLeanCompiler {
             ensure_object(obj, child)?;
             bindings.push(format!(
                 "let _integral_arg_{i} := {}",
-                self.compile_wd(
-                    child,
-                    &SourcePosition {
-                        before: i,
-                        ..*position
-                    }
-                )?
+                self.compile_wd(child, prior[i])?
+            ));
+            bindings.push(format!(
+                "let {} := _integral_arg_{i}",
+                formed[i].object_local_name()
             ));
         }
+        let formed_position = SourcePosition {
+            parent: Some(&upper_scope),
+            before: 3,
+            ..*position
+        };
+        let position = &formed_position;
         if proof.requirements.len() != 3 {
             return Err(invalid("WDRequirements"));
         }
@@ -229,38 +248,24 @@ impl LitexToLeanCompiler {
                 r.requirement.fact_id().value()
             ));
         }
-        let selection = match &proof.selection {
-            RiemannIntegralSelectionProof::Candidate(p) => {
-                let AtomicFact::HasRiemannIntegralFact(c) = &p.fact else {
-                    return Err(invalid("WDCandidate"));
-                };
-                if c.function.ir() != args[0].ir()
-                    || c.lower.ir() != args[1].ir()
-                    || c.upper.ir() != args[2].ir()
-                {
-                    return Err(invalid("WDCandidateSubject"));
-                }
-                let AtomicExceptEqualityFactSearchedProof::ByKnownAtomicFact(k) =
-                    p.searched_proof.as_ref()
-                else {
-                    return Err(invalid("WDCandidateCitation"));
-                };
-                let h = self.compile_known_atomic(k, &p.fact, position)?;
-                let value = self.compile_function_raw_expression_bound(
-                    &c.value,
-                    position,
-                    &HashMap::new(),
-                )?;
-                format!("(Litex.riemannIntegralExistsOfCandidate (Litex.denote _integral_arg_0) (Litex.denote _integral_arg_1) (Litex.denote _integral_arg_2) {value} {h})")
-            }
-            RiemannIntegralSelectionProof::Existence { fact, proof } => {
-                validate_existence(args[0], args[1], args[2], fact)?;
-                if source_subject(proof)? != *fact {
-                    return Err(invalid("WDExistenceProof"));
-                }
-                self.compile_verify(proof, position)?.1
-            }
+        let Fact::AtomicFact(AtomicFact::FunctionRiemannIntegrableFact(integrability)) =
+            source_subject(&proof.integrability)?
+        else {
+            return Err(invalid("WDIntegrability"));
         };
+        if integrability.function.ir() != args[0].ir()
+            || integrability.lower.ir() != args[1].ir()
+            || integrability.upper.ir() != args[2].ir()
+        {
+            return Err(invalid("WDIntegrabilitySubject"));
+        }
+        let integrability_position = SourcePosition {
+            before: 6,
+            ..*position
+        };
+        let integrability_proof = self
+            .compile_verify(&proof.integrability, &integrability_position)?
+            .1;
         let ids = proof
             .requirements
             .iter()
@@ -279,7 +284,7 @@ impl LitexToLeanCompiler {
         };
         lines.push(format!("have _integral_interval : ∀ x, M.mem x (Litex.riemannIntervalValue (Litex.denote _integral_arg_1) (Litex.denote _integral_arg_2)) → M.mem x (Litex.FunctionSemantics.domainValue (Litex.denote _integral_arg_0)) := by\n  rw [← _integral_domain_eq]{interval_fold}\n  exact h_{}",ids[2]));
         lines.push(format!(
-            "exact ⟨_integral_real,h_{},h_{},_integral_interval,{selection}⟩",
+            "exact ⟨_integral_real,h_{},h_{},_integral_interval,{integrability_proof}⟩",
             ids[0], ids[1]
         ));
         // Expose the fixed payload to congruence and tuple projections; only

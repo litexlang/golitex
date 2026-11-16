@@ -1,9 +1,16 @@
 use std::fmt;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct ImproperIntegralTheorem {
+    pub(crate) kind: usize,
+    pub(crate) rule: usize,
+}
+
 /// Stable semantic identity of a reserved theorem implemented by the Litex
 /// runtime rather than by a source `thm`/`axiom` declaration.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum BuiltinTheoremId {
+    ImproperIntegral(ImproperIntegralTheorem),
     ScalarDifferentialAlongLine,
     DifferentiableGradientAlongLine,
     MultiContinuousAtCompose,
@@ -544,6 +551,13 @@ pub enum BuiltinTheoremId {
 
 impl BuiltinTheoremId {
     pub fn from_name(name: &str) -> Option<Self> {
+        if let Some(theorem) = ImproperIntegralTheorem::from_name(name) {
+            return Some(Self::ImproperIntegral(theorem));
+        }
+        let name = crate::parse::builtin_aliases::canonical_builtin_name(
+            name,
+            crate::parse::builtin_aliases::BuiltinAliasKind::Theorem,
+        );
         Some(match name {
             "scalar_differential_along_line" => Self::ScalarDifferentialAlongLine,
             "differentiable_gradient_along_line" => Self::DifferentiableGradientAlongLine,
@@ -1099,6 +1113,7 @@ impl BuiltinTheoremId {
 
     pub const fn as_str(self) -> &'static str {
         match self {
+            Self::ImproperIntegral(theorem) => theorem.name(),
             Self::ScalarDifferentialAlongLine => "scalar_differential_along_line",
             Self::DifferentiableGradientAlongLine => "differentiable_gradient_along_line",
             Self::MultiContinuousAtCompose => "multi_continuous_at_compose",
@@ -1659,6 +1674,7 @@ impl fmt::Display for BuiltinTheoremId {
 impl BuiltinTheoremId {
     pub fn arity(self) -> usize {
         match self {
+            Self::ImproperIntegral(theorem) => theorem.arity(),
             Self::ScalarDifferentialAlongLine | Self::DifferentiableGradientAlongLine => 5,
             Self::MultiContinuousAtCompose => 5,
             Self::VectorContinuousAtCompose => 7,
@@ -2171,6 +2187,12 @@ impl BuiltinTheoremId {
 }
 
 pub fn is_reserved_builtin_name(name: &str) -> bool {
+    if crate::parse::builtin_aliases::BUILTIN_ALIASES
+        .iter()
+        .any(|(short, _, _)| *short == name)
+    {
+        return true;
+    }
     if matches!(
         name,
         crate::parse::keywords::IS_MATRIX_INV | crate::parse::keywords::MATRIX_INVERSIBLE
@@ -2193,6 +2215,10 @@ pub fn is_reserved_builtin_name(name: &str) -> bool {
 // Certificates owned by explicit introduction/projection theorem contracts.
 // Recognizing their signature never proves their truth.
 pub fn builtin_certificate_arity(name: &str) -> Option<usize> {
+    if let Some(arity) = crate::execute::execute_fact_stmt::improper_integral::predicate_arity(name)
+    {
+        return Some(arity);
+    }
     match name {
         "is_antiderivative_on" => Some(3),
         "is_darboux_enclosure" => Some(7),

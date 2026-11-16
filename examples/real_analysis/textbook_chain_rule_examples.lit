@@ -1,0 +1,79 @@
+# Ten original textbook-style examples of first derivatives.
+# Domains, differentiability, derivative values and a stationary-point proposition.
+# Check: target/release/litex -strict -lang en -f examples/real_analysis/textbook_chain_rule_examples.lit
+
+# 1. Power of an affine function
+have fn chain_polynomial(x R) R=(3*x+1)^5
+forall a R:
+    $diff_at(chain_polynomial,a)
+    deriv(chain_polynomial,a)=15*(3*a+1)^4
+
+
+# 2. Sine of a square
+have fn chain_sine(x R) R=sin(x^2)
+forall a R:
+    $diff_at(chain_sine,a)
+    deriv(chain_sine,a)=2*a*cos(a^2)
+
+
+# 3. Exponential of a sine
+have fn chain_exponential(x R) R=exp(sin(x))
+forall a R:
+    $diff_at(chain_exponential,a)
+    deriv(chain_exponential,a)=exp(sin(a))*cos(a)
+
+
+# 4. Three-layer composition
+have fn chain_three_layers(x R) R=sin(exp(x^2))
+forall a R:
+    $diff_at(chain_three_layers,a)
+    deriv(chain_three_layers,a)=2*a*exp(a^2)*cos(exp(a^2))
+
+
+# 5. Logarithm of a positive polynomial
+have fn chain_logarithm(x R) R=ln(1+x^2)
+forall a R:
+    $diff_at(chain_logarithm,a)
+    deriv(chain_logarithm,a)=2*a/(1+a^2)
+
+
+# 6. Square root of a positive polynomial
+have fn chain_square_root(x R) R=sqrt(1+x^2)
+forall a R:
+    $diff_at(chain_square_root,a)
+    deriv(chain_square_root,a)=a/sqrt(1+a^2)
+
+
+# 7. Product and chain rules
+have fn chain_product(x R) R=x^2*exp(3*x)
+forall a R:
+    $diff_at(chain_product,a)
+    deriv(chain_product,a)=exp(3*a)*(2*a+3*a^2)
+
+
+# 8. Quotient and chain rules
+have fn chain_quotient(x R) R=sin(x)/(1+x^2)
+forall a R:
+    $diff_at(chain_quotient,a)
+    deriv(chain_quotient,a)=((1+a^2)*cos(a)-2*a*sin(a))/(1+a^2)^2
+
+
+# 9. Stationary points as a proposition
+prop stationary_at(f fn(x R) R,a R):
+    $has_deriv_at(f,a,0)
+have fn chain_stationary(x R) R=(x^2-1)^2
+forall a R:
+    $diff_at(chain_stationary,a)
+    deriv(chain_stationary,a)=4*a*(a^2-1)
+by def $stationary_at(chain_stationary,1)
+by def $stationary_at(chain_stationary,-1)
+
+
+# 10. Abstract three-function chain rule
+forall f,g,h fn(x R) R,a R:
+    $diff_at(h,a)
+    $diff_at(g,h(a))
+    $diff_at(f,g(h(a)))
+    =>:
+        $diff_at(fn(x R) R {f(g(h(x)))},a)
+        deriv(fn(x R) R {f(g(h(x)))},a)=deriv(f,g(h(a)))*deriv(g,h(a))*deriv(h,a)

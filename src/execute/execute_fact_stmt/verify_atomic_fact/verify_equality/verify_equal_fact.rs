@@ -1,3 +1,6 @@
+//! Tier 1 frozen backbone: equality WD-before-truth pipeline and symmetric known-forall reuse.
+//! Builtin strategy dispatch lives in Tier 2 `search_equal_fact_by_builtin_strategy.rs`.
+
 use crate::ast::fact::EqualFact;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::result::{
     equal_fact_result_from_search_fail, equal_fact_result_from_success,
@@ -8,8 +11,6 @@ use crate::execute::execute_fact_stmt::verify_atomic_fact::EqualFactSearchedProo
 use crate::execute::execute_fact_stmt::verify_fact_result::VerifyFactResult;
 use crate::execute::execute_fact_stmt::VerifyState;
 use crate::runtime::{Runtime, RuntimeResult};
-
-use super::EqualitySearchProofByBuiltinStrategy;
 
 impl Runtime {
     // Verify both objects first, then select one successful truth-search route.
@@ -49,69 +50,6 @@ impl Runtime {
             )),
             None => Ok(equal_fact_result_from_search_fail(fact, well_defined_proof)),
         }
-    }
-
-    pub fn search_equal_fact_proof_by_builtin_strategy(
-        &mut self,
-        fact: &EqualFact,
-        ctx: VerifyState,
-    ) -> RuntimeResult<Option<EqualitySearchProofByBuiltinStrategy>> {
-        if let Some(proof) = self.search_equal_fact_by_cos_zero_integer_offset(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::CosZeroIntegerOffset(proof),
-            ));
-        }
-        if let Some(proof) = self.search_equal_fact_by_tuple_components(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::TupleComponentEquality(proof),
-            ));
-        }
-        if let Some(proof) = self.search_equal_fact_by_arithmetic_congruence(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::ArithmeticCongruence(proof),
-            ));
-        }
-        if let Some(proof) = self.search_equal_fact_by_complex_with_nonzero_premises(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::ComplexWithNonzeroPremises(proof),
-            ));
-        }
-        if let Some(proof) = self.search_equal_fact_by_rational_with_nonzero_premises(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::RationalWithNonzeroPremises(proof),
-            ));
-        }
-        if let Some(proof) = self.search_equal_fact_by_extremum_equality(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::ExtremumEquality(proof),
-            ));
-        }
-        if let Some(proof) = self.search_equal_fact_by_finite_set_product_pointwise(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::FiniteSetProductPointwiseEquality(proof),
-            ));
-        }
-        if let Some(proof) = self.search_equal_fact_by_mod_congruence(fact, ctx)? {
-            return Ok(Some(EqualitySearchProofByBuiltinStrategy::ModCongruence(
-                proof,
-            )));
-        }
-        if let Some(proof) = self.search_cartesian_coordinate_equality(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::CartesianCoordinateEquality(proof),
-            ));
-        }
-        if let Some(proof) = self.search_abs_product_from_factors(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::AbsProductFromFactors(proof),
-            ));
-        }
-        if let Some(proof) = self.search_function_application_congruence(fact, ctx)? {
-            return Ok(Some(
-                EqualitySearchProofByBuiltinStrategy::FunctionApplicationCongruence(proof),
-            ));
-        }
-        Ok(None)
     }
 
     pub fn search_equal_fact_proof_by_known_forall_fact(

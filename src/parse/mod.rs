@@ -19,6 +19,7 @@
 //! `by induc n` may select a visible name, but isolates its quantified identity;
 //! ordinary declarations still reject shadowing.
 
+pub(crate) mod builtin_aliases;
 mod fact;
 mod fact_prop;
 mod real_analysis_fact;
@@ -61,5 +62,9 @@ mod absolute_value_bar_tests;
 #[cfg(test)]
 #[path = "../../tests/unit/parse/cart_n.rs"]
 mod cart_n_tests;
+
+#[cfg(test)]
+#[path = "../../tests/unit/parse/builtin_short_names.rs"]
+mod builtin_short_names_tests;
 
 pub use statements::prop_registration_shape;

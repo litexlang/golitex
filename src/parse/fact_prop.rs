@@ -55,11 +55,18 @@ pub fn is_infix_prop_name(name: &str) -> bool {
 impl Runtime {
     pub(crate) fn atomic_from_prop(
         &mut self,
-        prop: AtomicName,
+        mut prop: AtomicName,
         args: Vec<Obj>,
         positive: bool,
         line_file: SourceLine,
     ) -> RuntimeResult<AtomicFact> {
+        if let AtomicName::Plain { name } = &mut prop {
+            *name = crate::parse::builtin_aliases::canonical_builtin_name(
+                name,
+                crate::parse::builtin_aliases::BuiltinAliasKind::Predicate,
+            )
+            .to_string();
+        }
         let name = match &prop {
             AtomicName::Plain { name } => name.as_str(),
             AtomicName::WithExportFileId { .. } | AtomicName::WithModAndExportFileId { .. } => {

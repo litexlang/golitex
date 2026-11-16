@@ -1,0 +1,36 @@
+# Before, the integral interfaces required these canonical spellings:
+# release thm riemann_integral_power(square,0,1,2)
+# $has_riemann_integral(square,0,1,1/3)
+# $is_riemann_integrable(square,0,1)
+# Short theorem and predicate names were unresolved.
+# Now, each spelling uses the existing theorem ID or canonical predicate.
+# Boundary: wrong values, argument counts and missing domains still reject.
+# Check: target/release/litex -strict -lang en -f examples/wd/riemann_short_names.lit
+
+have fn square(x R) R=x^2
+release thm integ_pow(square,0,1,2)
+$has_integ(square,0,1,1/3)
+$is_riemann_integrable(square,0,1)
+$integrable(square,0,1)
+integral(square,0,1)=1/3
+release thm integ_exists(square,0,1,1/3)
+release thm integ_integrable(square,0,1,1/3)
+release thm integ_select(square,0,1)
+release thm integ_unique(square,0,1,1/3,integral(square,0,1))
+
+have fn two(x R) R=2
+have fn partition(k Z:0<=k,k<=1) R=k
+have fn lower(k Z:1<=k,k<=1) R=2
+have fn upper(k Z:1<=k,k<=1) R=2
+release thm darboux_fold(two,0,1,1,partition,lower,upper)
+$darboux_bounds(two,0,1,1,partition,lower,upper)
+$is_darboux_enclosure(two,0,1,1,partition,lower,upper)
+release thm darboux_unfold(two,0,1,1,partition,lower,upper)
+
+have fn identity(x R) R=x
+have fn one(x R) R=1
+forall x R:
+    $has_deriv_at(identity,x,one(x))
+release thm antiderivative_from_definition(identity,one,R)
+$antideriv_on(identity,one,R)
+$is_antiderivative_on(identity,one,R)

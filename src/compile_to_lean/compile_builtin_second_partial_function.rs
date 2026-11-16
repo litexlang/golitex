@@ -1,7 +1,6 @@
 //! Replay the supplied first-partial function and both complete domain captures.
 use super::compile_real_set_bounds::{contains_parameter, parameter};
 use super::compile_sequence_analysis::call_matches;
-use super::helper::*;
 use super::source_position::{SourceOwner, SourcePosition};
 use super::{LeanCompileError, LitexToLeanCompiler};
 use crate::ast::stmt::TheoremCall;

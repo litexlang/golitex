@@ -1,5 +1,5 @@
 use crate::prelude::*;
-use crate::run_module::{load_file_for_lean, LoadLeanSourceResult, LoadedLeanSource};
+use crate::run_module::LoadedLeanSource;
 use crate::compile_to_lean::source_position::SourcePosition;
 use crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::by_object_definition::{EqualitySearchProofByObjectDefinition, by_identifier::EqualitySearchProofByIdentifierObjectDefinition};
 

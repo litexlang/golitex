@@ -1,0 +1,4 @@
+# Expected: exit 1, run_result=failure, category=exact_decimal_budget.
+# The exact result has 101 digits, above the 100-digit evaluation budget.
+# Run: target/release/litex -lang en -strict -f examples/negative/closed_exact_elementary_calculation/exact_decimal_digit_budget.lit
+eval 10^100

@@ -55,6 +55,8 @@ pub enum ExecEvalStmtFailed {
     CyclicAlgoCall,
     AggregateBudgetExceeded,
     AggregateRangeOverflow,
+    // The shared exact-decimal evaluator reached its digit ceiling.
+    ExactDecimalBudgetExceeded,
 }
 
 impl ExecCommandStmtResult {

@@ -307,7 +307,8 @@ fn intrinsic_codomain(element: &Obj) -> Option<(StandardSet, IntrinsicCodomain)>
     }
     use StandardSet::*;
     Some(match element {
-        Obj::IntegralOperator(_) => (R, K::RiemannIntegral),
+        Obj::IntegralOperator(IntegralOperator::Riemann(_)) => (R, K::RiemannIntegral),
+        Obj::IntegralOperator(IntegralOperator::Improper(_)) => (R, K::ImproperIntegral),
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(_)) => (R, K::DerivativeAt),
         Obj::DerivativeOperator(DerivativeOperator::Partial(_)) => (R, K::PartialDerivative),
         Obj::DerivativeOperator(DerivativeOperator::Divergence(_)) => {

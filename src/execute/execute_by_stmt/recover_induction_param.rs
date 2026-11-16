@@ -75,6 +75,7 @@ fn induction_bound_from_obj(
         Obj::IntegralOperator(IntegralOperator::Riemann(a)) => {
             vec![&a.function, &a.lower, &a.upper]
         }
+        Obj::IntegralOperator(IntegralOperator::Improper(value)) => value.operand_refs(),
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(a)) => vec![&a.function, &a.point],
         Obj::BoundOperator(BoundOperator::Supremum(a)) => vec![&a.set],
         Obj::BoundOperator(BoundOperator::Infimum(a)) => vec![&a.set],

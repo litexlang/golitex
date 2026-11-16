@@ -6,6 +6,14 @@ use std::collections::HashSet;
 
 pub const MAX_EVAL_DEPTH: usize = 64;
 
+pub(super) fn numeric_evaluation_failure(obj: &Obj) -> super::result::ExecEvalStmtFailed {
+    if crate::rational_expression::closed_decimal_budget_exceeded(obj) {
+        super::result::ExecEvalStmtFailed::ExactDecimalBudgetExceeded
+    } else {
+        super::result::ExecEvalStmtFailed::EvaluationFailed
+    }
+}
+
 pub fn is_number_literal(obj: &Obj) -> bool {
     matches!(obj, Obj::Literal(Literal::Number(_)))
 }

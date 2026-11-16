@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "description": "Litex kernel architectural lock. Tier 1 files are frozen framework backbone files locked by SHA-256. Tier 2 files are enum and append-only dispatch registries.",
+  "tier1_frozen_backbone": {
+    "src/parse/parse.rs": "a68e75c7a874d6d5f7005aaa0e2ca236c2d5bc8fadcacbd79156f1ec5ede5854",
+    "src/runtime/runtime.rs": "7b25987467d93c21a326ed8b3ee136e51ba244408da8b9d14e8fafeb33c2ed68",
+    "src/exec_env/exec_env.rs": "4e5746f6badd015cbe19ed11fe99b8810c4494ff96e19f7f613a0dbcc9d1aa85",
+    "src/exec_env/merge_exec_env.rs": "301a992a4638d255ebc23e7044fbe586860227cad4f18e028bccde2d90a2370f",
+    "src/run/run_litex_code.rs": "f5365eb6a6ce6d1e84fd0c5f615d3eda99639f333f83012f93523f7071a49713",
+    "src/run_module/import_kb.rs": "97f22d3e8a066c5d91460e388b1dd1c2ba43b2a7259050f2d3ddcacb6b894466",
+    "src/knowledge_base/mod.rs": "e569eea777f697107235314e2f3020e0928880058c3b12a0230796ed7e8c6d18",
+    "src/knowledge_base/paths.rs": "eba2886f627a8a101d66155315872a2f584ab9a68e57542bf8648bf26b68127d",
+    "src/knowledge_base/fingerprint.rs": "51cdd1cac7b56eb4f9bd159c9ee360dbd8e0b3ac7830bd2945ee8a956460f6df",
+    "src/knowledge_base/manifest.rs": "9c35bc4f8e32760b2cc645f49590fa0e47a73f710b1d3dcef50095419801ae4d",
+    "src/knowledge_base/mount.rs": "6b2f9f2c405cac98d0f68a5a121cbb2b983cd2443d96760ba9253b8e7d84bab2",
+    "src/knowledge_base/import_cache.rs": "a7c81484d9c0c13e5b19e7edd5f9df82818d11599ccf128e532633c41ffbde7b",
+    "src/knowledge_base/definitions_memory_codec.rs": "a4a21b15984f867d3ac480de6780abe5121d97e251d1751beb432404d7228b80",
+    "src/execute/exec_stmt.rs": "ef2cbbe7a311ef1c5df3cd8a6c80346cc2f413d54bc482add92958e772e501fa",
+    "src/execute/execute_fact_stmt/exec_fact_stmt.rs": "a2abf83d186595edee82b3a94e4db4da8bca98006a101e6f91f9b0f7789cdf8b",
+    "src/execute/execute_fact_stmt/verify.rs": "3f745e2e548460f7229d2d9bd3160bbb7f671cba564272e76c63c7897192acae",
+    "src/execute/execute_fact_stmt/verify_state.rs": "876b5559a482bac87e4d872a08700b2b60250af4ad94496a3709111160a9f301",
+    "src/execute/execute_fact_stmt/well_defined_results/verify_obj/entry.rs": "216740d128c935736f4ba5e73682e237ade4e706f13d57a983d9a6ad904beb48",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_fact.rs": "c17fb9f55165e5a5bab67a019639735b74ab886e6b30ff214c16a45f439429ef",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_well_defined.rs": "f9de0f6e024602665b647f6910eb8439cc5f207ae8184514cbd1eda44cdfa37a",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equal_fact.rs": "92ede540a9fbcf49ff60378f3f3a45f9b2d9ca9dcf078ebf11e0765a33b37345",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_proof.rs": "ba5a0c4431af7fdc7d2796267bbaba4821dfa495e2e512ad92c68c704b23fe80",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/verify_atomic_except_equality.rs": "d2d6f3fd1b9dd073e49fbf10a0249425d3bdfd940f656c7a3c3b94f9517879ab",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof.rs": "b5174dc607072a51bbbd677017512b14ffc3f84c9f3407f35935548a7879920b",
+    "src/store_fact_and_infer/store_fact_and_infer.rs": "e1b4e9df44cdb857369d6309d279563be2a165652d5adf5376c014e2add9b10f",
+    "src/store_fact_and_infer/store_fact.rs": "402a7932e2ddbf8c0c50d4333bfdfead9bc8c8a2f48e7565fb6c50882b1a2e5d",
+    "src/store_fact_and_infer/infer_fact/infer_fact.rs": "71221b3f4ff80a82821782ccecf663a5eaa0ceaa76b5370465af9e17deba97e8"
+  },
+  "tier2_enum_registries": [
+    "src/ast/obj.rs",
+    "src/ast/fact/fact.rs",
+    "src/ast/fact/atomic.rs",
+    "src/ast/stmt.rs",
+    "src/execute/exec_stmt_result.rs",
+    "src/execute/execute_fact_stmt/verify_fact_result.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/result.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/by_builtin_strategy_result.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/result.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_strategy/result.rs"
+  ],
+  "tier2_dispatch_registries": [
+    "src/parse/builtin_aliases.rs",
+    "src/execute/dispatch_stmt.rs",
+    "src/execute/execute_fact_stmt/well_defined_results/verify_obj/dispatch_obj_well_definedness.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/dispatch_predicate_domain_wd.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/search_equal_fact_by_builtin_strategy.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_equality/verify_equality_by_builtin_rules/search_equal_fact_builtin_rule.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_strategy/search_atomic_except_equality_fact_proof_by_builtin_strategy.rs",
+    "src/execute/execute_fact_stmt/verify_atomic_fact/verify_atomic_except_equality/search_atomic_except_equality_fact_proof_by_builtin_rules/search_atomic_except_equality_fact_proof_by_builtin_rule.rs",
+    "src/execute/execute_by_stmt/builtin_thm/builtin_thm.rs",
+    "src/knowledge_base/def_prop_codec.rs",
+    "src/knowledge_base/remap.rs"
+  ],
+  "forbidden_tier2_tokens": [
+    "merge_from(",
+    "execution_environments_stack",
+    "run_in_local_env_and_take_env"
+  ]
+}

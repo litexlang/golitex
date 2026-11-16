@@ -9522,6 +9522,57 @@ fn visit_owner<T>(
                 return Ok(Some(value));
             }
             if let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::IntegralOperator(
+                    crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(p),
+                ), ..
+            } = proof.detailed_ref() {
+                let mut stages = vec![
+                    AtomicSearchStage::WD(&p.function_wd),
+                    AtomicSearchStage::WD(&p.lower_wd),
+                    AtomicSearchStage::WD(&p.upper_wd),
+                ];
+                for requirement in &p.requirements {
+                    if let crate::execute::execute_fact_stmt::verify_atomic_fact::well_defined_result::PredicateDomainRequirementProof::Verified(checked) = &requirement.result {
+                        stages.push(AtomicSearchStage::Verify(checked));
+                    }
+                }
+                stages.push(AtomicSearchStage::Verify(&p.integrability));
+                for (index, stage) in stages.iter().take(position.before).enumerate().rev() {
+                    let prior = SourcePosition { before: index, ..*position };
+                    let found = match stage {
+                        AtomicSearchStage::WD(child) => visit_complete_wd(child, &prior, wd, verify)?,
+                        AtomicSearchStage::Verify(child) => visit_complete_verify(child, &prior, wd, verify)?,
+                        _ => unreachable!("integral formation stages"),
+                    };
+                    if found.is_some() {
+                        return Ok(found);
+                    }
+                }
+            }
+            if let DetailedObjWellDefinedProof::ByDef {
+                proof: ObjWellDefinedProofByDef::DerivativeOperator(
+                    crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p),
+                ), ..
+            } = proof.detailed_ref() {
+                let stages = [
+                    AtomicSearchStage::WD(&p.function_wd),
+                    AtomicSearchStage::WD(&p.point_wd),
+                    AtomicSearchStage::Verify(&p.point_in_domain),
+                    AtomicSearchStage::Verify(&p.differentiability),
+                ];
+                for (index, stage) in stages.iter().take(position.before).enumerate().rev() {
+                    let prior = SourcePosition { before: index, ..*position };
+                    let found = match stage {
+                        AtomicSearchStage::WD(child) => visit_complete_wd(child, &prior, wd, verify)?,
+                        AtomicSearchStage::Verify(child) => visit_complete_verify(child, &prior, wd, verify)?,
+                        _ => unreachable!("derivative formation stages"),
+                    };
+                    if found.is_some() {
+                        return Ok(found);
+                    }
+                }
+            }
+            if let DetailedObjWellDefinedProof::ByDef {
                 obj: Obj::SetFormer(SetFormer::SetBuilder(set)),
                 proof:
                     ObjWellDefinedProofByDef::SetFormer(SetFormerObjWellDefinedProofByDef::SetBuilder(
@@ -12834,6 +12885,83 @@ fn multivariable_interior_search_stages<'a>(
     }
 }
 
+fn riemann_expression_search_stages<'a>(
+    proof: &'a crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannExpressionProof,
+    stages: &mut Vec<AtomicSearchStage<'a>>,
+) {
+    use crate::execute::execute_fact_stmt::structural_riemann_integral::{
+        RiemannConstructorProof as C, RiemannLeafProof,
+    };
+    match &proof.constructor {
+        C::ZeroWidth { endpoints_equal } => stages.push(AtomicSearchStage::Verify(endpoints_equal)),
+        C::ReciprocalSqrt {
+            lower_positive,
+            upper_positive,
+        } => {
+            stages.push(AtomicSearchStage::Verify(lower_positive));
+            stages.push(AtomicSearchStage::Verify(upper_positive));
+        }
+        C::ReciprocalNaturalPower {
+            exponent_natural,
+            exponent_nonzero,
+            endpoint_signs,
+            ..
+        } => {
+            for proof in [exponent_natural.as_ref(), exponent_nonzero.as_ref()]
+                .into_iter()
+                .chain(endpoint_signs)
+            {
+                stages.push(AtomicSearchStage::Verify(proof));
+            }
+        }
+        C::Polynomial {
+            equality,
+            normalized,
+        } => {
+            stages.push(AtomicSearchStage::Verify(equality));
+            riemann_expression_search_stages(normalized, stages);
+        }
+        C::Constant { value_real } => stages.push(AtomicSearchStage::Verify(value_real)),
+        C::Variable => {}
+        C::NaturalPower { exponent_natural } => {
+            stages.push(AtomicSearchStage::Verify(exponent_natural))
+        }
+        C::Neg { argument } => riemann_expression_search_stages(argument, stages),
+        C::Add { left, right } | C::Sub { left, right } => {
+            riemann_expression_search_stages(left, stages);
+            riemann_expression_search_stages(right, stages);
+        }
+        C::Scale {
+            scalar_real,
+            argument,
+            ..
+        } => {
+            stages.push(AtomicSearchStage::Verify(scalar_real));
+            riemann_expression_search_stages(argument, stages);
+        }
+        C::Divide {
+            argument,
+            denominator_real,
+            denominator_nonzero,
+        } => {
+            stages.push(AtomicSearchStage::Verify(denominator_real));
+            stages.push(AtomicSearchStage::Verify(denominator_nonzero));
+            riemann_expression_search_stages(argument, stages);
+        }
+        C::Application { leaf, .. } => match leaf {
+            RiemannLeafProof::Candidate(_) => {}
+            RiemannLeafProof::Selected {
+                integrability,
+                value_well_defined,
+            } => {
+                stages.push(AtomicSearchStage::Verify(integrability));
+                stages.push(AtomicSearchStage::WD(value_well_defined));
+            }
+        },
+    }
+    stages.push(AtomicSearchStage::Verify(&proof.integral_real));
+}
+
 fn derivative_expression_search_stages<'a>(
     proof: &'a crate::execute::execute_fact_stmt::pointwise_derivative::DerivativeExpressionProof,
     stages: &mut Vec<AtomicSearchStage<'a>>,
@@ -13001,6 +13129,12 @@ fn equality_searched_stages(proof: &EqualFactSearchedProof) -> Vec<AtomicSearchS
         EqualitySearchProofByObjectDefinition, by_template::result::EqualitySearchProofByTemplateObjectDefinition,
     };
     match proof {
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::DerivativeValue(p),
+        ) => stages.push(AtomicSearchStage::Verify(&p.candidate)),
+        EqualFactSearchedProof::ByBuiltinStrategy(
+            EqualitySearchProofByBuiltinStrategy::RiemannIntegralValue(p),
+        ) => stages.push(AtomicSearchStage::Verify(&p.candidate)),
         EqualFactSearchedProof::ByObjectDefinition(
             EqualitySearchProofByObjectDefinition::ByTemplate(
                 EqualitySearchProofByTemplateObjectDefinition::HaveFnEqualCaseByCaseApplication(p),
@@ -13267,6 +13401,19 @@ fn atomic_searched_stages(
                 if let Some(second) = &coordinate.second { smooth_coordinate_search_stages(second, &mut stages); }
             }
             stages.extend(p.conclusion_equalities.iter().map(|p| AtomicSearchStage::Verify(&p.equality)));
+        },
+        AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::StructuralRiemannIntegral(p)) => {
+            complete_domain_source_stages(&p.domain.source, &mut stages);
+            stages.push(AtomicSearchStage::Verify(&p.domain.input_real));
+            stages.push(AtomicSearchStage::Verify(&p.domain.output_real));
+            stages.extend(p.interval_requirements.iter().map(AtomicSearchStage::Verify));
+            if let crate::execute::execute_fact_stmt::function_domain::CheckedFunctionBodyProof::IndependentlyChecked(wd) = &p.body_well_defined {
+                stages.push(AtomicSearchStage::WD(wd));
+            }
+            riemann_expression_search_stages(&p.expression, &mut stages);
+            if let crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConclusionProof::Candidate(proof) = &p.conclusion {
+                stages.push(AtomicSearchStage::Verify(proof));
+            }
         },
         AtomicExceptEqualityFactSearchedProof::ByBuiltinStrategy(AtomicExceptEqualityFactSearchProofByBuiltinStrategy::PointwiseDerivative(p))=>{
             complete_domain_source_stages(&p.domain.source,&mut stages);
@@ -13919,6 +14066,30 @@ fn projected_wd_child<'a>(
 ) -> Option<(&'a ObjWellDefinedProof, String)> {
     if matches(proof) {
         return Some((proof, term));
+    }
+    if let DetailedObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::IntegralOperator(
+            crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(p),
+        ), ..
+    } = proof.detailed_ref() {
+        for (child, field) in [(&p.function_wd, "function"), (&p.lower_wd, "lower"), (&p.upper_wd, "upper")] {
+            if let Some(found) = projected_wd_child(child, format!("({term}).val.{field}"), matches) {
+                return Some(found);
+            }
+        }
+        return None;
+    }
+    if let DetailedObjWellDefinedProof::ByDef {
+        proof: ObjWellDefinedProofByDef::DerivativeOperator(
+            crate::execute::execute_fact_stmt::function_derivative::DerivativeOperatorWellDefinedProof::AtPoint(p),
+        ), ..
+    } = proof.detailed_ref() {
+        for (child, field) in [(&p.function_wd, "function"), (&p.point_wd, "point")] {
+            if let Some(found) = projected_wd_child(child, format!("({term}).val.{field}"), matches) {
+                return Some(found);
+            }
+        }
+        return None;
     }
     if let Some(stages) = multivariable_limit_wd_stages(proof) {
         let fields: &[&str] = match proof.obj() {
