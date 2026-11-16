@@ -62,6 +62,14 @@ fn elementary_pointwise_tests_selection_false_neighbors_and_rollback() {
     for source in [
         "have fn wave(x R) R=sin(x*x)+exp(x)\nderivative(wave,0)=1",
         "have fn wave(x R) R=sin(x*x)+exp(x)\n0*derivative(wave,0)=0",
+    ] {
+        let mut rt = runtime();
+        check(&mut rt, source, true);
+    }
+    for source in [
+        "have unknown fn(x R) R\nderivative(unknown,0)=1",
+        "have unknown fn(x R) R\n0*derivative(unknown,0)=0",
+        "have fn wave(x R) R=sin(x*x)+exp(x)\nderivative(wave,0)=2",
         "$has_derivative_at(fn(x R) R {sin(x)},0,0)",
         "$has_derivative_at(fn(x R) R {exp(x)},0,0)",
         "$has_derivative_at(fn(x R+) R {ln(x)},1,-1)",
@@ -77,14 +85,13 @@ fn elementary_pointwise_tests_selection_false_neighbors_and_rollback() {
         check(&mut rt, "anchor+1=8", true);
     }
     let mut rt = runtime();
-    check(&mut rt, "have fn wave(x R) R=sin(x*x)+exp(x)", true);
     check(
         &mut rt,
-        "claim:\n    ? 0=1\n    $has_derivative_at(wave,0,1)\n    0=1",
+        "claim:\n    ? 0=1\n    have fn wave(x R) R=sin(x*x)+exp(x)\n    $has_derivative_at(wave,0,1)\n    0=1",
         false,
     );
     check(&mut rt, "derivative(wave,0)=1", false);
-    check(&mut rt, "$has_derivative_at(wave,0,1)", true);
+    check(&mut rt, "have fn wave(x R) R=sin(x*x)+exp(x)", true);
     check(&mut rt, "derivative(wave,0)=1", true);
 }
 #[test]

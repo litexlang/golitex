@@ -9,7 +9,7 @@ forall n N,a,b R:
 "#;
 
 const COEFFICIENT_SOURCE: &str = r#"forall c R*:
-    integral(fn(x R) R {(x+1)/c},0,1)=3/(2*c)
+    integral(fn(x R) R {x*(x+1)/c},0,1)=5/(6*c)
     integral(fn(x R) R {x/c+1},0,1)=1/(2*c)+1
 "#;
 

@@ -415,7 +415,7 @@ fn eval_exact_decimal_budget_and_large_unit_exponents() {
         assert!(!result.success, "unexpectedly succeeded: {source}");
         let normal = emit_run_normal(&result, &rt, "eval", None);
         assert!(
-            normal.contains("100 digits"),
+            normal.contains("100-digit budget") && normal.contains("exact_decimal_budget_exceeded"),
             "{source} did not report exact decimal budget: {normal}"
         );
     }
