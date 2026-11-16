@@ -8,13 +8,13 @@
 
 have fn p(x R) R=3*x^2+2*x+1
 $is_riemann_integrable(p,0,1)
-integ(p,0,1)=3
-3=integ(p,0,1)
+integral(p,0,1)=3
+3=integral(p,0,1)
 
 $has_riemann_integral(p,1,0,-3)
-integ(p,1,0)=-3
+integral(p,1,0)=-3
 $has_riemann_integral(p,2,2,0)
-integ(p,2,2)=0
+integral(p,2,2)=0
 
 forall a,b,c R:
     $has_riemann_integral(fn(x R) R {a*x^2+b*x+c},0,1,a/3+b/2+c)
@@ -36,7 +36,7 @@ forall f,g fn(x R) R,a,b R:
     $is_riemann_integrable(g,a,b)
     =>:
         $is_riemann_integrable(fn(x R) R {3*f(x)-g(x)/2+7},a,b)
-        integ(fn(x R) R {3*f(x)-g(x)/2+7},a,b)=3*integ(f,a,b)-integ(g,a,b)/2+7*(b-a)
+        integral(fn(x R) R {3*f(x)-g(x)/2+7},a,b)=3*integral(f,a,b)-integral(g,a,b)/2+7*(b-a)
         $is_riemann_integrable(fn(x R) R {f(x)*g(x)+abs(f(x))^2},a,b)
 
 $is_riemann_integrable(fn(x R) R {sin(x^2)+exp(x)*cos(x)},0,1)
@@ -57,7 +57,7 @@ forall f fn(x R) R,g fn(x R) R*:
 
 prop has_zero_integral(f fn(x R) R,a,b R):
     $is_riemann_integrable(f,a,b)
-    integ(f,a,b)=0
+    integral(f,a,b)=0
 
 have fn odd_power(x R) R=x^3
 $is_riemann_integrable(odd_power,-1,1)

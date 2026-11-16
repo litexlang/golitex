@@ -1726,6 +1726,129 @@ impl DerivativeAt {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum IntegralOperator {
     Riemann(RiemannIntegral),
+    Improper(ImproperIntegral),
+}
+
+/// A finite real improper integral with explicit endpoint inclusion.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct ImproperIntegral {
+    pub function: Box<Obj>,
+    pub bounds: ImproperIntegralBounds,
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ImproperIntegralBounds {
+    OpenClosed { start: Box<Obj>, end: Box<Obj> },
+    ClosedOpen { start: Box<Obj>, end: Box<Obj> },
+    Open { start: Box<Obj>, end: Box<Obj> },
+    PositiveInfinity { start: Box<Obj> },
+    NegativeInfinity { end: Box<Obj> },
+}
+
+impl ImproperIntegralBounds {
+    pub fn predicate_name(&self, candidate: bool) -> &'static str {
+        match (self, candidate) {
+            (Self::OpenClosed { .. }, true) => "has_integral_open_closed",
+            (Self::ClosedOpen { .. }, true) => "has_integral_closed_open",
+            (Self::Open { .. }, true) => "has_integral_open",
+            (Self::PositiveInfinity { .. }, true) => "has_integral_pos_inf",
+            (Self::NegativeInfinity { .. }, true) => "has_integral_neg_inf",
+            (Self::OpenClosed { .. }, false) => "is_integrable_open_closed",
+            (Self::ClosedOpen { .. }, false) => "is_integrable_closed_open",
+            (Self::Open { .. }, false) => "is_integrable_open",
+            (Self::PositiveInfinity { .. }, false) => "is_integrable_pos_inf",
+            (Self::NegativeInfinity { .. }, false) => "is_integrable_neg_inf",
+        }
+    }
+
+    pub fn from_predicate(name: &str, args: &[Obj]) -> Option<(Self, bool)> {
+        let (name, candidate) = match name {
+            "has_integral_open_closed" => ("integral_open_closed", true),
+            "has_integral_closed_open" => ("integral_closed_open", true),
+            "has_integral_open" => ("integral_open", true),
+            "has_integral_pos_inf" => ("integral_pos_inf", true),
+            "has_integral_neg_inf" => ("integral_neg_inf", true),
+            "is_integrable_open_closed" => ("integral_open_closed", false),
+            "is_integrable_closed_open" => ("integral_closed_open", false),
+            "is_integrable_open" => ("integral_open", false),
+            "is_integrable_pos_inf" => ("integral_pos_inf", false),
+            "is_integrable_neg_inf" => ("integral_neg_inf", false),
+            _ => return None,
+        };
+        let count = args.len().checked_sub(usize::from(candidate))?;
+        Self::from_name(name, &args[..count]).map(|bounds| (bounds, candidate))
+    }
+
+    pub fn name(&self) -> &'static str {
+        match self {
+            Self::OpenClosed { .. } => "integral_open_closed",
+            Self::ClosedOpen { .. } => "integral_closed_open",
+            Self::Open { .. } => "integral_open",
+            Self::PositiveInfinity { .. } => "integral_pos_inf",
+            Self::NegativeInfinity { .. } => "integral_neg_inf",
+        }
+    }
+
+    pub fn endpoint_refs(&self) -> Vec<&Obj> {
+        match self {
+            Self::OpenClosed { start, end }
+            | Self::ClosedOpen { start, end }
+            | Self::Open { start, end } => vec![start, end],
+            Self::PositiveInfinity { start } => vec![start],
+            Self::NegativeInfinity { end } => vec![end],
+        }
+    }
+
+    pub fn from_name(name: &str, args: &[Obj]) -> Option<Self> {
+        match (name, args) {
+            ("integral_open_closed", [start, end]) => Some(Self::OpenClosed {
+                start: Box::new(start.clone()),
+                end: Box::new(end.clone()),
+            }),
+            ("integral_closed_open", [start, end]) => Some(Self::ClosedOpen {
+                start: Box::new(start.clone()),
+                end: Box::new(end.clone()),
+            }),
+            ("integral_open", [start, end]) => Some(Self::Open {
+                start: Box::new(start.clone()),
+                end: Box::new(end.clone()),
+            }),
+            ("integral_pos_inf", [start]) => Some(Self::PositiveInfinity {
+                start: Box::new(start.clone()),
+            }),
+            ("integral_neg_inf", [end]) => Some(Self::NegativeInfinity {
+                end: Box::new(end.clone()),
+            }),
+            _ => None,
+        }
+    }
+
+    pub fn try_map_endpoints<E>(
+        &self,
+        mut map: impl FnMut(&Obj) -> Result<Obj, E>,
+    ) -> Result<Self, E> {
+        let args = self
+            .endpoint_refs()
+            .into_iter()
+            .map(&mut map)
+            .collect::<Result<Vec<_>, _>>()?;
+        Ok(Self::from_name(self.name(), &args).expect("bounds retain their arity"))
+    }
+}
+
+impl ImproperIntegral {
+    pub fn new(function: Obj, bounds: ImproperIntegralBounds) -> Self {
+        Self {
+            function: Box::new(function),
+            bounds,
+        }
+    }
+
+    pub fn operand_refs(&self) -> Vec<&Obj> {
+        let mut args = vec![self.function.as_ref()];
+        args.extend(self.bounds.endpoint_refs());
+        args
+    }
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct RiemannIntegral {

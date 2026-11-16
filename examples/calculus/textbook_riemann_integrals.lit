@@ -11,13 +11,13 @@
 have fn cubic_poly(x R) R = 4 * x^3 - 3 * x^2 + 2 * x - 1
 
 $is_riemann_integrable(cubic_poly, 0, 2)
-integ(cubic_poly, 0, 2) = 10
+integral(cubic_poly, 0, 2) = 10
 
 $is_riemann_integrable(cubic_poly, 2, 0)
-integ(cubic_poly, 2, 0) = -10
+integral(cubic_poly, 2, 0) = -10
 
 $is_riemann_integrable(cubic_poly, 2, 2)
-integ(cubic_poly, 2, 2) = 0
+integral(cubic_poly, 2, 2) = 0
 
 
 # ==============================================================================
@@ -26,7 +26,7 @@ integ(cubic_poly, 2, 2) = 0
 # ==============================================================================
 forall a, b, c, d R:
     $is_riemann_integrable(fn(x R) R {a * x^3 + b * x^2 + c * x + d}, 0, 2)
-    integ(fn(x R) R {a * x^3 + b * x^2 + c * x + d}, 0, 2) = (1 / 3) * (d + 4 * (a + b + c + d) + (8 * a + 4 * b + 2 * c + d))
+    integral(fn(x R) R {a * x^3 + b * x^2 + c * x + d}, 0, 2) = (1 / 3) * (d + 4 * (a + b + c + d) + (8 * a + 4 * b + 2 * c + d))
 
 
 # ==============================================================================
@@ -38,7 +38,7 @@ forall f, g fn(x R) R, a, b R, c R*:
     $is_riemann_integrable(g, a, b)
     =>:
         $is_riemann_integrable(fn(x R) R {2 * f(x) - g(x) / c + 5}, a, b)
-        integ(fn(x R) R {2 * f(x) - g(x) / c + 5}, a, b) = 2 * integ(f, a, b) - integ(g, a, b) / c + 5 * (b - a)
+        integral(fn(x R) R {2 * f(x) - g(x) / c + 5}, a, b) = 2 * integral(f, a, b) - integral(g, a, b) / c + 5 * (b - a)
         $is_riemann_integrable(fn(x R) R {f(x) * g(x) + abs(f(x) - g(x))}, a, b)
 
 $is_riemann_integrable(fn(x R) R {exp(-x^2)}, 0, 1)
@@ -64,7 +64,7 @@ release thm riemann_integral_newton_leibniz(rational_slope, log_quad, 0, 1)
 
 log_quad(1) = ln(1 + 1^2) = ln(2)
 log_quad(0) = ln(1 + 0^2) = ln(1) = 0
-integ(rational_slope, 0, 1) = log_quad(1) - log_quad(0) = ln(2) - 0 = ln(2)
+integral(rational_slope, 0, 1) = log_quad(1) - log_quad(0) = ln(2) - 0 = ln(2)
 
 
 # ==============================================================================
@@ -94,7 +94,7 @@ release thm riemann_integral_extensional(neg_id, abs_fn, -1, 0, 1 / 2)
 release thm riemann_integral_extensional(pos_id, abs_fn, 0, 2, 2)
 release thm riemann_integral_split(abs_fn, -1, 0, 2, 1 / 2, 2)
 
-integ(abs_fn, -1, 2) = 5 / 2
+integral(abs_fn, -1, 2) = 5 / 2
 
 
 # ==============================================================================
@@ -134,7 +134,7 @@ sin_fn(pi / 2) = sin(pi / 2) = 1
 sin_fn(0) = sin(0) = 0
 pos_id(pi / 2) * sin_fn(pi / 2) = (pi / 2) * 1 = pi / 2
 pos_id(0) * sin_fn(0) = 0 * 0 = 0
-integ(x_cos, 0, pi / 2) = pos_id(pi / 2) * sin_fn(pi / 2) - pos_id(0) * sin_fn(0) - 1 = pi / 2 - 0 - 1 = pi / 2 - 1
+integral(x_cos, 0, pi / 2) = pos_id(pi / 2) * sin_fn(pi / 2) - pos_id(0) * sin_fn(0) - 1 = pi / 2 - 0 - 1 = pi / 2 - 1
 
 
 # ==============================================================================
@@ -165,12 +165,12 @@ sq_fn(1) = 1
 exp_fn(0) = exp(0) = 1
 exp_fn(1) = exp(1)
 release thm riemann_integral_substitution(exp_fn, sq_fn, twice_fn, gaussian_slope, R, 0, 1, exp_fn(1) - exp_fn(0))
-integ(gaussian_slope, 0, 1) = exp_fn(1) - exp_fn(0) = exp(1) - 1
+integral(gaussian_slope, 0, 1) = exp_fn(1) - exp_fn(0) = exp(1) - 1
 
 sq_fn(-1) = 1
 release thm riemann_integral_zero(exp_fn, 1)
 release thm riemann_integral_substitution(exp_fn, sq_fn, twice_fn, gaussian_slope, R, -1, 1, 0)
-integ(gaussian_slope, -1, 1) = 0
+integral(gaussian_slope, -1, 1) = 0
 
 
 # ==============================================================================
@@ -180,7 +180,7 @@ integ(gaussian_slope, -1, 1) = 0
 prop has_integral_average(f fn(x R) R, a, b, avg R):
     $is_riemann_integrable(f, a, b)
     b - a != 0
-    integ(f, a, b) / (b - a) = avg
+    integral(f, a, b) / (b - a) = avg
 
 thm parabola_average_value:
     ? forall L R+:
@@ -190,12 +190,12 @@ thm parabola_average_value:
     L - 0 = L
     L != 0
     L - 0 != 0
-    integ(sq_fn, 0, L) = L^3 / 3
-    integ(sq_fn, 0, L) / (L - 0) = (L^3 / 3) / L = L^2 / 3
+    integral(sq_fn, 0, L) = L^3 / 3
+    integral(sq_fn, 0, L) / (L - 0) = (L^3 / 3) / L = L^2 / 3
     by def $has_integral_average(sq_fn, 0, L, L^2 / 3)
 
 2 - 0 != 0
-integ(cubic_poly, 0, 2) / (2 - 0) = 10 / 2 = 5
+integral(cubic_poly, 0, 2) / (2 - 0) = 10 / 2 = 5
 by def $has_integral_average(cubic_poly, 0, 2, 5)
 
 
@@ -205,7 +205,7 @@ by def $has_integral_average(cubic_poly, 0, 2, 5)
 # ==============================================================================
 prop are_l2_orthogonal_on(f, g fn(x R) R, a, b R):
     $is_riemann_integrable(fn(x R) R {f(x) * g(x)}, a, b)
-    integ(fn(x R) R {f(x) * g(x)}, a, b) = 0
+    integral(fn(x R) R {f(x) * g(x)}, a, b) = 0
 
 have fn leg_p1(x R) R = x
 have fn leg_p2(x R) R = (3 / 2) * x^2 - 1 / 2
@@ -224,7 +224,7 @@ forall t '[-1, 1]:
     prod_p1_p2(t) = fn(x R) R {leg_p1(x) * leg_p2(x)}(t)
 
 release thm riemann_integral_extensional(prod_p1_p2, fn(x R) R {leg_p1(x) * leg_p2(x)}, -1, 1, 0)
-integ(fn(x R) R {leg_p1(x) * leg_p2(x)}, -1, 1) = 0
+integral(fn(x R) R {leg_p1(x) * leg_p2(x)}, -1, 1) = 0
 by def $are_l2_orthogonal_on(leg_p1, leg_p2, -1, 1)
 
 
@@ -255,8 +255,8 @@ forall x '[0, 1]:
     unit_const(x) = 1
     cauchy_kernel(x) <= unit_const(x)
 
-release thm riemann_integral_compare(lower_quad, cauchy_kernel, 0, 1, 2 / 3, integ(cauchy_kernel, 0, 1))
-release thm riemann_integral_compare(cauchy_kernel, unit_const, 0, 1, integ(cauchy_kernel, 0, 1), 1)
+release thm riemann_integral_compare(lower_quad, cauchy_kernel, 0, 1, 2 / 3, integral(cauchy_kernel, 0, 1))
+release thm riemann_integral_compare(cauchy_kernel, unit_const, 0, 1, integral(cauchy_kernel, 0, 1), 1)
 
-2 / 3 <= integ(cauchy_kernel, 0, 1)
-integ(cauchy_kernel, 0, 1) <= 1
+2 / 3 <= integral(cauchy_kernel, 0, 1)
+integral(cauchy_kernel, 0, 1) <= 1

@@ -3,14 +3,14 @@ use crate::execute::execute_fact_stmt::structural_riemann_integral::{
 };
 use crate::prelude::*;
 
-const BASIC_SOURCE: &str = r#"integ(fn(x R) R {(x+1)^2},0,1)=7/3
+const BASIC_SOURCE: &str = r#"integral(fn(x R) R {(x+1)^2},0,1)=7/3
 forall n N,a,b R:
     $has_riemann_integral(fn(x R) R {x^n},a,b,(b^(n+1)-a^(n+1))/(n+1))
 "#;
 
 const COEFFICIENT_SOURCE: &str = r#"forall c R*:
-    integ(fn(x R) R {(x+1)/c},0,1)=3/(2*c)
-    integ(fn(x R) R {x/c+1},0,1)=1/(2*c)+1
+    integral(fn(x R) R {(x+1)/c},0,1)=3/(2*c)
+    integral(fn(x R) R {x/c+1},0,1)=1/(2*c)+1
 "#;
 
 fn run_on_large_stack(f: impl FnOnce() + Send + 'static) {
@@ -66,7 +66,7 @@ fn polynomial_proof(run: &mut RunLitexCodeResult) -> &mut StructuralRiemannInteg
 #[test]
 fn polynomial_integral_compiler_rejects_changed_evidence() {
     run_on_large_stack(|| {
-        let single = "integ(fn(x R) R {(x+1)^2},0,1)=7/3";
+        let single = "integral(fn(x R) R {(x+1)^2},0,1)=7/3";
         for mutation in 0..4 {
             let (mut run, compiler) = super::execute(single);
             let proof = polynomial_proof(&mut run);

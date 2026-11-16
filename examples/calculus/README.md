@@ -54,6 +54,27 @@ target/release/litex -strict -lang en -f examples/calculus/textbook_riemann_inte
 
 ## Authoring Pattern and Current Boundaries
 
-- **Establish existence before selecting `deriv(f, a)` or `integ(f, a, b)`**: well-definedness of `deriv(f, a)` consumes `$diff_at(f, a)` or `$has_deriv_at(f, a, L)`, and well-definedness of `integ(f, a, b)` consumes `$is_riemann_integrable(f, a, b)` or `$has_riemann_integral(f, a, b, I)`.
+- **Establish existence before selecting `deriv(f, a)` or `integral(f, a, b)`**: well-definedness of `deriv(f, a)` consumes `$diff_at(f, a)` or `$has_deriv_at(f, a, L)`, and well-definedness of `integral(f, a, b)` consumes `$is_riemann_integrable(f, a, b)` or `$has_riemann_integral(f, a, b, I)`.
 - **Automatic integrability vs. automatic integral value**: `RiemannIntegrability` automatically discharges `$is_riemann_integrable` across arithmetic, products, `abs`, natural powers, continuous elementary compositions (`exp`, `ln`, `sin`, `cos`, `sqrt`), and nowhere-zero continuous denominators. `RiemannIntegralValue` automatically evaluates constants, natural powers $x^n$, linear combinations, scalar divisions, and known leaf integrals; nonlinear antiderivatives, piecewise corner splits, integration by parts, and change of variables invoke the explicit calculus theorems (`riemann_integral_newton_leibniz`, `riemann_integral_split`, `integ_parts`, `riemann_integral_substitution`).
-- **Scope boundaries**: direct `abs(x)` differentiation away from zero, unexpanded variable-exponent `x^x` syntax (expressed via $\exp(x\ln x)$ in Example I.14), general transcendental antiderivative search, improper/measure integrals, and independent Lean replay of the new native derivative/integral value strategies remain outside this native example gate.
+- **Scope boundaries**: direct `abs(x)` differentiation away from zero, unexpanded variable-exponent `x^x` syntax (expressed via $\exp(x\ln x)$ in Example I.14), general transcendental antiderivative search, measure integrals, and independent Lean replay of the new native derivative/integral value strategies remain outside this native example gate.
+
+## Improper integrals
+
+[improper_integrals.lit](improper_integrals.lit) checks finite open endpoints,
+endpoint reversal, independent two-sided convergence, and both infinite
+intervals. `integ(x,a,b,E)` binds the variable only in the expression.
+`integ_oc`, `integ_co` and `integ_oo` preserve which endpoint is omitted.
+Function arguments use `integral` and the canonical `integral_open_closed`,
+`integral_closed_open`, `integral_open`, `integral_pos_inf` and
+`integral_neg_inf` interfaces.
+
+The finite open-endpoint operations require distinct endpoints. All operations
+require the complete integration region to lie in the function domain.
+Improper values additionally require local Riemann integrability and finite
+convergence of each relevant truncation limit. The native examples run with
+`-strict`. Their improper certificates currently have explicit unsupported
+Lean compiler branches.
+
+```bash
+target/release/litex -strict -lang en -f examples/calculus/improper_integrals.lit
+```

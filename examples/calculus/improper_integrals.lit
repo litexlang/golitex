@@ -1,0 +1,31 @@
+# Expression binders and oriented closed integrals.
+integ(x,0,2,4*x^2)=32/3
+integ(x,2,0,4*x^2)=-32/3
+integ(x,1,1,1/x)=0
+
+# Open endpoints retain their one-sided convergence conditions.
+integ_oc(x,0,1,1/sqrt(x))=2
+integ_co(x,1,0,1/sqrt(x))=-2
+integ_oc(x,0,1,x^2)=1/3
+integ_co(x,0,1,x^2)=1/3
+integ_oo(x,0,1,x^2)=1/3
+
+# Infinite intervals include their finite endpoint.
+integ_pos_inf(x,1,1/x^2)=1
+integ_neg_inf(x,-1,1/x^2)=1
+
+# Function interfaces and explicit candidate laws.
+have fn square(x R) R=x^2
+integral_open_closed(square,0,1)=1/3
+release thm integral_open_closed_to_definition(square,0,1,1/3)
+release thm integral_open_closed_from_definition(square,0,1,1/3)
+release thm integral_open_closed_selected(square,0,1)
+release thm integral_open_closed_unique(square,0,1,1/3,1/3)
+release thm integral_open_closed_reverse(square,0,1,1/3)
+integral_closed_open(square,1,0)=-1/3
+
+have fn twice_square(x R) R=2*x^2
+forall x R:
+    twice_square(x)=square(x)+square(x)
+release thm integral_open_closed_add(square,square,twice_square,0,1,1/3,1/3)
+integral_open_closed(twice_square,0,1)=2/3

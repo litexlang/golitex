@@ -101,13 +101,13 @@ async function run() {
     diff.controller.destroy();
 
     const area = mount(integral, locale, editable);
-    const direct = await area.hover(sourceLine(integral, 'integ(p,0,1)=3'), '.lr-chain-equality');
+    const direct = await area.hover(sourceLine(integral, 'integral(p,0,1)=3'), '.lr-chain-equality');
     inspect(direct, /\\int_\{0\}\^\{1\}.*3/, 'RiemannIntegralValue', 'StructuralRiemannIntegral');
     const areaSteps = direct.querySelector('.lr-calculus-steps');
     await areaSteps.querySelector('summary').click();
     assert(areaSteps.querySelector('[data-constructor="NaturalPower"]'));
 
-    const reverse = await area.hover(sourceLine(integral, 'integ(p,1,0)=-3'), '.lr-chain-equality');
+    const reverse = await area.hover(sourceLine(integral, 'integral(p,1,0)=-3'), '.lr-chain-equality');
     inspect(reverse, /\\int_\{1\}\^\{0\}.*-3/, 'RiemannIntegralSelectedValue');
     const reference = reverse.querySelector('.lr-calculus-proof .lr-fact-link');
     const premise = integral.facts.find(fact => fact.id === reference?.dataset.fact);
@@ -131,7 +131,7 @@ async function run() {
     const second = await chains.hover(chainLine, '.lr-chain-equality', 1);
     inspect(second, /\\prime.*3.*6/, 'DerivativeSelectedValue');
     assert.equal((second.querySelector('.lr-calculus-formula').textContent.match(/\\prime/g) || []).length, 1);
-    const compared = await chains.hover(sourceLine(aliases, 'integ(total,0,1)=4/3'), '.lr-chain-equality');
+    const compared = await chains.hover(sourceLine(aliases, 'integral(total,0,1)=4/3'), '.lr-chain-equality');
     inspect(compared, /\\int_\{0\}\^\{1\}.*\\frac\{4\}\{3\}/, 'RiemannIntegralSelectedValue');
     assert(compared.querySelector('.lr-calculus-proof details'), 'retain a nontrivial candidate-value comparison');
     chains.controller.destroy();
@@ -140,13 +140,13 @@ async function run() {
   for (const [source, math, expected] of [
     ['deriv(square, 4) = 8', /\\prime.*4.*8/, ['DerivativeSelectedValue']],
     ['deriv(affine_power, a) = 15 * (3*a + 1)^4', /\\prime.*15/, ['DerivativeValue', 'PointwiseDerivative']],
-    ['integ(odd_power, -1, 1) = 0', /\\int_\{-1\}\^\{1\}.*0/, ['RiemannIntegralValue', 'StructuralRiemannIntegral']]
+    ['integral(odd_power, -1, 1) = 0', /\\int_\{-1\}\^\{1\}.*0/, ['RiemannIntegralValue', 'StructuralRiemannIntegral']]
   ]) inspect(await demoView.hover(sourceLine(demo, source), '.lr-chain-equality'), math, ...expected);
   demoView.controller.destroy();
 
   const polynomial = compile('tests/fixtures/compile_to_lean/polynomial_integrals.lit');
   const polyView = mount(polynomial, 'en', false);
-  const polyProof = await polyView.hover(sourceLine(polynomial, 'integ(fn(x R) R {(x+1)^2},0,1)=7/3'), '.lr-chain-equality');
+  const polyProof = await polyView.hover(sourceLine(polynomial, 'integral(fn(x R) R {(x+1)^2},0,1)=7/3'), '.lr-chain-equality');
   inspect(polyProof, /\\int_\{0\}\^\{1\}.*\\frac\{7\}\{3\}/, 'RiemannIntegralValue', 'StructuralRiemannIntegral');
   const polySteps = polyProof.querySelector('.lr-calculus-steps');
   assert.match(polySteps.querySelector('summary').textContent, /Polynomial expansion/);

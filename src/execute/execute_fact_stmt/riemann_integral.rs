@@ -13,6 +13,7 @@ use helper::*;
 
 pub enum IntegralOperatorWellDefinedProof {
     Riemann(RiemannIntegralWellDefinedProof),
+    Improper(super::improper_integral::ImproperIntegralWellDefinedProof),
 }
 pub struct RiemannIntegralWellDefinedProof {
     pub function_wd: Box<ObjWellDefinedProof>,
@@ -25,6 +26,7 @@ pub struct RiemannIntegralWellDefinedProof {
 }
 pub enum IntegralOperatorWellDefinedFailure {
     Riemann(RiemannIntegralWellDefinedFailure),
+    Improper(super::improper_integral::ImproperIntegralWellDefinedFailure),
 }
 pub struct RiemannIntegralWellDefinedFailure {
     pub obj: Obj,

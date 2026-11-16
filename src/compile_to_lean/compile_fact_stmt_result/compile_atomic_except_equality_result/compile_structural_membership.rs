@@ -869,6 +869,9 @@ impl LitexToLeanCompiler {
                     self.compile_object_reference(&proof.element, position)?
                 ))
             }
+            StructuralMembershipReason::Intrinsic(IntrinsicCodomain::ImproperIntegral) => {
+                Err(LeanCompileError::unsupported("ImproperIntegral/Intrinsic"))
+            }
             StructuralMembershipReason::Intrinsic(IntrinsicCodomain::RiemannIntegral) => {
                 if proof.set != StandardSet::R
                     || !matches!(

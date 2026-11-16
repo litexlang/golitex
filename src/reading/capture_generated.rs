@@ -8938,6 +8938,13 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_builtin_theorem__BuiltinTheoremId(value: &crate::builtin_theorem::BuiltinTheoremId, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::builtin_theorem::BuiltinTheoremId::ImproperIntegral(f0) => {
+let rule_id = Some("builtin_theorem.BuiltinTheoremId::ImproperIntegral");
+let fields = vec![("0", capture_builtin_theorem__ImproperIntegralTheorem(f0, capture, runtime))];
+let mut output = node("BuiltinTheoremId", "ImproperIntegral", fields);
+if let Some(rule_id) = rule_id { capture.rule_application(&mut output, rule_id, "ImproperIntegral", ""); }
+output
+},
 crate::builtin_theorem::BuiltinTheoremId::ScalarDifferentialAlongLine => {
 let rule_id = Some("builtin_theorem.BuiltinTheoremId::ScalarDifferentialAlongLine");
 let fields = vec![];
@@ -13365,6 +13372,11 @@ let fields = vec![("0", capture_ast__obj__RiemannIntegral(f0, capture, runtime))
 let mut output = node("IntegralOperator", "Riemann", fields);
 output
 },
+crate::ast::obj::IntegralOperator::Improper(f0) => {
+let fields = vec![("0", capture_ast__obj__ImproperIntegral(f0, capture, runtime))];
+let mut output = node("IntegralOperator", "Improper", fields);
+output
+},
 };
 capture.subject_depth -= 1;
 capture.intern_evidence(output)
@@ -16203,6 +16215,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_builtin_theorem__ImproperIntegralTheorem(value: &crate::builtin_theorem::ImproperIntegralTheorem, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::builtin_theorem::ImproperIntegralTheorem { kind: f0, rule: f1 } => {
+let fields = vec![("kind", JsonValue::String((f0).to_string())), ("rule", JsonValue::String((f1).to_string()))];
+let mut output = node("ImproperIntegralTheorem", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__function_domain__FunctionDomainCandidateFailure(value: &crate::execute::execute_fact_stmt::function_domain::FunctionDomainCandidateFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::function_domain::FunctionDomainCandidateFailure { source: f0, comparison: f1 } => {
@@ -16957,6 +16980,19 @@ let output = match value {
 crate::ast::obj::RiemannIntegral { function: f0, lower: f1, upper: f2 } => {
 let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("lower", capture_ast__obj__Obj(f1, capture, runtime)), ("upper", capture_ast__obj__Obj(f2, capture, runtime))];
 let mut output = node("RiemannIntegral", "", fields);
+output
+},
+};
+capture.subject_depth -= 1;
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__ImproperIntegral(value: &crate::ast::obj::ImproperIntegral, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::ImproperIntegral { function: f0, bounds: f1 } => {
+let fields = vec![("function", capture_ast__obj__Obj(f0, capture, runtime)), ("bounds", capture_ast__obj__ImproperIntegralBounds(f1, capture, runtime))];
+let mut output = node("ImproperIntegral", "", fields);
 output
 },
 };
@@ -21088,6 +21124,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__by_builtin_strategy_result__EqualitySearchProofByBuiltinStrategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::ImproperIntegralValue(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralValueProof(f0, capture, runtime))];
+let mut output = node("EqualitySearchProofByBuiltinStrategy", "ImproperIntegralValue", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::EqualitySearchProofByBuiltinStrategy::MatrixStructuralEquality(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixStructuralEqualityProof(f0, capture, runtime))];
 let mut output = node("EqualitySearchProofByBuiltinStrategy", "MatrixStructuralEquality", fields);
@@ -21702,6 +21743,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__result__AtomicExceptEqualityFactSearchProofByBuiltinStrategy(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::ImproperIntegral(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralStructuralProof(f0, capture, runtime))];
+let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "ImproperIntegral", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::AtomicExceptEqualityFactSearchProofByBuiltinStrategy::FiniteSumUpperBound(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__finite_additive_bounds__FiniteSumUpperBoundProof(f0, capture, runtime))];
 let mut output = node("AtomicExceptEqualityFactSearchProofByBuiltinStrategy", "FiniteSumUpperBound", fields);
@@ -22939,6 +22985,11 @@ let output = match value {
 crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedFailure::Riemann(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralWellDefinedFailure(f0, capture, runtime))];
 let mut output = node("IntegralOperatorWellDefinedFailure", "Riemann", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedFailure::Improper(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralWellDefinedFailure(f0, capture, runtime))];
+let mut output = node("IntegralOperatorWellDefinedFailure", "Improper", fields);
 output
 },
 };
@@ -24471,6 +24522,39 @@ let mut output = node("CheckedBetaFunctionApplicationExpansionProof", "", fields
 output
 },
 };
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_ast__obj__ImproperIntegralBounds(value: &crate::ast::obj::ImproperIntegralBounds, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+capture.subject_depth += 1;
+let output = match value {
+crate::ast::obj::ImproperIntegralBounds::OpenClosed { start: f0, end: f1 } => {
+let fields = vec![("start", capture_ast__obj__Obj(f0, capture, runtime)), ("end", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("ImproperIntegralBounds", "OpenClosed", fields);
+output
+},
+crate::ast::obj::ImproperIntegralBounds::ClosedOpen { start: f0, end: f1 } => {
+let fields = vec![("start", capture_ast__obj__Obj(f0, capture, runtime)), ("end", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("ImproperIntegralBounds", "ClosedOpen", fields);
+output
+},
+crate::ast::obj::ImproperIntegralBounds::Open { start: f0, end: f1 } => {
+let fields = vec![("start", capture_ast__obj__Obj(f0, capture, runtime)), ("end", capture_ast__obj__Obj(f1, capture, runtime))];
+let mut output = node("ImproperIntegralBounds", "Open", fields);
+output
+},
+crate::ast::obj::ImproperIntegralBounds::PositiveInfinity { start: f0 } => {
+let fields = vec![("start", capture_ast__obj__Obj(f0, capture, runtime))];
+let mut output = node("ImproperIntegralBounds", "PositiveInfinity", fields);
+output
+},
+crate::ast::obj::ImproperIntegralBounds::NegativeInfinity { end: f0 } => {
+let fields = vec![("end", capture_ast__obj__Obj(f0, capture, runtime))];
+let mut output = node("ImproperIntegralBounds", "NegativeInfinity", fields);
+output
+},
+};
+capture.subject_depth -= 1;
 capture.intern_evidence(output)
 }
 
@@ -29311,6 +29395,17 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralValueProof(value: &crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralValueProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralValueProof { requirement: f0, proof: f1 } => {
+let fields = vec![("requirement", capture_ast__fact__fact__Fact(f0, capture, runtime)), ("proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("ImproperIntegralValueProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_equality__matrix_entry_normalization_proof__MatrixStructuralEqualityProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixStructuralEqualityProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_equality::matrix_entry_normalization_proof::MatrixStructuralEqualityProof { right_domain: f0, domain_match: f1, pointwise: f2 } => {
@@ -31811,6 +31906,22 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__InFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::RealSegmentMembership(f0) => {
+let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::RealSegmentMembership");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__real_segment__RealSegmentMembershipProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByBuiltinRule", "RealSegmentMembership", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::IntervalInclusion(f0) => {
+let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::IntervalInclusion");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__IntervalInclusionProof(f0, capture, runtime))];
+let mut output = node("InFactSearchProofByBuiltinRule", "IntervalInclusion", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::InFactSearchProofByBuiltinRule::NativeMatrixProperty(f0) => {
 let rule_id = Some("builtin.InFactSearchProofByBuiltinRule::NativeMatrixProperty");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__search_native_matrix_property__NativeMatrixPropertyProof(f0, capture, runtime))];
@@ -32257,6 +32368,14 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__SubsetFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::ConvexIntervalHull(f0) => {
+let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::ConvexIntervalHull");
+let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__ConvexIntervalHullProof(f0, capture, runtime))];
+let mut output = node("SubsetFactSearchProofByBuiltinRule", "ConvexIntervalHull", fields);
+if let Some(rule_id) = rule_id { let text = value.rule_name_and_message(runtime.launch_command.output_language()); capture.rule_application(&mut output, rule_id, &text.rule_name, &text.message); }
+if rule_id.is_some() { capture.rule_comments(&mut output, value.rule_name_and_message_en(), value.rule_name_and_message_zh()); }
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset(f0) => {
 let rule_id = Some("builtin.SubsetFactSearchProofByBuiltinRule::HomogeneousCartesianSequenceSubset");
 let fields = vec![("0", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__HomogeneousCartesianSequenceSubsetProof(f0, capture, runtime))];
@@ -33370,6 +33489,20 @@ pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_ato
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotBijectiveFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::search_atomic_except_equality_fact_proof_by_builtin_rule_result::NotBijectiveFactSearchProofByBuiltinRule, _capture: &mut Capture, _runtime: &Runtime) -> JsonValue { match *value {} }
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__search_atomic_except_equality_fact_proof_by_builtin_rule_result__NotIsChoiceFunctionForFactSearchProofByBuiltinRule(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::search_atomic_except_equality_fact_proof_by_builtin_rule_result::NotIsChoiceFunctionForFactSearchProofByBuiltinRule, _capture: &mut Capture, _runtime: &Runtime) -> JsonValue { match *value {} }
+
+pub(super) fn capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralStructuralProof(value: &crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralStructuralProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralStructuralProof { local_integrability: f0, local_integrability_store: f1, limits: f2, value: f3, comparison: f4, local_env: f5 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f5, runtime);
+let fields = vec![("local_integrability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("local_integrability_store", capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(f1, capture, runtime)), ("limits", JsonValue::Array((f2).iter().map(|item| capture_execute__execute_fact_stmt__improper_integral__ImproperTruncationLimitProof(item, capture, runtime)).collect())), ("value", capture_ast__obj__Obj(f3, capture, runtime)), ("comparison", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f4, capture, runtime)), ("local_env", capture.environment(f5, runtime))];
+let mut output = node("ImproperIntegralStructuralProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_strategy__finite_additive_bounds__FiniteSumUpperBoundProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_strategy::finite_additive_bounds::FiniteSumUpperBoundProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
@@ -35083,6 +35216,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__BuiltinPropDefinitionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::ImproperIntegral(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralDefinitionProof(f0, capture, runtime))];
+let mut output = node("BuiltinPropDefinitionProof", "ImproperIntegral", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::BuiltinPropDefinitionProof::IsMatrixInv(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__matrix_inverse_predicates__BuiltinIsMatrixInvDefinitionProof(f0, capture, runtime))];
 let mut output = node("BuiltinPropDefinitionProof", "IsMatrixInv", fields);
@@ -35923,6 +36061,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedFailure { obj: f0, stage: f1 } => {
 let fields = vec![("obj", capture_ast__obj__Obj(f0, capture, runtime)), ("stage", capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralFailureStage(f1, capture, runtime))];
 let mut output = node("RiemannIntegralWellDefinedFailure", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralWellDefinedFailure(value: &crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralWellDefinedFailure, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralWellDefinedFailure { obj: f0, requirement: f1, result: f2 } => {
+let fields = vec![("obj", capture_ast__obj__Obj(f0, capture, runtime)), ("requirement", capture_ast__fact__fact__Fact(f1, capture, runtime)), ("result", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("ImproperIntegralWellDefinedFailure", "", fields);
 output
 },
 };
@@ -37503,6 +37652,11 @@ let output = match value {
 crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Riemann(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__riemann_integral__RiemannIntegralWellDefinedProof(f0, capture, runtime))];
 let mut output = node("IntegralOperatorWellDefinedProof", "Riemann", fields);
+output
+},
+crate::execute::execute_fact_stmt::riemann_integral::IntegralOperatorWellDefinedProof::Improper(f0) => {
+let fields = vec![("0", capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralWellDefinedProof(f0, capture, runtime))];
+let mut output = node("IntegralOperatorWellDefinedProof", "Improper", fields);
 output
 },
 };
@@ -41432,6 +41586,11 @@ let fields = vec![];
 let mut output = node("IntrinsicCodomain", "RiemannIntegral", fields);
 output
 },
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::ImproperIntegral => {
+let fields = vec![];
+let mut output = node("IntrinsicCodomain", "ImproperIntegral", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_membership_proof::IntrinsicCodomain::DerivativeAt => {
 let fields = vec![];
 let mut output = node("IntrinsicCodomain", "DerivativeAt", fields);
@@ -44474,6 +44633,28 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__real_segment__RealSegmentMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::real_segment::RealSegmentMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::real_segment::RealSegmentMembershipProof { requirements: f0, proofs: f1 } => {
+let fields = vec![("requirements", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proofs", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("RealSegmentMembershipProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__in_fact__IntervalInclusionProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::IntervalInclusionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::IntervalInclusionProof { membership: f0, bounds: f1 } => {
+let fields = vec![("membership", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f0, capture, runtime)), ("bounds", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("IntervalInclusionProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__SignedNumericMembershipProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::SignedNumericMembershipProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::SignedNumericMembershipProof { base_membership: f0, sign: f1 } => {
@@ -45087,6 +45268,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::in_fact::MulInNaturalBuiltinRuleProof { left_in_n_proof: f0, right_in_n_proof: f1 } => {
 let fields = vec![("left_in_n_proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("right_in_n_proof", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
 let mut output = node("MulInNaturalBuiltinRuleProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__search_atomic_except_equality_fact_proof_by_builtin_rules__subset__ConvexIntervalHullProof(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::ConvexIntervalHullProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::verify_atomic_except_equality::search_atomic_except_equality_fact_proof_by_builtin_rules::subset::ConvexIntervalHullProof { first_endpoint: f0, second_endpoint: f1 } => {
+let fields = vec![("first_endpoint", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("second_endpoint", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("ConvexIntervalHullProof", "", fields);
 output
 },
 };
@@ -46391,6 +46583,20 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__improper_integral__ImproperTruncationLimitProof(value: &crate::execute::execute_fact_stmt::improper_integral::ImproperTruncationLimitProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::improper_integral::ImproperTruncationLimitProof { introduced_parameter: f0, integrand_wd: f1, integral: f2, formula_wd: f3, limit: f4, local_env: f5 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f5, runtime);
+let fields = vec![("introduced_parameter", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("integrand_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("integral", capture_execute__execute_fact_stmt__structural_riemann_integral__StructuralRiemannIntegralProof(f2, capture, runtime)), ("formula_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f3, capture, runtime)), ("limit", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitProof(f4, capture, runtime)), ("local_env", capture.environment(f5, runtime))];
+let mut output = node("ImproperTruncationLimitProof", "", fields);
+capture.leave_scope(saved_scope);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitApproach(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitApproach, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::structural_limit::StructuralLimitApproach::Sequence => {
@@ -46425,6 +46631,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitGeometryProof(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitGeometryProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitGeometryProof::RealInterval { requirement_facts: f0, proof_of_requirement_facts: f1 } => {
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("StructuralLimitGeometryProof", "RealInterval", fields);
+output
+},
 crate::execute::execute_fact_stmt::structural_limit::StructuralLimitGeometryProof::PositiveNaturalSequence => {
 let fields = vec![];
 let mut output = node("StructuralLimitGeometryProof", "PositiveNaturalSequence", fields);
@@ -46881,6 +47092,20 @@ output
 crate::execute::execute_fact_stmt::function_domain::FunctionSpaceNonemptyProof::ConstantFunction { signature: f0, return_nonempty: f1 } => {
 let fields = vec![("signature", capture_ast__obj__FnSet(f0, capture, runtime)), ("return_nonempty", capture_execute__execute_fact_stmt__function_domain__FunctionSpaceNonemptyProof(f1, capture, runtime))];
 let mut output = node("FunctionSpaceNonemptyProof", "ConstantFunction", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralDefinitionProof(value: &crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralDefinitionProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralDefinitionProof { requirement_facts: f0, proof_of_requirement_facts: f1, stores: f2, local_env: f3 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f3, runtime);
+let fields = vec![("requirement_facts", JsonValue::Array((f0).iter().map(|item| capture_ast__fact__fact__Fact(item, capture, runtime)).collect())), ("proof_of_requirement_facts", JsonValue::Array((f1).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect())), ("stores", JsonValue::Array((f2).iter().map(|item| capture_store_fact_and_infer__store_fact_and_infer_result__store_and_infer_result__StoreFactAndInferResult(item, capture, runtime)).collect())), ("local_env", capture.environment(f3, runtime))];
+let mut output = node("ImproperIntegralDefinitionProof", "", fields);
+capture.leave_scope(saved_scope);
 output
 },
 };
@@ -47885,6 +48110,17 @@ let output = match value {
 crate::execute::execute_fact_stmt::riemann_integral::RiemannIntegralWellDefinedProof { function_wd: f0, lower_wd: f1, upper_wd: f2, domain: f3, requirements: f4, integrability: f5 } => {
 let fields = vec![("function_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f0, capture, runtime)), ("lower_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f1, capture, runtime)), ("upper_wd", capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(f2, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__function_limit__RealFunctionLimitDomainProof(f3, capture, runtime)), ("requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_atomic_fact__well_defined_result__PredicateDomainWellDefinedProof(item, capture, runtime)).collect())), ("integrability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f5, capture, runtime))];
 let mut output = node("RiemannIntegralWellDefinedProof", "", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
+pub(super) fn capture_execute__execute_fact_stmt__improper_integral__ImproperIntegralWellDefinedProof(value: &crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralWellDefinedProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::improper_integral::ImproperIntegralWellDefinedProof { children: f0, integrability: f1 } => {
+let fields = vec![("children", JsonValue::Array((f0).iter().map(|item| capture_execute__execute_fact_stmt__well_defined_results__verify_obj__obj_well_defined_proof__ObjWellDefinedProof(item, capture, runtime)).collect())), ("integrability", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("ImproperIntegralWellDefinedProof", "", fields);
 output
 },
 };
@@ -49603,6 +49839,11 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignReason(value: &crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::ResolvedBound { real: f0, source: f1 } => {
+let fields = vec![("real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "ResolvedBound", fields);
+output
+},
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::DifferenceFromOrder { left_real: f0, right_real: f1, source: f2 } => {
 let fields = vec![("left_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f0, capture, runtime)), ("right_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime)), ("source", capture_execute__execute_fact_stmt__verify_atomic_fact__verify_atomic_except_equality__result__AtomicExceptEqualityFactKnownProof(f2, capture, runtime))];
 let mut output = node("StructuralRealSignReason", "DifferenceFromOrder", fields);
@@ -49696,6 +49937,11 @@ output
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::PositivePower { base: f0, exponent_real: f1 } => {
 let fields = vec![("base", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("exponent_real", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
 let mut output = node("StructuralRealSignReason", "PositivePower", fields);
+output
+},
+crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::NonzeroIntegerPower { base: f0, exponent_integer: f1 } => {
+let fields = vec![("base", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_real_sign_proof__StructuralRealSignProof(f0, capture, runtime)), ("exponent_integer", capture_execute__execute_fact_stmt__verify_atomic_fact__structural_membership_proof__StructuralMembershipProof(f1, capture, runtime))];
+let mut output = node("StructuralRealSignReason", "NonzeroIntegerPower", fields);
 output
 },
 crate::execute::execute_fact_stmt::verify_atomic_fact::structural_real_sign_proof::StructuralRealSignReason::PositiveEvenPower { base: f0, exponent: f1 } => {
@@ -50051,6 +50297,24 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__structural_limit__StructuralLimitConstructorProof(value: &crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Elementary { kind: f0, argument: f1, domain: f2 } => {
+let fields = vec![("kind", capture_execute__execute_fact_stmt__pointwise_elementary__ElementaryRealFunction(f0, capture, runtime)), ("argument", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f1, capture, runtime)), ("domain", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "Elementary", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::ReciprocalAffinePower { numerator: f0, slope: f1, offset: f2, exponent: f3, requirements: f4 } => {
+let fields = vec![("numerator", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f0, capture, runtime)), ("slope", capture_ast__obj__Obj(f1, capture, runtime)), ("offset", capture_ast__obj__Obj(f2, capture, runtime)), ("exponent", capture_ast__obj__Obj(f3, capture, runtime)), ("requirements", JsonValue::Array((f4).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("StructuralLimitConstructorProof", "ReciprocalAffinePower", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::RiemannIntegral { introduced_parameter: f0, integral: f1, formula_limit: f2, local_env: f3 } => {
+let saved_scope = capture.enter_scope();
+capture.index_environment(f3, runtime);
+let fields = vec![("introduced_parameter", capture_execute__introduce_typed_parameters__IntroduceTypedParametersResult(f0, capture, runtime)), ("integral", capture_execute__execute_fact_stmt__structural_riemann_integral__StructuralRiemannIntegralProof(f1, capture, runtime)), ("formula_limit", capture_execute__execute_fact_stmt__structural_limit__StructuralLimitExpressionProof(f2, capture, runtime)), ("local_env", capture.environment(f3, runtime))];
+let mut output = node("StructuralLimitConstructorProof", "RiemannIntegral", fields);
+capture.leave_scope(saved_scope);
+output
+},
 crate::execute::execute_fact_stmt::structural_limit::StructuralLimitConstructorProof::Constant => {
 let fields = vec![];
 let mut output = node("StructuralLimitConstructorProof", "Constant", fields);
@@ -50112,6 +50376,21 @@ capture.intern_evidence(output)
 
 pub(super) fn capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannConstructorProof(value: &crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::ZeroWidth { endpoints_equal: f0 } => {
+let fields = vec![("endpoints_equal", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "ZeroWidth", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::ReciprocalSqrt { lower_positive: f0, upper_positive: f1 } => {
+let fields = vec![("lower_positive", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("upper_positive", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime))];
+let mut output = node("RiemannConstructorProof", "ReciprocalSqrt", fields);
+output
+},
+crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::ReciprocalNaturalPower { exponent: f0, exponent_natural: f1, exponent_nonzero: f2, endpoint_signs: f3 } => {
+let fields = vec![("exponent", capture_ast__obj__Obj(f0, capture, runtime)), ("exponent_natural", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f1, capture, runtime)), ("exponent_nonzero", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f2, capture, runtime)), ("endpoint_signs", JsonValue::Array((f3).iter().map(|item| capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(item, capture, runtime)).collect()))];
+let mut output = node("RiemannConstructorProof", "ReciprocalNaturalPower", fields);
+output
+},
 crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannConstructorProof::Polynomial { equality: f0, normalized: f1 } => {
 let fields = vec![("equality", capture_execute__execute_fact_stmt__verify_fact_result__VerifyFactResult(f0, capture, runtime)), ("normalized", capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannExpressionProof(f1, capture, runtime))];
 let mut output = node("RiemannConstructorProof", "Polynomial", fields);
@@ -51273,6 +51552,37 @@ output
 capture.intern_evidence(output)
 }
 
+pub(super) fn capture_execute__execute_fact_stmt__pointwise_elementary__ElementaryRealFunction(value: &crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
+let output = match value {
+crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Exp => {
+let fields = vec![];
+let mut output = node("ElementaryRealFunction", "Exp", fields);
+output
+},
+crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Ln => {
+let fields = vec![];
+let mut output = node("ElementaryRealFunction", "Ln", fields);
+output
+},
+crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Sin => {
+let fields = vec![];
+let mut output = node("ElementaryRealFunction", "Sin", fields);
+output
+},
+crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Cos => {
+let fields = vec![];
+let mut output = node("ElementaryRealFunction", "Cos", fields);
+output
+},
+crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Sqrt => {
+let fields = vec![];
+let mut output = node("ElementaryRealFunction", "Sqrt", fields);
+output
+},
+};
+capture.intern_evidence(output)
+}
+
 pub(super) fn capture_execute__execute_fact_stmt__structural_riemann_integral__RiemannLeafProof(value: &crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannLeafProof, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
 let output = match value {
 crate::execute::execute_fact_stmt::structural_riemann_integral::RiemannLeafProof::Candidate(f0) => {
@@ -51332,37 +51642,6 @@ output
 crate::execute::execute_fact_stmt::pointwise_derivative::InteriorOperandProof::Differentiable(f0) => {
 let fields = vec![("0", capture_execute__execute_fact_stmt__pointwise_derivative__DerivativeExpressionProof(f0, capture, runtime))];
 let mut output = node("InteriorOperandProof", "Differentiable", fields);
-output
-},
-};
-capture.intern_evidence(output)
-}
-
-pub(super) fn capture_execute__execute_fact_stmt__pointwise_elementary__ElementaryRealFunction(value: &crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction, capture: &mut Capture, runtime: &Runtime) -> JsonValue {
-let output = match value {
-crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Exp => {
-let fields = vec![];
-let mut output = node("ElementaryRealFunction", "Exp", fields);
-output
-},
-crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Ln => {
-let fields = vec![];
-let mut output = node("ElementaryRealFunction", "Ln", fields);
-output
-},
-crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Sin => {
-let fields = vec![];
-let mut output = node("ElementaryRealFunction", "Sin", fields);
-output
-},
-crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Cos => {
-let fields = vec![];
-let mut output = node("ElementaryRealFunction", "Cos", fields);
-output
-},
-crate::execute::execute_fact_stmt::pointwise_elementary::ElementaryRealFunction::Sqrt => {
-let fields = vec![];
-let mut output = node("ElementaryRealFunction", "Sqrt", fields);
 output
 },
 };

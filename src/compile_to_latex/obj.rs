@@ -120,6 +120,30 @@ pub(super) fn expression(
             riemann_integral(&x.function, &x.lower, &x.upper, modules, lang)?,
             30,
         ),
+        Obj::IntegralOperator(IntegralOperator::Improper(value)) => {
+            let (lower, upper) = match &value.bounds {
+                ImproperIntegralBounds::OpenClosed { start, end } => {
+                    (format!("{}^{{\\circ}}", o(start)?), o(end)?)
+                }
+                ImproperIntegralBounds::ClosedOpen { start, end } => {
+                    (o(start)?, format!("{}^{{\\circ}}", o(end)?))
+                }
+                ImproperIntegralBounds::Open { start, end } => (
+                    format!("{}^{{\\circ}}", o(start)?),
+                    format!("{}^{{\\circ}}", o(end)?),
+                ),
+                ImproperIntegralBounds::PositiveInfinity { start } => {
+                    (o(start)?, r"+\infty".into())
+                }
+                ImproperIntegralBounds::NegativeInfinity { end } => (r"-\infty".into(), o(end)?),
+            };
+            let function = function_operand(&value.function, modules, lang)?;
+            let bound = fresh_rendered_index(r"\xi", &[&function, &lower, &upper]);
+            (
+                format!(r"\int_{{{lower}}}^{{{upper}}} {function}({bound})\,\mathrm{{d}}{bound}"),
+                30,
+            )
+        }
         Obj::DerivativeOperator(DerivativeOperator::AtPoint(x)) => {
             (derivative_at(&x.function, &x.point, modules, lang)?, 50)
         }

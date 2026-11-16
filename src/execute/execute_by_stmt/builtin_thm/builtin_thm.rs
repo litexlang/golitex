@@ -63,6 +63,9 @@ fn prepare_contract(
     args: &[Obj],
 ) -> RuntimeResult<Result<(Vec<Fact>, Vec<Fact>), String>> {
     use BuiltinTheoremId::*;
+    if let ImproperIntegral(theorem) = id {
+        return super::improper_integrals::prepare(rt, theorem, args);
+    }
     if id.is_multivariable() {
         return super::multivariable::prepare(rt, id, args);
     }

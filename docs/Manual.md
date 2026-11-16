@@ -653,7 +653,7 @@ Both spellings can be used together in one proof.
 | `grad_at(f,p,n)` | `gradient_at(f,p,n)` |
 | `set_sum(S,f)` | `finite_set_sum(S,f)` |
 | `set_prod(S,f)` | `finite_set_product(S,f)` |
-| `integ(f,a,b)` | `integral(f,a,b)` |
+| `integ(x,a,b,E)` | `integral(fn(x '[min(a,b),max(a,b)]) R {E},a,b)` |
 
 | Predicate short name | Canonical name |
 | --- | --- |
@@ -714,15 +714,15 @@ deriv(square,3)=derivative(square,3)=6
 
 Short names are reserved in declarations, just like their long forms. Alias
 recognition uses the relevant object, predicate or bare-theorem position.
-Qualified names follow module resolution. `integ` has exactly the existing
-three-argument real Riemann integral contract. `lim(a)` and `fn_lim(f,x0)`
+Qualified names follow module resolution. `integ(x,a,b,E)` takes exactly four arguments. The function interface is
+`integral(f,a,b)`. `lim(a)` and `fn_lim(f,x0)`
 retain their separate contracts.
 
 The [runnable mixed-spelling example](../examples/wd/builtin_short_names.lit)
 also covers finite aggregates and explicit integral theorem selection.
 
 For integral predicates, `$has_integ(f,a,b,I)` specifies a candidate value,
-`$integrable(f,a,b)` states existence, and `integ(f,a,b)` selects the value.
+`$integrable(f,a,b)` states existence, and `integral(f,a,b)` selects the value.
 The `fold` and `unfold` theorem suffixes introduce a predicate from its
 defining clauses and recover those clauses, respectively. `integ_congr`
 transports an integral across pointwise-equal functions, `integ_mono` uses
@@ -735,7 +735,7 @@ have fn square(x R) R=x^2
 release thm integ_pow(square,0,1,2)
 $has_integ(square,0,1,1/3)
 $integrable(square,0,1)
-integ(square,0,1)=1/3
+integral(square,0,1)=1/3
 ```
 
 The [integral alias example](../examples/wd/riemann_short_names.lit) also
@@ -6703,6 +6703,60 @@ An arbitrary real function still requires provable integrability, including
 inside `0*integral(f,0,1)`. A guarded function may require an explicit
 interval-in-domain proof;
 see [actual-domain examples](../examples/real_analysis/riemann_integral_domains.lit).
+
+The expression syntax `integ(x,a,b,E)` binds `x` only in `E`. Endpoints are
+read in the outer scope. Its function domain is the sorted closed interval,
+so the expression must be defined at both endpoints. This form takes four
+arguments. Existing function-valued calls use `integral(f,a,b)`.
+
+An arbitrary real function still requires provable integrability, including
+inside `0*integral(f,0,1)`. A guarded function may require an explicit
+interval-in-domain proof. See [actual-domain examples](../examples/real_analysis/riemann_integral_domains.lit).
+
+#### Improper integrals
+
+The five improper integral operations select finite real values. Each requires
+coverage of its whole integration region, Riemann integrability on every closed
+subinterval of that region, and convergence of the corresponding truncated
+integrals. Finite open-endpoint operations require distinct endpoints.
+
+| Expression syntax | Function interface | Integrability predicate |
+| --- | --- | --- |
+| `integ_oc(x,a,b,E)` | `integral_open_closed(f,a,b)` | `$integrable_oc(f,a,b)` |
+| `integ_co(x,a,b,E)` | `integral_closed_open(f,a,b)` | `$integrable_co(f,a,b)` |
+| `integ_oo(x,a,b,E)` | `integral_open(f,a,b)` | `$integrable_oo(f,a,b)` |
+| `integ_pos_inf(x,a,E)` | `integral_pos_inf(f,a)` | `$integrable_pos_inf(f,a)` |
+| `integ_neg_inf(x,b,E)` | `integral_neg_inf(f,b)` | `$integrable_neg_inf(f,b)` |
+
+For `a<b`, the first three regions are `(a,b]`, `[a,b)` and `(a,b)`.
+The suffix identifies the first and second endpoint. Reversing a finite
+integral swaps `oc` with `co` and changes the sign. The infinite operations
+use `[a,+infinity)` and `(-infinity,b]`, including their finite endpoint.
+
+The open-closed definition takes the limit of
+`integral(f,a+t*(b-a),b)` as `t` tends to zero from above. The closed-open
+version uses `integral(f,a,b+t*(a-b))`. Both use `0<t<1`. With both endpoints
+open, split at `(a+b)/2` and require the two one-sided integrals to converge
+independently. The infinite definitions use `integral(f,a,t)` as `t` tends to positive
+infinity, or `integral(f,t,b)` as `t` tends to negative infinity. For closed
+numeric finite bounds the implementation uses the equivalent direct
+one-sided truncation parameter.
+
+Candidate predicates use `$has_integral_open_closed`,
+`$has_integral_closed_open`, `$has_integral_open`, `$has_integral_pos_inf`
+and `$has_integral_neg_inf`, with the value as their last argument.
+Their short spellings are `$has_integ_oc`, `$has_integ_co`, `$has_integ_oo`,
+`$has_integ_pos_inf` and `$has_integ_neg_inf`.
+
+For each improper canonical name, the suffixes `_from_definition` and
+`_to_definition` connect a candidate to local integrability and truncation
+limits. `_selected` consumes integrability, `_unique` compares two candidates,
+`_add` and `_scale` require the pointwise formula for a supplied result function,
+and `_congr` transports a candidate across pointwise equality on the region.
+The three finite operations also provide `_reverse`. For example,
+`integral_open_closed_reverse(f,a,b,I)` supplies the closed-open candidate
+from `b` to `a` with value `-I`. See the
+[improper integral examples](../examples/calculus/improper_integrals.lit).
 
 These reserved explicit theorem calls check every premise before publishing
 their conclusions. Functions named `h` are supplied result functions: the

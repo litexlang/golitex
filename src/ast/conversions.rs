@@ -1038,6 +1038,12 @@ impl From<crate::ast::obj::RiemannIntegral> for crate::ast::obj::Obj {
     }
 }
 
+impl From<crate::ast::obj::ImproperIntegral> for crate::ast::obj::Obj {
+    fn from(value: crate::ast::obj::ImproperIntegral) -> Self {
+        Self::IntegralOperator(crate::ast::obj::IntegralOperator::Improper(value))
+    }
+}
+
 impl From<crate::ast::obj::MatrixOperator> for crate::ast::obj::Obj {
     fn from(value: crate::ast::obj::MatrixOperator) -> Self {
         Self::MatrixOperator(value)

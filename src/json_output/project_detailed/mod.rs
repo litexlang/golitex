@@ -15,6 +15,7 @@ mod exist_builtin_gen;
 mod function_derivative;
 mod function_domain;
 mod helper;
+mod improper_integral;
 mod induction;
 mod known_special_property;
 mod known_tuple;

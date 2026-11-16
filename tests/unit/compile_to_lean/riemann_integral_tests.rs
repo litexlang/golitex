@@ -16,7 +16,7 @@ const AUTOMATIC_INTEGRABILITY_SOURCE: &str = r#"forall f fn(x R) R:
     forall a,b R:
         $is_riemann_integrable(f,a,b)
     =>:
-        integ(f,0,1)=integ(f,0,1)
+        integral(f,0,1)=integral(f,0,1)
 "#;
 
 #[test]
@@ -36,7 +36,7 @@ fn riemann_integral_automatic_integrability_replays_known_forall() {
 
 #[test]
 fn riemann_integral_wd_replays_existing_existential_condition() {
-    let source = "forall f fn(x R) R,a,b R:\n    exist I R st {$has_riemann_integral(f,a,b,I)}\n    =>:\n        integ(f,a,b)=integ(f,a,b)\n";
+    let source = "forall f fn(x R) R,a,b R:\n    exist I R st {$has_riemann_integral(f,a,b,I)}\n    =>:\n        integral(f,a,b)=integral(f,a,b)\n";
     let (run, compiler) = super::execute(source);
     let output = compiler
         .compile_run(&run, "integrability_from_existence")
@@ -468,7 +468,7 @@ fn riemann_selected_equality_requires_original_citation() {
 
 #[test]
 fn riemann_integral_ring_identity_replays_and_large_closed_exponent_fails_closed() {
-    let ring_source = "forall f fn(x R) R, a, b R:\n    $is_riemann_integrable(f, a, b)\n    =>:\n        integ(f, a, b) + integ(f, a, b) = 2 * integ(f, a, b)\n";
+    let ring_source = "forall f fn(x R) R, a, b R:\n    $is_riemann_integrable(f, a, b)\n    =>:\n        integral(f, a, b) + integral(f, a, b) = 2 * integral(f, a, b)\n";
     let (run, compiler) = super::execute(ring_source);
     let output = compiler
         .compile_run(&run, "riemann_ring_identity")

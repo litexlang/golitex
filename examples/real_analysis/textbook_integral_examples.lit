@@ -8,7 +8,7 @@ have fn polynomial(x R) R=3*x^2+2*x+1
 
 $is_riemann_integrable(polynomial,0,1)
 
-integ(polynomial,0,1)=3
+integral(polynomial,0,1)=3
 
 
 # 2. General power rule
@@ -24,7 +24,7 @@ forall a,b,c R:
 # 4. Zero integral as a proposition
 prop zero_integral(f fn(x R) R,a,b R):
     $is_riemann_integrable(f,a,b)
-    integ(f,a,b)=0
+    integral(f,a,b)=0
 
 have fn odd_cubic(x R) R=x^3
 
@@ -39,7 +39,7 @@ forall f,g fn(x R) R,a,b R:
     $is_riemann_integrable(g,a,b)
     =>:
         $is_riemann_integrable(fn(x R) R {3*f(x)-2*g(x)+1},a,b)
-        integ(fn(x R) R {3*f(x)-2*g(x)+1},a,b)=3*integ(f,a,b)-2*integ(g,a,b)+(b-a)
+        integral(fn(x R) R {3*f(x)-2*g(x)+1},a,b)=3*integral(f,a,b)-2*integral(g,a,b)+(b-a)
 
 
 # 6. Integrability of a composite
@@ -67,7 +67,7 @@ exponential(1)=exp(1)
 
 exponential(1)-exponential(0)=exp(1)-1
 
-integ(exponential,0,1)=exp(1)-1
+integral(exponential,0,1)=exp(1)-1
 
 
 # 8. Cosine integral by Newton–Leibniz
@@ -89,7 +89,7 @@ sine(pi/2)=1
 
 sine(pi/2)-sine(0)=1
 
-integ(cosine,0,pi/2)=1
+integral(cosine,0,pi/2)=1
 
 
 # 9. Substitution with u=x^2
@@ -117,7 +117,7 @@ sine(4)-sine(0)=sin(4)
 
 release thm riemann_integral_substitution(cosine,square,twice,substituted_cosine,R,0,2,sine(4)-sine(0))
 
-integ(substituted_cosine,0,2)=sin(4)
+integral(substituted_cosine,0,2)=sin(4)
 
 
 # 10. Integration by parts
@@ -141,5 +141,5 @@ identity(0)=0
 
 identity(1)*exponential(1)-identity(0)*exponential(0)-(exponential(1)-exponential(0))=1
 
-integ(weighted_exponential,0,1)=1
+integral(weighted_exponential,0,1)=1
 

@@ -441,6 +441,9 @@ fn try_parse_keyword_primary(
     if matches!(tb.peek_at(1), Some(MOD_SIGN | MOD_FLAT_SIGN)) {
         return Ok(None);
     }
+    if let Some(integral) = super::integral::parse_integral(rt, tb, token)? {
+        return Ok(Some(integral));
+    }
     let token = crate::parse::builtin_aliases::canonical_builtin_name(
         token,
         crate::parse::builtin_aliases::BuiltinAliasKind::Object,

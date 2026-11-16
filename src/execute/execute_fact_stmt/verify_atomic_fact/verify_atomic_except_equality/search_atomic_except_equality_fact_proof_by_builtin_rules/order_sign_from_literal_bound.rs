@@ -49,7 +49,7 @@ impl Runtime {
         Some(OrderSignFromNegativeLiteralBoundBuiltinRuleProof { cite_fact_id })
     }
 
-    fn known_positive_lower_bound_cite(&self, x: &Obj) -> Option<FactId> {
+    pub(crate) fn known_positive_lower_bound_cite(&self, x: &Obj) -> Option<FactId> {
         // Scan known >= and > with x on the left and a positive literal on the right.
         for env in self.execution_environments_stack.iter().rev() {
             let facts = &env.facts.known_atomic_except_equality_facts.by_prop;
@@ -88,7 +88,7 @@ impl Runtime {
         None
     }
 
-    fn known_negative_upper_bound_cite(&self, x: &Obj) -> Option<FactId> {
+    pub(crate) fn known_negative_upper_bound_cite(&self, x: &Obj) -> Option<FactId> {
         for env in self.execution_environments_stack.iter().rev() {
             let facts = &env.facts.known_atomic_except_equality_facts.by_prop;
             for ((_, _), knowns) in facts.iter() {

@@ -261,6 +261,17 @@ pub(super) fn is_reserved_object_name(name: &str) -> bool {
             | "curl"
             | "laplacian"
             | "integral"
+            | "integ"
+            | "integ_oc"
+            | "integ_co"
+            | "integ_oo"
+            | "integ_pos_inf"
+            | "integ_neg_inf"
+            | "integral_open_closed"
+            | "integral_closed_open"
+            | "integral_open"
+            | "integral_pos_inf"
+            | "integral_neg_inf"
             | "derivative"
             | I
             | E

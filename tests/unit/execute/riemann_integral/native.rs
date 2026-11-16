@@ -15,11 +15,11 @@ fn polynomial_integral_strategy_preserves_domains_and_values() {
     assert!(json.contains("pointwise_equality"));
     assert!(json.contains("normalized_integral"));
     for source in [
-        "integ(fn(x R) R {(x+1)^2},0,1)=8/3",
-        "integ(fn(x R) R {0*(1/x)},0,1)=0",
-        "integ(fn(x R) R {(x^2-1)/(x-1)},0,2)=4",
-        "integ(fn(x R) R {(x+1)^2},0,1)=0",
-        "integ(fn(x R) R {(x+1)^33},0,1)=0",
+        "integral(fn(x R) R {(x+1)^2},0,1)=8/3",
+        "integral(fn(x R) R {0*(1/x)},0,1)=0",
+        "integral(fn(x R) R {(x^2-1)/(x-1)},0,2)=4",
+        "integral(fn(x R) R {(x+1)^2},0,1)=0",
+        "integral(fn(x R) R {(x+1)^33},0,1)=0",
     ] {
         check(&mut runtime(), source, false);
     }
@@ -236,16 +236,16 @@ fn riemann_integral_structural_polynomial_candidates_and_values() {
     assert!(json.contains("StructuralRiemannIntegral"));
     assert!(json.contains("interval_requirements"));
     assert!(rt.known_riemann_integral_candidates().is_empty());
-    let value = check(&mut rt, "integ(p,0,1)=3", true);
+    let value = check(&mut rt, "integral(p,0,1)=3", true);
     let json = crate::json_output::project_run_detailed(&value, &rt, "riemann", None).stringify();
     assert!(json.contains("RiemannIntegralValue"));
     assert!(json.contains("NaturalPower"));
-    check(&mut rt, "3=integ(p,0,1)", true);
+    check(&mut rt, "3=integral(p,0,1)", true);
     check(&mut rt, "$has_riemann_integral(p,1,0,-3)", true);
-    check(&mut rt, "integ(p,1,0)=-3", true);
+    check(&mut rt, "integral(p,1,0)=-3", true);
     check(&mut rt, "$has_riemann_integral(p,2,2,0)", true);
-    check(&mut rt, "integ(p,2,2)=0", true);
-    check(&mut rt, "integ(p,0,1)=4", false);
+    check(&mut rt, "integral(p,2,2)=0", true);
+    check(&mut rt, "integral(p,0,1)=4", false);
     check(&mut rt, "1+1=2", true);
 }
 
@@ -253,7 +253,7 @@ fn riemann_integral_structural_polynomial_candidates_and_values() {
 fn riemann_integral_structural_known_candidates_and_selected_leaves() {
     let mut rt = runtime();
     check(&mut rt, "forall f,g fn(x R) R,a,b,I,J R:\n    $has_riemann_integral(f,a,b,I)\n    $has_riemann_integral(g,a,b,J)\n    =>:\n        $has_riemann_integral(fn(x R) R {3*f(x)-g(x)/2+7},a,b,3*I-J/2+7*(b-a))", true);
-    check(&mut rt, "forall f,g fn(x R) R,a,b R:\n    $is_riemann_integrable(f,a,b)\n    $is_riemann_integrable(g,a,b)\n    =>:\n        $is_riemann_integrable(fn(x R) R {3*f(x)-g(x)/2+7},a,b)\n        integ(fn(x R) R {3*f(x)-g(x)/2+7},a,b)=3*integ(f,a,b)-integ(g,a,b)/2+7*(b-a)", true);
+    check(&mut rt, "forall f,g fn(x R) R,a,b R:\n    $is_riemann_integrable(f,a,b)\n    $is_riemann_integrable(g,a,b)\n    =>:\n        $is_riemann_integrable(fn(x R) R {3*f(x)-g(x)/2+7},a,b)\n        integral(fn(x R) R {3*f(x)-g(x)/2+7},a,b)=3*integral(f,a,b)-integral(g,a,b)/2+7*(b-a)", true);
 }
 
 #[test]
@@ -273,13 +273,13 @@ fn riemann_integral_automatic_integrability_tracer() {
 fn riemann_integral_automatic_integrability_retains_shared_proof() {
     let mut rt = runtime();
     check(&mut rt, "have fn p(x R) R=3*x^2+2*x+1", true);
-    let run = check(&mut rt, "integ(p,0,1)=3", true);
+    let run = check(&mut rt, "integral(p,0,1)=3", true);
     let json = crate::json_output::project_run_detailed(&run, &rt, "riemann", None).stringify();
     assert!(json.contains("\"integrability\""));
     assert!(json.contains("StructuralRiemannIntegral"));
     assert!(json.contains("RiemannIntegralValue"));
     assert!(rt.known_riemann_integral_candidates().is_empty());
-    check(&mut rt, "integ(p,0,1)+1=4", true);
+    check(&mut rt, "integral(p,0,1)+1=4", true);
 }
 
 #[test]
@@ -287,7 +287,7 @@ fn riemann_integral_automatic_integrability_preserves_search_permissions() {
     let mut rt = runtime();
     check(&mut rt, "have fn p(x R) R=x^2", true);
     let tokens = crate::tokenize::Tokenizer::new()
-        .tokenize("integ(p,0,1)=1/3", rt.current_file.clone())
+        .tokenize("integral(p,0,1)=1/3", rt.current_file.clone())
         .unwrap();
     let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) =
         rt.parse(&tokens).unwrap().remove(0)
@@ -320,27 +320,27 @@ fn riemann_integral_automatic_integrability_preserves_rejection_and_rollback() {
     let mut rt = runtime();
     check(&mut rt, "have fn p(x R) R=3*x^2+2*x+1", true);
     let tokens = crate::tokenize::Tokenizer::new()
-        .tokenize("integ(p,0,1)=4", rt.current_file.clone())
+        .tokenize("integral(p,0,1)=4", rt.current_file.clone())
         .unwrap();
     let Stmt::Fact(Fact::AtomicFact(AtomicFact::EqualFact(goal))) =
         rt.parse(&tokens).unwrap().remove(0)
     else {
         panic!("integral equality")
     };
-    check(&mut rt, "integ(p,0,1)=4", false);
+    check(&mut rt, "integral(p,0,1)=4", false);
     assert!(rt.well_defined_visible_in_stack(&goal.left).is_none());
     assert!(rt.known_riemann_integral_candidates().is_empty());
-    check(&mut rt, "integ(p,0,1)=3", true);
+    check(&mut rt, "integral(p,0,1)=3", true);
     for source in [
-        "forall f fn(x R) R:\n    integ(f,0,1)=0",
-        "forall f fn(x R) R:\n    0*integ(f,0,1)=0",
-        "forall f fn(x R) R:\n    $is_riemann_integrable(f,0,1)\n    =>:\n        integ(f,0,1)=1/3",
-        "forall f fn(x R) R:\n    f=fn(x R) R {f(x)}\n    =>:\n        integ(f,0,1) $in R",
-        "integ(fn(x R*) R {1/x},0,1)=0",
+        "forall f fn(x R) R:\n    integral(f,0,1)=0",
+        "forall f fn(x R) R:\n    0*integral(f,0,1)=0",
+        "forall f fn(x R) R:\n    $is_riemann_integrable(f,0,1)\n    =>:\n        integral(f,0,1)=1/3",
+        "forall f fn(x R) R:\n    f=fn(x R) R {f(x)}\n    =>:\n        integral(f,0,1) $in R",
+        "integral(fn(x R*) R {1/x},0,1)=0",
     ] {
         check(&mut rt, source, false);
     }
-    check(&mut rt, "integ(p,0,1)+2=5", true);
+    check(&mut rt, "integral(p,0,1)+2=5", true);
 }
 
 #[test]
@@ -348,7 +348,7 @@ fn riemann_integral_structural_scalar_arithmetic_and_closed_domains() {
     let mut rt = runtime();
     check(&mut rt, "have fn p(x '[0,1]) R=-(x^2)*3+x/2", true);
     check(&mut rt, "$has_riemann_integral(p,0,1,-3/4)", true);
-    check(&mut rt, "integ(p,0,1)=-3/4", true);
+    check(&mut rt, "integral(p,0,1)=-3/4", true);
     check(&mut rt, "$is_riemann_integrable(p,0,2)", false);
     check(
         &mut rt,
@@ -371,7 +371,7 @@ fn riemann_integral_structural_missing_leaves_products_and_substitution_reject()
         "forall f fn(x R) R:\n    $is_riemann_integrable(fn(x R) R {f(x)+1},0,1)",
         false,
     );
-    check(&mut rt, "forall f,g fn(x R) R:\n    $is_riemann_integrable(f,0,1)\n    $is_riemann_integrable(g,0,1)\n    =>:\n        $has_riemann_integral(fn(x R) R {f(x)*g(x)},0,1,integ(f,0,1)*integ(g,0,1))", false);
+    check(&mut rt, "forall f,g fn(x R) R:\n    $is_riemann_integrable(f,0,1)\n    $is_riemann_integrable(g,0,1)\n    =>:\n        $has_riemann_integral(fn(x R) R {f(x)*g(x)},0,1,integral(f,0,1)*integral(g,0,1))", false);
     check(&mut rt, "forall f fn(x R) R:\n    $is_riemann_integrable(f,0,1)\n    =>:\n        $is_riemann_integrable(fn(x R) R {f(2*x)},0,1)", false);
     check(&mut rt, "have fn singular(x R*) R=1/x", true);
     check(&mut rt, "$is_riemann_integrable(singular,0,1)", false);
@@ -384,7 +384,7 @@ fn riemann_integral_structural_lean_preserves_nonpolynomial_boundary() {
     let mut rt = runtime();
     let run = check(
         &mut rt,
-        "have fn square(x R) R=x^2\ninteg(square,0,1)=integ(square,0,1)",
+        "have fn square(x R) R=x^2\nintegral(square,0,1)=integral(square,0,1)",
         true,
     );
     crate::compile_to_lean::LitexToLeanCompiler::new(rt)
@@ -413,7 +413,7 @@ fn riemann_integral_structural_lean_preserves_nonpolynomial_boundary() {
         .expect("explicit polynomial integration compiles");
 
     let mut rt = runtime();
-    let run = check(&mut rt, "forall f fn(x R) R:\n    f=fn(x R) R {x^2}\n    $is_riemann_integrable(f,0,1)\n    =>:\n        integ(f,0,1)=1/3", true);
+    let run = check(&mut rt, "forall f fn(x R) R:\n    f=fn(x R) R {x^2}\n    $is_riemann_integrable(f,0,1)\n    =>:\n        integral(f,0,1)=1/3", true);
     crate::compile_to_lean::LitexToLeanCompiler::new(rt)
         .compile_run(&run, "integral_value")
         .expect("a recorded polynomial body supports value replay");

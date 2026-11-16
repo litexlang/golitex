@@ -14,6 +14,7 @@ use crate::runtime::{Runtime, RuntimeResult};
 
 // Builtin proofs for `$subset`. One rule ↔ one dedicated proof struct.
 pub enum SubsetFactSearchProofByBuiltinRule {
+    ConvexIntervalHull(ConvexIntervalHullProof),
     HomogeneousCartesianSequenceSubset(HomogeneousCartesianSequenceSubsetProof),
     FunctionRangeInCodomain(FunctionRangeInCodomainProof),
     // Fixed inclusion among standard number sets.
@@ -82,6 +83,11 @@ pub enum SubsetFactSearchProofByBuiltinRule {
     // ⇒ `A $subset C`.
     // Example: trust `A $subset B`; trust `B $subset C`; prove `A $subset C`.
     SubsetTransitivity(SubsetTransitivityBuiltinRuleProof),
+}
+
+pub struct ConvexIntervalHullProof {
+    pub first_endpoint: Box<VerifyFactResult>,
+    pub second_endpoint: Box<VerifyFactResult>,
 }
 
 pub struct HomogeneousCartesianSequenceSubsetProof {
@@ -173,6 +179,93 @@ pub struct SubsetTransitivityBuiltinRuleProof {
 }
 
 impl Runtime {
+    // A subset constructor descends into its smaller operand without reopening
+    // arbitrary search. Keep ordinary WD and the same proof-state ceiling.
+    fn verify_subset_constructor_child(
+        &mut self,
+        requirement: &Fact,
+        state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let ordinary = self.verify_fact(requirement, state)?;
+        if !ordinary.is_failed() {
+            return Ok(ordinary);
+        }
+        let Fact::AtomicFact(AtomicFact::SubsetFact(subset)) = requirement else {
+            return Ok(ordinary);
+        };
+        let constructor = matches!(&subset.left, Obj::SetOperator(SetOperator::SetMinus(_)))
+            || matches!(
+                (&subset.left, &subset.right),
+                (
+                    Obj::SetFormer(
+                        SetFormer::IntervalObj(_) | SetFormer::OneSideInfinityIntervalObj(_)
+                    ),
+                    Obj::StandardSet(StandardSet::R)
+                )
+            );
+        if !constructor {
+            return Ok(ordinary);
+        }
+        let VerifyAtomicFactWellDefinedResult::Success(wd) =
+            self.verify_atomic_fact_well_definedness(&subset.clone().into(), state)?
+        else {
+            return Ok(ordinary);
+        };
+        let Some(proof) = self.search_subset_fact_proof_by_builtin_rule(subset, state)? else {
+            return Ok(ordinary);
+        };
+        Ok(
+            super::super::result::atomic_except_equality_fact_result_from_success(
+                &subset.clone().into(),
+                wd,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+                    super::AtomicExceptEqualityFactSearchProofByBuiltinRule::SubsetFact(proof),
+                ),
+            ),
+        )
+    }
+
+    fn convex_endpoint_membership(
+        &mut self,
+        fact: &AtomicFact,
+        state: VerifyState,
+    ) -> RuntimeResult<VerifyFactResult> {
+        let ordinary = self.verify_fact(&fact.clone().into(), state)?;
+        if !ordinary.is_failed() {
+            return Ok(ordinary);
+        }
+        let AtomicFact::InFact(member) = fact else {
+            return Ok(ordinary);
+        };
+        let proof = if let Some(proof) = self.real_segment_membership(member, state)? {
+            super::in_fact::InFactSearchProofByBuiltinRule::RealSegmentMembership(proof)
+        } else if let Some(proof) = self.interval_inclusion_membership(member, state)? {
+            super::in_fact::InFactSearchProofByBuiltinRule::IntervalInclusion(proof)
+        } else if let Some(proof) = self.interval_membership_proof(member, state)? {
+            proof
+        } else if let Some(proof) =
+            self.one_side_infinity_interval_membership_proof(member, state)?
+        {
+            proof
+        } else {
+            return Ok(ordinary);
+        };
+        let VerifyAtomicFactWellDefinedResult::Success(wd) =
+            self.verify_atomic_fact_well_definedness(fact, state)?
+        else {
+            return Ok(ordinary);
+        };
+        Ok(
+            super::super::result::atomic_except_equality_fact_result_from_success(
+                fact,
+                wd,
+                AtomicExceptEqualityFactSearchedProof::ByBuiltinRule(
+                    super::AtomicExceptEqualityFactSearchProofByBuiltinRule::InFact(proof),
+                ),
+            ),
+        )
+    }
+
     // Builtin search for `$subset`.
     // B0: reflexivity. A: match Obj shapes of (left, right). No sequential rule list.
     // Example: prove `N $subset R`, `union({1}, {2}) $subset N`.
@@ -186,6 +279,48 @@ impl Runtime {
             return Ok(Some(SubsetFactSearchProofByBuiltinRule::SubsetReflexivity(
                 SubsetReflexivityBuiltinRuleProof {},
             )));
+        }
+        if let Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftClosedRightClosed(
+            interval,
+        ))) = &fact.left
+        {
+            if let (
+                Obj::ArithmeticOperator(ArithmeticOperator::Min(lower)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Max(upper)),
+            ) = (interval.start.as_ref(), interval.end.as_ref())
+            {
+                if lower.left == upper.left
+                    && lower.right == upper.right
+                    && convex_interval_region(&fact.right)
+                {
+                    let first = crate::execute::execute_fact_stmt::riemann_integral::helper::member(
+                        self,
+                        *lower.left.clone(),
+                        fact.right.clone(),
+                    );
+                    let second =
+                        crate::execute::execute_fact_stmt::riemann_integral::helper::member(
+                            self,
+                            *lower.right.clone(),
+                            fact.right.clone(),
+                        );
+                    let first_endpoint = self.convex_endpoint_membership(&first, verify_state)?;
+                    if !first_endpoint.is_failed() {
+                        let second_endpoint =
+                            self.convex_endpoint_membership(&second, verify_state)?;
+                        if !second_endpoint.is_failed() {
+                            return Ok(Some(
+                                SubsetFactSearchProofByBuiltinRule::ConvexIntervalHull(
+                                    ConvexIntervalHullProof {
+                                        first_endpoint: Box::new(first_endpoint),
+                                        second_endpoint: Box::new(second_endpoint),
+                                    },
+                                ),
+                            ));
+                        }
+                    }
+                }
+            }
         }
 
         let equation = EqualFact {
@@ -384,6 +519,34 @@ impl Runtime {
                         SetMinusSubsetLeftBuiltinRuleProof {},
                     ),
                 ))
+            }
+
+            // Removing points preserves every upper set of the original set.
+            // Descend through the left constructor, e.g. ([a,b] \ {a}) ⊆ R.
+            (Obj::SetOperator(SetOperator::SetMinus(difference)), right)
+                if matches!(
+                    difference.left.as_ref(),
+                    Obj::SetFormer(SetFormer::IntervalObj(_))
+                ) && right == &Obj::StandardSet(StandardSet::R) =>
+            {
+                let left_premise = subset_fact(&fact.left, &difference.left, self);
+                let right_premise = subset_fact(&difference.left, right, self);
+                let left_to_middle_proof =
+                    self.verify_subset_constructor_child(&left_premise, verify_state)?;
+                let middle_to_right_proof =
+                    self.verify_subset_constructor_child(&right_premise, verify_state)?;
+                if left_to_middle_proof.is_failed() || middle_to_right_proof.is_failed() {
+                    Ok(None)
+                } else {
+                    Ok(Some(
+                        SubsetFactSearchProofByBuiltinRule::SubsetTransitivity(
+                            SubsetTransitivityBuiltinRuleProof {
+                                left_to_middle_proof,
+                                middle_to_right_proof,
+                            },
+                        ),
+                    ))
+                }
             }
 
             (
@@ -889,4 +1052,37 @@ fn in_fact(element: &Obj, set: &Obj, runtime: &mut Runtime) -> Fact {
         set: set.clone(),
         line_file: None,
     }))
+}
+
+// A real interval remains convex when either of its extreme endpoints is removed.
+fn convex_interval_region(region: &Obj) -> bool {
+    match region {
+        Obj::SetFormer(SetFormer::IntervalObj(_) | SetFormer::OneSideInfinityIntervalObj(_)) => {
+            true
+        }
+        Obj::SetOperator(SetOperator::SetMinus(difference)) => {
+            let Obj::SetFormer(SetFormer::IntervalObj(IntervalObj::LeftClosedRightClosed(
+                interval,
+            ))) = difference.left.as_ref()
+            else {
+                return false;
+            };
+            let Obj::SetFormer(SetFormer::ListSet(excluded)) = difference.right.as_ref() else {
+                return false;
+            };
+            let (
+                Obj::ArithmeticOperator(ArithmeticOperator::Min(lower)),
+                Obj::ArithmeticOperator(ArithmeticOperator::Max(upper)),
+            ) = (interval.start.as_ref(), interval.end.as_ref())
+            else {
+                return false;
+            };
+            lower.left == upper.left
+                && lower.right == upper.right
+                && excluded.list.iter().all(|point| {
+                    point.as_ref() == lower.left.as_ref() || point.as_ref() == lower.right.as_ref()
+                })
+        }
+        _ => false,
+    }
 }

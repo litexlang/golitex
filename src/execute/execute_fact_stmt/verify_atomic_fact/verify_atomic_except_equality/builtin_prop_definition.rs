@@ -37,6 +37,14 @@ impl Runtime {
         fact: &AtomicFact,
         verify_state: VerifyState,
     ) -> RuntimeResult<Result<BuiltinPropDefinitionProof, DefinitionProofFailed>> {
+        if let Some((integral, value)) =
+            crate::execute::execute_fact_stmt::improper_integral::predicate_integral(fact)
+                .filter(|_| matches!(fact, AtomicFact::NormalAtomicFact(_)))
+        {
+            return Ok(self
+                .prove_improper_definition(&integral, value, verify_state)?
+                .map(BuiltinPropDefinitionProof::ImproperIntegral));
+        }
         match fact {
             AtomicFact::IsMatrixInvFact(f) => {
                 let requirements = self.matrix_inverse_candidate_clauses(f);

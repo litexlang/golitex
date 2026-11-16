@@ -34,6 +34,19 @@ pub struct RiemannExpressionProof {
 }
 
 pub enum RiemannConstructorProof {
+    ZeroWidth {
+        endpoints_equal: Box<VerifyFactResult>,
+    },
+    ReciprocalSqrt {
+        lower_positive: Box<VerifyFactResult>,
+        upper_positive: Box<VerifyFactResult>,
+    },
+    ReciprocalNaturalPower {
+        exponent: Obj,
+        exponent_natural: Box<VerifyFactResult>,
+        exponent_nonzero: Box<VerifyFactResult>,
+        endpoint_signs: Vec<VerifyFactResult>,
+    },
     Polynomial {
         equality: Box<VerifyFactResult>,
         normalized: Box<RiemannExpressionProof>,
@@ -168,7 +181,7 @@ impl Runtime {
             else {
                 continue;
             };
-            let direct = self.prove_riemann_expression(
+            let mut direct = self.prove_riemann_expression(
                 &body.equal_to,
                 params[0].id,
                 lower,
@@ -177,6 +190,22 @@ impl Runtime {
                 0,
                 &mut budget,
             )?;
+            if direct.is_none() {
+                let endpoints_equal: Fact = eq(self, lower.clone(), upper.clone()).into();
+                let endpoints_equal = self.verify_fact(&endpoints_equal, state)?;
+                if !endpoints_equal.is_failed() {
+                    let integral = num("0");
+                    let fact: Fact = member(self, integral.clone(), real()).into();
+                    direct = Some(RiemannExpressionProof {
+                        expression: *body.equal_to.clone(),
+                        integral,
+                        constructor: RiemannConstructorProof::ZeroWidth {
+                            endpoints_equal: Box::new(endpoints_equal),
+                        },
+                        integral_real: Box::new(self.verify_fact(&fact, state)?),
+                    });
+                }
+            }
             let expression = if let Some(expression) = direct {
                 expression
             } else {
@@ -431,6 +460,114 @@ impl Runtime {
                             argument: Box::new(argument),
                         },
                     )
+                }
+                Obj::ArithmeticOperator(ArithmeticOperator::Div(a))
+                    if a.left.as_ref() == &num("1") && depends(&a.right, parameter) =>
+                {
+                    match a.right.as_ref() {
+                        Obj::ExpLogOperator(ExpLogOperator::Sqrt(root))
+                            if is_parameter(&root.arg, parameter) =>
+                        {
+                            let lower_fact: Fact =
+                                member(self, lower.clone(), Obj::StandardSet(StandardSet::RPos))
+                                    .into();
+                            let upper_fact: Fact =
+                                member(self, upper.clone(), Obj::StandardSet(StandardSet::RPos))
+                                    .into();
+                            let lower_positive = self.verify_fact(&lower_fact, state)?;
+                            let upper_positive = self.verify_fact(&upper_fact, state)?;
+                            if lower_positive.is_failed() || upper_positive.is_failed() {
+                                return Ok(None);
+                            }
+                            let sqrt = super::pointwise_elementary::ElementaryRealFunction::Sqrt;
+                            (
+                                mul_objs(
+                                    num("2"),
+                                    sub_objs(sqrt.apply(upper.clone()), sqrt.apply(lower.clone())),
+                                ),
+                                C::ReciprocalSqrt {
+                                    lower_positive: Box::new(lower_positive),
+                                    upper_positive: Box::new(upper_positive),
+                                },
+                            )
+                        }
+                        Obj::ArithmeticOperator(ArithmeticOperator::Pow(power))
+                            if is_parameter(&power.base, parameter)
+                                && !depends(&power.exponent, parameter) =>
+                        {
+                            let mut endpoint_signs = Vec::new();
+                            for sign in [StandardSet::RPos, StandardSet::RNeg] {
+                                let mut proofs = Vec::new();
+                                for endpoint in [lower, upper] {
+                                    let fact: Fact = member(
+                                        self,
+                                        endpoint.clone(),
+                                        Obj::StandardSet(sign.clone()),
+                                    )
+                                    .into();
+                                    let proof = self.verify_fact(&fact, state)?;
+                                    if proof.is_failed() {
+                                        break;
+                                    }
+                                    proofs.push(proof);
+                                }
+                                if proofs.len() == 2 {
+                                    endpoint_signs = proofs;
+                                    break;
+                                }
+                            }
+                            if endpoint_signs.len() != 2 {
+                                return Ok(None);
+                            }
+                            let exponent = sub_objs(*power.exponent.clone(), num("1"));
+                            let exponent = crate::rational_expression::evaluate_obj_to_normalized_decimal_number(&exponent)
+                                .map(|n| Obj::Literal(Literal::Number(n))).unwrap_or(exponent);
+                            let natural: Fact =
+                                member(self, exponent.clone(), Obj::StandardSet(StandardSet::NPos))
+                                    .into();
+                            let exponent_natural = self.verify_fact(&natural, state)?;
+                            if exponent_natural.is_failed() {
+                                return Ok(None);
+                            }
+                            let nonzero: Fact = NotEqualFact {
+                                fact_id: self.global_ids.allocate_fact_id(),
+                                left: exponent.clone(),
+                                right: num("0"),
+                                line_file: None,
+                            }
+                            .into();
+                            let exponent_nonzero = self.verify_fact(&nonzero, state)?;
+                            if exponent_nonzero.is_failed() {
+                                return Ok(None);
+                            }
+                            let reciprocal = |value: &Obj| {
+                                div_objs(
+                                    num("1"),
+                                    if exponent == num("1") {
+                                        value.clone()
+                                    } else {
+                                        Obj::ArithmeticOperator(ArithmeticOperator::Pow(Pow {
+                                            base: Box::new(value.clone()),
+                                            exponent: Box::new(exponent.clone()),
+                                        }))
+                                    },
+                                )
+                            };
+                            (
+                                div_objs(
+                                    sub_objs(reciprocal(lower), reciprocal(upper)),
+                                    exponent.clone(),
+                                ),
+                                C::ReciprocalNaturalPower {
+                                    exponent,
+                                    exponent_natural: Box::new(exponent_natural),
+                                    exponent_nonzero: Box::new(exponent_nonzero),
+                                    endpoint_signs,
+                                },
+                            )
+                        }
+                        _ => return Ok(None),
+                    }
                 }
                 Obj::ArithmeticOperator(ArithmeticOperator::Div(a))
                     if !depends(&a.right, parameter) =>
